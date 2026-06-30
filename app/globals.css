@@ -1,8 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;600&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { background-color: #0D0D0D; color: #FFFFFF; }
-body { font-family: 'Inter', sans-serif; background-color: #0D0D0D; color: #FFFFFF; min-height: 100vh; }
-h1,h2,h3,h4,h5,h6 { font-family: 'Space Grotesk', sans-serif; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0D0D0D;
+  --surface: #1A1A1A;
+  --border: #2A2A2A;
+  --accent: #FF6B00;
+  --text: #FFFFFF;
+  --muted: #999999;
+  --green: #00E676;
+  --red: #FF1744;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  line-height: 1.15;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 3px;
+}
