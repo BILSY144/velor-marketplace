@@ -1,37 +1,76 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-// Currency config: symbol, rate from USD, name
-const CURRENCIES: Record<string, { symbol: string; rate: number; name: string }> = {
-  GBP: { symbol: '£', rate: 1,      name: 'British Pound'  },
-  USD: { symbol: '$', rate: 1.27,   name: 'US Dollar'      },
-  EUR: { symbol: '€', rate: 1.17,   name: 'Euro'           },
-  CAD: { symbol: 'CA$', rate: 1.72, name: 'Canadian Dollar' },
-  AUD: { symbol: 'A$', rate: 1.93,  name: 'Australian Dollar'},
-  JPY: { symbol: '¥', rate: 200,    name: 'Japanese Yen'   },
-  SGD: { symbol: 'S$', rate: 1.71,  name: 'Singapore Dollar'},
-  INR: { symbol: '₹', rate: 105,    name: 'Indian Rupee'   },
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
+
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      color: '#FFFFFF',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '15px',
+      fontSmoothing: 'antialiased',
+      '::placeholder': { color: '#555555' },
+    },
+    invalid: { color: '#FF1744' },
+  },
 };
 
-const COUNTRIES = [
-  'United Kingdom','United States','Canada','Australia','Germany','France',
-  'Japan','Singapore','India','Netherlands','Sweden','Norway','Denmark',
-  'Spain','Italy','Portugal','Poland','Brazil','Mexico','South Korea',
-  'New Zealand','Ireland','Belgium','Switzerland','Austria',
-];
+const CURRENCY_MAP: Record<string, { code: string; symbol: string }> = {
+  GB: { code: 'GBP', symbol: '£' },
+  US: { code: 'USD', symbol: '$' },
+  CA: { code: 'CAD', symbol: 'CA$' },
+  AU: { code: 'AUD', symbol: 'A$' },
+  NZ: { code: 'NZD', symbol: 'NZ$' },
+  EU: { code: 'EUR', symbol: '€' },
+  DE: { code: 'EUR', symbol: '€' },
+  FR: { code: 'EUR', symbol: '€' },
+  ES: { code: 'EUR', symbol: '€' },
+  IT: { code: 'EUR', symbol: '€' },
+  NL: { code: 'EUR', symbol: '€' },
+  CH: { code: 'CHF', symbol: 'CHF' },
+  SE: { code: 'SEK', symbol: 'kr' },
+  NO: { code: 'NOK', symbol: 'kr' },
+  DK: { code: 'DKK', symbol: 'kr' },
+  JP: { code: 'JPY', symbol: '¥' },
+  SG: { code: 'SGD', symbol: 'S$' },
+  HK: { code: 'HKD', symbol: 'HK$' },
+  AE: { code: 'AED', symbol: 'AED' },
+  IN: { code: 'INR', symbol: '₹' },
+  BR: { code: 'BRL', symbol: 'R$' },
+  MX: { code: 'MXN', symbol: 'MX$' },
+  ZA: { code: 'ZAR', symbol: 'R' },
+};
 
-const SHIPPING_OPTIONS: Record<string, { label: string; days: string; price: number }[]> = {
-  'United Kingdom': [
-    { label: 'Standard Delivery', days: '3–5 business days', price: 0 },
-    { label: 'Express Delivery', days: '1–2 business days', price: 4.99 },
-  ],
-  default: [
-    { label: 'Standard International', days: '7–14 business days', price: 9.99 },
-    { label: 'Express International', days: '3–5 business days', price: 24.99 },
-  ],
+const COUNTRY_CODES: Record<string, string> = {
+  'United Kingdom': 'GB',
+  'United States': 'US',
+  'Canada': 'CA',
+  'Australia': 'AU',
+  'New Zealand': 'NZ',
+  'Germany': 'DE',
+  'France': 'FR',
+  'Spain': 'ES',
+  'Italy': 'IT',
+  'Netherlands': 'NL',
+  'Switzerland': 'CH',
+  'Sweden': 'SE',
+  'Norway': 'NO',
+  'Denmark': 'DK',
+  'Japan': 'JP',
+  'Singapore': 'SG',
+  'Hong Kong': 'HK',
+  'UAE': 'AE',
+  'India': 'IN',
+  'Brazil': 'BR',
+  'Mexico': 'MX',
+  'South Africa': 'ZA',
+  'Ireland': 'IE',
+  'Belgium': 'BE',
+  'Portugal': 'PT',
 };
 
 interface CartItem {
@@ -50,428 +89,488 @@ interface ShippingForm {
   phone: string;
   address: string;
   city: string;
-  postalCode: string;
+  postcode: string;
   country: string;
-  state: string;
 }
 
-interface PaymentForm {
-  cardNumber: string;
-  cardName: string;
-  expiry: string;
-  cvc: string;
+interface FormErrors {
+  [key: string]: string;
 }
 
-function formatCard(value: string) {
-  return value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})/g, '$1 ').trim();
-}
-function formatExpiry(value: string) {
-  const v = value.replace(/\D/g, '').slice(0, 4);
-  return v.length >= 3 ? `${v.slice(0, 2)}/${v.slice(2)}` : v;
-}
+function CheckoutContent() {
+  const stripe = useStripe();
+  const elements = useElements();
 
-export default function CheckoutPage() {
-  const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [currency, setCurrency] = useState('GBP');
-  const [selectedShipping, setSelectedShipping] = useState(0);
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Partial<ShippingForm & PaymentForm>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const [shipping, setShipping] = useState<ShippingForm>({
-    firstName: '', lastName: '', email: '', phone: '',
-    address: '', city: '', postalCode: '', country: 'United Kingdom', state: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    postcode: '',
+    country: 'United Kingdom',
   });
 
-  const [payment, setPayment] = useState<PaymentForm>({
-    cardNumber: '', cardName: '', expiry: '', cvc: '',
-  });
+  const [cardName, setCardName] = useState('');
+  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
   // Load cart from localStorage
   useEffect(() => {
     try {
       const stored = localStorage.getItem('velor-cart');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setItems(parsed.state?.items || []);
-      }
+      if (stored) setCartItems(JSON.parse(stored));
     } catch {}
-    // Demo: prefill 2 sample items if cart is empty
-    setItems(prev => prev.length > 0 ? prev : [
-      { id: '1', name: 'Adjustable Dumbbell Set', price: 89.99, quantity: 1, image: 'https://placehold.co/80x80/1A1A1A/999999?text=DB', variantName: '20kg' },
-      { id: '2', name: 'Resistance Bands Pack', price: 24.99, quantity: 2, image: 'https://placehold.co/80x80/1A1A1A/999999?text=RB', variantName: 'Medium' },
-    ]);
   }, []);
 
-  // Auto-select currency based on country
-  useEffect(() => {
-    const map: Record<string, string> = {
-      'United Kingdom': 'GBP', 'United States': 'USD', 'Canada': 'CAD',
-      'Australia': 'AUD', 'Germany': 'EUR', 'France': 'EUR', 'Netherlands': 'EUR',
-      'Spain': 'EUR', 'Italy': 'EUR', 'Portugal': 'EUR', 'Belgium': 'EUR',
-      'Austria': 'EUR', 'Japan': 'JPY', 'Singapore': 'SGD', 'India': 'INR',
-    };
-    const c = map[shipping.country];
-    if (c) setCurrency(c);
-  }, [shipping.country]);
+  const countryCode = COUNTRY_CODES[shipping.country] ?? 'GB';
+  const currency = CURRENCY_MAP[countryCode] ?? CURRENCY_MAP['GB'];
+  const isUK = countryCode === 'GB';
 
-  const cur = CURRENCIES[currency];
-  const shippingOpts = SHIPPING_OPTIONS[shipping.country] || SHIPPING_OPTIONS.default;
-  const shippingCost = shippingOpts[selectedShipping]?.price ?? 0;
+  const shippingCost = isUK
+    ? shippingMethod === 'express' ? 4.99 : 0
+    : shippingMethod === 'express' ? 14.99 : 7.99;
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const total = (subtotal + shippingCost) * cur.rate;
-  const fmt = (n: number) => `${cur.symbol}${(n * cur.rate).toFixed(currency === 'JPY' ? 0 : 2)}`;
+  const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+  const total = subtotal + shippingCost;
 
-  function updateShipping(field: keyof ShippingForm, value: string) {
-    setShipping(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
-  }
-
-  function validateShipping(): boolean {
-    const e: Partial<ShippingForm> = {};
+  const validateShipping = useCallback(() => {
+    const e: FormErrors = {};
     if (!shipping.firstName.trim()) e.firstName = 'Required';
     if (!shipping.lastName.trim()) e.lastName = 'Required';
-    if (!shipping.email.match(/^[^@]+@[^@]+\.[^@]+$/)) e.email = 'Valid email required';
+    if (!shipping.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(shipping.email)) e.email = 'Valid email required';
     if (!shipping.address.trim()) e.address = 'Required';
     if (!shipping.city.trim()) e.city = 'Required';
-    if (!shipping.postalCode.trim()) e.postalCode = 'Required';
+    if (!shipping.postcode.trim()) e.postcode = 'Required';
+    return e;
+  }, [shipping]);
+
+  const handleShippingNext = () => {
+    const e = validateShipping();
     setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
-  function validatePayment(): boolean {
-    const e: Partial<PaymentForm> = {};
-    if (payment.cardNumber.replace(/\s/g, '').length < 16) e.cardNumber = 'Enter 16-digit card number';
-    if (!payment.cardName.trim()) e.cardName = 'Required';
-    if (!payment.expiry.match(/^\d{2}\/\d{2}$/)) e.expiry = 'MM/YY format';
-    if (payment.cvc.length < 3) e.cvc = '3 or 4 digits';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
-  function handleShippingContinue() {
-    if (validateShipping()) setStep(2);
-  }
-
-  async function handlePlaceOrder() {
-    if (!validatePayment()) return;
-    setProcessing(true);
-    // Simulate payment processing — real Stripe integration wired in Task #142
-    await new Promise(r => setTimeout(r, 2000));
-    const orderNum = 'VM-' + Math.random().toString(36).slice(2, 9).toUpperCase();
-    localStorage.setItem('velor-last-order', JSON.stringify({
-      orderNumber: orderNum,
-      items,
-      shipping,
-      total: total.toFixed(2),
-      currency,
-      shippingMethod: shippingOpts[selectedShipping].label,
-      placedAt: new Date().toISOString(),
-    }));
-    try { localStorage.removeItem('velor-cart'); } catch {}
-    router.push(`/checkout/confirmation?order=${orderNum}`);
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', borderRadius: 8,
-    border: '1px solid #2A2A2A', background: '#0D0D0D',
-    color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter, sans-serif',
-    outline: 'none', boxSizing: 'border-box',
+    if (Object.keys(e).length === 0) setStep('payment');
   };
-  const errorStyle: React.CSSProperties = { color: '#FF1744', fontSize: 12, marginTop: 4 };
-  const labelStyle: React.CSSProperties = { display: 'block', color: '#999999', fontSize: 12, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' };
+
+  const handlePlaceOrder = async () => {
+    if (!stripe || !elements) return;
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) return;
+
+    if (!cardName.trim()) {
+      setErrors({ cardName: 'Name on card is required' });
+      return;
+    }
+
+    setProcessing(true);
+    setErrors({});
+
+    try {
+      // Create PaymentIntent
+      const piRes = await fetch('/api/stripe/payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Math.round(total * 100),
+          currency: 'gbp',
+          items: cartItems.map(i => ({ id: i.id, name: i.name, qty: i.quantity })),
+        }),
+      });
+
+      if (!piRes.ok) {
+        const err = await piRes.json();
+        throw new Error(err.error || 'Failed to create payment');
+      }
+
+      const { clientSecret } = await piRes.json();
+
+      // Confirm card payment
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: cardName,
+            email: shipping.email,
+            address: {
+              line1: shipping.address,
+              city: shipping.city,
+              postal_code: shipping.postcode,
+              country: countryCode,
+            },
+          },
+        },
+      });
+
+      if (error) throw new Error(error.message ?? 'Payment failed');
+
+      // Order succeeded — save and redirect
+      const orderNumber = 'VM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      const orderData = {
+        orderNumber,
+        paymentIntentId: paymentIntent?.id,
+        items: cartItems,
+        shipping,
+        shippingMethod,
+        shippingCost,
+        subtotal,
+        total,
+        currency: currency.code,
+        placedAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem('velor-last-order', JSON.stringify(orderData));
+      localStorage.removeItem('velor-cart');
+
+      window.location.href = '/checkout/confirmation';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Payment failed. Please try again.';
+      setErrors({ submit: msg });
+      setProcessing(false);
+    }
+  };
+
+  const field = (
+    label: string,
+    key: keyof ShippingForm,
+    placeholder: string,
+    type = 'text',
+    half = false
+  ) => (
+    <div style={{ flex: half ? '1 1 calc(50% - 6px)' : '1 1 100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={shipping[key]}
+        onChange={e => setShipping(p => ({ ...p, [key]: e.target.value }))}
+        placeholder={placeholder}
+        style={{
+          background: '#0D0D0D',
+          border: `1px solid ${errors[key] ? '#FF1744' : '#2A2A2A'}`,
+          borderRadius: 8,
+          padding: '10px 12px',
+          color: '#FFFFFF',
+          fontSize: 14,
+          outline: 'none',
+        }}
+      />
+      {errors[key] && <span style={{ fontSize: 11, color: '#FF1744' }}>{errors[key]}</span>}
+    </div>
+  );
+
+  const token = currency.symbol;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif' }}>
-      {/* Top bar */}
-      <div style={{ borderBottom: '1px solid #2A2A2A', padding: '0 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 800, color: '#FF6B00', textDecoration: 'none', letterSpacing: '-0.02em' }}>VELOR</Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#999999', fontSize: 13 }}>Secure checkout</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#00E676"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>
-          </div>
-        </div>
+    <div style={{ minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif', color: '#FFFFFF' }}>
+      {/* Header strip */}
+      <div style={{ borderBottom: '1px solid #2A2A2A', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <a href="/" style={{ color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 20, textDecoration: 'none' }}>
+          VELOR
+        </a>
+        <span style={{ color: '#2A2A2A' }}>|</span>
+        <span style={{ color: '#999999', fontSize: 14 }}>Secure Checkout</span>
       </div>
 
-      {/* Progress steps */}
-      <div style={{ borderBottom: '1px solid #2A2A2A', background: '#111111' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 48, display: 'flex', alignItems: 'center', gap: 0 }}>
-          {(['Shipping Details', 'Payment'] as const).map((label, i) => {
-            const idx = i + 1;
-            const active = step === idx;
-            const done = step > idx;
-            return (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {i > 0 && <div style={{ width: 32, height: 1, background: '#2A2A2A', margin: '0 8px' }} />}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: done ? 'pointer' : 'default' }} onClick={() => done ? setStep(idx as 1 | 2) : null}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: active ? '#FF6B00' : done ? '#00E676' : '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#000000', flexShrink: 0 }}>
-                    {done ? '✓' : idx}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 16px', display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+        {/* Left — form */}
+        <div style={{ flex: '1 1 480px' }}>
+          {/* Steps */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
+            {(['shipping', 'payment'] as const).map((s, i) => (
+              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {i > 0 && <div style={{ width: 32, height: 1, background: '#2A2A2A' }} />}
+                <div
+                  onClick={() => s === 'shipping' && step === 'payment' && setStep('shipping')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    cursor: s === 'shipping' && step === 'payment' ? 'pointer' : 'default',
+                  }}
+                >
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: step === s ? '#FF6B00' : '#1A1A1A',
+                    border: `1px solid ${step === s ? '#FF6B00' : '#2A2A2A'}`,
+                    fontSize: 11, fontWeight: 700, color: step === s ? '#FFFFFF' : '#999999',
+                  }}>
+                    {i + 1}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? '#FFFFFF' : done ? '#00E676' : '#999999' }}>{label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: step === s ? '#FFFFFF' : '#999999', textTransform: 'capitalize' }}>
+                    {s}
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+            ))}
+          </div>
 
-      {/* Main grid */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32, alignItems: 'start' }}>
-
-        {/* Left — forms */}
-        <div>
-          {step === 1 && (
-            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Shipping Details</h2>
-                {/* Currency switcher */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: '#999999', fontSize: 12 }}>Currency:</span>
-                  <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 12 }}>
-                    {Object.entries(CURRENCIES).map(([code, { name }]) => (
-                      <option key={code} value={code}>{code} — {name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Name row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>First Name</label>
-                  <input style={{ ...inputStyle, borderColor: errors.firstName ? '#FF1744' : '#2A2A2A' }} value={shipping.firstName} onChange={e => updateShipping('firstName', e.target.value)} placeholder="John" />
-                  {errors.firstName && <p style={errorStyle}>{errors.firstName}</p>}
-                </div>
-                <div>
-                  <label style={labelStyle}>Last Name</label>
-                  <input style={{ ...inputStyle, borderColor: errors.lastName ? '#FF1744' : '#2A2A2A' }} value={shipping.lastName} onChange={e => updateShipping('lastName', e.target.value)} placeholder="Smith" />
-                  {errors.lastName && <p style={errorStyle}>{errors.lastName}</p>}
-                </div>
-              </div>
-
-              {/* Email + Phone */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Email Address</label>
-                  <input style={{ ...inputStyle, borderColor: errors.email ? '#FF1744' : '#2A2A2A' }} value={shipping.email} onChange={e => updateShipping('email', e.target.value)} placeholder="john@example.com" type="email" />
-                  {errors.email && <p style={errorStyle}>{errors.email}</p>}
-                </div>
-                <div>
-                  <label style={labelStyle}>Phone (optional)</label>
-                  <input style={inputStyle} value={shipping.phone} onChange={e => updateShipping('phone', e.target.value)} placeholder="+44 7700 000000" type="tel" />
-                </div>
-              </div>
+          {step === 'shipping' && (
+            <div>
+              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, marginBottom: 20 }}>
+                Delivery Details
+              </h2>
 
               {/* Country */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Country</label>
-                <select style={inputStyle} value={shipping.country} onChange={e => { updateShipping('country', e.target.value); setSelectedShipping(0); }}>
-                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country</label>
+                <select
+                  value={shipping.country}
+                  onChange={e => setShipping(p => ({ ...p, country: e.target.value }))}
+                  style={{ background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 8, padding: '10px 12px', color: '#FFFFFF', fontSize: 14 }}
+                >
+                  {Object.keys(COUNTRY_CODES).map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
 
-              {/* Address */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Street Address</label>
-                <input style={{ ...inputStyle, borderColor: errors.address ? '#FF1744' : '#2A2A2A' }} value={shipping.address} onChange={e => updateShipping('address', e.target.value)} placeholder="123 Main Street, Apt 4B" />
-                {errors.address && <p style={errorStyle}>{errors.address}</p>}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+                {field('First Name', 'firstName', 'Jane', 'text', true)}
+                {field('Last Name', 'lastName', 'Smith', 'text', true)}
+              </div>
+              <div style={{ marginBottom: 12 }}>{field('Email', 'email', 'jane@example.com', 'email')}</div>
+              <div style={{ marginBottom: 12 }}>{field('Phone', 'phone', '+44 7700 000000', 'tel')}</div>
+              <div style={{ marginBottom: 12 }}>{field('Address', 'address', '123 High Street')}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+                {field('City', 'city', 'London', 'text', true)}
+                {field(isUK ? 'Postcode' : 'ZIP / Postal Code', 'postcode', isUK ? 'SW1A 1AA' : '', 'text', true)}
               </div>
 
-              {/* City + Postal + State */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
-                <div>
-                  <label style={labelStyle}>City</label>
-                  <input style={{ ...inputStyle, borderColor: errors.city ? '#FF1744' : '#2A2A2A' }} value={shipping.city} onChange={e => updateShipping('city', e.target.value)} placeholder="London" />
-                  {errors.city && <p style={errorStyle}>{errors.city}</p>}
+              {/* Shipping method */}
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Shipping Method</h3>
+              {[
+                { id: 'standard', label: isUK ? 'Standard (3-5 days)' : 'Standard (7-14 days)', price: isUK ? 0 : 7.99 },
+                { id: 'express', label: isUK ? 'Express (1-2 days)' : 'Express (3-5 days)', price: isUK ? 4.99 : 14.99 },
+              ].map(opt => (
+                <div
+                  key={opt.id}
+                  onClick={() => setShippingMethod(opt.id as 'standard' | 'express')}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '12px 16px', marginBottom: 8, borderRadius: 8, cursor: 'pointer',
+                    border: `1px solid ${shippingMethod === opt.id ? '#FF6B00' : '#2A2A2A'}`,
+                    background: shippingMethod === opt.id ? 'rgba(255,107,0,0.08)' : '#1A1A1A',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 16, height: 16, borderRadius: '50%',
+                      border: `2px solid ${shippingMethod === opt.id ? '#FF6B00' : '#2A2A2A'}`,
+                      background: shippingMethod === opt.id ? '#FF6B00' : 'transparent',
+                    }} />
+                    <span style={{ fontSize: 14, color: '#FFFFFF' }}>{opt.label}</span>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: opt.price === 0 ? '#00E676' : '#FFFFFF' }}>
+                    {opt.price === 0 ? 'FREE' : `${token}${opt.price.toFixed(2)}`}
+                  </span>
                 </div>
-                <div>
-                  <label style={labelStyle}>Postcode / ZIP</label>
-                  <input style={{ ...inputStyle, borderColor: errors.postalCode ? '#FF1744' : '#2A2A2A' }} value={shipping.postalCode} onChange={e => updateShipping('postalCode', e.target.value)} placeholder="SW1A 1AA" />
-                  {errors.postalCode && <p style={errorStyle}>{errors.postalCode}</p>}
-                </div>
-                <div>
-                  <label style={labelStyle}>State / County</label>
-                  <input style={inputStyle} value={shipping.state} onChange={e => updateShipping('state', e.target.value)} placeholder="England" />
-                </div>
-              </div>
+              ))}
 
-              {/* Shipping options */}
-              <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: 24, marginBottom: 24 }}>
-                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 16, fontWeight: 700, color: '#FFFFFF', margin: '0 0 16px' }}>Shipping Method</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {shippingOpts.map((opt, idx) => (
-                    <label key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 8, border: `1px solid ${selectedShipping === idx ? '#FF6B00' : '#2A2A2A'}`, background: selectedShipping === idx ? '#FF6B0010' : 'transparent', cursor: 'pointer' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <input type="radio" checked={selectedShipping === idx} onChange={() => setSelectedShipping(idx)} style={{ accentColor: '#FF6B00' }} />
-                        <div>
-                          <div style={{ color: '#FFFFFF', fontSize: 14, fontWeight: 600 }}>{opt.label}</div>
-                          <div style={{ color: '#999999', fontSize: 12, marginTop: 2 }}>{opt.days}</div>
-                        </div>
-                      </div>
-                      <span style={{ color: opt.price === 0 ? '#00E676' : '#FFFFFF', fontWeight: 700, fontSize: 14 }}>
-                        {opt.price === 0 ? 'FREE' : fmt(opt.price)}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button onClick={handleShippingContinue} style={{ width: '100%', padding: '16px', background: '#FF6B00', color: '#000000', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0.02em' }}>
+              <button
+                onClick={handleShippingNext}
+                style={{
+                  width: '100%', padding: '14px', marginTop: 24,
+                  background: '#FF6B00', border: 'none', borderRadius: 8,
+                  color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'Space Grotesk, sans-serif',
+                }}
+              >
                 Continue to Payment
               </button>
             </div>
           )}
 
-          {step === 2 && (
-            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Payment</h2>
-                <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#FF6B00', fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Edit shipping</button>
-              </div>
-
-              {/* Shipping summary pill */}
-              <div style={{ background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 8, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#999999' }}>
-                <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{shipping.firstName} {shipping.lastName}</span>
-                {' · '}{shipping.address}, {shipping.city}, {shipping.postalCode}, {shipping.country}
-              </div>
-
-              {/* Card number */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Card Number</label>
-                <input style={{ ...inputStyle, borderColor: errors.cardNumber ? '#FF1744' : '#2A2A2A', letterSpacing: '0.1em' }}
-                  value={payment.cardNumber}
-                  onChange={e => {
-                    const v = formatCard(e.target.value);
-                    setPayment(prev => ({ ...prev, cardNumber: v }));
-                    if (errors.cardNumber) setErrors(prev => ({ ...prev, cardNumber: undefined }));
-                  }}
-                  placeholder="1234 5678 9012 3456" maxLength={19} />
-                {errors.cardNumber && <p style={errorStyle}>{errors.cardNumber}</p>}
-              </div>
+          {step === 'payment' && (
+            <div>
+              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, marginBottom: 20 }}>
+                Payment
+              </h2>
 
               {/* Card name */}
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Name on Card</label>
-                <input style={{ ...inputStyle, borderColor: errors.cardName ? '#FF1744' : '#2A2A2A' }}
-                  value={payment.cardName}
-                  onChange={e => { setPayment(prev => ({ ...prev, cardName: e.target.value })); if (errors.cardName) setErrors(prev => ({ ...prev, cardName: undefined })); }}
-                  placeholder="JOHN SMITH" />
-                {errors.cardName && <p style={errorStyle}>{errors.cardName}</p>}
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                  Name on Card
+                </label>
+                <input
+                  type="text"
+                  value={cardName}
+                  onChange={e => setCardName(e.target.value)}
+                  placeholder="Jane Smith"
+                  style={{
+                    width: '100%', background: '#0D0D0D',
+                    border: `1px solid ${errors.cardName ? '#FF1744' : '#2A2A2A'}`,
+                    borderRadius: 8, padding: '10px 12px',
+                    color: '#FFFFFF', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                {errors.cardName && <span style={{ fontSize: 11, color: '#FF1744' }}>{errors.cardName}</span>}
               </div>
 
-              {/* Expiry + CVC */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
-                <div>
-                  <label style={labelStyle}>Expiry Date</label>
-                  <input style={{ ...inputStyle, borderColor: errors.expiry ? '#FF1744' : '#2A2A2A' }}
-                    value={payment.expiry}
-                    onChange={e => { const v = formatExpiry(e.target.value); setPayment(prev => ({ ...prev, expiry: v })); if (errors.expiry) setErrors(prev => ({ ...prev, expiry: undefined })); }}
-                    placeholder="MM/YY" maxLength={5} />
-                  {errors.expiry && <p style={errorStyle}>{errors.expiry}</p>}
-                </div>
-                <div>
-                  <label style={labelStyle}>CVC / CVV</label>
-                  <input style={{ ...inputStyle, borderColor: errors.cvc ? '#FF1744' : '#2A2A2A' }}
-                    value={payment.cvc}
-                    onChange={e => { const v = e.target.value.replace(/\D/g,'').slice(0,4); setPayment(prev => ({ ...prev, cvc: v })); if (errors.cvc) setErrors(prev => ({ ...prev, cvc: undefined })); }}
-                    placeholder="123" maxLength={4} type="password" />
-                  {errors.cvc && <p style={errorStyle}>{errors.cvc}</p>}
+              {/* Stripe Card Element */}
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                  Card Details
+                </label>
+                <div style={{
+                  background: '#0D0D0D', border: '1px solid #2A2A2A',
+                  borderRadius: 8, padding: '12px',
+                }}>
+                  <CardElement options={CARD_ELEMENT_OPTIONS} />
                 </div>
               </div>
 
-              {/* Trust strip */}
-              <div style={{ display: 'flex', gap: 20, marginBottom: 24, padding: '12px 0', borderTop: '1px solid #2A2A2A', borderBottom: '1px solid #2A2A2A' }}>
-                {['256-bit SSL', 'PCI Compliant', 'Secure Payment'].map(t => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#00E676"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-                    <span style={{ color: '#999999', fontSize: 12 }}>{t}</span>
+              {errors.submit && (
+                <div style={{ padding: '12px', background: 'rgba(255,23,68,0.1)', border: '1px solid #FF1744', borderRadius: 8, marginBottom: 16, fontSize: 14, color: '#FF1744' }}>
+                  {errors.submit}
+                </div>
+              )}
+
+              {/* Trust row */}
+              <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+                {[
+                  {
+                    svg: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    ),
+                    text: '256-bit SSL',
+                  },
+                  {
+                    svg: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                      </svg>
+                    ),
+                    text: '30-Day Returns',
+                  },
+                  {
+                    svg: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                    ),
+                    text: 'Instant Confirmation',
+                  },
+                ].map(({ svg, text }) => (
+                  <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#999999' }}>
+                    {svg}
+                    {text}
                   </div>
                 ))}
               </div>
 
-              <button onClick={handlePlaceOrder} disabled={processing} style={{ width: '100%', padding: '18px', background: processing ? '#553300' : '#FF6B00', color: '#000000', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 800, cursor: processing ? 'not-allowed' : 'pointer', fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                {processing ? (
-                  <>
-                    <span style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #FF6B0044', borderTop: '2px solid #FF6B00', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                    <span style={{ color: '#FF6B00' }}>Processing...</span>
-                  </>
-                ) : `Pay ${cur.symbol}${total.toFixed(currency === 'JPY' ? 0 : 2)} ${currency}`}
+              <button
+                onClick={handlePlaceOrder}
+                disabled={processing || !stripe}
+                style={{
+                  width: '100%', padding: '15px',
+                  background: processing ? '#333333' : '#FF6B00',
+                  border: 'none', borderRadius: 8,
+                  color: '#FFFFFF', fontSize: 16, fontWeight: 700, cursor: processing ? 'not-allowed' : 'pointer',
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  transition: 'background 0.2s',
+                }}
+              >
+                {processing ? 'Processing...' : `Pay ${token}${total.toFixed(2)}`}
               </button>
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+              <button
+                onClick={() => setStep('shipping')}
+                style={{
+                  width: '100%', marginTop: 10, padding: '12px',
+                  background: 'transparent', border: '1px solid #2A2A2A',
+                  borderRadius: 8, color: '#999999', fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
+                Back to Shipping
+              </button>
             </div>
           )}
         </div>
 
         {/* Right — order summary */}
-        <div style={{ position: 'sticky', top: 24 }}>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24 }}>
-            <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 16, fontWeight: 700, color: '#FFFFFF', margin: '0 0 20px' }}>Order Summary</h3>
+        <div style={{ flex: '0 0 340px', minWidth: 280 }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24, position: 'sticky', top: 24 }}>
+            <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+              Order Summary
+            </h3>
 
-            {/* Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
-              {items.map(item => (
-                <div key={item.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <img src={item.image} alt={item.name} style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', border: '1px solid #2A2A2A' }} />
-                    <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#FF6B00', color: '#000', fontSize: 11, fontWeight: 700, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                    {item.variantName && <div style={{ color: '#999999', fontSize: 12 }}>{item.variantName}</div>}
-                  </div>
-                  <span style={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>{fmt(item.price * item.quantity)}</span>
+            {cartItems.length === 0 ? (
+              <p style={{ color: '#999999', fontSize: 14 }}>Your cart is empty.</p>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
+                  {cartItems.map(item => (
+                    <div key={item.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', background: '#0D0D0D' }}
+                        />
+                        <span style={{
+                          position: 'absolute', top: -6, right: -6,
+                          background: '#FF6B00', color: '#FFFFFF',
+                          width: 18, height: 18, borderRadius: '50%',
+                          fontSize: 10, fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.name}
+                        </p>
+                        {item.variantName && (
+                          <p style={{ fontSize: 11, color: '#999999', margin: '2px 0 0' }}>{item.variantName}</p>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                        {token}{(item.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Promo code */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-              <input style={{ ...inputStyle, flex: 1, padding: '9px 12px' }} placeholder="Promo code" />
-              <button style={{ padding: '9px 16px', background: '#2A2A2A', color: '#FFFFFF', border: '1px solid #3A3A3A', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>Apply</button>
-            </div>
-
-            {/* Totals */}
-            <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ color: '#999999', fontSize: 14 }}>Subtotal</span>
-                <span style={{ color: '#FFFFFF', fontSize: 14 }}>{fmt(subtotal)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ color: '#999999', fontSize: 14 }}>Shipping</span>
-                <span style={{ color: shippingCost === 0 ? '#00E676' : '#FFFFFF', fontSize: 14, fontWeight: shippingCost === 0 ? 700 : 400 }}>
-                  {shippingCost === 0 ? 'FREE' : fmt(shippingCost)}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2A2A2A', paddingTop: 14, marginTop: 4 }}>
-                <span style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>Total</span>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#FF6B00', fontSize: 20, fontWeight: 800, fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {cur.symbol}{total.toFixed(currency === 'JPY' ? 0 : 2)}
+                <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14, color: '#999999' }}>
+                    <span>Subtotal</span>
+                    <span>{token}{subtotal.toFixed(2)}</span>
                   </div>
-                  <div style={{ color: '#999999', fontSize: 11 }}>{currency} · incl. tax</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 14, color: '#999999' }}>
+                    <span>Shipping</span>
+                    <span style={{ color: shippingCost === 0 ? '#00E676' : '#FFFFFF' }}>
+                      {shippingCost === 0 ? 'FREE' : `${token}${shippingCost.toFixed(2)}`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700 }}>
+                    <span>Total</span>
+                    <span style={{ color: '#FF6B00' }}>{token}{total.toFixed(2)}</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: '#999999', marginTop: 6 }}>
+                    Displayed in {currency.code} — charged in GBP
+                  </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Guarantee strip */}
-            <div style={{ marginTop: 20, padding: '14px 16px', background: '#0D0D0D', borderRadius: 8, border: '1px solid #2A2A2A' }}>
-              {[
-                { icon: '🔒', text: 'Secure 256-bit encryption' },
-                { icon: '↩', text: '30-day hassle-free returns' },
-                { icon: '⚡', text: 'Same-day dispatch on orders before 3pm' },
-              ].map(({ icon, text }) => (
-                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 14 }}>{icon}</span>
-                  <span style={{ color: '#999999', fontSize: 12 }}>{text}</span>
-                </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutContent />
+    </Elements>
   );
 }
