@@ -1,35 +1,157 @@
 import Link from 'next/link';
+
+const footerLinks = {
+  Marketplace: [
+    { label: 'Browse Products', href: '/shop' },
+    { label: 'Start Selling', href: '/sell' },
+    { label: 'Seller Dashboard', href: '/dashboard' },
+    { label: 'Pricing', href: '/pricing' },
+  ],
+  Support: [
+    { label: 'Help Centre', href: '/help' },
+    { label: 'Track Order', href: '/track' },
+    { label: 'Returns', href: '/returns' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+  Company: [
+    { label: 'About Velor', href: '/about' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Careers', href: '/careers' },
+    { label: 'Press', href: '/press' },
+  ],
+};
+
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: '#111111', borderTop: '1px solid #2A2A2A', padding: '48px 24px 24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+    <footer style={{
+      background: '#111111',
+      borderTop: '1px solid var(--border)',
+      paddingTop: 64,
+    }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr',
+          gap: 48,
+          marginBottom: 56,
+        }}>
+          {/* Brand column */}
           <div>
-            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 800, color: '#FFFFFF' }}>VELOR</span>
-            <p style={{ color: '#999999', fontSize: '14px', fontFamily: 'Inter, sans-serif', marginTop: '12px', lineHeight: 1.6 }}>The AI-powered global marketplace connecting sellers and buyers worldwide.</p>
-          </div>
-          <div>
-            <h4 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Marketplace</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[{ label: 'Shop', href: '/shop' }, { label: 'Sell', href: '/sell' }].map((link) => (
-                <Link key={link.href} href={link.href} style={{ color: '#999999', textDecoration: 'none', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>{link.label}</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <span style={{
+                fontFamily: 'var(--font-display), system-ui, sans-serif',
+                fontSize: 20,
+                fontWeight: 800,
+                color: 'var(--text)',
+                letterSpacing: '-0.03em',
+              }}>
+                VELOR
+              </span>
+              <span style={{
+                background: 'var(--accent)',
+                color: '#fff',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '3px 7px',
+                borderRadius: 4,
+              }}>
+                MARKETPLACE
+              </span>
+            </div>
+            <p style={{
+              color: 'var(--muted)',
+              fontSize: 14,
+              lineHeight: 1.7,
+              marginBottom: 24,
+              maxWidth: 280,
+            }}>
+              The AI-powered global marketplace connecting independent sellers with buyers in 180+ countries.
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {['Twitter', 'Instagram', 'LinkedIn'].map(s => (
+                <a key={s} href="#" style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 6,
+                  border: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--muted)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }}
+                >
+                  {s[0]}
+                </a>
               ))}
             </div>
           </div>
-          <div>
-            <h4 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Company</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[{ label: 'About', href: '/about' }, { label: 'Contact', href: '/contact' }].map((link) => (
-                <Link key={link.href} href={link.href} style={{ color: '#999999', textDecoration: 'none', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>{link.label}</Link>
-              ))}
+
+          {/* Link columns */}
+          {Object.entries(footerLinks).map(([heading, links]) => (
+            <div key={heading}>
+              <div style={{
+                fontFamily: 'var(--font-display), system-ui, sans-serif',
+                fontWeight: 700,
+                fontSize: 13,
+                color: 'var(--text)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                marginBottom: 16,
+              }}>
+                {heading}
+              </div>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {links.map(link => (
+                  <li key={link.href}>
+                    <Link href={link.href} style={{
+                      color: 'var(--muted)',
+                      fontSize: 14,
+                      transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
-        <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <p style={{ color: '#999999', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>2026 Velor Commerce Ltd. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            {[{ label: 'Privacy Policy', href: '/privacy' }, { label: 'Terms', href: '/terms' }].map((link) => (
-              <Link key={link.href} href={link.href} style={{ color: '#999999', textDecoration: 'none', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>{link.label}</Link>
+
+        {/* Bottom strip */}
+        <div style={{
+          borderTop: '1px solid var(--border)',
+          padding: '20px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+            2026 Velor Commerce Ltd. All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: 24 }}>
+            {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(item => (
+              <Link key={item} href="#" style={{
+                color: 'var(--muted)',
+                fontSize: 13,
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
+              >
+                {item}
+              </Link>
             ))}
           </div>
         </div>
