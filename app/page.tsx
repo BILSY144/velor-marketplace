@@ -1,14 +1,17 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 
 const categories = [
-  { name: 'Fitness & Gym', slug: 'fitness-gym', count: '12,400+', icon: '🏋' },
-  { name: 'Electronics', slug: 'electronics', count: '28,000+', icon: '📱' },
-  { name: 'Home & Garden', slug: 'home-garden', count: '31,000+', icon: '🏠' },
-  { name: 'Sports & Outdoors', slug: 'sports', count: '9,800+', icon: '⚽' },
-  { name: 'Beauty & Health', slug: 'beauty', count: '14,200+', icon: '💄' },
-  { name: 'Toys & Games', slug: 'toys', count: '7,600+', icon: '🎮' },
-  { name: 'Fashion', slug: 'fashion', count: '22,500+', icon: '👗' },
-  { name: 'Automotive', slug: 'automotive', count: '5,300+', icon: '🚗' },
+  { name: 'Fitness & Gym', slug: 'fitness-gym', count: '12,400+' },
+  { name: 'Electronics', slug: 'electronics', count: '28,000+' },
+  { name: 'Home & Garden', slug: 'home-garden', count: '31,000+' },
+  { name: 'Sports & Outdoors', slug: 'sports', count: '9,800+' },
+  { name: 'Beauty & Health', slug: 'beauty', count: '14,200+' },
+  { name: 'Toys & Games', slug: 'toys', count: '7,600+' },
+  { name: 'Fashion', slug: 'fashion', count: '22,500+' },
+  { name: 'Automotive', slug: 'automotive', count: '5,300+' },
 ];
 
 const stats = [
@@ -33,6 +36,37 @@ const steps = [
   { num: '03', title: 'Start Selling', desc: 'Reach millions of buyers worldwide and get paid automatically.' },
 ];
 
+function CategoryCard({ cat }: { cat: typeof categories[0] }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      href={`/shop?category=${cat.slug}`}
+      style={{
+        display: 'block',
+        background: 'var(--surface)',
+        border: `1px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
+        borderRadius: 12,
+        padding: '32px 24px',
+        transition: 'border-color 0.2s',
+        textDecoration: 'none',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        fontFamily: 'var(--font-display), system-ui, sans-serif',
+        fontWeight: 700,
+        fontSize: 16,
+        color: 'var(--text)',
+        marginBottom: 6,
+      }}>
+        {cat.name}
+      </div>
+      <div style={{ color: 'var(--muted)', fontSize: 13 }}>{cat.count} products</div>
+    </Link>
+  );
+}
+
 export default function HomePage() {
   return (
     <>
@@ -45,6 +79,7 @@ export default function HomePage() {
         justifyContent: 'center',
         overflow: 'hidden',
         background: 'radial-gradient(ellipse at 60% 40%, rgba(255,107,0,0.12) 0%, transparent 60%), var(--bg)',
+        paddingTop: 64,
       }}>
         <div style={{ textAlign: 'center', maxWidth: 760, padding: '0 24px', position: 'relative', zIndex: 1 }}>
           <div style={{
@@ -80,7 +115,6 @@ export default function HomePage() {
             fontSize: 18,
             color: 'var(--muted)',
             lineHeight: 1.7,
-            marginBottom: 40,
             maxWidth: 520,
             margin: '0 auto 40px',
           }}>
@@ -117,7 +151,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Decorative grid lines */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -186,30 +219,7 @@ export default function HomePage() {
           gap: 16,
         }}>
           {categories.map((cat) => (
-            <Link key={cat.slug} href={`/shop?category=${cat.slug}`} style={{
-              display: 'block',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 12,
-              padding: '32px 24px',
-              transition: 'border-color 0.2s',
-              textDecoration: 'none',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
-            >
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{cat.icon}</div>
-              <div style={{
-                fontFamily: 'var(--font-display), system-ui, sans-serif',
-                fontWeight: 700,
-                fontSize: 16,
-                color: 'var(--text)',
-                marginBottom: 6,
-              }}>
-                {cat.name}
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: 13 }}>{cat.count} products</div>
-            </Link>
+            <CategoryCard key={cat.slug} cat={cat} />
           ))}
         </div>
       </section>
@@ -316,50 +326,52 @@ export default function HomePage() {
 
       {/* SELLER CTA */}
       <section style={{
-        margin: '0 24px 96px',
         maxWidth: 1200,
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        background: 'linear-gradient(135deg, rgba(255,107,0,0.15) 0%, rgba(255,107,0,0.05) 100%)',
-        border: '1px solid rgba(255,107,0,0.25)',
-        borderRadius: 20,
-        padding: '72px 48px',
-        textAlign: 'center',
+        margin: '0 auto 96px',
+        padding: '0 24px',
       }}>
-        <h2 style={{
-          fontFamily: 'var(--font-display), system-ui, sans-serif',
-          fontSize: 'clamp(28px, 4vw, 44px)',
-          fontWeight: 800,
-          color: 'var(--text)',
-          marginBottom: 16,
-          letterSpacing: '-0.02em',
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(255,107,0,0.15) 0%, rgba(255,107,0,0.05) 100%)',
+          border: '1px solid rgba(255,107,0,0.25)',
+          borderRadius: 20,
+          padding: '72px 48px',
+          textAlign: 'center',
         }}>
-          Ready to Start Selling?
-        </h2>
-        <p style={{
-          color: 'var(--muted)',
-          fontSize: 18,
-          marginBottom: 36,
-          maxWidth: 480,
-          margin: '0 auto 36px',
-        }}>
-          Join 10,000+ sellers already growing their business on Velor Marketplace.
-        </p>
-        <Link href="/sell" style={{
-          background: 'var(--accent)',
-          color: '#fff',
-          fontFamily: 'var(--font-display), system-ui, sans-serif',
-          fontWeight: 700,
-          fontSize: 17,
-          padding: '18px 48px',
-          borderRadius: 8,
-          display: 'inline-block',
-          letterSpacing: '-0.01em',
-        }}>
-          Create Your Free Store
-        </Link>
-        <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 16 }}>
-          No credit card required. Free forever for basic listings.
+          <h2 style={{
+            fontFamily: 'var(--font-display), system-ui, sans-serif',
+            fontSize: 'clamp(28px, 4vw, 44px)',
+            fontWeight: 800,
+            color: 'var(--text)',
+            marginBottom: 16,
+            letterSpacing: '-0.02em',
+          }}>
+            Ready to Start Selling?
+          </h2>
+          <p style={{
+            color: 'var(--muted)',
+            fontSize: 18,
+            maxWidth: 480,
+            margin: '0 auto 36px',
+            lineHeight: 1.6,
+          }}>
+            Join 10,000+ sellers already growing their business on Velor Marketplace.
+          </p>
+          <Link href="/sell" style={{
+            background: 'var(--accent)',
+            color: '#fff',
+            fontFamily: 'var(--font-display), system-ui, sans-serif',
+            fontWeight: 700,
+            fontSize: 17,
+            padding: '18px 48px',
+            borderRadius: 8,
+            display: 'inline-block',
+            letterSpacing: '-0.01em',
+          }}>
+            Create Your Free Store
+          </Link>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 16 }}>
+            No credit card required. Free forever for basic listings.
+          </div>
         </div>
       </section>
     </>
