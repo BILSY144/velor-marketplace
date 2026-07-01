@@ -21,12 +21,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message too long (max 2000 characters)' }, { status: 400 });
     }
 
-    // Prevent messaging yourself
     if (sellerId === session.user.id) {
       return NextResponse.json({ error: 'Cannot send a message to yourself' }, { status: 400 });
     }
 
-    // Verify product exists and belongs to the seller
+    // Verify the product belongs to the specified seller
     const product = await prisma.product.findUnique({
       where: { id: productId },
       select: { id: true, name: true, sellerId: true },
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/messages?productId=X&sellerId=Y — fetch a thread between buyer and seller on a product
+// GET /api/messages?productId=...&sellerId=... — fetch conversation thread and mark as read
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -79,7 +78,7 @@ export async function GET(req: NextRequest) {
 
     const userId = session.user.id;
 
-    // Fetch all messages in this thread (between the two parties about this product)
+    // Fetch the full conversation between buyer and seller for this product
     const messages = await prisma.message.findMany({
       where: {
         productId,
@@ -94,15 +93,15 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Mark unread messages sent to the current user as read
+    // Mark messages from the seller as read (only the ones sent to the current user)
     await prisma.message.updateMany({
       where: {
         productId,
         senderId: sellerId,
         receiverId: userId,
-        read: false,
+        isRead: false,
       },
-      data: { read: true },
+      data: { isRead: true },
     });
 
     return NextResponse.json({ messages });
