@@ -49,6 +49,7 @@ model User {
   sentMessages     Message[]       @relation("SentMessages")
   receivedMessages Message[]       @relation("ReceivedMessages")
   wishlistItems    WishlistItem[]
+  reviews          Review[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
@@ -145,6 +146,7 @@ model Product {
   heightCm      Float?
   hsCode        String?
   originCountry String?
+  viewCount     Int            @default(0)
   orderItems    OrderItem[]
   reviews       Review[]
   messages      Message[]
@@ -229,7 +231,9 @@ model Review {
   id        String   @id @default(cuid())
   productId String
   product   Product  @relation(fields: [productId], references: [id])
-  author    String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  author    String?
   rating    Int
   comment   String   @db.Text
   createdAt DateTime @default(now())

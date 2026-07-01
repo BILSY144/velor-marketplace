@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'You have already reviewed this product' }, { status: 409 })
   }
   const review = await prisma.review.create({
-    data: { productId, userId: session.user.id, rating: Number(rating), body: comment || '' }
+    data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '' }
   })
   return NextResponse.json({ review }, { status: 201 })
 }

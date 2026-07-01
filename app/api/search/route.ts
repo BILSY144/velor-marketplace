@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     }),
     prisma.seller.findMany({
       where: {
-        isApproved: true,
+        approved: true,
         OR: [
           { storeName: { contains: q, mode: 'insensitive' } },
           { description: { contains: q, mode: 'insensitive' } },

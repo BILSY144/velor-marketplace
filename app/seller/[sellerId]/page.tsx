@@ -36,7 +36,7 @@ export default async function SellerProfilePage({
   const { sellerId } = await params
 
   const seller = await prisma.seller.findFirst({
-    where: { id: sellerId, isApproved: true },
+    where: { id: sellerId, approved: true },
     include: {
       user: { select: { name: true } },
       products: {

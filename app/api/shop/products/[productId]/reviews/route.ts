@@ -66,7 +66,7 @@ export async function POST(
       productId,
       userId: session.user.id,
       rating: Number(rating),
-      body: comment || ''
+      comment: comment || ''
     }
   })
 
