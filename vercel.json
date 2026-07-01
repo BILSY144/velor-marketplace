@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/products/auto-moderate",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

@@ -2,15 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
+async function sendEmail(payload: object) {
+  return fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  }).catch(() => {})
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth()
-  if (!session?.user || (session.user as any).role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.user as any)?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') || 'PENDING_REVIEW'
-
   const where = status === 'ALL' ? {} : { status: status as any }
 
   const products = await prisma.product.findMany({
@@ -30,8 +40,8 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await auth()
-  if (!session?.user || (session.user as any).role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.user as any)?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const { productId, action, note } = await req.json()
@@ -43,7 +53,10 @@ export async function PATCH(req: NextRequest) {
 
   const product = await prisma.product.update({
     where: { id: productId },
-    data: { status: newStatus },
+    data: {
+      status: newStatus,
+      ...(action === 'reject' ? { rejectionNote: note || null } : {}),
+    },
     include: {
       seller: {
         include: {
@@ -54,32 +67,26 @@ export async function PATCH(req: NextRequest) {
   })
 
   const sellerEmail = product.seller.user.email
-  const sellerName = product.seller.user.name
+  const sellerName = product.seller.user.name || 'there'
+  const businessName = product.seller.businessName
 
-  const subject =
-    action === 'approve'
-      ? `Your product "${product.name}" has been approved`
-      : `Your product "${product.name}" needs attention`
-
-  const html =
-    action === 'approve'
-      ? `<h2>Product Approved</h2><p>Hi ${sellerName},</p><p>Your product <strong>${product.name}</strong> has been approved and is now live on Velor Marketplace.</p><p><a href="https://velorcommerce.store/dashboard/products">View your products</a></p>`
-      : `<h2>Product Requires Changes</h2><p>Hi ${sellerName},</p><p>Your product <strong>${product.name}</strong> was not approved for the following reason:</p><blockquote>${note || 'Please review our listing guidelines and resubmit.'}</blockquote><p><a href="https://velorcommerce.store/dashboard/products">Update your listing</a></p>`
-
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  if (action === 'approve') {
+    await sendEmail({
       from: 'Velor Marketplace <noreply@velorcommerce.co.uk>',
       reply_to: 'customerservice@velorcommerce.co.uk',
       to: sellerEmail,
-      subject,
-      html,
-    }),
-  }).catch(() => {})
+      subject: `Your listing has been approved — ${product.name}`,
+      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Your listing is live</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} — your product has been reviewed and approved.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${businessName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.name}</div><div style="font-size:20px;font-weight:700;color:#FF6B00;margin-top:8px;">£${Number(product.price).toFixed(2)}</div></div><div style="color:#00E676;font-size:14px;font-weight:600;">Your listing is now visible to buyers on Velor Marketplace.</div></div></div>`,
+    })
+  } else {
+    await sendEmail({
+      from: 'Velor Marketplace <noreply@velorcommerce.co.uk>',
+      reply_to: 'customerservice@velorcommerce.co.uk',
+      to: sellerEmail,
+      subject: `Update on your listing — ${product.name}`,
+      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Listing requires changes</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} — your listing could not be approved in its current form.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${businessName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.name}</div></div>${note ? `<div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:12px;color:#FF1744;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px;">Reason</div><div style="color:#fff;font-size:14px;line-height:1.6;">${note}</div></div>` : ''}<div style="color:#999;font-size:14px;line-height:1.6;">Please update your listing and resubmit for review. If you have questions, contact customerservice@velorcommerce.co.uk</div></div></div>`,
+    })
+  }
 
-  return NextResponse.json({ success: true, product })
+  return NextResponse.json({ success: true })
 }
