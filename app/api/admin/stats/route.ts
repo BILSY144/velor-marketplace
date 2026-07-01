@@ -24,7 +24,7 @@ export async function GET() {
     prisma.order.count(),
     prisma.order.aggregate({ _sum: { total: true } }),
     prisma.seller.count({ where: { status: 'PENDING' } }),
-    prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
+    prisma.product.count({ where: { status: 'PENDING' } }),
     prisma.order.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
