@@ -98,6 +98,17 @@ interface FormErrors {
   [key: string]: string;
 }
 
+interface DiscountResult {
+  valid: boolean;
+  discountId?: string;
+  code?: string;
+  type?: 'PERCENTAGE' | 'FIXED';
+  value?: number;
+  discountAmount?: number;
+  description?: string;
+  error?: string;
+}
+
 function CheckoutContent() {
   const stripe = useStripe();
   const elements = useElements();
@@ -121,6 +132,11 @@ function CheckoutContent() {
   const [cardName, setCardName] = useState('');
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
+  // Discount code state
+  const [discountInput, setDiscountInput] = useState('');
+  const [discountResult, setDiscountResult] = useState<DiscountResult | null>(null);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
+
   // Load cart from localStorage
   useEffect(() => {
     try {
@@ -138,13 +154,43 @@ function CheckoutContent() {
     : shippingMethod === 'express' ? 14.99 : 7.99;
 
   const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-  const total = subtotal + shippingCost;
+  const discountAmount = discountResult?.valid ? (discountResult.discountAmount ?? 0) : 0;
+  const total = Math.max(0, subtotal + shippingCost - discountAmount);
+
+  const handleApplyDiscount = useCallback(async () => {
+    if (!discountInput.trim()) return;
+    setApplyingDiscount(true);
+    setDiscountResult(null);
+    try {
+      const sellerId = cartItems.find(i => i.sellerId)?.sellerId;
+      const res = await fetch('/api/discount/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: discountInput.trim().toUpperCase(),
+          subtotal,
+          sellerId: sellerId ?? null,
+        }),
+      });
+      const data: DiscountResult = await res.json();
+      setDiscountResult(data);
+    } catch {
+      setDiscountResult({ valid: false, error: 'Could not apply discount code. Please try again.' });
+    } finally {
+      setApplyingDiscount(false);
+    }
+  }, [discountInput, subtotal, cartItems]);
+
+  const handleRemoveDiscount = () => {
+    setDiscountResult(null);
+    setDiscountInput('');
+  };
 
   const validateShipping = useCallback(() => {
     const e: FormErrors = {};
     if (!shipping.firstName.trim()) e.firstName = 'Required';
     if (!shipping.lastName.trim()) e.lastName = 'Required';
-    if (!shipping.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(shipping.email)) e.email = 'Valid email required';
+    if (!shipping.email.trim() || !/^[^@]+@[^@]+.[^@]+$/.test(shipping.email)) e.email = 'Valid email required';
     if (!shipping.address.trim()) e.address = 'Required';
     if (!shipping.city.trim()) e.city = 'Required';
     if (!shipping.postcode.trim()) e.postcode = 'Required';
@@ -173,7 +219,7 @@ function CheckoutContent() {
 
     try {
       const sellerId = cartItems.find(i => i.sellerId)?.sellerId;
-    // Create PaymentIntent
+      // Create PaymentIntent
       const piRes = await fetch('/api/stripe/payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,6 +227,10 @@ function CheckoutContent() {
           amount: Math.round(total * 100),
           currency: 'gbp',
           ...(sellerId ? { sellerId } : {}),
+          ...(discountResult?.valid && discountResult.code ? {
+            discountCode: discountResult.code,
+            discountAmount,
+          } : {}),
           items: cartItems.map(i => ({ id: i.id, name: i.name, qty: i.quantity })),
         }),
       });
@@ -221,6 +271,8 @@ function CheckoutContent() {
         shippingMethod,
         shippingCost,
         subtotal,
+        discountCode: discountResult?.valid ? discountResult.code : null,
+        discountAmount,
         total,
         currency: currency.code,
         placedAt: new Date().toISOString(),
@@ -542,11 +594,69 @@ function CheckoutContent() {
                   ))}
                 </div>
 
-                <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: 16 }}>
+                {/* Discount code input */}
+                <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: 16, marginBottom: 4 }}>
+                  {discountResult?.valid ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.3)', borderRadius: 8 }}>
+                      <div>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#00E676', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                          {discountResult.code}
+                        </span>
+                        <span style={{ fontSize: 11, color: '#00E676', marginLeft: 8 }}>{discountResult.description}</span>
+                      </div>
+                      <button
+                        onClick={handleRemoveDiscount}
+                        style={{ background: 'none', border: 'none', color: '#999999', fontSize: 12, cursor: 'pointer', padding: '2px 4px' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        type="text"
+                        value={discountInput}
+                        onChange={e => setDiscountInput(e.target.value.toUpperCase())}
+                        onKeyDown={e => e.key === 'Enter' && handleApplyDiscount()}
+                        placeholder="Discount code"
+                        style={{
+                          flex: 1, background: '#0D0D0D', border: '1px solid #2A2A2A',
+                          borderRadius: 8, padding: '9px 12px', color: '#FFFFFF', fontSize: 13,
+                          outline: 'none', fontFamily: 'monospace', letterSpacing: '0.05em',
+                        }}
+                      />
+                      <button
+                        onClick={handleApplyDiscount}
+                        disabled={applyingDiscount || !discountInput.trim()}
+                        style={{
+                          padding: '9px 14px', background: 'transparent',
+                          border: '1px solid #FF6B00', borderRadius: 8,
+                          color: '#FF6B00', fontSize: 13, fontWeight: 700,
+                          cursor: applyingDiscount || !discountInput.trim() ? 'not-allowed' : 'pointer',
+                          opacity: applyingDiscount || !discountInput.trim() ? 0.5 : 1,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {applyingDiscount ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {discountResult && !discountResult.valid && (
+                    <p style={{ fontSize: 11, color: '#FF1744', margin: '6px 0 0' }}>{discountResult.error}</p>
+                  )}
+                </div>
+
+                <div style={{ paddingTop: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14, color: '#999999' }}>
                     <span>Subtotal</span>
                     <span>{token}{subtotal.toFixed(2)}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14, color: '#00E676' }}>
+                      <span>Discount</span>
+                      <span>-{token}{discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 14, color: '#999999' }}>
                     <span>Shipping</span>
                     <span style={{ color: shippingCost === 0 ? '#00E676' : '#FFFFFF' }}>
