@@ -24,4 +24,4 @@ export async function GET(request: NextRequest) {
   if (!accountId) return NextResponse.json({ needsAccount: true });
   const accountLink = await stripe.accountLinks.create({ account: accountId, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
   return NextResponse.json({ onboardingUrl: accountLink.url });
-}���
+}
