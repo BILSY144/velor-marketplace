@@ -13,12 +13,16 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
 
-  const where: Prisma.SellerWhereInput =
-    status === 'ALL' ? {} :
-    status === 'APPROVED' ? { isApproved: true, isSuspended: false } :
-    status === 'SUSPENDED' ? { isSuspended: true } :
-    status === 'REJECTED' ? { isApproved: false, isSuspended: true } :
-    { isApproved: false, isSuspended: false } // PENDING default
+  let where: Prisma.SellerWhereInput = {}
+  if (status === 'APPROVED') {
+    where = { isApproved: true, isSuspended: false }
+  } else if (status === 'SUSPENDED') {
+    where = { isSuspended: true }
+  } else if (status === 'REJECTED') {
+    where = { isApproved: false, isSuspended: true }
+  } else if (status !== 'ALL') {
+    where = { isApproved: false, isSuspended: false }
+  }
 
   const sellers = await prisma.seller.findMany({
     where,
@@ -46,10 +50,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const updateData: Prisma.SellerUpdateInput =
-    action === 'approve' ? { isApproved: true, isSuspended: false } :
-    action === 'reject' ? { isApproved: false, isSuspended: true } :
-    { isSuspended: true } // suspend
+  let updateData: Prisma.SellerUpdateInput = { isSuspended: true }
+  if (action === 'approve') {
+    updateData = { isApproved: true, isSuspended: false }
+  } else if (action === 'reject') {
+    updateData = { isApproved: false, isSuspended: true }
+  }
 
   const seller = await prisma.seller.update({
     where: { id: sellerId },
