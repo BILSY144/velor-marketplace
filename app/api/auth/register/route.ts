@@ -14,7 +14,7 @@ async function sendEmail(payload: object) {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, storeName } = await req.json()
+  const { name, email, password, storeName, country } = await req.json()
 
   if (!name || !email || !password || !storeName) {
     return NextResponse.json({ error: 'All fields required' }, { status: 400 })
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
         create: {
           storeName,
           storeSlug,
+          country: country || 'GB',
         },
       },
     },
@@ -62,17 +63,7 @@ export async function POST(req: NextRequest) {
       reply_to: 'customerservice@velorcommerce.store',
       to: email,
       subject: 'Welcome to Velor Marketplace — Application Received',
-      html: `
-<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#0D0D0D;color:#FFFFFF;padding:40px;border-radius:12px;">
-  <h1 style="color:#FF6B00;font-size:28px;margin-bottom:8px;">Welcome to Velor, ${name}!</h1>
-  <p style="color:#999;font-size:14px;margin-bottom:24px;">Seller Application Received</p>
-  <p>Your seller account for <strong>${storeName}</strong> has been created and is now under review.</p>
-  <p style="color:#999;">Applications are reviewed automatically. You will receive an email confirmation shortly.</p>
-  <a href="https://velorcommerce.store/dashboard" style="display:inline-block;background:#FF6B00;color:#FFFFFF;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:24px 0;">Go to Dashboard</a>
-  <hr style="border-color:#2A2A2A;margin:32px 0;" />
-  <p style="color:#666;font-size:12px;">Velor Marketplace — velorcommerce.store</p>
-</div>
-`,
+      html: `<p>Hi ${name},</p><p>Thank you for applying to sell on Velor Marketplace. We will review your application and be in touch shortly.</p><p>The Velor Team</p>`,
     }),
   ])
 
