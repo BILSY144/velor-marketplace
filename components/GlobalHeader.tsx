@@ -225,6 +225,9 @@ export default function GlobalHeader() {
                   <Link href="/orders" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '10px 12px', color: '#fff', textDecoration: 'none', fontSize: '14px', borderRadius: '6px', fontFamily: 'Inter, sans-serif' }}>
                     My Orders
                   </Link>
+              <Link href="/messages" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '10px 12px', color: '#fff', textDecoration: 'none', fontSize: '14px', borderRadius: '6px', fontFamily: 'Inter, sans-serif' }}>
+                Messages
+              </Link>
                   <button
                     onClick={() => { setMenuOpen(false); signOut({ callbackUrl: '/' }) }}
                     style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', color: '#FF1744', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', borderRadius: '6px', fontFamily: 'Inter, sans-serif' }}
