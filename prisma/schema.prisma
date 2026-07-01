@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
@@ -40,6 +40,26 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(BUYER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  seller           Seller?
+  reviews          Review[]
+  wishlists        WishlistItem[]
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -49,25 +69,6 @@ model VerificationToken {
 }
 
 // --- Marketplace Models ---
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          Role      @default(BUYER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts     Account[]
-  sessions     Session[]
-  seller       Seller?
-  reviews      Review[]
-  wishlists    WishlistItem[]
-  sentMessages Message[] @relation("SentMessages")
-}
 
 model Seller {
   id              String       @id @default(cuid())
@@ -82,11 +83,10 @@ model Seller {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  products         Product[]
-  orders           Order[]
-  payouts          Payout[]
-  discountCodes    DiscountCode[]
-  receivedMessages Message[]    @relation("SellerMessages")
+  products      Product[]
+  orders        Order[]
+  payouts       Payout[]
+  discountCodes DiscountCode[]
 }
 
 model Product {
@@ -98,31 +98,30 @@ model Product {
   price       Float
   images      String[]
   category    String
-  tags        String[]
   stock       Int           @default(0)
   status      ProductStatus @default(PENDING)
+  tags        String[]
+  avgRating   Float         @default(0)
+  soldCount   Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   orderItems OrderItem[]
   reviews    Review[]
   wishlists  WishlistItem[]
-  messages   Message[]
 }
 
 model Order {
-  id             String      @id @default(cuid())
-  sellerId       String
-  seller         Seller      @relation(fields: [sellerId], references: [id])
-  buyerName      String
-  buyerEmail     String
-  address        String
-  total          Float
-  discountCode   String?
-  discountAmount Float       @default(0)
-  status         OrderStatus @default(PENDING)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id         String      @id @default(cuid())
+  sellerId   String
+  seller     Seller      @relation(fields: [sellerId], references: [id])
+  buyerName  String
+  buyerEmail String
+  address    String
+  total      Float
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   items OrderItem[]
 }
@@ -172,33 +171,31 @@ model Payout {
 }
 
 model DiscountCode {
-  id         String       @id @default(cuid())
-  sellerId   String
-  seller     Seller       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  code       String       @unique
-  type       DiscountType
-  value      Float
-  minOrder   Float?
-  maxUses    Int?
-  usedCount  Int          @default(0)
-  expiresAt  DateTime?
-  active     Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id          String    @id @default(cuid())
+  sellerId    String
+  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  code        String    @unique
+  type        String
+  value       Float
+  minOrder    Float?
+  maxDiscount Float?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  senderId  String
-  sender    User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  sellerId  String
-  seller    Seller   @relation("SellerMessages", fields: [sellerId], references: [id], onDelete: Cascade)
-  productId String?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  subject   String
-  body      String   @db.Text
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 // --- Enums ---
@@ -236,9 +233,4 @@ enum SellerStatus {
   APPROVED
   REJECTED
   SUSPENDED
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FIXED
 }
