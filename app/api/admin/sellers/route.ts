@@ -12,8 +12,15 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
 
+  const where =
+    status === 'ALL' ? {} :
+    status === 'APPROVED' ? { isApproved: true, isSuspended: false } :
+    status === 'SUSPENDED' ? { isSuspended: true } :
+    status === 'REJECTED' ? { isApproved: false, isSuspended: true } :
+    { isApproved: false, isSuspended: false } // PENDING default
+
   const sellers = await prisma.seller.findMany({
-    where: { status: status as any },
+    where,
     include: {
       user: {
         select: { id: true, name: true, email: true, createdAt: true },
@@ -38,15 +45,14 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const statusMap: Record<string, string> = {
-    approve: 'APPROVED',
-    reject: 'REJECTED',
-    suspend: 'SUSPENDED',
-  }
+  const updateData =
+    action === 'approve' ? { isApproved: true, isSuspended: false } :
+    action === 'reject' ? { isApproved: false, isSuspended: true } :
+    { isSuspended: true } // suspend
 
   const seller = await prisma.seller.update({
     where: { id: sellerId },
-    data: { status: statusMap[action] as any },
+    data: updateData,
     include: {
       user: { select: { name: true, email: true } },
     },
