@@ -16,14 +16,21 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller profile not found' }, { status: 403 })
+
+  const sellerProducts = await prisma.product.findMany({
+    where: { sellerId: seller.id },
+    select: { id: true }
+  })
+  const productIds = sellerProducts.map(p => p.id)
+
   const orderItems = await prisma.orderItem.findMany({
-    where: { product: { sellerId: seller.id } },
+    where: { productId: { in: productIds } },
     include: {
-      order: { select: { id: true, buyerName: true, status: true, createdAt: true } },
-      product: { select: { id: true, name: true, images: true } }
+      order: { select: { id: true, buyerName: true, status: true, createdAt: true } }
     },
     orderBy: { order: { createdAt: 'desc' } }
   })
+
   const ordersMap = new Map<string, any>()
   for (const item of orderItems) {
     const oid = item.orderId
@@ -38,9 +45,11 @@ export async function GET() {
     const lineTotal = item.price * item.quantity
     const commission = lineTotal * PLATFORM_FEE_RATE
     const payout = lineTotal - commission
-    o.items.push({ id: item.id, productId: item.productId, productName: item.product.name,
-      productImage: item.product.images[0] ?? null, quantity: item.quantity,
-      unitPrice: item.price, commission, payout })
+    o.items.push({
+      id: item.id, productId: item.productId, productName: item.name,
+      productImage: item.image ?? null, quantity: item.quantity,
+      unitPrice: item.price, commission, payout
+    })
     o.totalRevenue += lineTotal
     o.totalPayout += payout
   }
