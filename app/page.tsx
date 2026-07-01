@@ -478,7 +478,7 @@ export default function HomePage() {
           }}
         >
           {[
-            { v: '+ÃÂ£2,400', l: "Today's sales" },
+            { v: '+£2,400', l: "Today's sales" },
             { v: '18 orders', l: 'Last hour' },
             { v: '4.9/5.0', l: 'Avg rating' },
           ].map((item) => (
@@ -984,7 +984,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling Ã¢ÂÂ It's Free
+                Start Selling — It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
