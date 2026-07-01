@@ -85,20 +85,21 @@ model VerificationToken {
 }
 
 model Seller {
-  id               String                 @id @default(cuid())
-  userId           String                 @unique
-  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName        String
-  description      String?                @db.Text
-  stripeAccountId  String?                @unique
-  stripeOnboarded  Boolean                @default(false)
-  approved         Boolean                @default(false)
-  products         Product[]
-  orders           Order[]
-  shipments        Shipment[]
-  shippingProfile  SellerShippingProfile?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
+  id              String                 @id @default(cuid())
+  userId          String                 @unique
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName       String
+  description     String?                @db.Text
+  stripeAccountId String?                @unique
+  stripeOnboarded Boolean                @default(false)
+  approved        Boolean                @default(false)
+  products        Product[]
+  orders          Order[]
+  shipments       Shipment[]
+  shippingProfile SellerShippingProfile?
+  discountCodes   DiscountCode[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 }
 
 model SellerShippingProfile {
@@ -182,11 +183,11 @@ model OrderItem {
 }
 
 model Shipment {
-  id               String          @id @default(cuid())
+  id               String         @id @default(cuid())
   orderId          String
-  order            Order           @relation(fields: [orderId], references: [id])
+  order            Order          @relation(fields: [orderId], references: [id])
   sellerId         String
-  seller           Seller          @relation(fields: [sellerId], references: [id])
+  seller           Seller         @relation(fields: [sellerId], references: [id])
   shippoShipmentId String?
   shippoRateId     String?
   shippoLabelId    String?
@@ -195,14 +196,14 @@ model Shipment {
   labelUrl         String?
   carrier          String?
   service          String?
-  shippingAmount   Float           @default(0)
-  dutiesAmount     Float           @default(0)
-  currency         String          @default("GBP")
-  declaredValue    Float           @default(0)
-  status           ShipmentStatus  @default(PENDING)
+  shippingAmount   Float          @default(0)
+  dutiesAmount     Float          @default(0)
+  currency         String         @default("GBP")
+  declaredValue    Float          @default(0)
+  status           ShipmentStatus @default(PENDING)
   events           ShipmentEvent[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model ShipmentEvent {
@@ -239,12 +240,17 @@ model Message {
 }
 
 model DiscountCode {
-  id         String    @id @default(cuid())
-  code       String    @unique
-  percentage Float
-  active     Boolean   @default(true)
-  usageCount Int       @default(0)
-  maxUses    Int?
-  expiresAt  DateTime?
-  createdAt  DateTime  @default(now())
+  id          String    @id @default(cuid())
+  sellerId    String
+  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  code        String    @unique
+  type        String    @default("PERCENTAGE")
+  value       Float
+  minOrder    Float?
+  maxDiscount Float?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
 }
