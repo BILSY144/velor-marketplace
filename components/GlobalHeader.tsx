@@ -1,10 +1,20 @@
 'use client'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 
 const CATEGORIES = ['All', 'Electronics', 'Fashion', 'Home & Living', 'Sports', 'Beauty', 'Art & Crafts', 'Books', 'Toys']
+
+interface SearchResult {
+  id: string
+  name: string
+  price: number
+  image: string | null
+  category: string
+  sellerId: string
+  sellerName: string
+}
 
 function CartIcon() {
   return (
@@ -19,11 +29,17 @@ function CartIcon() {
 export default function GlobalHeader() {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [activeCategory, setActiveCategory] = useState('All')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [searching, setSearching] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     function updateCount() {
@@ -50,16 +66,51 @@ export default function GlobalHeader() {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
     }
-    if (menuOpen) document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [menuOpen])
+  }, [])
+
+  const runLiveSearch = useCallback(async (q: string) => {
+    if (q.length < 2) {
+      setSearchResults([])
+      setShowDropdown(false)
+      return
+    }
+    setSearching(true)
+    try {
+      const res = await fetch('/api/search?q=' + encodeURIComponent(q))
+      const data = await res.json()
+      setSearchResults(data.results ?? [])
+      setShowDropdown(true)
+    } catch {
+      setSearchResults([])
+    } finally {
+      setSearching(false)
+    }
+  }, [])
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value
+    setSearchQuery(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => runLiveSearch(val), 300)
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     if (searchQuery.trim()) {
-      window.location.href = '/shop?search=' + encodeURIComponent(searchQuery.trim())
+      setShowDropdown(false)
+      router.push('/search?q=' + encodeURIComponent(searchQuery.trim()))
     }
+  }
+
+  function handleResultClick() {
+    setShowDropdown(false)
+    setSearchQuery('')
   }
 
   const canSell = session?.user?.role === 'SELLER' || session?.user?.role === 'ADMIN'
@@ -73,20 +124,65 @@ export default function GlobalHeader() {
           <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 800, color: '#FF6B00', letterSpacing: '-0.5px' }}>VELOR</span>
         </Link>
 
-        <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', maxWidth: '600px', margin: '0 auto' }}>
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search for anything..."
-            style={{ flex: 1, height: '40px', background: '#1A1A1A', border: '1px solid #2A2A2A', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '0 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'Inter, sans-serif' }}
-          />
-          <button
-            type="submit"
-            style={{ height: '40px', padding: '0 20px', background: '#FF6B00', border: 'none', borderRadius: '0 8px 8px 0', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', flexShrink: 0 }}
-          >
-            Search
-          </button>
-        </form>
+        <div ref={searchRef} style={{ flex: 1, maxWidth: '600px', margin: '0 auto', position: 'relative' }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex' }}>
+            <input
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+              placeholder="Search for anything..."
+              style={{ flex: 1, height: '40px', background: '#1A1A1A', border: '1px solid #2A2A2A', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '0 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'Inter, sans-serif' }}
+            />
+            <button
+              type="submit"
+              style={{ height: '40px', padding: '0 20px', background: '#FF6B00', border: 'none', borderRadius: '0 8px 8px 0', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', flexShrink: 0 }}
+            >
+              Search
+            </button>
+          </form>
+
+          {showDropdown && (
+            <div style={{ position: 'absolute', top: '44px', left: 0, right: 0, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '10px', overflow: 'hidden', zIndex: 300, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', maxHeight: '420px', overflowY: 'auto' }}>
+              {searching && (
+                <div style={{ padding: '16px', color: '#999', fontSize: '13px', fontFamily: 'Inter, sans-serif', textAlign: 'center' }}>Searching...</div>
+              )}
+              {!searching && searchResults.length === 0 && (
+                <div style={{ padding: '16px', color: '#999', fontSize: '13px', fontFamily: 'Inter, sans-serif', textAlign: 'center' }}>No results found</div>
+              )}
+              {!searching && searchResults.map(item => (
+                <Link
+                  key={item.id}
+                  href={'/marketplace/' + item.id}
+                  onClick={handleResultClick}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', textDecoration: 'none', borderBottom: '1px solid #222', transition: 'background 0.1s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = '#222'}
+                  onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', background: '#111', flexShrink: 0 }}>
+                    {item.image
+                      ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <div style={{ width: '100%', height: '100%', background: '#222' }} />
+                    }
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                    <div style={{ fontSize: '11px', color: '#999', fontFamily: 'Inter, sans-serif' }}>{item.category} · {item.sellerName}</div>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>£{item.price.toFixed(2)}</div>
+                </Link>
+              ))}
+              {!searching && searchResults.length > 0 && (
+                <Link
+                  href={'/search?q=' + encodeURIComponent(searchQuery)}
+                  onClick={handleResultClick}
+                  style={{ display: 'block', padding: '12px 14px', textAlign: 'center', color: '#FF6B00', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', textDecoration: 'none', borderTop: '1px solid #2A2A2A' }}
+                >
+                  See all results for "{searchQuery}"
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: 'auto' }}>
           {!canSell && (
