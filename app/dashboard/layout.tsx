@@ -2,13 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import SellerAgreementGate from '@/components/SellerAgreementGate';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
   { href: '/dashboard/products', label: 'Products', icon: 'PR' },
   { href: '/dashboard/orders', label: 'Orders', icon: 'OR' },
   { href: '/dashboard/payouts', label: 'Payouts', icon: 'PY' },
-  { href: '/dashboard/stripe-connect', label: 'Stripe Connect', icon: 'SC' },
   { href: '/dashboard/analytics', label: 'Analytics', icon: 'AN' },
   { href: '/dashboard/settings', label: 'Settings', icon: 'ST' },
 ];
@@ -17,37 +17,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      background: '#0D0D0D',
+      fontFamily: 'Inter, sans-serif',
+      color: '#FFFFFF',
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
       {/* Sidebar */}
       <aside style={{
         width: '240px',
-        background: '#0D0D0D',
+        flexShrink: 0,
+        background: '#111111',
         borderRight: '1px solid #2A2A2A',
         position: 'fixed',
         top: '64px',
         left: 0,
         bottom: 0,
-        display: 'flex',
-        flexDirection: 'column',
+        overflowY: 'auto',
         zIndex: 40,
       }}>
-        {/* Seller badge */}
-        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid #2A2A2A' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#FF6B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>S</span>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#FFFFFF' }}>Seller Dashboard</p>
-              <p style={{ margin: 0, fontSize: '11px', color: '#999999' }}>Velor Marketplace</p>
-            </div>
-          </div>
+        <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid #2A2A2A' }}>
+          <Link href="/" style={{
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontWeight: 800,
+            fontSize: '20px',
+            color: '#FF6B00',
+            textDecoration: 'none',
+            letterSpacing: '-0.5px',
+          }}>
+            VELOR
+          </Link>
+          <p style={{ color: '#999999', fontSize: '12px', marginTop: '4px' }}>Seller Dashboard</p>
         </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto' }}>
-          {navItems.map(item => {
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+        <nav style={{ padding: '16px 0' }}>
+          {navItems.map((item) => {
+            const isActive = item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname.startsWith(item.href);
+
             return (
               <Link
                 key={item.href}
@@ -55,31 +66,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  marginBottom: '2px',
+                  gap: '12px',
+                  padding: '12px 20px',
                   textDecoration: 'none',
                   borderLeft: isActive ? '3px solid #FF6B00' : '3px solid transparent',
-                  background: isActive ? 'rgba(255, 107, 0, 0.08)' : 'transparent',
-                  color: isActive ? '#FF6B00' : '#999999',
+                  background: isActive ? 'rgba(255,107,0,0.08)' : 'transparent',
+                  color: isActive ? '#FFFFFF' : '#999999',
                   fontSize: '14px',
                   fontWeight: isActive ? 600 : 400,
-                  transition: 'all 0.15s ease',
+                  transition: 'all 0.15s',
                 }}
               >
                 <span style={{
-                  width: '24px',
-                  height: '24px',
+                  width: '28px',
+                  height: '28px',
                   borderRadius: '6px',
-                  background: isActive ? 'rgba(255, 107, 0, 0.15)' : '#1A1A1A',
+                  background: isActive ? '#FF6B00' : '#2A2A2A',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '10px',
                   fontWeight: 700,
-                  color: isActive ? '#FF6B00' : '#666666',
+                  color: isActive ? '#FFFFFF' : '#666666',
                   flexShrink: 0,
+                  fontFamily: 'Space Grotesk, sans-serif',
                 }}>
                   {item.icon}
                 </span>
@@ -89,29 +99,93 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Bottom */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid #2A2A2A' }}>
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          borderTop: '1px solid #2A2A2A',
+        }}>
           <Link
-            href="/"
+            href="/dashboard/stripe-connect"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '10px 12px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              color: '#666666',
+              gap: '8px',
+              color: '#999999',
               fontSize: '13px',
+              textDecoration: 'none',
             }}
           >
-            Back to marketplace
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: pathname.startsWith('/dashboard/stripe-connect') ? '#00E676' : '#444444',
+              flexShrink: 0,
+            }} />
+            Payout Setup
           </Link>
         </div>
       </aside>
 
+      {/* Top header bar */}
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '64px',
+        background: '#111111',
+        borderBottom: '1px solid #2A2A2A',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 50,
+      }}>
+        <div style={{ width: '200px' }} />
+        <p style={{
+          fontFamily: 'Space Grotesk, sans-serif',
+          fontWeight: 700,
+          fontSize: '15px',
+          color: '#FFFFFF',
+        }}>
+          Seller Portal
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link href="/" style={{ color: '#999999', fontSize: '13px', textDecoration: 'none' }}>
+            View Store
+          </Link>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: '#FF6B00',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontWeight: 700,
+            fontSize: '14px',
+            color: '#FFFFFF',
+          }}>
+            S
+          </div>
+        </div>
+      </header>
+
       {/* Main content */}
-      <main style={{ marginLeft: '240px', marginTop: '64px', flex: 1, minHeight: 'calc(100vh - 64px)', background: '#0D0D0D' }}>
-        {children}
+      <main style={{
+        marginLeft: '240px',
+        marginTop: '64px',
+        flex: 1,
+        minWidth: 0,
+      }}>
+        <SellerAgreementGate>
+          {children}
+        </SellerAgreementGate>
       </main>
     </div>
   );
