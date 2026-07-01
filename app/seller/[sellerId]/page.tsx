@@ -1,0 +1,317 @@
+import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+function StarRating({ rating, count }: { rating: number; count: number }) {
+  const full = Math.floor(rating)
+  const half = rating - full >= 0.5
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
+        {'★'.repeat(full)}
+        {half ? '½' : ''}
+        {'☆'.repeat(5 - full - (half ? 1 : 0))}
+      </span>
+      <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
+        {rating.toFixed(1)} ({count})
+      </span>
+    </span>
+  )
+}
+
+export default async function SellerProfilePage({
+  params,
+}: {
+  params: Promise<{ sellerId: string }>
+}) {
+  const { sellerId } = await params
+
+  const seller = await prisma.seller.findUnique({
+    where: { id: sellerId, status: 'APPROVED' },
+    include: {
+      user: { select: { name: true } },
+      products: {
+        where: { status: 'APPROVED' },
+        include: {
+          reviews: { select: { rating: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  if (!seller) notFound()
+
+  const totalReviews = seller.products.reduce((sum, p) => sum + p.reviews.length, 0)
+  const avgRating =
+    totalReviews > 0
+      ? seller.products.reduce(
+          (sum, p) => sum + p.reviews.reduce((s, r) => s + r.rating, 0),
+          0
+        ) / totalReviews
+      : 0
+
+  const memberSince = new Date(seller.createdAt).toLocaleDateString('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  })
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg)',
+        color: 'var(--text)',
+        fontFamily: 'var(--font-body)',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
+          padding: '48px 0',
+        }}
+      >
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '28px' }}>
+            {/* Avatar */}
+            <div
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                fontWeight: 800,
+                color: '#000',
+                fontFamily: 'var(--font-display)',
+                flexShrink: 0,
+              }}
+            >
+              {initials(seller.businessName)}
+            </div>
+
+            {/* Info */}
+            <div>
+              <h1
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '32px',
+                  fontWeight: 800,
+                  color: 'var(--text)',
+                  margin: '0 0 8px 0',
+                }}
+              >
+                {seller.businessName}
+              </h1>
+
+              {totalReviews > 0 && (
+                <div style={{ marginBottom: '10px' }}>
+                  <StarRating rating={avgRating} count={totalReviews} />
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '20px',
+                  flexWrap: 'wrap',
+                  fontSize: '13px',
+                  color: 'var(--muted)',
+                  marginBottom: '14px',
+                }}
+              >
+                {seller.country && <span>{seller.country}</span>}
+                <span>{seller.products.length} products</span>
+                <span>Member since {memberSince}</span>
+              </div>
+
+              {seller.description && (
+                <p
+                  style={{
+                    color: '#aaa',
+                    fontSize: '15px',
+                    maxWidth: '560px',
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  {seller.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Products */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+        <h2
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '22px',
+            fontWeight: 700,
+            color: 'var(--text)',
+            margin: '0 0 28px 0',
+          }}
+        >
+          Products ({seller.products.length})
+        </h2>
+
+        {seller.products.length === 0 ? (
+          <div
+            style={{
+              padding: '60px 0',
+              textAlign: 'center',
+              color: 'var(--muted)',
+              fontSize: '15px',
+            }}
+          >
+            No products listed yet.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: '20px',
+            }}
+          >
+            {seller.products.map((product) => {
+              const pAvg =
+                product.reviews.length > 0
+                  ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
+                  : null
+
+              return (
+                <Link
+                  key={product.id}
+                  href={`/shop/${product.id}`}
+                  style={{ textDecoration: 'none', display: 'block' }}
+                >
+                  <div
+                    style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLDivElement).style.borderColor = '#444'
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'
+                    }}
+                  >
+                    {/* Image */}
+                    <div
+                      style={{
+                        aspectRatio: '1',
+                        background: '#111',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {product.images[0] ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#333',
+                            fontSize: '13px',
+                          }}
+                        >
+                          No image
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ padding: '14px' }}>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: 'var(--muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        {product.category}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: 'var(--text)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          marginBottom: '10px',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {product.name}
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            color: 'var(--accent)',
+                            fontFamily: 'var(--font-display)',
+                          }}
+                        >
+                          {new Intl.NumberFormat('en-GB', {
+                            style: 'currency',
+                            currency: 'GBP',
+                          }).format(product.price)}
+                        </span>
+                        {pAvg !== null && (
+                          <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                            <span style={{ color: 'var(--accent)' }}>★</span>{' '}
+                            {pAvg.toFixed(1)} ({product.reviews.length})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
