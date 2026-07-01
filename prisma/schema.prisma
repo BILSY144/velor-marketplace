@@ -36,18 +36,20 @@ enum ShipmentStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String    @default("BUYER")
-  accounts      Account[]
-  sessions      Session[]
-  seller        Seller?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  role             String    @default("BUYER")
+  accounts         Account[]
+  sessions         Session[]
+  seller           Seller?
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model Account {
@@ -142,6 +144,7 @@ model Product {
   originCountry String?
   orderItems    OrderItem[]
   reviews       Review[]
+  messages      Message[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -165,7 +168,6 @@ model Order {
   shippingService String?
   items           OrderItem[]
   shipments       Shipment[]
-  messages        Message[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -183,11 +185,11 @@ model OrderItem {
 }
 
 model Shipment {
-  id               String         @id @default(cuid())
+  id               String          @id @default(cuid())
   orderId          String
-  order            Order          @relation(fields: [orderId], references: [id])
+  order            Order           @relation(fields: [orderId], references: [id])
   sellerId         String
-  seller           Seller         @relation(fields: [sellerId], references: [id])
+  seller           Seller          @relation(fields: [sellerId], references: [id])
   shippoShipmentId String?
   shippoRateId     String?
   shippoLabelId    String?
@@ -196,14 +198,14 @@ model Shipment {
   labelUrl         String?
   carrier          String?
   service          String?
-  shippingAmount   Float          @default(0)
-  dutiesAmount     Float          @default(0)
-  currency         String         @default("GBP")
-  declaredValue    Float          @default(0)
-  status           ShipmentStatus @default(PENDING)
+  shippingAmount   Float           @default(0)
+  dutiesAmount     Float           @default(0)
+  currency         String          @default("GBP")
+  declaredValue    Float           @default(0)
+  status           ShipmentStatus  @default(PENDING)
   events           ShipmentEvent[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model ShipmentEvent {
@@ -228,15 +230,16 @@ model Review {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  orderId   String?
-  order     Order?   @relation(fields: [orderId], references: [id])
-  fromEmail String
-  toEmail   String
-  subject   String?
-  body      String   @db.Text
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id])
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 model DiscountCode {
