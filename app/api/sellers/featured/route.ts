@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   const sellers = await prisma.seller.findMany({
     where: {
-      isApproved: true,
+      status: 'APPROVED',
       products: { some: { status: 'APPROVED' } },
     },
     include: {

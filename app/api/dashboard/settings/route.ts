@@ -13,7 +13,7 @@ export async function GET() {
 
   const seller = await prisma.seller.findUnique({
     where: { userId: session.user.id },
-    select: { storeName: true, description: true, country: true },
+    select: { businessName: true, description: true, country: true },
   })
 
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
@@ -21,7 +21,7 @@ export async function GET() {
   return NextResponse.json({
     name: user?.name ?? '',
     email: user?.email ?? '',
-    storeName: seller.storeName,
+    businessName: seller.businessName,
     description: seller.description ?? '',
     country: seller.country ?? '',
   })
@@ -35,10 +35,10 @@ export async function PATCH(request: Request) {
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
   const body = await request.json()
-  const { name, storeName, description, country } = body
+  const { name, businessName, description, country } = body
 
-  if (typeof storeName === 'string' && storeName.trim().length < 2) {
-    return NextResponse.json({ error: 'Store name must be at least 2 characters' }, { status: 400 })
+  if (typeof businessName === 'string' && businessName.trim().length < 2) {
+    return NextResponse.json({ error: 'Business name must be at least 2 characters' }, { status: 400 })
   }
 
   await Promise.all([
@@ -48,7 +48,7 @@ export async function PATCH(request: Request) {
     prisma.seller.update({
       where: { userId: session.user.id },
       data: {
-        ...(storeName !== undefined && { storeName: String(storeName).trim() }),
+        ...(businessName !== undefined && { businessName: String(businessName).trim() }),
         ...(description !== undefined && { description: String(description).trim() }),
         ...(country !== undefined && { country: String(country).trim() }),
       },

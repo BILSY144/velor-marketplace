@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
-  if (!seller.approved) {
+  if (seller.status !== 'APPROVED') {
     return NextResponse.json({ error: 'Seller account pending approval' }, { status: 403 })
   }
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
-      status: 'PENDING_REVIEW',
+      status: 'PENDING',
     },
   })
 
