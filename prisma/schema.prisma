@@ -11,7 +11,11 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-// --- NextAuth Models ---
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
 
 model Account {
   id                String  @id @default(cuid())
@@ -68,20 +72,24 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// --- Marketplace Models ---
-
 model Seller {
-  id              String       @id @default(cuid())
-  userId          String       @unique
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessName    String
-  description     String?      @db.Text
-  country         String?
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName       String
+  storeSlug       String    @unique
+  description     String?   @db.Text
+  logo            String?
+  banner          String?
+  country         String
+  currency        String    @default("GBP")
+  agreedToTerms   Boolean   @default(false)
+  agreedAt        DateTime?
   stripeAccountId String?
-  stripeOnboarded Boolean      @default(false)
-  status          SellerStatus @default(PENDING)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  isApproved      Boolean   @default(false)
+  isSuspended     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   products      Product[]
   orders        Order[]
@@ -90,38 +98,41 @@ model Seller {
 }
 
 model Product {
-  id          String        @id @default(cuid())
+  id          String   @id @default(cuid())
   sellerId    String
-  seller      Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   name        String
-  description String?       @db.Text
+  description String?  @db.Text
   price       Float
+  currency    String   @default("GBP")
   images      String[]
   category    String
-  stock       Int           @default(0)
-  status      ProductStatus @default(PENDING)
   tags        String[]
-  avgRating   Float         @default(0)
-  soldCount   Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  stock       Int      @default(0)
+  isApproved  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  orderItems OrderItem[]
+  orderItems WishlistItem[]
   reviews    Review[]
-  wishlists  WishlistItem[]
+  wishlists  WishlistItem[] @relation("WishlistProduct")
+  messages   Message[]
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  sellerId   String
-  seller     Seller      @relation(fields: [sellerId], references: [id])
-  buyerName  String
-  buyerEmail String
-  address    String
-  total      Float
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  sellerId        String
+  seller          Seller      @relation(fields: [sellerId], references: [id])
+  buyerEmail      String
+  buyerName       String
+  status          String      @default("pending")
+  total           Float
+  currency        String      @default("GBP")
+  stripePaymentId String?
+  shippingAddress String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   items OrderItem[]
 }
@@ -131,22 +142,25 @@ model OrderItem {
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
+  name      String
   price     Float
+  quantity  Int
+  image     String?
 }
 
 model Review {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating    Int
-  comment   String?  @db.Text
+  title     String?
+  body      String?  @db.Text
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([userId, productId])
+  @@unique([productId, userId])
 }
 
 model WishlistItem {
@@ -154,20 +168,22 @@ model WishlistItem {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation("WishlistProduct", fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
 }
 
 model Payout {
-  id        String       @id @default(cuid())
+  id        String   @id @default(cuid())
   sellerId  String
-  seller    Seller       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   amount    Float
-  status    PayoutStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  currency  String   @default("GBP")
+  status    String   @default("pending")
+  stripeId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model DiscountCode {
@@ -193,44 +209,9 @@ model Message {
   sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId String
   receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   content    String   @db.Text
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
-}
-
-// --- Enums ---
-
-enum Role {
-  BUYER
-  SELLER
-  ADMIN
-}
-
-enum ProductStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-enum PayoutStatus {
-  PENDING
-  PROCESSING
-  PAID
-  FAILED
-}
-
-enum SellerStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  SUSPENDED
 }
