@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       thread.messages.push(msg);
 
       // Count messages sent TO the current user that are unread
-      if (msg.receiverId === userId && !msg.read) {
+      if (msg.receiverId === userId && !msg.isRead) {
         thread.unreadCount++;
       }
     }
