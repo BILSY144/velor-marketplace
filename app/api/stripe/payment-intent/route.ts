@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 const PLATFORM_COMMISSION_RATE = 0.15;
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
     const { amount, currency = 'gbp', sellerId, items } = await request.json();

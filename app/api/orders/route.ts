@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/auth';
 
 // POST - create order after successful Stripe payment
 // Body: { sellerId, buyerEmail, buyerName, address, total, items }
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -60,6 +65,10 @@ export async function POST(req: NextRequest) {
 
 // GET /api/orders?email=... - list buyer orders
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const email = req.nextUrl.searchParams.get('email')
   if (!email) return NextResponse.json({ error: 'email param required' }, { status: 400 })
 

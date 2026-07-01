@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const accountId = request.cookies.get('seller_account_id')?.value;
   if (!accountId) {
     return NextResponse.json({ connected: false });
@@ -31,6 +36,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const res = NextResponse.json({ disconnected: true });
   res.cookies.delete('seller_account_id');
   return res;

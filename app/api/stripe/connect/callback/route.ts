@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
 // GET /api/stripe/connect/callback?account=acct_xxx&seller=xxx
 // Called by Stripe after seller completes onboarding flow
 // Verifies account status and redirects back to dashboard
 
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const { searchParams } = new URL(request.url);
   const accountId = searchParams.get('account');
   const sellerId = searchParams.get('seller');
