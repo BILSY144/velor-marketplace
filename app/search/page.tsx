@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-export const dynamic = 'force-dynamic'
 
 interface SearchResult {
   id: string;
@@ -16,7 +14,7 @@ interface SearchResult {
   sellerName: string;
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const q = searchParams.get('q') ?? '';
@@ -165,7 +163,7 @@ export default function SearchPage() {
                         by {item.sellerName}
                       </p>
                       <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>
-                        Â£{item.price.toFixed(2)}
+                        ÃÂ£{item.price.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -177,4 +175,12 @@ export default function SearchPage() {
       </div>
     </main>
   );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div style={{ color: 'var(--text)', padding: '40px', textAlign: 'center' }}>Loading...</div>}>
+      <SearchContent />
+    </Suspense>
+  )
 }
