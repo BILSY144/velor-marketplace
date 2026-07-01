@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic'
+
 interface SearchResult {
   id: string;
   name: string;
@@ -163,7 +165,7 @@ export default function SearchPage() {
                         by {item.sellerName}
                       </p>
                       <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>
-                        £{item.price.toFixed(2)}
+                        Â£{item.price.toFixed(2)}
                       </p>
                     </div>
                   </div>
