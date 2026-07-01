@@ -92,6 +92,7 @@ model Seller {
   user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   storeName       String
   description     String?                @db.Text
+  country         String?
   stripeAccountId String?                @unique
   stripeOnboarded Boolean                @default(false)
   approved        Boolean                @default(false)
