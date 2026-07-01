@@ -30,7 +30,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent;
       try {
-        await prisma.order.update({
+        await prisma.order.updateMany({
           where: { stripePaymentId: pi.id },
           data: { status: 'PAID' },
         });
@@ -42,7 +42,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     case 'payment_intent.payment_failed': {
       const pi = event.data.object as Stripe.PaymentIntent;
       try {
-        await prisma.order.update({
+        await prisma.order.updateMany({
           where: { stripePaymentId: pi.id },
           data: { status: 'FAILED' },
         });
