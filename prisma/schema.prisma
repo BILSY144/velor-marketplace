@@ -40,24 +40,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          Role      @default(BUYER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts  Account[]
-  sessions  Session[]
-  seller    Seller?
-  reviews   Review[]
-  wishlists WishlistItem[]
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -68,22 +50,42 @@ model VerificationToken {
 
 // --- Marketplace Models ---
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(BUYER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  seller        Seller?
+  reviews       Review[]
+  wishlists     WishlistItem[]
+  sentMessages  Message[]     @relation("SentMessages")
+}
+
 model Seller {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   businessName    String
-  description     String?  @db.Text
+  description     String?      @db.Text
   country         String?
   stripeAccountId String?
   stripeOnboarded Boolean      @default(false)
   status          SellerStatus @default(PENDING)
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime     @updatedAt
 
-  products Product[]
-  orders   Order[]
-  payouts  Payout[]
+  products      Product[]
+  orders        Order[]
+  payouts       Payout[]
+  discountCodes DiscountCode[]
+  receivedMessages Message[]  @relation("SellerMessages")
 }
 
 model Product {
@@ -95,30 +97,31 @@ model Product {
   price       Float
   images      String[]
   category    String
+  tags        String[]
   stock       Int           @default(0)
   status      ProductStatus @default(PENDING)
-  tags        String[]
-  avgRating   Float         @default(0)
-  soldCount   Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  orderItems OrderItem[]
-  reviews    Review[]
-  wishlists  WishlistItem[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+  wishlists   WishlistItem[]
+  messages    Message[]
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  sellerId   String
-  seller     Seller      @relation(fields: [sellerId], references: [id])
-  buyerName  String
-  buyerEmail String
-  address    String
-  total      Float
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  sellerId       String
+  seller         Seller      @relation(fields: [sellerId], references: [id])
+  buyerName      String
+  buyerEmail     String
+  address        String
+  total          Float
+  discountCode   String?
+  discountAmount Float       @default(0)
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   items OrderItem[]
 }
@@ -158,13 +161,43 @@ model WishlistItem {
 }
 
 model Payout {
-  id       String       @id @default(cuid())
-  sellerId String
-  seller   Seller       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  amount   Float
-  status   PayoutStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id        String       @id @default(cuid())
+  sellerId  String
+  seller    Seller       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  amount    Float
+  status    PayoutStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model DiscountCode {
+  id          String       @id @default(cuid())
+  sellerId    String
+  seller      Seller       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  code        String       @unique
+  type        DiscountType
+  value       Float
+  minOrder    Float?
+  maxUses     Int?
+  usedCount   Int          @default(0)
+  expiresAt   DateTime?
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  sellerId    String
+  seller      Seller   @relation("SellerMessages", fields: [sellerId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  subject     String
+  body        String   @db.Text
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
 
 // --- Enums ---
@@ -202,4 +235,9 @@ enum SellerStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
 }
