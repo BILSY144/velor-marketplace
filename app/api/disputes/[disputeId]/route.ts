@@ -14,7 +14,7 @@ export async function GET(
 
   const dispute = await prisma.dispute.findUnique({
     where: { id: disputeId },
-    include: { order: true },
+    include: { order: { include: { items: true } } },
   });
   if (!dispute) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -25,17 +25,9 @@ export async function GET(
   if (!isBuyer && !isAdmin) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
-    const sellerProducts = await prisma.product.findMany({
-      where: { sellerId: seller.id },
-      select: { id: true },
-    });
-    const sellerProductIds = sellerProducts.map((p) => p.id);
-
-    const hasItem = await prisma.orderItem.findFirst({
-      where: { orderId: dispute.orderId, productId: { in: sellerProductIds } },
-    });
-    if (!hasItem) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (dispute.order.sellerId !== seller.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   return NextResponse.json({ dispute });

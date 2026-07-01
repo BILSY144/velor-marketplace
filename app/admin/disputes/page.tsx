@@ -1,166 +1,152 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 
-interface AdminDisputeItem {
+interface OrderItem {
+  id: string;
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface DisputeOrder {
+  id: string;
+  buyerEmail: string;
+  buyerName: string;
+  total: number;
+  currency: string;
+  items: OrderItem[];
+}
+
+interface Dispute {
   id: string;
   orderId: string;
   raisedBy: string;
   reason: string;
-  evidence: string | null;
+  evidence?: string;
   status: string;
-  resolution: string | null;
+  resolution?: string;
   createdAt: string;
-  order: {
-    id: string;
-    total: number;
-    currency: string;
-    items: Array<{ product: { id: string; title: string }; quantity: number }>;
-  };
+  order: DisputeOrder;
 }
 
-const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
-  OPEN:      { bg: 'var(--accent)', fg: '#000' },
-  IN_REVIEW: { bg: '#F59E0B',       fg: '#000' },
-  RESOLVED:  { bg: 'var(--green)',  fg: '#000' },
+const STATUS_OPTIONS = ['OPEN', 'IN_REVIEW', 'RESOLVED'];
+
+const STATUS_COLORS: Record<string, string> = {
+  OPEN: 'var(--accent)',
+  IN_REVIEW: '#F59E0B',
+  RESOLVED: 'var(--green)',
 };
 
 export default function AdminDisputesPage() {
-  const [disputes, setDisputes] = useState<AdminDisputeItem[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
   const [resText, setResText] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch('/api/disputes?role=admin')
-      .then(r => r.json())
-      .then(d => setDisputes(d.disputes ?? []))
-      .finally(() => setLoading(false));
+      .then((r) => r.json())
+      .then((d) => { setDisputes(d.disputes ?? []); setLoading(false); });
   }, []);
 
   async function updateDispute(id: string, status: string) {
-    setUpdating(id);
-    const resolution = resText[id] ?? '';
-    const res = await fetch('/api/disputes/' + id, {
+    const res = await fetch(`/api/disputes/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, ...(resolution && { resolution }) }),
+      body: JSON.stringify({ status, resolution: resText[id] ?? '' }),
     });
     if (res.ok) {
-      setDisputes(prev => prev.map(d =>
-        d.id === id ? { ...d, status, resolution: resolution || d.resolution } : d
-      ));
+      const { dispute } = await res.json() as { dispute: Dispute };
+      setDisputes((prev) => prev.map((d) => (d.id === id ? dispute : d)));
     }
-    setUpdating(null);
   }
 
-  if (loading) {
-    return (
-      <div style={{ padding: 32 }}>
-        <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Loading...</p>
-      </div>
-    );
-  }
-
-  const openCount = disputes.filter(d => d.status === 'OPEN').length;
+  const open = disputes.filter((d) => d.status === 'OPEN').length;
 
   return (
-    <div style={{ padding: '32px 24px', maxWidth: 960, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)' }}>
-          Disputes
+    <div style={{ padding: '32px', maxWidth: 960 }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+          Dispute Management
+          {open > 0 && (
+            <span style={{ marginLeft: 12, background: 'var(--red)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
+              {open} open
+            </span>
+          )}
         </h1>
-        {openCount > 0 && (
-          <span style={{ background: 'var(--accent)', color: '#000', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99, fontFamily: 'var(--font-body)' }}>
-            {openCount} open
-          </span>
-        )}
+        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>Review and resolve buyer disputes across the platform.</p>
       </div>
-      <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 32, fontFamily: 'var(--font-body)' }}>
-        {disputes.length} total disputes across the platform.
-      </p>
 
-      {disputes.length === 0 ? (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 48, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', fontSize: 15, fontFamily: 'var(--font-body)' }}>No disputes on the platform.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {disputes.map(d => {
-            const col = STATUS_COLOR[d.status] ?? { bg: 'var(--border)', fg: 'var(--text)' };
-            const firstProduct = d.order?.items?.[0]?.product;
-            return (
-              <div key={d.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 24 }}>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', fontFamily: 'var(--font-display)' }}>
-                      #{d.orderId.slice(-8).toUpperCase()}
-                    </span>
-                    <span style={{ background: col.bg, color: col.fg, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
-                      {d.status}
-                    </span>
-                  </div>
-                  {firstProduct?.title && (
-                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>
-                      {firstProduct.title}
-                    </p>
-                  )}
-                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>
-                    Raised by: {d.raisedBy}
-                  </p>
-                  <p style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>
-                    <span style={{ color: 'var(--muted)' }}>Reason: </span>{d.reason}
-                  </p>
-                  {d.evidence && (
-                    <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>
-                      Evidence: {d.evidence}
-                    </p>
-                  )}
-                  {d.resolution && (
-                    <p style={{ fontSize: 12, color: 'var(--green)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>
-                      Resolution: {d.resolution}
-                    </p>
-                  )}
-                  <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>
-                    {new Date(d.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    {' - '}
-                    {(d.order?.total ?? 0).toFixed(2)} {d.order?.currency ?? 'GBP'}
-                  </p>
-                </div>
-
-                {d.status !== 'RESOLVED' && (
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                    <textarea
-                      placeholder="Resolution notes (optional)..."
-                      value={resText[d.id] ?? ''}
-                      onChange={e => setResText(prev => ({ ...prev, [d.id]: e.target.value }))}
-                      rows={2}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 10px', color: 'var(--text)', fontSize: 13, fontFamily: 'var(--font-body)', resize: 'vertical', marginBottom: 10, boxSizing: 'border-box' as const }}
-                    />
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {d.status === 'OPEN' && (
-                        <button
-                          onClick={() => updateDispute(d.id, 'IN_REVIEW')}
-                          disabled={updating === d.id}
-                          style={{ background: '#F59E0B', color: '#000', border: 'none', borderRadius: 6, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-                        >
-                          Mark In Review
-                        </button>
-                      )}
-                      <button
-                        onClick={() => updateDispute(d.id, 'RESOLVED')}
-                        disabled={updating === d.id}
-                        style={{ background: 'var(--green)', color: '#000', border: 'none', borderRadius: 6, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-                      >
-                        Resolve
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {loading && <p style={{ color: 'var(--muted)' }}>Loading...</p>}
+      {!loading && disputes.length === 0 && (
+        <p style={{ color: 'var(--muted)' }}>No disputes on the platform.</p>
       )}
+
+      {disputes.map((dispute) => (
+        <div key={dispute.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 22, marginBottom: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Dispute #{dispute.id.slice(-8)} | Order #{dispute.orderId.slice(-8)}</span>
+              <p style={{ margin: '4px 0 2px', fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>Raised by: {dispute.raisedBy}</p>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Buyer: {dispute.order.buyerEmail}</p>
+            </div>
+            <span style={{ background: STATUS_COLORS[dispute.status] ?? 'var(--muted)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {dispute.status}
+            </span>
+          </div>
+
+          <p style={{ color: 'var(--text)', fontSize: 14, marginBottom: 8 }}>
+            <strong>Reason:</strong> {dispute.reason}
+          </p>
+          {dispute.evidence && (
+            <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 10, fontStyle: 'italic' }}>
+              Evidence: {dispute.evidence}
+            </p>
+          )}
+
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+            {dispute.order.items.map((item) => (
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', borderRadius: 6, padding: '6px 10px' }}>
+                {item.image && (
+                  <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+                )}
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>{item.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>x{item.quantity}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <textarea
+              value={resText[dispute.id] ?? dispute.resolution ?? ''}
+              onChange={(e) => setResText((prev) => ({ ...prev, [dispute.id]: e.target.value }))}
+              placeholder="Add resolution notes..."
+              rows={2}
+              style={{ width: '100%', background: '#111', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 6, padding: '8px 12px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {STATUS_OPTIONS.filter((s) => s !== dispute.status).map((s) => (
+              <button
+                key={s}
+                onClick={() => updateDispute(dispute.id, s)}
+                style={{
+                  background: STATUS_COLORS[s] ?? 'var(--muted)',
+                  color: s === 'IN_REVIEW' ? '#000' : '#fff',
+                  fontWeight: 700, fontSize: 12, padding: '7px 16px',
+                  border: 'none', borderRadius: 6, cursor: 'pointer',
+                  textTransform: 'uppercase', letterSpacing: '0.3px',
+                }}
+              >
+                Mark {s.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

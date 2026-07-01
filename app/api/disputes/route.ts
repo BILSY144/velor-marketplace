@@ -44,11 +44,7 @@ export async function GET(req: Request) {
     if (user?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const disputes = await prisma.dispute.findMany({
-      include: {
-        order: {
-          include: { items: { include: { product: { select: { id: true, title: true } } } } },
-        },
-      },
+      include: { order: { include: { items: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ disputes });
@@ -58,25 +54,9 @@ export async function GET(req: Request) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
 
-    const sellerProducts = await prisma.product.findMany({
-      where: { sellerId: seller.id },
-      select: { id: true },
-    });
-    const sellerProductIds = sellerProducts.map((p) => p.id);
-
     const disputes = await prisma.dispute.findMany({
-      where: {
-        order: { items: { some: { productId: { in: sellerProductIds } } } },
-      },
-      include: {
-        order: {
-          include: {
-            items: {
-              include: { product: { select: { id: true, title: true, images: true } } },
-            },
-          },
-        },
-      },
+      where: { order: { sellerId: seller.id } },
+      include: { order: { include: { items: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ disputes });
@@ -84,7 +64,7 @@ export async function GET(req: Request) {
 
   const disputes = await prisma.dispute.findMany({
     where: { raisedBy: email },
-    include: { order: true },
+    include: { order: { include: { items: true } } },
     orderBy: { createdAt: 'desc' },
   });
   return NextResponse.json({ disputes });

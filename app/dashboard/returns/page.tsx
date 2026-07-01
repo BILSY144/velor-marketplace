@@ -1,150 +1,141 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 
-interface ReturnOrderItem {
-  product: { id: string; title: string; images: string[] };
+interface OrderItem {
+  id: string;
+  productId: string;
+  name: string;
+  price: number;
   quantity: number;
+  image?: string;
 }
 
-interface ReturnItem {
+interface ReturnOrder {
+  id: string;
+  buyerEmail: string;
+  buyerName: string;
+  total: number;
+  currency: string;
+  items: OrderItem[];
+}
+
+interface ReturnRequest {
   id: string;
   orderId: string;
   buyerEmail: string;
   reason: string;
   status: string;
-  notes: string | null;
+  notes?: string;
   createdAt: string;
-  order: {
-    id: string;
-    total: number;
-    currency: string;
-    items: ReturnOrderItem[];
-  };
+  order: ReturnOrder;
 }
 
-const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
-  PENDING:    { bg: 'var(--accent)', fg: '#000' },
-  PROCESSING: { bg: '#F59E0B',       fg: '#000' },
-  APPROVED:   { bg: 'var(--green)',  fg: '#000' },
-  REJECTED:   { bg: 'var(--red)',    fg: '#fff' },
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: 'var(--accent)',
+  PROCESSING: '#F59E0B',
+  APPROVED: 'var(--green)',
+  REJECTED: 'var(--red)',
 };
 
 export default function SellerReturnsPage() {
-  const [returns, setReturns] = useState<ReturnItem[]>([]);
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/returns?role=seller')
-      .then(r => r.json())
-      .then(d => setReturns(d.returns ?? []))
-      .finally(() => setLoading(false));
+      .then((r) => r.json())
+      .then((d) => { setReturns(d.returns ?? []); setLoading(false); });
   }, []);
 
   async function setStatus(id: string, status: string) {
-    setUpdating(id);
-    const res = await fetch('/api/returns/' + id, {
+    const res = await fetch(`/api/returns/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
     if (res.ok) {
-      setReturns(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      setReturns((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
     }
-    setUpdating(null);
   }
 
-  if (loading) {
-    return (
-      <div style={{ padding: 32 }}>
-        <p style={{ color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Loading...</p>
-      </div>
-    );
-  }
+  const pending = returns.filter((r) => r.status === 'PENDING').length;
 
   return (
-    <div style={{ padding: '32px 24px', maxWidth: 880, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)', marginBottom: 6 }}>
-        Return Requests
-      </h1>
-      <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 32, fontFamily: 'var(--font-body)' }}>
-        {returns.length} {returns.length === 1 ? 'request' : 'requests'} from buyers on your orders.
-      </p>
+    <div style={{ padding: '32px', maxWidth: 900 }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+          Return Requests
+          {pending > 0 && (
+            <span style={{ marginLeft: 12, background: 'var(--accent)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
+              {pending} pending
+            </span>
+          )}
+        </h1>
+        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>Manage buyer return requests for your orders.</p>
+      </div>
 
-      {returns.length === 0 ? (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 48, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', fontSize: 15, fontFamily: 'var(--font-body)' }}>No return requests yet.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {returns.map(r => {
-            const col = STATUS_COLOR[r.status] ?? { bg: 'var(--border)', fg: 'var(--text)' };
-            const firstItem = r.order?.items?.[0];
-            const img = firstItem?.product?.images?.[0];
-            return (
-              <div key={r.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                {img && (
-                  <img src={img} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', fontFamily: 'var(--font-display)' }}>
-                      Order #{r.orderId.slice(-8).toUpperCase()}
-                    </span>
-                    <span style={{ background: col.bg, color: col.fg, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
-                      {r.status}
-                    </span>
-                  </div>
-                  {firstItem?.product?.title && (
-                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 4, fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                      {firstItem.product.title}
-                    </p>
-                  )}
-                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 4, fontFamily: 'var(--font-body)' }}>{r.buyerEmail}</p>
-                  <p style={{ fontSize: 13, color: 'var(--text)', marginBottom: 6, fontFamily: 'var(--font-body)' }}>
-                    <span style={{ color: 'var(--muted)' }}>Reason: </span>{r.reason}
-                  </p>
-                  {r.notes && (
-                    <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, fontFamily: 'var(--font-body)' }}>Notes: {r.notes}</p>
-                  )}
-                  <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>
-                    {new Date(r.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    {' - '}
-                    {(r.order?.total ?? 0).toFixed(2)} {r.order?.currency ?? 'GBP'}
-                  </p>
-                </div>
-                {r.status === 'PENDING' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                    <button
-                      onClick={() => setStatus(r.id, 'APPROVED')}
-                      disabled={updating === r.id}
-                      style={{ background: 'var(--green)', color: '#000', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => setStatus(r.id, 'REJECTED')}
-                      disabled={updating === r.id}
-                      style={{ background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
-                {r.status === 'APPROVED' && (
-                  <button
-                    onClick={() => setStatus(r.id, 'PROCESSING')}
-                    disabled={updating === r.id}
-                    style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-body)' }}
-                  >
-                    Processing
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {loading && <p style={{ color: 'var(--muted)' }}>Loading...</p>}
+      {!loading && returns.length === 0 && (
+        <p style={{ color: 'var(--muted)' }}>No return requests yet.</p>
       )}
+
+      {returns.map((ret) => (
+        <div key={ret.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 20, marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Return #{ret.id.slice(-8)}</span>
+              <p style={{ margin: '4px 0 0', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{ret.order.buyerEmail}</p>
+            </div>
+            <span style={{ background: STATUS_COLORS[ret.status] ?? 'var(--muted)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {ret.status}
+            </span>
+          </div>
+
+          <p style={{ color: 'var(--text)', fontSize: 14, marginBottom: 12 }}>
+            <strong>Reason:</strong> {ret.reason}
+          </p>
+
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+            {ret.order.items.map((item) => (
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', borderRadius: 6, padding: '6px 10px' }}>
+                {item.image && (
+                  <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+                )}
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>{item.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>x{item.quantity}</span>
+              </div>
+            ))}
+          </div>
+
+          {ret.status === 'PENDING' && (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setStatus(ret.id, 'APPROVED')}
+                style={{ background: 'var(--green)', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => setStatus(ret.id, 'REJECTED')}
+                style={{ background: 'var(--red)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+              >
+                Reject
+              </button>
+            </div>
+          )}
+          {ret.status === 'APPROVED' && (
+            <button
+              onClick={() => setStatus(ret.id, 'PROCESSING')}
+              style={{ background: '#F59E0B', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+            >
+              Mark Processing
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
