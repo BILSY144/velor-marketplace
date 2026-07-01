@@ -8,6 +8,8 @@ const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
   { href: '/dashboard/products', label: 'Products', icon: 'PR' },
   { href: '/dashboard/orders', label: 'Orders', icon: 'OR' },
+  { href: '/dashboard/returns', label: 'Returns', icon: 'RT' },
+  { href: '/dashboard/disputes', label: 'Disputes', icon: 'DS' },
   { href: '/dashboard/messages', label: 'Messages', icon: 'MS' },
   { href: '/dashboard/discount-codes', label: 'Discounts', icon: 'DC' },
   { href: '/dashboard/payouts', label: 'Payouts', icon: 'PY' },
