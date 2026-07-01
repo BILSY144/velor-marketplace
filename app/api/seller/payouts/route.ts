@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
   }
 
-  if (!seller.stripeOnboarded || !seller.stripeAccountId) {
+  if (!seller.stripeAccountId) {
     return NextResponse.json(
       { error: 'Stripe account not connected. Please complete onboarding first.' },
       { status: 400 }
