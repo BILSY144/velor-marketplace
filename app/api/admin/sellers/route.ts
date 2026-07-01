@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { Prisma, SellerStatus } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { Resend } from 'resend'
 
 export async function GET(request: NextRequest) {
@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
   // Seller model uses: approved (Boolean)
   let where: Prisma.SellerWhereInput = {}
   if (status === 'APPROVED') {
-    where = { status: 'APPROVED' }
+    where = { approved: true }
   } else if (status !== 'ALL') {
     // PENDING, REJECTED, SUSPENDED all map to not-yet-approved
-    where = { status: status as SellerStatus }
+    where = { approved: false }
   }
 
   const sellers = await prisma.seller.findMany({
@@ -48,13 +48,10 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  // approved is the only status field on Seller
-  const statusMap: Record<string, SellerStatus> = { approve: SellerStatus.APPROVED, reject: SellerStatus.REJECTED, suspend: SellerStatus.SUSPENDED }
-  const newStatus = statusMap[action]
-
+      const approved = action === 'approve'
   const seller = await prisma.seller.update({
     where: { id: sellerId },
-    data: { status: newStatus },
+    data: { approved },
     include: {
       user: { select: { name: true, email: true } },
     },
@@ -78,7 +75,7 @@ export async function PATCH(request: NextRequest) {
         ? `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
 <h1 style="color:#FF6B00;font-size:24px;margin-bottom:16px">You're approved!</h1>
 <p style="color:#cccccc;font-size:15px;line-height:1.6">Hi ${sellerName},</p>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Great news â your Velor seller account has been approved. You can now list products, manage orders, and receive payouts through your seller dashboard.</p>
+<p style="color:#cccccc;font-size:15px;line-height:1.6">Great news Ã¢ÂÂ your Velor seller account has been approved. You can now list products, manage orders, and receive payouts through your seller dashboard.</p>
 <a href="https://velorcommerce.store/dashboard" style="display:inline-block;margin-top:24px;background:#FF6B00;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">Go to Dashboard</a>
 <p style="color:#666666;font-size:13px;margin-top:40px">The Velor Team</p>
 </div>`

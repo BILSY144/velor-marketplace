@@ -14,9 +14,9 @@ async function sendEmail(payload: object) {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, businessName, country } = await req.json()
+  const { name, email, password, storeName, country } = await req.json()
 
-  if (!name || !email || !password || !businessName) {
+  if (!name || !email || !password || !storeName) {
     return NextResponse.json({ error: 'All fields required' }, { status: 400 })
   }
   if (password.length < 8) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       role: 'SELLER',
       seller: {
         create: {
-          businessName,
+          storeName,
           country: country || 'GB',
         },
       },
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'customerservice@velorcommerce.store',
       to: email,
-      subject: 'Welcome to Velor Marketplace â Application Received',
+      subject: 'Welcome to Velor Marketplace Ã¢ÂÂ Application Received',
       html: `<p>Hi ${name},</p><p>Thank you for applying to sell on Velor Marketplace. We will review your application and be in touch shortly.</p><p>The Velor Team</p>`,
     }),
   ])
