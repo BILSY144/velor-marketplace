@@ -4,14 +4,28 @@ import { prisma } from '@/lib/prisma'
 // POST — create order after successful Stripe payment
 // Body: { sellerId, buyerEmail, buyerName, address, total, items }
 export async function POST(req: NextRequest) {
-  let body: any
+  let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { sellerId, buyerEmail, buyerName, address, total, items } = body
+  const { sellerId, buyerEmail, buyerName, address, total, items } = body as {
+    sellerId?: string
+    buyerEmail?: string
+    buyerName?: string
+    address?: unknown
+    total?: number
+    items?: Array<{
+      productId?: string
+      id?: string
+      name?: string
+      quantity?: number
+      price?: number
+      image?: string
+    }>
+  }
 
   if (!sellerId || !buyerEmail || !buyerName || !address || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -22,21 +36,23 @@ export async function POST(req: NextRequest) {
       data: {
         sellerId,
         buyerEmail: String(buyerEmail).toLowerCase().trim(),
-        buyerName: buyerName ?? buyerEmail,
+        buyerName: buyerName ?? String(buyerEmail),
         address: typeof address === 'string' ? address : JSON.stringify(address),
         total: Number(total),
         status: 'PENDING',
         items: {
-          create: items.map((item: any) => ({
-            productId: item.productId ?? item.id,
+          create: items.map((item) => ({
+            productId: item.productId ?? item.id ?? '',
+            name: item.name ?? String(item.productId ?? item.id ?? ''),
             quantity: Number(item.quantity),
             price: Number(item.price),
+            image: item.image ?? null,
           })),
         },
       },
     })
     return NextResponse.json({ orderId: order.id }, { status: 201 })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[POST /api/orders]', err)
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
   }
@@ -50,11 +66,7 @@ export async function GET(req: NextRequest) {
   const orders = await prisma.order.findMany({
     where: { buyerEmail: email.toLowerCase().trim() },
     include: {
-      items: {
-        include: {
-          product: { select: { id: true, name: true, images: true, category: true } },
-        },
-      },
+      items: true,
     },
     orderBy: { createdAt: 'desc' },
   })
