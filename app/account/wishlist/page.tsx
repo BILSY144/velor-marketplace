@@ -141,7 +141,7 @@ export default function WishlistPage() {
                       {item.product.name}
                     </div>
                   </Link>
-                  {item.(product.avgRating ?? 0) > 0 && (
+                  {(item.product.avgRating ?? 0) > 0 && (
                     <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
                       {'\u2605'.repeat(Math.round(item.product.avgRating ?? 0))} {item.product.avgRating ?? 0}
                       <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({item.product.reviewCount})</span>

@@ -191,7 +191,7 @@ function ShopContent() {
                     <div style={{ padding: '14px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
                       <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
-                      {p.avgRating ?? 0 != null && (
+                      {(p.avgRating ?? 0) != null && (
                         <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
                           {'\u2605'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
                           <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
