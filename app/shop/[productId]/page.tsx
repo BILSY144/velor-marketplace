@@ -54,6 +54,11 @@ export default function ProductPage() {
   const [addedToCart, setAddedToCart] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [contactMessage, setContactMessage] = useState('')
+  const [contactSending, setContactSending] = useState(false)
+  const [contactSent, setContactSent] = useState(false)
+  const [contactError, setContactError] = useState('')
 
   useEffect(() => {
     if (!productId) return
@@ -93,6 +98,30 @@ export default function ProductPage() {
       setIsWishlisted(prev => !prev)
     } finally {
       setWishlistLoading(false)
+    }
+  }
+
+  async function handleContactSeller() {
+    if (!session) {
+      router.push(`/auth/signin?callbackUrl=/shop/${productId}`)
+      return
+    }
+    if (!contactMessage.trim() || !product) return
+    setContactSending(true)
+    setContactError('')
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, sellerId: product.sellerId, content: contactMessage }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setContactSent(true)
+      setContactMessage('')
+    } catch {
+      setContactError('Failed to send message. Please try again.')
+    } finally {
+      setContactSending(false)
     }
   }
 
@@ -256,6 +285,22 @@ export default function ProductPage() {
             {isWishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
           </button>
 
+          <button
+            onClick={() => {
+              if (!session) {
+                router.push(`/auth/signin?callbackUrl=/shop/${productId}`)
+                return
+              }
+              setShowContactModal(true)
+              setContactSent(false)
+              setContactError('')
+            }}
+            style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <span style={{ fontSize: '16px' }}>&#9993;</span>
+            Contact Seller
+          </button>
+
           {product.sellerName && (
             <div style={{ marginTop: '20px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)' }}>
               Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.sellerName}</span>
@@ -302,6 +347,53 @@ export default function ProductPage() {
           </div>
         )}
       </div>
+
+      {/* Contact Seller Modal */}
+      {showContactModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowContactModal(false) } }}
+        >
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '480px', position: 'relative' }}>
+            <button
+              onClick={() => { setShowContactModal(false); setContactSent(false); setContactError(''); setContactMessage('') }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '22px', cursor: 'pointer', lineHeight: 1 }}
+            >
+              &times;
+            </button>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Contact Seller</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '0 0 24px' }}>
+              Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.sellerName}</span> about this product
+            </p>
+            {contactSent ? (
+              <div style={{ padding: '20px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '10px', color: 'var(--green)', fontWeight: 600, textAlign: 'center', fontSize: '15px' }}>
+                Message sent! The seller will reply in your inbox.
+              </div>
+            ) : (
+              <>
+                <textarea
+                  value={contactMessage}
+                  onChange={e => setContactMessage(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleContactSeller() } }}
+                  placeholder="Ask about availability, shipping, customisation..."
+                  rows={5}
+                  style={{ width: '100%', padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', fontFamily: 'Inter, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
+                />
+                {contactError && (
+                  <p style={{ color: 'var(--red)', fontSize: '13px', margin: '8px 0 0' }}>{contactError}</p>
+                )}
+                <button
+                  onClick={handleContactSeller}
+                  disabled={contactSending || !contactMessage.trim()}
+                  style={{ marginTop: '16px', width: '100%', padding: '14px', background: contactSending || !contactMessage.trim() ? 'var(--border)' : 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '15px', cursor: contactSending || !contactMessage.trim() ? 'not-allowed' : 'pointer' }}
+                >
+                  {contactSending ? 'Sending...' : 'Send Message'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
-      }
+}
