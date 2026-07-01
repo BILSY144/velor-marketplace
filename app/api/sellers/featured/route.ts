@@ -5,15 +5,15 @@ export async function GET() {
   try {
     const sellers = await prisma.seller.findMany({
       where: {
-        status: 'APPROVED',
-        products: { some: { status: 'APPROVED' } },
+        isApproved: true,
+        products: { some: { isApproved: true } },
       },
       select: {
         id: true,
         storeName: true,
         user: { select: { image: true } },
         products: {
-          where: { status: 'APPROVED' },
+          where: { isApproved: true },
           select: {
             id: true,
             reviews: { select: { rating: true } },
@@ -44,4 +44,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ sellers: [] })
   }
-          }
+}

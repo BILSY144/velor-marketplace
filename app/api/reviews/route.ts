@@ -24,7 +24,6 @@ export async function POST(request: Request) {
   if (!productId || !rating || rating < 1 || rating > 5) {
     return NextResponse.json({ error: 'Rating must be 1-5' }, { status: 400 })
   }
-  // Verify buyer has a completed/in-progress order for this product
   const purchased = await prisma.orderItem.findFirst({
     where: {
       productId,
@@ -41,11 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'You have already reviewed this product' }, { status: 409 })
   }
   const review = await prisma.review.create({
-    data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '' }
+    data: { productId, userId: session.user.id, rating: Number(rating), body: comment || '' }
   })
-  // Update product avgRating
-  const allReviews = await prisma.review.findMany({ where: { productId }, select: { rating: true } })
-  const newAvg = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length
-  await prisma.product.update({ where: { id: productId }, data: { avgRating: newAvg } })
   return NextResponse.json({ review }, { status: 201 })
 }
