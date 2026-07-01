@@ -67,7 +67,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? 'ÃÂ£' : product.currency === 'USD' ? '$' : 'Ã¢ÂÂ¬'
+  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
 
   return (
     <Link
