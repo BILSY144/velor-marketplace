@@ -21,6 +21,7 @@ export async function GET() {
     where: { productId: { in: sellerProductIds } },
     include: {
       order: { select: { id: true, createdAt: true, status: true } },
+      product: { select: { name: true, images: true } },
     },
   })
 
@@ -48,7 +49,7 @@ export async function GET() {
   for (const item of orderItems) {
     const pid = item.productId
     if (!productMap[pid]) {
-      productMap[pid] = { name: item.name, image: item.image ?? null, revenue: 0, units: 0 }
+      productMap[pid] = { name: item.product.name, image: item.product.images?.[0] ?? null, revenue: 0, units: 0 }
     }
     productMap[pid].revenue += item.price * item.quantity
     productMap[pid].units += item.quantity
