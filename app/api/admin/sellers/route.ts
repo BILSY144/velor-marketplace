@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { Resend } from 'resend'
 
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
 
-  const where =
+  const where: Prisma.SellerWhereInput =
     status === 'ALL' ? {} :
     status === 'APPROVED' ? { isApproved: true, isSuspended: false } :
     status === 'SUSPENDED' ? { isSuspended: true } :
@@ -45,7 +46,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const updateData =
+  const updateData: Prisma.SellerUpdateInput =
     action === 'approve' ? { isApproved: true, isSuspended: false } :
     action === 'reject' ? { isApproved: false, isSuspended: true } :
     { isSuspended: true } // suspend
