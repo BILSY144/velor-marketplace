@@ -1,379 +1,831 @@
-'use client';
+'use client'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
-import Link from 'next/link';
-import { useState } from 'react';
+interface Product {
+  id: string
+  name: string
+  price: number
+  currency: string
+  images: string[]
+  category: string
+  avgRating: number | null
+  reviewCount: number
+  sellerName: string
+}
 
-const categories = [
-  { name: 'Fitness & Gym', slug: 'fitness-gym', count: '12,400+' },
-  { name: 'Electronics', slug: 'electronics', count: '28,000+' },
-  { name: 'Home & Garden', slug: 'home-garden', count: '31,000+' },
-  { name: 'Sports & Outdoors', slug: 'sports', count: '9,800+' },
-  { name: 'Beauty & Health', slug: 'beauty', count: '14,200+' },
-  { name: 'Toys & Games', slug: 'toys', count: '7,600+' },
-  { name: 'Fashion', slug: 'fashion', count: '22,500+' },
-  { name: 'Automotive', slug: 'automotive', count: '5,300+' },
-];
+const HERO_HEADLINES = [
+  { top: 'The Marketplace', bottom: 'Built for Sellers.' },
+  { top: 'Zero Fees.', bottom: 'Infinite Reach.' },
+  { top: 'Your Products.', bottom: 'The World.' },
+]
 
-const stats = [
+const STATS = [
   { value: '10K+', label: 'Active Sellers' },
   { value: '180+', label: 'Countries' },
   { value: '500K+', label: 'Products' },
-  { value: '$0', label: 'To List' },
-];
+  { value: '$0', label: 'Listing Fee' },
+]
 
-const features = [
-  { title: 'Global Reach', desc: 'Sell to buyers in 180+ countries with localised checkout and currency support.' },
-  { title: 'Zero Listing Fees', desc: 'List unlimited products for free. We only make money when you do.' },
-  { title: 'AI-Powered Tools', desc: 'Auto-generate product descriptions, pricing suggestions, and SEO titles.' },
-  { title: 'Fast Payouts', desc: 'Get paid within 2 business days via bank transfer, PayPal, or crypto.' },
-  { title: 'Seller Protection', desc: 'Dispute resolution, fraud prevention, and chargeback management built in.' },
-  { title: 'Real-Time Analytics', desc: 'Track views, conversions, and revenue with your seller dashboard.' },
-];
+const CATEGORIES = [
+  { name: 'Fitness & Gym', desc: 'Equipment & accessories' },
+  { name: 'Electronics', desc: 'Gadgets & tech' },
+  { name: 'Home & Garden', desc: 'Furnishings & decor' },
+  { name: 'Sports & Outdoors', desc: 'Gear & clothing' },
+  { name: 'Beauty & Health', desc: 'Skincare & wellness' },
+  { name: 'Toys & Games', desc: 'For all ages' },
+  { name: 'Fashion', desc: 'Clothing & accessories' },
+  { name: 'Automotive', desc: 'Parts & accessories' },
+]
 
-const steps = [
-  { num: '01', title: 'Create Your Store', desc: 'Sign up free and set up your seller profile in under 5 minutes.' },
-  { num: '02', title: 'List Your Products', desc: 'Upload products manually or bulk import from your existing store.' },
-  { num: '03', title: 'Start Selling', desc: 'Reach millions of buyers worldwide and get paid automatically.' },
-];
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    title: 'Create Your Store',
+    desc: 'Sign up free, set up your seller profile, and agree to our marketplace terms. Takes under 5 minutes.',
+  },
+  {
+    step: '02',
+    title: 'List Your Products',
+    desc: 'Upload products with images, set your own prices, and go live instantly for buyers worldwide to discover.',
+  },
+  {
+    step: '03',
+    title: 'Get Paid',
+    desc: 'Buyers purchase via Stripe. Funds hit your account within 48 hours after delivery confirmation.',
+  },
+]
 
-function CategoryCard({ cat }: { cat: typeof categories[0] }) {
-  const [hovered, setHovered] = useState(false);
+function ProductCard({ product }: { product: Product }) {
+  const [hovered, setHovered] = useState(false)
+  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
+
   return (
     <Link
-      href={`/shop?category=${cat.slug}`}
-      style={{
-        display: 'block',
-        background: 'var(--surface)',
-        border: `1px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: 12,
-        padding: '32px 24px',
-        transition: 'border-color 0.2s',
-        textDecoration: 'none',
-      }}
+      href={`/shop/${product.id}`}
+      style={{ textDecoration: 'none', display: 'block' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div style={{
-        fontFamily: 'var(--font-display), system-ui, sans-serif',
-        fontWeight: 700,
-        fontSize: 16,
-        color: 'var(--text)',
-        marginBottom: 6,
-      }}>
-        {cat.name}
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: `1px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
+          borderRadius: 12,
+          overflow: 'hidden',
+          transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
+          transform: hovered ? 'translateY(-4px)' : 'none',
+          boxShadow: hovered ? '0 12px 40px rgba(255,107,0,0.15)' : 'none',
+        }}
+      >
+        <div
+          style={{
+            aspectRatio: '1',
+            background: '#1E1E1E',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {product.images[0] ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transition: 'transform 0.4s',
+                transform: hovered ? 'scale(1.05)' : 'scale(1)',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--border)',
+                fontSize: 32,
+                fontWeight: 700,
+              }}
+            >
+              --
+            </div>
+          )}
+        </div>
+        <div style={{ padding: '16px' }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'var(--muted)',
+              marginBottom: 6,
+            }}
+          >
+            {product.category}
+          </div>
+          <div
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 15,
+              fontWeight: 600,
+              color: 'var(--text)',
+              lineHeight: 1.3,
+              marginBottom: 8,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {product.name}
+          </div>
+          {product.avgRating ? (
+            <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 8 }}>
+              {'★'.repeat(Math.round(product.avgRating))}{' '}
+              <span style={{ color: 'var(--muted)' }}>({product.reviewCount})</span>
+            </div>
+          ) : null}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 18,
+                fontWeight: 800,
+                color: 'var(--text)',
+              }}
+            >
+              {sym}{product.price.toFixed(2)}
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>by {product.sellerName}</span>
+          </div>
+        </div>
       </div>
-      <div style={{ color: 'var(--muted)', fontSize: 13 }}>{cat.count} products</div>
     </Link>
-  );
+  )
 }
 
 export default function HomePage() {
+  const [heroIdx, setHeroIdx] = useState(0)
+  const [products, setProducts] = useState<Product[]>([])
+  const [fadeHero, setFadeHero] = useState(true)
+  const [catHover, setCatHover] = useState<string | null>(null)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFadeHero(false)
+      setTimeout(() => {
+        setHeroIdx((i) => (i + 1) % HERO_HEADLINES.length)
+        setFadeHero(true)
+      }, 400)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/shop/products?limit=8')
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products || []))
+      .catch(() => {})
+  }, [])
+
+  const hero = HERO_HEADLINES[heroIdx]
+
   return (
-    <>
+    <div style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
       {/* HERO */}
-      <section style={{
-        position: 'relative',
-        minHeight: '90vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        background: 'radial-gradient(ellipse at 60% 40%, rgba(255,107,0,0.12) 0%, transparent 60%), var(--bg)',
-        paddingTop: 64,
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: 760, padding: '0 24px', position: 'relative', zIndex: 1 }}>
-          <div style={{
-            display: 'inline-block',
-            background: 'rgba(255,107,0,0.15)',
-            border: '1px solid rgba(255,107,0,0.3)',
-            color: 'var(--accent)',
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            padding: '6px 16px',
-            borderRadius: 100,
-            marginBottom: 28,
-          }}>
-            The Global Marketplace for Independent Sellers
-          </div>
+      <section
+        style={{
+          minHeight: '90vh',
+          display: 'flex',
+          alignItems: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          background:
+            'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,107,0,0.08) 0%, transparent 70%), var(--bg)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            backgroundImage:
+              'linear-gradient(rgba(255,107,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,0.04) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
+        />
 
-          <h1 style={{
-            fontFamily: 'var(--font-display), system-ui, sans-serif',
-            fontSize: 'clamp(40px, 7vw, 72px)',
-            fontWeight: 800,
-            lineHeight: 1.1,
-            color: 'var(--text)',
-            marginBottom: 24,
-            letterSpacing: '-0.02em',
-          }}>
-            Sell Anything.<br />
-            <span style={{ color: 'var(--accent)' }}>Reach Everyone.</span>
-          </h1>
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '0 40px',
+            position: 'relative',
+            zIndex: 1,
+            width: '100%',
+          }}
+        >
+          <div style={{ maxWidth: 760 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'rgba(255,107,0,0.12)',
+                border: '1px solid rgba(255,107,0,0.3)',
+                borderRadius: 100,
+                padding: '6px 16px',
+                marginBottom: 32,
+              }}
+            >
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: 'var(--accent)',
+                  animation: 'pulse 2s infinite',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--accent)',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                Now live in 180+ countries
+              </span>
+            </div>
 
-          <p style={{
-            fontSize: 18,
-            color: 'var(--muted)',
-            lineHeight: 1.7,
-            maxWidth: 520,
-            margin: '0 auto 40px',
-          }}>
-            The AI-powered marketplace where independent sellers connect with buyers in 180+ countries. Zero listing fees. Instant payouts.
-          </p>
+            <div
+              style={{
+                opacity: fadeHero ? 1 : 0,
+                transition: 'opacity 0.4s ease',
+              }}
+            >
+              <h1
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 'clamp(48px, 7vw, 84px)',
+                  fontWeight: 800,
+                  lineHeight: 1.05,
+                  margin: 0,
+                  letterSpacing: '-2px',
+                  color: 'var(--text)',
+                }}
+              >
+                {hero.top}
+                <br />
+                <span style={{ color: 'var(--accent)' }}>{hero.bottom}</span>
+              </h1>
+            </div>
 
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/sell" style={{
-              background: 'var(--accent)',
-              color: '#fff',
-              fontFamily: 'var(--font-display), system-ui, sans-serif',
-              fontWeight: 700,
-              fontSize: 16,
-              padding: '16px 36px',
-              borderRadius: 8,
-              display: 'inline-block',
-              letterSpacing: '-0.01em',
-            }}>
-              Start Selling Free
-            </Link>
-            <Link href="/shop" style={{
-              background: 'transparent',
-              color: 'var(--text)',
-              fontFamily: 'var(--font-display), system-ui, sans-serif',
-              fontWeight: 600,
-              fontSize: 16,
-              padding: '16px 36px',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-              display: 'inline-block',
-            }}>
-              Browse Products
-            </Link>
+            <p
+              style={{
+                fontSize: 18,
+                color: 'var(--muted)',
+                marginTop: 24,
+                marginBottom: 40,
+                lineHeight: 1.7,
+                maxWidth: 560,
+              }}
+            >
+              The global marketplace where independent sellers reach millions of buyers. Zero
+              listing fees. Instant payouts. Ship worldwide.
+            </p>
+
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <Link href="/sell" style={{ textDecoration: 'none' }}>
+                <button
+                  style={{
+                    background: 'var(--accent)',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '16px 36px',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    letterSpacing: '-0.3px',
+                  }}
+                >
+                  Start Selling Free
+                </button>
+              </Link>
+              <Link href="/shop" style={{ textDecoration: 'none' }}>
+                <button
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: '16px 36px',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    letterSpacing: '-0.3px',
+                  }}
+                >
+                  Browse Products
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-          opacity: 0.3,
-          zIndex: 0,
-        }} />
-      </section>
-
-      {/* STATS */}
-      <section style={{
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--surface)',
-      }}>
-        <div style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-        }}>
-          {stats.map((s, i) => (
-            <div key={i} style={{
-              padding: '40px 24px',
-              textAlign: 'center',
-              borderRight: i < stats.length - 1 ? '1px solid var(--border)' : 'none',
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-display), system-ui, sans-serif',
-                fontSize: 48,
-                fontWeight: 800,
-                color: 'var(--accent)',
-                lineHeight: 1,
-                marginBottom: 8,
-              }}>
-                {s.value}
+        <div
+          style={{
+            position: 'absolute',
+            right: '8%',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            opacity: 0.65,
+          }}
+        >
+          {[
+            { v: '+£2,400', l: "Today's sales" },
+            { v: '18 orders', l: 'Last hour' },
+            { v: '4.9/5.0', l: 'Avg rating' },
+          ].map((item) => (
+            <div
+              key={item.l}
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '14px 20px',
+                minWidth: 160,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: 'var(--accent)',
+                }}
+              >
+                {item.v}
               </div>
-              <div style={{ color: 'var(--muted)', fontSize: 14, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                {s.label}
-              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{item.l}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CATEGORIES */}
-      <section style={{ padding: '96px 24px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display), system-ui, sans-serif',
-            fontSize: 'clamp(28px, 4vw, 40px)',
-            fontWeight: 700,
-            color: 'var(--text)',
-            marginBottom: 12,
-          }}>
-            Shop by Category
-          </h2>
-          <p style={{ color: 'var(--muted)', fontSize: 16 }}>Millions of products from independent sellers worldwide</p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 16,
-        }}>
-          {categories.map((cat) => (
-            <CategoryCard key={cat.slug} cat={cat} />
+      {/* STATS STRIP */}
+      <section
+        style={{
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '0 40px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+          }}
+        >
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                padding: '36px 24px',
+                textAlign: 'center',
+                borderRight: i < 3 ? '1px solid var(--border)' : 'none',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 40,
+                  fontWeight: 800,
+                  color: 'var(--accent)',
+                }}
+              >
+                {s.value}
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 6 }}>{s.label}</div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section style={{
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-        padding: '96px 24px',
-      }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ marginBottom: 64, textAlign: 'center' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-display), system-ui, sans-serif',
-              fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 700,
-              color: 'var(--text)',
-              marginBottom: 12,
-            }}>
-              How It Works
-            </h2>
-            <p style={{ color: 'var(--muted)', fontSize: 16 }}>Start selling globally in three steps</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40 }}>
-            {steps.map((step) => (
-              <div key={step.num} style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontFamily: 'var(--font-display), system-ui, sans-serif',
-                  fontSize: 64,
-                  fontWeight: 800,
-                  color: 'rgba(255,107,0,0.15)',
-                  lineHeight: 1,
-                  marginBottom: 16,
-                  letterSpacing: '-0.04em',
-                }}>
-                  {step.num}
+      {/* TRENDING PRODUCTS */}
+      {products.length > 0 && (
+        <section style={{ padding: '80px 0' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                marginBottom: 40,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: 'var(--accent)',
+                    marginBottom: 8,
+                  }}
+                >
+                  Live Marketplace
                 </div>
-                <h3 style={{
-                  fontFamily: 'var(--font-display), system-ui, sans-serif',
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  marginBottom: 10,
-                }}>
-                  {step.title}
-                </h3>
-                <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: 15 }}>{step.desc}</p>
+                <h2
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 36,
+                    fontWeight: 800,
+                    margin: 0,
+                    color: 'var(--text)',
+                    letterSpacing: '-1px',
+                  }}
+                >
+                  Trending Right Now
+                </h2>
+              </div>
+              <Link
+                href="/shop"
+                style={{
+                  textDecoration: 'none',
+                  color: 'var(--accent)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  borderBottom: '1px solid var(--accent)',
+                  paddingBottom: 2,
+                }}
+              >
+                View all products
+              </Link>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 20,
+              }}
+            >
+              {products.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CATEGORIES */}
+      <section
+        style={{
+          padding: '80px 0',
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+          <div style={{ marginBottom: 48, textAlign: 'center' }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--accent)',
+                marginBottom: 8,
+              }}
+            >
+              What We Sell
+            </div>
+            <h2
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 36,
+                fontWeight: 800,
+                margin: 0,
+                color: 'var(--text)',
+                letterSpacing: '-1px',
+              }}
+            >
+              Shop by Category
+            </h2>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 16,
+            }}
+          >
+            {CATEGORIES.map((cat) => (
+              <Link
+                key={cat.name}
+                href={`/shop?category=${encodeURIComponent(cat.name)}`}
+                style={{ textDecoration: 'none' }}
+                onMouseEnter={() => setCatHover(cat.name)}
+                onMouseLeave={() => setCatHover(null)}
+              >
+                <div
+                  style={{
+                    background: 'var(--bg)',
+                    border: `1px solid ${catHover === cat.name ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: 12,
+                    padding: '28px 24px',
+                    transition: 'border-color 0.2s, transform 0.2s',
+                    transform: catHover === cat.name ? 'translateY(-2px)' : 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: catHover === cat.name ? 'var(--accent)' : 'var(--text)',
+                      marginBottom: 6,
+                      transition: 'color 0.2s',
+                    }}
+                  >
+                    {cat.name}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>{cat.desc}</div>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      fontSize: 18,
+                      color: catHover === cat.name ? 'var(--accent)' : 'var(--border)',
+                      transition: 'color 0.2s',
+                    }}
+                  >
+                    →
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{ padding: '100px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--accent)',
+                marginBottom: 8,
+              }}
+            >
+              For Sellers
+            </div>
+            <h2
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 36,
+                fontWeight: 800,
+                margin: 0,
+                color: 'var(--text)',
+                letterSpacing: '-1px',
+              }}
+            >
+              Start Selling in 3 Steps
+            </h2>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 32,
+            }}
+          >
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={step.step} style={{ position: 'relative' }}>
+                {i < 2 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 20,
+                      left: 'calc(100% - 16px)',
+                      width: 32,
+                      fontSize: 20,
+                      color: 'var(--border)',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                    }}
+                  >
+                    →
+                  </div>
+                )}
+                <div
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 16,
+                    padding: 32,
+                    height: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 52,
+                      fontWeight: 800,
+                      color: 'rgba(255,107,0,0.15)',
+                      marginBottom: 16,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {step.step}
+                  </div>
+                  <h3
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: 'var(--text)',
+                      marginBottom: 12,
+                      marginTop: 0,
+                    }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: 14, margin: 0 }}>
+                    {step.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section style={{ padding: '96px 24px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display), system-ui, sans-serif',
-            fontSize: 'clamp(28px, 4vw, 40px)',
-            fontWeight: 700,
-            color: 'var(--text)',
-            marginBottom: 12,
-          }}>
-            Built for Sellers
-          </h2>
-          <p style={{ color: 'var(--muted)', fontSize: 16 }}>Everything you need to run a global business</p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 24,
-        }}>
-          {features.map((f, i) => (
-            <div key={i} style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 12,
-              padding: '32px',
-            }}>
-              <div style={{
-                width: 40,
-                height: 4,
-                background: 'var(--accent)',
-                borderRadius: 2,
-                marginBottom: 20,
-              }} />
-              <h3 style={{
-                fontFamily: 'var(--font-display), system-ui, sans-serif',
-                fontSize: 18,
-                fontWeight: 700,
-                color: 'var(--text)',
-                marginBottom: 10,
-              }}>
-                {f.title}
-              </h3>
-              <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7 }}>{f.desc}</p>
+      {/* TRUST STRIP */}
+      <section
+        style={{
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '0 40px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+          }}
+        >
+          {[
+            { title: 'Free to List', desc: 'No upfront costs ever' },
+            { title: 'Fast Payouts', desc: 'Within 48 hours' },
+            { title: 'Global Buyers', desc: '180+ countries' },
+            { title: 'Seller Protection', desc: 'Disputes handled for you' },
+            { title: 'AI-Powered Tools', desc: 'Grow your store faster' },
+          ].map((t, i) => (
+            <div
+              key={t.title}
+              style={{
+                padding: '28px 20px',
+                borderRight: i < 4 ? '1px solid var(--border)' : 'none',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 4 }}>
+                {t.title}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* SELLER CTA */}
-      <section style={{
-        maxWidth: 1200,
-        margin: '0 auto 96px',
-        padding: '0 24px',
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(255,107,0,0.15) 0%, rgba(255,107,0,0.05) 100%)',
-          border: '1px solid rgba(255,107,0,0.25)',
-          borderRadius: 20,
-          padding: '72px 48px',
+      <section
+        style={{
+          padding: '100px 40px',
+          background:
+            'radial-gradient(ellipse 80% 100% at 50% 100%, rgba(255,107,0,0.1) 0%, transparent 70%)',
           textAlign: 'center',
-        }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display), system-ui, sans-serif',
-            fontSize: 'clamp(28px, 4vw, 44px)',
-            fontWeight: 800,
-            color: 'var(--text)',
-            marginBottom: 16,
-            letterSpacing: '-0.02em',
-          }}>
-            Ready to Start Selling?
+        }}
+      >
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: 'var(--accent)',
+              marginBottom: 16,
+            }}
+          >
+            Join 10,000+ Sellers
+          </div>
+          <h2
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 'clamp(32px, 5vw, 52px)',
+              fontWeight: 800,
+              margin: '0 0 20px',
+              lineHeight: 1.1,
+              letterSpacing: '-1px',
+            }}
+          >
+            Ready to Sell to
+            <br />
+            <span style={{ color: 'var(--accent)' }}>the Entire World?</span>
           </h2>
-          <p style={{
-            color: 'var(--muted)',
-            fontSize: 18,
-            maxWidth: 480,
-            margin: '0 auto 36px',
-            lineHeight: 1.6,
-          }}>
-            Join 10,000+ sellers already growing their business on Velor Marketplace.
+          <p
+            style={{
+              color: 'var(--muted)',
+              fontSize: 16,
+              lineHeight: 1.7,
+              marginBottom: 40,
+            }}
+          >
+            Create your free seller account in minutes. No fees, no limits, no middleman. Just you,
+            your products, and millions of buyers.
           </p>
-          <Link href="/sell" style={{
-            background: 'var(--accent)',
-            color: '#fff',
-            fontFamily: 'var(--font-display), system-ui, sans-serif',
-            fontWeight: 700,
-            fontSize: 17,
-            padding: '18px 48px',
-            borderRadius: 8,
-            display: 'inline-block',
-            letterSpacing: '-0.01em',
-          }}>
-            Create Your Free Store
-          </Link>
-          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 16 }}>
-            No credit card required. Free forever for basic listings.
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/sell" style={{ textDecoration: 'none' }}>
+              <button
+                style={{
+                  background: 'var(--accent)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '16px 40px',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'Space Grotesk, sans-serif',
+                }}
+              >
+                Start Selling — It's Free
+              </button>
+            </Link>
+            <Link href="/shop" style={{ textDecoration: 'none' }}>
+              <button
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                  padding: '16px 40px',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'Space Grotesk, sans-serif',
+                }}
+              >
+                Explore Products
+              </button>
+            </Link>
           </div>
         </div>
       </section>
-    </>
-  );
-}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @media (max-width: 768px) {
+          .hero-cards { display: none !important; }
+        }
+      `}</style>
+    </div>
+  )
+          }
