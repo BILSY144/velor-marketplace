@@ -1,207 +1,139 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-
-interface AccountStatus {
-  connected: boolean;
-  accountId?: string;
-  displayName?: string;
-  chargesEnabled?: boolean;
-  payoutsEnabled?: boolean;
-  detailsSubmitted?: boolean;
-  country?: string;
-  email?: string;
-}
-
-function ConnectedView({
-  status,
-  onDisconnect,
-  disconnecting,
-}: {
-  status: AccountStatus;
-  onDisconnect: () => void;
-  disconnecting: boolean;
-}) {
-  return (
-    <div>
-      <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '20px', color: '#00E676', lineHeight: '1' }}>&#10003;</span>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#FFFFFF' }}>Connected</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#999999' }}>{status.displayName || status.accountId}</p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(0,230,118,0.1)', borderRadius: '20px', border: '1px solid rgba(0,230,118,0.2)' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00E676' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#00E676' }}>Active</span>
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-          {[
-            { label: 'Account ID', value: status.accountId || '-', color: undefined },
-            { label: 'Charges', value: status.chargesEnabled ? 'Enabled' : 'Not enabled', color: status.chargesEnabled ? '#00E676' : '#FF1744' },
-            { label: 'Payouts', value: status.payoutsEnabled ? 'Enabled' : 'Pending', color: status.payoutsEnabled ? '#00E676' : '#FF6B00' },
-          ].map(item => (
-            <div key={item.label} style={{ background: '#0D0D0D', borderRadius: '8px', padding: '12px' }}>
-              <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</p>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: item.color || '#FFFFFF', wordBreak: 'break-all' }}>{item.value}</p>
-            </div>
-          ))}
-        </div>
-        {!status.detailsSubmitted && (
-          <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(255,107,0,0.1)', borderRadius: '8px', border: '1px solid rgba(255,107,0,0.2)' }}>
-            <p style={{ margin: 0, fontSize: '13px', color: '#FF6B00' }}>
-              Your Stripe account setup is incomplete. Visit your Stripe dashboard to finish providing business details and enable payouts.
-            </p>
-          </div>
-        )}
-      </div>
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <a
-          href="https://dashboard.stripe.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ padding: '12px 24px', background: '#FF6B00', color: '#FFFFFF', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: 600, fontFamily: 'Space Grotesk, sans-serif' }}
-        >
-          Open Stripe Dashboard
-        </a>
-        <button
-          onClick={onDisconnect}
-          disabled={disconnecting}
-          style={{ padding: '12px 24px', background: 'transparent', color: '#999999', border: '1px solid #2A2A2A', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: disconnecting ? 'not-allowed' : 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}
-        >
-          {disconnecting ? 'Disconnecting...' : 'Disconnect'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DisconnectedView({ oauthUrl }: { oauthUrl: string }) {
-  return (
-    <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '48px 32px', textAlign: 'center', marginBottom: '24px' }}>
-      <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#141414', border: '2px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2zm1 17h-2v-2h2v2zm0-4h-2V7h2v8z" fill="#444444"/>
-        </svg>
-      </div>
-      <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 10px' }}>
-        No Stripe account connected
-      </h2>
-      <p style={{ color: '#999999', fontSize: '14px', margin: '0 0 28px', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-        Connect your Stripe account to start accepting payments and receiving payouts for your products on Velor Marketplace.
-      </p>
-      {oauthUrl ? (
-        <a
-          href={oauthUrl}
-          style={{ display: 'inline-block', padding: '14px 36px', background: '#FF6B00', color: '#FFFFFF', borderRadius: '8px', textDecoration: 'none', fontSize: '15px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0.02em' }}
-        >
-          Connect with Stripe
-        </a>
-      ) : (
-        <div style={{ padding: '14px 32px', background: '#2A2A2A', color: '#666666', borderRadius: '8px', display: 'inline-block', fontSize: '14px' }}>
-          Stripe Connect not configured — add STRIPE_CLIENT_ID to environment variables
-        </div>
-      )}
-    </div>
-  );
-}
-
+import { useState, useEffect } from 'react';
 export default function StripeConnectPage() {
-  const [status, setStatus] = useState<AccountStatus | null>(null);
-  const [oauthUrl, setOauthUrl] = useState<string>('');
+  const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [disconnecting, setDisconnecting] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [connecting, setConnecting] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [accountRes, urlRes] = await Promise.all([
-          fetch('/api/stripe/connect/account'),
-          fetch('/api/stripe/connect'),
-        ]);
-        const [accountData, urlData] = await Promise.all([
-          accountRes.json(),
-          urlRes.json(),
-        ]);
-        setStatus(accountData);
-        if (urlData.url) setOauthUrl(urlData.url);
-      } catch {
-        setError('Failed to load connection status');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  useEffect(() => { fetchStatus(); }, []);
 
-  const handleDisconnect = async () => {
-    if (!confirm('Disconnect your Stripe account? You will stop receiving payouts until you reconnect.')) return;
-    setDisconnecting(true);
+  async function fetchStatus() {
+    setLoading(true);
     try {
-      await fetch('/api/stripe/connect/account', { method: 'DELETE' });
-      setStatus({ connected: false });
-    } catch {
-      setError('Failed to disconnect. Please try again.');
-    } finally {
-      setDisconnecting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div style={{ padding: '40px', color: '#999999', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
-        Loading...
-      </div>
-    );
+      const r = await fetch('/api/stripe/connect/account');
+      const d = await r.json();
+      setStatus(d);
+    } catch {}
+    setLoading(false);
   }
 
+  async function handleConnect() {
+    setConnecting(true);
+    try {
+      const r = await fetch('/api/stripe/connect', { method: 'POST' });
+      const d = await r.json();
+      if (d.onboardingUrl) window.location.href = d.onboardingUrl;
+    } catch { setConnecting(false); }
+  }
+
+  async function handleCompleteSetup() {
+    setConnecting(true);
+    try {
+      const r = await fetch('/api/stripe/connect');
+      const d = await r.json();
+      if (d.onboardingUrl) window.location.href = d.onboardingUrl;
+    } catch { setConnecting(false); }
+  }
+
+  async function handleDisconnect() {
+    if (!confirm('Disconnect your Stripe account? You will stop receiving payouts.')) return;
+    await fetch('/api/stripe/connect/account', { method: 'DELETE' });
+    await fetchStatus();
+  }
+
+  const isConnected = status?.chargesEnabled && status?.payoutsEnabled;
+  const isIncomplete = status && !status.needsAccount && !isConnected;
+
   return (
-    <div style={{ padding: '32px', maxWidth: '720px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 8px' }}>
-          Stripe Connect
-        </h1>
-        <p style={{ color: '#999999', fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
-          Connect your Stripe account to receive payouts for your sales on Velor Marketplace.
-        </p>
-      </div>
-      {error && (
-        <div style={{ background: 'rgba(255,23,68,0.1)', border: '1px solid rgba(255,23,68,0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', color: '#FF1744', fontSize: '14px' }}>
-          {error}
-        </div>
-      )}
-      {status?.connected ? (
-        <ConnectedView status={status} onDisconnect={handleDisconnect} disconnecting={disconnecting} />
+    <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px', fontFamily: 'Inter, sans-serif', color: '#FFFFFF' }}>
+      <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 28, fontWeight: 700, marginBottom: 8, color: '#FFFFFF' }}>
+        Payout Settings
+      </h1>
+      <p style={{ color: '#999999', fontSize: 15, marginBottom: 32 }}>
+        Connect your Stripe account to receive 85% of every sale automatically.
+      </p>
+
+      {loading ? (
+        <div style={{ color: '#999999', fontSize: 14 }}>Loading...</div>
       ) : (
-        <DisconnectedView oauthUrl={oauthUrl} />
-      )}
-      <div style={{ marginTop: '40px', padding: '24px', background: '#1A1A1A', borderRadius: '12px', border: '1px solid #2A2A2A' }}>
-        <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 20px' }}>
-          How payouts work
-        </h2>
-        {[
-          { step: '1', title: 'Customer places an order', desc: 'Stripe collects payment from the buyer at checkout.' },
-          { step: '2', title: 'Platform fee deducted', desc: 'Velor retains a 15% commission on every sale.' },
-          { step: '3', title: 'You receive the rest', desc: '85% of the sale amount is transferred to your Stripe account automatically.' },
-          { step: '4', title: 'Stripe pays out to your bank', desc: 'Stripe deposits funds to your linked bank account on your chosen schedule.' },
-        ].map(item => (
-          <div key={item.step} style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,107,0,0.15)', border: '1px solid rgba(255,107,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#FF6B00' }}>{item.step}</span>
+        <>
+          {isConnected && (
+            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00E676' }} />
+                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 16 }}>Connected</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                {[
+                  { label: 'Charges', ok: status?.chargesEnabled },
+                  { label: 'Payouts', ok: status?.payoutsEnabled },
+                  { label: 'Verified', ok: status?.detailsSubmitted },
+                ].map(item => (
+                  <div key={item.label} style={{ background: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.ok ? '#00E676' : '#FF1744' }} />
+                    <span style={{ fontSize: 13, color: '#FFFFFF' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={handleDisconnect} style={{ marginTop: 20, background: 'transparent', border: '1px solid #2A2A2A', borderRadius: 8, padding: '10px 16px', color: '#999999', fontSize: 13, cursor: 'pointer' }}>
+                Disconnect
+              </button>
             </div>
-            <div>
-              <p style={{ margin: '0 0 2px', fontSize: '14px', fontWeight: 600, color: '#FFFFFF' }}>{item.title}</p>
-              <p style={{ margin: 0, fontSize: '13px', color: '#999999', lineHeight: 1.5 }}>{item.desc}</p>
+          )}
+
+          {status?.needsAccount && (
+            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Set Up Payouts</h3>
+              <p style={{ color: '#999999', fontSize: 14, marginBottom: 20 }}>
+                You will earn 85% of every sale. Velor retains 15% as a platform fee. Payouts are processed by Stripe.
+              </p>
+              <button
+                onClick={handleConnect}
+                disabled={connecting}
+                style={{ background: '#FF6B00', border: 'none', borderRadius: 8, padding: '13px 24px', color: '#FFFFFF', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, cursor: connecting ? 'not-allowed' : 'pointer', opacity: connecting ? 0.7 : 1 }}
+              >
+                {connecting ? 'Redirecting...' : 'Connect with Stripe'}
+              </button>
             </div>
+          )}
+
+          {isIncomplete && (
+            <div style={{ background: '#1A1A1A', border: '1px solid #FF6B00', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 8, color: '#FF6B00' }}>Setup Incomplete</h3>
+              <p style={{ color: '#999999', fontSize: 14, marginBottom: 20 }}>
+                Your Stripe account needs a few more details before payouts can be enabled.
+              </p>
+              <button
+                onClick={handleCompleteSetup}
+                disabled={connecting}
+                style={{ background: '#FF6B00', border: 'none', borderRadius: 8, padding: '13px 24px', color: '#FFFFFF', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, cursor: connecting ? 'not-allowed' : 'pointer', opacity: connecting ? 0.7 : 1 }}
+              >
+                {connecting ? 'Redirecting...' : 'Complete Setup'}
+              </button>
+              <button onClick={handleDisconnect} style={{ marginLeft: 12, background: 'transparent', border: '1px solid #2A2A2A', borderRadius: 8, padding: '13px 16px', color: '#999999', fontSize: 13, cursor: 'pointer' }}>
+                Disconnect
+              </button>
+            </div>
+          )}
+
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24 }}>
+            <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>How payouts work</h3>
+            {[
+              { step: '1', text: 'A customer purchases your product' },
+              { step: '2', text: 'Velor deducts a 15% platform fee' },
+              { step: '3', text: 'You receive 85% directly to your Stripe account' },
+              { step: '4', text: 'Stripe transfers funds on your chosen schedule' },
+            ].map(item => (
+              <div key={item.step} style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'flex-start' }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#FF6B00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700 }}>
+                  {item.step}
+                </div>
+                <span style={{ fontSize: 14, color: '#999999', paddingTop: 4 }}>{item.text}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

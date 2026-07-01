@@ -80,6 +80,7 @@ interface CartItem {
   quantity: number;
   image: string;
   variantName?: string;
+  sellerId?: string;
 }
 
 interface ShippingForm {
@@ -171,13 +172,15 @@ function CheckoutContent() {
     setErrors({});
 
     try {
-      // Create PaymentIntent
+      const sellerId = cartItems.find(i => i.sellerId)?.sellerId;
+    // Create PaymentIntent
       const piRes = await fetch('/api/stripe/payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: Math.round(total * 100),
           currency: 'gbp',
+          ...(sellerId ? { sellerId } : {}),
           items: cartItems.map(i => ({ id: i.id, name: i.name, qty: i.quantity })),
         }),
       });
