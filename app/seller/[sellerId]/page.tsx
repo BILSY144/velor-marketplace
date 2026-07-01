@@ -17,9 +17,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'â'.repeat(full)}
-        {half ? 'Â½' : ''}
-        {'â'.repeat(5 - full - (half ? 1 : 0))}
+        {'Ã¢ÂÂ'.repeat(full)}
+        {half ? 'ÃÂ½' : ''}
+        {'Ã¢ÂÂ'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -35,12 +35,12 @@ export default async function SellerProfilePage({
 }) {
   const { sellerId } = await params
 
-  const seller = await prisma.seller.findUnique({
-    where: { id: sellerId, status: 'APPROVED' },
+  const seller = await prisma.seller.findFirst({
+    where: { id: sellerId, isApproved: true },
     include: {
       user: { select: { name: true } },
       products: {
-        where: { status: 'APPROVED' },
+        where: { isApproved: true },
         include: {
           reviews: { select: { rating: true } },
         },
@@ -299,7 +299,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>â</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>Ã¢ÂÂ</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}
