@@ -16,7 +16,8 @@ export async function GET() {
           name: true,
           price: true,
           stock: true,
-          status: true,
+          isApproved: true,
+          isActive: true,
           category: true,
           images: true,
           createdAt: true,
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
-  if (seller.status !== 'APPROVED') {
+  if (!seller.isApproved || seller.isSuspended) {
     return NextResponse.json({ error: 'Seller account pending approval' }, { status: 403 })
   }
 
@@ -60,29 +61,19 @@ export async function POST(req: NextRequest) {
   }
 
   if (!name || !category || price == null) {
-    return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
-  }
-
-  const parsedPrice = parseFloat(String(price))
-  if (isNaN(parsedPrice) || parsedPrice <= 0) {
-    return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
+    return NextResponse.json({ error: 'Missing required fields: name, price, category' }, { status: 400 })
   }
 
   const product = await prisma.product.create({
     data: {
+      name,
+      description: description || '',
+      price: price as number,
+      stock: stock || 0,
+      category,
+      images: images || [],
+      tags: tags || [],
       sellerId: seller.id,
-      name: String(name).trim(),
-      description: String(description || '').trim(),
-      price: parsedPrice,
-      stock: Math.max(0, parseInt(String(stock || 0))),
-      category: String(category).trim(),
-      images: Array.isArray(images)
-        ? images.filter((u: unknown) => typeof u === 'string' && u.startsWith('http'))
-        : [],
-      tags: Array.isArray(tags)
-        ? tags.filter((t: unknown) => typeof t === 'string')
-        : [],
-      status: 'PENDING',
     },
   })
 
