@@ -23,9 +23,9 @@ export async function GET(req: NextRequest) {
   const filter = searchParams.get('status') || 'PENDING'
   const where =
     filter === 'ALL' ? {} :
-    filter === 'APPROVED' ? { isApproved: true } :
-    filter === 'REJECTED' ? { isApproved: false, isActive: false } :
-    { isApproved: false, isActive: true } // PENDING default
+    filter === 'APPROVED' ? { status: 'APPROVED' as const } :
+    filter === 'REJECTED' ? { status: 'REJECTED' as const } :
+    { status: 'PENDING_REVIEW' as const } // PENDING default
 
   const products = await prisma.product.findMany({
     where,
@@ -56,8 +56,7 @@ export async function PATCH(req: NextRequest) {
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
-      isApproved: action === 'approve',
-      isActive: action === 'approve',
+      status: action === 'approve' ? 'APPROVED' : 'REJECTED',
     },
     include: {
       seller: {
