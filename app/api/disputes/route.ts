@@ -1,0 +1,85 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json() as { orderId: string; reason: string; evidence?: string };
+  const { orderId, reason, evidence } = body;
+  if (!orderId || !reason) {
+    return NextResponse.json({ error: 'orderId and reason are required' }, { status: 400 });
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  if (order.buyerEmail !== email) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const dispute = await prisma.dispute.create({
+    data: {
+      orderId,
+      raisedBy: email,
+      reason,
+      ...(evidence && { evidence }),
+    },
+  });
+
+  return NextResponse.json({ dispute }, { status: 201 });
+}
+
+export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const role = searchParams.get('role') ?? 'buyer';
+
+  if (role === 'admin') {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const disputes = await prisma.dispute.findMany({
+      include: {
+        order: {
+          include: { items: { include: { product: { select: { id: true, title: true } } } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json({ disputes });
+  }
+
+  if (role === 'seller') {
+    const seller = await prisma.seller.findFirst({ where: { user: { email } } });
+    if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
+
+    const disputes = await prisma.dispute.findMany({
+      where: { order: { items: { some: { product: { sellerId: seller.id } } } } },
+      include: {
+        order: {
+          include: {
+            items: {
+              include: { product: { select: { id: true, title: true, images: true } } },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json({ disputes });
+  }
+
+  // buyer
+  const disputes = await prisma.dispute.findMany({
+    where: { raisedBy: email },
+    include: { order: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  return NextResponse.json({ disputes });
+}

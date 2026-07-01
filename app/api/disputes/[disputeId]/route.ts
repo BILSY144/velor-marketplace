@@ -1,0 +1,67 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ disputeId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { disputeId } = await params;
+
+  const dispute = await prisma.dispute.findUnique({
+    where: { id: disputeId },
+    include: { order: true },
+  });
+  if (!dispute) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  const isAdmin = user?.role === 'ADMIN';
+  const isBuyer = dispute.raisedBy === email;
+
+  if (!isBuyer && !isAdmin) {
+    const seller = await prisma.seller.findFirst({ where: { user: { email } } });
+    if (!seller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const hasItem = await prisma.orderItem.findFirst({
+      where: { orderId: dispute.orderId, product: { sellerId: seller.id } },
+    });
+    if (!hasItem) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  return NextResponse.json({ dispute });
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ disputeId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { disputeId } = await params;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const dispute = await prisma.dispute.findUnique({ where: { id: disputeId } });
+  if (!dispute) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const body = await req.json() as { status?: string; resolution?: string };
+
+  const updated = await prisma.dispute.update({
+    where: { id: disputeId },
+    data: {
+      ...(body.status !== undefined && { status: body.status }),
+      ...(body.resolution !== undefined && { resolution: body.resolution }),
+    },
+  });
+
+  return NextResponse.json({ dispute: updated });
+}
