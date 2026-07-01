@@ -21,7 +21,6 @@ export async function GET() {
           category: true,
           images: true,
           createdAt: true,
-          _count: { select: { orderItems: true } },
         },
       },
     },
@@ -29,7 +28,20 @@ export async function GET() {
 
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
 
-  const products = seller.products.map((p) => ({ ...p, sales: p._count.orderItems }))
+  const productIds = seller.products.map((p) => p.id)
+
+  // Count order items per product (OrderItem has no relation back to Product — use groupBy)
+  const salesCounts = productIds.length > 0
+    ? await prisma.orderItem.groupBy({
+        by: ['productId'],
+        where: { productId: { in: productIds } },
+        _count: { productId: true },
+      })
+    : []
+
+  const salesMap = new Map(salesCounts.map((s) => [s.productId, s._count.productId]))
+
+  const products = seller.products.map((p) => ({ ...p, sales: salesMap.get(p.id) ?? 0 }))
   return NextResponse.json({ products })
 }
 
@@ -39,41 +51,25 @@ export async function POST(req: NextRequest) {
 
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
-  if (!seller.isApproved || seller.isSuspended) {
-    return NextResponse.json({ error: 'Seller account pending approval' }, { status: 403 })
-  }
 
-  let body: Record<string, unknown>
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const body = await req.json()
+  const { name, description, price, stock, category, images } = body
 
-  const { name, description, price, stock, category, images, tags } = body as {
-    name?: string
-    description?: string
-    price?: number
-    stock?: number
-    category?: string
-    images?: string[]
-    tags?: string[]
-  }
-
-  if (!name || !category || price == null) {
-    return NextResponse.json({ error: 'Missing required fields: name, price, category' }, { status: 400 })
+  if (!name || !price || !category) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
   const product = await prisma.product.create({
     data: {
       name,
-      description: description || '',
-      price: price as number,
-      stock: stock || 0,
+      description: description ?? '',
+      price: parseFloat(price),
+      stock: parseInt(stock) ?? 0,
       category,
-      images: images || [],
-      tags: tags || [],
+      images: images ?? [],
       sellerId: seller.id,
+      isApproved: false,
+      isActive: false,
     },
   })
 
