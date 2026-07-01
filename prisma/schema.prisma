@@ -65,6 +65,7 @@ model User {
   sessions Session[]
   seller   Seller?
   reviews  Review[]
+  wishlists WishlistItem[]
 }
 
 enum Role {
