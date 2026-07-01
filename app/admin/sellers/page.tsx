@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 interface Seller {
   id: string
-  storeName: string
+  businessName: string
   status: string
   createdAt: string
   user: {
@@ -36,7 +36,7 @@ export default function AdminSellersPage() {
   const [confirmDialog, setConfirmDialog] = useState<{
     sellerId: string
     action: string
-    storeName: string
+    businessName: string
   } | null>(null)
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function AdminSellersPage() {
     if (action === 'approve') {
       handleAction(seller.id, action)
     } else {
-      setConfirmDialog({ sellerId: seller.id, action, storeName: seller.storeName })
+      setConfirmDialog({ sellerId: seller.id, action, businessName: seller.businessName })
     }
   }
 
@@ -135,7 +135,7 @@ export default function AdminSellersPage() {
             </h3>
             <p style={{ margin: '0 0 24px', color: '#999999', fontSize: 14 }}>
               Are you sure you want to {confirmDialog.action}{' '}
-              <strong style={{ color: '#FFFFFF' }}>{confirmDialog.storeName}</strong>?
+              <strong style={{ color: '#FFFFFF' }}>{confirmDialog.businessName}</strong>?
               {confirmDialog.action === 'reject' && ' They will be notified by email.'}
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -194,7 +194,7 @@ export default function AdminSellersPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#111111' }}>
-              {['Store Name', 'Owner', 'Email', 'Applied', 'Status', 'Actions'].map(h => (
+              {['Business Name', 'Owner', 'Email', 'Applied', 'Status', 'Actions'].map(h => (
                 <th key={h} style={{
                   padding: '12px 16px', textAlign: 'left', fontSize: 12,
                   fontWeight: 600, color: '#999999', textTransform: 'uppercase',
@@ -223,7 +223,7 @@ export default function AdminSellersPage() {
                 borderBottom: i < sellers.length - 1 ? '1px solid #2A2A2A' : 'none',
               }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, fontSize: 14 }}>
-                  {seller.storeName}
+                  {seller.businessName}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 14, color: '#CCCCCC' }}>
                   {seller.user.name || '—'}
@@ -297,4 +297,4 @@ export default function AdminSellersPage() {
       </div>
     </div>
   )
-}
+        }
