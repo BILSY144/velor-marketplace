@@ -36,20 +36,21 @@ enum ShipmentStatus {
 }
 
 model User {
-  id               String    @id @default(cuid())
+  id               String          @id @default(cuid())
   name             String?
-  email            String    @unique
+  email            String          @unique
   emailVerified    DateTime?
   image            String?
   password         String?
-  role             String    @default("BUYER")
+  role             String          @default("BUYER")
   accounts         Account[]
   sessions         Session[]
   seller           Seller?
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  wishlistItems    WishlistItem[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model Account {
@@ -101,6 +102,7 @@ model Seller {
   shipments       Shipment[]
   shippingProfile SellerShippingProfile?
   discountCodes   DiscountCode[]
+  payouts         Payout[]
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 }
@@ -125,18 +127,18 @@ model SellerShippingProfile {
 }
 
 model Product {
-  id            String        @id @default(cuid())
+  id            String         @id @default(cuid())
   sellerId      String
-  seller        Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller        Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   name          String
-  description   String        @db.Text
+  description   String         @db.Text
   price         Float
-  currency      String        @default("GBP")
-  stock         Int           @default(0)
+  currency      String         @default("GBP")
+  stock         Int            @default(0)
   category      String
   images        String[]
   tags          String[]
-  status        ProductStatus @default(PENDING_REVIEW)
+  status        ProductStatus  @default(PENDING_REVIEW)
   weightGrams   Int?
   lengthCm      Float?
   widthCm       Float?
@@ -146,31 +148,34 @@ model Product {
   orderItems    OrderItem[]
   reviews       Review[]
   messages      Message[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  wishlistItems WishlistItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  stripePaymentId String?     @unique
+  id              String          @id @default(cuid())
+  stripePaymentId String?         @unique
   sellerId        String
-  seller          Seller      @relation(fields: [sellerId], references: [id])
+  seller          Seller          @relation(fields: [sellerId], references: [id])
   buyerEmail      String
   buyerName       String
-  status          OrderStatus @default(PAID)
+  status          OrderStatus     @default(PAID)
   total           Float
-  productSubtotal Float       @default(0)
-  shippingCost    Float       @default(0)
-  dutiesCost      Float       @default(0)
-  currency        String      @default("GBP")
+  productSubtotal Float           @default(0)
+  shippingCost    Float           @default(0)
+  dutiesCost      Float           @default(0)
+  currency        String          @default("GBP")
   shippingAddress Json?
   address         String?
   carrier         String?
   shippingService String?
   items           OrderItem[]
   shipments       Shipment[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  disputes        Dispute[]
+  returnRequests  ReturnRequest[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model OrderItem {
@@ -186,11 +191,11 @@ model OrderItem {
 }
 
 model Shipment {
-  id               String          @id @default(cuid())
+  id               String         @id @default(cuid())
   orderId          String
-  order            Order           @relation(fields: [orderId], references: [id])
+  order            Order          @relation(fields: [orderId], references: [id])
   sellerId         String
-  seller           Seller          @relation(fields: [sellerId], references: [id])
+  seller           Seller         @relation(fields: [sellerId], references: [id])
   shippoShipmentId String?
   shippoRateId     String?
   shippoLabelId    String?
@@ -199,14 +204,14 @@ model Shipment {
   labelUrl         String?
   carrier          String?
   service          String?
-  shippingAmount   Float           @default(0)
-  dutiesAmount     Float           @default(0)
-  currency         String          @default("GBP")
-  declaredValue    Float           @default(0)
-  status           ShipmentStatus  @default(PENDING)
+  shippingAmount   Float          @default(0)
+  dutiesAmount     Float          @default(0)
+  currency         String         @default("GBP")
+  declaredValue    Float          @default(0)
+  status           ShipmentStatus @default(PENDING)
   events           ShipmentEvent[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model ShipmentEvent {
@@ -257,4 +262,48 @@ model DiscountCode {
   isActive    Boolean   @default(true)
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())
+}
+
+model Dispute {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  raisedBy   String
+  reason     String
+  evidence   String?
+  status     String   @default("OPEN")
+  resolution String?
+  createdAt  DateTime @default(now())
+}
+
+model ReturnRequest {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  buyerEmail String
+  reason     String
+  status     String   @default("PENDING")
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Payout {
+  id        String   @id @default(cuid())
+  sellerId  String
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+  amount    Float
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
