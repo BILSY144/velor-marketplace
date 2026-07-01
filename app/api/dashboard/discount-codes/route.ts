@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       code: code.toUpperCase().trim(),
       type,
       value: parseFloat(value),
-      minimumOrder: minimumOrder ? parseFloat(minimumOrder) : null,
+      minOrder: minimumOrder ? parseFloat(minimumOrder) : null,
       maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
       usageLimit: usageLimit ? parseInt(usageLimit) : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
