@@ -36,10 +36,6 @@ export async function POST(req: NextRequest) {
 
   const hashed = await bcrypt.hash(password, 12)
 
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-
   const user = await prisma.user.create({
     data: {
       name,
@@ -60,7 +56,7 @@ export async function POST(req: NextRequest) {
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'customerservice@velorcommerce.store',
       to: email,
-      subject: 'Welcome to Velor Marketplace Ã¢ÂÂ Application Received',
+      subject: 'Welcome to Velor Marketplace ÃÂ¢ÃÂÃÂ Application Received',
       html: `<p>Hi ${name},</p><p>Thank you for applying to sell on Velor Marketplace. We will review your application and be in touch shortly.</p><p>The Velor Team</p>`,
     }),
   ])
