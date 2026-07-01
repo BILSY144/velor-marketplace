@@ -41,6 +41,8 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  password      String?
+  role          String    @default("BUYER")
   accounts      Account[]
   sessions      Session[]
   seller        Seller?
