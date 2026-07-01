@@ -1,198 +1,305 @@
-'use client';
+'use client'
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
-interface OrderData {
-  orderNumber: string;
-  items: Array<{ name: string; quantity: number; price: number }>;
-  subtotal: number;
-  shipping: number;
-  total: number;
-  currency: string;
-  shippingAddress?: {
-    name: string;
-    line1: string;
-    city: string;
-    country: string;
-  };
+interface ShippingForm {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  postcode: string
+  country: string
 }
 
-function getDeliveryDate(): string {
-  const date = new Date();
-  let daysAdded = 0;
-  while (daysAdded < 5) {
-    date.setDate(date.getDate() + 1);
-    const day = date.getDay();
-    if (day !== 0 && day !== 6) daysAdded++;
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  image: string
+  variantName?: string
+  sellerId?: string
+}
+
+interface StoredOrder {
+  orderNumber: string
+  paymentIntentId?: string
+  items: CartItem[]
+  shipping: ShippingForm
+  shippingMethod: string
+  shippingCost: number
+  subtotal: number
+  total: number
+  currency: string
+  placedAt: string
+}
+
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount)
+}
+
+function getDeliveryDate(method: string): string {
+  const now = new Date()
+  const days = method === 'express' ? 2 : 5
+  let count = 0
+  const d = new Date(now)
+  while (count < days) {
+    d.setDate(d.getDate() + 1)
+    const dow = d.getDay()
+    if (dow !== 0 && dow !== 6) count++
   }
-  return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-}
-
-function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency.toUpperCase() }).format(amount);
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 function ConfirmationContent() {
-  const searchParams = useSearchParams();
-  const [order, setOrder] = useState<OrderData | null>(null);
-  const deliveryDate = getDeliveryDate();
+  const searchParams = useSearchParams()
+  const [order, setOrder] = useState<StoredOrder | null>(null)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    const orderParam = searchParams.get('order');
-    if (orderParam) {
-      try {
-        setOrder(JSON.parse(decodeURIComponent(orderParam)));
-        return;
-      } catch {}
+    const param = searchParams.get('order')
+    if (param) {
+      try { setOrder(JSON.parse(decodeURIComponent(param))); return } catch {}
     }
-    const stored = localStorage.getItem('velor-last-order');
+    const stored = localStorage.getItem('velor-last-order')
     if (stored) {
-      try { setOrder(JSON.parse(stored)); } catch {}
+      try { setOrder(JSON.parse(stored)) } catch {}
     }
-  }, [searchParams]);
+  }, [searchParams])
+
+  // Persist order to DB on mount — fire-and-forget, idempotent
+  useEffect(() => {
+    if (!order || saved || !order.paymentIntentId) return
+    setSaved(true)
+
+    const buyerName = `${order.shipping.firstName ?? ''} ${order.shipping.lastName ?? ''}`.trim()
+
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentIntentId: order.paymentIntentId,
+        buyerEmail: order.shipping.email,
+        buyerName,
+        total: order.total,
+        currency: order.currency ?? 'GBP',
+        shippingAddress: {
+          name: buyerName,
+          line1: order.shipping.address ?? '',
+          city: order.shipping.city ?? '',
+          postcode: order.shipping.postcode ?? '',
+          country: order.shipping.country ?? '',
+        },
+        items: (order.items ?? []).map((i) => ({
+          id: i.id,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+      }),
+    }).catch(() => {}) // Non-blocking — confirmation UI never depends on this
+  }, [order, saved])
 
   if (!order) {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#999999', fontFamily: 'Inter, sans-serif' }}>Loading order details...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0D0D' }}>
+        <p style={{ color: '#999999', fontFamily: 'Inter, sans-serif' }}>Loading your order...</p>
       </div>
-    );
+    )
   }
 
-  const currency = order.currency || 'usd';
+  const deliveryDate = getDeliveryDate(order.shippingMethod)
+  const currency = order.currency ?? 'GBP'
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '48px 24px' }}>
-      {/* Success Icon */}
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{
-          width: '72px', height: '72px', borderRadius: '50%',
-          background: '#00E676', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: '20px'
-        }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-            <path d="M5 13l4 4L19 7" stroke="#0D0D0D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 800, color: '#FFFFFF', margin: '0 0 8px' }}>
-          Order Confirmed
-        </h1>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: '#999999', margin: 0 }}>
-          Thank you! Your order <strong style={{ color: '#FF6B00' }}>#{order.orderNumber}</strong> is confirmed.
-        </p>
+    <div style={{ minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif', color: '#FFFFFF' }}>
+      {/* Header */}
+      <div style={{ borderBottom: '1px solid #2A2A2A', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <a href="/" style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 20, color: '#FF6B00', textDecoration: 'none', letterSpacing: '-0.5px' }}>
+          VELOR
+        </a>
+        <span style={{ color: '#2A2A2A' }}>|</span>
+        <span style={{ color: '#999999', fontSize: 14 }}>Order Confirmation</span>
       </div>
 
-      {/* Delivery Estimate */}
-      <div style={{
-        background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px',
-        padding: '20px 24px', marginBottom: '24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke="#00E676" strokeWidth="1.5" strokeLinejoin="round"/>
-            <circle cx="5.5" cy="18.5" r="1.5" stroke="#00E676" strokeWidth="1.5"/>
-            <circle cx="18.5" cy="18.5" r="1.5" stroke="#00E676" strokeWidth="1.5"/>
-          </svg>
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '48px 24px' }}>
+        {/* Success header */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'rgba(0,230,118,0.12)', border: '2px solid #00E676',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 20px',
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 32, fontWeight: 800, margin: '0 0 8px' }}>
+            Order Confirmed!
+          </h1>
+          <p style={{ color: '#999999', fontSize: 15, margin: 0 }}>
+            Thank you. Your order is on its way.
+          </p>
+        </div>
+
+        {/* Order number */}
+        <div style={{
+          background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12,
+          padding: '20px 24px', marginBottom: 24,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
+        }}>
           <div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#999999', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Estimated Delivery
-            </p>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: '#00E676', margin: 0 }}>
-              {deliveryDate}
+            <p style={{ fontSize: 11, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Order Number</p>
+            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 22, fontWeight: 800, margin: 0, color: '#FF6B00' }}>
+              {order.orderNumber}
             </p>
           </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 11, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Est. Delivery</p>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#00E676' }}>{deliveryDate}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Order Items */}
-      <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 16px' }}>
-          Order Summary
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {order.items.map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#FFFFFF', margin: '0 0 2px' }}>{item.name}</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#999999', margin: 0 }}>Qty: {item.quantity}</p>
+        {/* Items */}
+        <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999999', margin: 0 }}>
+              Items Ordered
+            </p>
+          </div>
+          {(order.items ?? []).map((item, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
+              borderBottom: i < order.items.length - 1 ? '1px solid #2A2A2A' : 'none',
+            }}>
+              {item.image && (
+                <img src={item.image} alt={item.name} style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', background: '#111111', flexShrink: 0 }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                {item.variantName && <p style={{ fontSize: 12, color: '#999999', margin: 0 }}>{item.variantName}</p>}
               </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#FFFFFF', margin: 0, fontWeight: 600 }}>
-                {formatCurrency(item.price * item.quantity, currency)}
-              </p>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>{formatCurrency(item.price, currency)}</p>
+                <p style={{ fontSize: 11, color: '#999999', margin: 0 }}>Qty: {item.quantity}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Totals */}
+          <div style={{ padding: '14px 20px', borderTop: '1px solid #2A2A2A' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: '#999999' }}>Subtotal</span>
+              <span style={{ fontSize: 13 }}>{formatCurrency(order.subtotal, currency)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontSize: 13, color: '#999999' }}>Delivery</span>
+              <span style={{ fontSize: 13, color: '#00E676' }}>
+                {order.shippingCost === 0 ? 'FREE' : formatCurrency(order.shippingCost, currency)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #2A2A2A' }}>
+              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 16, fontWeight: 800 }}>Total</span>
+              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 16, fontWeight: 800, color: '#FF6B00' }}>
+                {formatCurrency(order.total, currency)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Delivery address */}
+        {order.shipping && (
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: '16px 20px', marginBottom: 24 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999999', margin: '0 0 10px' }}>
+              Delivering To
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>
+              {order.shipping.firstName} {order.shipping.lastName}
+            </p>
+            <p style={{ fontSize: 13, color: '#999999', margin: '0 0 2px' }}>{order.shipping.address}</p>
+            <p style={{ fontSize: 13, color: '#999999', margin: '0 0 2px' }}>{order.shipping.city}, {order.shipping.postcode}</p>
+            <p style={{ fontSize: 13, color: '#999999', margin: 0 }}>{order.shipping.country}</p>
+          </div>
+        )}
+
+        {/* What happens next */}
+        <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: '20px 24px', marginBottom: 36 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999999', margin: '0 0 16px' }}>
+            What Happens Next
+          </p>
+          {[
+            { step: '1', title: 'Order Confirmed', desc: 'Your payment has been processed successfully.' },
+            { step: '2', title: 'Processing', desc: 'We are preparing your items for dispatch.' },
+            { step: '3', title: 'Dispatched', desc: "You'll receive a tracking number once your order ships." },
+            { step: '4', title: 'Delivered', desc: `Expected by ${deliveryDate}.` },
+          ].map(({ step, title, desc }) => (
+            <div key={step} style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'rgba(255,107,0,0.12)', border: '1px solid #FF6B00',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, fontWeight: 800, color: '#FF6B00',
+              }}>
+                {step}
+              </div>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 2px' }}>{title}</p>
+                <p style={{ fontSize: 12, color: '#999999', margin: 0 }}>{desc}</p>
+              </div>
             </div>
           ))}
         </div>
-        <div style={{ borderTop: '1px solid #2A2A2A', marginTop: '16px', paddingTop: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#999999' }}>Shipping</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#00E676' }}>Free</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, color: '#FFFFFF' }}>Total</span>
-            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, color: '#FF6B00' }}>
-              {formatCurrency(order.total, currency)}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Shipping Address */}
-      {order.shippingAddress && (
-        <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px 24px', marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 12px' }}>
-            Shipping To
-          </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#999999', margin: 0, lineHeight: 1.6 }}>
-            {order.shippingAddress.name}<br />
-            {order.shippingAddress.line1}<br />
-            {order.shippingAddress.city}<br />
-            {order.shippingAddress.country}
-          </p>
+        {/* CTAs */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <a
+            href="/orders"
+            style={{
+              flex: '1 1 200px', padding: '14px 24px', borderRadius: 8,
+              background: '#FF6B00', color: '#FFFFFF', textAlign: 'center',
+              fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, fontWeight: 700,
+              textDecoration: 'none', display: 'block',
+            }}
+          >
+            View My Orders
+          </a>
+          <a
+            href="/shop"
+            style={{
+              flex: '1 1 200px', padding: '14px 24px', borderRadius: 8,
+              background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF',
+              textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block',
+            }}
+          >
+            Continue Shopping
+          </a>
         </div>
-      )}
 
-      {/* CTA */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <a
-          href="/"
-          style={{
-            flex: 1, display: 'block', textAlign: 'center', padding: '14px',
-            background: '#FF6B00', color: '#FFFFFF', borderRadius: '8px',
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: '15px', fontWeight: 700,
-            textDecoration: 'none'
-          }}
-        >
-          Continue Shopping
-        </a>
-        <a
-          href="/dashboard/orders"
-          style={{
-            flex: 1, display: 'block', textAlign: 'center', padding: '14px',
-            background: 'transparent', color: '#FFFFFF', borderRadius: '8px',
-            border: '1px solid #2A2A2A',
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: '15px', fontWeight: 700,
-            textDecoration: 'none'
-          }}
-        >
-          View Orders
-        </a>
+        {/* Help */}
+        <p style={{ textAlign: 'center', color: '#999999', fontSize: 12, marginTop: 28 }}>
+          Questions? Email{' '}
+          <a href="mailto:customerservice@velorcommerce.store" style={{ color: '#FF6B00', textDecoration: 'none' }}>
+            customerservice@velorcommerce.store
+          </a>
+        </p>
       </div>
     </div>
-  );
+  )
 }
 
 export default function ConfirmationPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0D0D' }}>
-      <Suspense fallback={
-        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: '#999999', fontFamily: 'Inter, sans-serif' }}>Loading...</p>
-        </div>
-      }>
-        <ConfirmationContent />
-      </Suspense>
-    </div>
-  );
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#999999', fontFamily: 'Inter, sans-serif' }}>Loading...</p>
+      </div>
+    }>
+      <ConfirmationContent />
+    </Suspense>
+  )
 }
