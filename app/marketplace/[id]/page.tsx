@@ -1,9 +1,10 @@
 import ProductDetail from './ProductDetail'
 
-export default function MarketplaceProductPage({
+export default async function MarketplaceProductPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  return <ProductDetail id={params.id} />
+  const { id } = await params
+  return <ProductDetail id={id} />
 }
