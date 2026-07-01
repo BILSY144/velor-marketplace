@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 interface Product {
@@ -30,6 +31,7 @@ const CATEGORIES = [
 ]
 
 function ShopContent() {
+  const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
@@ -37,6 +39,8 @@ function ShopContent() {
   const [pages, setPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [searchInput, setSearchInput] = useState('')
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+  const [wishlistPending, setWishlistPending] = useState<string | null>(null)
 
   const category = searchParams.get('category') || ''
   const search = searchParams.get('search') || ''
@@ -65,6 +69,42 @@ function ShopContent() {
   useEffect(() => { fetchProducts() }, [fetchProducts])
   useEffect(() => { setSearchInput(search) }, [search])
 
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/wishlist')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        const ids = new Set<string>(data.items.map((i: { product: { id: string } }) => i.product.id))
+        setWishlistIds(ids)
+      })
+      .catch(() => {})
+  }, [session])
+
+  async function toggleWishlist(e: React.MouseEvent, productId: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!session) {
+      router.push('/auth/signin?callbackUrl=/shop')
+      return
+    }
+    setWishlistPending(productId)
+    const isIn = wishlistIds.has(productId)
+    try {
+      await fetch('/api/wishlist', {
+        method: isIn ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+      setWishlistIds(prev => {
+        const next = new Set(prev)
+        isIn ? next.delete(productId) : next.add(productId)
+        return next
+      })
+    } finally {
+      setWishlistPending(null)
+    }
+  }
+
   function navigate(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString())
     Object.entries(updates).forEach(([k, v]) => v ? p.set(k, v) : p.delete(k))
@@ -72,14 +112,14 @@ function ShopContent() {
     router.push(`/shop?${p}`)
   }
 
-  const currencySymbol = (c: string) => c === 'GBP' ? '£' : c
+  const sym = (c: string) => c === 'GBP' ? '\u00a3' : c + ' '
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '24px', letterSpacing: '-0.5px' }}>VELOR</Link>
-          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px' }}>
+          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px', color: 'var(--text)' }}>
             {category ? CATEGORIES.find(c => c.slug === category)?.label || category : 'All Products'}
             {total > 0 && <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>{total} items</span>}
           </h1>
@@ -92,12 +132,28 @@ function ShopContent() {
               onKeyDown={e => { if (e.key === 'Enter') navigate({ search: searchInput }) }}
               style={{ flex: 1, background: '#111', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none', maxWidth: '400px' }}
             />
-            <button onClick={() => navigate({ search: searchInput })} style={{ background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: 700, cursor: 'pointer', fontSize: '15px' }}>Search</button>
+            <button
+              onClick={() => navigate({ search: searchInput })}
+              style={{ background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: 700, cursor: 'pointer', fontSize: '15px' }}
+            >
+              Search
+            </button>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate({ category: '' })} style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: !category ? 'var(--accent)' : 'transparent', color: !category ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>All</button>
+            <button
+              onClick={() => navigate({ category: '' })}
+              style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: !category ? 'var(--accent)' : 'transparent', color: !category ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+            >
+              All
+            </button>
             {CATEGORIES.map(c => (
-              <button key={c.slug} onClick={() => navigate({ category: c.slug })} style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: category === c.slug ? 'var(--accent)' : 'transparent', color: category === c.slug ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>{c.label}</button>
+              <button
+                key={c.slug}
+                onClick={() => navigate({ category: c.slug })}
+                style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: category === c.slug ? 'var(--accent)' : 'transparent', color: category === c.slug ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+              >
+                {c.label}
+              </button>
             ))}
           </div>
         </div>
@@ -106,7 +162,9 @@ function ShopContent() {
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 40px' }}>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-            {Array.from({ length: 8 }).map((_, i) => <div key={i} style={{ background: 'var(--surface)', borderRadius: '12px', height: '340px', opacity: 0.5 }} />)}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={{ background: 'var(--surface)', borderRadius: '12px', height: '340px', opacity: 0.4 }} />
+            ))}
           </div>
         ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--muted)' }}>
@@ -116,38 +174,87 @@ function ShopContent() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
             {products.map(p => (
-              <Link key={p.id} href={`/shop/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
-                  <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
-                    {p.images[0]
-                      // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '13px' }}>No image</div>
-                    }
-                    {p.stock > 0 && p.stock < 5 && (
-                      <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px' }}>ONLY {p.stock} LEFT</div>
-                    )}
-                  </div>
-                  <div style={{ padding: '14px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
-                    {p.avgRating && <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>{'★'.repeat(Math.round(p.avgRating))} {p.avgRating} <span style={{ color: 'var(--muted)' }}>({p.reviewCount})</span></div>}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{currencySymbol(p.currency)}{p.price.toFixed(2)}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{p.sellerName}</span>
+              <div key={p.id} style={{ position: 'relative' }}>
+                <Link href={`/shop/${p.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                    <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
+                      {p.images[0]
+                        ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '13px' }}>No image</div>
+                      }
+                      {p.stock > 0 && p.stock < 5 && (
+                        <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
+                          ONLY {p.stock} LEFT
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '14px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                      {p.avgRating != null && (
+                        <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
+                          {'\u2605'.repeat(Math.round(p.avgRating))} {p.avgRating}
+                          <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{sym(p.currency)}{p.price.toFixed(2)}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+                <button
+                  onClick={e => toggleWishlist(e, p.id)}
+                  disabled={wishlistPending === p.id}
+                  title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: 'rgba(13,13,13,0.78)',
+                    border: 'none',
+                    cursor: wishlistPending === p.id ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '17px',
+                    color: wishlistIds.has(p.id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
+                    backdropFilter: 'blur(4px)',
+                    transition: 'color 0.15s',
+                    zIndex: 1,
+                    lineHeight: 1,
+                  }}
+                >
+                  {wishlistIds.has(p.id) ? '\u2665' : '\u2661'}
+                </button>
+              </div>
             ))}
           </div>
         )}
 
         {pages > 1 && !loading && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '48px' }}>
-            {page > 1 && <button onClick={() => navigate({ page: String(page - 1) })} style={{ padding: '8px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer', fontWeight: 600 }}>Previous</button>}
+            {page > 1 && (
+              <button
+                onClick={() => navigate({ page: String(page - 1) })}
+                style={{ padding: '8px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Previous
+              </button>
+            )}
             <span style={{ padding: '8px 16px', color: 'var(--muted)', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
-            {page < pages && <button onClick={() => navigate({ page: String(page + 1) })} style={{ padding: '8px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#000', cursor: 'pointer', fontWeight: 700 }}>Next</button>}
+            {page < pages && (
+              <button
+                onClick={() => navigate({ page: String(page + 1) })}
+                style={{ padding: '8px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#000', cursor: 'pointer', fontWeight: 700 }}
+              >
+                Next
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -161,4 +268,4 @@ export default function ShopPage() {
       <ShopContent />
     </Suspense>
   )
-}
+        }
