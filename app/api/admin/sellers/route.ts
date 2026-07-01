@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || '')
 
 export async function GET(request: NextRequest) {
   const session = await auth()
@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
           </div>`
 
     await resend.emails.send({
-      from: 'noreply@velorcommerce.co.uk',
+      from: 'noreply@velorcommerce.store',
       to: sellerEmail,
       subject,
       html: bodyHtml,
