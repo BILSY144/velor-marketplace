@@ -19,11 +19,11 @@ export async function GET() {
     recentOrders,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.seller.count({ where: { isApproved: true, isSuspended: false } }),
+    prisma.seller.count({ where: { approved: true } }),
     prisma.product.count({ where: { status: 'APPROVED' } }),
     prisma.order.count(),
     prisma.order.aggregate({ _sum: { total: true } }),
-    prisma.seller.count({ where: { isApproved: false, isSuspended: false } }),
+    prisma.seller.count({ where: { approved: false } }),
     prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
     prisma.order.findMany({
       take: 10,
