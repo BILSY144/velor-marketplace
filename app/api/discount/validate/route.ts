@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
 
     const sub = typeof subtotal === 'number' ? subtotal : 0
 
-    if (discount.minimumOrder && sub < discount.minimumOrder) {
+    if (discount.minOrder && sub < discount.minOrder) {
       return NextResponse.json({
         valid: false,
-        error: `Minimum order of Â£${discount.minimumOrder.toFixed(2)} required`,
+        error: `Minimum order of ÃÂ£${discount.minOrder.toFixed(2)} required`,
       })
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       discountAmount: Math.round(discountAmount * 100) / 100,
       description: discount.type === 'PERCENTAGE'
         ? `${discount.value}% off`
-        : `Â£${discount.value.toFixed(2)} off`,
+        : `ÃÂ£${discount.value.toFixed(2)} off`,
     })
   } catch (error) {
     console.error('Discount validate error:', error)
