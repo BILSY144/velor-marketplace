@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         buyerName: buyerName ?? String(buyerEmail),
         shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
         total: Number(total),
-        status: 'pending',
+        status: 'PENDING',
         items: {
           create: items.map((item) => ({
             productId: item.productId ?? item.id ?? '',
