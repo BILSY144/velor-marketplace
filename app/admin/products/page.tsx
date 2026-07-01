@@ -178,12 +178,12 @@ export default function AdminProductsPage() {
                     <b>{product.seller.storeName}</b> &mdash; {product.seller.user.email} &mdash; {product.category}
                   </div>
                   <div className="adm-desc">{product.description}</div>
-                  <div className="adm-price">ÃÂ£{Number(product.price).toFixed(2)}</div>
+                  <div className="adm-price">ÃÂÃÂ£{Number(product.price).toFixed(2)}</div>
                 </div>
 
                 <div className="adm-side">
-                  <span className={`adm-badge adm-badge-${product.isApproved ? 'Approved' : 'Pending'}`}>
-                    {product.isApproved ? 'Approved' : 'Pending'.replace('_', ' ')}
+                  <span className={`adm-badge adm-badge-${product.status === 'APPROVED' ? 'Approved' : product.status === 'REJECTED' ? 'Rejected' : 'Pending'}`}>
+                    {product.status === 'APPROVED' ? 'Approved' : product.status === 'REJECTED' ? 'Rejected' : 'Pending'.replace('_', ' ')}
                   </span>
 
                   {activeTab === 'PENDING_REVIEW' && (
