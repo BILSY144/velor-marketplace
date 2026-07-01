@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     // Group into threads keyed by productId + other party ID
     const threadMap = new Map<string, {
       threadKey: string;
-      productId: string;
+      productId: string | null;
       productName: string;
       productImage: string | null;
       otherUserId: string;
@@ -42,14 +42,14 @@ export async function GET(req: NextRequest) {
 
     for (const msg of messages) {
       const otherUser = msg.senderId === userId ? msg.receiver : msg.sender;
-      const threadKey = [msg.productId, otherUser.id].sort().join(':');
+      const threadKey = [msg.productId ?? '', otherUser.id].sort().join(':');
 
       if (!threadMap.has(threadKey)) {
         threadMap.set(threadKey, {
           threadKey,
           productId: msg.productId,
-          productName: msg.product.name,
-          productImage: msg.product.images?.[0] ?? null,
+          productName: msg.product?.name ?? '',
+          productImage: msg.product?.images?.[0] ?? null,
           otherUserId: otherUser.id,
           otherUserName: otherUser.name,
           otherUserImage: otherUser.image,
