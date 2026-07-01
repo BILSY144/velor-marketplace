@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const products = await prisma.product.findMany({
-    where: { status: 'APPROVED' },
+    where: { isApproved: true, isActive: true },
     include: {
       seller: {
-        select: { businessName: true },
+        select: { storeName: true },
       },
     },
     orderBy: { createdAt: 'desc' },
