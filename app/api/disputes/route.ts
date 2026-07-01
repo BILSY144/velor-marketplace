@@ -58,8 +58,16 @@ export async function GET(req: Request) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
 
+    const sellerProducts = await prisma.product.findMany({
+      where: { sellerId: seller.id },
+      select: { id: true },
+    });
+    const sellerProductIds = sellerProducts.map((p) => p.id);
+
     const disputes = await prisma.dispute.findMany({
-      where: { order: { items: { some: { product: { sellerId: seller.id } } } } },
+      where: {
+        order: { items: { some: { productId: { in: sellerProductIds } } } },
+      },
       include: {
         order: {
           include: {

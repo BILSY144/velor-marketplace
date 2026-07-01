@@ -25,8 +25,15 @@ export async function GET(
   if (!isBuyer && !isAdmin) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const sellerProducts = await prisma.product.findMany({
+      where: { sellerId: seller.id },
+      select: { id: true },
+    });
+    const sellerProductIds = sellerProducts.map((p) => p.id);
+
     const hasItem = await prisma.orderItem.findFirst({
-      where: { orderId: returnRequest.orderId, product: { sellerId: seller.id } },
+      where: { orderId: returnRequest.orderId, productId: { in: sellerProductIds } },
     });
     if (!hasItem) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
@@ -54,8 +61,15 @@ export async function PATCH(
   if (!isAdmin) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const sellerProducts = await prisma.product.findMany({
+      where: { sellerId: seller.id },
+      select: { id: true },
+    });
+    const sellerProductIds = sellerProducts.map((p) => p.id);
+
     const hasItem = await prisma.orderItem.findFirst({
-      where: { orderId: returnRequest.orderId, product: { sellerId: seller.id } },
+      where: { orderId: returnRequest.orderId, productId: { in: sellerProductIds } },
     });
     if (!hasItem) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

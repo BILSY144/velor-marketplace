@@ -38,8 +38,16 @@ export async function GET(req: Request) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
 
+    const sellerProducts = await prisma.product.findMany({
+      where: { sellerId: seller.id },
+      select: { id: true },
+    });
+    const sellerProductIds = sellerProducts.map((p) => p.id);
+
     const returns = await prisma.returnRequest.findMany({
-      where: { order: { items: { some: { product: { sellerId: seller.id } } } } },
+      where: {
+        order: { items: { some: { productId: { in: sellerProductIds } } } },
+      },
       include: {
         order: {
           include: {
@@ -59,7 +67,11 @@ export async function GET(req: Request) {
     if (user?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const returns = await prisma.returnRequest.findMany({
-      include: { order: { include: { items: { include: { product: { select: { id: true, title: true } } } } } } },
+      include: {
+        order: {
+          include: { items: { include: { product: { select: { id: true, title: true } } } } },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ returns });
