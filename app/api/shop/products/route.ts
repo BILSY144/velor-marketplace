@@ -36,19 +36,21 @@ export async function GET(req: NextRequest) {
     id: p.id,
     name: p.name,
     price: p.price,
-    currency: p.currency,
     images: p.images,
     category: p.category,
     stock: p.stock,
-    tags: p.tags,
-    sellerId: p.sellerId,
+    avgRating: p.avgRating,
+    soldCount: p.soldCount,
     sellerName: p.seller.businessName,
-    avgRating: p.reviews.length > 0
-      ? Math.round((p.reviews.reduce((a: number, r: { rating: number }) => a + r.rating, 0) / p.reviews.length) * 10) / 10
-      : null,
+    sellerId: p.seller.id,
     reviewCount: p.reviews.length,
-    createdAt: p.createdAt,
+    tags: p.tags,
   }))
 
-  return NextResponse.json({ products: enriched, total, pages: Math.ceil(total / limit), page, limit })
+  return NextResponse.json({
+    products: enriched,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  })
 }
