@@ -17,9 +17,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'ÃÂ¢ÃÂÃÂ'.repeat(full)}
-        {half ? 'ÃÂÃÂ½' : ''}
-        {'ÃÂ¢ÃÂÃÂ'.repeat(5 - full - (half ? 1 : 0))}
+        {'★'.repeat(full)}
+        {half ? '½' : ''}
+        {'☆'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -40,7 +40,7 @@ export default async function SellerProfilePage({
     include: {
       user: { select: { name: true } },
       products: {
-        where: { isApproved: true },
+        where: { status: 'APPROVED' },
         include: {
           reviews: { select: { rating: true } },
         },
@@ -51,13 +51,11 @@ export default async function SellerProfilePage({
 
   if (!seller) notFound()
 
-  const totalReviews = seller.products.reduce((sum, p) => sum + ([] as {rating:number}[]).length, 0)
+  const allReviews = seller.products.flatMap((p) => p.reviews)
+  const totalReviews = allReviews.length
   const avgRating =
     totalReviews > 0
-      ? seller.products.reduce(
-          (sum, p) => sum + ([] as {rating:number}[]).reduce((s, r) => s + r.rating, 0),
-          0
-        ) / totalReviews
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
       : 0
 
   const memberSince = new Date(seller.createdAt).toLocaleDateString('en-GB', {
@@ -208,13 +206,6 @@ export default async function SellerProfilePage({
                       border: '1px solid var(--border)',
                       borderRadius: '12px',
                       overflow: 'hidden',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.borderColor = '#444'
-                    }}
-                    onMouseLeave={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'
                     }}
                   >
                     {/* Image */}
@@ -299,7 +290,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>ÃÂ¢ÃÂÃÂ</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>{'★'}</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}

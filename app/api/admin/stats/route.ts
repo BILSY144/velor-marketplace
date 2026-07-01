@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const session = await auth()
-  if (!session?.user || (session.user as any).role !== 'ADMIN') {
+  if (!session?.user || (session.user as { role?: string }).role !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -20,11 +20,11 @@ export async function GET() {
   ] = await Promise.all([
     prisma.user.count(),
     prisma.seller.count({ where: { isApproved: true, isSuspended: false } }),
-    prisma.product.count({ where: { isApproved: true } }),
+    prisma.product.count({ where: { status: 'APPROVED' } }),
     prisma.order.count(),
     prisma.order.aggregate({ _sum: { total: true } }),
     prisma.seller.count({ where: { isApproved: false, isSuspended: false } }),
-    prisma.product.count({ where: { isApproved: false, isActive: true } }),
+    prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
     prisma.order.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },

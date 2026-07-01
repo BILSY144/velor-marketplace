@@ -1,49 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const q = searchParams.get('q')?.trim() ?? '';
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const q = searchParams.get('q')?.trim()
 
-  if (q.length < 2) {
-    return NextResponse.json({ results: [] });
+  if (!q || q.length < 2) {
+    return NextResponse.json({ products: [], sellers: [] })
   }
 
-  const products = await prisma.product.findMany({
-    where: {
-      isApproved: true,
-      OR: [
-        { name: { contains: q, mode: 'insensitive' } },
-        { description: { contains: q, mode: 'insensitive' } },
-        { category: { contains: q, mode: 'insensitive' } },
-      ],
-    },
-    take: 8,
-    select: {
-      id: true,
-      name: true,
-      price: true,
-      images: true,
-      category: true,
-      seller: {
-        select: {
-          id: true,
-          storeName: true,
-        },
+  const [products, sellers] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        status: 'APPROVED',
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+          { category: { contains: q, mode: 'insensitive' } },
+          { tags: { has: q } },
+        ],
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        images: true,
+        category: true,
+        seller: { select: { storeName: true } },
+      },
+      take: 8,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.seller.findMany({
+      where: {
+        isApproved: true,
+        OR: [
+          { storeName: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      select: {
+        id: true,
+        storeName: true,
+        country: true,
+        _count: { select: { products: true } },
+      },
+      take: 4,
+    }),
+  ])
 
-  const results = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    image: p.images[0] ?? null,
-    category: p.category,
-    sellerId: p.seller.id,
-    sellerName: p.seller.storeName,
-  }));
-
-  return NextResponse.json({ results });
+  return NextResponse.json({ products, sellers })
 }

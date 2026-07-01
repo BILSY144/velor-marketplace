@@ -11,14 +11,12 @@ export async function GET() {
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
-  // Fetch seller products first — used for both orderItem filtering and status counts
   const sellerProducts = await prisma.product.findMany({
     where: { sellerId: seller.id },
-    select: { id: true, isApproved: true, isActive: true },
+    select: { id: true, status: true },
   })
   const sellerProductIds = sellerProducts.map((p) => p.id)
 
-  // OrderItem has no product relation — filter by productId
   const orderItems = await prisma.orderItem.findMany({
     where: { productId: { in: sellerProductIds } },
     include: {
@@ -35,7 +33,6 @@ export async function GET() {
   const totalOrders = orderIds.size
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
-  // Revenue by day for last 30 days
   const dailyRevenue: Record<string, number> = {}
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -47,7 +44,6 @@ export async function GET() {
     }
   }
 
-  // Top products — use item.name and item.image (stored fields on OrderItem, no relation needed)
   const productMap: Record<string, { name: string; image: string | null; revenue: number; units: number }> = {}
   for (const item of orderItems) {
     const pid = item.productId
@@ -62,14 +58,12 @@ export async function GET() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5)
 
-  // Product counts by status using boolean fields (no status string field on Product)
   const productsByStatus = {
-    APPROVED: sellerProducts.filter((p) => p.isApproved && p.isActive).length,
-    PENDING: sellerProducts.filter((p) => !p.isApproved && p.isActive).length,
-    REJECTED: sellerProducts.filter((p) => !p.isApproved && !p.isActive).length,
+    APPROVED: sellerProducts.filter((p) => p.status === 'APPROVED').length,
+    PENDING: sellerProducts.filter((p) => p.status === 'PENDING_REVIEW').length,
+    REJECTED: sellerProducts.filter((p) => p.status === 'REJECTED').length,
   }
 
-  // Pending payout — exclude refunded and cancelled orders
   const pendingPayout = orderItems
     .filter((i) => i.order.status !== 'REFUNDED' && i.order.status !== 'CANCELLED')
     .reduce((sum, item) => {

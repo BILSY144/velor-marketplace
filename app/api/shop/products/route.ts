@@ -1,56 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const page = parseInt(searchParams.get('page') ?? '1', 10)
+  const limit = parseInt(searchParams.get('limit') ?? '24', 10)
   const category = searchParams.get('category')
+  const sort = searchParams.get('sort') ?? 'newest'
   const search = searchParams.get('search')
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-  const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '24')), 48)
+  const minPrice = searchParams.get('minPrice')
+  const maxPrice = searchParams.get('maxPrice')
 
-  const where: Record<string, unknown> = { isApproved: true }
+  const where: Record<string, unknown> = { status: 'APPROVED' }
+
   if (category) where.category = category
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
       { description: { contains: search, mode: 'insensitive' } },
-      { tags: { has: search } },
     ]
   }
+  if (minPrice || maxPrice) {
+    where.price = {}
+    if (minPrice) (where.price as Record<string, number>).gte = parseFloat(minPrice)
+    if (maxPrice) (where.price as Record<string, number>).lte = parseFloat(maxPrice)
+  }
 
-  const [products, total] = await Promise.all([
+  let orderBy: Record<string, string> = { createdAt: 'desc' }
+  if (sort === 'price_asc') orderBy = { price: 'asc' }
+  else if (sort === 'price_desc') orderBy = { price: 'desc' }
+
+  const [total, products] = await Promise.all([
+    prisma.product.count({ where }),
     prisma.product.findMany({
       where,
-      include: {
-        seller: { select: { storeName: true, id: true } },
-        reviews: { select: { rating: true } },
-      },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
+      include: {
+        seller: { select: { id: true, storeName: true } },
+        reviews: { select: { rating: true } },
+        _count: { select: { reviews: true } },
+      },
     }),
-    prisma.product.count({ where }),
   ])
 
-  const enriched = products.map(p => ({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    images: p.images,
-    category: p.category,
-    stock: p.stock,
-    avgRating: p.reviews.length > 0 ? p.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / p.reviews.length : 0,
-    soldCount: 0,
-    sellerName: p.seller.storeName,
-    sellerId: p.seller.id,
-    reviewCount: p.reviews.length,
-    tags: p.tags,
-  }))
-
   return NextResponse.json({
-    products: enriched,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
+    products,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   })
 }
