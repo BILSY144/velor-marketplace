@@ -9,7 +9,7 @@ interface DiscountCode {
   value: number
   minimumOrder: number | null
   maxDiscount: number | null
-  usageCount: number
+  usedCount: number
   usageLimit: number | null
   expiresAt: string | null
   isActive: boolean
@@ -127,16 +127,16 @@ export default function DiscountCodesPage() {
                 <tr key={c.id}>
                   <td style={S.td}><span style={S.code}>{c.code}</span></td>
                   <td style={S.td}>
-                    {c.type === 'PERCENTAGE' ? `${c.value}% off` : `£${c.value.toFixed(2)} off`}
-                    {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max £{c.maxDiscount})</span> : null}
+                    {c.type === 'PERCENTAGE' ? `${c.value}% off` : `Â£${c.value.toFixed(2)} off`}
+                    {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max Â£{c.maxDiscount})</span> : null}
                   </td>
                   <td style={S.td}>
                     <span style={{ ...S.badge, background: c.isActive ? 'rgba(0,230,118,0.15)' : 'rgba(153,153,153,0.15)', color: c.isActive ? 'var(--green)' : 'var(--muted)' }}>
                       {c.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td style={S.td}>{c.usageCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
-                  <td style={S.td}>{c.minimumOrder ? `£${c.minimumOrder.toFixed(2)}` : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
+                  <td style={S.td}>{c.usedCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
+                  <td style={S.td}>{c.minimumOrder ? `Â£${c.minimumOrder.toFixed(2)}` : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
                   <td style={S.td}>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-GB') : <span style={{ color: 'var(--muted)' }}>Never</span>}</td>
                   <td style={S.td}>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -167,7 +167,7 @@ export default function DiscountCodesPage() {
                 <label style={S.label}>Type</label>
                 <select style={S.select} value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
                   <option value="PERCENTAGE">Percentage (%)</option>
-                  <option value="FIXED">Fixed (£)</option>
+                  <option value="FIXED">Fixed (Â£)</option>
                 </select>
               </div>
               <div style={S.field}>
@@ -177,7 +177,7 @@ export default function DiscountCodesPage() {
             </div>
             <div style={S.row2}>
               <div style={S.field}>
-                <label style={S.label}>Min Order (£)</label>
+                <label style={S.label}>Min Order (Â£)</label>
                 <input style={S.input} type="number" placeholder="Optional" value={form.minimumOrder} onChange={e => setForm(p => ({ ...p, minimumOrder: e.target.value }))} />
               </div>
               <div style={S.field}>
@@ -199,3 +199,4 @@ export default function DiscountCodesPage() {
     </div>
   )
 }
+￿￿

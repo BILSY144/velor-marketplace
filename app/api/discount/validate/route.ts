@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: false, error: 'Invalid or expired discount code' })
     }
 
-    if (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit) {
+    if (discount.usageLimit !== null && discount.usedCount >= discount.usageLimit) {
       return NextResponse.json({ valid: false, error: 'This code has reached its usage limit' })
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (discount.minimumOrder && sub < discount.minimumOrder) {
       return NextResponse.json({
         valid: false,
-        error: `Minimum order of £${discount.minimumOrder.toFixed(2)} required`,
+        error: `Minimum order of Â£${discount.minimumOrder.toFixed(2)} required`,
       })
     }
 
@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
       discountAmount: Math.round(discountAmount * 100) / 100,
       description: discount.type === 'PERCENTAGE'
         ? `${discount.value}% off`
-        : `£${discount.value.toFixed(2)} off`,
+        : `Â£${discount.value.toFixed(2)} off`,
     })
   } catch (error) {
     console.error('Discount validate error:', error)
     return NextResponse.json({ valid: false, error: 'Server error' }, { status: 500 })
   }
 }
+￿
