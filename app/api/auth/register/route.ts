@@ -14,9 +14,9 @@ async function sendEmail(payload: object) {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, businessName } = await req.json()
+  const { name, email, password, storeName } = await req.json()
 
-  if (!name || !email || !password || !businessName) {
+  if (!name || !email || !password || !storeName) {
     return NextResponse.json({ error: 'All fields required' }, { status: 400 })
   }
   if (password.length < 8) {
@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
 
   const hashed = await bcrypt.hash(password, 12)
 
+  const storeSlug = storeName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
   const user = await prisma.user.create({
     data: {
       name,
@@ -44,26 +49,24 @@ export async function POST(req: NextRequest) {
       role: 'SELLER',
       seller: {
         create: {
-          businessName,
-          status: 'PENDING',
+          storeName,
+          storeSlug,
         },
       },
     },
   })
 
-  // Trigger AI auto-moderation for any products this seller already has
-  // (edge case — mostly fires seller welcome email)
   await Promise.allSettled([
     sendEmail({
-      from: 'Velor Marketplace <noreply@velorcommerce.co.uk>',
-      reply_to: 'customerservice@velorcommerce.co.uk',
+      from: 'Velor Marketplace <noreply@velorcommerce.store>',
+      reply_to: 'customerservice@velorcommerce.store',
       to: email,
       subject: 'Welcome to Velor Marketplace — Application Received',
       html: `
 <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#0D0D0D;color:#FFFFFF;padding:40px;border-radius:12px;">
   <h1 style="color:#FF6B00;font-size:28px;margin-bottom:8px;">Welcome to Velor, ${name}!</h1>
   <p style="color:#999;font-size:14px;margin-bottom:24px;">Seller Application Received</p>
-  <p>Your seller account for <strong>${businessName}</strong> has been created and is now under review.</p>
+  <p>Your seller account for <strong>${storeName}</strong> has been created and is now under review.</p>
   <p style="color:#999;">Applications are reviewed automatically. You will receive an email confirmation shortly.</p>
   <a href="https://velorcommerce.store/dashboard" style="display:inline-block;background:#FF6B00;color:#FFFFFF;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:24px 0;">Go to Dashboard</a>
   <hr style="border-color:#2A2A2A;margin:32px 0;" />
