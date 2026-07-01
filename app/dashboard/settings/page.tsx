@@ -13,7 +13,7 @@ const COUNTRIES = [
 interface Settings {
   name: string
   email: string
-  businessName: string
+  storeName: string
   description: string
   country: string
 }
@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState<Settings>({
     name: '',
     email: '',
-    businessName: '',
+    storeName: '',
     description: '',
     country: '',
   })
@@ -57,7 +57,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
-          businessName: form.businessName,
+          storeName: form.storeName,
           description: form.description,
           country: form.country,
         }),
@@ -71,7 +71,7 @@ export default function SettingsPage() {
         setTimeout(() => setSaved(false), 3000)
       }
     } catch {
-      setError('Failed to save — please try again')
+      setError('Failed to save â please try again')
     } finally {
       setSaving(false)
     }
@@ -204,8 +204,8 @@ export default function SettingsPage() {
             <label style={label}>Business name</label>
             <input
               style={inputStyle()}
-              value={form.businessName}
-              onChange={(e) => set('businessName', e.target.value)}
+              value={form.storeName}
+              onChange={(e) => set('storeName', e.target.value)}
               placeholder="Your store name"
             />
           </div>

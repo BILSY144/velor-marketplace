@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       seller: {
         select: {
           id: true,
-          businessName: true,
+          storeName: true,
         },
       },
     },
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     image: p.images[0] ?? null,
     category: p.category,
     sellerId: p.seller.id,
-    sellerName: p.seller.businessName,
+    sellerName: p.seller.storeName,
   }));
 
   return NextResponse.json({ results });

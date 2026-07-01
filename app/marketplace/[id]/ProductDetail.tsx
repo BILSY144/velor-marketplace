@@ -13,7 +13,7 @@ interface Product {
   category: string
   createdAt: string
   seller: {
-    businessName: string
+    storeName: string
     user: { name: string; email: string }
   }
 }
@@ -53,7 +53,7 @@ export default function ProductDetail({ id }: { id: string }) {
         image: product.images?.[0] || '',
         quantity: qty,
         sellerId: undefined,
-        sellerName: product.seller.businessName,
+        sellerName: product.seller.storeName,
       })
     }
     localStorage.setItem('velor-cart', JSON.stringify(existing))
@@ -157,10 +157,10 @@ export default function ProductDetail({ id }: { id: string }) {
 
               <div className="pd-seller-box">
                 <div className="pd-seller-label">Sold by</div>
-                <div className="pd-seller-name">{product.seller.businessName}</div>
+                <div className="pd-seller-name">{product.seller.storeName}</div>
               </div>
 
-              <div className="pd-price">£{product.price.toFixed(2)}</div>
+              <div className="pd-price">Â£{product.price.toFixed(2)}</div>
 
               <p className="pd-desc">{product.description}</p>
 

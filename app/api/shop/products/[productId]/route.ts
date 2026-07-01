@@ -10,7 +10,7 @@ export async function GET(
   const product = await prisma.product.findUnique({
     where: { id: productId, status: 'APPROVED' },
     include: {
-      seller: { select: { businessName: true, id: true } },
+      seller: { select: { storeName: true, id: true } },
       reviews: {
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },

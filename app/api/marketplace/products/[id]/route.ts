@@ -11,7 +11,7 @@ export async function GET(
     include: {
       seller: {
         select: {
-          businessName: true,
+          storeName: true,
           user: { select: { name: true, email: true } },
         },
       },

@@ -12,7 +12,7 @@ interface Product {
   category: string
   status: string
   createdAt: string
-  seller: { businessName: string }
+  seller: { storeName: string }
 }
 
 export default function MarketplaceGrid() {
@@ -146,8 +146,8 @@ export default function MarketplaceGrid() {
                     <div className="mp-card-body">
                       <div className="mp-card-cat">{product.category}</div>
                       <div className="mp-card-name">{product.name}</div>
-                      <div className="mp-card-seller">{product.seller.businessName}</div>
-                      <div className="mp-card-price">£{product.price.toFixed(2)}</div>
+                      <div className="mp-card-seller">{product.seller.storeName}</div>
+                      <div className="mp-card-price">Â£{product.price.toFixed(2)}</div>
                     </div>
                   </Link>
                   <Link href={`/marketplace/${product.id}`} className="mp-card-btn">

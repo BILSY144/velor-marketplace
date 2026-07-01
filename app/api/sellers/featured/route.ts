@@ -10,7 +10,7 @@ export async function GET() {
       },
       select: {
         id: true,
-        businessName: true,
+        storeName: true,
         user: { select: { image: true } },
         products: {
           where: { status: 'APPROVED' },
@@ -31,7 +31,7 @@ export async function GET() {
             : null
         return {
           id: s.id,
-          name: s.businessName,
+          name: s.storeName,
           image: s.user.image,
           productCount: s.products.length,
           avgRating: avgRating ? Math.round(avgRating * 10) / 10 : null,

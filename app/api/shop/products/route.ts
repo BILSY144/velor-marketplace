@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     prisma.product.findMany({
       where,
       include: {
-        seller: { select: { businessName: true, id: true } },
+        seller: { select: { storeName: true, id: true } },
         reviews: { select: { rating: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     stock: p.stock,
     avgRating: p.avgRating,
     soldCount: p.soldCount,
-    sellerName: p.seller.businessName,
+    sellerName: p.seller.storeName,
     sellerId: p.seller.id,
     reviewCount: p.reviews.length,
     tags: p.tags,

@@ -6,7 +6,7 @@ import Link from 'next/link'
 export default function SignUpPage() {
   const [form, setForm] = useState({
     name: '',
-    businessName: '',
+    storeName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -38,7 +38,7 @@ export default function SignUpPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: form.name,
-        businessName: form.businessName,
+        storeName: form.storeName,
         email: form.email,
         password: form.password,
       }),
@@ -242,8 +242,8 @@ export default function SignUpPage() {
             <label style={labelStyle}>Business Name</label>
             <input
               type="text"
-              value={form.businessName}
-              onChange={(e) => update('businessName', e.target.value)}
+              value={form.storeName}
+              onChange={(e) => update('storeName', e.target.value)}
               required
               placeholder="Your store or company name"
               style={inputStyle}

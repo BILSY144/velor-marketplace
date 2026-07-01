@@ -16,7 +16,7 @@ interface AdminProduct {
   status: ProductStatus
   createdAt: string
   seller: {
-    businessName: string
+    storeName: string
     user: { name: string; email: string }
   }
 }
@@ -175,10 +175,10 @@ export default function AdminProductsPage() {
                 <div className="adm-info">
                   <div className="adm-name">{product.name}</div>
                   <div className="adm-meta">
-                    <b>{product.seller.businessName}</b> &mdash; {product.seller.user.email} &mdash; {product.category}
+                    <b>{product.seller.storeName}</b> &mdash; {product.seller.user.email} &mdash; {product.category}
                   </div>
                   <div className="adm-desc">{product.description}</div>
-                  <div className="adm-price">£{Number(product.price).toFixed(2)}</div>
+                  <div className="adm-price">Â£{Number(product.price).toFixed(2)}</div>
                 </div>
 
                 <div className="adm-side">

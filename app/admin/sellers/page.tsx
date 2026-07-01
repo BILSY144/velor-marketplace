@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 interface Seller {
   id: string
-  businessName: string
+  storeName: string
   status: string
   createdAt: string
   user: {
@@ -36,7 +36,7 @@ export default function AdminSellersPage() {
   const [confirmDialog, setConfirmDialog] = useState<{
     sellerId: string
     action: string
-    businessName: string
+    storeName: string
   } | null>(null)
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function AdminSellersPage() {
     if (action === 'approve') {
       handleAction(seller.id, action)
     } else {
-      setConfirmDialog({ sellerId: seller.id, action, businessName: seller.businessName })
+      setConfirmDialog({ sellerId: seller.id, action, storeName: seller.storeName })
     }
   }
 
@@ -135,7 +135,7 @@ export default function AdminSellersPage() {
             </h3>
             <p style={{ margin: '0 0 24px', color: '#999999', fontSize: 14 }}>
               Are you sure you want to {confirmDialog.action}{' '}
-              <strong style={{ color: '#FFFFFF' }}>{confirmDialog.businessName}</strong>?
+              <strong style={{ color: '#FFFFFF' }}>{confirmDialog.storeName}</strong>?
               {confirmDialog.action === 'reject' && ' They will be notified by email.'}
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -223,10 +223,10 @@ export default function AdminSellersPage() {
                 borderBottom: i < sellers.length - 1 ? '1px solid #2A2A2A' : 'none',
               }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, fontSize: 14 }}>
-                  {seller.businessName}
+                  {seller.storeName}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 14, color: '#CCCCCC' }}>
-                  {seller.user.name || '—'}
+                  {seller.user.name || 'â'}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 13, color: '#999999' }}>
                   {seller.user.email}
