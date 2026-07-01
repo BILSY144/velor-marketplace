@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // POST — create order after successful Stripe payment
-// Body: { paymentIntentId, buyerEmail, buyerName, total, currency, shippingAddress, items }
+// Body: { paymentIntentId, buyerEmail, buyerName, total, shippingAddress, items }
 // Idempotent: returns existing order if stripePaymentId already exists
 export async function POST(req: NextRequest) {
   let body: any
@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { paymentIntentId, buyerEmail, buyerName, total, currency, shippingAddress, items } = body
+  const { paymentIntentId, buyerEmail, buyerName, total, shippingAddress, items } = body
 
   if (!paymentIntentId || !buyerEmail || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
   // Idempotent check — return existing record without error
-  const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
+  const existing = await prisma.order.findFirst({ where: { stripePaymentId: paymentIntentId } })
   if (existing) return NextResponse.json({ orderId: existing.id })
 
   try {
@@ -29,15 +29,13 @@ export async function POST(req: NextRequest) {
         buyerName: buyerName ?? buyerEmail,
         stripePaymentId: paymentIntentId,
         total,
-        currency: (currency ?? 'GBP').toUpperCase(),
-        status: 'PAID',
+        status: 'PENDING',
         shippingAddress: shippingAddress ?? {},
         items: {
           create: items.map((item: any) => ({
             productId: item.id,
             quantity: Number(item.quantity),
             price: Number(item.price),
-            commission: Math.round(Number(item.price) * Number(item.quantity) * 0.15 * 100) / 100,
           })),
         },
       },
@@ -46,7 +44,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     // Race condition: unique constraint on stripePaymentId
     if (err?.code === 'P2002') {
-      const existing2 = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
+      const existing2 = await prisma.order.findFirst({ where: { stripePaymentId: paymentIntentId } })
       if (existing2) return NextResponse.json({ orderId: existing2.id })
     }
     console.error('[POST /api/orders]', err)
