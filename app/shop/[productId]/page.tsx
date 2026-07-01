@@ -314,7 +314,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ produc
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div>Free delivery on all UK orders</div>
               <div>30-day hassle-free returns</div>
-              <div style={{ color: 'var(--text)' }}>Sold by <span style={{ fontWeight: 600 }}>{product.sellerName}</span></div>
+              <div style={{ color: 'var(--text)' }}>Sold by <Link href={`/seller/${product.sellerId}`} style={{ fontWeight: 600, color: 'var(--accent)', textDecoration: 'none' }}>{product.sellerName}</Link></div>
             </div>
           </div>
         </div>
