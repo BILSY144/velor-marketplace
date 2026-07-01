@@ -13,15 +13,13 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
 
+  // Seller model uses: approved (Boolean)
   let where: Prisma.SellerWhereInput = {}
   if (status === 'APPROVED') {
-    where = { isApproved: true, isSuspended: false }
-  } else if (status === 'SUSPENDED') {
-    where = { isSuspended: true }
-  } else if (status === 'REJECTED') {
-    where = { isApproved: false, isSuspended: true }
+    where = { approved: true }
   } else if (status !== 'ALL') {
-    where = { isApproved: false, isSuspended: false }
+    // PENDING, REJECTED, SUSPENDED all map to not-yet-approved
+    where = { approved: false }
   }
 
   const sellers = await prisma.seller.findMany({
@@ -50,27 +48,16 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  let updateData: Prisma.SellerUpdateInput = { isSuspended: true }
-  if (action === 'approve') {
-    updateData = { isApproved: true, isSuspended: false }
-  } else if (action === 'reject') {
-    updateData = { isApproved: false, isSuspended: true }
-  }
+  // approved is the only status field on Seller
+  const approved = action === 'approve'
 
   const seller = await prisma.seller.update({
     where: { id: sellerId },
-    data: updateData,
+    data: { approved },
     include: {
       user: { select: { name: true, email: true } },
     },
   })
-
-  if (action === 'approve') {
-    await prisma.user.update({
-      where: { id: seller.userId },
-      data: { role: 'SELLER' },
-    })
-  }
 
   const sellerName = seller.user.name || 'Seller'
   const sellerEmail = seller.user.email || ''
