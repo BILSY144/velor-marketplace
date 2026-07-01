@@ -74,7 +74,7 @@ Reject if: dangerous, illegal, adult content, clearly fraudulent, or spam.`,
 
     const aiData = await aiRes.json()
     const text = aiData.content?.[0]?.text || ''
-    const match = text.match(/{[sS]*}/)
+    const match = text.match(/{[\s\S]*}/)
     if (match) {
       const parsed = JSON.parse(match[0])
       return { approved: !!parsed.approved, reason: parsed.reason || 'AI review complete.' }
@@ -92,8 +92,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Pending products: not yet approved, still active (isActive: true, isApproved: false)
   const pendingProducts = await prisma.product.findMany({
-    where: { status: 'PENDING' },
+    where: { isApproved: false, isActive: true },
     include: {
       seller: {
         include: {
@@ -113,9 +114,14 @@ export async function POST(req: NextRequest) {
       price: product.price,
     })
 
+    // Approved: isApproved = true, isActive = true
+    // Rejected: isApproved = false, isActive = false
     await prisma.product.update({
       where: { id: product.id },
-      data: { status: approved ? 'APPROVED' : 'REJECTED' },
+      data: {
+        isApproved: approved,
+        isActive: approved,
+      },
     })
 
     const sellerEmail = product.seller?.user?.email
