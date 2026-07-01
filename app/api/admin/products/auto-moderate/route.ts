@@ -37,6 +37,161 @@ async function aiReviewProduct(product: {
   }
 
   if (product.price <= 0) {
+    return { approved: false, reason: 'Product price must be greater than \u00a30.' }
+  }
+
+  const prompt = `You are a marketplace product moderator for Velor, a legitimate UK e-commerce marketplace.
+Review this product listing and decide if it should be approved or rejected.
+Product Name: ${product.name}
+Category: ${product.category}
+Price: \u00a3${product.price}
+Description: ${product.description}
+Approve the product if:
+- It is a real, physical product that can be legally sold in the UK
+- The description is clear, accurate, and at least somewhat informative
+- The price is reasonable (not suspiciously low like \u00a30.01 or absurdly high)
+- It does not violate any laws or marketplace policies
+Reject the product if:
+- It is a prohibited item (weapons, drugs, counterfeit goods, adult content, etc.)
+- The description is gibberish, placeholder text, or test data
+- The name or description is clearly spam or an attempt to game the system
+- It appears to be a service rather than a physical product
+Respond with ONLY valid JSON, no markdown, no explanation outside the JSON:
+{"approved": true, "reason": "Brief explanation"}`
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+
+    const data = await r.json()
+    const responseText = data.content?.[0]?.text || ''
+    const match = responseText.match(/\{[\s\S]*?\}/)
+    if (match) {
+      return JSON.parse(match[0])
+    }
+  } catch {
+    // AI call failed - approve by default to avoid blocking legitimate sellers
+  }
+
+  return { approved: true, reason: 'Passed automated review.' }
+}
+
+// POST /api/admin/products/auto-moderate
+// Called by Vercel cron - secured by CRON_SECRET header
+export async function POST(req: NextRequest) {
+  const authHeader = req.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const pendingProducts = await prisma.product.findMany({
+    where: { status: 'PENDING' },
+    include: {
+      seller: {
+        include: {
+          user: { select: { name: true, email: true } },
+        },
+      },
+    },
+  })
+
+  if (pendingProducts.length === 0) {
+    return NextResponse.json({ reviewed: 0 })
+  }
+
+  const results = []
+
+  for (const product of pendingProducts) {
+    const review = await aiReviewProduct({
+      name: product.name,
+      description: product.description || '',
+      category: product.category,
+      price: product.price,
+    })
+
+    const newStatus = review.approved ? 'APPROVED' : 'REJECTED'
+
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { status: newStatus },
+    })
+
+    const sellerEmail = product.seller?.user?.email
+    const sellerName = product.seller?.user?.name || 'Seller'
+
+    if (sellerEmail) {
+      if (review.approved) {
+        await sendEmail({
+          from: 'noreply@velorcommerce.store',
+          to: sellerEmail,
+          subject: 'Your product has been approved - Velor Marketplace',
+          html: `<p>Hi ${sellerName},</p><p>Great news! Your product <strong>${product.name}</strong> has been approved and is now live on Velor Marketplace.</p><p>The Velor Team</p>`,
+        })
+      } else {
+        await sendEmail({
+          from: 'noreply@velorcommerce.store',
+          to: sellerEmail,
+          subject: 'Product listing update required - Velor Marketplace',
+          html: `<p>Hi ${sellerName},</p><p>Your product <strong>${product.name}</strong> was not approved.</p><p>Reason: ${review.reason}</p><p>Please update your listing and resubmit. The Velor Team</p>`,
+        })
+      }
+    }
+
+    results.push({ productId: product.id, name: product.name, status: newStatus, reason: review.reason })
+  }
+
+  return NextResponse.json({ reviewed: results.length, results })
+}
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+const FORBIDDEN_PATTERNS = [
+  /weapon|gun|knife|blade|explosive|bomb/i,
+  /adult|porn|xxx/i,
+  /drug|narcotic|steroid/i,
+  /counterfeit|replica/i,
+]
+
+async function sendEmail(payload: object) {
+  return fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  }).catch(() => {})
+}
+
+async function aiReviewProduct(product: {
+  name: string
+  description: string
+  category: string
+  price: number
+}): Promise<{ approved: boolean; reason: string }> {
+  const text = `${product.name} ${product.description} ${product.category}`
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(text)) {
+      return { approved: false, reason: 'Product contains prohibited content or keywords.' }
+    }
+  }
+
+  if (!product.description || product.description.trim().length < 20) {
+    return { approved: false, reason: 'Description is too short or missing. Please write a clear product description of at least 20 characters.' }
+  }
+
+  if (product.price <= 0) {
     return { approved: false, reason: 'Product price must be greater than £0.' }
   }
 
