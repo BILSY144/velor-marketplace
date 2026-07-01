@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// POST — create order after successful Stripe payment
+// POST - create order after successful Stripe payment
 // Body: { sellerId, buyerEmail, buyerName, address, total, items }
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
         sellerId,
         buyerEmail: String(buyerEmail).toLowerCase().trim(),
         buyerName: buyerName ?? String(buyerEmail),
-        address: typeof address === 'string' ? address : JSON.stringify(address),
+        shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
         total: Number(total),
-        status: 'PENDING',
+        status: 'pending',
         items: {
           create: items.map((item) => ({
             productId: item.productId ?? item.id ?? '',
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/orders?email=... — list buyer orders
+// GET /api/orders?email=... - list buyer orders
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get('email')
   if (!email) return NextResponse.json({ error: 'email param required' }, { status: 400 })
