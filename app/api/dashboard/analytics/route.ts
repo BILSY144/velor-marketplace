@@ -2,6 +2,8 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
+const PLATFORM_FEE_RATE = 0.15
+
 export async function GET() {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -20,7 +22,10 @@ export async function GET() {
   })
 
   const totalRevenue = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const totalEarnings = orderItems.reduce((sum, item) => sum + (item.price * item.quantity - item.commission), 0)
+  const totalEarnings = orderItems.reduce((sum, item) => {
+    const gross = item.price * item.quantity
+    return sum + gross - gross * PLATFORM_FEE_RATE
+  }, 0)
   const orderIds = new Set(orderItems.map((i) => i.order.id))
   const totalOrders = orderIds.size
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
@@ -62,15 +67,17 @@ export async function GET() {
   })
   const productsByStatus = {
     APPROVED: products.filter((p) => p.status === 'APPROVED').length,
-    PENDING_REVIEW: products.filter((p) => p.status === 'PENDING_REVIEW').length,
+    PENDING: products.filter((p) => p.status === 'PENDING').length,
     REJECTED: products.filter((p) => p.status === 'REJECTED').length,
-    DELISTED: products.filter((p) => p.status === 'DELISTED').length,
   }
 
-  // Pending payout (non-refunded items)
+  // Pending payout (non-refunded, non-cancelled items)
   const pendingPayout = orderItems
     .filter((i) => i.order.status !== 'REFUNDED' && i.order.status !== 'CANCELLED')
-    .reduce((sum, item) => sum + (item.price * item.quantity - item.commission), 0)
+    .reduce((sum, item) => {
+      const gross = item.price * item.quantity
+      return sum + gross - gross * PLATFORM_FEE_RATE
+    }, 0)
 
   return NextResponse.json({
     summary: {
