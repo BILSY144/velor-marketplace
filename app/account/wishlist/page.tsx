@@ -141,9 +141,9 @@ export default function WishlistPage() {
                       {item.product.name}
                     </div>
                   </Link>
-                  {item.product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0 > 0 && (
+                  {item.product.avgRating ?? 0 > 0 && (
                     <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
-                      {'\u2605'.repeat(Math.round(item.product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0))} {item.product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0}
+                      {'\u2605'.repeat(Math.round(item.product.avgRating ?? 0))} {item.product.avgRating ?? 0}
                       <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({item.product.reviewCount})</span>
                     </div>
                   )}

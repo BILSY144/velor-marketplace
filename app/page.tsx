@@ -67,7 +67,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
+  const sym = product.currency === 'GBP' ? 'ÃÂ£' : product.currency === 'USD' ? '$' : 'Ã¢ÂÂ¬'
 
   return (
     <Link
@@ -153,9 +153,9 @@ function ProductCard({ product }: { product: Product }) {
           >
             {product.name}
           </div>
-          {product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0 ? (
+          {product.avgRating ?? 0 ? (
             <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 8 }}>
-              {'\u2605'.repeat(Math.round(product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0))}{' '}
+              {'\u2605'.repeat(Math.round(product.avgRating ?? 0))}{' '}
               <span style={{ color: 'var(--muted)' }}>({product.reviewCount})</span>
             </div>
           ) : null}
@@ -478,7 +478,7 @@ export default function HomePage() {
           }}
         >
           {[
-            { v: '+Â£2,400', l: "Today's sales" },
+            { v: '+ÃÂ£2,400', l: "Today's sales" },
             { v: '18 orders', l: 'Last hour' },
             { v: '4.9/5.0', l: 'Avg rating' },
           ].map((item) => (
@@ -984,7 +984,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling â It's Free
+                Start Selling Ã¢ÂÂ It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>

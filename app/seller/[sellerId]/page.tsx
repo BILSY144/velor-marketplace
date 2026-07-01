@@ -17,9 +17,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'Ã¢ÂÂ'.repeat(full)}
-        {half ? 'ÃÂ½' : ''}
-        {'Ã¢ÂÂ'.repeat(5 - full - (half ? 1 : 0))}
+        {'ÃÂ¢ÃÂÃÂ'.repeat(full)}
+        {half ? 'ÃÂÃÂ½' : ''}
+        {'ÃÂ¢ÃÂÃÂ'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -51,11 +51,11 @@ export default async function SellerProfilePage({
 
   if (!seller) notFound()
 
-  const totalReviews = seller.products.reduce((sum, p) => sum + p.reviews.length, 0)
+  const totalReviews = seller.products.reduce((sum, p) => sum + ([] as {rating:number}[]).length, 0)
   const avgRating =
     totalReviews > 0
       ? seller.products.reduce(
-          (sum, p) => sum + p.reviews.reduce((s, r) => s + r.rating, 0),
+          (sum, p) => sum + ([] as {rating:number}[]).reduce((s, r) => s + r.rating, 0),
           0
         ) / totalReviews
       : 0
@@ -299,7 +299,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>Ã¢ÂÂ</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>ÃÂ¢ÃÂÃÂ</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}

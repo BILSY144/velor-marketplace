@@ -135,7 +135,7 @@ export default function ProductPage() {
     if (idx >= 0) {
       cart[idx].quantity += qty
     } else {
-      cart.push({ id: cartId, name: product.name + (selectedVariant ? ` â ${selectedVariant.name}` : ''), price, quantity: qty, image })
+      cart.push({ id: cartId, name: product.name + (selectedVariant ? ` Ã¢ÂÂ ${selectedVariant.name}` : ''), price, quantity: qty, image })
     }
     localStorage.setItem('velor-cart', JSON.stringify(cart))
     setAddedToCart(true)
@@ -210,10 +210,10 @@ export default function ProductPage() {
           <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{product.category}</div>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.name}</h1>
 
-          {product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0 != null && (
+          {product.avgRating ?? 0 != null && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'\u2605'.repeat(Math.round(product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0))}</span>
-              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0}</span>
+              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'\u2605'.repeat(Math.round(product.avgRating ?? 0))}</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
               <span style={{ color: 'var(--muted)', fontSize: '14px' }}>({product.reviewCount} reviews)</span>
             </div>
           )}
@@ -328,8 +328,8 @@ export default function ProductPage() {
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '24px' }}>
               Reviews
-              {product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0 != null && (
-                <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.reviews && product.reviews.length > 0 ? product.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / product.reviews.length : 0} \u2605</span>
+              {product.avgRating ?? 0 != null && (
+                <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} \u2605</span>
               )}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
