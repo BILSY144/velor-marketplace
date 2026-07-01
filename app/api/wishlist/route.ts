@@ -18,7 +18,7 @@ export async function GET() {
           price: true,
           images: true,
           category: true,
-          status: true,
+          isApproved: true,
           seller: { select: { storeName: true } },
           reviews: { select: { rating: true } },
         },

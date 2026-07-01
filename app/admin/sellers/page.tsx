@@ -226,7 +226,7 @@ export default function AdminSellersPage() {
                   {seller.storeName}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 14, color: '#CCCCCC' }}>
-                  {seller.user.name || 'â'}
+                  {seller.user.name || 'Ã¢ÂÂ'}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 13, color: '#999999' }}>
                   {seller.user.email}
@@ -240,16 +240,16 @@ export default function AdminSellersPage() {
                   <span style={{
                     display: 'inline-block', padding: '3px 10px', borderRadius: 20,
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
-                    background: (STATUS_COLOR[seller.status] || '#999999') + '22',
-                    color: STATUS_COLOR[seller.status] || '#999999',
-                    border: `1px solid ${STATUS_COLOR[seller.status] || '#999999'}44`,
+                    background: (STATUS_COLOR[seller.isApproved ? 'Approved' : 'Pending'] || '#999999') + '22',
+                    color: STATUS_COLOR[seller.isApproved ? 'Approved' : 'Pending'] || '#999999',
+                    border: `1px solid ${STATUS_COLOR[seller.isApproved ? 'Approved' : 'Pending'] || '#999999'}44`,
                   }}>
-                    {seller.status}
+                    {seller.isApproved ? 'Approved' : 'Pending'}
                   </span>
                 </td>
                 <td style={{ padding: '14px 16px' }}>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {seller.status !== 'APPROVED' && (
+                    {seller.isApproved ? 'Approved' : 'Pending' !== 'APPROVED' && (
                       <button
                         disabled={actionLoading === seller.id + 'approve'}
                         onClick={() => requestAction(seller, 'approve')}
@@ -262,7 +262,7 @@ export default function AdminSellersPage() {
                         Approve
                       </button>
                     )}
-                    {seller.status !== 'REJECTED' && seller.status !== 'APPROVED' && (
+                    {seller.isApproved ? 'Approved' : 'Pending' !== 'REJECTED' && seller.isApproved ? 'Approved' : 'Pending' !== 'APPROVED' && (
                       <button
                         disabled={actionLoading === seller.id + 'reject'}
                         onClick={() => requestAction(seller, 'reject')}
@@ -275,7 +275,7 @@ export default function AdminSellersPage() {
                         Reject
                       </button>
                     )}
-                    {seller.status === 'APPROVED' && (
+                    {seller.isApproved === true && (
                       <button
                         disabled={actionLoading === seller.id + 'suspend'}
                         onClick={() => requestAction(seller, 'suspend')}
