@@ -14,6 +14,15 @@ interface Product {
   sellerName: string
 }
 
+interface FeaturedSeller {
+  id: string
+  name: string
+  image: string | null
+  productCount: number
+  avgRating: number | null
+  reviewCount: number
+}
+
 const HERO_HEADLINES = [
   { top: 'The Marketplace', bottom: 'Built for Sellers.' },
   { top: 'Zero Fees.', bottom: 'Infinite Reach.' },
@@ -146,7 +155,7 @@ function ProductCard({ product }: { product: Product }) {
           </div>
           {product.avgRating ? (
             <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 8 }}>
-              {'★'.repeat(Math.round(product.avgRating))}{' '}
+              {'\u2605'.repeat(Math.round(product.avgRating))}{' '}
               <span style={{ color: 'var(--muted)' }}>({product.reviewCount})</span>
             </div>
           ) : null}
@@ -175,11 +184,112 @@ function ProductCard({ product }: { product: Product }) {
   )
 }
 
+function SellerCard({ seller }: { seller: FeaturedSeller }) {
+  const [hovered, setHovered] = useState(false)
+  const initial = seller.name.charAt(0).toUpperCase()
+
+  return (
+    <Link
+      href={`/sellers/${seller.id}`}
+      style={{ textDecoration: 'none', display: 'block' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        style={{
+          background: 'var(--bg)',
+          border: `1px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
+          borderRadius: 12,
+          padding: '24px',
+          transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
+          transform: hovered ? 'translateY(-4px)' : 'none',
+          boxShadow: hovered ? '0 12px 40px rgba(255,107,0,0.12)' : 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+        }}
+      >
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: hovered ? 'rgba(255,107,0,0.15)' : 'var(--surface)',
+            border: `2px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
+            overflow: 'hidden',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'border-color 0.2s, background 0.2s',
+          }}
+        >
+          {seller.image ? (
+            <img
+              src={seller.image}
+              alt={seller.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <span
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 20,
+                fontWeight: 800,
+                color: hovered ? 'var(--accent)' : 'var(--muted)',
+                transition: 'color 0.2s',
+              }}
+            >
+              {initial}
+            </span>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 15,
+              fontWeight: 700,
+              color: hovered ? 'var(--accent)' : 'var(--text)',
+              marginBottom: 4,
+              transition: 'color 0.2s',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {seller.name}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', gap: 10 }}>
+            <span>{seller.productCount} products</span>
+            {seller.avgRating && (
+              <span style={{ color: 'var(--accent)' }}>
+                \u2605 {seller.avgRating.toFixed(1)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div
+          style={{
+            fontSize: 18,
+            color: hovered ? 'var(--accent)' : 'var(--border)',
+            transition: 'color 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          \u2192
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 export default function HomePage() {
   const [heroIdx, setHeroIdx] = useState(0)
   const [products, setProducts] = useState<Product[]>([])
   const [fadeHero, setFadeHero] = useState(true)
   const [catHover, setCatHover] = useState<string | null>(null)
+  const [featuredSellers, setFeaturedSellers] = useState<FeaturedSeller[]>([])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -196,6 +306,13 @@ export default function HomePage() {
     fetch('/api/shop/products?limit=8')
       .then((r) => r.json())
       .then((d) => setProducts(d.products || []))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/sellers/featured')
+      .then((r) => r.json())
+      .then((d) => setFeaturedSellers(d.sellers || []))
       .catch(() => {})
   }, [])
 
@@ -500,12 +617,86 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* FEATURED SELLERS */}
+      {featuredSellers.length > 0 && (
+        <section
+          style={{
+            padding: '80px 0',
+            background: 'var(--surface)',
+            borderTop: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                marginBottom: 40,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: 'var(--accent)',
+                    marginBottom: 8,
+                  }}
+                >
+                  Top Sellers
+                </div>
+                <h2
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 36,
+                    fontWeight: 800,
+                    margin: 0,
+                    color: 'var(--text)',
+                    letterSpacing: '-1px',
+                  }}
+                >
+                  Featured Sellers
+                </h2>
+              </div>
+              <Link
+                href="/sellers"
+                style={{
+                  textDecoration: 'none',
+                  color: 'var(--accent)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  borderBottom: '1px solid var(--accent)',
+                  paddingBottom: 2,
+                }}
+              >
+                View all sellers
+              </Link>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 16,
+              }}
+            >
+              {featuredSellers.map((s) => (
+                <SellerCard key={s.id} seller={s} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* CATEGORIES */}
       <section
         style={{
           padding: '80px 0',
-          background: 'var(--surface)',
-          borderTop: '1px solid var(--border)',
+          background: products.length === 0 && featuredSellers.length === 0 ? 'var(--surface)' : 'var(--bg)',
+          borderTop: products.length > 0 || featuredSellers.length > 0 ? 'none' : '1px solid var(--border)',
           borderBottom: '1px solid var(--border)',
         }}
       >
@@ -553,7 +744,7 @@ export default function HomePage() {
               >
                 <div
                   style={{
-                    background: 'var(--bg)',
+                    background: 'var(--surface)',
                     border: `1px solid ${catHover === cat.name ? 'var(--accent)' : 'var(--border)'}`,
                     borderRadius: 12,
                     padding: '28px 24px',
@@ -583,7 +774,7 @@ export default function HomePage() {
                       transition: 'color 0.2s',
                     }}
                   >
-                    →
+                    \u2192
                   </div>
                 </div>
               </Link>
@@ -643,7 +834,7 @@ export default function HomePage() {
                       zIndex: 0,
                     }}
                   >
-                    →
+                    \u2192
                   </div>
                 )}
                 <div
@@ -828,4 +1019,4 @@ export default function HomePage() {
       `}</style>
     </div>
   )
-          }
+  }
