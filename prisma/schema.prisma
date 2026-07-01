@@ -72,8 +72,9 @@ model Seller {
   id              String   @id @default(cuid())
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName       String
+  businessName    String
   description     String?  @db.Text
+  country         String?
   stripeAccountId String?
   stripeOnboarded Boolean      @default(false)
   status          SellerStatus @default(PENDING)
