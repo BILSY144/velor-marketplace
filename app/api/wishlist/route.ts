@@ -40,7 +40,7 @@ export async function GET() {
         price: item.product.price,
         images: item.product.images,
         category: item.product.category,
-        status: item.product.status,
+        status: item.product.isApproved,
         sellerName: item.product.seller.storeName,
         avgRating: Math.round(avgRating * 10) / 10,
         reviewCount: ratings.length,

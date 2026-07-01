@@ -66,13 +66,11 @@ export async function POST(
       productId,
       userId: session.user.id,
       rating: Number(rating),
-      comment: comment || ''
+      body: comment || ''
     }
   })
 
   const allReviews = await prisma.review.findMany({ where: { productId }, select: { rating: true } })
   const newAvg = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length
-  await prisma.product.update({ where: { id: productId }, data: { avgRating: newAvg } })
-
-  return NextResponse.json({ review }, { status: 201 })
+return NextResponse.json({ review }, { status: 201 })
 }
