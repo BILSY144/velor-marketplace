@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
-      status: 'PENDING_REVIEW',
+      status: 'PENDING',
     },
   })
 
