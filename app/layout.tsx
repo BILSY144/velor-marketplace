@@ -1,17 +1,14 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Providers from '@/components/Providers'
+import ConditionalLayout from '@/components/ConditionalLayout'
 
 export const metadata: Metadata = {
-  title: 'Velor Marketplace',
-  description: 'The global marketplace for independent sellers',
+  title: 'Velor - Global Marketplace',
+  description: 'Discover unique products from sellers around the world.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -21,7 +18,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </Providers>
       </body>
     </html>
   )
