@@ -1,57 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { auth } from '@/auth';
+import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
+import { auth } from '@/auth'
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
-const PLATFORM_COMMISSION_RATE = 0.15;
+// Platform commission: 15% on product subtotal ONLY
+// Shipping and duties are pass-through — sellers receive full shipping amount
+const PLATFORM_COMMISSION_RATE = 0.15
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
-    const { amount, currency = 'gbp', sellerId, items } = await request.json();
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-02-24.acacia',
+    })
 
-    if (!amount || typeof amount !== 'number' || amount < 50) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    const {
+      productSubtotal,  // in pence/cents — the product cost only
+      shippingCost,     // in pence/cents — shipping pass-through
+      dutiesAmount,     // in pence/cents — duties/VAT pass-through
+      currency = 'gbp',
+      sellerId,
+      items,
+    } = await request.json()
+
+    if (!productSubtotal || productSubtotal <= 0) {
+      return NextResponse.json({ error: 'productSubtotal required and must be > 0' }, { status: 400 })
     }
 
-    const intentParams: Stripe.PaymentIntentCreateParams = {
-      amount,
-      currency,
-      automatic_payment_methods: { enabled: true },
+    const totalAmount = (productSubtotal ?? 0) + (shippingCost ?? 0) + (dutiesAmount ?? 0)
+    // 15% commission on product subtotal ONLY — not shipping, not duties
+    const applicationFeeAmount = Math.round(productSubtotal * PLATFORM_COMMISSION_RATE)
+
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
+      amount: Math.round(totalAmount),
+      currency: currency.toLowerCase(),
       metadata: {
-        items: items ? JSON.stringify(items).slice(0, 500) : '',
+        items: JSON.stringify(items ?? []),
+        productSubtotal: String(productSubtotal),
+        shippingCost: String(shippingCost ?? 0),
+        dutiesAmount: String(dutiesAmount ?? 0),
+        applicationFee: String(applicationFeeAmount),
       },
-    };
-
-    // Only apply Connect split when a valid seller account is provided.
-    // transfer_data.destination and application_fee_amount both require
-    // a connected Stripe Express account — omit them for platform-only payments.
-    if (sellerId && typeof sellerId === 'string' && sellerId.startsWith('acct_')) {
-      const applicationFeeAmount = Math.round(amount * PLATFORM_COMMISSION_RATE);
-      intentParams.application_fee_amount = applicationFeeAmount;
-      intentParams.transfer_data = { destination: sellerId };
-      intentParams.metadata = {
-        ...intentParams.metadata,
-        sellerId,
-        platformFee: applicationFeeAmount.toString(),
-        sellerPayout: (amount - applicationFeeAmount).toString(),
-      };
     }
 
-    const paymentIntent = await stripe.paymentIntents.create(intentParams);
+    if (sellerId) {
+      paymentIntentParams.transfer_data = { destination: sellerId }
+      paymentIntentParams.application_fee_amount = applicationFeeAmount
+    }
 
-    return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal server error';
-    console.error('[payment-intent]', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams)
+
+    return NextResponse.json({ clientSecret: paymentIntent.client_secret })
+  } catch (err) {
+    console.error('[payment-intent]', err)
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

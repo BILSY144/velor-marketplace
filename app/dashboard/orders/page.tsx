@@ -1,151 +1,245 @@
 'use client'
+
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
-interface OrderItemLine {
-  id: string
-  productId: string
-  productName: string
-  productImage: string | null
-  quantity: number
-  unitPrice: number
-  commission: number
-  payout: number
+interface OrderItem {
+  id: string; productId: string; quantity: number; price: number;
+  product: { name: string; images: string[] };
 }
-
+interface Shipment {
+  id: string; status: string; trackingNumber: string | null;
+  labelUrl: string | null; carrier: string | null;
+}
 interface Order {
-  id: string
-  buyerName: string
-  status: string
-  createdAt: string
-  currency: string
-  items: OrderItemLine[]
-  totalRevenue: number
-  totalPayout: number
+  id: string; status: string; total: number; productSubtotal: number;
+  shippingCost: number; dutiesCost: number; currency: string;
+  buyerEmail: string; buyerName: string; createdAt: string;
+  shippingAddress: Record<string, string>;
+  items: OrderItem[]; shipments: Shipment[];
 }
 
-const STATUS_COLOURS: Record<string, string> = {
-  PENDING: '#FF6B00',
-  PAID: '#FF6B00',
-  PROCESSING: '#FF6B00',
-  FULFILLED: '#00E676',
-  SHIPPED: '#00E676',
-  CANCELLED: '#FF1744',
-  REFUNDED: '#FF1744',
+const STATUS_COLORS: Record<string, string> = {
+  PAID: '#FF6B00', PROCESSING: '#FF6B00', SHIPPED: '#00E676',
+  DELIVERED: '#00E676', CANCELLED: '#FF1744', REFUNDED: '#FF1744',
 }
 
-function formatCurrency(amount: number, currency: string) {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: currency || 'GBP' }).format(amount)
+function statusBadge(status: string) {
+  return (
+    <span style={{
+      padding: '3px 10px', borderRadius: '20px', fontSize: '11px',
+      fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+      background: (STATUS_COLORS[status] ?? '#999') + '22',
+      color: STATUS_COLORS[status] ?? '#999',
+    }}>{status}</span>
+  )
 }
 
-export default function OrdersPage() {
+export default function DashboardOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [labelLoading, setLabelLoading] = useState<Record<string, boolean>>({})
+  const [labelErrors, setLabelErrors] = useState<Record<string, string>>({})
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/dashboard/orders')
       .then(r => r.json())
-      .then(d => { setOrders(d.orders || []); setLoading(false) })
-      .catch(() => { setError('Failed to load orders'); setLoading(false) })
+      .then(d => setOrders(d.orders ?? []))
+      .finally(() => setLoading(false))
   }, [])
 
-  const totalOrders = orders.length
-  const grossRevenue = orders.reduce((s, o) => s + o.totalRevenue, 0)
-  const yourPayout = orders.reduce((s, o) => s + o.totalPayout, 0)
-
-  function toggleOrder(id: string) {
-    setExpanded(prev => {
-      const n = new Set(prev)
-      n.has(id) ? n.delete(id) : n.add(id)
-      return n
-    })
+  async function createLabel(orderId: string) {
+    setLabelLoading(l => ({ ...l, [orderId]: true }))
+    setLabelErrors(e => ({ ...e, [orderId]: '' }))
+    try {
+      const res = await fetch('/api/dashboard/shipping/label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setLabelErrors(e => ({ ...e, [orderId]: data.error ?? 'Label creation failed' }))
+        return
+      }
+      // Refresh orders to show new shipment
+      const refreshed = await fetch('/api/dashboard/orders').then(r => r.json())
+      setOrders(refreshed.orders ?? [])
+    } catch {
+      setLabelErrors(e => ({ ...e, [orderId]: 'Network error — please try again' }))
+    } finally {
+      setLabelLoading(l => ({ ...l, [orderId]: false }))
+    }
   }
 
-  if (loading) return (
-    <div style={{ padding: '40px', color: '#999' }}>Loading orders...</div>
-  )
-  if (error) return (
-    <div style={{ padding: '40px', color: '#FF1744' }}>{error}</div>
-  )
+  const fmt = (val: number, currency: string) =>
+    new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(val)
+
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>
+        Loading orders...
+      </div>
+    )
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div style={{ padding: '40px', fontFamily: 'var(--font-body)', color: 'var(--muted)', textAlign: 'center' }}>
+        <p>No orders yet.</p>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '960px' }}>
-      <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, color: '#fff', marginBottom: '32px' }}>
+    <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)' }}>
+      <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '28px' }}>
         Orders
       </h1>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
-        {[
-          { label: 'Total Orders', value: String(totalOrders) },
-          { label: 'Gross Revenue', value: formatCurrency(grossRevenue, 'GBP') },
-          { label: 'Your Payout', value: formatCurrency(yourPayout, 'GBP'), green: true },
-        ].map(card => (
-          <div key={card.label} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
-            <div style={{ fontSize: '26px', fontWeight: 700, color: card.green ? '#00E676' : '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>{card.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#555' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>0</div>
-          <div style={{ fontSize: '16px' }}>No orders yet. Share your products to get your first sale.</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {orders.map(order => {
-            const colour = STATUS_COLOURS[order.status] || '#999'
-            const isOpen = expanded.has(order.id)
-            return (
-              <div key={order.id} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', overflow: 'hidden' }}>
-                <button
-                  onClick={() => toggleOrder(order.id)}
-                  style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '16px', textAlign: 'left' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>{order.id.slice(0, 8).toUpperCase()}</div>
-                    <div style={{ fontSize: '15px', color: '#fff', fontWeight: 600 }}>{order.buyerName}</div>
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#999' }}>{new Date(order.createdAt).toLocaleDateString('en-GB')}</div>
-                  <div style={{ background: colour + '22', color: colour, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '6px', border: '1px solid ' + colour + '44' }}>
-                    {order.status}
-                  </div>
-                  <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                    <div style={{ fontSize: '13px', color: '#999' }}>Payout</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#00E676' }}>{formatCurrency(order.totalPayout, order.currency)}</div>
-                  </div>
-                  <div style={{ color: '#999', fontSize: '18px' }}>{isOpen ? '\u2303' : '\u2304'}</div>
-                </button>
-                {isOpen && (
-                  <div style={{ borderTop: '1px solid #2A2A2A', padding: '16px 20px' }}>
-                    {order.items.map(item => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid #222' }}>
-                        {item.productImage && (
-                          <img src={item.productImage} alt={item.productName} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px', background: '#222' }} />
-                        )}
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '14px', color: '#fff', fontWeight: 600 }}>{item.productName}</div>
-                          <div style={{ fontSize: '13px', color: '#999' }}>Qty: {item.quantity} x {formatCurrency(item.unitPrice, order.currency)}</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '13px', color: '#999' }}>Your payout</div>
-                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#00E676' }}>{formatCurrency(item.payout, order.currency)}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', fontSize: '14px' }}>
-                      <span style={{ color: '#999' }}>Gross revenue: {formatCurrency(order.totalRevenue, order.currency)}</span>
-                      <span style={{ color: '#00E676', fontWeight: 700 }}>Total payout: {formatCurrency(order.totalPayout, order.currency)}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {orders.map(order => {
+          const currency = order.currency ?? 'GBP'
+          const hasLabel = order.shipments && order.shipments.length > 0
+          const latestShipment = order.shipments?.[0]
+          const canLabel = ['PAID', 'PROCESSING'].includes(order.status)
+          const isExpanded = expandedOrder === order.id
+          const addr = order.shippingAddress as Record<string, string>
+          return (
+            <div key={order.id} style={{
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: '10px', overflow: 'hidden',
+            }}>
+              <div
+                style={{ padding: '20px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}
+                onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Order</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace' }}>
+                      {order.id.slice(0, 8).toUpperCase()}
                     </div>
                   </div>
-                )}
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Customer</div>
+                    <div style={{ fontSize: '14px', color: 'var(--text)' }}>{order.buyerName}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Date</div>
+                    <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                      {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Total</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
+                      {fmt(order.total, currency)}
+                    </div>
+                  </div>
+                  {statusBadge(order.status)}
+                </div>
+                <div style={{ fontSize: '18px', color: 'var(--muted)' }}>{isExpanded ? '▲' : '▼'}</div>
               </div>
-            )
-          })}
-        </div>
-      )}
+
+              {isExpanded && (
+                <div style={{ borderTop: '1px solid var(--border)', padding: '20px 24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '20px' }}>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+                        Ship To
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.7 }}>
+                        {addr?.name}<br />
+                        {addr?.line1}{addr?.line2 ? ', ' + addr.line2 : ''}<br />
+                        {addr?.city}{addr?.state ? ', ' + addr.state : ''} {addr?.postal_code}<br />
+                        {addr?.country}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+                        Breakdown
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.9 }}>
+                        Products: <span style={{ color: 'var(--text)' }}>{fmt(order.productSubtotal ?? 0, currency)}</span><br />
+                        Shipping: <span style={{ color: 'var(--text)' }}>{fmt(order.shippingCost ?? 0, currency)}</span><br />
+                        {(order.dutiesCost ?? 0) > 0 && (
+                          <>Duties (DDP): <span style={{ color: 'var(--text)' }}>{fmt(order.dutiesCost, currency)}</span><br /></>
+                        )}
+                        Total: <span style={{ color: 'var(--text)', fontWeight: 700 }}>{fmt(order.total, currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Items</div>
+                    {order.items.map(item => (
+                      <div key={item.id} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                        {item.product?.images?.[0] && (
+                          <img src={item.product.images[0]} alt={item.product.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px', background: 'var(--bg)' }} />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '14px', color: 'var(--text)', fontWeight: 500 }}>{item.product?.name ?? 'Product'}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity} × {fmt(item.price, currency)}</div>
+                        </div>
+                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{fmt(item.quantity * item.price, currency)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Shipment / Label section */}
+                  {hasLabel && latestShipment ? (
+                    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+                        Shipment
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                          {latestShipment.carrier ?? 'DHL Express'} &middot; {statusBadge(latestShipment.status)}
+                        </div>
+                        {latestShipment.trackingNumber && (
+                          <div style={{ fontSize: '13px', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                            {latestShipment.trackingNumber}
+                          </div>
+                        )}
+                        {latestShipment.labelUrl && (
+                          <a href={latestShipment.labelUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ padding: '6px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>
+                            Download Label
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ) : canLabel ? (
+                    <div>
+                      {labelErrors[order.id] && (
+                        <div style={{ padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px', marginBottom: '12px' }}>
+                          {labelErrors[order.id]}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => createLabel(order.id)}
+                        disabled={labelLoading[order.id]}
+                        style={{
+                          padding: '10px 22px', background: labelLoading[order.id] ? 'var(--border)' : 'var(--accent)',
+                          color: '#fff', border: 'none', borderRadius: '6px',
+                          fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px',
+                          cursor: labelLoading[order.id] ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {labelLoading[order.id] ? 'Creating Label...' : 'Create Shipping Label (DDP)'}
+                      </button>
+                      <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>
+                        Purchases a DHL Express DDP label via Shippo. Duties pre-collected — buyer will not be charged at delivery.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
