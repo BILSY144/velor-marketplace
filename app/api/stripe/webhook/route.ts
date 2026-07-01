@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       try {
         await prisma.order.updateMany({
           where: { stripePaymentId: pi.id },
-          data: { status: 'FAILED' },
+          data: { status: 'CANCELLED' },
         });
       } catch {
         // Order may not exist yet
