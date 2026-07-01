@@ -11,13 +11,18 @@ export async function GET() {
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
-  const now = new Date()
+  // Fetch seller products first — used for both orderItem filtering and status counts
+  const sellerProducts = await prisma.product.findMany({
+    where: { sellerId: seller.id },
+    select: { id: true, isApproved: true, isActive: true },
+  })
+  const sellerProductIds = sellerProducts.map((p) => p.id)
 
+  // OrderItem has no product relation — filter by productId
   const orderItems = await prisma.orderItem.findMany({
-    where: { product: { sellerId: seller.id } },
+    where: { productId: { in: sellerProductIds } },
     include: {
       order: { select: { id: true, createdAt: true, status: true } },
-      product: { select: { id: true, name: true, images: true } },
     },
   })
 
@@ -31,26 +36,23 @@ export async function GET() {
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
   // Revenue by day for last 30 days
-  const revenueByDay: Record<string, number> = {}
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    revenueByDay[d.toISOString().slice(0, 10)] = 0
-  }
+  const dailyRevenue: Record<string, number> = {}
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   for (const item of orderItems) {
-    const day = item.order.createdAt.toISOString().slice(0, 10)
-    if (day in revenueByDay) {
-      revenueByDay[day] += item.price * item.quantity
+    const date = item.order.createdAt
+    if (date >= thirtyDaysAgo) {
+      const day = date.toISOString().slice(0, 10)
+      dailyRevenue[day] = (dailyRevenue[day] || 0) + item.price * item.quantity
     }
   }
-  const dailyRevenue = Object.entries(revenueByDay).map(([date, revenue]) => ({ date, revenue }))
 
-  // Top products by revenue
+  // Top products — use item.name and item.image (stored fields on OrderItem, no relation needed)
   const productMap: Record<string, { name: string; image: string | null; revenue: number; units: number }> = {}
   for (const item of orderItems) {
     const pid = item.productId
     if (!productMap[pid]) {
-      productMap[pid] = { name: item.product.name, image: item.product.images[0] ?? null, revenue: 0, units: 0 }
+      productMap[pid] = { name: item.name, image: item.image ?? null, revenue: 0, units: 0 }
     }
     productMap[pid].revenue += item.price * item.quantity
     productMap[pid].units += item.quantity
@@ -60,18 +62,14 @@ export async function GET() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5)
 
-  // Products by status
-  const products = await prisma.product.findMany({
-    where: { sellerId: seller.id },
-    select: { status: true },
-  })
+  // Product counts by status using boolean fields (no status string field on Product)
   const productsByStatus = {
-    APPROVED: products.filter((p) => p.status === 'APPROVED').length,
-    PENDING: products.filter((p) => p.status === 'PENDING').length,
-    REJECTED: products.filter((p) => p.status === 'REJECTED').length,
+    APPROVED: sellerProducts.filter((p) => p.isApproved && p.isActive).length,
+    PENDING: sellerProducts.filter((p) => !p.isApproved && p.isActive).length,
+    REJECTED: sellerProducts.filter((p) => !p.isApproved && !p.isActive).length,
   }
 
-  // Pending payout (non-refunded, non-cancelled items)
+  // Pending payout — exclude refunded and cancelled orders
   const pendingPayout = orderItems
     .filter((i) => i.order.status !== 'REFUNDED' && i.order.status !== 'CANCELLED')
     .reduce((sum, item) => {
@@ -86,7 +84,7 @@ export async function GET() {
       totalOrders,
       avgOrderValue,
       pendingPayout,
-      totalProducts: products.length,
+      totalProducts: sellerProducts.length,
     },
     dailyRevenue,
     topProducts,
