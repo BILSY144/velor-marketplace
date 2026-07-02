@@ -4,7 +4,7 @@ import { sendEmail } from '@/lib/email';
 export async function GET(request: NextRequest) {
   const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
 
-  const html = \`<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -28,90 +28,50 @@ td { padding: 6px 8px; border-bottom: 1px solid #1c1a16; vertical-align: top; }
 <body>
 <div class="wrapper">
 <h1>VELOR GLOBAL MARKETPLACE</h1>
-<p class="meta">Director Briefing — \${now}</p>
+<p class="meta">Director Briefing — ${now}</p>
 
-<h2>Business Overview</h2>
-<p>
-Velor is the world's first 100% AI-operated global commerce marketplace.
-Every function that Amazon, eBay, and Etsy pay thousands of employees to perform —
-seller acquisition, product onboarding, customer service, fraud detection, pricing intelligence,
-and marketing — is executed by a coordinated team of specialised AI agents operating
-around the clock, in every language, across every country.
-</p>
+<h2>Platform Status</h2>
 <table>
-<tr><th>Detail</th><th>Value</th></tr>
-<tr><td>Entity</td><td>Velor Commerce Ltd (UK limited company)</td></tr>
-<tr><td>Domain</td><td>velorcommerce.store</td></tr>
-<tr><td>Model</td><td>Multi-seller global marketplace, open to any seller in any country</td></tr>
-<tr><td>Operating model</td><td>100% AI agents — zero human operations team</td></tr>
-<tr><td>Payments</td><td>Stripe Connect — multi-currency, 135+ countries, automated commission splits</td></tr>
-<tr><td>Target GMV (Month 24)</td><td>$15.2M/month</td></tr>
-<tr><td>Target revenue (Month 24)</td><td>$1.67M/month</td></tr>
-<tr><td>Gross margin target</td><td>95% (AI cost model)</td></tr>
+<tr><th>Agent</th><th>Status</th><th>Notes</th></tr>
+<tr><td>Seller Applications</td><td class="done">Live</td><td>Form to DB with auto-review</td></tr>
+<tr><td>AI Product Moderation</td><td class="done">Live</td><td>Claude reviews each submission</td></tr>
+<tr><td>Director Briefing</td><td class="done">Live</td><td>This email, triggered by cron</td></tr>
+<tr><td>Chat Concierge</td><td class="done">Live</td><td>/api/chat powered by Claude</td></tr>
+<tr><td>Contact Form</td><td class="done">Live</td><td>Routed to willsinclair144@gmail.com</td></tr>
+<tr><td>Checkout</td><td class="done">Live</td><td>Stripe integration active</td></tr>
+<tr><td>Order Tracking</td><td class="pending">Pending</td><td>Not yet implemented</td></tr>
+<tr><td>Seller Dashboard</td><td class="pending">Pending</td><td>UI in progress</td></tr>
+<tr><td>Payout Engine</td><td class="pending">Pending</td><td>Stripe Connect pending</td></tr>
 </table>
 
-<h2>Seller Tier Revenue Model</h2>
-<table>
-<tr><th>Tier</th><th>Monthly Fee</th><th>Commission</th><th>Listings</th></tr>
-<tr><td>STARTER</td><td>Free</td><td>15%</td><td>50 products</td></tr>
-<tr><td>PRO</td><td>$59/month</td><td>8%</td><td>Unlimited</td></tr>
-<tr><td>ENTERPRISE</td><td>Custom</td><td>3–5%</td><td>Unlimited + API access</td></tr>
-</table>
-
-<h2>Current Build Status</h2>
-<table>
-<tr><th>Component</th><th>Status</th></tr>
-<tr><td>Marketplace scaffold (velorcommerce.store)</td><td><span class="done">LIVE</span> — Next.js 15, App Router, Vercel, dark design system</td></tr>
-<tr><td>Seller application route (/api/seller/apply)</td><td><span class="done">BUILT</span> — saves to DB, sends confirmation email</td></tr>
-<tr><td>Daily agent report (07:00 UTC cron)</td><td><span class="done">LIVE</span> — emails director daily</td></tr>
-<tr><td>Admin brief endpoint (/api/admin/brief)</td><td><span class="done">LIVE</span></td></tr>
-<tr><td>Multi-seller product catalogue (PostgreSQL)</td><td><span class="pending">IN BUILD</span></td></tr>
-<tr><td>Seller dashboard and storefronts</td><td><span class="pending">IN BUILD</span></td></tr>
-<tr><td>Stripe Connect commission engine</td><td><span class="pending">IN BUILD</span></td></tr>
-<tr><td>HUNTER agent (seller prospecting)</td><td><span class="pending">PENDING BUILD</span></td></tr>
-<tr><td>HERALD agent (buyer support)</td><td><span class="pending">PENDING BUILD</span></td></tr>
-<tr><td>ORACLE agent (listing optimisation)</td><td><span class="pending">PENDING BUILD</span></td></tr>
-<tr><td>SENTINEL agent (fraud detection)</td><td><span class="pending">PENDING BUILD</span></td></tr>
-<tr><td>Rate limiting (chat, contact, checkout)</td><td><span class="critical">NOT DONE — build soon</span></td></tr>
-<tr><td>Next.js CVE-2025-29927 patch</td><td><span class="critical">NOT DONE — upgrade to 14.2.25+</span></td></tr>
-<tr><td>Admin route auth (ADMIN_SECRET)</td><td><span class="critical">NOT DONE — critical security gap</span></td></tr>
-</table>
-
-<h2>The Nine AI Agents</h2>
-<table>
-<tr><th>Agent</th><th>Role</th></tr>
-<tr><td><strong>HUNTER</strong></td><td>Global seller prospecting and personalised outreach across 190+ countries in every language.</td></tr>
-<tr><td><strong>CURATOR</strong></td><td>Seller onboarding — registration to first live listing in under 24 hours. Verifies legitimacy, requests compliance documentation.</td></tr>
-<tr><td><strong>ORACLE</strong></td><td>AI-powered listing optimisation. SEO titles, descriptions, category assignments, pricing recommendations — in any language, for any product.</td></tr>
-<tr><td><strong>SCOUT</strong></td><td>Real-time competitive pricing intelligence across Amazon, eBay, Google Shopping, and regional platforms in every market.</td></tr>
-<tr><td><strong>SENTINEL</strong></td><td>Fraud detection and platform integrity. Monitors every transaction, listing, and seller account. Automated holds applied instantly.</td></tr>
-<tr><td><strong>HERALD</strong></td><td>Full-spectrum buyer customer service. Sub-60-second response time, 24/7/365, in every major language. No ticket queue.</td></tr>
-<tr><td><strong>LEDGER</strong></td><td>Seller SLA enforcement and performance scoring. Automated coaching for underperforming sellers. Escalates persistent violations.</td></tr>
-<tr><td><strong>ARBITER</strong></td><td>Omnichannel marketing — SEO, email campaigns, paid search, social media, influencer outreach in every market. A/B tests creative.</td></tr>
-<tr><td><strong>COMPASS</strong></td><td>Business intelligence and analytics. Aggregates data across all agents. Daily KPI report for the director in natural language.</td></tr>
-</table>
-
-<h2>CEO Agent (Claude / Anthropic)</h2>
-<p>The orchestrating intelligence. Cross-domain decisions, high-priority escalations, weekly business summary for the director. Operational leadership — not a chatbot.</p>
-
-<h2>Immediate Priorities</h2>
+<h2>Revenue Model</h2>
 <ul>
-<li><span class="critical">CRITICAL</span> — Add ADMIN_SECRET check to all /admin/* routes</li>
-<li><span class="critical">HIGH</span> — Patch Next.js to 14.2.25+ (CVE-2025-29927, CVSS 9.1)</li>
-<li><span class="critical">HIGH</span> — Rate limiting on /api/chat, /api/contact, /api/checkout</li>
-<li><span class="pending">NEXT</span> — Build multi-seller PostgreSQL catalogue</li>
-<li><span class="pending">NEXT</span> — Build HUNTER agent</li>
-<li><span class="pending">NEXT</span> — Build HERALD agent</li>
-<li><span class="pending">NEXT</span> — Build Stripe Connect commission engine</li>
-<li><span class="pending">NEXT</span> — Set CRON_SECRET and ANTHROPIC_API_KEY in Vercel</li>
+<li>Commission: 12-18% per sale</li>
+<li>Seller subscription: £29-£99/month</li>
+<li>Promoted listings: TBD</li>
+</ul>
+
+<h2>Security Tasks</h2>
+<ul>
+<li class="pending">ADMIN_SECRET auth on /api/admin/* routes - in progress</li>
+<li class="pending">Rate limiting on /api/chat, /api/contact, /api/checkout - pending</li>
+<li class="done">CVE-2025-29927 - Next.js 16.2.9 unaffected</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+<li>Complete ADMIN_SECRET middleware for all admin routes</li>
+<li>Add rate limiting via edge middleware</li>
+<li>Build seller dashboard UI</li>
+<li>Launch seller onboarding</li>
 </ul>
 
 <div class="footer">
-Sent by the Velor Agent OS — velorcommerce.store — \${now}
+Sent by the Velor Agent OS — velorcommerce.store — ${now}
 </div>
 </div>
 </body>
-</html>\`;
+</html>`;
 
   try {
     await sendEmail({
