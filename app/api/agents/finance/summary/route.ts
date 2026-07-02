@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
     await Promise.all([
       prisma.order.findMany({
         where: { createdAt: { gte: since }, status: { not: 'CANCELLED' } },
-        select: { id: true, totalAmount: true, status: true, createdAt: true },
+        select: { id: true, total: true, status: true, createdAt: true },
       }),
       prisma.order.findMany({
         where: { createdAt: { gte: prevSince, lt: since }, status: { not: 'CANCELLED' } },
-        select: { totalAmount: true },
+        select: { total: true },
       }),
       prisma.payout.findMany({
         where: { createdAt: { gte: since } },
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-  const gmv = currentOrders.reduce((s, o) => s + Number(o.totalAmount), 0);
-  const prevGmv = previousOrders.reduce((s, o) => s + Number(o.totalAmount), 0);
+  const gmv = currentOrders.reduce((s, o) => s + Number(o.total), 0);
+  const prevGmv = previousOrders.reduce((s, o) => s + Number(o.total), 0);
   const platformRevenue = gmv * 0.15;
   const payoutsTotal = currentPayouts.filter(p => p.status === 'PAID').reduce((s, p) => s + Number(p.amount), 0);
   const pendingPayouts = currentPayouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + Number(p.amount), 0);
