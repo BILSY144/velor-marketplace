@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/stripe/connect/callback?account=acct_xxx&seller=xxx
 // Called by Stripe after seller completes onboarding flow
@@ -39,6 +40,14 @@ export async function GET(request: NextRequest) {
     }
 
     const status = account.details_submitted && account.charges_enabled ? 'active' : 'pending';
+
+    // Persist stripe onboarding state to database
+    if (charges_enabled) {
+      await prisma.seller.update({
+        where: { stripeAccountId: accountId },
+        data: { stripeOnboarded: true },
+      });
+    }
 
     // Redirect to dashboard with status
     const redirectUrl = new URL(`${baseUrl}/dashboard/stripe-connect`);
