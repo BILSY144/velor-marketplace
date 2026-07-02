@@ -29,12 +29,6 @@ const HERO_HEADLINES = [
   { top: 'Your Products.', bottom: 'The World.' },
 ]
 
-const STATS = [
-  { value: '10K+', label: 'Active Sellers' },
-  { value: '180+', label: 'Countries' },
-  { value: '500K+', label: 'Products' },
-  { value: '$0', label: 'Listing Fee' },
-]
 
 const CATEGORIES = [
   { name: 'Fitness & Gym', desc: 'Equipment & accessories' },
@@ -67,7 +61,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
+  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
 
   return (
     <Link
@@ -264,7 +258,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             <span>{seller.productCount} products</span>
             {seller.avgRating && (
               <span style={{ color: 'var(--accent)' }}>
-                ★ {seller.avgRating.toFixed(1)}
+                â {seller.avgRating.toFixed(1)}
               </span>
             )}
           </div>
@@ -277,7 +271,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             flexShrink: 0,
           }}
         >
-          →
+          â
         </div>
       </div>
     </Link>
@@ -465,90 +459,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div
-          style={{
-            position: 'absolute',
-            right: '8%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-            opacity: 0.65,
-          }}
-        >
-          {[
-            { v: '+£2,400', l: "Today's sales" },
-            { v: '18 orders', l: 'Last hour' },
-            { v: '4.9/5.0', l: 'Avg rating' },
-          ].map((item) => (
-            <div
-              key={item.l}
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                padding: '14px 20px',
-                minWidth: 160,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 20,
-                  fontWeight: 800,
-                  color: 'var(--accent)',
-                }}
-              >
-                {item.v}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{item.l}</div>
-            </div>
-          ))}
-        </div>
       </section>
 
-      {/* STATS STRIP */}
-      <section
-        style={{
-          background: 'var(--surface)',
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: '0 auto',
-            padding: '0 40px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-          }}
-        >
-          {STATS.map((s, i) => (
-            <div
-              key={s.label}
-              style={{
-                padding: '36px 24px',
-                textAlign: 'center',
-                borderRight: i < 3 ? '1px solid var(--border)' : 'none',
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 40,
-                  fontWeight: 800,
-                  color: 'var(--accent)',
-                }}
-              >
-                {s.value}
-              </div>
-              <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 6 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* TRENDING PRODUCTS */}
       {products.length > 0 && (
@@ -774,7 +686,7 @@ export default function HomePage() {
                       transition: 'color 0.2s',
                     }}
                   >
-                    →
+                    â
                   </div>
                 </div>
               </Link>
@@ -834,7 +746,7 @@ export default function HomePage() {
                       zIndex: 0,
                     }}
                   >
-                    →
+                    â
                   </div>
                 )}
                 <div
@@ -984,7 +896,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling — It's Free
+                Start Selling â It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
