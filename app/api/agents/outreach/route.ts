@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/auth';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as { role?: string }).role !== 'ADMIN') return null;
   return session;
 }
