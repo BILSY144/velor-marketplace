@@ -30,7 +30,7 @@ export async function GET(
 
   const [activeProducts, recentOrders] = await Promise.all([
     prisma.product.count({
-      where: { sellerId: (await params).sellerId, status: 'ACTIVE' },
+      where: { sellerId: (await params).sellerId, status: 'APPROVED' },
     }),
     prisma.order.findMany({
       where: {
@@ -41,7 +41,7 @@ export async function GET(
       include: {
         items: {
           where: { product: { sellerId: (await params).sellerId } },
-          include: { product: { select: { id: true, name: true, views: true } } },
+          include: { product: { select: { id: true, name: true, viewCount: true } } },
         },
       },
     }),
@@ -52,19 +52,19 @@ export async function GET(
     0
   );
 
-  const productViewMap: Record<string, { name: string; views: number; sales: number }> = {};
+  const productViewMap: Record<string, { name: string; viewCount: number; sales: number }> = {};
   for (const order of recentOrders) {
     for (const item of order.items) {
       const pid = item.product.id;
       if (!productViewMap[pid]) {
-        productViewMap[pid] = { name: item.product.name, views: item.product.views ?? 0, sales: 0 };
+        productViewMap[pid] = { name: item.product.name, viewCount: item.product.viewCount ?? 0, sales: 0 };
       }
       productViewMap[pid].sales += item.quantity;
     }
   }
 
   const topProduct = Object.values(productViewMap).sort((a, b) => b.sales - a.sales)[0] ?? null;
-  const weeklyViews = Object.values(productViewMap).reduce((s, p) => s + p.views, 0);
+  const weeklyViews = Object.values(productViewMap).reduce((s, p) => s + p.viewCount, 0);
   const conversionRate =
     weeklyViews > 0 ? ((recentOrders.length / weeklyViews) * 100).toFixed(1) + '%' : '0%';
 

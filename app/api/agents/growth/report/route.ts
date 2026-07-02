@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where: { createdAt: { gte: prevSince, lt: since } } }),
       prisma.seller.count({ where: { createdAt: { gte: since } } }),
       prisma.seller.count({ where: { createdAt: { gte: prevSince, lt: since } } }),
-      prisma.product.count({ where: { createdAt: { gte: since }, status: 'ACTIVE' } }),
+      prisma.product.count({ where: { createdAt: { gte: since }, status: 'APPROVED' } }),
       prisma.sellerProspect.count({ where: { status: { in: ['prospected', 'contacted'] } } }),
       prisma.sellerApplication.count({ where: { status: 'PENDING' } }),
       prisma.sellerApplication.count({ where: { createdAt: { gte: since } } }),
