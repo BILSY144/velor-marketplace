@@ -14,60 +14,36 @@ export async function GET(request: NextRequest) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const category = searchParams.get('category');
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
   const pageSize = 50;
-
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
   if (category) where.category = category;
-
   const [prospects, total] = await Promise.all([
     prisma.sellerProspect.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: {
-        outreachLogs: {
-          orderBy: { sentAt: 'desc' },
-          take: 1,
-        },
-      },
+      include: { outreachLogs: { orderBy: { sentAt: 'desc' }, take: 1 } },
     }),
     prisma.sellerProspect.count({ where }),
   ]);
-
   return NextResponse.json({ prospects, total, page, pageSize });
 }
 
 export async function POST(request: NextRequest) {
   if (!(await requireAdmin())) {
-
-  await prisma.agentLog.create({
-    data: {
-      agentName: 'prospects',
-      action: 'prospect_created',
-      status: 'success',
-      details: { platform: body?.platform, storeUrl: body?.storeUrl, score: body?.score },
-    },
-  });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   const body = await request.json();
   const { name, platform, storeUrl, email, category, score, country, sellerType, notes } = body;
-
   if (!name || !platform || !storeUrl || !category || !sellerType) {
-    return NextResponse.json(
-      { error: 'name, platform, storeUrl, category, and sellerType are required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'name, platform, storeUrl, category, and sellerType are required' }, { status: 400 });
   }
-
   const prospect = await prisma.sellerProspect.create({
     data: {
       name: String(name).trim(),
@@ -82,47 +58,46 @@ export async function POST(request: NextRequest) {
       status: 'prospected',
     },
   });
-
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'prospects',
+      action: 'prospect_created',
+      status: 'success',
+      targetId: prospect.id,
+      details: { platform: prospect.platform, storeUrl: prospect.storeUrl, score: prospect.score },
+    },
+  });
   return NextResponse.json({ prospect }, { status: 201 });
 }
 
 export async function PATCH(request: NextRequest) {
   if (!(await requireAdmin())) {
-
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const body = await request.json();
+  const { id, ...updates } = body;
+  if (!id) {
+    return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const field of ALLOWED_UPDATE_FIELDS) {
+    if (field in updates) sanitized[field] = updates[field];
+  }
+  if (Object.keys(sanitized).length === 0) {
+    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+  }
+  const prospect = await prisma.sellerProspect.update({
+    where: { id: String(id) },
+    data: sanitized,
+  });
   await prisma.agentLog.create({
     data: {
       agentName: 'prospects',
       action: 'prospect_updated',
       status: 'success',
-      details: { newStatus: body?.status },
-      targetId: id,
+      targetId: prospect.id,
+      details: { newStatus: sanitized.status ?? null },
     },
   });
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const body = await request.json();
-  const { id, ...updates } = body;
-
-  if (!id) {
-    return NextResponse.json({ error: 'id is required' }, { status: 400 });
-  }
-
-  const sanitized: Record<string, unknown> = {};
-  for (const field of ALLOWED_UPDATE_FIELDS) {
-    if (field in updates) {
-      sanitized[field] = updates[field];
-    }
-  }
-
-  if (Object.keys(sanitized).length === 0) {
-    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
-  }
-
-  const prospect = await prisma.sellerProspect.update({
-    where: { id: String(id) },
-    data: sanitized,
-  });
-
   return NextResponse.json({ prospect });
-                  }
+}
