@@ -184,7 +184,5 @@ export const sortRatesByDDP = sortRatesGlobal
 // Falls back to absolute cheapest if none have tracking.
 export function pickBestRate(rates: ShippoRate[]): ShippoRate | null {
   if (!rates.length) return null
-  const sorted = sortRatesGlobal(rates)
-  const tracked = sorted.filter(r => r.trackable !== false && r.trackable !== 'NO_TRACKING')
-  return tracked[0] ?? sorted[0]
+  return sortRatesGlobal(rates)[0]
 }
