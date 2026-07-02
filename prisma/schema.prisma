@@ -311,3 +311,56 @@ model Payout {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+
+enum SellerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model SellerProspect {
+  id          String   @id @default(cuid())
+  name        String
+  platform    String
+  storeUrl    String
+  email       String?
+  category    String
+  score       Int
+  country     String?
+  sellerType  String
+  status      String   @default("prospected")
+  notes       String?  @db.Text
+  outreachLogs OutreachLog[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OutreachLog {
+  id          String        @id @default(cuid())
+  prospectId  String
+  prospect    SellerProspect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  emailType   String
+  subject     String
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model SellerApplication {
+  id                 String                  @id @default(cuid())
+  businessName       String
+  contactEmail       String
+  contactName        String
+  storeDescription   String?  @db.Text
+  website            String?
+  productCategories  String[]
+  sampleImages       String[]
+  country            String?
+  status             SellerApplicationStatus @default(PENDING)
+  rejectionReason    String?  @db.Text
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  prospectId         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
