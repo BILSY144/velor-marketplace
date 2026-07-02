@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const { error: notifyError } = await resend.emails.send({
     from: 'Velor Contact Form <noreply@velorcommerce.co.uk>',
     to: ['customerservice@velorcommerce.co.uk'],
-    reply_to: email,
+    replyTo: email,
     subject: `[Contact] ${subjectLine}`,
     html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px}h2{font-size:18px;font-weight:700;margin:0 0 24px}table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px}td{padding:10px 0;vertical-align:top;border-bottom:1px solid #f0f0f0}td:first-child{font-weight:600;width:30%;color:#555}.msg{background:#f9f9f9;border-left:3px solid #e5e5e5;padding:16px;font-size:14px;line-height:1.6;white-space:pre-wrap}</style></head><body><h2>New Contact Form Submission</h2><table><tr><td>Name</td><td>${name}</td></tr><tr><td>Email</td><td>${email}</td></tr><tr><td>Subject</td><td>${subjectLine}</td></tr></table><div class="msg">${message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></body></html>`,
   })
