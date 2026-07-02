@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
           const pr = productMap.get(item.productId)
           return {
             description: item.name ?? pr?.id ?? 'Product',
-            quantity: String(item.quantity ?? 1),
+            quantity: item.quantity ?? 1,
             net_weight: String(Math.max(0.05, (pr?.weightGrams ?? 500) * (item.quantity ?? 1) / 1000)),
             mass_unit: 'kg' as const,
             value_amount: String((item.price ?? pr?.price ?? 0) * (item.quantity ?? 1)),
