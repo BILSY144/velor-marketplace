@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server'
 export default auth((req) => {
   const { pathname } = req.nextUrl
 
-  // Protect dashboard routes - require authenticated session
+  // Protect dashboard routes - require session
   if (pathname.startsWith('/dashboard')) {
     if (!req.auth) {
       return NextResponse.redirect(new URL('/auth/sign-in', req.url))
     }
   }
 
-  // Protect admin API routes - require ADMIN_SECRET bearer token
+  // Protect admin API routes - require auth token
   if (pathname.startsWith('/api/admin')) {
     const secret = process.env.ADMIN_SECRET
     const authHeader = req.headers.get('authorization')
