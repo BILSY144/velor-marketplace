@@ -86,6 +86,16 @@ export async function POST(request: NextRequest) {
       data: { status: 'contacted' },
     }),
   ]);
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'outreach',
+      action: 'email_sent',
+      status: 'success',
+      targetId: prospect.id,
+      details: { emailType, prospectId: prospect.id },
+    },
+  });
+
 
   return NextResponse.json({ success: true, logId: log.id, subject }, { status: 201 });
 }
