@@ -39,6 +39,14 @@ const CATEGORIES = [
   { name: 'Toys & Games', desc: 'For all ages' },
   { name: 'Fashion', desc: 'Clothing & accessories' },
   { name: 'Automotive', desc: 'Parts & accessories' },
+  { name: 'Jewellery & Watches', desc: 'Fine & fashion jewellery' },
+  { name: 'Baby & Kids', desc: 'Clothing, gear & essentials' },
+  { name: 'Pet Supplies', desc: 'Food, toys & accessories' },
+  { name: 'Books & Education', desc: 'Learning & literature' },
+  { name: 'Art & Crafts', desc: 'Creative supplies & kits' },
+  { name: 'Office & Stationery', desc: 'Desks, tools & supplies' },
+  { name: 'Travel & Luggage', desc: 'Bags, cases & accessories' },
+  { name: 'Food & Grocery', desc: 'Pantry & specialty foods' },
 ]
 
 const HOW_IT_WORKS = [
@@ -61,7 +69,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
+  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
 
   return (
     <Link
@@ -258,7 +266,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             <span>{seller.productCount} products</span>
             {seller.avgRating && (
               <span style={{ color: 'var(--accent)' }}>
-                ★ {seller.avgRating.toFixed(1)}
+                â {seller.avgRating.toFixed(1)}
               </span>
             )}
           </div>
@@ -271,7 +279,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             flexShrink: 0,
           }}
         >
-          →
+          â
         </div>
       </div>
     </Link>
@@ -686,7 +694,7 @@ export default function HomePage() {
                       transition: 'color 0.2s',
                     }}
                   >
-                    →
+                    â
                   </div>
                 </div>
               </Link>
@@ -746,7 +754,7 @@ export default function HomePage() {
                       zIndex: 0,
                     }}
                   >
-                    →
+                    â
                   </div>
                 )}
                 <div
@@ -896,7 +904,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling — It's Free
+                Start Selling â It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
