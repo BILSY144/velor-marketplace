@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
 
 export async function GET(
   _req: Request,
@@ -25,12 +28,11 @@ export async function GET(
   if (!isBuyer && !isAdmin) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
     if (!seller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    if (returnRequest.order.sellerId !== seller.id) {
+    if (returnRequest.order.sellerId !== seller.id)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
   }
 
-  return NextResponse.json({ returnRequest });
+  return NextResponse.json(returnRequest);
 }
 
 export async function PATCH(
@@ -61,6 +63,22 @@ export async function PATCH(
     }
   }
 
+  let stripeRefundId: string | undefined;
+  if (body.status === 'APPROVED' && returnRequest.status !== 'APPROVED') {
+    const order = returnRequest.order;
+    if (order.stripePaymentId) {
+      try {
+        const refund = await stripe.refunds.create({
+          payment_intent: order.stripePaymentId,
+        });
+        stripeRefundId = refund.id;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Stripe refund failed';
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
+    }
+  }
+
   const updated = await prisma.returnRequest.update({
     where: { id: returnId },
     data: {
@@ -69,5 +87,20 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json({ returnRequest: updated });
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'returns',
+      action: body.status === 'APPROVED' ? 'refund_issued' : 'status_updated',
+      status: 'success',
+      targetId: returnId,
+      details: {
+        returnId,
+        orderId: returnRequest.orderId,
+        newStatus: body.status ?? null,
+        stripeRefundId: stripeRefundId ?? null,
+      },
+    },
+  });
+
+  return NextResponse.json({ ...updated, stripeRefundId });
 }

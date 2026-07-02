@@ -29,33 +29,19 @@ export async function GET(
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const [activeProducts, recentOrders] = await Promise.all([
-    prisma.product.count({
-      where: { sellerId: (await params).sellerId, status: 'APPROVED' },
-    }),
+    prisma.product.count({ where: { sellerId: seller.id, status: 'ACTIVE' } }),
     prisma.order.findMany({
-      where: {
-        items: { some: { product: { sellerId: (await params).sellerId } } },
-        createdAt: { gte: weekAgo },
-        status: { not: 'CANCELLED' },
-      },
-      include: {
-        items: {
-          where: { product: { sellerId: (await params).sellerId } },
-          include: { product: { select: { id: true, name: true, viewCount: true } } },
-        },
-      },
+      where: { sellerId: seller.id, createdAt: { gte: weekAgo } },
+      include: { items: { include: { product: { select: { name: true, viewCount: true } } } } },
     }),
   ]);
 
-  const weeklyRevenue = recentOrders.reduce(
-    (sum, order) => sum + order.items.reduce((s, item) => s + Number(item.price) * item.quantity, 0),
-    0
-  );
+  const weeklyRevenue = recentOrders.reduce((s, o) => s + o.total, 0);
 
   const productViewMap: Record<string, { name: string; viewCount: number; sales: number }> = {};
   for (const order of recentOrders) {
     for (const item of order.items) {
-      const pid = item.product.id;
+      const pid = item.productId;
       if (!productViewMap[pid]) {
         productViewMap[pid] = { name: item.product.name, viewCount: item.product.viewCount ?? 0, sales: 0 };
       }
@@ -67,6 +53,22 @@ export async function GET(
   const weeklyViews = Object.values(productViewMap).reduce((s, p) => s + p.viewCount, 0);
   const conversionRate =
     weeklyViews > 0 ? ((recentOrders.length / weeklyViews) * 100).toFixed(1) + '%' : '0%';
+
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'seller-success',
+      action: 'health_check',
+      status: 'success',
+      targetId: seller.id,
+      details: {
+        sellerId: seller.id,
+        storeName: seller.storeName,
+        activeProducts,
+        weeklyOrders: recentOrders.length,
+        weeklyRevenue,
+      },
+    },
+  });
 
   return NextResponse.json({
     seller: { id: seller.id, storeName: seller.storeName, email: seller.user?.email },
@@ -89,19 +91,19 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = await request.json() as {
+    action: string;
+    weeklyViews?: number;
+    weeklySales?: number;
+    weeklyRevenue?: number;
+    conversionRate?: string;
+    topProduct?: string;
+  };
   const { action } = body;
-
-  if (!action || !['send_coaching', 'send_performance_report'].includes(action)) {
-    return NextResponse.json(
-      { error: 'action must be send_coaching or send_performance_report' },
-      { status: 400 }
-    );
-  }
 
   const seller = await prisma.seller.findUnique({
     where: { id: (await params).sellerId },
-    include: { user: { select: { email: true, name: true } } },
+    include: { user: { select: { id: true, email: true, name: true } } },
   });
 
   if (!seller) {
@@ -117,6 +119,15 @@ export async function POST(
   if (action === 'send_coaching') {
     const { subject, html } = buildSellerCoachingEmail({ sellerName });
     await sendEmail({ to: seller.user.email, subject, html });
+    await prisma.agentLog.create({
+      data: {
+        agentName: 'seller-success',
+        action: 'send_coaching',
+        status: 'success',
+        targetId: seller.id,
+        details: { to: seller.user.email, sellerId: seller.id },
+      },
+    });
     return NextResponse.json({ success: true, action, to: seller.user.email });
   }
 
@@ -131,6 +142,22 @@ export async function POST(
       topProduct: topProduct ?? 'N/A',
     });
     await sendEmail({ to: seller.user.email, subject, html });
+    await prisma.agentLog.create({
+      data: {
+        agentName: 'seller-success',
+        action: 'send_performance_report',
+        status: 'success',
+        targetId: seller.id,
+        details: {
+          to: seller.user.email,
+          sellerId: seller.id,
+          weeklyRevenue: weeklyRevenue ?? 0,
+          weeklySales: weeklySales ?? 0,
+        },
+      },
+    });
     return NextResponse.json({ success: true, action, to: seller.user.email });
   }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
