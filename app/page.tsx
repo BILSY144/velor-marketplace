@@ -67,7 +67,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
+  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
 
   return (
     <Link
@@ -478,7 +478,7 @@ export default function HomePage() {
           }}
         >
           {[
-            { v: '+Â£2,400', l: "Today's sales" },
+            { v: '+£2,400', l: "Today's sales" },
             { v: '18 orders', l: 'Last hour' },
             { v: '4.9/5.0', l: 'Avg rating' },
           ].map((item) => (
@@ -984,7 +984,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling â It's Free
+                Start Selling — It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
