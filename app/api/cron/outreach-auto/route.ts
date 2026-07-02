@@ -2,15 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
-// ---------------------------------------------------------------------------
-// Outreach Auto-Scheduler — runs twice daily at 09:00 and 17:00 UTC
-// Moves prospects through the 3-email outreach sequence:
-//   1. initial   → first contact after scouting
-//   2. followup1 → 3 days after initial
-//   3. followup2 → 5 days after followup1 (final touch, marks 'outreached')
-// Only contacts prospects with an email address.
-// ---------------------------------------------------------------------------
-
 const MAX_PER_RUN = 25;
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
@@ -35,7 +26,7 @@ export async function GET() {
     try {
       const { subject, html } = buildOutreachEmail({
         prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-          email: prospect.email, category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
+          category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
         emailType: 'initial',
       });
       await sendEmail({ to: prospect.email, subject, html });
@@ -60,7 +51,7 @@ export async function GET() {
       try {
         const { subject, html } = buildOutreachEmail({
           prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-            email: prospect.email, category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
+            category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
           emailType: 'followup1',
         });
         await sendEmail({ to: prospect.email, subject, html });
@@ -70,7 +61,7 @@ export async function GET() {
     }
   }
 
-  // Stage 3: Followup 2 (5+ days after followup1) — marks 'outreached'
+  // Stage 3: Followup 2 (5+ days after followup1) — marks status 'outreached'
   const budget2 = MAX_PER_RUN - initialSent - followup1Sent;
   if (budget2 > 0) {
     const followup2Due = await prisma.sellerProspect.findMany({
@@ -86,7 +77,7 @@ export async function GET() {
       try {
         const { subject, html } = buildOutreachEmail({
           prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-            email: prospect.email, category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
+            category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
           emailType: 'followup2',
         });
         await sendEmail({ to: prospect.email, subject, html });
