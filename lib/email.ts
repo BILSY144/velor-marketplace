@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getResendClient = () => new Resend(process.env.RESEND_API_KEY);
 const FROM = 'Velor Commerce <customerservice@velorcommerce.co.uk>';
 
 const LOGO = `<div style="background:#FF6B00;padding:24px 32px"><h1 style="margin:0;font-size:22px;font-weight:800;color:#FFF;letter-spacing:0.1em">VELOR</h1></div>`;
@@ -33,7 +33,7 @@ export interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions): Promise<void> {
-  const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+  const { error } = await getResendClient().emails.send({ from: FROM, to, subject, html });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
   }
