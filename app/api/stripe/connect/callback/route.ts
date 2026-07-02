@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const status = account.details_submitted && account.charges_enabled ? 'active' : 'pending';
 
     // Persist stripe onboarding state to database
-    if (charges_enabled) {
+    if (account.charges_enabled) {
       await prisma.seller.update({
         where: { stripeAccountId: accountId },
         data: { stripeOnboarded: true },
