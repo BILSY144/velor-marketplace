@@ -11,14 +11,14 @@ async function requireAdmin() {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const application = await prisma.sellerApplication.findUnique({
-    where: { id: params.id },
+    where: { id: (await params).id },
   });
 
   if (!application) {
@@ -30,7 +30,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await requireAdmin();
   if (!session) {
@@ -45,7 +45,7 @@ export async function PATCH(
   }
 
   const application = await prisma.sellerApplication.findUnique({
-    where: { id: params.id },
+    where: { id: (await params).id },
   });
 
   if (!application) {
@@ -64,7 +64,7 @@ export async function PATCH(
 
   if (action === 'approve') {
     const updated = await prisma.sellerApplication.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: { status: 'APPROVED', reviewedAt: now, reviewedBy: reviewerEmail },
     });
 
@@ -83,7 +83,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.sellerApplication.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         status: 'REJECTED',
         rejectionReason: String(reason).trim(),

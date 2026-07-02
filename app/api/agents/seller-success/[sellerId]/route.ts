@@ -11,14 +11,14 @@ async function requireAdmin() {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { sellerId: string } }
+  { params }: { params: Promise<{ sellerId: string }> }
 ) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const seller = await prisma.seller.findUnique({
-    where: { id: params.sellerId },
+    where: { id: (await params).sellerId },
     include: { user: { select: { id: true, email: true, name: true } } },
   });
 
@@ -30,17 +30,17 @@ export async function GET(
 
   const [activeProducts, recentOrders] = await Promise.all([
     prisma.product.count({
-      where: { sellerId: params.sellerId, status: 'ACTIVE' },
+      where: { sellerId: (await params).sellerId, status: 'ACTIVE' },
     }),
     prisma.order.findMany({
       where: {
-        items: { some: { product: { sellerId: params.sellerId } } },
+        items: { some: { product: { sellerId: (await params).sellerId } } },
         createdAt: { gte: weekAgo },
         status: { not: 'CANCELLED' },
       },
       include: {
         items: {
-          where: { product: { sellerId: params.sellerId } },
+          where: { product: { sellerId: (await params).sellerId } },
           include: { product: { select: { id: true, name: true, views: true } } },
         },
       },
@@ -83,7 +83,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { sellerId: string } }
+  { params }: { params: Promise<{ sellerId: string }> }
 ) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -100,7 +100,7 @@ export async function POST(
   }
 
   const seller = await prisma.seller.findUnique({
-    where: { id: params.sellerId },
+    where: { id: (await params).sellerId },
     include: { user: { select: { email: true, name: true } } },
   });
 
