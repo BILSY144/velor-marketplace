@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     prisma.sellerApplication.count({ where }),
   ]);
 
+  const pending = await prisma.sellerApplication.count({ where: { status: 'PENDING' } });
 
   await prisma.agentLog.create({
     data: {
