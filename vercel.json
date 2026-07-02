@@ -1,12 +1,7 @@
 {
   "crons": [
-    {
-      "path": "/api/admin/products/auto-moderate",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/reports/daily",
-      "schedule": "0 7 * * *"
-    }
+    { "path": "/api/admin/products/auto-moderate", "schedule": "*/5 * * * *" },
+    { "path": "/api/reports/daily", "schedule": "0 7 * * *" },
+    { "path": "/api/briefing", "schedule": "0 7 * * *" }
   ]
 }
