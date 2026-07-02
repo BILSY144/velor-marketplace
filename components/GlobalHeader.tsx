@@ -4,7 +4,25 @@ import Link from 'next/link'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
-const CATEGORIES = ['All', 'Electronics', 'Fashion', 'Home & Living', 'Sports', 'Beauty', 'Art & Crafts', 'Books', 'Toys']
+const CATEGORIES = [
+  'All',
+  'Fitness & Gym',
+  'Electronics',
+  'Home & Garden',
+  'Sports & Outdoors',
+  'Beauty & Health',
+  'Toys & Games',
+  'Fashion',
+  'Automotive',
+  'Jewellery & Watches',
+  'Baby & Kids',
+  'Pet Supplies',
+  'Books & Education',
+  'Art & Crafts',
+  'Office & Stationery',
+  'Travel & Luggage',
+  'Food & Grocery',
+]
 
 interface SearchResult {
   id: string
@@ -166,9 +184,9 @@ export default function GlobalHeader() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                    <div style={{ fontSize: '11px', color: '#999', fontFamily: 'Inter, sans-serif' }}>{item.category} · {item.sellerName}</div>
+                    <div style={{ fontSize: '11px', color: '#999', fontFamily: 'Inter, sans-serif' }}>{item.category} Â· {item.sellerName}</div>
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>£{item.price.toFixed(2)}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>Â£{item.price.toFixed(2)}</div>
                 </Link>
               ))}
               {!searching && searchResults.length > 0 && (
