@@ -46,6 +46,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!(await requireAdmin())) {
+
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'prospects',
+      action: 'prospect_created',
+      status: 'success',
+      details: { platform: body?.platform, storeUrl: body?.storeUrl, score: body?.score },
+    },
+  });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -79,6 +88,16 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   if (!(await requireAdmin())) {
+
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'prospects',
+      action: 'prospect_updated',
+      status: 'success',
+      details: { newStatus: body?.status },
+      targetId: id,
+    },
+  });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -106,4 +125,4 @@ export async function PATCH(request: NextRequest) {
   });
 
   return NextResponse.json({ prospect });
-}
+                  }
