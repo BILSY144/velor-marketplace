@@ -1,9 +1,28 @@
 {
   "crons": [
-    { "path": "/api/admin/products/auto-moderate", "schedule": "*/5 * * * *" },
-    { "path": "/api/reports/daily", "schedule": "0 7 * * *" },
-    { "path": "/api/briefing", "schedule": "0 7 * * *" },
-    { "path": "/api/cron/scout-sellers", "schedule": "0 */6 * * *" },
-    { "path": "/api/cron/outreach-auto", "schedule": "0 9,17 * * *" }
+    {
+      "path": "/api/admin/products/auto-moderate",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/reports/daily",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/briefing",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/scout-sellers",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/outreach-auto",
+      "schedule": "0 9,17 * * *"
+    },
+    {
+      "path": "/api/cron/traffic-check",
+      "schedule": "0 8 * * *"
+    }
   ]
 }

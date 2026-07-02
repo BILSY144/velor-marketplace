@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { CATEGORIES, CATEGORY_NAMES } from '@/lib/categories'
 
 interface Product {
   id: string
@@ -20,6 +21,7 @@ export default function MarketplaceGrid() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
+  const [activeSubcategory, setActiveSubcategory] = useState('All')
   const [sort, setSort] = useState<'newest' | 'price-asc' | 'price-desc'>('newest')
 
   useEffect(() => {
@@ -32,46 +34,66 @@ export default function MarketplaceGrid() {
       .catch(() => setLoading(false))
   }, [])
 
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(products.map(p => p.category))).sort()
-    return ['All', ...cats]
-  }, [products])
+  // Active category object from taxonomy
+  const activeCategoryObj = useMemo(() =>
+    CATEGORIES.find(c => c.name === activeCategory) ?? null,
+    [activeCategory]
+  )
+
+  // Subcategories for active category
+  const subcategories = useMemo(() =>
+    activeCategoryObj ? ['All', ...activeCategoryObj.subcategories.map(s => s.name)] : [],
+    [activeCategoryObj]
+  )
 
   const filtered = useMemo(() => {
     let list = products.filter(p => {
-      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase())
+      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description?.toLowerCase().includes(search.toLowerCase())
       const matchCat = activeCategory === 'All' || p.category === activeCategory
-      return matchSearch && matchCat
+      const matchSub = activeSubcategory === 'All' || p.category === activeSubcategory
+      return matchSearch && matchCat && matchSub
     })
-    if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price)
-    else if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price)
+    if (sort === 'newest') list = list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    if (sort === 'price-asc') list = list.sort((a, b) => a.price - b.price)
+    if (sort === 'price-desc') list = list.sort((a, b) => b.price - a.price)
     return list
-  }, [products, search, activeCategory, sort])
+  }, [products, search, activeCategory, activeSubcategory, sort])
+
+  // Count products per category for badge display
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: products.length }
+    for (const cat of CATEGORY_NAMES) {
+      counts[cat] = products.filter(p => p.category === cat).length
+    }
+    return counts
+  }, [products])
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;600&display=swap');
-        .mp-root { background: #0D0D0D; min-height: 100vh; font-family: 'Inter', sans-serif; color: #fff; }
-        .mp-hero { padding: 64px 48px 40px; border-bottom: 1px solid #2A2A2A; }
-        .mp-hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 52px; font-weight: 800; margin: 0 0 8px; }
-        .mp-hero h1 span { color: #FF6B00; }
-        .mp-hero p { color: #999; font-size: 16px; margin: 0; }
-        .mp-controls { padding: 24px 48px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #2A2A2A; }
-        .mp-search { flex: 1; min-width: 220px; background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 8px; padding: 10px 16px; color: #fff; font-size: 14px; outline: none; }
-        .mp-search:focus { border-color: #FF6B00; }
-        .mp-search::placeholder { color: #666; }
-        .mp-sort { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 8px; padding: 10px 16px; color: #fff; font-size: 14px; cursor: pointer; outline: none; }
-        .mp-cats { padding: 16px 48px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #2A2A2A; }
-        .mp-cat { padding: 6px 16px; border-radius: 20px; border: 1px solid #2A2A2A; background: transparent; color: #999; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-        .mp-cat:hover { border-color: #FF6B00; color: #FF6B00; }
-        .mp-cat.active { background: #FF6B00; border-color: #FF6B00; color: #000; }
-        .mp-grid { padding: 40px 48px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        @media (max-width: 1100px) { .mp-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 768px) { .mp-grid { grid-template-columns: repeat(2, 1fr); padding: 20px 16px; } .mp-hero { padding: 40px 16px 24px; } .mp-hero h1 { font-size: 36px; } .mp-controls { padding: 16px; } .mp-cats { padding: 12px 16px; } }
-        .mp-card { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 12px; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: transform 0.15s, box-shadow 0.15s; }
-        .mp-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(255,107,0,0.12); }
-        .mp-card-img { aspect-ratio: 1; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .mp-wrap { max-width: 1400px; margin: 0 auto; padding: 0 20px 60px; }
+        .mp-header { display: flex; align-items: center; justify-content: space-between; padding: 32px 0 24px; gap: 16px; flex-wrap: wrap; }
+        .mp-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: #fff; }
+        .mp-count { font-size: 14px; color: #666; }
+        .mp-search-sort { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .mp-search { background: #111; border: 1px solid #222; border-radius: 10px; padding: 10px 16px; color: #fff; font-size: 14px; width: 240px; }
+        .mp-search:focus { outline: none; border-color: #FF6B00; }
+        .mp-sort { background: #111; border: 1px solid #222; border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 14px; cursor: pointer; }
+        .mp-cats { overflow-x: auto; display: flex; gap: 8px; padding: 0 0 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .mp-cats::-webkit-scrollbar { display: none; }
+        .mp-cat-btn { white-space: nowrap; padding: 8px 16px; border-radius: 20px; border: 1px solid #222; background: transparent; color: #888; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; position: relative; }
+        .mp-cat-btn.active { background: #FF6B00; border-color: #FF6B00; color: #000; }
+        .mp-cat-btn:hover:not(.active) { border-color: #444; color: #fff; }
+        .mp-cat-count { font-size: 10px; margin-left: 4px; opacity: 0.7; }
+        .mp-subcats { display: flex; gap: 6px; padding: 0 0 20px; flex-wrap: wrap; }
+        .mp-subcat-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #1a1a1a; background: transparent; color: #555; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .mp-subcat-btn.active { background: #1a1a1a; border-color: #333; color: #FF6B00; }
+        .mp-subcat-btn:hover:not(.active) { border-color: #333; color: #888; }
+        .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .mp-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s; text-decoration: none; }
+        .mp-card:hover { border-color: #FF6B00; }
+        .mp-card-img { height: 220px; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
         .mp-card-img img { width: 100%; height: 100%; object-fit: cover; }
         .mp-card-img-placeholder { color: #333; font-size: 40px; }
         .mp-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
@@ -79,84 +101,103 @@ export default function MarketplaceGrid() {
         .mp-card-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
         .mp-card-seller { font-size: 12px; color: #666; }
         .mp-card-price { font-size: 17px; font-weight: 700; color: #fff; margin-top: auto; padding-top: 8px; }
-        .mp-card-btn { margin: 0 14px 14px; background: #FF6B00; color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; display: block; transition: opacity 0.15s; }
-        .mp-card-btn:hover { opacity: 0.85; }
-        .mp-empty { padding: 80px 48px; text-align: center; color: #666; }
-        .mp-empty h3 { font-size: 24px; color: #fff; margin-bottom: 8px; }
-        .mp-count { padding: 0 48px 8px; color: #666; font-size: 13px; }
-        @media (max-width: 768px) { .mp-count { padding: 0 16px 8px; } }
-        .mp-spinner { display: flex; align-items: center; justify-content: center; padding: 80px; }
-        .mp-spin { width: 32px; height: 32px; border: 3px solid #2A2A2A; border-top-color: #FF6B00; border-radius: 50%; animation: spin 0.7s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .mp-card-btn { margin: 0 14px 14px; background: #FF6B00; color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; display: block; text-decoration: none; }
+        .mp-empty { text-align: center; padding: 80px 20px; color: #444; }
+        .mp-empty-title { font-size: 20px; font-weight: 700; color: #666; margin-bottom: 8px; }
+        .mp-cat-section { margin: 40px 0 24px; }
+        .mp-cat-section-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+        @media (max-width: 600px) {
+          .mp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .mp-title { font-size: 22px; }
+          .mp-search { width: 100%; }
+        }
       `}</style>
 
-      <div className="mp-root">
-        <div className="mp-hero">
-          <h1>Velor <span>Marketplace</span></h1>
-          <p>Shop unique products from independent sellers</p>
+      <div className="mp-wrap">
+        <div className="mp-header">
+          <div>
+            <div className="mp-title">Marketplace</div>
+            <div className="mp-count">{loading ? 'Loading...' : `${filtered.length} of ${products.length} products`}</div>
+          </div>
+          <div className="mp-search-sort">
+            <input
+              className="mp-search"
+              placeholder="Search products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select className="mp-sort" value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
+              <option value="newest">Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+            </select>
+          </div>
         </div>
 
-        <div className="mp-controls">
-          <input
-            className="mp-search"
-            placeholder="Search products..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <select className="mp-sort" value={sort} onChange={e => setSort(e.target.value as any)}>
-            <option value="newest">Newest</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-          </select>
-        </div>
-
+        {/* Category tabs — all 14 defined categories always visible */}
         <div className="mp-cats">
-          {categories.map(cat => (
+          <button
+            className={`mp-cat-btn ${activeCategory === 'All' ? 'active' : ''}`}
+            onClick={() => { setActiveCategory('All'); setActiveSubcategory('All') }}
+          >
+            All <span className="mp-cat-count">({products.length})</span>
+          </button>
+          {CATEGORIES.map(cat => (
             <button
-              key={cat}
-              className={`mp-cat ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
+              key={cat.slug}
+              className={`mp-cat-btn ${activeCategory === cat.name ? 'active' : ''}`}
+              onClick={() => { setActiveCategory(cat.name); setActiveSubcategory('All') }}
             >
-              {cat}
+              {cat.name}
+              <span className="mp-cat-count">({categoryCounts[cat.name] ?? 0})</span>
             </button>
           ))}
         </div>
 
+        {/* Subcategory chips — show when a category is selected */}
+        {activeCategoryObj && subcategories.length > 1 && (
+          <div className="mp-subcats">
+            {subcategories.map(sub => (
+              <button
+                key={sub}
+                className={`mp-subcat-btn ${activeSubcategory === sub ? 'active' : ''}`}
+                onClick={() => setActiveSubcategory(sub)}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Products grid */}
         {loading ? (
-          <div className="mp-spinner"><div className="mp-spin" /></div>
+          <div className="mp-empty"><div className="mp-empty-title">Loading products...</div></div>
         ) : filtered.length === 0 ? (
           <div className="mp-empty">
-            <h3>No products found</h3>
-            <p>Try a different search or category</p>
+            <div className="mp-empty-title">No products found</div>
+            <p>{activeCategory !== 'All' ? `Be the first to list in ${activeCategory}!` : 'Try a different search term.'}</p>
           </div>
         ) : (
-          <>
-            <div className="mp-count">{filtered.length} product{filtered.length !== 1 ? 's' : ''}</div>
-            <div className="mp-grid">
-              {filtered.map(product => (
-                <div key={product.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                  <Link href={`/marketplace/${product.id}`} className="mp-card">
-                    <div className="mp-card-img">
-                      {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.name} />
-                      ) : (
-                        <div className="mp-card-img-placeholder">+</div>
-                      )}
-                    </div>
-                    <div className="mp-card-body">
-                      <div className="mp-card-cat">{product.category}</div>
-                      <div className="mp-card-name">{product.name}</div>
-                      <div className="mp-card-seller">{product.seller.storeName}</div>
-                      <div className="mp-card-price">Â£{product.price.toFixed(2)}</div>
-                    </div>
-                  </Link>
-                  <Link href={`/marketplace/${product.id}`} className="mp-card-btn">
-                    View Product
-                  </Link>
+          <div className="mp-grid">
+            {filtered.map(product => (
+              <Link key={product.id} href={`/marketplace/${product.id}`} className="mp-card">
+                <div className="mp-card-img">
+                  {product.images?.[0] ? (
+                    <img src={product.images[0]} alt={product.name} loading="lazy" />
+                  ) : (
+                    <span className="mp-card-img-placeholder">*</span>
+                  )}
                 </div>
-              ))}
-            </div>
-          </>
+                <div className="mp-card-body">
+                  <div className="mp-card-cat">{product.category}</div>
+                  <div className="mp-card-name">{product.name}</div>
+                  <div className="mp-card-seller">by {product.seller?.storeName}</div>
+                  <div className="mp-card-price">£{product.price.toFixed(2)}</div>
+                </div>
+                <span className="mp-card-btn">View Product</span>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
     </>
