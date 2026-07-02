@@ -89,7 +89,7 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
         fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '16px',
         cursor: paying ? 'not-allowed' : 'pointer', width: '100%',
       }}>
-        {paying ? 'Processing...' : 'Pay ' + fmt(total) + ' (DDP — No Surprise Fees)'}
+        {paying ? 'Processing...' : 'Pay ' + fmt(total) + ' (DDP â No Surprise Fees)'}
       </button>
       <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
         Duties and taxes are included in your total. You will not be charged anything on delivery.
@@ -184,6 +184,30 @@ export default function CheckoutPage() {
       })
       const data = await res.json()
       if (data.clientSecret) {
+        const piId = (data.clientSecret as string).split('_secret_')[0]
+        localStorage.setItem('velor-last-order', JSON.stringify({
+          orderNumber: 'VLR-' + Date.now(),
+          paymentIntentId: piId,
+          items,
+          shipping: {
+            firstName: address.name.split(' ')[0] ?? address.name,
+            lastName: address.name.split(' ').slice(1).join(' ') ?? '',
+            email: address.email,
+            phone: '',
+            address: [address.line1, address.line2].filter(Boolean).join(', '),
+            city: address.city,
+            postcode: address.postalCode,
+            country: address.country,
+          },
+          shippingMethod: selectedRate?.service ?? '',
+          shippingCost,
+          subtotal: productSubtotal,
+          total,
+          currency,
+          placedAt: new Date().toISOString(),
+          sellerId: items[0]?.sellerId ?? null,
+          rateId: selectedRate?.rateId ?? null,
+        }))
         setClientSecret(data.clientSecret)
         setStep('payment')
       }
@@ -300,7 +324,7 @@ export default function CheckoutPage() {
                         <input type="radio" name="rate" checked={selectedRate?.rateId === rate.rateId} onChange={() => setSelectedRate(rate)} style={{ accentColor: 'var(--accent)' }} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
-                            {rate.carrier} — {rate.service}
+                            {rate.carrier} â {rate.service}
                             {rate.isDDP && (
                               <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(0,230,118,0.15)', color: 'var(--green)', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
                                 DDP
@@ -351,7 +375,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* RIGHT — Order Summary */}
+        {/* RIGHT â Order Summary */}
         <div style={{ ...surface, position: 'sticky', top: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>Order Summary</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
@@ -375,7 +399,7 @@ export default function CheckoutPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(shippingCost) : '—'}</span>
+              <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(shippingCost) : 'â'}</span>
             </div>
             {landedCost && !landedCost.isDomestic && dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
@@ -387,7 +411,7 @@ export default function CheckoutPage() {
               </div>
             )}
             {landedCost?.isDomestic && (
-              <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic — no import duties</div>
+              <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic â no import duties</div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
               <span style={{ color: 'var(--text)' }}>Total</span>

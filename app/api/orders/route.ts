@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/auth';
+import { auth } from '@/auth'
 
 // POST - create order after successful Stripe payment
-// Body: { sellerId, buyerEmail, buyerName, address, total, items }
+// Body: { sellerId, buyerEmail, buyerName, address, total, productSubtotal, shippingCost, items, paymentIntentId }
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -16,24 +12,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { sellerId, buyerEmail, buyerName, address, total, items } = body as {
+  const {
+    sellerId,
+    buyerEmail,
+    buyerName,
+    address,
+    total,
+    productSubtotal,
+    shippingCost,
+    items,
+    paymentIntentId,
+  } = body as {
     sellerId?: string
     buyerEmail?: string
     buyerName?: string
     address?: unknown
     total?: number
+    productSubtotal?: number
+    shippingCost?: number
+    paymentIntentId?: string
     items?: Array<{
       productId?: string
       id?: string
-      name?: string
       quantity?: number
       price?: number
-      image?: string
     }>
   }
 
   if (!sellerId || !buyerEmail || !buyerName || !address || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+
+  // Idempotency: if order already exists for this PaymentIntent, return it
+  if (paymentIntentId) {
+    const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
+    if (existing) {
+      return NextResponse.json({ orderId: existing.id }, { status: 200 })
+    }
   }
 
   try {
@@ -44,14 +59,16 @@ export async function POST(req: NextRequest) {
         buyerName: buyerName ?? String(buyerEmail),
         shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
         total: Number(total),
-        status: 'PENDING',
+        productSubtotal: Number(productSubtotal ?? 0),
+        shippingCost: Number(shippingCost ?? 0),
+        status: 'PAID',
+        stripePaymentId: paymentIntentId ?? null,
         items: {
           create: items.map((item) => ({
             productId: item.productId ?? item.id ?? '',
-            name: item.name ?? String(item.productId ?? item.id ?? ''),
             quantity: Number(item.quantity),
             price: Number(item.price),
-            image: item.image ?? null,
+            commission: Number(item.price) * Number(item.quantity) * 0.15,
           })),
         },
       },
@@ -63,22 +80,19 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/orders?email=... - list buyer orders
+// GET /api/orders?email=... - list buyer orders (requires auth)
 export async function GET(req: NextRequest) {
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const email = req.nextUrl.searchParams.get('email')
   if (!email) return NextResponse.json({ error: 'email param required' }, { status: 400 })
 
   const orders = await prisma.order.findMany({
     where: { buyerEmail: email.toLowerCase().trim() },
-    include: {
-      items: true,
-    },
+    include: { items: true, shipments: true },
     orderBy: { createdAt: 'desc' },
   })
-
   return NextResponse.json({ orders })
 }
