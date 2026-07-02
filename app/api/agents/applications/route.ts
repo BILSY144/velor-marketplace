@@ -31,5 +31,15 @@ export async function GET(request: NextRequest) {
     prisma.sellerApplication.count({ where }),
   ]);
 
+
+  await prisma.agentLog.create({
+    data: {
+      agentName: 'applications',
+      action: 'applications_reviewed',
+      status: 'success',
+      details: { total, pending },
+    },
+  });
+
   return NextResponse.json({ applications, total, page, pageSize });
 }
