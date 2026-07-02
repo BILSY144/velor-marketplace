@@ -61,7 +61,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
+  const sym = product.currency === 'GBP' ? '£' : product.currency === 'USD' ? '$' : '€'
 
   return (
     <Link
@@ -258,7 +258,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             <span>{seller.productCount} products</span>
             {seller.avgRating && (
               <span style={{ color: 'var(--accent)' }}>
-                â {seller.avgRating.toFixed(1)}
+                ★ {seller.avgRating.toFixed(1)}
               </span>
             )}
           </div>
@@ -271,7 +271,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             flexShrink: 0,
           }}
         >
-          â
+          →
         </div>
       </div>
     </Link>
@@ -686,7 +686,7 @@ export default function HomePage() {
                       transition: 'color 0.2s',
                     }}
                   >
-                    â
+                    →
                   </div>
                 </div>
               </Link>
@@ -746,7 +746,7 @@ export default function HomePage() {
                       zIndex: 0,
                     }}
                   >
-                    â
+                    →
                   </div>
                 )}
                 <div
@@ -896,7 +896,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling â It's Free
+                Start Selling — It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
