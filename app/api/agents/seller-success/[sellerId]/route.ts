@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { ProductStatus } from '@prisma/client';
 import { sendEmail, buildSellerCoachingEmail, buildSellerPerformanceEmail } from '@/lib/email';
 
 async function requireAdmin() {
@@ -28,31 +29,29 @@ export async function GET(
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [activeProducts, recentOrders] = await Promise.all([
-    prisma.product.count({ where: { sellerId: seller.id, status: 'ACTIVE' } }),
+  const [approvedProducts, recentOrders] = await Promise.all([
+    prisma.product.count({ where: { sellerId: seller.id, status: ProductStatus.APPROVED } }),
     prisma.order.findMany({
       where: { sellerId: seller.id, createdAt: { gte: weekAgo } },
-      include: { items: { include: { product: { select: { name: true, viewCount: true } } } } },
+      include: { items: { include: { product: { select: { name: true } } } } },
     }),
   ]);
 
   const weeklyRevenue = recentOrders.reduce((s, o) => s + o.total, 0);
 
-  const productViewMap: Record<string, { name: string; viewCount: number; sales: number }> = {};
+  const productSalesMap: Record<string, { name: string; sales: number }> = {};
   for (const order of recentOrders) {
     for (const item of order.items) {
       const pid = item.productId;
-      if (!productViewMap[pid]) {
-        productViewMap[pid] = { name: item.product.name, viewCount: item.product.viewCount ?? 0, sales: 0 };
+      if (!productSalesMap[pid]) {
+        productSalesMap[pid] = { name: item.product.name, sales: 0 };
       }
-      productViewMap[pid].sales += item.quantity;
+      productSalesMap[pid].sales += item.quantity;
     }
   }
 
-  const topProduct = Object.values(productViewMap).sort((a, b) => b.sales - a.sales)[0] ?? null;
-  const weeklyViews = Object.values(productViewMap).reduce((s, p) => s + p.viewCount, 0);
-  const conversionRate =
-    weeklyViews > 0 ? ((recentOrders.length / weeklyViews) * 100).toFixed(1) + '%' : '0%';
+  const topProduct =
+    Object.values(productSalesMap).sort((a, b) => b.sales - a.sales)[0] ?? null;
 
   await prisma.agentLog.create({
     data: {
@@ -63,7 +62,7 @@ export async function GET(
       details: {
         sellerId: seller.id,
         storeName: seller.storeName,
-        activeProducts,
+        approvedProducts,
         weeklyOrders: recentOrders.length,
         weeklyRevenue,
       },
@@ -73,11 +72,9 @@ export async function GET(
   return NextResponse.json({
     seller: { id: seller.id, storeName: seller.storeName, email: seller.user?.email },
     stats: {
-      activeProducts,
+      approvedProducts,
       weeklyOrders: recentOrders.length,
       weeklyRevenue,
-      weeklyViews,
-      conversionRate,
       topProduct: topProduct ? topProduct.name : null,
     },
   });
