@@ -364,3 +364,13 @@ model SellerApplication {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
+
+model AgentLog {
+  id        String   @id @default(cuid())
+  agentName String
+  action    String
+  status    String
+  details   Json?
+  targetId  String?
+  createdAt DateTime @default(now())
+}
