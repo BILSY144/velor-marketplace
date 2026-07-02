@@ -1,8 +1,41 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default auth((req) => {
+// Simple edge-compatible in-memory rate limiter
+const _rl = new Map<string, { count: number; reset: number }>()
+
+function rateLimit(ip: string, key: string, max: number, windowMs: number): boolean {
+  const k = ip + ':' + key
+  const now = Date.now()
+  const entry = _rl.get(k)
+  if (!entry || now > entry.reset) {
+    _rl.set(k, { count: 1, reset: now + windowMs })
+    return true
+  }
+  if (entry.count >= max) return false
+  entry.count++
+  return true
+}
+
+export default auth((req: NextRequest & { auth?: unknown }) => {
   const { pathname } = req.nextUrl
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
+
+  // Rate limiting
+  const limits: Record<string, [number, number]> = {
+    '/api/chat':     [20, 60_000],
+    '/api/contact':  [5,  60_000],
+    '/api/checkout': [10, 60_000],
+  }
+  for (const [route, [max, win]] of Object.entries(limits)) {
+    if (pathname.startsWith(route)) {
+      if (!rateLimit(ip, route, max, win)) {
+        return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 })
+      }
+      break
+    }
+  }
 
   // Protect dashboard routes - require session
   if (pathname.startsWith('/dashboard')) {
@@ -24,5 +57,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/api/admin/:path*', '/api/chat/:path*', '/api/contact/:path*', '/api/checkout/:path*'],
 }
