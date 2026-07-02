@@ -50,20 +50,20 @@ export async function GET(request: NextRequest) {
   const pendingPayouts = currentPayouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + Number(p.amount), 0);
   const gmvChange = prevGmv > 0 ? (((gmv - prevGmv) / prevGmv) * 100).toFixed(1) + '%' : 'N/A';
 
-
   await prisma.agentLog.create({
     data: {
       agentName: 'finance',
       action: 'summary_generated',
       status: 'success',
       details: {
-        ordersCount: orders.length,
-        payoutsCount: payouts.length,
+        ordersCount: currentOrders.length,
+        payoutsCount: currentPayouts.length,
         disputesCount: disputes.length,
         returnsCount: returnRequests.length,
       },
     },
   });
+
   return NextResponse.json({
     period: `Last ${daysBack} days`,
     since: since.toISOString(),
