@@ -1,4 +1,4 @@
-// Shippo API client — no SDK, pure fetch, DDP-first
+// Shippo API client â no SDK, pure fetch, DDP-first
 // Docs: https://docs.goshippo.com/
 
 const SHIPPO_BASE = 'https://api.goshippo.com'
@@ -91,7 +91,10 @@ export function buildParcelFromItems(
     (sum, item) => sum + (item.heightCm ?? 10) * item.quantity,
     0
   )
-  const kg = Math.max(0.05, totalWeightG / 1000)
+  // Dimensional weight: carriers charge whichever is greater — actual vs volumetric
+  // Standard divisor 5000 cm³/kg used by DHL, FedEx, UPS, Royal Mail
+  const dimWeightKg = (maxLen * maxWid * Math.min(totalHeight * 1.1, 60)) / 5000
+  const kg = Math.max(0.05, Math.max(totalWeightG / 1000, dimWeightKg))
   return {
     length: String(Math.max(1, Math.round(maxLen))),
     width: String(Math.max(1, Math.round(maxWid))),
@@ -161,14 +164,27 @@ export async function purchaseLabel(rateId: string): Promise<ShippoTransaction> 
 }
 
 // Sort rates: DHL first (best DDP), then FedEx, then UPS, then others, cheapest within group
-export function sortRatesByDDP(rates: ShippoRate[]): ShippoRate[] {
-  const priority = ['dhl', 'fedex', 'ups']
+// Sort rates globally: cheapest first, then by speed.
+// No hardcoded carrier bias — Shippo returns only carriers valid for the route.
+export function sortRatesGlobal(rates: ShippoRate[]): ShippoRate[] {
   return [...rates].sort((a, b) => {
-    const ap = priority.findIndex(p => (a.provider ?? '').toLowerCase().includes(p))
-    const bp = priority.findIndex(p => (b.provider ?? '').toLowerCase().includes(p))
-    const an = ap === -1 ? 99 : ap
-    const bn = bp === -1 ? 99 : bp
-    if (an !== bn) return an - bn
-    return parseFloat(a.amount) - parseFloat(b.amount)
+    const priceDiff = parseFloat(a.amount) - parseFloat(b.amount)
+    if (Math.abs(priceDiff) > 0.50) return priceDiff
+    // Within 50p of each other: prefer faster
+    const aDays = a.estimated_days ?? 99
+    const bDays = b.estimated_days ?? 99
+    return aDays - bDays
   })
+}
+
+// Alias for backward compatibility during migration
+export const sortRatesByDDP = sortRatesGlobal
+
+// AI auto-selection: pick cheapest rate that includes tracking.
+// Falls back to absolute cheapest if none have tracking.
+export function pickBestRate(rates: ShippoRate[]): ShippoRate | null {
+  if (!rates.length) return null
+  const sorted = sortRatesGlobal(rates)
+  const tracked = sorted.filter(r => r.trackable !== false && r.trackable !== 'NO_TRACKING')
+  return tracked[0] ?? sorted[0]
 }

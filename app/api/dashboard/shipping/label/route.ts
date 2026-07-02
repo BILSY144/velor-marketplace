@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import {
   createShippoShipment, purchaseLabel, buildParcelFromItems,
-  sortRatesByDDP, ShippoAddress, ShippoCustomsItem,
+  sortRatesGlobal, ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
 
 export const dynamic = 'force-dynamic'
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const sorted = sortRatesByDDP(shipment.rates)
+    const sorted = sortRatesGlobal(shipment.rates)
     const bestRate = sorted[0]
 
     const transaction = await purchaseLabel(bestRate.object_id)
