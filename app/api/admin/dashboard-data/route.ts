@@ -13,9 +13,18 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: cors() })
 }
 
-export async function GET(request: NextRequest) {
+function isAuthorized(request: NextRequest): boolean {
+  const secret = process.env.ADMIN_SECRET
+  if (!secret) return false
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
+  if (authHeader === `Bearer ${secret}`) return true
+  const tokenParam = request.nextUrl.searchParams.get('token')
+  if (tokenParam === secret) return true
+  return false
+}
+
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: cors() })
   }
 
