@@ -1,13 +1,13 @@
 'use client'
-import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-
-export const dynamic = 'force-dynamic'
+import { useEffect, useState } from 'react'
 
 export default function UnsubscribePage() {
-  const params = useSearchParams()
-  const u = params.get('u') || ''
+  const [u, setU] = useState('')
   const [state, setState] = useState<'idle' | 'saving' | 'done' | 'error'>('idle')
+
+  useEffect(() => {
+    try { setU(new URLSearchParams(window.location.search).get('u') || '') } catch {}
+  }, [])
 
   async function confirm() {
     setState('saving')
