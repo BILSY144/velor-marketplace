@@ -33,7 +33,7 @@ export async function GET(
     prisma.product.count({ where: { sellerId: seller.id, status: ProductStatus.APPROVED } }),
     prisma.order.findMany({
       where: { sellerId: seller.id, createdAt: { gte: weekAgo } },
-      include: { items: { include: { product: { select: { name: true } } } } },
+      include: { items: { include: { product: { select: { title: true } } } } },
     }),
   ]);
 
@@ -44,7 +44,7 @@ export async function GET(
     for (const item of order.items) {
       const pid = item.productId;
       if (!productSalesMap[pid]) {
-        productSalesMap[pid] = { name: item.product.name, sales: 0 };
+        productSalesMap[pid] = { name: item.product.title, sales: 0 };
       }
       productSalesMap[pid].sales += item.quantity;
     }

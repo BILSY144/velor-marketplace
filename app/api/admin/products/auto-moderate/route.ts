@@ -14,13 +14,13 @@ const MIN_PRICE = 0.01
 const MAX_PRICE = 50000
 
 function moderateProduct(product: {
-  name: string
+  title: string
   description: string | null
   price: number
   images: string[]
 }): { approved: boolean; reason?: string } {
   for (const pattern of FORBIDDEN_PATTERNS) {
-    if (pattern.test(product.name)) {
+    if (pattern.test(product.title)) {
       return { approved: false, reason: `Forbidden pattern in name: ${pattern}` }
     }
   }
@@ -40,10 +40,10 @@ function moderateProduct(product: {
   if (!product.images || product.images.length === 0) {
     return { approved: false, reason: 'No images provided' }
   }
-  if (product.name.length < 3) {
+  if (product.title.length < 3) {
     return { approved: false, reason: 'Name too short' }
   }
-  if (product.name.length > 200) {
+  if (product.title.length > 200) {
     return { approved: false, reason: 'Name too long' }
   }
   return { approved: true }
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       where: { status: 'PENDING_REVIEW' },
       select: {
         id: true,
-        name: true,
+        title: true,
         description: true,
         price: true,
         images: true,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     for (const product of pending) {
       try {
         const { approved, reason } = moderateProduct({
-          name: product.name,
+          title: product.title,
           description: product.description,
           price: product.price,
           images: product.images,
