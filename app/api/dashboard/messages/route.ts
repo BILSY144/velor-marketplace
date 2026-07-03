@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/dashboard/messages — returns all message threads for the logged-in seller
+// GET /api/dashboard/messages â returns all message threads for the logged-in seller
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       include: {
         sender: { select: { id: true, name: true, image: true } },
         receiver: { select: { id: true, name: true, image: true } },
-        product: { select: { id: true, name: true, images: true } },
+        product: { select: { id: true, title: true, images: true } },
       },
     });
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/dashboard/messages — seller replies to a buyer message
+// POST /api/dashboard/messages â seller replies to a buyer message
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();

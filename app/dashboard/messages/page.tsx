@@ -162,7 +162,7 @@ export default function DashboardMessagesPage() {
                       <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{formatTime(conv.lastMessage.createdAt)}</span>
                     </div>
                     {conv.product && (
-                      <div style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.product.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.product.title}</div>
                     )}
                     <div style={{ fontSize: 13, color: conv.unreadCount > 0 ? 'var(--text)' : 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {conv.lastMessage.senderId === currentUserId ? 'You: ' : ''}{conv.lastMessage.content}
@@ -196,7 +196,7 @@ export default function DashboardMessagesPage() {
                   {otherUser?.name ?? selected.otherUser.name ?? selected.otherUser.email}
                 </div>
                 {selected.product && (
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>Re: {selected.product.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>Re: {selected.product.title}</div>
                 )}
               </div>
             </div>
