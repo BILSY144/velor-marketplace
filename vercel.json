@@ -17,6 +17,10 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/enrich-emails",
+      "schedule": "0 */6 * * *"
+    },
+    {
       "path": "/api/cron/outreach-auto",
       "schedule": "0 9,17 * * *"
     },

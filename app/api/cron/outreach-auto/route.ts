@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
-const MAX_PER_RUN = 25;
+const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 8;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
@@ -17,6 +17,10 @@ function unsub(email: string | null): string {
 }
 
 export async function GET() {
+  if (process.env.OUTREACH_ENABLED !== 'true') {
+    return NextResponse.json({ ok: true, skipped: 'outreach disabled' });
+  }
+
   let initialSent = 0, followup1Sent = 0, followup2Sent = 0;
   const errors: string[] = [];
 
