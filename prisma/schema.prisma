@@ -256,11 +256,14 @@ model DiscountCode {
   sellerId    String
   seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   code        String    @unique
-  discountPct Float
-  maxUses     Int?
+  type        String    @default("PERCENTAGE")
+  value       Float     @default(0)
+  minOrder    Float?
+  maxDiscount Float?
+  usageLimit  Int?
   usedCount   Int       @default(0)
   expiresAt   DateTime?
-  active      Boolean   @default(true)
+  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
