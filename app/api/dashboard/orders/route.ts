@@ -37,7 +37,7 @@ export async function GET() {
     const oid = item.orderId
     if (!ordersMap.has(oid)) {
       ordersMap.set(oid, {
-        id: item.order.id, buyerName: maskName(item.order.customerName),
+        id: item.order.id, buyerName: maskName(item.order.customerName ?? ''),
         status: item.order.status, createdAt: item.order.createdAt,
         items: [], totalRevenue: 0, totalPayout: 0,
       })
