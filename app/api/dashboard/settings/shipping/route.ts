@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
     }
     const body = await request.json()
-    const { name, company, street1, street2, city, state, zip, country, phone, email: profileEmail, handlingDays } = body
+    const { name, company, street1, street2, city, state, zip, country, phone } = body
     if (!name || !street1 || !city || !zip || !country) {
       return NextResponse.json({ error: 'Missing required fields: name, street1, city, zip, country' }, { status: 400 })
     }
@@ -50,8 +50,6 @@ export async function POST(request: NextRequest) {
         city, state: state || null,
         zip, country: country || 'GB',
         phone: phone || null,
-        email: profileEmail || null,
-        handlingDays: handlingDays ?? 1,
       },
       update: {
         name, company: company || null,
@@ -59,8 +57,6 @@ export async function POST(request: NextRequest) {
         city, state: state || null,
         zip, country: country || 'GB',
         phone: phone || null,
-        email: profileEmail || null,
-        handlingDays: handlingDays ?? 1,
       },
     })
     return NextResponse.json({ profile })
