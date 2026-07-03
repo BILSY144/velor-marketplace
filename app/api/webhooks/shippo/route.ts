@@ -21,8 +21,8 @@ const SHIPPO_STATUS_MAP: Record<string, string> = {
   PRE_TRANSIT: 'LABEL_PURCHASED',
   TRANSIT: 'IN_TRANSIT',
   DELIVERED: 'DELIVERED',
-  RETURNED: 'RETURNED',
-  FAILURE: 'FAILED',
+  RETURNED: 'EXCEPTION',
+  FAILURE: 'EXCEPTION',
   UNKNOWN: 'IN_TRANSIT',
 }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     if (newStatus !== shipment.status) {
       await prisma.shipment.update({
         where: { id: shipment.id },
-        data: { status: newStatus as 'PENDING' | 'LABEL_PURCHASED' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED' | 'RETURNED' },
+        data: { status: newStatus as 'PENDING' | 'LABEL_PURCHASED' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'EXCEPTION' },
       })
 
       if (newStatus === 'DELIVERED') {
