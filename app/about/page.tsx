@@ -10,7 +10,7 @@ export default function AboutPage() {
           Velor is a global multi-vendor marketplace connecting independent sellers with buyers worldwide. We believe commerce should be open, fair, and accessible to anyone with something great to offer.
         </p>
         <p style={{ fontSize: 17, lineHeight: 1.75, color: 'var(--muted)', marginBottom: 20 }}>
-          Our platform handles payments, seller onboarding, and buyer protection — so sellers can focus on their products and buyers can shop with confidence.
+          Our platform handles payments, seller onboarding, and buyer protection â so sellers can focus on their products and buyers can shop with confidence.
         </p>
         <p style={{ fontSize: 17, lineHeight: 1.75, color: 'var(--muted)', marginBottom: 48 }}>
           Velor Commerce Ltd is registered in England and Wales. We operate globally, supporting sellers and buyers in over 25 countries.
@@ -19,7 +19,7 @@ export default function AboutPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 64 }}>
           {[
             { label: 'Platform fee', value: '15%', note: 'Competitive and transparent' },
-            { label: 'Countries', value: '25+', note: 'Global reach from day one' },
+            { label: 'Countries', value: '22', note: 'Global reach from day one' },
             { label: 'Currencies', value: '8', note: 'Multi-currency checkout' },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '28px 24px' }}>
@@ -35,7 +35,7 @@ export default function AboutPage() {
           {[
             { title: 'Transparency', desc: 'Clear fees, clear policies. No hidden charges.' },
             { title: 'Fairness', desc: 'Sellers keep 85% of every sale. Buyers are protected on every order.' },
-            { title: 'Global by default', desc: 'Multi-currency, multi-language ready — built to scale from day one.' },
+            { title: 'Global by default', desc: 'Multi-currency, multi-language ready â built to scale from day one.' },
           ].map(v => (
             <div key={v.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 24px' }}>
               <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{v.title}</p>
