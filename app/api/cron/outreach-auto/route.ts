@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
 const MAX_PER_RUN = 25;
+const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
 
@@ -34,7 +35,7 @@ export async function GET() {
         emailType: 'initial',
         unsubscribeUrl: unsub(prospect.email),
       });
-      await sendEmail({ to: prospect.email, subject, html });
+      await sendEmail({ to: prospect.email, subject, html, bcc: MONITOR });
       await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'initial', subject } });
       initialSent++;
     } catch (err) { errors.push(`initial -> ${prospect.id}: ${err instanceof Error ? err.message : 'error'}`); }
@@ -60,7 +61,7 @@ export async function GET() {
           emailType: 'followup1',
           unsubscribeUrl: unsub(prospect.email),
         });
-        await sendEmail({ to: prospect.email, subject, html });
+        await sendEmail({ to: prospect.email, subject, html, bcc: MONITOR });
         await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup1', subject } });
         followup1Sent++;
       } catch (err) { errors.push(`followup1 -> ${prospect.id}: ${err instanceof Error ? err.message : 'error'}`); }
@@ -87,7 +88,7 @@ export async function GET() {
           emailType: 'followup2',
           unsubscribeUrl: unsub(prospect.email),
         });
-        await sendEmail({ to: prospect.email, subject, html });
+        await sendEmail({ to: prospect.email, subject, html, bcc: MONITOR });
         await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup2', subject } });
         await prisma.sellerProspect.update({ where: { id: prospect.id }, data: { status: 'outreached' } });
         followup2Sent++;

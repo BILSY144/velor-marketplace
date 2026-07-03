@@ -30,10 +30,11 @@ export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
+  bcc?: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions): Promise<void> {
-  const { error } = await getResendClient().emails.send({ from: FROM, to, subject, html });
+export async function sendEmail({ to, subject, html, bcc }: EmailOptions): Promise<void> {
+  const { error } = await getResendClient().emails.send({ from: FROM, to, subject, html, ...(bcc ? { bcc } : {}) });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
   }
