@@ -276,7 +276,7 @@ model AgentLog {
   id        String   @id @default(cuid())
   agentName String
   action    String
-  details   String?  @db.Text
+  details   Json?
   status    String   @default("success")
   createdAt DateTime @default(now())
 }
