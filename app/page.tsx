@@ -347,39 +347,19 @@ export default function HomePage() {
 
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: '50vw',
-            maxWidth: 960,
-            zIndex: 0,
-          }}
-        >
-          <img
-            src="/velor-global-market.png"
-            alt="Velor Global Marketplace"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center',
-              display: 'block',
-            }}
-          />
-        </div>
-
-        <div
-          style={{
-            maxWidth: 1200,
+            maxWidth: '100%',
             margin: '0 auto',
-            padding: '0 40px',
+            padding: '0 48px',
             position: 'relative',
             zIndex: 1,
             width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 56,
+            flexWrap: 'wrap',
           }}
         >
-          <div style={{ maxWidth: 520, position: 'relative', zIndex: 1 }}>
+          <div style={{ maxWidth: 560, flex: '1 1 420px', position: 'relative', zIndex: 1 }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -488,6 +468,20 @@ export default function HomePage() {
                 </button>
               </Link>
             </div>
+          </div>
+
+          <div style={{ flex: '1 1 620px', minWidth: 300 }}>
+            <img
+              src="/velor-global-market.png"
+              alt="Velor Global Marketplace"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                borderRadius: 16,
+                border: '1px solid var(--border)',
+              }}
+            />
           </div>
         </div>
 

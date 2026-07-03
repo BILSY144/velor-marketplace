@@ -136,7 +136,7 @@ export default function GlobalHeader() {
 
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 100, background: '#0D0D0D', borderBottom: '1px solid #2A2A2A' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', height: '64px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 40px', height: '64px', display: 'flex', alignItems: 'center', gap: '16px' }}>
 
         <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 800, color: '#FF6B00', letterSpacing: '-0.5px' }}>VELOR</span>
@@ -273,7 +273,7 @@ export default function GlobalHeader() {
       </div>
 
       <div style={{ borderTop: '1px solid #1E1E1E', overflowX: 'auto' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: '4px', height: '40px', alignItems: 'center' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 40px', display: 'flex', gap: '4px', height: '40px', alignItems: 'center' }}>
           {CATEGORIES.map(cat => {
             const isActive = isShopPage && cat === activeCategory
             return (
