@@ -126,6 +126,10 @@ model Seller {
   discountCodes                DiscountCode[]
   payouts                      Payout[]
   verification                 SellerVerification?
+  sellerScore                  Float               @default(0)
+  sellerBadge                  String?
+  sellerScoreUpdatedAt         DateTime?
+  scoreBreakdown               Json?
   createdAt                    DateTime            @default(now())
   updatedAt                    DateTime            @updatedAt
 }

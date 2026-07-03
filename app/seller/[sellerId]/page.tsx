@@ -116,6 +116,14 @@ export default async function SellerProfilePage({
                 {seller.storeName}
               </h1>
 
+              {seller.sellerBadge && seller.sellerBadge !== 'NEW' && (() => {
+                const b = ({ TOP_RATED: ['Top Rated Seller', '#FFD54A', 'rgba(255,213,74,0.12)'], TRUSTED: ['Trusted Seller', '#C7CDD6', 'rgba(199,205,214,0.12)'], ESTABLISHED: ['Established Seller', '#CD8B5A', 'rgba(205,139,90,0.12)'] } as Record<string, string[]>)[seller.sellerBadge as string]
+                if (!b) return null
+                return (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '10px', padding: '5px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: b[1], background: b[2], border: '1px solid ' + b[1] + '55' }}>{b[0]}</div>
+                )
+              })()}
+
               {totalReviews > 0 && (
                 <div style={{ marginBottom: '10px' }}>
                   <StarRating rating={avgRating} count={totalReviews} />

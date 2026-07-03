@@ -42,5 +42,14 @@ export async function POST(request: Request) {
   const review = await prisma.review.create({
     data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '' }
   })
+  try {
+    const p = await prisma.product.findUnique({ where: { id: productId }, select: { sellerId: true } })
+    if (p) {
+      const { computeSellerScore } = await import('@/lib/seller-ranking')
+      await computeSellerScore(p.sellerId)
+    }
+  } catch {
+    // ranking refresh is best-effort; never block the review response
+  }
   return NextResponse.json({ review }, { status: 201 })
 }

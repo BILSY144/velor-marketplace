@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') ?? '1', 10)
   const limit = parseInt(searchParams.get('limit') ?? '24', 10)
   const category = searchParams.get('category')
-  const sort = searchParams.get('sort') ?? 'newest'
+  const sort = searchParams.get('sort') ?? 'recommended'
   const search = searchParams.get('search')
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
@@ -26,9 +27,14 @@ export async function GET(request: Request) {
     if (maxPrice) (where.price as Record<string, number>).lte = parseFloat(maxPrice)
   }
 
-  let orderBy: Record<string, string> = { createdAt: 'desc' }
+  let orderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = [
+    { seller: { tier: 'asc' } },
+    { seller: { sellerScore: 'desc' } },
+    { createdAt: 'desc' },
+  ]
   if (sort === 'price_asc') orderBy = { price: 'asc' }
   else if (sort === 'price_desc') orderBy = { price: 'desc' }
+  else if (sort === 'newest') orderBy = { createdAt: 'desc' }
 
   const [total, products] = await Promise.all([
     prisma.product.count({ where }),
@@ -38,7 +44,7 @@ export async function GET(request: Request) {
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        seller: { select: { id: true, storeName: true } },
+        seller: { select: { id: true, storeName: true, tier: true, sellerScore: true, sellerBadge: true } },
         reviews: { select: { rating: true } },
         _count: { select: { reviews: true } },
       },
