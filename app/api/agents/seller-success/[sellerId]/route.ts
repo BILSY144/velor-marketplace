@@ -73,7 +73,7 @@ export async function GET(
       approvedProducts,
       weeklyOrders: recentOrders.length,
       weeklyRevenue,
-      topProduct: topProduct ? topProduct.title : null,
+      topProduct: topProduct ? topProduct.name : null,
     },
   });
 }
