@@ -154,7 +154,7 @@ export default function GlobalHeader() {
               flexShrink: 0,
             }}
           >
-            <img src="/velor-logo.png" alt="Velor" style={{ height: 34, width: 'auto', filter: 'drop-shadow(0 0 10px rgba(255,120,0,0.5))' }} />
+            <img src="/velor-logo.png" alt="Velor" style={{ height: 28, width: 'auto' }} />
           </Link>
 
           {/* Primary nav (desktop) */}

@@ -110,7 +110,7 @@ export default function GlobalFooter() {
               marginBottom: 12,
             }}
           >
-            <img src="/velor-logo.png" alt="Velor" style={{ height: 30, width: 'auto', filter: 'drop-shadow(0 0 10px rgba(255,120,0,0.45))' }} />
+            <img src="/velor-logo.png" alt="Velor" style={{ height: 24, width: 'auto' }} />
           </div>
           <p style={{ color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.6, maxWidth: 300 }}>
             The first fully AI-run marketplace. Independent sellers, protected buyers,
