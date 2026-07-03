@@ -69,7 +69,7 @@ const HOW_IT_WORKS = [
 
 function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
-  const sym = product.currency === 'GBP' ? 'Â£' : product.currency === 'USD' ? '$' : 'â¬'
+  const sym = product.currency === 'GBP' ? 'Ã£' : product.currency === 'USD' ? '$' : 'Ã¢ÂÂ¬'
 
   return (
     <Link
@@ -266,7 +266,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             <span>{seller.productCount} products</span>
             {seller.avgRating && (
               <span style={{ color: 'var(--accent)' }}>
-                â {seller.avgRating.toFixed(1)}
+                Ã¢ÂÂ {seller.avgRating.toFixed(1)}
               </span>
             )}
           </div>
@@ -279,7 +279,7 @@ function SellerCard({ seller }: { seller: FeaturedSeller }) {
             flexShrink: 0,
           }}
         >
-          â
+          Ã¢ÂÂ
         </div>
       </div>
     </Link>
@@ -385,7 +385,7 @@ export default function HomePage() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Now live in 180+ countries
+                Now live in 22 countries and growing
               </span>
             </div>
 
@@ -694,7 +694,7 @@ export default function HomePage() {
                       transition: 'color 0.2s',
                     }}
                   >
-                    â
+                    Ã¢ÂÂ
                   </div>
                 </div>
               </Link>
@@ -754,7 +754,7 @@ export default function HomePage() {
                       zIndex: 0,
                     }}
                   >
-                    â
+                    Ã¢ÂÂ
                   </div>
                 )}
                 <div
@@ -821,7 +821,7 @@ export default function HomePage() {
           {[
             { title: 'Free to List', desc: 'No upfront costs ever' },
             { title: 'Fast Payouts', desc: 'Within 48 hours' },
-            { title: 'Global Buyers', desc: '180+ countries' },
+            { title: 'Global Buyers', desc: '22 countries and growing' },
             { title: 'Seller Protection', desc: 'Disputes handled for you' },
             { title: 'AI-Powered Tools', desc: 'Grow your store faster' },
           ].map((t, i) => (
@@ -904,7 +904,7 @@ export default function HomePage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
-                Start Selling â It's Free
+                Start Selling Ã¢ÂÂ It's Free
               </button>
             </Link>
             <Link href="/shop" style={{ textDecoration: 'none' }}>
