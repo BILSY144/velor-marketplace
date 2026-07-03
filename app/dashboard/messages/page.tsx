@@ -10,7 +10,7 @@ interface OtherUser {
 
 interface Product {
   id: string;
-  name: string;
+  title: string;
 }
 
 interface ConversationEntry {
