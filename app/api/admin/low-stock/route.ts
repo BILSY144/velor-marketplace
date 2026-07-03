@@ -29,7 +29,7 @@ function buildLowStockEmail(
     .join('');
 
   const count = products.length;
-  const subject = `Low Stock Alert Ã¢ÂÂ ${count} product${count !== 1 ? 's' : ''} need restocking`;
+  const subject = `Low Stock Alert ÃÂ¢ÃÂÃÂ ${count} product${count !== 1 ? 's' : ''} need restocking`;
   const html = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <h2 style="color:#1a1a1a">Low Stock Alert</h2>
@@ -47,7 +47,7 @@ function buildLowStockEmail(
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace Ã¢ÂÂ automated low-stock monitor</p>
+      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace ÃÂ¢ÃÂÃÂ automated low-stock monitor</p>
     </div>
   `;
   return { subject, html };
@@ -75,7 +75,7 @@ export async function GET() {
         agentName: 'low-stock-monitor',
         action: 'scan',
         status: 'success',
-        details: { alertsSent: 0, message: 'All products adequately stocked' },
+        details: JSON.stringify({ alertsSent: 0, message: 'All products adequately stocked' }),
       },
     });
     return NextResponse.json({ ok: true, lowStockCount: 0, products: [] });
@@ -83,7 +83,7 @@ export async function GET() {
 
   const flat = lowStockProducts.map((p) => ({
     id: p.id,
-    name: p.title,
+    title: p.title,
     stock: p.stock,
     sellerStoreName: p.seller.storeName,
   }));
@@ -96,10 +96,10 @@ export async function GET() {
       agentName: 'low-stock-monitor',
       action: 'alert_sent',
       status: 'success',
-      details: {
+      details: JSON.stringify({
         alertsSent: flat.length,
         recipient: ALERT_RECIPIENT,
-        products: flat.map((p) => ({ id: p.id, name: p.title, stock: p.stock })),
+        products: flat.map((p) => ({ id: p.id, name: p.title, stock: p.stock }))),
       },
     },
   });
