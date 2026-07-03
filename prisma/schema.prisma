@@ -193,6 +193,8 @@ model Product {
   originCountry String?
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
+  messages      Message[]
+  reviews       Review[]
   createdAt     DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -214,6 +216,7 @@ model Order {
   returnRequests  ReturnRequest[]
   shipment        Shipment?
   payout          Payout?
+  dispute         Dispute?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -243,6 +246,7 @@ model Shipment {
   carrier          String?
   status           ShipmentStatus @default(PENDING)
   labelUrl         String?
+  events           ShipmentEvent[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 }
