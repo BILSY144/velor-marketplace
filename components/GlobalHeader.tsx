@@ -147,8 +147,8 @@ export default function GlobalHeader() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 24,
-              letterSpacing: '0.14em',
+              fontSize: 30,
+              letterSpacing: '0.12em',
               color: 'var(--accent)',
               textDecoration: 'none',
               flexShrink: 0,

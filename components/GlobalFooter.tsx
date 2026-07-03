@@ -104,8 +104,8 @@ export default function GlobalFooter() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 22,
-              letterSpacing: '0.14em',
+              fontSize: 26,
+              letterSpacing: '0.12em',
               color: 'var(--accent)',
               marginBottom: 12,
             }}
