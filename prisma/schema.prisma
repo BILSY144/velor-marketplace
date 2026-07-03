@@ -31,8 +31,7 @@ enum ShipmentStatus {
   IN_TRANSIT
   OUT_FOR_DELIVERY
   DELIVERED
-  FAILED
-  RETURNED
+  EXCEPTION
 }
 
 enum SellerTier {
@@ -41,23 +40,26 @@ enum SellerTier {
   ENTERPRISE
 }
 
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id               String          @id @default(cuid())
-  name             String?
-  email            String          @unique
-  emailVerified    DateTime?
-  image            String?
-  password         String?
-  role             String          @default("BUYER")
-  accounts         Account[]
-  sessions         Session[]
-  seller           Seller?
-  sentMessages     Message[]       @relation("SentMessages")
-  receivedMessages Message[]       @relation("ReceivedMessages")
-  wishlistItems    WishlistItem[]
-  reviews          Review[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("user")
+  accounts      Account[]
+  sessions      Session[]
+  seller        Seller?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Account {
@@ -95,28 +97,56 @@ model VerificationToken {
 }
 
 model Seller {
-  id              String                 @id @default(cuid())
-  userId          String                 @unique
-  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName       String
-  description     String?                @db.Text
-  country         String?
-  stripeAccountId String?                @unique
-  stripeOnboarded Boolean                @default(false)
-  approved        Boolean                @default(false)
-  tier                         SellerTier  @default(STARTER)
-  stripeCustomerId             String?     @unique
-  stripeSubscriptionId         String?     @unique
+  id                           String              @id @default(cuid())
+  userId                       String              @unique
+  user                         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName                    String
+  description                  String?             @db.Text
+  country                      String?
+  stripeAccountId              String?             @unique
+  stripeOnboarded              Boolean             @default(false)
+  approved                     Boolean             @default(false)
+  tier                         SellerTier          @default(STARTER)
+  stripeCustomerId             String?             @unique
+  stripeSubscriptionId         String?             @unique
   subscriptionStatus           String?
   subscriptionCurrentPeriodEnd DateTime?
-  products        Product[]
-  orders          Order[]
-  shipments       Shipment[]
-  shippingProfile SellerShippingProfile?
-  discountCodes   DiscountCode[]
-  payouts         Payout[]
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
+  termsAcceptedAt              DateTime?
+  termsVersion                 String?
+  featuredSlotsUsed            Int                 @default(0)
+  featuredSlotsResetAt         DateTime?
+  products                     Product[]
+  orders                       Order[]
+  shipments                    Shipment[]
+  shippingProfile              SellerShippingProfile?
+  discountCodes                DiscountCode[]
+  payouts                      Payout[]
+  verification                 SellerVerification?
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+}
+
+model SellerVerification {
+  id                 String             @id @default(cuid())
+  sellerId           String             @unique
+  seller             Seller             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  status             VerificationStatus @default(NOT_SUBMITTED)
+  fullLegalName      String?
+  dateOfBirth        String?
+  nationality        String?
+  idType             String?
+  idDocumentUrl      String?            @db.Text
+  businessName       String?
+  businessType       String?
+  businessRegNumber  String?
+  businessCountry    String?
+  taxId              String?
+  businessDocUrl     String?            @db.Text
+  verificationNotes  String?            @db.Text
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 model SellerShippingProfile {
@@ -130,137 +160,78 @@ model SellerShippingProfile {
   city         String
   state        String?
   zip          String
-  country      String   @default("GB")
+  country      String
   phone        String?
-  email        String?
-  handlingDays Int      @default(1)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
 model Product {
-  id            String         @id @default(cuid())
-  sellerId      String
-  seller        Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  name          String
-  description   String         @db.Text
-  price         Float
-  currency      String         @default("GBP")
-  stock         Int            @default(0)
-  category      String
-  images        String[]
-  tags          String[]
-  status        ProductStatus  @default(PENDING_REVIEW)
-  weightGrams   Int?
-  lengthCm      Float?
-  widthCm       Float?
-  heightCm      Float?
-  hsCode        String?
-  originCountry String?
-  viewCount     Int            @default(0)
-  orderItems    OrderItem[]
-  reviews       Review[]
-  messages      Message[]
-  wishlistItems WishlistItem[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id          String        @id @default(cuid())
+  sellerId    String
+  seller      Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?       @db.Text
+  price       Float
+  compareAt   Float?
+  images      String[]
+  category    String
+  tags        String[]
+  stock       Int           @default(0)
+  status      ProductStatus @default(PENDING_REVIEW)
+  featured    Boolean       @default(false)
+  featuredAt  DateTime?
+  orderItems  OrderItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Order {
-  id              String          @id @default(cuid())
-  stripePaymentId String?         @unique
+  id              String      @id @default(cuid())
   sellerId        String
-  seller          Seller          @relation(fields: [sellerId], references: [id])
-  buyerEmail      String
-  buyerName       String
-  status          OrderStatus     @default(PAID)
-  total           Float
-  productSubtotal Float           @default(0)
-  shippingCost    Float           @default(0)
-  dutiesCost      Float           @default(0)
-  currency        String          @default("GBP")
+  seller          Seller      @relation(fields: [sellerId], references: [id])
+  stripePaymentId String?     @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Float
+  platformFee     Float
+  sellerEarnings  Float
+  currency        String      @default("gbp")
+  customerEmail   String
+  customerName    String?
   shippingAddress Json?
-  address         String?
-  carrier         String?
-  shippingService String?
   items           OrderItem[]
-  shipments       Shipment[]
-  disputes        Dispute[]
-  returnRequests  ReturnRequest[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  shipment        Shipment?
+  payout          Payout?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {
-  id         String   @id @default(cuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id])
-  quantity   Int
-  price      Float
-  commission Float    @default(0)
-  createdAt  DateTime @default(now())
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
 }
 
 model Shipment {
   id               String         @id @default(cuid())
-  orderId          String
-  order            Order          @relation(fields: [orderId], references: [id])
   sellerId         String
   seller           Seller         @relation(fields: [sellerId], references: [id])
+  orderId          String         @unique
+  order            Order          @relation(fields: [orderId], references: [id])
   shippoShipmentId String?
   shippoRateId     String?
   shippoLabelId    String?
   trackingNumber   String?
   trackingUrl      String?
-  labelUrl         String?
   carrier          String?
-  service          String?
-  shippingAmount   Float          @default(0)
-  dutiesAmount     Float          @default(0)
-  currency         String         @default("GBP")
-  declaredValue    Float          @default(0)
   status           ShipmentStatus @default(PENDING)
-  events           ShipmentEvent[]
+  labelUrl         String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-}
-
-model ShipmentEvent {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id])
-  status      String
-  description String
-  location    String?
-  occurredAt  DateTime
-  createdAt   DateTime @default(now())
-}
-
-model Review {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  author    String?
-  rating    Int
-  comment   String   @db.Text
-  createdAt DateTime @default(now())
-}
-
-model Message {
-  id         String   @id @default(cuid())
-  senderId   String
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiverId String
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  productId  String?
-  product    Product? @relation(fields: [productId], references: [id])
-  content    String   @db.Text
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
 }
 
 model DiscountCode {
@@ -268,131 +239,34 @@ model DiscountCode {
   sellerId    String
   seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   code        String    @unique
-  type        String    @default("PERCENTAGE")
-  value       Float
-  minOrder    Float?
-  maxDiscount Float?
-  usageLimit  Int?
+  discountPct Float
+  maxUses     Int?
   usedCount   Int       @default(0)
-  isActive    Boolean   @default(true)
   expiresAt   DateTime?
+  active      Boolean   @default(true)
   createdAt   DateTime  @default(now())
-}
-
-model Dispute {
-  id         String   @id @default(cuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  raisedBy   String
-  reason     String
-  evidence   String?
-  status     String   @default("OPEN")
-  resolution String?
-  createdAt  DateTime @default(now())
-}
-
-model ReturnRequest {
-  id         String   @id @default(cuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  buyerEmail String
-  reason     String
-  status     String   @default("PENDING")
-  notes      String?
-  createdAt  DateTime @default(now())
-}
-
-model WishlistItem {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@unique([userId, productId])
+  updatedAt   DateTime  @updatedAt
 }
 
 model Payout {
-  id        String   @id @default(cuid())
-  sellerId  String
-  seller    Seller   @relation(fields: [sellerId], references: [id])
-  amount    Float
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-
-enum SellerApplicationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-model SellerProspect {
-  id          String   @id @default(cuid())
-  name        String
-  platform    String
-  storeUrl    String
-  email       String?
-  category    String
-  score       Int
-  country     String?
-  sellerType  String
-  status      String   @default("prospected")
-  notes       String?  @db.Text
-  outreachLogs OutreachLog[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model OutreachLog {
-  id          String        @id @default(cuid())
-  prospectId  String
-  prospect    SellerProspect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
-  emailType   String
-  subject     String
-  sentAt      DateTime @default(now())
-  createdAt   DateTime @default(now())
-}
-
-model SellerApplication {
-  id                 String                  @id @default(cuid())
-  businessName       String
-  contactEmail       String
-  contactName        String
-  storeDescription   String?  @db.Text
-  website            String?
-  productCategories  String[]
-  sampleImages       String[]
-  country            String?
-  status             SellerApplicationStatus @default(PENDING)
-  rejectionReason    String?  @db.Text
-  reviewedAt         DateTime?
-  reviewedBy         String?
-  prospectId         String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id               String   @id @default(cuid())
+  sellerId         String
+  seller           Seller   @relation(fields: [sellerId], references: [id])
+  orderId          String?  @unique
+  order            Order?   @relation(fields: [orderId], references: [id])
+  amount           Float
+  currency         String   @default("gbp")
+  stripeTransferId String?  @unique
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model AgentLog {
   id        String   @id @default(cuid())
   agentName String
   action    String
-  status    String
-  details   Json?
-  targetId  String?
+  details   String?  @db.Text
+  status    String   @default("success")
   createdAt DateTime @default(now())
-}
-
-model PageView {
-  id        String   @id @default(cuid())
-  path      String
-  referrer  String?
-  country   String?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([path])
 }

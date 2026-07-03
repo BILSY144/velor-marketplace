@@ -2,7 +2,6 @@ import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Simple edge-compatible in-memory rate limiter
 const _rl = new Map<string, { count: number; reset: number }>()
 
 function rateLimit(ip: string, key: string, max: number, windowMs: number): boolean {
@@ -22,7 +21,6 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
   const { pathname } = req.nextUrl
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
 
-  // Rate limiting
   const limits: Record<string, [number, number]> = {
     '/api/chat':     [20, 60_000],
     '/api/contact':  [5,  60_000],
@@ -37,18 +35,22 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
     }
   }
 
-  // Protect dashboard routes - require session
   if (pathname.startsWith('/dashboard')) {
     if (!req.auth) {
       return NextResponse.redirect(new URL('/auth/sign-in', req.url))
     }
+    if (!pathname.startsWith('/dashboard/terms')) {
+      const termsCookie = req.cookies.get('velor_terms')
+      if (!termsCookie?.value) {
+        return NextResponse.redirect(new URL('/dashboard/terms', req.url))
+      }
+    }
   }
 
-  // Protect admin API routes - require auth token
   if (pathname.startsWith('/api/admin')) {
     const secret = process.env.ADMIN_SECRET
     const authHeader = req.headers.get('authorization')
-    if (!secret || authHeader !== `Bearer ${secret}`) {
+    if (!secret || authHeader !== 'Bearer ' + secret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }
