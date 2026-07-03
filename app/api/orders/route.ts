@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 
   const orders = await prisma.order.findMany({
     where: { customerEmail: email.toLowerCase().trim() },
-    include: { items: true, shipments: true },
+    include: { items: true, shipment: true },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json({ orders })
