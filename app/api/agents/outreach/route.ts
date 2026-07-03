@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
       agentName: 'outreach',
       action: 'email_sent',
       status: 'success',
-      targetId: prospect.id,
       details: { emailType, prospectId: prospect.id },
     },
   });

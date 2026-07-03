@@ -58,9 +58,7 @@ export async function GET(
       agentName: 'seller-success',
       action: 'health_check',
       status: 'success',
-      targetId: seller.id,
       details: {
-        sellerId: seller.id,
         storeName: seller.storeName,
         approvedProducts,
         weeklyOrders: recentOrders.length,
@@ -121,7 +119,6 @@ export async function POST(
         agentName: 'seller-success',
         action: 'send_coaching',
         status: 'success',
-        targetId: seller.id,
         details: { to: seller.user.email, sellerId: seller.id },
       },
     });
@@ -144,10 +141,8 @@ export async function POST(
         agentName: 'seller-success',
         action: 'send_performance_report',
         status: 'success',
-        targetId: seller.id,
         details: {
           to: seller.user.email,
-          sellerId: seller.id,
           weeklyRevenue: weeklyRevenue ?? 0,
           weeklySales: weeklySales ?? 0,
         },

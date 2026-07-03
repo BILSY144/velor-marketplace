@@ -92,7 +92,6 @@ export async function PATCH(
       agentName: 'returns',
       action: body.status === 'APPROVED' ? 'refund_issued' : 'status_updated',
       status: 'success',
-      targetId: returnId,
       details: {
         returnId,
         orderId: returnRequest.orderId,

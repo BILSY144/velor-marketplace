@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
       agentName: 'prospects',
       action: 'prospect_created',
       status: 'success',
-      targetId: prospect.id,
       details: { platform: prospect.platform, storeUrl: prospect.storeUrl, score: prospect.score },
     },
   });
@@ -95,7 +94,6 @@ export async function PATCH(request: NextRequest) {
       agentName: 'prospects',
       action: 'prospect_updated',
       status: 'success',
-      targetId: prospect.id,
       details: { newStatus: sanitized.status ?? null },
     },
   });
