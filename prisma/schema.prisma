@@ -378,7 +378,7 @@ model Message {
 
 model Dispute {
   id         String   @id @default(cuid())
-  orderId    String
+  orderId    String   @unique
   raisedBy   String
   reason     String
   evidence   String?
