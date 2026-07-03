@@ -356,7 +356,7 @@ export default function HomePage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 48, flexWrap: 'wrap' }}>
-          <div style={{ maxWidth: 760, flex: '1 1 460px' }}>
+          <div style={{ maxWidth: 560, flex: '1 1 400px' }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -469,9 +469,8 @@ export default function HomePage() {
 
           <div
             style={{
-              flex: '1 1 420px',
-              minWidth: 300,
-              maxWidth: 620,
+              flex: '1.25 1 520px',
+              minWidth: 320,
             }}
           >
             <img
