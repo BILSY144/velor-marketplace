@@ -42,7 +42,7 @@ export async function POST(
     where: {
       productId,
       order: {
-        buyerEmail: session.user.email,
+        customerEmail: session.user.email,
         status: { in: ['PROCESSING', 'SHIPPED', 'DELIVERED'] }
       }
     }
