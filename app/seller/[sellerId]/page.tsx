@@ -17,9 +17,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'★'.repeat(full)}
-        {half ? '½' : ''}
-        {'☆'.repeat(5 - full - (half ? 1 : 0))}
+        {'â'.repeat(full)}
+        {half ? 'Â½' : ''}
+        {'â'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -219,7 +219,7 @@ export default async function SellerProfilePage({
                       {product.images[0] ? (
                         <img
                           src={product.images[0]}
-                          alt={product.name}
+                          alt={product.title}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
@@ -266,7 +266,7 @@ export default async function SellerProfilePage({
                           lineHeight: 1.3,
                         }}
                       >
-                        {product.name}
+                        {product.title}
                       </div>
                       <div
                         style={{
@@ -290,7 +290,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>{'★'}</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>{'â'}</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}
