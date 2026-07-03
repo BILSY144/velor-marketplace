@@ -416,8 +416,87 @@ async function scoutBing(
 
 // ── Main Handler ─────────────────────────────────────────────────────────────
 
+// -- Brave Search: compliant independent-seller discovery (Shopify / DTC stores) --
+const BRAVE_TARGETS: Array<{ query: string; category: string }> = [
+  { query: '"powered by Shopify" electronics gadgets store', category: 'Electronics' },
+  { query: '"powered by Shopify" home decor store', category: 'Home & Garden' },
+  { query: 'independent skincare brand online shop', category: 'Beauty & Health' },
+  { query: '"powered by Shopify" toys and games store', category: 'Toys & Games' },
+  { query: 'independent pet supplies online store', category: 'Pet Supplies' },
+  { query: '"powered by Shopify" handmade jewellery store', category: 'Jewellery & Watches' },
+];
+
+const BRAVE_BLOCKLIST = [
+  'amazon.', 'ebay.', 'etsy.', 'walmart.', 'aliexpress.', 'alibaba.', 'wish.com',
+  'temu.', 'target.com', 'bestbuy.', 'facebook.', 'instagram.', 'pinterest.',
+  'tiktok.', 'youtube.', 'reddit.', 'wikipedia.', 'google.', 'bing.', 'yelp.',
+  'trustpilot.', 'www.shopify.com', 'shopify.dev', 'apps.shopify.com',
+];
+
+function braveCountry(host: string): string | null {
+  if (host.endsWith('.co.uk') || host.endsWith('.uk')) return 'GB';
+  if (host.endsWith('.ca')) return 'CA';
+  if (host.endsWith('.com.au') || host.endsWith('.au')) return 'AU';
+  if (host.endsWith('.de')) return 'DE';
+  if (host.endsWith('.fr')) return 'FR';
+  if (host.endsWith('.ie')) return 'IE';
+  return null;
+}
+
+async function scoutBrave(
+  apiKey: string
+): Promise<{ candidates: ProspectCandidate[]; errors: string[] }> {
+  const candidates: ProspectCandidate[] = [];
+  const errors: string[] = [];
+  const seen = new Set<string>();
+  for (const target of BRAVE_TARGETS) {
+    try {
+      const url = new URL('https://api.search.brave.com/res/v1/web/search');
+      url.searchParams.set('q', target.query);
+      url.searchParams.set('count', '20');
+      const res = await fetch(url.toString(), {
+        headers: { 'X-Subscription-Token': apiKey, Accept: 'application/json' },
+        next: { revalidate: 0 },
+      });
+      if (!res.ok) { errors.push('Brave [' + target.category + ']: HTTP ' + res.status); continue; }
+      const data = await res.json();
+      const results = (data && data.web && data.web.results) || [];
+      for (const r of results) {
+        let host = '';
+        try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch { continue; }
+        if (!host || seen.has(host)) continue;
+        if (BRAVE_BLOCKLIST.some((b) => host.includes(b))) continue;
+        seen.add(host);
+        const isShopify = host.endsWith('myshopify.com') || /shopify/i.test(r.description || '');
+        const rawName = String(r.title || host).split(/[|\u2013\u2014\-\u00b7]/)[0].trim();
+        candidates.push({
+          name: (rawName || host).slice(0, 120),
+          platform: isShopify ? 'shopify' : 'web',
+          storeUrl: 'https://' + host,
+          email: null,
+          category: target.category,
+          score: 55 + (isShopify ? 15 : 0),
+          country: braveCountry(host),
+          sellerType: 'brand',
+          notes: String(r.description || '').slice(0, 240),
+        });
+      }
+    } catch (e) {
+      errors.push('Brave [' + target.category + ']: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+  return { candidates, errors };
+}
+
 export async function GET() {
   const sources: Array<{ name: string; result: { candidates: ProspectCandidate[]; errors: string[] } }> = [];
+
+  // Brave Search - compliant independent-seller discovery
+  if (process.env.BRAVE_SEARCH_API_KEY) {
+    sources.push({ name: 'brave', result: await scoutBrave(process.env.BRAVE_SEARCH_API_KEY) });
+  } else {
+    await prisma.agentLog.create({ data: { agentName: 'seller-scout', action: 'source_skipped', status: 'warning', details: { source: 'brave', reason: 'BRAVE_SEARCH_API_KEY not set' } } });
+  }
 
   // Etsy — official Etsy Open API v3
   if (process.env.ETSY_API_KEY) {
