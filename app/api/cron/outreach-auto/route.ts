@@ -11,6 +11,10 @@ function safeSellerType(raw: string): SellerTypeStr {
   return raw === 'brand' ? 'brand' : 'individual';
 }
 
+function unsub(email: string | null): string {
+  return 'https://velorcommerce.store/unsubscribe?u=' + Buffer.from(email || '', 'utf8').toString('base64url');
+}
+
 export async function GET() {
   let initialSent = 0, followup1Sent = 0, followup2Sent = 0;
   const errors: string[] = [];
@@ -28,6 +32,7 @@ export async function GET() {
         prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
           category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
         emailType: 'initial',
+        unsubscribeUrl: unsub(prospect.email),
       });
       await sendEmail({ to: prospect.email, subject, html });
       await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'initial', subject } });
@@ -53,6 +58,7 @@ export async function GET() {
           prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
             category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
           emailType: 'followup1',
+          unsubscribeUrl: unsub(prospect.email),
         });
         await sendEmail({ to: prospect.email, subject, html });
         await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup1', subject } });
@@ -79,6 +85,7 @@ export async function GET() {
           prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
             category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
           emailType: 'followup2',
+          unsubscribeUrl: unsub(prospect.email),
         });
         await sendEmail({ to: prospect.email, subject, html });
         await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup2', subject } });

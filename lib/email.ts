@@ -270,47 +270,53 @@ export interface OutreachProspect {
 export function buildOutreachEmail(d: {
   prospect: OutreachProspect;
   emailType: OutreachEmailType;
+  unsubscribeUrl?: string;
 }): { subject: string; html: string } {
   const { prospect, emailType } = d;
   const p = prospect;
+  const unsub = d.unsubscribeUrl || 'https://velorcommerce.store/unsubscribe';
 
   const subjects: Record<OutreachEmailType, string> = {
-    initial: `Sell on Velor Commerce: curated marketplace for ${p.category} sellers`,
-    followup1: `Following up: Velor Commerce seller opportunity`,
-    followup2: `Last note from Velor Commerce`,
+    initial: `List free on Velor - we open to buyers in 30 days`,
+    followup1: `Still free to list - Velor opens to buyers soon`,
+    followup2: `Last call: list free before Velor opens to buyers`,
   };
 
-  const introByType: Record<typeof p.sellerType, Record<OutreachEmailType, string>> = {
-    individual: {
-      initial: `We came across your ${h(p.platform)} store and were impressed by what you have built. Velor Commerce is a curated UK marketplace for independent sellers in ${h(p.category)}, and we think your store would be a strong fit.`,
-      followup1: `I wanted to follow up on my previous message about listing your products on Velor Commerce. We are selectively onboarding ${h(p.category)} sellers and your store stood out to our team.`,
-      followup2: `This is my final note on this. If selling through a curated UK marketplace ever becomes relevant, the application takes under five minutes at velorcommerce.co.uk/apply. We would love to have you.`,
-    },
-    small_business: {
-      initial: `We discovered your business on ${h(p.platform)} and believe your ${h(p.category)} products would resonate with the Velor Commerce audience. We are building a curated UK marketplace of quality small businesses and you are exactly the type of seller we are looking for.`,
-      followup1: `Following up on my earlier message about Velor Commerce. We are still onboarding ${h(p.category)} sellers and your business stood out. The platform takes a 15% commission with no listing fees.`,
-      followup2: `One last message from us. If expanding your online presence through a curated marketplace appeals to you, you can apply at velorcommerce.co.uk/apply. No obligation, takes five minutes.`,
-    },
-    brand: {
-      initial: `Your brand caught our attention on ${h(p.platform)}. Velor Commerce is a premium UK marketplace positioning itself as a destination for curated ${h(p.category)} brands, and we would like to discuss featuring your products.`,
-      followup1: `I am following up on my earlier outreach about Velor Commerce. We are selectively approaching brands in the ${h(p.category)} space and yours continues to stand out. Would you be open to a brief conversation?`,
-      followup2: `Final message from Velor Commerce. If you ever want to explore distribution through a curated UK marketplace, please apply at velorcommerce.co.uk/apply or reply to this email.`,
-    },
+  const intros: Record<OutreachEmailType, string> = {
+    initial: `We came across your ${h(p.platform)} store and loved your ${h(p.category)} range. Velor is a new global marketplace, and we open our doors to buyers in 30 days. List your products now, for free, so you are front and centre the moment buyers arrive.`,
+    followup1: `Following up about Velor Commerce. Listing is still free and we open to buyers soon. It takes about five minutes to get your ${h(p.category)} products live.`,
+    followup2: `Last note from us. Velor opens to buyers shortly and listing stays free until then. If a growing global marketplace suits your ${h(p.category)} business, now is the moment.`,
   };
 
-  const intro = introByType[p.sellerType][emailType];
-
-  const html = `${WRAP_OPEN}
-    <h2 style="color:#FFF;font-size:20px;margin:0 0 16px">${subjects[emailType]}</h2>
-    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">${intro}</p>
-    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
-      Velor Commerce offers sellers a clean, high-converting storefront, built-in logistics support, and access to a growing audience of UK buyers. We handle marketing and customer acquisition so you can focus on your products.
-    </p>
-    <a href="https://velorcommerce.co.uk/apply" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none;margin-bottom:20px">Apply to sell on Velor</a>
-    <p style="color:#777;font-size:13px;line-height:1.6;margin:0">
-      Questions? Reply to this email or visit <a href="https://velorcommerce.co.uk" style="color:#FF6B00">velorcommerce.co.uk</a>.
-    </p>
-    ${WRAP_CLOSE}`;
+  const html = `
+  <div style='background:#0D0D0D;padding:24px 0;font-family:Arial,Helvetica,sans-serif;'>
+    <div style='max-width:600px;margin:0 auto;background:#141414;border:1px solid #2A2A2A;border-radius:12px;overflow:hidden;'>
+      <div style='background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
+        <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
+        <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>GLOBAL MARKETPLACE</span>
+      </div>
+      <img src='https://velorcommerce.store/velor-email-hero.jpg' width='600' alt='Velor Global Marketplace' style='display:block;width:100%;max-width:600px;height:auto;border:0;' />
+      <div style='padding:32px;'>
+        <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>OPENING TO BUYERS IN 30 DAYS</div>
+        <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>List now &mdash; for free.</div>
+        <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 16px;'>Hi ${h(p.name)},</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 22px;'>${intros[emailType]}</p>
+        <div style='border-top:1px solid #2A2A2A;padding-top:20px;margin-bottom:24px;'>
+          <div style='margin-bottom:12px;color:#EAEAEA;font-size:14px;'><span style='color:#FF6B00;font-weight:800;margin-right:10px;'>&#10003;</span>Free to list &mdash; we only take 15% on what actually sells</div>
+          <div style='margin-bottom:12px;color:#EAEAEA;font-size:14px;'><span style='color:#FF6B00;font-weight:800;margin-right:10px;'>&#10003;</span>Get set up before launch, so buyers find you on day one</div>
+          <div style='margin-bottom:12px;color:#EAEAEA;font-size:14px;'><span style='color:#FF6B00;font-weight:800;margin-right:10px;'>&#10003;</span>Global marketplace &mdash; multi-currency checkout, worldwide buyers</div>
+          <div style='color:#EAEAEA;font-size:14px;'><span style='color:#FF6B00;font-weight:800;margin-right:10px;'>&#10003;</span>You keep control &mdash; your brand, your prices, your customers</div>
+        </div>
+        <a href='https://velorcommerce.store/apply' style='display:inline-block;background:#FF6B00;color:#0D0D0D;font-size:15px;font-weight:800;text-decoration:none;padding:14px 34px;border-radius:8px;'>List now &mdash; it is free</a>
+        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>Takes about five minutes. No card, no listing fees.</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>&mdash; The Velor Seller Team</p>
+      </div>
+      <div style='background:#0D0D0D;padding:20px 32px;border-top:1px solid #2A2A2A;'>
+        <p style='color:#666666;font-size:12px;line-height:1.6;margin:0 0 8px;'>Velor Commerce Ltd &middot; a global online marketplace &middot; velorcommerce.store</p>
+        <p style='color:#666666;font-size:12px;line-height:1.6;margin:0;'>You received this because ${h(p.name)} appeared on a public ${h(p.platform)} listing. Not interested? <a href='${unsub}' style='color:#FF6B00;text-decoration:underline;'>Unsubscribe</a> &mdash; one click and we will not contact you again.</p>
+      </div>
+    </div>
+  </div>`;
 
   return { subject: subjects[emailType], html };
 }
