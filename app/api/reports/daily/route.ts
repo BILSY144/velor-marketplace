@@ -64,7 +64,7 @@ function appCard(a: {
       <tbody>
         ${row('Contact', `${a.contactName} &lt;${a.contactEmail}&gt;`)}
         ${row('Country', a.country ?? 'Unknown')}
-        ${row('Categories', a.productCategories.join(', ') || '—')}
+        ${row('Categories', a.productCategories.join(', ') || 'â')}
         ${row('Received', new Date(a.createdAt).toLocaleDateString('en-GB', { day:'numeric',month:'short',year:'numeric' }))}
       </tbody>
     </table>`;
@@ -80,7 +80,7 @@ function prospectCard(p: {
       <tbody>
         ${row('Platform', p.platform)}
         ${row('Store', `<a href="${p.storeUrl}" style="color:#2563eb">${p.storeUrl}</a>`)}
-        ${row('Email', p.email ?? 'Not captured')}
+        ${row('Email', 'Not captured')}
         ${row('Category', p.category)}
         ${row('Type', p.sellerType)}
         ${row('Score', String(p.score))}
@@ -175,15 +175,15 @@ function buildDailyReportHtml(d: {
   const pendingAppsHtml = d.pendingApplications.length > 0
     ? `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:12px">
         <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#92400e">${d.pendingApplications.length} application${d.pendingApplications.length > 1 ? 's' : ''} awaiting your review</p>
-        ${d.pendingApplications.map(a => `<div style="font-size:12px;color:#92400e;padding:2px 0">• ${a.businessName} — ${a.contactEmail}</div>`).join('')}
+        ${d.pendingApplications.map(a => `<div style="font-size:12px;color:#92400e;padding:2px 0">â¢ ${a.businessName} â ${a.contactEmail}</div>`).join('')}
       </div>`
     : '';
 
   const uncontactedHtml = d.uncontactedProspects.length > 0
     ? `<div style="background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;padding:12px 16px;margin-bottom:12px">
         <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#1e40af">${d.uncontactedProspects.length} prospect${d.uncontactedProspects.length > 1 ? 's' : ''} discovered but not yet contacted</p>
-        ${d.uncontactedProspects.slice(0, 5).map(p => `<div style="font-size:12px;color:#1e40af;padding:2px 0">• ${p.name} — ${p.platform} (score: ${p.score})</div>`).join('')}
-        ${d.uncontactedProspects.length > 5 ? `<div style="font-size:12px;color:#1e40af;padding:2px 0">… and ${d.uncontactedProspects.length - 5} more</div>` : ''}
+        ${d.uncontactedProspects.slice(0, 5).map(p => `<div style="font-size:12px;color:#1e40af;padding:2px 0">â¢ ${p.name} â ${p.platform} (score: ${p.score})</div>`).join('')}
+        ${d.uncontactedProspects.length > 5 ? `<div style="font-size:12px;color:#1e40af;padding:2px 0">â¦ and ${d.uncontactedProspects.length - 5} more</div>` : ''}
       </div>`
     : '';
 
@@ -217,20 +217,20 @@ function buildDailyReportHtml(d: {
 
   <div style="background:#1a1a1a;padding:20px 24px;border-radius:8px;margin-bottom:28px">
     <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600">Velor Marketplace</h1>
-    <p style="margin:4px 0 0;color:#9ca3af;font-size:13px">Seller Pipeline Report · ${d.date} · Live Data</p>
+    <p style="margin:4px 0 0;color:#9ca3af;font-size:13px">Seller Pipeline Report Â· ${d.date} Â· Live Data</p>
   </div>
 
   ${statsHtml}
 
   ${section('Pipeline Funnel (All Time)', funnelHtml)}
   ${section('Pending Actions', pendingActionsHtml)}
-  ${section('New Applications — Last 7 Days', newAppsHtml)}
-  ${section('New Prospects Discovered — Last 7 Days', newProspectsHtml)}
-  ${section('Outreach Sent — Last 7 Days', outreachHtml)}
-  ${section('Agent Activity — Last 24 Hours', agentHtml)}
+  ${section('New Applications â Last 7 Days', newAppsHtml)}
+  ${section('New Prospects Discovered â Last 7 Days', newProspectsHtml)}
+  ${section('Outreach Sent â Last 7 Days', outreachHtml)}
+  ${section('Agent Activity â Last 24 Hours', agentHtml)}
 
   <div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">
-    <p style="font-size:11px;color:#9ca3af;margin:0">Velor Marketplace · Automated Report · ${d.date}</p>
+    <p style="font-size:11px;color:#9ca3af;margin:0">Velor Marketplace Â· Automated Report Â· ${d.date}</p>
   </div>
 
 </body></html>`;
@@ -333,7 +333,7 @@ export async function GET(req: NextRequest) {
 
     await sendEmail({
       to: REPORT_RECIPIENT,
-      subject: `Velor Seller Pipeline — ${dateStr}`,
+      subject: `Velor Seller Pipeline â ${dateStr}`,
       html,
     });
 

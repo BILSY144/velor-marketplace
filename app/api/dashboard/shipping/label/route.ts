@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
       zip: p.zip,
       country: p.country,
       phone: p.phone ?? undefined,
-      email: p.email ?? undefined,
     }
 
     const shippingAddress = order.shippingAddress as {
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     } | null
 
     const addressTo: ShippoAddress = {
-      name: order.customerName,
+      name: order.customerName ?? '',
       street1: shippingAddress?.address ?? '1 Main Street',
       city: shippingAddress?.city ?? '',
       state: shippingAddress?.state,

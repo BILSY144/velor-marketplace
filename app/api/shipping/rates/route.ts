@@ -8,7 +8,7 @@ import {
 export const dynamic = 'force-dynamic'
 
 // No DEFAULT_ORIGIN. Every seller must have a ShippingProfile with their real dispatch address.
-// A seller without a shipping profile is skipped with a warning — we never invent an origin.
+// A seller without a shipping profile is skipped with a warning â we never invent an origin.
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     for (const [stripeAccountId, items] of sellerGroups) {
       try {
         if (stripeAccountId === '__unknown__') {
-          console.warn('[shipping/rates] Cart item missing sellerStripeAccountId — skipping')
+          console.warn('[shipping/rates] Cart item missing sellerStripeAccountId â skipping')
           continue
         }
 
@@ -99,8 +99,7 @@ export async function POST(request: NextRequest) {
           zip: p.zip,
           country: p.country,
           phone: p.phone ?? undefined,
-          email: p.email ?? undefined,
-        }
+            }
 
         // isInternational is per-seller: their dispatch country vs the buyer's country.
         // A seller in Japan shipping to France is international.
@@ -188,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!combinedRates || combinedRates.length === 0) {
-      // Shippo returned no rates for this route — show a single contact-us option
+      // Shippo returned no rates for this route â show a single contact-us option
       combinedRates = [
         {
           rateId: 'quote-required',
