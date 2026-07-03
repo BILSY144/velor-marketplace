@@ -497,7 +497,7 @@ async function scoutBrave(
         headers: { 'X-Subscription-Token': apiKey, Accept: 'application/json' },
         next: { revalidate: 0 },
       });
-      if (!res.ok) { errors.push('Brave [' + target.category + ']: HTTP ' + res.status); continue; }
+      if (!res.ok) { const b = await res.text(); errors.push('Brave [' + target.category + ']: HTTP ' + res.status + ' ' + b.slice(0, 180)); continue; }
       const data = await res.json();
       const results = (data && data.web && data.web.results) || [];
       for (const r of results) {
