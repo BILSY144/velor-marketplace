@@ -427,7 +427,7 @@ export default function HomePage() {
               }}
             >
               The global marketplace where independent sellers reach millions of buyers. Zero
-              listing fees. Instant payouts. Ship worldwide.
+              listing fees. Secure Stripe payouts. Ship worldwide.
             </p>
 
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
