@@ -45,7 +45,7 @@ export async function computeSellerScore(sellerId: string) {
     select: { status: true },
   })
   const totalOrders = orders.length
-  const(#ountBy = (statuses: string[]) =>
+  const countBy = (statuses: string[]) =>
     orders.filter((o) => statuses.includes(o.status)).length
   const paidOrders = countBy(['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'DISPUTED', 'REFUNDED'])
   const deliveredOrders = countBy(['DELIVERED'])
