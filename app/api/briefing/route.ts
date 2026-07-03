@@ -22,7 +22,7 @@ async function generateAndSend() {
     agentLogs,
   ] = await Promise.allSettled([
     prisma.seller.count(),
-    prisma.sellerApplication.count({ where: { status: 'PENDING' } }),
+    prisma.sellerVerification.count({ where: { status: 'PENDING' } }),
     prisma.order.count(),
     prisma.order.count({ where: { createdAt: { gte: yesterday } } }),
     prisma.order.aggregate({ _sum: { subtotal: true } }),

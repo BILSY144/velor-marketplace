@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
           include: {
             product: {
               select: {
-                id: true, name: true, price: true,
+                id: true, title: true, price: true,
                 weightGrams: true, lengthCm: true, widthCm: true, heightCm: true,
                 hsCode: true, originCountry: true,
               },
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     } | null
 
     const addressTo: ShippoAddress = {
-      name: order.buyerName,
+      name: order.customerName,
       street1: shippingAddress?.address ?? '1 Main Street',
       city: shippingAddress?.city ?? '',
       state: shippingAddress?.state,

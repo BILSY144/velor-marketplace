@@ -182,6 +182,12 @@ model Product {
   status      ProductStatus @default(PENDING_REVIEW)
   featured    Boolean       @default(false)
   featuredAt  DateTime?
+  weightGrams   Float?
+  lengthCm      Float?
+  widthCm       Float?
+  heightCm      Float?
+  hsCode        String?
+  originCountry String?
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
   createdAt     DateTime      @default(now())

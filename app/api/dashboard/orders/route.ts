@@ -26,7 +26,7 @@ export async function GET() {
   const orderItems = await prisma.orderItem.findMany({
     where: { productId: { in: productIds } },
     include: {
-      order: { select: { id: true, buyerName: true, status: true, createdAt: true } },
+      order: { select: { id: true, customerName: true, status: true, createdAt: true } },
       product: { select: { title: true, images: true } },
     },
     orderBy: { order: { createdAt: 'desc' } }
@@ -37,7 +37,7 @@ export async function GET() {
     const oid = item.orderId
     if (!ordersMap.has(oid)) {
       ordersMap.set(oid, {
-        id: item.order.id, buyerName: maskName(item.order.buyerName),
+        id: item.order.id, buyerName: maskName(item.order.customerName),
         status: item.order.status, createdAt: item.order.createdAt,
         items: [], totalRevenue: 0, totalPayout: 0,
       })
