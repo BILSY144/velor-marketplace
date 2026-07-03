@@ -23,7 +23,7 @@ export async function GET(
 
   const user = await prisma.user.findUnique({ where: { email } });
   const isAdmin = user?.role === 'ADMIN';
-  const isBuyer = returnRequest.buyerEmail === email;
+  const isBuyer = returnRequest.customerEmail === email;
 
   if (!isBuyer && !isAdmin) {
     const seller = await prisma.seller.findFirst({ where: { user: { email } } });
