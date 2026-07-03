@@ -19,7 +19,7 @@ function buildLowStockEmail(
     .map(
       (p) =>
         `<tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #eee">${p.name}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee">${p.title}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #eee">${p.sellerStoreName}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #eee;color:${
             p.stock === 0 ? '#dc2626' : '#f59e0b'
@@ -29,7 +29,7 @@ function buildLowStockEmail(
     .join('');
 
   const count = products.length;
-  const subject = `Low Stock Alert — ${count} product${count !== 1 ? 's' : ''} need restocking`;
+  const subject = `Low Stock Alert â ${count} product${count !== 1 ? 's' : ''} need restocking`;
   const html = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <h2 style="color:#1a1a1a">Low Stock Alert</h2>
@@ -47,7 +47,7 @@ function buildLowStockEmail(
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace — automated low-stock monitor</p>
+      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace â automated low-stock monitor</p>
     </div>
   `;
   return { subject, html };
@@ -62,7 +62,7 @@ export async function GET() {
     where: { stock: { lt: LOW_STOCK_THRESHOLD } },
     select: {
       id: true,
-      name: true,
+      title: true,
       stock: true,
       seller: { select: { storeName: true } },
     },
@@ -83,7 +83,7 @@ export async function GET() {
 
   const flat = lowStockProducts.map((p) => ({
     id: p.id,
-    name: p.name,
+    name: p.title,
     stock: p.stock,
     sellerStoreName: p.seller.storeName,
   }));
@@ -99,7 +99,7 @@ export async function GET() {
       details: {
         alertsSent: flat.length,
         recipient: ALERT_RECIPIENT,
-        products: flat.map((p) => ({ id: p.id, name: p.name, stock: p.stock })),
+        products: flat.map((p) => ({ id: p.id, name: p.title, stock: p.stock })),
       },
     },
   });
