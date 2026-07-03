@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = 'Velor Marketplace <noreply@velorcommerce.store>';
+const FROM_EMAIL = 'Velor Marketplace <customerservice@velorcommerce.co.uk>';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body = await request.text();
@@ -106,10 +106,23 @@ export async function POST(request: Request): Promise<NextResponse> {
     case 'invoice.paid': {
       const invoice = event.data.object as Stripe.Invoice;
       const customerId = invoice.customer as string;
+      const recovered = await prisma.seller.findFirst({
+        where: { stripeCustomerId: customerId, subscriptionStatus: 'past_due' },
+        include: { user: { select: { email: true } } },
+      });
       await prisma.seller.updateMany({
         where: { stripeCustomerId: customerId, subscriptionStatus: 'past_due' },
         data: { subscriptionStatus: 'active' },
       });
+      if (recovered?.user?.email) {
+        const sellerName = recovered.storeName || 'there';
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: [recovered.user.email],
+          subject: 'Payment recovered - your Pro subscription is active',
+          html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#f8f8f8;margin:0;padding:40px 20px;"><div style="max-width:560px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;"><div style="background:#0f0f0f;padding:32px 40px;"><p style="color:white;font-size:22px;font-weight:700;margin:0;">Velor Marketplace</p></div><div style="padding:40px;"><h1 style="font-size:20px;font-weight:700;color:#111;margin:0 0 16px;">Your Pro subscription is back on</h1><p style="color:#555;line-height:1.6;margin:0 0 20px;">Hi ${sellerName},</p><p style="color:#555;line-height:1.6;margin:0 0 20px;">Your payment was successfully processed and your Velor Pro subscription is now active again. All your listings and seller features are fully restored.</p><p style="color:#555;line-height:1.6;margin:0 0 28px;">Thank you for resolving this.</p><p style="color:#999;font-size:12px;margin-top:32px;">Velor Marketplace &mdash; customerservice@velorcommerce.co.uk</p></div></div></body></html>`,
+        });
+      }
       break;
     }
 

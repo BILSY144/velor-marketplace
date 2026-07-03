@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = 'Velor Marketplace <noreply@velorcommerce.store>';
+const FROM_EMAIL = 'Velor Marketplace <customerservice@velorcommerce.co.uk>';
 const ADMIN_EMAIL = 'customerservice@velorcommerce.co.uk';
 
 export async function GET() {
