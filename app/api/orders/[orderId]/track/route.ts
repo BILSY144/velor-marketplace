@@ -19,8 +19,7 @@ export async function GET(
     const order = await prisma.order.findFirst({
       where: { id: orderId, customerEmail: email },
       include: {
-        shipments: {
-          orderBy: { createdAt: 'asc' },
+        shipment: {
           include: {
             events: { orderBy: { occurredAt: 'asc' } },
           },
@@ -35,24 +34,21 @@ export async function GET(
     return NextResponse.json({
       orderId: order.id,
       status: order.status,
-      carrier: order.carrier,
-      shippingService: order.shippingService,
-      shipments: order.shipments.map(s => ({
-        id: s.id,
-        status: s.status,
-        carrier: s.carrier,
-        service: s.service,
-        trackingNumber: s.trackingNumber,
-        trackingUrl: s.trackingUrl,
-        labelUrl: s.labelUrl,
-        events: s.events.map(e => ({
+      shipment: order.shipment ? {
+        id: order.shipment.id,
+        status: order.shipment.status,
+        carrier: order.shipment.carrier,
+        trackingNumber: order.shipment.trackingNumber,
+        trackingUrl: order.shipment.trackingUrl,
+        labelUrl: order.shipment.labelUrl,
+        events: order.shipment.events.map(e => ({
           id: e.id,
           status: e.status,
           description: e.description,
           location: e.location,
           occurredAt: e.occurredAt,
         })),
-      })),
+      } : null,
     })
   } catch (err) {
     console.error('[orders/track]', err)
