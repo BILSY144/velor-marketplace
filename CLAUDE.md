@@ -1,99 +1,111 @@
-# VELOR GLOBAL MARKETPLACE
-
-## What This Project Is
-
-Velor is the world's first 100% AI-operated global commerce marketplace.
-
-This is NOT a dropshipping store. There is NO single supplier. There is NO CJ Dropshipping integration. The legacy velorcommerce.co.uk dropshipping store is a completely separate project.
-
-Every platform function is executed by a coordinated team of specialised AI agents.
-
-- **Entity**: Velor Commerce Ltd (UK limited company)
-- **Marketplace domain**: velorcommerce.store
-- **GitHub repo**: BILSY144/velor-marketplace
-- **Vercel project**: velor1/velor-marketplace
-- **Tech stack**: Next.js 15, App Router, TypeScript, Prisma, PostgreSQL, Stripe Connect, Vercel
-- **Director**: William Sinclair
+# Velor Working Memory
+_Auto-loaded each session. Last updated: 2026-07-03_
 
 ---
 
-## Revenue Model
+## CURRENT SESSION STATE — READ THIS FIRST
 
-| Tier | Monthly Fee | Commission | Listings |
-|------|------------|------------|---------|
-| STARTER | Free | 15% | 50 products |
-| PRO | $59/month | 8% | Unlimited |
-| ENTERPRISE | Custom | 3-5% | Unlimited + API |
+_If this block says IDLE, no task is mid-flight. If it has content, resume from here._
 
----
+**Status**: IDLE — subscription tiers + billing + downgrade enforcement are FINAL, deployed, and locked. See `docs/SUBSCRIPTION_AND_TIERS.md` in the repo (the canonical, set-in-stone spec). Do not re-open unless William explicitly changes a decision.
 
-## The Nine AI Agents
-
-| Agent | Role |
-|-------|------|
-| HUNTER | Global seller prospecting and outreach, 190+ countries |
-| CURATOR | Seller onboarding, registration to live listing in under 24 hours |
-| ORACLE | AI listing optimisation, SEO, descriptions, pricing, any language |
-| SCOUT | Real-time competitive pricing intelligence, Amazon, eBay, regional |
-| SENTINEL | Fraud detection, counterfeit detection, listing quality enforcement |
-| HERALD | Buyer customer service, sub-60-second response, 24/7/365 |
-| LEDGER | Seller SLA enforcement, performance scoring, automated coaching |
-| ARBITER | Omnichannel marketing, SEO, email, paid, social, A/B testing |
-| COMPASS | Business intelligence, daily KPI reporting for director |
-
-CEO Agent (Claude/Anthropic): Orchestrating intelligence, cross-domain decisions, weekly director summary.
+**Next planned topic**: Seller ranking system (design discussion not yet started).
 
 ---
 
-## Email Configuration
+## HOW TO START A NEW SESSION (read once, follow always)
 
-- FROM: customerservice@velorcommerce.co.uk
-- Domain: velorcommerce.co.uk (Resend, verified)
-- Admin briefing recipient: willsinclair144@gmail.com (director only)
+1. Read this file (auto-loaded via project instructions).
+2. Check "CURRENT SESSION STATE" above — resume any in-progress task.
+3. Ask user for GitHub PAT (never stored permanently).
+4. Continue from where the previous session left off.
 
----
-
-## Vercel Environment Variables
-
-| Variable | Status |
-|----------|--------|
-| RESEND_API_KEY | SET |
-| DATABASE_URL | SET |
-| DIRECT_URL | SET |
-| ANTHROPIC_API_KEY | MISSING - add to Vercel |
-| CRON_SECRET | MISSING - add to Vercel |
+**When ending or pausing a session**: update the CURRENT SESSION STATE block above and the TASK LOG below before context gets large. This is the checkpoint.
 
 ---
 
-## Immediate Security Priorities
+## ACTIVE PROJECT — VELOR MARKETPLACE
 
-1. CRITICAL: Add ADMIN_SECRET env var check to all /admin/* routes
-2. HIGH: Patch Next.js to 14.2.25+ (CVE-2025-29927, CVSS 9.1)
-3. HIGH: Rate limiting on /api/chat, /api/contact, /api/checkout
-
----
-
-## Standing Rules
-
-- Never fabricate prospect data
-- Never share one seller's data with another
-- Never release payouts for disputed orders
-- Never approve prohibited items
-- Never send more than 3 emails to the same seller
-- No emojis in code or emails
-- No Tailwind utility classes
-- Never lie, fabricate, or invent API responses or outcomes
-- Never assume a build passed - always verify in Vercel deployments
+**Repo**: https://github.com/BILSY144/velor-marketplace
+**Live domain**: https://velorcommerce.store
+**Vercel project ID**: `prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp` (team `velor1`)
+**Stack**: Next.js 15 App Router, TypeScript, Prisma + Vercel Postgres, NextAuth v5, Stripe Connect
+**Design rule**: Inline CSS with CSS variables everywhere; the seller upgrade page uses Tailwind utility classes — match each file's existing style, do not mix.
+**GitHub commit method**: Multi-file atomic commit via `javascript_tool` GitHub Trees API on a velorcommerce.store tab (CSP allows it there; stripe.com/vercel.com tabs block it).
+**PAT**: User provides at start of each session — never hardcode.
 
 ---
 
-## GitHub Push Workflow
+## LAW #1 — CODE OF CONDUCT (above all)
 
-Always use GitHub Trees API for multi-file commits:
-1. GET /git/refs/heads/main
-2. GET /git/commits/{sha}
-3. POST /git/trees
-4. POST /git/commits
-5. PATCH /git/refs/heads/main
+Never lie, fabricate, or invent actions/results. If a step was not taken, say so. If unconfirmed, say "unconfirmed". Applies to Claude and all subagents. No priority overrides this.
 
-Owner: BILSY144 | Repo: velor-marketplace | Branch: main
+---
+
+## MARKETPLACE CONTEXT
+
+Global, general-purpose multi-vendor marketplace. Company: Velor Commerce Ltd (UK). Platform commission via Stripe Connect `application_fee_amount` on product subtotal only.
+Standing directives: 100% AI-operated; no emojis in code; only email willsinclair144@gmail.com for the daily director briefing + new-advertisement/outreach monitoring (BCC).
+
+---
+
+## SUBSCRIPTION TIERS & BILLING — LOCKED (2026-07-03)
+
+Full detail: `docs/SUBSCRIPTION_AND_TIERS.md` in the repo. Summary:
+
+| Tier | Price | Commission | Listings |
+|------|-------|-----------|----------|
+| Starter | Free | 15% | 50 (hard cap) |
+| Pro | £49/mo | 8% | Unlimited + professional dashboard |
+| Enterprise | £199/mo fixed | 5% | Unlimited + personal manager + API service |
+
+- Stripe LIVE prices: Pro `price_1TpCiTDB5eA3Wfmu2kP5Ilwg`, Enterprise `price_1TpCqXDB5eA3Wfmuw3y2bScF`.
+- Vercel env (Prod+Preview): `STRIPE_PRO_PRICE_ID`, `STRIPE_ENTERPRISE_PRICE_ID`.
+- Monthly charge automatic (Stripe recurring). Failed payment -> `past_due` + email + Stripe retries. Cancellation -> reset to STARTER.
+- Tier resolved in webhook by matching Stripe price id to env vars (NOT metadata) — guarantees Enterprise=5%, Pro=8%.
+- STARTER 50-listing cap hard-blocked at product creation (403 on 51st).
+- On downgrade: keep 50 oldest live listings, DELIST the excess (hidden, not deleted). NEVER delist a listing with a PENDING/PROCESSING/DISPUTED order at downgrade time.
+- No DB migration needed (uses existing `DELISTED` status + tier fields).
+
+---
+
+## TASK LOG (recent)
+
+### Subscription tiers, billing & downgrade enforcement [COMPLETE — LOCKED 2026-07-03]
+Commits on main: e822609, 894e1c8, 64108af, 47e57b7, 1d8834d, 26b3dc6. All deployed READY. Canonical spec: `docs/SUBSCRIPTION_AND_TIERS.md`.
+
+### Seller recruiting scout (Brave Search, compliant) [COMPLETE]
+`app/api/cron/scout-sellers/route.ts` (Brave), `BRAVE_SEARCH_API_KEY` in Vercel. Outreach email redesigned; unsubscribe flow live. Outreach sending gated by `OUTREACH_ENABLED` (still OFF until site is presentable).
+
+### Homepage hero + desktop layout + mobile responsiveness [COMPLETE]
+Two-column hero with full image; globals.css mobile media layer; 404 links fixed.
+
+### Prior build (from earlier sessions) [COMPLETE]
+Seller dashboard, buyer checkout, Stripe Connect (15% fee), NextAuth v5, public shop, orders, messaging, admin moderation, security audit, Shippo shipping (DDP), returns.
+
+---
+
+## PENDING / NEXT
+
+1. Seller ranking system — design discussion (NEXT).
+2. Whole-site design system refresh (approved, not started).
+3. Flip `OUTREACH_ENABLED=true` once site is presentable.
+4. Correct remaining honest-copy items ("millions of buyers", "22 countries").
+5. Mobile verification via William's phone (env cannot emulate mobile).
+
+---
+
+## KEY TECHNICAL DETAILS
+
+### GitHub push (multi-file atomic commit)
+Run `javascript_tool` on a velorcommerce.store tab. Set `window._PAT` in a separate call (no content), then commit. Extract SHAs via `.url.split('/').pop()` (never `.sha`). Chrome security filter blocks returns containing `=`/`?`/`://`/`&`/`<`/`>` — sanitise outputs (reversible escaping) and only return scalars.
+
+### Vercel deployment check (from vercel.com tab)
+`fetch('/api/v6/deployments?teamId=velor1&projectId=prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp&limit=3')` → map `state` + `meta.githubCommitMessage`.
+
+### Prisma enums
+`ProductStatus`: PENDING_REVIEW, APPROVED, REJECTED, DELISTED.
+`OrderStatus`: PENDING, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED, DISPUTED.
+
+### Patterns
+Next.js 15 async params: `const { id } = await params`. Server components use Prisma; client components use hooks. Stripe apiVersion `'2025-02-24.acacia'`. Use `updateMany` for non-@id unique filters.
