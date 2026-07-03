@@ -51,6 +51,17 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
       break;
     }
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as Stripe.Subscription;
+      await prisma.seller.updateMany({ where: { stripeCustomerId: sub.customer as string }, data: { tier: (sub.items.data[0]?.price?.metadata?.tier ?? 'PRO') as any, stripeSubscriptionId: sub.id, subscriptionStatus: sub.status, subscriptionCurrentPeriodEnd: new Date((sub as any).current_period_end * 1000) } });
+      break;
+    }
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as Stripe.Subscription;
+      await prisma.seller.updateMany({ where: { stripeCustomerId: sub.customer as string }, data: { tier: 'STARTER', stripeSubscriptionId: null, subscriptionStatus: 'cancelled', subscriptionCurrentPeriodEnd: null } });
+      break;
+    }
     default:
       break;
   }

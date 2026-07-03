@@ -2,7 +2,11 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-const PLATFORM_FEE_RATE = 0.15
+const TIER_COMMISSION: Record<string, number> = {
+  STARTER:    0.15,
+  PRO:        0.08,
+  ENTERPRISE: 0.05,
+}
 
 export async function GET() {
   const session = await auth()
@@ -30,7 +34,7 @@ export async function GET() {
   }, 0)
 
   // Seller receives gross minus platform fee
-  const totalEarned = grossEarnings * (1 - PLATFORM_FEE_RATE)
+  const totalEarned = grossEarnings * (1 - TIER_COMMISSION[(seller as any).tier ?? 'STARTER'])
 
   // Get total already paid out
   const paidPayouts = await prisma.payout.findMany({
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
     const orderTotal = order.items.reduce((s, item) => s + item.price * item.quantity, 0)
     return sum + orderTotal
   }, 0)
-  const totalEarned = grossEarnings * (1 - PLATFORM_FEE_RATE)
+  const totalEarned = grossEarnings * (1 - TIER_COMMISSION[(seller as any).tier ?? 'STARTER'])
   const paidPayouts = await prisma.payout.findMany({
     where: { sellerId: seller.id, status: 'PAID' }
   })

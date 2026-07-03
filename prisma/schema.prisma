@@ -35,6 +35,12 @@ enum ShipmentStatus {
   RETURNED
 }
 
+enum SellerTier {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
 model User {
   id               String          @id @default(cuid())
   name             String?
@@ -98,6 +104,11 @@ model Seller {
   stripeAccountId String?                @unique
   stripeOnboarded Boolean                @default(false)
   approved        Boolean                @default(false)
+  tier                         SellerTier  @default(STARTER)
+  stripeCustomerId             String?     @unique
+  stripeSubscriptionId         String?     @unique
+  subscriptionStatus           String?
+  subscriptionCurrentPeriodEnd DateTime?
   products        Product[]
   orders          Order[]
   shipments       Shipment[]

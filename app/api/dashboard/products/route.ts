@@ -42,6 +42,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Seller account pending approval' }, { status: 403 })
   }
 
+  const LISTING_LIMITS: Record<string, number | null> = { STARTER: 50, PRO: null, ENTERPRISE: null }
+  const sellerTier = (seller as any).tier ?? 'STARTER'
+  const listingLimit = LISTING_LIMITS[sellerTier]
+  if (listingLimit !== null) {
+    const listingCount = await prisma.product.count({ where: { sellerId: seller.id } })
+    if (listingCount >= listingLimit) {
+      return NextResponse.json({ error: 'Listing limit reached. Upgrade to Pro for unlimited listings.', upgradeRequired: true }, { status: 403 })
+    }
+  }
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
