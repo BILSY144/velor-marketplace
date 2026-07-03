@@ -37,7 +37,7 @@ export async function GET(
     }),
   ]);
 
-  const weeklyRevenue = recentOrders.reduce((s, o) => s + o.total, 0);
+  const weeklyRevenue = recentOrders.reduce((s, o) => s + o.subtotal, 0);
 
   const productSalesMap: Record<string, { name: string; sales: number }> = {};
   for (const order of recentOrders) {
