@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       where: {
         status: 'APPROVED',
         OR: [
-          { name: { contains: q, mode: 'insensitive' } },
+          { title: { contains: q, mode: 'insensitive' } },
           { description: { contains: q, mode: 'insensitive' } },
           { category: { contains: q, mode: 'insensitive' } },
           { tags: { has: q } },
