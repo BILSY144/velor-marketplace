@@ -58,6 +58,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   seller        Seller?
+  wishlistItems WishlistItem[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -181,8 +182,9 @@ model Product {
   status      ProductStatus @default(PENDING_REVIEW)
   featured    Boolean       @default(false)
   featuredAt  DateTime?
-  orderItems  OrderItem[]
-  createdAt   DateTime      @default(now())
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+  createdAt     DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
 
@@ -193,13 +195,14 @@ model Order {
   stripePaymentId String?     @unique
   status          OrderStatus @default(PENDING)
   subtotal        Float
-  platformFee     Float
-  sellerEarnings  Float
+  platformFee     Float       @default(0)
+  sellerEarnings  Float       @default(0)
   currency        String      @default("gbp")
   customerEmail   String
   customerName    String?
   shippingAddress Json?
   items           OrderItem[]
+  returnRequests  ReturnRequest[]
   shipment        Shipment?
   payout          Payout?
   createdAt       DateTime    @default(now())
@@ -212,8 +215,9 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
+  quantity   Int
+  price      Float
+  commission Float?
 }
 
 model Shipment {
@@ -269,4 +273,26 @@ model AgentLog {
   details   String?  @db.Text
   status    String   @default("success")
   createdAt DateTime @default(now())
+}
+
+model ReturnRequest {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerEmail String
+  reason        String   @db.Text
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
 }

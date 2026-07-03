@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     const customsItems: ShippoCustomsItem[] = isInternational
       ? order.items.map(item => ({
-          description: item.product.name,
+          description: item.product.title,
           quantity: item.quantity,
           net_weight: String(Math.max(0.05, (item.product.weightGrams ?? 500) * item.quantity / 1000)),
           mass_unit: 'kg' as const,

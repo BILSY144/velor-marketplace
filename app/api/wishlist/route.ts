@@ -14,13 +14,12 @@ export async function GET() {
       product: {
         select: {
           id: true,
-          name: true,
+          title: true,
           price: true,
           images: true,
           category: true,
           status: true,
           seller: { select: { storeName: true } },
-          reviews: { select: { rating: true } },
         },
       },
     },
@@ -28,15 +27,14 @@ export async function GET() {
   })
 
   const formatted = items.map(item => {
-    const ratings = item.product.reviews.map(r => r.rating)
-    const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
+    const avgRating = 0
     return {
       id: item.id,
       productId: item.productId,
       addedAt: item.createdAt,
       product: {
         id: item.product.id,
-        name: item.product.name,
+        name: item.product.title,
         price: item.product.price,
         images: item.product.images,
         category: item.product.category,

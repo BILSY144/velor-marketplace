@@ -15,12 +15,12 @@ export async function POST(req: Request) {
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-  if (order.buyerEmail !== email) {
+  if (order.customerEmail !== email) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const returnRequest = await prisma.returnRequest.create({
-    data: { orderId, buyerEmail: email, reason },
+    data: { orderId, customerEmail: email, reason },
   });
 
   return NextResponse.json({ returnRequest }, { status: 201 });
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
   }
 
   const returns = await prisma.returnRequest.findMany({
-    where: { buyerEmail: email },
+    where: { customerEmail: email },
     include: { order: { include: { items: true } } },
     orderBy: { createdAt: 'desc' },
   });

@@ -55,12 +55,10 @@ export async function POST(req: NextRequest) {
     const order = await prisma.order.create({
       data: {
         sellerId,
-        buyerEmail: String(buyerEmail).toLowerCase().trim(),
-        buyerName: buyerName ?? String(buyerEmail),
+        customerEmail: String(buyerEmail).toLowerCase().trim(),
+        customerName: buyerName ?? String(buyerEmail),
         shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
-        total: Number(total),
-        productSubtotal: Number(productSubtotal ?? 0),
-        shippingCost: Number(shippingCost ?? 0),
+        subtotal: Number(total),
         status: 'PAID',
         stripePaymentId: paymentIntentId ?? null,
         items: {
@@ -90,7 +88,7 @@ export async function GET(req: NextRequest) {
   if (!email) return NextResponse.json({ error: 'email param required' }, { status: 400 })
 
   const orders = await prisma.order.findMany({
-    where: { buyerEmail: email.toLowerCase().trim() },
+    where: { customerEmail: email.toLowerCase().trim() },
     include: { items: true, shipments: true },
     orderBy: { createdAt: 'desc' },
   })

@@ -22,7 +22,7 @@ export async function GET() {
     prisma.seller.count({ where: { approved: true } }),
     prisma.product.count({ where: { status: 'APPROVED' } }),
     prisma.order.count(),
-    prisma.order.aggregate({ _sum: { total: true } }),
+    prisma.order.aggregate({ _sum: { subtotal: true } }),
     prisma.seller.count({ where: { approved: false } }),
     prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
     prisma.order.findMany({
@@ -41,7 +41,7 @@ export async function GET() {
     totalSellers,
     totalApprovedProducts,
     totalOrders,
-    totalRevenue: revenueAgg._sum.total ?? 0,
+    totalRevenue: revenueAgg._sum.subtotal ?? 0,
     pendingSellers,
     pendingProducts,
     recentOrders,

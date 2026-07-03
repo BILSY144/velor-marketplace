@@ -27,7 +27,7 @@ export async function GET() {
     where: { productId: { in: productIds } },
     include: {
       order: { select: { id: true, buyerName: true, status: true, createdAt: true } },
-      product: { select: { name: true, images: true } },
+      product: { select: { title: true, images: true } },
     },
     orderBy: { order: { createdAt: 'desc' } }
   })
@@ -47,7 +47,7 @@ export async function GET() {
     const commission = lineTotal * PLATFORM_FEE_RATE
     const payout = lineTotal - commission
     o.items.push({
-      id: item.id, productId: item.productId, productName: item.product.name,
+      id: item.id, productId: item.productId, productName: item.product.title,
       productImage: item.product.images?.[0] ?? null, quantity: item.quantity,
       unitPrice: item.price, commission, payout
     })

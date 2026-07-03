@@ -17,7 +17,7 @@ export async function GET(
 
   try {
     const order = await prisma.order.findFirst({
-      where: { id: orderId, buyerEmail: email },
+      where: { id: orderId, customerEmail: email },
       include: {
         shipments: {
           orderBy: { createdAt: 'asc' },
