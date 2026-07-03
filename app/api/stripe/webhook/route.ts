@@ -73,14 +73,26 @@ export async function POST(request: Request): Promise<NextResponse> {
         const live = await prisma.product.findMany({
           where: { sellerId: s.id, status: 'APPROVED' },
           orderBy: { createdAt: 'asc' },
-          select: { id: true },
+          select: {
+            id: true,
+            orderItems: {
+              where: { order: { status: { in: ['PENDING', 'PROCESSING', 'DISPUTED'] } } },
+              select: { id: true },
+              take: 1,
+            },
+          },
         });
         if (live.length > 50) {
-          const toDelist = live.slice(50).map((p) => p.id);
-          await prisma.product.updateMany({
-            where: { id: { in: toDelist } },
-            data: { status: 'DELISTED' },
-          });
+          const excess = live.slice(50);
+          const toDelist = excess
+            .filter((p) => p.orderItems.length === 0)
+            .map((p) => p.id);
+          if (toDelist.length > 0) {
+            await prisma.product.updateMany({
+              where: { id: { in: toDelist } },
+              data: { status: 'DELISTED' },
+            });
+          }
         }
       }
       break;
