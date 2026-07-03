@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const TIER_CONFIG = {
   STARTER:    { commission: 15, listingLimit: 50,   monthlyFee: 0    },
   PRO:        { commission: 8,  listingLimit: null,  monthlyFee: 49   },
-  ENTERPRISE: { commission: 5,  listingLimit: null,  monthlyFee: null },
+  ENTERPRISE: { commission: 5,  listingLimit: null,  monthlyFee: 199 },
 } as const
 
 export async function GET() {
@@ -62,9 +62,10 @@ export async function POST(req: NextRequest) {
 
   const { action } = await req.json()
 
-  if (action === 'upgrade_to_pro') {
-    if (!process.env.STRIPE_PRO_PRICE_ID) {
-      return NextResponse.json({ error: 'Pro plan not yet configured' }, { status: 503 })
+  if (action === 'upgrade_to_pro' || action === 'upgrade_to_enterprise') {
+    const priceId = action === 'upgrade_to_enterprise' ? process.env.STRIPE_ENTERPRISE_PRICE_ID : process.env.STRIPE_PRO_PRICE_ID
+    if (!priceId) {
+      return NextResponse.json({ error: 'Selected plan not yet configured' }, { status: 503 })
     }
 
     // Get or create Stripe customer
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
     const session2 = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: baseUrl + '/dashboard/upgrade?success=true',
       cancel_url: baseUrl + '/dashboard/upgrade?cancelled=true',
       metadata: { sellerId: seller.id },
