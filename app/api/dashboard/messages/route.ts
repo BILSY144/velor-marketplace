@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/dashboard/messages â returns all message threads for the logged-in seller
+// GET /api/dashboard/messages Ã¢ÂÂ returns all message threads for the logged-in seller
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         threadMap.set(threadKey, {
           threadKey,
           productId: msg.productId,
-          productName: msg.product?.name ?? '',
+          productName: msg.product?.title ?? '',
           productImage: msg.product?.images?.[0] ?? null,
           otherUserId: otherUser.id,
           otherUserName: otherUser.name,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/dashboard/messages â seller replies to a buyer message
+// POST /api/dashboard/messages Ã¢ÂÂ seller replies to a buyer message
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
