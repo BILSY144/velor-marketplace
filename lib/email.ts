@@ -1,13 +1,13 @@
 import { Resend } from 'resend';
 
 const getResendClient = () => new Resend(process.env.RESEND_API_KEY);
-const FROM = 'Velor Commerce <customerservice@velorcommerce.co.uk>';
+const FROM = 'Velor Commerce <hello@velorcommerce.store>';
 
 const LOGO = `<div style="background:#FF6B00;padding:24px 32px"><h1 style="margin:0;font-size:22px;font-weight:800;color:#FFF;letter-spacing:0.1em">VELOR</h1></div>`;
 
 const FOOTER = `<div style="background:#111;padding:20px 32px;border-top:1px solid #1E1E1E">
   <p style="margin:0;font-size:12px;color:#666;line-height:1.6">
-    Velor Commerce Ltd &middot; customerservice@velorcommerce.co.uk<br>
+    Velor Commerce Ltd &middot; customerservice@velorcommerce.store<br>
     You are receiving this email because you have an account or pending application with Velor Commerce.
   </p>
 </div>`;
@@ -31,10 +31,11 @@ export interface EmailOptions {
   subject: string;
   html: string;
   bcc?: string;
+  from?: string;
 }
 
-export async function sendEmail({ to, subject, html, bcc }: EmailOptions): Promise<void> {
-  const { error } = await getResendClient().emails.send({ from: FROM, to, subject, html, ...(bcc ? { bcc } : {}) });
+export async function sendEmail({ to, subject, html, bcc, from }: EmailOptions): Promise<void> {
+  const { error } = await getResendClient().emails.send({ from: from || FROM, to, subject, html, ...(bcc ? { bcc } : {}) });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
   }
@@ -95,7 +96,7 @@ export function buildWelcomeEmail(d: { name: string }): { subject: string; html:
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
       Hi ${h(d.name)}, your account is ready. You can now browse and purchase from our curated selection of premium sellers.
     </p>
-    <a href="https://velorcommerce.co.uk" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Start shopping</a>
+    <a href="https://velorcommerce.store" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Start shopping</a>
     ${WRAP_CLOSE}`;
 
   return { subject: 'Welcome to Velor Commerce', html };
@@ -115,7 +116,7 @@ export function buildSellerApprovedEmail(d: {
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 24px">
       You can now log in to your seller dashboard to set up your store, add products, and start selling.
     </p>
-    <a href="https://velorcommerce.co.uk/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Go to seller dashboard</a>
+    <a href="https://velorcommerce.store/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Go to seller dashboard</a>
     ${WRAP_CLOSE}`;
 
   return { subject: `Approved: ${d.storeName} on Velor Commerce`, html };
@@ -140,7 +141,7 @@ export function buildSellerRejectedEmail(d: {
       <p style="margin:0;color:#CC8080;font-size:14px;line-height:1.6">${h(d.reason)}</p>
     </div>
     <p style="color:#777;font-size:13px;line-height:1.6">
-      If you believe this decision was made in error, or if your circumstances have changed, please contact us at customerservice@velorcommerce.co.uk.
+      If you believe this decision was made in error, or if your circumstances have changed, please contact us at customerservice@velorcommerce.store.
     </p>
     ${WRAP_CLOSE}`;
 
@@ -209,7 +210,7 @@ export function buildSellerCoachingEmail(d: { sellerName: string }): { subject: 
       <p style="color:#FF6B00;font-weight:600;font-size:14px;margin:0 0 6px">Pricing</p>
       <p style="color:#AAA;font-size:14px;line-height:1.6;margin:0">Sellers who price competitively within their category see 30% higher click-through rates. Review your prices against comparable listings monthly.</p>
     </div>
-    <a href="https://velorcommerce.co.uk/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">View your dashboard</a>
+    <a href="https://velorcommerce.store/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">View your dashboard</a>
     ${WRAP_CLOSE}`;
 
   return { subject: 'Grow your Velor store: seller tips', html };
@@ -250,7 +251,7 @@ export function buildSellerPerformanceEmail(d: {
       <p style="color:#777;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px">Top product this week</p>
       <p style="color:#FFF;font-size:15px;font-weight:600;margin:0">${h(d.topProduct)}</p>
     </div>
-    <a href="https://velorcommerce.co.uk/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">View full analytics</a>
+    <a href="https://velorcommerce.store/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">View full analytics</a>
     ${WRAP_CLOSE}`;
 
   return { subject: 'Your weekly Velor performance report', html };
