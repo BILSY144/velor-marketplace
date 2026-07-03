@@ -184,9 +184,9 @@ export default function GlobalHeader() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                    <div style={{ fontSize: '11px', color: '#999', fontFamily: 'Inter, sans-serif' }}>{item.category} Â· {item.sellerName}</div>
+                    <div style={{ fontSize: '11px', color: '#999', fontFamily: 'Inter, sans-serif' }}>{item.category} ÃÂ· {item.sellerName}</div>
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>Â£{item.price.toFixed(2)}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FF6B00', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>ÃÂ£{item.price.toFixed(2)}</div>
                 </Link>
               ))}
               {!searching && searchResults.length > 0 && (
@@ -260,6 +260,14 @@ export default function GlobalHeader() {
               <Link href="/auth/login" style={{ textDecoration: 'none', fontSize: '14px', color: '#999', fontFamily: 'Inter, sans-serif' }}>Sign In</Link>
               <Link href="/auth/register" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: 600, color: '#fff', background: '#FF6B00', padding: '8px 16px', borderRadius: '8px', fontFamily: 'Inter, sans-serif' }}>Join Free</Link>
             </>
+          )}
+          {(session?.user as { role?: string })?.role === 'ADMIN' && (
+            <Link
+              href="/admin/dashboard"
+              style={{ textDecoration: 'none', fontSize: '13px', fontWeight: 600, color: '#FF6B00', background: '#111', border: '1px solid #2A2A2A', padding: '7px 14px', borderRadius: '8px', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
+            >
+              Dashboard
+            </Link>
           )}
         </div>
       </div>
