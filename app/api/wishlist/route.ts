@@ -41,7 +41,7 @@ export async function GET() {
         status: item.product.status,
         sellerName: item.product.seller.storeName,
         avgRating: Math.round(avgRating * 10) / 10,
-        reviewCount: ratings.length,
+        reviewCount: 0,
       },
     }
   })
