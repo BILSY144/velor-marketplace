@@ -68,3 +68,17 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--border);
   border-radius: 3px;
 }
+
+
+/* ---- Mobile responsive layer (max-width 640px only; desktop unaffected) ---- */
+@media (max-width: 640px) {
+  html, body { overflow-x: hidden; }
+  [style*='padding:0 40px'] { padding-left: 16px !important; padding-right: 16px !important; }
+  [style*='padding:0 48px'] { padding-left: 16px !important; padding-right: 16px !important; }
+  [style*='padding:80px 0'] { padding-top: 48px !important; padding-bottom: 48px !important; }
+  [style*='grid-template-columns:repeat(4, 1fr)'],
+  [style*='grid-template-columns:repeat(5, 1fr)'] { grid-template-columns: repeat(2, 1fr) !important; }
+  [style*='grid-template-columns:repeat(3, 1fr)'] { grid-template-columns: 1fr !important; }
+  header [style*='height:64px'] { flex-wrap: wrap !important; height: auto !important; padding-top: 10px !important; padding-bottom: 10px !important; }
+  header [style*='max-width:600px'] { order: 3 !important; flex: 1 0 100% !important; max-width: 100% !important; margin: 8px 0 0 0 !important; }
+}
