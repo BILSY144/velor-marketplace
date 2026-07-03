@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       await prisma.seller.updateMany({
         where: { stripeCustomerId: sub.customer as string },
         data: {
-          tier: (sub.items.data[0]?.price?.metadata?.tier ?? 'PRO') as any,
+          tier: (sub.items.data[0]?.price?.id === process.env.STRIPE_ENTERPRISE_PRICE_ID ? 'ENTERPRISE' : sub.items.data[0]?.price?.id === process.env.STRIPE_PRO_PRICE_ID ? 'PRO' : (sub.items.data[0]?.price?.metadata?.tier ?? 'PRO')) as any,
           stripeSubscriptionId: sub.id,
           subscriptionStatus: sub.status,
           subscriptionCurrentPeriodEnd: new Date((sub as any).current_period_end * 1000),
@@ -55,6 +55,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription;
+      const downgraded = await prisma.seller.findMany({
+        where: { stripeCustomerId: sub.customer as string },
+        select: { id: true },
+      });
       await prisma.seller.updateMany({
         where: { stripeCustomerId: sub.customer as string },
         data: {
@@ -64,6 +68,21 @@ export async function POST(request: Request): Promise<NextResponse> {
           subscriptionCurrentPeriodEnd: null,
         },
       });
+      // Enforce STARTER 50-listing cap: keep 50 oldest live listings, delist the rest
+      for (const s of downgraded) {
+        const live = await prisma.product.findMany({
+          where: { sellerId: s.id, status: 'APPROVED' },
+          orderBy: { createdAt: 'asc' },
+          select: { id: true },
+        });
+        if (live.length > 50) {
+          const toDelist = live.slice(50).map((p) => p.id);
+          await prisma.product.updateMany({
+            where: { id: { in: toDelist } },
+            data: { status: 'DELISTED' },
+          });
+        }
+      }
       break;
     }
 
