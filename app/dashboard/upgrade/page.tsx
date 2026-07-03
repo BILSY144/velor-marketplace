@@ -59,7 +59,7 @@ const TIERS = [
   {
     id: 'ENTERPRISE',
     name: 'Enterprise',
-    price: null,
+    price: 199,
     commission: 5,
     listingLabel: 'Unlimited active listings',
     color: 'from-amber-700 to-orange-900',
@@ -70,9 +70,9 @@ const TIERS = [
       'Dedicated account manager',
       'API access and integrations',
       'Custom analytics reports',
-      'Negotiated contract terms',
+      'Fixed £199/mo, no hidden fees',
       'Early feature access',
-      '4-5% commission per sale',
+      '5% commission per sale',
     ],
     highlight: false,
   },
@@ -107,13 +107,13 @@ function UpgradeContent() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (action = 'upgrade_to_pro') => {
     setUpgrading(true);
     try {
       const r = await fetch('/api/seller/subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'upgrade_to_pro' }),
+        body: JSON.stringify({ action }),
       });
       const data = await r.json();
       if (data.checkoutUrl) {
@@ -259,13 +259,13 @@ function UpgradeContent() {
                       )}
                     </div>
                   ) : tier.id === 'PRO' ? (
-                    <button onClick={handleUpgrade} disabled={upgrading || loading} className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 text-white font-semibold py-3.5 rounded-xl transition-all text-sm shadow-lg shadow-violet-900/30">
+                    <button onClick={() => handleUpgrade('upgrade_to_pro')} disabled={upgrading || loading} className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 text-white font-semibold py-3.5 rounded-xl transition-all text-sm shadow-lg shadow-violet-900/30">
                       {upgrading ? 'Redirecting to checkout...' : 'Upgrade to Pro — £49/mo'}
                     </button>
                   ) : tier.id === 'ENTERPRISE' ? (
-                    <a href="mailto:customerservice@velorcommerce.co.uk?subject=Enterprise plan enquiry" className="block w-full text-center bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 text-white font-semibold py-3.5 rounded-xl transition-all text-sm">
-                      Contact our team
-                    </a>
+                    <button onClick={() => handleUpgrade('upgrade_to_enterprise')} disabled={upgrading || loading} className="w-full bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 disabled:opacity-50 text-white font-semibold py-3.5 rounded-xl transition-all text-sm shadow-lg shadow-amber-900/30">
+                      {upgrading ? 'Redirecting to checkout...' : 'Upgrade to Enterprise — £199/mo'}
+                    </button>
                   ) : (
                     <div className="w-full text-center py-3 rounded-xl border border-white/10 text-sm text-neutral-600">Default plan</div>
                   )}
