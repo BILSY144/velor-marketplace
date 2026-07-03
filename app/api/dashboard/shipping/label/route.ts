@@ -151,11 +151,6 @@ export async function POST(request: NextRequest) {
         trackingUrl: transaction.tracking_url_provider,
         labelUrl: transaction.label_url,
         carrier: bestRate.provider,
-        service: bestRate.servicelevel?.name,
-        shippingAmount: parseFloat(bestRate.amount),
-        dutiesAmount: order.dutiesCost ?? 0,
-        currency: bestRate.currency ?? 'GBP',
-        declaredValue,
         status: 'LABEL_PURCHASED',
       },
     })
@@ -164,8 +159,6 @@ export async function POST(request: NextRequest) {
       where: { id: order.id },
       data: {
         status: 'SHIPPED',
-        carrier: bestRate.provider,
-        shippingService: bestRate.servicelevel?.name,
       },
     })
 
@@ -176,7 +169,6 @@ export async function POST(request: NextRequest) {
         trackingUrl: dbShipment.trackingUrl,
         labelUrl: dbShipment.labelUrl,
         carrier: dbShipment.carrier,
-        service: dbShipment.service,
       },
     })
   } catch (err) {
