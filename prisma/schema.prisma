@@ -56,6 +56,9 @@ model User {
   password      String?
   role          String    @default("user")
   accounts      Account[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  reviews          Review[]
   sessions      Session[]
   seller        Seller?
   wishlistItems WishlistItem[]
@@ -346,4 +349,59 @@ model OutreachLog {
   emailType  String
   subject    String
   sentAt     DateTime       @default(now())
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  country   String?
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  productId  String?
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Dispute {
+  id         String   @id @default(cuid())
+  orderId    String
+  raisedBy   String
+  reason     String
+  evidence   String?
+  status     String   @default("OPEN")
+  resolution String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int
+  comment   String   @default("")
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ShipmentEvent {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  status      String
+  description String
+  location    String?
+  occurredAt  DateTime
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 }
