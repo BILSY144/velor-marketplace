@@ -149,7 +149,7 @@ export default function GlobalHeader() {
               fontWeight: 800,
               fontSize: 24,
               letterSpacing: '0.14em',
-              color: 'var(--text)',
+              color: 'var(--accent)',
               textDecoration: 'none',
               flexShrink: 0,
             }}

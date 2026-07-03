@@ -106,6 +106,7 @@ export default function GlobalFooter() {
               fontWeight: 800,
               fontSize: 22,
               letterSpacing: '0.14em',
+              color: 'var(--accent)',
               marginBottom: 12,
             }}
           >
