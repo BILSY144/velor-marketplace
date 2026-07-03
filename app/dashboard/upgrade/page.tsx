@@ -94,7 +94,8 @@ function UpgradeContent() {
       .then(setStatus)
       .finally(() => setLoading(false));
     if (searchParams.get('success') === 'true') {
-      setToast({ type: 'success', msg: 'Welcome to Pro. Your commission rate is now 8%.' });
+      const plan = searchParams.get('plan');
+      setToast({ type: 'success', msg: plan === 'enterprise' ? 'Welcome to Enterprise. Your commission rate is now 5%.' : 'Welcome to Pro. Your commission rate is now 8%.' });
     }
     if (searchParams.get('cancelled') === 'true') {
       setToast({ type: 'error', msg: 'Payment cancelled - you remain on your current plan.' });
