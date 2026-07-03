@@ -10,9 +10,11 @@
   --border: #2A2A2A;
   --accent: #FF6B00;
   --text: #FFFFFF;
-  --muted: #999999;
+  --muted: #B4B4B4;
   --green: #00E676;
   --red: #FF1744;
+  --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 html {
@@ -23,7 +25,7 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-body), system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
