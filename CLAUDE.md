@@ -9,7 +9,7 @@ _If this block says IDLE, no task is mid-flight. If it has content, resume from 
 
 **Status**: IDLE — subscription tiers + billing + downgrade enforcement are FINAL, deployed, and locked. See `docs/SUBSCRIPTION_AND_TIERS.md` in the repo (the canonical, set-in-stone spec). Do not re-open unless William explicitly changes a decision.
 
-**Next planned topic**: Seller ranking system (design discussion not yet started).
+**Next planned topic**: none mid-flight — awaiting William's direction.
 
 ---
 
@@ -87,7 +87,7 @@ Seller dashboard, buyer checkout, Stripe Connect (15% fee), NextAuth v5, public 
 
 ## PENDING / NEXT
 
-1. Seller ranking system — design discussion (NEXT).
+1. Seller ranking system — COMPLETE and DEPLOYED (spec: docs/SELLER_RANKING.md; commits d6608c3, ff7819e).
 2. Whole-site design system refresh (approved, not started).
 3. Flip `OUTREACH_ENABLED=true` once site is presentable.
 4. Correct remaining honest-copy items ("millions of buyers", "22 countries").
