@@ -22,7 +22,7 @@ export async function GET() {
   const seen = new Map<string, {
     conversationId: string;
     otherUser: { id: string; name: string | null; email: string };
-    product: { id: string; name: string } | null;
+    product: { id: string; title: string } | null;
     lastMessage: { content: string; createdAt: Date; senderId: string };
     unreadCount: number;
   }>();
