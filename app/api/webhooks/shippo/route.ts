@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       if (newStatus === 'DELIVERED') {
         await prisma.order.update({
           where: { id: shipment.orderId },
-          data: { status: 'DELIVERED' },
+          data: { status: 'DELIVERED', deliveredAt: new Date() },
         })
       }
     }

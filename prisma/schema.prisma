@@ -209,6 +209,7 @@ model Order {
   seller          Seller      @relation(fields: [sellerId], references: [id])
   stripePaymentId String?     @unique
   status          OrderStatus @default(PENDING)
+  deliveredAt     DateTime?
   subtotal        Float
   platformFee     Float       @default(0)
   sellerEarnings  Float       @default(0)
