@@ -13,7 +13,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
-          name: true,
+          title: true,
           price: true,
           stock: true,
           status: true,

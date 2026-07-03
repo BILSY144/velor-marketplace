@@ -14,7 +14,7 @@ export async function GET() {
     include: {
       sender: { select: { id: true, name: true, email: true } },
       receiver: { select: { id: true, name: true, email: true } },
-      product: { select: { id: true, name: true } },
+      product: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: 'desc' },
   });

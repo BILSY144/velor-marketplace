@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       },
       select: {
         id: true,
-        name: true,
+        title: true,
         price: true,
         images: true,
         category: true,

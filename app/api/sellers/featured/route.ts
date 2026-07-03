@@ -14,7 +14,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
-          name: true,
+          title: true,
           price: true,
           images: true,
           category: true,
