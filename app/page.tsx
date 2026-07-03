@@ -355,7 +355,8 @@ export default function HomePage() {
             width: '100%',
           }}
         >
-          <div style={{ maxWidth: 760 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 48, flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 760, flex: '1 1 460px' }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -464,6 +465,27 @@ export default function HomePage() {
                 </button>
               </Link>
             </div>
+          </div>
+
+          <div
+            style={{
+              flex: '1 1 420px',
+              minWidth: 300,
+              maxWidth: 620,
+            }}
+          >
+            <img
+              src="/velor-global-market.png"
+              alt="Velor Global Marketplace"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                borderRadius: 16,
+                border: '1px solid var(--border)',
+              }}
+            />
+          </div>
           </div>
         </div>
 
