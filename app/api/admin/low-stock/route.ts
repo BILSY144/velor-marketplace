@@ -13,7 +13,7 @@ async function requireAdmin() {
 }
 
 function buildLowStockEmail(
-  products: { id: string; name: string; stock: number; sellerStoreName: string }[]
+  products: { id: string; title: string; stock: number; sellerStoreName: string }[]
 ) {
   const rows = products
     .map(
@@ -29,7 +29,7 @@ function buildLowStockEmail(
     .join('');
 
   const count = products.length;
-  const subject = `Low Stock Alert â ${count} product${count !== 1 ? 's' : ''} need restocking`;
+  const subject = `Low Stock Alert Ã¢ÂÂ ${count} product${count !== 1 ? 's' : ''} need restocking`;
   const html = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <h2 style="color:#1a1a1a">Low Stock Alert</h2>
@@ -47,7 +47,7 @@ function buildLowStockEmail(
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace â automated low-stock monitor</p>
+      <p style="color:#888;font-size:12px;margin-top:24px">Velor Marketplace Ã¢ÂÂ automated low-stock monitor</p>
     </div>
   `;
   return { subject, html };
