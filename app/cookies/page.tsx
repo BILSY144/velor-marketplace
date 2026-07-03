@@ -1,0 +1,14 @@
+export const metadata = { title: 'Cookie Policy - Velor Commerce' }
+
+export default function Page() {
+  return (
+    <main style={{ background: 'var(--bg)', minHeight: '72vh', padding: '72px 20px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 40, fontWeight: 800, color: 'var(--text)', margin: '0 0 20px', letterSpacing: '-1px' }}>Cookie policy</h1>
+        <p style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>Velor uses essential cookies to keep you signed in, remember your cart, and run core marketplace features. These are required for the site to work.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>We also use limited analytics to understand how the site is used so we can improve it. You can control cookies through your browser settings.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>For more detail on how we handle your data, see our <a href='/legal/privacy' style={{ color: 'var(--accent)' }}>Privacy Policy</a>.</p>
+      </div>
+    </main>
+  )
+}

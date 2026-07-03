@@ -257,8 +257,8 @@ export default function GlobalHeader() {
             </div>
           ) : (
             <>
-              <Link href="/auth/login" style={{ textDecoration: 'none', fontSize: '14px', color: '#999', fontFamily: 'Inter, sans-serif' }}>Sign In</Link>
-              <Link href="/auth/register" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: 600, color: '#fff', background: '#FF6B00', padding: '8px 16px', borderRadius: '8px', fontFamily: 'Inter, sans-serif' }}>Join Free</Link>
+              <Link href="/auth/sign-in" style={{ textDecoration: 'none', fontSize: '14px', color: '#999', fontFamily: 'Inter, sans-serif' }}>Sign In</Link>
+              <Link href="/auth/sign-up" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: 600, color: '#fff', background: '#FF6B00', padding: '8px 16px', borderRadius: '8px', fontFamily: 'Inter, sans-serif' }}>Join Free</Link>
             </>
           )}
           {(session?.user as { role?: string })?.role === 'ADMIN' && (

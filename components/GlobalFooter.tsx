@@ -24,7 +24,7 @@ export default function GlobalFooter() {
           </div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', fontFamily: 'Space Grotesk, sans-serif' }}>Company</div>
-            {[['About Velor', '/about'], ['Seller Agreement', '/seller-agreement'], ['Privacy Policy', '/privacy'], ['Terms of Service', '/terms']].map(([label, href]) => (
+            {[['About Velor', '/about'], ['Seller Agreement', '/seller-agreement'], ['Privacy Policy', '/legal/privacy'], ['Terms of Service', '/legal/terms']].map(([label, href]) => (
               <Link key={label} href={href} style={{ display: 'block', fontSize: '14px', color: '#666', textDecoration: 'none', marginBottom: '10px', fontFamily: 'Inter, sans-serif' }}>{label}</Link>
             ))}
           </div>
@@ -32,7 +32,7 @@ export default function GlobalFooter() {
         <div style={{ borderTop: '1px solid #222', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ fontSize: '13px', color: '#555', fontFamily: 'Inter, sans-serif' }}>2026 Velor Marketplace. All rights reserved.</div>
           <div style={{ display: 'flex', gap: '20px' }}>
-            {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Cookies', '/cookies']].map(([label, href]) => (
+            {[['Privacy', '/legal/privacy'], ['Terms', '/legal/terms'], ['Cookies', '/cookies']].map(([label, href]) => (
               <Link key={label} href={href} style={{ fontSize: '13px', color: '#555', textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>{label}</Link>
             ))}
           </div>
