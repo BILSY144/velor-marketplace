@@ -69,6 +69,10 @@ Full detail: `docs/SUBSCRIPTION_AND_TIERS.md` in the repo. Summary:
 
 ---
 
+## PAYOUT ESCROW — LOCKED (2026-07-03)
+
+Full detail: docs/PAYOUTS.md. Funds held on the platform until delivery confirmed (Shippo), then released via /api/cron/release-payouts: 15 days for probation sellers, 72 hours for trusted (10+ delivered, 30+ day account, no unresolved disputes/returns). Open return/dispute freezes that order until resolved. payment-intent holds funds (no transfer_data); release uses PaymentIntent metadata sellerShare + sellerAccountId; idempotent transfers. Commit 1e72cec.
+
 ## TASK LOG (recent)
 
 ### Subscription tiers, billing & downgrade enforcement [COMPLETE — LOCKED 2026-07-03]

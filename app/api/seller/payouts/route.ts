@@ -65,63 +65,9 @@ export async function GET() {
   })
 }
 
-export async function POST(request: Request) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const seller = await prisma.seller.findUnique({
-    where: { userId: session.user.id }
-  })
-  if (!seller) {
-    return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
-  }
-
-  if (!seller.stripeAccountId) {
-    return NextResponse.json(
-      { error: 'Stripe account not connected. Please complete onboarding first.' },
-      { status: 400 }
-    )
-  }
-
-  const body = await request.json()
-  const { amount } = body
-
-  if (!amount || typeof amount !== 'number' || amount <= 0) {
-    return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
-  }
-
-  // Recalculate available balance to validate
-  const deliveredOrders = await prisma.order.findMany({
-    where: { sellerId: seller.id, status: 'DELIVERED' },
-    include: { items: true }
-  })
-  const grossEarnings = deliveredOrders.reduce((sum, order) => {
-    const orderTotal = order.items.reduce((s, item) => s + item.price * item.quantity, 0)
-    return sum + orderTotal
-  }, 0)
-  const totalEarned = grossEarnings * (1 - TIER_COMMISSION[(seller as any).tier ?? 'STARTER'])
-  const paidPayouts = await prisma.payout.findMany({
-    where: { sellerId: seller.id, status: 'PAID' }
-  })
-  const totalPaid = paidPayouts.reduce((sum, p) => sum + p.amount, 0)
-  const availableBalance = Math.max(0, totalEarned - totalPaid)
-
-  if (amount > availableBalance) {
-    return NextResponse.json(
-      { error: 'Requested amount exceeds available balance' },
-      { status: 400 }
-    )
-  }
-
-  const payout = await prisma.payout.create({
-    data: {
-      sellerId: seller.id,
-      amount,
-      status: 'PENDING'
-    }
-  })
-
-  return NextResponse.json({ payout }, { status: 201 })
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Payouts are automatic. Funds are held until delivery is confirmed, then released after the hold window (15 days for new sellers, 72 hours once trusted). No manual withdrawal is needed.' },
+    { status: 400 }
+  )
 }
