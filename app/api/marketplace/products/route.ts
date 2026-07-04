@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   ]
   if (sort === 'price_asc') orderBy = { price: 'asc' }
   else if (sort === 'price_desc') orderBy = { price: 'desc' }
-  else if (sort === 'popular') orderBy = { viewCount: 'desc' }
+  else if (sort === 'popular') orderBy = { wishlistItems: { _count: 'desc' } }
 
   const [total, products] = await Promise.all([
     prisma.product.count({ where }),
