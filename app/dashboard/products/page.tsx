@@ -43,6 +43,29 @@ const DUTY_GUIDANCE: Record<string, string> = {
   '95': 'UK 0% | EU 4.7% | US 0% | AU 0%',
 }
 
+// The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
+// and app/shop/page.tsx filters exactly). The shop's products API does a
+// strict string match on category, so a listing only shows up under a
+// category page when this value matches one of these 16 names exactly.
+const PRODUCT_CATEGORIES = [
+  'Electronics',
+  'Fashion',
+  'Home & Garden',
+  'Beauty & Health',
+  'Sports & Outdoors',
+  'Jewellery & Watches',
+  'Toys & Games',
+  'Baby & Kids',
+  'Pet Supplies',
+  'Automotive',
+  'Books & Education',
+  'Art & Crafts',
+  'Office & Stationery',
+  'Travel & Luggage',
+  'Food & Grocery',
+  'Fitness & Gym',
+]
+
 const COUNTRIES = [
   { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
   { code: 'AD', name: 'Andorra' }, { code: 'AO', name: 'Angola' }, { code: 'AG', name: 'Antigua and Barbuda' },
@@ -381,6 +404,7 @@ export default function DashboardProductsPage() {
   const hsInfo = hsChapterInfo(form.hsCode)
   const dutyGuide = form.hsCode?.length >= 2 ? DUTY_GUIDANCE[form.hsCode.slice(0, 2)] : null
   const validImageCount = form.images.map(u => u.trim()).filter(Boolean).length
+  const categoryIsKnown = !form.category || PRODUCT_CATEGORIES.includes(form.category)
 
   if (loading) return <div style={{ padding: '40px', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>Loading...</div>
 
@@ -432,12 +456,21 @@ export default function DashboardProductsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Stock</label>
+                  <label style={labelStyle}>Inventory No:</label>
                   <input style={inputStyle} type="number" value={form.stock} onChange={e => set('stock', e.target.value)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Category</label>
-                  <input style={inputStyle} value={form.category} onChange={e => set('category', e.target.value)} />
+                  <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.category} onChange={e => set('category', e.target.value)}>
+                    <option value="">Select category</option>
+                    {!categoryIsKnown && (
+                      <option value={form.category}>{form.category} (existing)</option>
+                    )}
+                    {PRODUCT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+                    Matches Velor&apos;s live categories — your listing goes straight to the right category page.
+                  </div>
                 </div>
               </div>
               <div>
@@ -554,7 +587,7 @@ export default function DashboardProductsPage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
               <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                {symbolFor(sellerCurrency)}{p.price.toFixed(2)} &middot; Stock: {p.stock} &middot;
+                {symbolFor(sellerCurrency)}{p.price.toFixed(2)} &middot; Inventory No: {p.stock} &middot;
                 {p.hsCode ? ' HS: ' + p.hsCode : ' No HS code'} &middot;
                 {p.weightGrams ? ' ' + p.weightGrams + 'g' : ' No weight'}
               </div>
