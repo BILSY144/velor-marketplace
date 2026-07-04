@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 interface SubscriptionStatus {
   tier: 'STARTER' | 'PRO' | 'ENTERPRISE';
@@ -91,11 +92,17 @@ function UpgradeContent() {
   const [upgrading, setUpgrading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [notSeller, setNotSeller] = useState(false);
+  const intent = searchParams.get('intent');
+  const intentTierId = intent ? intent.toUpperCase() : null;
 
   useEffect(() => {
     fetch('/api/seller/subscription')
-      .then(r => r.json())
-      .then(setStatus)
+      .then(r => {
+        if (r.status === 404) { setNotSeller(true); return null; }
+        return r.json();
+      })
+      .then(data => { if (data) setStatus(data); })
       .finally(() => setLoading(false));
     if (searchParams.get('success') === 'true') {
       const plan = searchParams.get('plan');
@@ -111,6 +118,12 @@ function UpgradeContent() {
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!intentTierId || loading) return;
+    const el = document.getElementById(`tier-${intentTierId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [intentTierId, loading]);
 
   const handleUpgrade = async (action = 'upgrade_to_pro') => {
     setUpgrading(true);
@@ -218,11 +231,23 @@ function UpgradeContent() {
           </div>
         )}
 
+        {!loading && notSeller && (
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <p className="font-semibold text-sm">You don't have a seller account yet</p>
+              <p className="text-neutral-500 text-sm mt-0.5">Create your free store in a couple of minutes, then come back here to choose a plan.</p>
+            </div>
+            <Link href="/sell" className="shrink-0 bg-white text-black font-semibold text-sm px-6 py-3 rounded-xl hover:bg-neutral-200 transition-colors">
+              Become a seller
+            </Link>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-5 mb-16">
           {TIERS.map(tier => {
             const isCurrent = status?.tier === tier.id;
             return (
-              <div key={tier.id} className={`relative rounded-2xl border overflow-hidden flex flex-col transition-transform ${tier.borderColor} ${tier.highlight ? 'shadow-2xl shadow-violet-900/40 md:-translate-y-2' : ''}`}>
+              <div id={`tier-${tier.id}`} key={tier.id} className={`relative rounded-2xl border overflow-hidden flex flex-col transition-transform ${tier.borderColor} ${tier.highlight ? 'shadow-2xl shadow-violet-900/40 md:-translate-y-2' : ''} ${intentTierId === tier.id ? 'ring-2 ring-offset-2 ring-offset-black ring-white/70' : ''}`}>
                 {tier.badge && (
                   <div className="absolute top-4 right-4">
                     <span className="text-xs font-semibold uppercase tracking-wider bg-white/20 text-white rounded-full px-3 py-1">{tier.badge}</span>
@@ -262,7 +287,11 @@ function UpgradeContent() {
                       </li>
                     ))}
                   </ul>
-                  {isCurrent ? (
+                  {notSeller ? (
+                    <Link href="/sell" className="w-full block text-center py-3.5 rounded-xl border border-white/20 text-sm font-semibold hover:bg-white/5 transition-colors">
+                      Become a seller to choose this plan
+                    </Link>
+                  ) : isCurrent ? (
                     <div>
                       <div className="w-full text-center py-3 rounded-xl border border-white/15 text-sm text-neutral-500 font-medium">Your current plan</div>
                       {tier.id === 'PRO' && status?.hasActiveSubscription && status.subscriptionStatus !== 'cancelling' && (
