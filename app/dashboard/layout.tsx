@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
+import VelorAssistant from '@/components/VelorAssistant';
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
   { href: '/dashboard/products', label: 'Products', icon: 'PR' },
@@ -198,6 +198,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }}>
         {children}
       </main>
+      <VelorAssistant />
     </div>
   );
 }
