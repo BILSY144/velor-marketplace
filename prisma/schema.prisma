@@ -130,6 +130,8 @@ model Seller {
   sellerBadge                  String?
   sellerScoreUpdatedAt         DateTime?
   scoreBreakdown               Json?
+  storeTheme                   String              @default("classic")
+  storefrontUnlocked           Boolean             @default(false)
   createdAt                    DateTime            @default(now())
   updatedAt                    DateTime            @updatedAt
 }

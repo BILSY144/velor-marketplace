@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { getTheme } from '@/lib/store-themes'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -51,6 +52,9 @@ export default async function SellerProfilePage({
 
   if (!seller) notFound()
 
+  const theme = getTheme((seller as unknown as { storeTheme?: string }).storeTheme)
+  const tk = theme.tokens
+
   const allReviews = seller.products.flatMap((p) => p.reviews)
   const totalReviews = allReviews.length
   const avgRating =
@@ -67,10 +71,18 @@ export default async function SellerProfilePage({
     <div
       style={{
         minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--text)',
-        fontFamily: 'var(--font-body)',
-      }}
+        background: tk.bg,
+        color: tk.text,
+        fontFamily: tk.fontBody,
+        ['--bg' as string]: tk.bg,
+        ['--surface' as string]: tk.surface,
+        ['--border' as string]: tk.border,
+        ['--accent' as string]: tk.accent,
+        ['--text' as string]: tk.text,
+        ['--muted' as string]: tk.muted,
+        ['--font-display' as string]: tk.fontDisplay,
+        ['--font-body' as string]: tk.fontBody,
+      } as React.CSSProperties}
     >
       {/* Header */}
       <div

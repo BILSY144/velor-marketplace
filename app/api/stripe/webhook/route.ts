@@ -26,6 +26,13 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   switch (event.type) {
+    case 'checkout.session.completed': {
+      const cs = event.data.object as Stripe.Checkout.Session
+      if (cs.metadata?.type === 'storefront_unlock' && cs.metadata?.sellerId) {
+        await prisma.seller.update({ where: { id: cs.metadata.sellerId }, data: { storefrontUnlocked: true } as unknown as Record<string, unknown> })
+      }
+      break
+    }
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent;
       const orderId = pi.metadata?.orderId;
