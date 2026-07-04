@@ -202,7 +202,6 @@ export default function GlobalHeader() {
                 </div>
               )}
             </div>
-            <Link href="/sell" style={navLink}>Sell on Velor</Link>
             <Link href="/about" style={navLink}>How it works</Link>
           </nav>
 
