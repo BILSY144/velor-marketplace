@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface PayoutRecord {
   id: string;
@@ -111,9 +112,9 @@ export default function PayoutsPage() {
           <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
             Payout Method
           </h2>
-          <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', color: 'var(--muted)', fontSize: 12, cursor: 'pointer' }}>
+          <Link href="/dashboard/stripe-connect" style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', color: 'var(--muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
             Connect Bank Account
-          </button>
+          </Link>
         </div>
         <div style={{ padding: '20px', background: 'var(--bg)', borderRadius: 8, border: '1px dashed var(--border)', textAlign: 'center' }}>
           <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 4 }}>No payout method connected</div>

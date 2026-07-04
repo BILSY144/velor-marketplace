@@ -4,6 +4,7 @@ export default function StripeConnectPage() {
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { fetchStatus(); }, []);
 
@@ -19,20 +20,40 @@ export default function StripeConnectPage() {
 
   async function handleConnect() {
     setConnecting(true);
+    setError('');
     try {
       const r = await fetch('/api/stripe/connect', { method: 'POST' });
       const d = await r.json();
-      if (d.onboardingUrl) window.location.href = d.onboardingUrl;
-    } catch { setConnecting(false); }
+      if (r.ok && d.onboardingUrl) {
+        window.location.href = d.onboardingUrl;
+        return;
+      }
+      setError(d.error || 'Could not start Stripe onboarding. Try again.');
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setConnecting(false);
   }
 
   async function handleCompleteSetup() {
     setConnecting(true);
+    setError('');
     try {
       const r = await fetch('/api/stripe/connect');
       const d = await r.json();
-      if (d.onboardingUrl) window.location.href = d.onboardingUrl;
-    } catch { setConnecting(false); }
+      if (r.ok && d.onboardingUrl) {
+        window.location.href = d.onboardingUrl;
+        return;
+      }
+      if (d.needsAccount) {
+        await handleConnect();
+        return;
+      }
+      setError(d.error || 'Could not resume Stripe onboarding. Try again.');
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setConnecting(false);
   }
 
   async function handleDisconnect() {
@@ -52,6 +73,12 @@ export default function StripeConnectPage() {
       <p style={{ color: '#999999', fontSize: 15, marginBottom: 32 }}>
         Connect your Stripe account to receive 85% of every sale automatically.
       </p>
+
+      {error && (
+        <div style={{ background: 'rgba(255,23,68,0.1)', border: '1px solid #FF1744', borderRadius: 8, padding: '12px 16px', color: '#FF1744', fontSize: 14, marginBottom: 20 }}>
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div style={{ color: '#999999', fontSize: 14 }}>Loading...</div>

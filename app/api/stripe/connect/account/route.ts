@@ -1,21 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const accountId = request.cookies.get('seller_account_id')?.value;
+  let accountId = request.cookies.get('seller_account_id')?.value;
+  const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
+  if (!accountId && seller?.stripeAccountId) {
+    accountId = seller.stripeAccountId;
+  }
   if (!accountId) {
-    return NextResponse.json({ connected: false });
+    return NextResponse.json({ connected: false, needsAccount: true });
   }
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
     const account = await stripe.accounts.retrieve(accountId);
+    if (seller && (account.charges_enabled || account.payouts_enabled || seller.stripeAccountId !== accountId)) {
+      try {
+        await prisma.seller.update({
+          where: { id: seller.id },
+          data: {
+            stripeAccountId: accountId,
+            stripeOnboarded: !!(account.charges_enabled && account.payouts_enabled),
+          } as unknown as Record<string, unknown>,
+        });
+      } catch (dbErr) {
+        console.error('Failed to persist stripe account status', dbErr);
+      }
+    }
     return NextResponse.json({
       connected: true,
       accountId,
