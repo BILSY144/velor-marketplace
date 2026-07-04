@@ -61,8 +61,9 @@ export async function GET() {
 
   const productsByStatus = {
     APPROVED: sellerProducts.filter((p) => p.status === 'APPROVED').length,
-    PENDING: sellerProducts.filter((p) => p.status === 'PENDING_REVIEW').length,
+    PENDING_REVIEW: sellerProducts.filter((p) => p.status === 'PENDING_REVIEW').length,
     REJECTED: sellerProducts.filter((p) => p.status === 'REJECTED').length,
+    DELISTED: sellerProducts.filter((p) => p.status === 'DELISTED').length,
   }
 
   const pendingPayout = orderItems
