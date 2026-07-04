@@ -34,10 +34,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
+        // Look up once at sign-in and bake it into the JWT — this is what lets
+        // the site header show "My Store" / "Seller dashboard" for sellers.
+        // Without this, session.user.sellerId is always undefined and those
+        // links never appear even for real sellers.
+        const seller = await prisma.seller.findUnique({
+          where: { userId: user.id },
+          select: { id: true },
+        })
+        token.sellerId = seller?.id ?? null
       }
       return token
     },
@@ -45,6 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string
         ;(session.user as any).role = token.role
+        session.user.sellerId = token.sellerId ?? null
       }
       return session
     },
