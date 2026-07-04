@@ -143,7 +143,8 @@ export default function StorefrontDesign() {
         setActive(id)
         setToast('Storefront design applied.')
       } else {
-        setToast('Could not apply that design. Try again.')
+        const data = await r.json().catch(() => ({}))
+        setToast(data.error || ('Could not apply that design (status ' + r.status + ').'))
       }
     } catch {
       setToast('Network error. Please try again.')

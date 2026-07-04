@@ -34,9 +34,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'locked' }, { status: 403 })
   }
 
-  await prisma.seller.update({
-    where: { id: seller.id },
-    data: { storeTheme: themeId } as unknown as Record<string, unknown>,
-  })
-  return NextResponse.json({ ok: true, theme: themeId })
+  try {
+    await prisma.seller.update({
+      where: { id: seller.id },
+      data: { storeTheme: themeId } as unknown as Record<string, unknown>,
+    })
+    return NextResponse.json({ ok: true, theme: themeId })
+  } catch (err) {
+    console.error('Failed to apply storefront theme', err)
+    const message = err instanceof Error ? err.message : 'Unknown server error'
+    return NextResponse.json({ error: 'Database error: ' + message }, { status: 500 })
+  }
 }
