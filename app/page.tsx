@@ -451,18 +451,23 @@ export default function Home() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18, maxWidth: 1040, margin: '0 auto' }}>
           {[
-            { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false },
-            { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true },
-            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false },
+            { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false, intent: 'starter', cta: 'Get started' },
+            { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true, intent: 'pro', cta: 'Choose Pro' },
+            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false, intent: 'enterprise', cta: 'Choose Enterprise' },
           ].map((t) => (
-            <div
+            <Link
               key={t.name}
+              href={`/dashboard/upgrade?intent=${t.intent}`}
               style={{
+                display: 'block',
                 background: 'var(--surface)',
                 border: t.hl ? '1px solid var(--accent)' : '1px solid var(--border)',
                 borderRadius: 18,
                 padding: '26px 24px',
                 position: 'relative',
+                color: 'inherit',
+                textDecoration: 'none',
+                cursor: 'pointer',
               }}
             >
               {t.hl && (
@@ -487,14 +492,28 @@ export default function Home() {
                 <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30 }}>{t.price}</span>
               </div>
               <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{t.comm}</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 18 }}>
                 {t.feat.map((f) => (
                   <li key={f} style={{ color: 'var(--muted)', fontSize: 14, padding: '6px 0', display: 'flex', gap: 8 }}>
                     <span style={{ color: 'var(--green)' }}>✔</span> {f}
                   </li>
                 ))}
               </ul>
-            </div>
+              <div
+                style={{
+                  color: t.hl ? '#000' : 'var(--text)',
+                  background: t.hl ? 'var(--accent)' : 'transparent',
+                  border: t.hl ? 'none' : '1px solid var(--border)',
+                  borderRadius: 999,
+                  padding: '10px 0',
+                  textAlign: 'center',
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
+              >
+                {t.cta} →
+              </div>
+            </Link>
           ))}
         </div>
         <p style={{ color: 'var(--muted)', fontSize: 13, textAlign: 'center', margin: '22px auto 0', maxWidth: 620 }}>
