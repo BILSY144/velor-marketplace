@@ -12,8 +12,9 @@ export async function POST() {
   }
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
   if (!seller) {
+    const debugMsg = 'No seller profile is linked to this account. [debug userId=' + session.user.id + ' email=' + session.user.email + ' role=' + (session.user as any).role + ']';
     return NextResponse.json({
-      error: 'No seller profile is linked to this account.',
+      error: debugMsg,
       debugUserId: session.user.id,
       debugEmail: session.user.email,
       debugRole: (session.user as any).role,
