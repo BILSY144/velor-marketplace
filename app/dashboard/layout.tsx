@@ -2,11 +2,11 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import SellerAgreementGate from '@/components/SellerAgreementGate';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
   { href: '/dashboard/products', label: 'Products', icon: 'PR' },
+  { href: '/dashboard/storefront', label: 'Storefront', icon: 'SF' },
   { href: '/dashboard/orders', label: 'Orders', icon: 'OR' },
   { href: '/dashboard/returns', label: 'Returns', icon: 'RT' },
   { href: '/dashboard/disputes', label: 'Disputes', icon: 'DS' },
@@ -187,9 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         flex: 1,
         minWidth: 0,
       }}>
-        <SellerAgreementGate>
-          {children}
-        </SellerAgreementGate>
+        {children}
       </main>
     </div>
   );

@@ -53,13 +53,13 @@ export default function TermsPage() {
             <section><h3 className="text-base font-semibold text-gray-900 mb-2">14. Independent Contractor</h3><p>Sellers are independent contractors. Nothing in these terms creates an employment, partnership, or agency relationship between the Seller and the Platform.</p></section>
             <section><h3 className="text-base font-semibold text-gray-900 mb-2">15. Governing Law</h3><p>These terms are governed by the laws of England and Wales. Disputes shall be submitted to binding arbitration under the rules of the London Court of International Arbitration (LCIA).</p></section>
             <section><h3 className="text-base font-semibold text-gray-900 mb-2">16. Entire Agreement</h3><p>These terms, together with the Platform Privacy Policy, constitute the entire agreement between the Seller and the Platform. If any provision is found unenforceable, the remaining provisions continue in full force.</p></section>
-            <p className="text-gray-400 text-xs pt-4 border-t border-gray-100">Effective date: 1 July 2026 - Version 1.0 - Operated by Velor Commerce - Contact: customerservice@velorcommerce.co.uk</p>
+            <p className="text-gray-400 text-xs pt-4 border-t border-gray-100">Effective date: 4 July 2026 - Version 1.1 - Operated by Velor Commerce Ltd - Contact: customerservice@velorcommerce.store</p>
           </div>
           <div className="px-8 py-6 bg-gray-50 border-t border-gray-200">
             {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
             <label className="flex items-start gap-3 cursor-pointer mb-5">
               <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500" />
-              <span className="text-sm text-gray-700">I have read and agree to the Velor Marketplace Seller Agreement (v1.0, July 2026). I confirm I have the legal authority to bind myself or my business to these terms.</span>
+              <span className="text-sm text-gray-700">I have read and agree to the Velor Marketplace Seller Agreement (v1.1, July 2026). I confirm I have the legal authority to bind myself or my business to these terms.</span>
             </label>
             <button onClick={handleAccept} disabled={!accepted || loading} className="w-full bg-gray-900 text-white font-semibold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors text-sm">
               {loading ? 'Saving...' : 'Accept and Enter Dashboard'}
