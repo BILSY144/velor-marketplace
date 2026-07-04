@@ -1,14 +1,16 @@
 # Velor Marketplace — Subscription Tiers & Billing (LOCKED SPEC)
 
 Status: FINAL and DEPLOYED. Do not re-litigate. Any change requires an explicit new decision from William.
-Last locked: 2026-07-03.
+Last locked: 2026-07-04.
+
+**2026-07-04 update (William's decision):** Starter listing cap lowered 50 → 20 (headline features now explicitly include seller dashboard and buyer protection). Pro listing cap changed from unlimited to a 200 hard cap, and Pro now includes a free custom storefront. Enterprise unchanged except it also now explicitly lists a free custom storefront. Commission rates unchanged (15% / 8% / 5%).
 
 ## Tiers
 
 | Tier | Price | Commission | Listings | Extras |
 |------|-------|-----------|----------|--------|
-| Starter | Free | 15% | Up to 50 (hard cap) | Seller dashboard, analytics, order tools |
-| Pro | £49/mo | 8% | Unlimited | Professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
+| Starter | Free | 15% | Up to 20 (hard cap) | Seller dashboard, analytics, order tools, buyer protection on every sale |
+| Pro | £49/mo | 8% | Up to 200 (hard cap) | Free custom storefront, professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
 | Enterprise | £199/mo (fixed, non-negotiable) | 5% | Unlimited | Everything in Pro + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
 
 ## Stripe (LIVE mode, acct_1TlcWCDB5eA3Wfmu — VELOR COMMERCE LTD)
@@ -28,10 +30,11 @@ Vercel env (Production + Preview): STRIPE_PRO_PRICE_ID, STRIPE_ENTERPRISE_PRICE_
 
 ## Listing cap enforcement
 
-- Hard block: POST /api/dashboard/products refuses to create a 51st listing for a STARTER seller (403 "Listing limit reached"). LISTING_LIMITS = { STARTER: 50, PRO: null, ENTERPRISE: null }. Free sellers can never exceed 50 at any time.
-- On downgrade to STARTER: keep the 50 OLDEST live (APPROVED) listings; DELIST the excess.
-  - DELIST = status set to DELISTED (hidden from storefront, NOT deleted). Seller keeps them and can relist after upgrading.
-  - PROTECTED: a listing is NEVER delisted if it has an order in PENDING, PROCESSING, or DISPUTED state at the time of downgrade. Protected excess stays live even if that keeps the seller temporarily above 50; it is only trimmed on a later downgrade once its orders have settled.
+- Hard block: POST /api/dashboard/products refuses to create a 21st listing for a STARTER seller and a 201st listing for a PRO seller (403 "Listing limit reached"). LISTING_LIMITS = { STARTER: 20, PRO: 200, ENTERPRISE: null }. Enterprise sellers can never hit a cap.
+- On downgrade to STARTER (subscription cancelled/deleted): keep the 20 OLDEST live (APPROVED) listings; DELIST the excess.
+- DELIST = status set to DELISTED (hidden from storefront, NOT deleted). Seller keeps them and can relist after upgrading.
+- PROTECTED: a listing is NEVER delisted if it has an order in PENDING, PROCESSING, or DISPUTED state at the time of downgrade. Protected excess stays live even if that keeps the seller temporarily above 20; it is only trimmed on a later downgrade once its orders have settled.
+- Note: there is no self-serve Enterprise→Pro downgrade path in this app (only cancel-to-Starter or upgrade). If one is added later, the same 200-cap delisting logic used for Starter should be replicated for a Pro landing.
 
 ## No DB migration required
 
@@ -44,3 +47,4 @@ Uses existing ProductStatus.DELISTED and existing Seller tier/subscription field
 - 64108af plan-aware checkout success message (Pro + Enterprise)
 - 47e57b7 resolve tier by Stripe price id (Enterprise=5%) + delist over-50 on downgrade
 - 1d8834d never delist listings with pending/processing/disputed orders on downgrade
+- (2026-07-04) Starter cap 50→20, Pro cap unlimited→200, Pro + Enterprise both list free custom storefront
