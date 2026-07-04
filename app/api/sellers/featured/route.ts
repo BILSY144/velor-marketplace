@@ -23,7 +23,7 @@ export async function GET() {
       _count: { select: { products: true } },
     },
     take: 6,
-    orderBy: [{ tier: 'asc' }, { sellerScore: 'desc' }, { createdAt: 'desc' }],
+    orderBy: [{ tier: 'desc' }, { sellerScore: 'desc' }, { createdAt: 'desc' }],
   })
 
   return NextResponse.json({ sellers })
