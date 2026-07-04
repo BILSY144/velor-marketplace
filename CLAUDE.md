@@ -3,6 +3,19 @@ _Auto-loaded each session. Last updated: 2026-07-04 (Seller tier limits updated)
 
 ---
 
+## ⚠️ OPEN REVIEW ITEM — AWAITING WILLIAM (added 2026-07-04, DO NOT REMOVE UNTIL CONFIRMED)
+
+**Tiered seller plan pages need William's review before this is considered done.** The dedicated single-tier pages (`/dashboard/upgrade/starter`, `/pro`, `/enterprise`) are built, deployed, and visually verified — but the underlying business content has NOT been reviewed by William yet. Keep this section in the file and raise it proactively next session until he confirms it's resolved. Review needs to cover:
+
+1. **Price-to-value justification** — does what's actually offered on each tier (Starter free/15% commission, Pro £49/mo/8%, Enterprise £199/mo fixed/5%) genuinely justify that price jump? Walk through each feature bullet with William, not just the price/commission numbers.
+2. **Can Velor actually deliver everything listed** — audit each tier page's feature list against what is REALLY built today vs. aspirational copy. Flag anything unconfirmed, especially: "AI-powered listing optimisation" (Pro), "priority placement in search" (Pro), "dedicated account manager" (Enterprise), "full API access & integrations" (Enterprise), "custom analytics & early access" (Enterprise). Do not let unbuilt features stay listed as if live — either build them, clearly mark them "coming soon", or remove them.
+3. **Layout/design differentiation between tiers** — confirm the three dedicated pages don't just look like the same template with different colours and numbers. Each tier's page should visually communicate escalating premium-ness (Starter → Pro → Enterprise), not just swap a gradient.
+4. **Actual in-dashboard experience escalation** — beyond the marketing page, confirm each tier genuinely unlocks a more advanced settings/dashboard experience than the one below it (not just a higher listing cap and lower commission %). E.g. does Pro's dashboard look/behave more advanced than Starter's? Does Enterprise expose real extra tools (API keys page, account manager contact, advanced analytics dashboard) or just a bullet point on a pricing page?
+
+**Status: NOT started.** This is a content/product review task for William, not a code task — surface it at the start of the next session and don't mark it resolved until he explicitly signs off.
+
+---
+
 ## CURRENT SESSION STATE — READ THIS FIRST
 
 **Status: Stripe Connect onboarding is now FULLY WORKING end-to-end. No blockers remaining from the overnight session.**
@@ -48,7 +61,7 @@ Review the 15 storefront themes — this was the original long-standing goal bef
 **Live domain**: https://velorcommerce.store
 **Vercel project ID**: `prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp` (team `velor1`)
 **Stack**: Next.js 15 App Router, TypeScript, Prisma + Vercel Postgres, NextAuth v5, Stripe Connect
-**Design rule**: Inline CSS with CSS variables everywhere; the seller upgrade page uses Tailwind utility classes — match each file's existing style, do not mix.
+**Design rule**: Inline CSS with CSS variables everywhere — this codebase does NOT use Tailwind at runtime (no compiled Tailwind output ships in production); match each file's existing inline-style + CSS-variable convention (`--bg`, `--surface`, `--border`, `--accent`, `--text`, `--muted`, `--green`, `--red`, `--font-display`, `--font-body`). Discovered 2026-07-04 after Tailwind utility classes silently rendered unstyled on the upgrade page.
 **GitHub commit method**: Multi-file atomic commit via `javascript_tool` GitHub Trees API on a velorcommerce.store tab (CSP allows it there; stripe.com/vercel.com tabs block it). GitHub web upload UI (pencil/upload) is also a proven fallback used successfully in recent sessions.
 **PAT**: User provides at start of each session — never hardcode.
 
@@ -85,6 +98,7 @@ Full detail: `docs/SUBSCRIPTION_AND_TIERS.md` in the repo. Summary:
 - On downgrade to Starter: keep 20 oldest live listings, DELIST the excess (hidden, not deleted). NEVER delist a listing with a PENDING/PROCESSING/DISPUTED order at downgrade time.
 - No DB migration needed (uses existing `DELISTED` status + tier fields).
 - 2026-07-04 change (William's decision): Starter cap lowered 50→20 (now explicitly markets seller dashboard + buyer protection); Pro cap changed from unlimited to 200 and now includes a free custom storefront (same entitlement Enterprise already had via `lib/store-themes.ts` `canUseTheme`); Enterprise unchanged but now also explicitly lists the free custom storefront. Commission rates (15/8/5%) unchanged.
+- **See "OPEN REVIEW ITEM" at the top of this file** — William has not yet confirmed this pricing/feature set is justified or fully deliverable.
 
 ---
 
@@ -106,6 +120,16 @@ Full detail: `docs/PAYOUTS.md`. Funds held on the platform until delivery confir
 
 ---
 
+## TIERED SELLER UPGRADE PAGES — (2026-07-04)
+
+Rebuilt as three dedicated routes (not one page branching on a query param): `app/dashboard/upgrade/starter/page.tsx`, `/pro/page.tsx`, `/enterprise/page.tsx`, all rendering a shared `components/dashboard/TierUpgradeView.tsx`. `app/dashboard/upgrade/page.tsx` is now a compact 3-tile chooser. Homepage tier cards (`app/page.tsx`) link directly to `/dashboard/upgrade/{starter|pro|enterprise}`.
+
+Each page is a single, no-page-scroll view (`height: calc(100dvh - 64px)`, `overflow: hidden`) with a gradient spotlight panel (tier name/price/commission/pitch) next to a "What's included" + "How it works" content panel and a bottom CTA bar using `var(--accent)` for the payment button. Root cause of an earlier broken-styling bug: the page was originally built with Tailwind utility classes, but this project ships **no compiled Tailwind CSS at all** — every other page uses inline styles + CSS variables. Rebuilt to match. Commits: `c82945d` (shared component), `1374d4c`/`8a50fcf`/`607c1f8` (starter/pro/enterprise pages), `86d9d57` (index chooser), `95ea967` (homepage links). All deployed READY, visually verified live (no scroll, correct gradients/fonts/colours) 2026-07-04.
+
+**See "OPEN REVIEW ITEM" at the top of this file — the pricing/feature justification and tier-to-tier differentiation has not yet been reviewed by William.**
+
+---
+
 ## TASK LOG (recent)
 
 ### Seller tier limits updated [COMPLETE — deployed 2026-07-04]
@@ -123,6 +147,9 @@ Commit `1acff9d`. Theme picker, per-tier entitlements, themed storefront renderi
 ### Subscription tiers, billing & downgrade enforcement [COMPLETE — LOCKED 2026-07-03, updated 2026-07-04]
 Commits on main: `e822609`, `894e1c8`, `64108af`, `47e57b7`, `1d8834d`, `26b3dc6`, plus the 2026-07-04 tier-limit update above. All deployed READY. Canonical spec: `docs/SUBSCRIPTION_AND_TIERS.md`.
 
+### Tiered seller upgrade pages rebuilt as dedicated single-tier pages [BUILT & DEPLOYED — NOT YET REVIEWED, see OPEN REVIEW ITEM at top]
+Commits `c82945d`, `1374d4c`, `8a50fcf`, `607c1f8`, `86d9d57`, `95ea967` (2026-07-04). See "TIERED SELLER UPGRADE PAGES" section above.
+
 ### Seller ranking system [COMPLETE — deployed]
 Spec: `docs/SELLER_RANKING.md`. Commits `d6608c3` (this specific deploy showed a Vercel Error), `ff7819e` (fixed a corrupted character, redeployed READY).
 
@@ -139,11 +166,12 @@ Seller dashboard, buyer checkout, Stripe Connect (15% fee), NextAuth v5, public 
 
 ## PENDING / NEXT
 
-1. Decide whether to re-lock themes + logo behind `PREVIEW_OPEN = false`, or leave open longer.
-2. Flip `OUTREACH_ENABLED=true` once site is presentable.
-3. Correct remaining honest-copy items ("millions of buyers", "22 countries").
-4. Mobile verification via William's phone (env cannot emulate mobile).
-5. Consider writing `docs/STORE_THEMES.md` as the canonical spec for the 15-theme system, matching the pattern used for tiers/payouts/ranking.
+1. **Review tiered seller plan pages with William — pricing justification, feature deliverability, tier differentiation (see OPEN REVIEW ITEM at top of file).**
+2. Decide whether to re-lock themes + logo behind `PREVIEW_OPEN = false`, or leave open longer.
+3. Flip `OUTREACH_ENABLED=true` once site is presentable.
+4. Correct remaining honest-copy items ("millions of buyers", "22 countries").
+5. Mobile verification via William's phone (env cannot emulate mobile).
+6. Consider writing `docs/STORE_THEMES.md` as the canonical spec for the 15-theme system, matching the pattern used for tiers/payouts/ranking.
 
 ---
 
