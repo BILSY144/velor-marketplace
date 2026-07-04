@@ -446,14 +446,14 @@ export default function Home() {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={h2}>Sell on Velor</h2>
           <p style={{ color: 'var(--muted)', fontSize: 15, maxWidth: 620, margin: '12px auto 0' }}>
-            List for free and reach buyers worldwide. Upgrade any time for lower commission and unlimited listings.
+            List for free and reach buyers worldwide. Upgrade any time for lower commission and more listings.
           </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18, maxWidth: 1040, margin: '0 auto' }}>
           {[
-            { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 50 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false },
-            { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['Unlimited listings', 'Priority search placement', 'Advanced analytics'], hl: true },
-            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Everything in Pro', 'Dedicated account manager', 'Full API access'], hl: false },
+            { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false },
+            { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true },
+            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false },
           ].map((t) => (
             <div
               key={t.name}
