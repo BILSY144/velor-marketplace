@@ -1,5 +1,6 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { SUPPORTED_CURRENCIES } from '@/lib/fx'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
 
   const seller = await prisma.seller.findUnique({
     where: { userId: session.user.id },
-    select: { storeName: true, description: true, country: true },
+    select: { storeName: true, description: true, country: true, currency: true },
   })
 
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
@@ -24,6 +25,7 @@ export async function GET() {
     storeName: seller.storeName,
     description: seller.description ?? '',
     country: seller.country ?? '',
+    currency: seller.currency ?? 'GBP',
   })
 }
 
@@ -35,10 +37,17 @@ export async function PATCH(request: Request) {
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
   const body = await request.json()
-  const { name, storeName, description, country } = body
+  const { name, storeName, description, country, currency } = body
 
   if (typeof storeName === 'string' && storeName.trim().length < 2) {
     return NextResponse.json({ error: 'Business name must be at least 2 characters' }, { status: 400 })
+  }
+
+  if (
+    currency !== undefined &&
+    !(SUPPORTED_CURRENCIES as readonly string[]).includes(String(currency).toUpperCase())
+  ) {
+    return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 })
   }
 
   await Promise.all([
@@ -51,6 +60,7 @@ export async function PATCH(request: Request) {
         ...(storeName !== undefined && { storeName: String(storeName).trim() }),
         ...(description !== undefined && { description: String(description).trim() }),
         ...(country !== undefined && { country: String(country).trim() }),
+        ...(currency !== undefined && { currency: String(currency).toUpperCase() }),
       },
     }),
   ])
