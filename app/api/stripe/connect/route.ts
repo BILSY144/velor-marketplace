@@ -12,7 +12,12 @@ export async function POST() {
   }
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
   if (!seller) {
-    return NextResponse.json({ error: 'No seller profile is linked to this account.' }, { status: 404 });
+    return NextResponse.json({
+      error: 'No seller profile is linked to this account.',
+      debugUserId: session.user.id,
+      debugEmail: session.user.email,
+      debugRole: (session.user as any).role,
+    }, { status: 404 });
   }
   const account = await stripe.accounts.create({ type: 'express', capabilities: { card_payments: { requested: true }, transfers: { requested: true } } });
   const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });

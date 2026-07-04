@@ -100,12 +100,18 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetch('/api/dashboard/analytics')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Request failed with status ' + r.status)
+        return r.json()
+      })
       .then((d) => {
         setData(d)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => {
+        setData(null)
+        setLoading(false)
+      })
   }, [])
 
   const card: React.CSSProperties = {
