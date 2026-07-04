@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   }
 
   let orderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = [
-    { seller: { tier: 'asc' } },
+    { seller: { tier: 'desc' } },
     { seller: { sellerScore: 'desc' } },
     { createdAt: 'desc' },
   ]
