@@ -29,6 +29,42 @@ function hsChapterInfo(hsCode: string) {
   return HS_CATEGORY_MAP[chapter] ?? null
 }
 
+interface ListingSuggestion { level: 'warning' | 'tip'; text: string }
+
+function getListingSuggestions(
+  form: { description: string; category: string; price: string; weightGrams: string },
+  validImageCount: number,
+  categoryStats: { count: number; avgPrice: number; medianPrice: number } | null
+  ): ListingSuggestion[] {
+  const suggestions: ListingSuggestion[] = []
+  if (validImageCount < 5) {
+    suggestions.push({ level: 'tip', text: `Add ${5 - validImageCount} more photo${5 - validImageCount === 1 ? '' : 's'} — listings with 5+ photos get more views and buyer trust.` })
+  }
+  const descLen = form.description.trim().length
+  if (descLen === 0) {
+    suggestions.push({ level: 'warning', text: 'Add a description — buyers skip listings with no details.' })
+  } else if (descLen < 100) {
+    suggestions.push({ level: 'tip', text: 'Your description is quite short. Mention materials, dimensions, fit, or what makes this item stand out.' })
+  }
+  if (!form.category) {
+    suggestions.push({ level: 'warning', text: 'Select a category so buyers can find this listing when browsing.' })
+  }
+  if (categoryStats && categoryStats.count >= 3 && form.price) {
+    const price = parseFloat(form.price)
+    if (!isNaN(price) && categoryStats.medianPrice > 0) {
+      const ratio = price / categoryStats.medianPrice
+      if (ratio > 2) {
+        suggestions.push({ level: 'tip', text: `This is priced well above similar listings in ${form.category}. Make sure your photos and description clearly justify the price.` })
+      } else if (ratio < 0.4) {
+        suggestions.push({ level: 'tip', text: `This is priced well below similar listings in ${form.category} — double check the price is correct.` })
+      }
+    }
+  }
+  if (!form.weightGrams) {
+    suggestions.push({ level: 'tip', text: 'Add a weight so shipping costs and delivery estimates are accurate.' })
+  }
+  return suggestions
+}
 const DUTY_GUIDANCE: Record<string, string> = {
   '61': 'UK 12% | EU 12% | US 18% | AU 17.5%',
   '62': 'UK 12% | EU 12% | US 18% | AU 17.5%',
@@ -293,11 +329,22 @@ export default function DashboardProductsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [sellerCurrency, setSellerCurrency] = useState('GBP')
+  const [categoryStats, setCategoryStats] = useState<{ count: number; avgPrice: number; medianPrice: number } | null>(null)
 
   useEffect(() => {
     loadProducts()
     fetch('/api/dashboard/settings').then((r) => r.json()).then((d) => setSellerCurrency(d.currency || 'GBP')).catch(() => {})
   }, [])
+  useEffect(() => {
+    if (!form.category) {
+      setCategoryStats(null)
+      return
+    }
+    fetch(`/api/dashboard/category-stats?category=${encodeURIComponent(form.category)}`)
+      .then(r => r.json())
+      .then(setCategoryStats)
+      .catch(() => setCategoryStats(null))
+  }, [form.category])
 
   async function loadProducts() {
     setLoading(true)
@@ -483,6 +530,20 @@ export default function DashboardProductsPage() {
                 <div style={{ fontSize: '12px', color: validImageCount >= MIN_IMAGES ? 'var(--muted)' : 'var(--red)', marginTop: '8px' }}>
                   {validImageCount} of {MAX_IMAGES} added — minimum {MIN_IMAGES} required
                 </div>
+                {(() => {
+                          const suggestions = getListingSuggestions(form, validImageCount, categoryStats)
+                          if (suggestions.length === 0) return null
+                          return (
+                            <div style={{ marginTop: '18px', padding: '14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>Listing Health</div>
+                              {suggestions.map((s, i) => (
+                                <div key={i} style={{ fontSize: '12px', color: s.level === 'warning' ? 'var(--red)' : 'var(--muted)', marginBottom: '6px' }}>
+                                  {s.level === 'warning' ? 'Warning: ' : 'Tip: '}{s.text}
+                                </div>
+                              ))}
+                            </div>
+                          )
+                })()}
               </div>
 
               {/* Shipping section */}
