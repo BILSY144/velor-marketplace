@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function TermsPage() {
-  const router = useRouter();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,8 +17,10 @@ export default function TermsPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to record acceptance (status ' + res.status + ')');
       }
-      router.push('/dashboard');
-      router.refresh();
+      // Hard navigation, not router.push: guarantees the browser re-sends the
+      // request with the just-set velor_terms cookie and middleware evaluates
+      // it fresh, instead of relying on the client router cache.
+      window.location.href = '/dashboard';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
