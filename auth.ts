@@ -46,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { userId: user.id },
           select: { id: true },
         })
-        token.sellerId = seller?.id ?? null
+        ;(token as any).sellerId = seller?.id ?? null
       }
       return token
     },
@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string
         ;(session.user as any).role = token.role
-        session.user.sellerId = token.sellerId ?? null
+        ;(session.user as any).sellerId = (token as any).sellerId ?? null
       }
       return session
     },
