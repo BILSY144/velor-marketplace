@@ -22,13 +22,14 @@ const TIERS = [
     name: 'Starter',
     price: 0,
     commission: 15,
-    listingLabel: 'Up to 50 active listings',
+    listingLabel: 'Up to 20 active listings',
     color: 'from-slate-700 to-slate-900',
     borderColor: 'border-white/10',
     badge: null,
     features: [
-      '50 active product listings',
+      '20 active product listings',
       'Seller dashboard and analytics',
+      'Buyer protection on every sale',
       'Order management tools',
       'Customer support access',
       'Standard search placement',
@@ -41,12 +42,13 @@ const TIERS = [
     name: 'Pro',
     price: 49,
     commission: 8,
-    listingLabel: 'Unlimited active listings',
+    listingLabel: 'Up to 200 active listings',
     color: 'from-violet-600 to-purple-800',
     borderColor: 'border-violet-500/60',
     badge: 'Most popular',
     features: [
-      'Unlimited product listings',
+      '200 active product listings',
+      'Free custom storefront',
       'Priority placement in search',
       'AI-powered listing optimisation',
       'Pricing insights dashboard',
@@ -69,6 +71,7 @@ const TIERS = [
       'Everything in Pro',
       'Dedicated account manager',
       'API access and integrations',
+      'Free custom storefront',
       'Custom analytics reports',
       'Fixed £199/mo, no hidden fees',
       'Early feature access',
@@ -166,7 +169,7 @@ function UpgradeContent() {
           <p className="text-xs uppercase tracking-widest text-neutral-500 mb-4">Seller plans</p>
           <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-5">Scale with your business</h1>
           <p className="text-neutral-400 text-lg max-w-lg mx-auto">
-            Start free with 50 listings. Go unlimited from £49/month and drop your commission to 8%.
+            Start free with 20 listings. Get up to 200 listings from £49/month and drop your commission to 8%.
           </p>
         </div>
 
@@ -194,8 +197,22 @@ function UpgradeContent() {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-amber-300 text-sm">You have reached your 50-listing limit</p>
-              <p className="text-amber-400/70 text-sm mt-0.5">Upgrade to Pro for unlimited listings and 8% commission.</p>
+              <p className="font-semibold text-amber-300 text-sm">You have reached your 20-listing limit</p>
+              <p className="text-amber-400/70 text-sm mt-0.5">Upgrade to Pro for 200 listings and 8% commission.</p>
+            </div>
+          </div>
+        )}
+
+        {!loading && status?.listingLimitReached && status.tier === 'PRO' && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-10 flex items-start gap-4">
+            <div className="text-amber-400 mt-0.5">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 3h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-300 text-sm">You have reached your 200-listing limit</p>
+              <p className="text-amber-400/70 text-sm mt-0.5">Upgrade to Enterprise for unlimited listings and 5% commission.</p>
             </div>
           </div>
         )}
@@ -316,12 +333,12 @@ function UpgradeContent() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {[
-                  { name: 'Etsy',              commission: '6.5% + listing fee', fee: 'Free',   limit: 'Unlimited', velor: false, highlight: false },
-                  { name: 'eBay',              commission: '12.9%',              fee: 'Free',   limit: 'Unlimited', velor: false, highlight: false },
-                  { name: 'Amazon',            commission: '8-15%',              fee: '£25-39', limit: 'Unlimited', velor: false, highlight: false },
-                  { name: 'Velor Starter',     commission: '15%',                fee: 'Free',   limit: '50',        velor: true,  highlight: false },
-                  { name: 'Velor Pro',         commission: '8%',                 fee: '£49/mo', limit: 'Unlimited', velor: true,  highlight: true  },
-                  { name: 'Velor Enterprise',  commission: '4-5%',               fee: 'Custom', limit: 'Unlimited', velor: true,  highlight: false },
+                  { name: 'Etsy', commission: '6.5% + listing fee', fee: 'Free', limit: 'Unlimited', velor: false, highlight: false },
+                  { name: 'eBay', commission: '12.9%', fee: 'Free', limit: 'Unlimited', velor: false, highlight: false },
+                  { name: 'Amazon', commission: '8-15%', fee: '£25-39', limit: 'Unlimited', velor: false, highlight: false },
+                  { name: 'Velor Starter', commission: '15%', fee: 'Free', limit: '20', velor: true, highlight: false },
+                  { name: 'Velor Pro', commission: '8%', fee: '£49/mo', limit: '200', velor: true, highlight: true },
+                  { name: 'Velor Enterprise', commission: '4-5%', fee: 'Custom', limit: 'Unlimited', velor: true, highlight: false },
                 ].map(row => (
                   <tr key={row.name} className={row.highlight ? 'bg-violet-900/25 text-white' : row.velor ? 'bg-white/[0.02] text-neutral-300' : 'text-neutral-500'}>
                     <td className="px-6 py-4 font-medium">{row.highlight && <span className="text-violet-400 mr-1.5">★</span>}{row.name}</td>
