@@ -120,6 +120,8 @@ interface Product {
 
 const MIN_IMAGES = 3
 const MAX_IMAGES = 8
+const MAX_IMAGE_DIMENSION = 1000
+const MAX_IMAGE_DATA_URL_LEN = 350_000
 
 const emptyForm = {
   name: '', description: '', price: '', stock: '', category: '',
@@ -138,16 +140,49 @@ const labelStyle = {
   letterSpacing: '0.05em', marginBottom: '6px',
 }
 
-function isLikelyUrl(value: string) {
-  try {
-    const u = new URL(value)
-    return u.protocol === 'http:' || u.protocol === 'https:'
-  } catch {
-    return false
-  }
+function resizeAndCompressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!/^image\/(png|jpeg|jpg|webp)$/.test(file.type)) {
+      reject(new Error('Please choose a PNG, JPG or WebP image.'))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+          const scale = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height)
+          width = Math.round(width * scale)
+          height = Math.round(height * scale)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { reject(new Error('Could not process this image.')); return }
+        ctx.drawImage(img, 0, 0, width, height)
+        let quality = 0.85
+        let dataUrl = canvas.toDataURL('image/jpeg', quality)
+        while (dataUrl.length > MAX_IMAGE_DATA_URL_LEN && quality > 0.35) {
+          quality -= 0.1
+          dataUrl = canvas.toDataURL('image/jpeg', quality)
+        }
+        if (dataUrl.length > MAX_IMAGE_DATA_URL_LEN) {
+          reject(new Error('This image is still too large after compression — try a smaller photo.'))
+          return
+        }
+        resolve(dataUrl)
+      }
+      img.onerror = () => reject(new Error('Could not read this image.'))
+      img.src = reader.result as string
+    }
+    reader.onerror = () => reject(new Error('Could not read this file.'))
+    reader.readAsDataURL(file)
+  })
 }
 
-function ImageUrlBox({
+function ImageUploadBox({
   index,
   value,
   onChange,
@@ -156,60 +191,70 @@ function ImageUrlBox({
   value: string
   onChange: (v: string) => void
 }) {
-  const [status, setStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const inputId = `product-image-input-${index}`
 
-  useEffect(() => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-      setStatus('idle')
-      return
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setError('')
+    setBusy(true)
+    try {
+      const dataUrl = await resizeAndCompressImage(file)
+      onChange(dataUrl)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not process this image.')
+    } finally {
+      setBusy(false)
     }
-    if (!isLikelyUrl(trimmed)) {
-      setStatus('invalid')
-      return
-    }
-    setStatus('checking')
-    let cancelled = false
-    const img = new Image()
-    img.onload = () => { if (!cancelled) setStatus('valid') }
-    img.onerror = () => { if (!cancelled) setStatus('invalid') }
-    img.src = trimmed
-    return () => { cancelled = true }
-  }, [value])
-
-  const statusColor =
-    status === 'valid' ? 'var(--green)' :
-    status === 'invalid' ? 'var(--red)' :
-    'var(--border)'
+  }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <label
+        htmlFor={inputId}
         style={{
-          width: '44px', height: '44px', borderRadius: '6px', flexShrink: 0,
-          border: '1px solid ' + statusColor, background: 'var(--bg)',
+          width: '64px', height: '64px', borderRadius: '8px', flexShrink: 0, cursor: 'pointer',
+          border: '1px dashed var(--border)', background: 'var(--bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
         }}
       >
-        {status === 'valid' && (
-          <img src={value.trim()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {value ? (
+          <img src={value} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : busy ? (
+          <span style={{ fontSize: '10px', color: 'var(--muted)' }}>...</span>
+        ) : (
+          <span style={{ fontSize: '22px', color: 'var(--muted)', lineHeight: 1 }}>+</span>
         )}
-        {status === 'checking' && <span style={{ fontSize: '10px', color: 'var(--muted)' }}>...</span>}
-        {status === 'invalid' && <span style={{ fontSize: '16px', color: 'var(--red)' }}>!</span>}
-        {status === 'idle' && <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{index + 1}</span>}
-      </div>
-      <div style={{ flex: 1 }}>
         <input
-          style={{ ...inputStyle, border: '1px solid ' + statusColor }}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={`Image ${index + 1} URL${index < MIN_IMAGES ? ' (required)' : ' (optional)'}`}
+          id={inputId}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={onFile}
+          style={{ display: 'none' }}
         />
-        {status === 'invalid' && (
-          <div style={{ fontSize: '11px', color: 'var(--red)', marginTop: '4px' }}>
-            Couldn&apos;t load an image from this URL — check the link.
-          </div>
-        )}
+      </label>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 600 }}>
+          Image {index + 1}{index < MIN_IMAGES ? ' (required)' : ' (optional)'}
+        </div>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '2px' }}>
+          <label htmlFor={inputId} style={{ fontSize: '12px', color: 'var(--accent)', cursor: 'pointer' }}>
+            {value ? 'Replace' : 'Upload photo'}
+          </label>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              style={{ fontSize: '12px', color: 'var(--red)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {error && <div style={{ fontSize: '11px', color: 'var(--red)', marginTop: '4px' }}>{error}</div>}
       </div>
     </div>
   )
@@ -355,10 +400,10 @@ export default function DashboardProductsPage() {
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Product Images</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <label style={labelStyle}>Product Photos</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {form.images.map((url, i) => (
-                    <ImageUrlBox key={i} index={i} value={url} onChange={(v) => setImage(i, v)} />
+                    <ImageUploadBox key={i} index={i} value={url} onChange={(v) => setImage(i, v)} />
                   ))}
                 </div>
                 <div style={{ fontSize: '12px', color: validImageCount >= MIN_IMAGES ? 'var(--muted)' : 'var(--red)', marginTop: '8px' }}>
