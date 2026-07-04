@@ -453,7 +453,7 @@ export default function Home() {
           {[
             { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false },
             { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true },
-            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false },
+            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false },
           ].map((t) => (
             <div
               key={t.name}
