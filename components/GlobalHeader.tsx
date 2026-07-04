@@ -81,7 +81,10 @@ export default function GlobalHeader() {
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/shop')
   }
 
-  const isSeller = Boolean((session?.user as { sellerId?: string } | undefined)?.sellerId)
+  // The seller's own storefront lives at /seller/[sellerId] — this is the
+  // buyer-facing page they'll want a quick link to from anywhere on the site.
+  const sellerId = (session?.user as { sellerId?: string } | undefined)?.sellerId
+  const isSeller = Boolean(sellerId)
 
   const navLink: React.CSSProperties = {
     color: 'var(--text)',
@@ -236,6 +239,11 @@ export default function GlobalHeader() {
 
           {/* Right cluster */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+            {isSeller && (
+              <Link href={`/seller/${sellerId}`} className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="View my store">
+                My Store
+              </Link>
+            )}
             <Link href="/account/wishlist" className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="Wishlist">
               ♡
             </Link>
@@ -296,9 +304,14 @@ export default function GlobalHeader() {
                       <Link href="/account/wishlist" style={menuItem}>Wishlist</Link>
                       <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
                       {isSeller ? (
-                        <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
-                          Seller dashboard
-                        </Link>
+                        <>
+                          <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
+                            Seller dashboard
+                          </Link>
+                          <Link href={`/seller/${sellerId}`} style={menuItem}>
+                            View my store
+                          </Link>
+                        </>
                       ) : (
                         <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
                           Start selling
@@ -367,7 +380,12 @@ export default function GlobalHeader() {
             <Link href="/messages" style={menuItem}>Messages</Link>
             {session ? (
               isSeller
-                ? <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Seller dashboard</Link>
+                ? (
+                  <>
+                    <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Seller dashboard</Link>
+                    <Link href={`/seller/${sellerId}`} style={menuItem}>View my store</Link>
+                  </>
+                )
                 : <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Start selling</Link>
             ) : (
               <>
