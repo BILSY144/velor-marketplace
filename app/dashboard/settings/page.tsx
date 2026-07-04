@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
+import { SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
 
 const COUNTRIES = [
   'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany', 'France',
@@ -10,12 +11,24 @@ const COUNTRIES = [
   'Japan', 'South Korea', 'Hong Kong', 'India', 'Brazil', 'Mexico', 'Other',
 ]
 
+// Suggests a sensible default currency the moment a seller picks their
+// country — they can still override it with the Currency dropdown below.
+const COUNTRY_CURRENCY: Record<string, string> = {
+  'United Kingdom': 'GBP', 'United States': 'USD', 'Canada': 'CAD', 'Australia': 'AUD',
+  'Germany': 'EUR', 'France': 'EUR', 'Spain': 'EUR', 'Italy': 'EUR', 'Netherlands': 'EUR',
+  'Sweden': 'SEK', 'Norway': 'NOK', 'Denmark': 'DKK', 'Switzerland': 'CHF',
+  'Austria': 'EUR', 'Belgium': 'EUR', 'Portugal': 'EUR', 'Ireland': 'EUR',
+  'New Zealand': 'NZD', 'Singapore': 'SGD', 'Japan': 'JPY', 'South Korea': 'KRW',
+  'Hong Kong': 'HKD', 'India': 'INR', 'Brazil': 'BRL', 'Mexico': 'MXN', 'Other': 'GBP',
+}
+
 interface Settings {
   name: string
   email: string
   storeName: string
   description: string
   country: string
+  currency: string
 }
 
 export default function SettingsPage() {
@@ -26,6 +39,7 @@ export default function SettingsPage() {
     storeName: '',
     description: '',
     country: '',
+    currency: 'GBP',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -36,7 +50,7 @@ export default function SettingsPage() {
     fetch('/api/dashboard/settings')
       .then((r) => r.json())
       .then((d) => {
-        setForm(d)
+        setForm({ ...d, currency: d.currency || 'GBP' })
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -44,6 +58,18 @@ export default function SettingsPage() {
 
   const set = (field: keyof Settings, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+    setSaved(false)
+    setError('')
+  }
+
+  // Changing the country re-suggests a currency, but the seller can still
+  // pick a different one from the Currency dropdown right after this field.
+  const setCountry = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      country: value,
+      currency: COUNTRY_CURRENCY[value] ?? prev.currency,
+    }))
     setSaved(false)
     setError('')
   }
@@ -60,6 +86,7 @@ export default function SettingsPage() {
           storeName: form.storeName,
           description: form.description,
           country: form.country,
+          currency: form.currency,
         }),
       })
       const data = await res.json()
@@ -71,7 +98,7 @@ export default function SettingsPage() {
         setTimeout(() => setSaved(false), 3000)
       }
     } catch {
-      setError('Failed to save â please try again')
+      setError('Failed to save — please try again')
     } finally {
       setSaving(false)
     }
@@ -108,6 +135,17 @@ export default function SettingsPage() {
     boxSizing: 'border-box',
     cursor: disabled ? 'not-allowed' : 'text',
   })
+
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle(),
+    cursor: 'pointer',
+    appearance: 'none',
+    backgroundImage:
+      `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 14px center',
+    paddingRight: '36px',
+  }
 
   if (loading) {
     return (
@@ -226,18 +264,9 @@ export default function SettingsPage() {
           <div>
             <label style={label}>Country</label>
             <select
-              style={{
-                ...inputStyle(),
-                cursor: 'pointer',
-                appearance: 'none',
-                backgroundImage:
-                  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 14px center',
-                paddingRight: '36px',
-              }}
+              style={selectStyle}
               value={form.country}
-              onChange={(e) => set('country', e.target.value)}
+              onChange={(e) => setCountry(e.target.value)}
             >
               <option value="">Select your country</option>
               {COUNTRIES.map((c) => (
@@ -246,6 +275,24 @@ export default function SettingsPage() {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label style={label}>Currency</label>
+            <select
+              style={selectStyle}
+              value={form.currency}
+              onChange={(e) => set('currency', e.target.value)}
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c} — {CURRENCY_NAMES[c]}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+              Auto-suggested from your country. All your product prices are set in this
+              currency — buyers abroad automatically see them converted to their own.
+            </div>
           </div>
         </div>
       </div>
