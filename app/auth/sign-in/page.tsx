@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function SignInPage() {
+function SignInForm() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -14,10 +16,11 @@ export default function SignInPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
     const result = await signIn('credentials', {
       email,
       password,
-      callbackUrl: '/dashboard',
+      callbackUrl,
       redirect: false,
     })
     setLoading(false)
@@ -212,5 +215,13 @@ export default function SignInPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0D0D0D' }} />}>
+      <SignInForm />
+    </Suspense>
   )
 }
