@@ -2,7 +2,98 @@ import { prisma } from '@/lib/prisma'
 import { getTheme } from '@/lib/store-themes'
 import { auth } from '@/auth'
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
+
+// Shown instead of a bare 404 when a store link points to a seller who
+// hasn't finished setup or isn't approved yet — friendlier than a generic
+// "page not found" and keeps people inside the Velor experience.
+function StoreNotReady() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg)',
+        color: 'var(--text)',
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'Space Grotesk, sans-serif',
+          fontWeight: 800,
+          fontSize: '18px',
+          color: 'var(--accent)',
+          letterSpacing: '0.1em',
+          marginBottom: '28px',
+        }}
+      >
+        VELOR
+      </div>
+
+      <h1
+        style={{
+          fontFamily: 'Space Grotesk, sans-serif',
+          fontWeight: 700,
+          fontSize: '26px',
+          margin: '0 0 12px',
+        }}
+      >
+        This store isn&apos;t set up yet
+      </h1>
+
+      <p
+        style={{
+          color: 'var(--muted)',
+          fontSize: '15px',
+          lineHeight: 1.6,
+          maxWidth: '440px',
+          margin: '0 0 32px',
+        }}
+      >
+        This seller hasn&apos;t finished setting up their storefront, or it&apos;s still
+        awaiting approval. Check back soon, or explore other sellers on Velor.
+      </p>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'center' }}>
+        <Link
+          href="/shop"
+          style={{
+            background: 'var(--accent)',
+            color: '#000',
+            fontWeight: 800,
+            fontSize: '15px',
+            textDecoration: 'none',
+            padding: '14px 28px',
+            borderRadius: 999,
+          }}
+        >
+          Browse the marketplace
+        </Link>
+        <Link
+          href="/"
+          style={{
+            background: 'transparent',
+            color: 'var(--text)',
+            fontWeight: 700,
+            fontSize: '15px',
+            textDecoration: 'none',
+            padding: '14px 28px',
+            borderRadius: 999,
+            border: '1px solid var(--border)',
+          }}
+        >
+          Back to home
+        </Link>
+      </div>
+    </div>
+  )
+}
 
 function initials(name: string): string {
   return name
@@ -19,9 +110,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'â'.repeat(full)}
-        {half ? 'Â½' : ''}
-        {'â'.repeat(5 - full - (half ? 1 : 0))}
+        {'★'.repeat(full)}
+        {half ? '½' : ''}
+        {'★'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -54,14 +145,13 @@ export default async function SellerProfilePage({
   if (!seller) {
     // Public storefronts only render once a seller is approved. If the person
     // hitting this URL is the seller themselves (e.g. clicked "My Store" from
-    // the header before approval finished), send them to their dashboard
-    // instead of a confusing public 404 — genuine invalid/unknown seller IDs
-    // from anyone else still get a real 404.
+    // the header before approval finished), send them to their dashboard.
+    // Anyone else gets a friendly "not set up yet" page instead of a bare 404.
     const session = await auth()
     if (session?.user?.sellerId === sellerId) {
       redirect('/dashboard')
     }
-    notFound()
+    return <StoreNotReady />
   }
 
   const theme = getTheme((seller as unknown as { storeTheme?: string }).storeTheme)
@@ -323,7 +413,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>{'â'}</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>{'★'}</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}
