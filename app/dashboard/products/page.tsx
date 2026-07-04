@@ -43,15 +43,72 @@ const DUTY_GUIDANCE: Record<string, string> = {
 }
 
 const COUNTRIES = [
-  { code: 'GB', name: 'United Kingdom' }, { code: 'CN', name: 'China' },
-  { code: 'US', name: 'United States' }, { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' }, { code: 'IT', name: 'Italy' },
-  { code: 'JP', name: 'Japan' }, { code: 'IN', name: 'India' },
-  { code: 'PL', name: 'Poland' }, { code: 'TW', name: 'Taiwan' },
-  { code: 'KR', name: 'South Korea' }, { code: 'VN', name: 'Vietnam' },
-  { code: 'TR', name: 'Turkey' }, { code: 'HK', name: 'Hong Kong' },
-  { code: 'BD', name: 'Bangladesh' }, { code: 'TH', name: 'Thailand' },
-  { code: 'AU', name: 'Australia' }, { code: 'CA', name: 'Canada' },
+  { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
+  { code: 'AD', name: 'Andorra' }, { code: 'AO', name: 'Angola' }, { code: 'AG', name: 'Antigua and Barbuda' },
+  { code: 'AR', name: 'Argentina' }, { code: 'AM', name: 'Armenia' }, { code: 'AU', name: 'Australia' },
+  { code: 'AT', name: 'Austria' }, { code: 'AZ', name: 'Azerbaijan' }, { code: 'BS', name: 'Bahamas' },
+  { code: 'BH', name: 'Bahrain' }, { code: 'BD', name: 'Bangladesh' }, { code: 'BB', name: 'Barbados' },
+  { code: 'BY', name: 'Belarus' }, { code: 'BE', name: 'Belgium' }, { code: 'BZ', name: 'Belize' },
+  { code: 'BJ', name: 'Benin' }, { code: 'BT', name: 'Bhutan' }, { code: 'BO', name: 'Bolivia' },
+  { code: 'BA', name: 'Bosnia and Herzegovina' }, { code: 'BW', name: 'Botswana' }, { code: 'BR', name: 'Brazil' },
+  { code: 'BN', name: 'Brunei' }, { code: 'BG', name: 'Bulgaria' }, { code: 'BF', name: 'Burkina Faso' },
+  { code: 'BI', name: 'Burundi' }, { code: 'KH', name: 'Cambodia' }, { code: 'CM', name: 'Cameroon' },
+  { code: 'CA', name: 'Canada' }, { code: 'CV', name: 'Cape Verde' }, { code: 'CF', name: 'Central African Republic' },
+  { code: 'TD', name: 'Chad' }, { code: 'CL', name: 'Chile' }, { code: 'CN', name: 'China' },
+  { code: 'CO', name: 'Colombia' }, { code: 'KM', name: 'Comoros' }, { code: 'CG', name: 'Congo' },
+  { code: 'CD', name: 'Congo (DRC)' }, { code: 'CR', name: 'Costa Rica' }, { code: 'HR', name: 'Croatia' },
+  { code: 'CU', name: 'Cuba' }, { code: 'CY', name: 'Cyprus' }, { code: 'CZ', name: 'Czechia' },
+  { code: 'DK', name: 'Denmark' }, { code: 'DJ', name: 'Djibouti' }, { code: 'DM', name: 'Dominica' },
+  { code: 'DO', name: 'Dominican Republic' }, { code: 'EC', name: 'Ecuador' }, { code: 'EG', name: 'Egypt' },
+  { code: 'SV', name: 'El Salvador' }, { code: 'GQ', name: 'Equatorial Guinea' }, { code: 'ER', name: 'Eritrea' },
+  { code: 'EE', name: 'Estonia' }, { code: 'SZ', name: 'Eswatini' }, { code: 'ET', name: 'Ethiopia' },
+  { code: 'FJ', name: 'Fiji' }, { code: 'FI', name: 'Finland' }, { code: 'FR', name: 'France' },
+  { code: 'GA', name: 'Gabon' }, { code: 'GM', name: 'Gambia' }, { code: 'GE', name: 'Georgia' },
+  { code: 'DE', name: 'Germany' }, { code: 'GH', name: 'Ghana' }, { code: 'GR', name: 'Greece' },
+  { code: 'GD', name: 'Grenada' }, { code: 'GT', name: 'Guatemala' }, { code: 'GN', name: 'Guinea' },
+  { code: 'GW', name: 'Guinea-Bissau' }, { code: 'GY', name: 'Guyana' }, { code: 'HT', name: 'Haiti' },
+  { code: 'HN', name: 'Honduras' }, { code: 'HK', name: 'Hong Kong' }, { code: 'HU', name: 'Hungary' },
+  { code: 'IS', name: 'Iceland' }, { code: 'IN', name: 'India' }, { code: 'ID', name: 'Indonesia' },
+  { code: 'IR', name: 'Iran' }, { code: 'IQ', name: 'Iraq' }, { code: 'IE', name: 'Ireland' },
+  { code: 'IL', name: 'Israel' }, { code: 'IT', name: 'Italy' }, { code: 'CI', name: "Ivory Coast" },
+  { code: 'JM', name: 'Jamaica' }, { code: 'JP', name: 'Japan' }, { code: 'JO', name: 'Jordan' },
+  { code: 'KZ', name: 'Kazakhstan' }, { code: 'KE', name: 'Kenya' }, { code: 'KI', name: 'Kiribati' },
+  { code: 'KW', name: 'Kuwait' }, { code: 'KG', name: 'Kyrgyzstan' }, { code: 'LA', name: 'Laos' },
+  { code: 'LV', name: 'Latvia' }, { code: 'LB', name: 'Lebanon' }, { code: 'LS', name: 'Lesotho' },
+  { code: 'LR', name: 'Liberia' }, { code: 'LY', name: 'Libya' }, { code: 'LI', name: 'Liechtenstein' },
+  { code: 'LT', name: 'Lithuania' }, { code: 'LU', name: 'Luxembourg' }, { code: 'MO', name: 'Macau' },
+  { code: 'MG', name: 'Madagascar' }, { code: 'MW', name: 'Malawi' }, { code: 'MY', name: 'Malaysia' },
+  { code: 'MV', name: 'Maldives' }, { code: 'ML', name: 'Mali' }, { code: 'MT', name: 'Malta' },
+  { code: 'MR', name: 'Mauritania' }, { code: 'MU', name: 'Mauritius' }, { code: 'MX', name: 'Mexico' },
+  { code: 'MD', name: 'Moldova' }, { code: 'MC', name: 'Monaco' }, { code: 'MN', name: 'Mongolia' },
+  { code: 'ME', name: 'Montenegro' }, { code: 'MA', name: 'Morocco' }, { code: 'MZ', name: 'Mozambique' },
+  { code: 'MM', name: 'Myanmar' }, { code: 'NA', name: 'Namibia' }, { code: 'NR', name: 'Nauru' },
+  { code: 'NP', name: 'Nepal' }, { code: 'NL', name: 'Netherlands' }, { code: 'NZ', name: 'New Zealand' },
+  { code: 'NI', name: 'Nicaragua' }, { code: 'NE', name: 'Niger' }, { code: 'NG', name: 'Nigeria' },
+  { code: 'KP', name: 'North Korea' }, { code: 'MK', name: 'North Macedonia' }, { code: 'NO', name: 'Norway' },
+  { code: 'OM', name: 'Oman' }, { code: 'PK', name: 'Pakistan' }, { code: 'PW', name: 'Palau' },
+  { code: 'PA', name: 'Panama' }, { code: 'PG', name: 'Papua New Guinea' }, { code: 'PY', name: 'Paraguay' },
+  { code: 'PE', name: 'Peru' }, { code: 'PH', name: 'Philippines' }, { code: 'PL', name: 'Poland' },
+  { code: 'PT', name: 'Portugal' }, { code: 'QA', name: 'Qatar' }, { code: 'RO', name: 'Romania' },
+  { code: 'RU', name: 'Russia' }, { code: 'RW', name: 'Rwanda' }, { code: 'KN', name: 'Saint Kitts and Nevis' },
+  { code: 'LC', name: 'Saint Lucia' }, { code: 'VC', name: 'Saint Vincent and the Grenadines' },
+  { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' }, { code: 'ST', name: 'Sao Tome and Principe' },
+  { code: 'SA', name: 'Saudi Arabia' }, { code: 'SN', name: 'Senegal' }, { code: 'RS', name: 'Serbia' },
+  { code: 'SC', name: 'Seychelles' }, { code: 'SL', name: 'Sierra Leone' }, { code: 'SG', name: 'Singapore' },
+  { code: 'SK', name: 'Slovakia' }, { code: 'SI', name: 'Slovenia' }, { code: 'SB', name: 'Solomon Islands' },
+  { code: 'SO', name: 'Somalia' }, { code: 'ZA', name: 'South Africa' }, { code: 'KR', name: 'South Korea' },
+  { code: 'SS', name: 'South Sudan' }, { code: 'ES', name: 'Spain' }, { code: 'LK', name: 'Sri Lanka' },
+  { code: 'SD', name: 'Sudan' }, { code: 'SR', name: 'Suriname' }, { code: 'SE', name: 'Sweden' },
+  { code: 'CH', name: 'Switzerland' }, { code: 'SY', name: 'Syria' }, { code: 'TW', name: 'Taiwan' },
+  { code: 'TJ', name: 'Tajikistan' }, { code: 'TZ', name: 'Tanzania' }, { code: 'TH', name: 'Thailand' },
+  { code: 'TL', name: 'Timor-Leste' }, { code: 'TG', name: 'Togo' }, { code: 'TO', name: 'Tonga' },
+  { code: 'TT', name: 'Trinidad and Tobago' }, { code: 'TN', name: 'Tunisia' }, { code: 'TR', name: 'Turkey' },
+  { code: 'TM', name: 'Turkmenistan' }, { code: 'TV', name: 'Tuvalu' }, { code: 'UG', name: 'Uganda' },
+  { code: 'UA', name: 'Ukraine' }, { code: 'AE', name: 'United Arab Emirates' }, { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' }, { code: 'UY', name: 'Uruguay' }, { code: 'UZ', name: 'Uzbekistan' },
+  { code: 'VU', name: 'Vanuatu' }, { code: 'VA', name: 'Vatican City' }, { code: 'VE', name: 'Venezuela' },
+  { code: 'VN', name: 'Vietnam' }, { code: 'YE', name: 'Yemen' }, { code: 'ZM', name: 'Zambia' },
+  { code: 'ZW', name: 'Zimbabwe' },
 ]
 
 interface Product {
@@ -61,9 +118,13 @@ interface Product {
   hsCode: string | null; originCountry: string | null;
 }
 
+const MIN_IMAGES = 3
+const MAX_IMAGES = 8
+
 const emptyForm = {
-  name: '', description: '', price: '', stock: '', category: '', imageUrls: '',
-  weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: 'CN',
+  name: '', description: '', price: '', stock: '', category: '',
+  images: ['', '', '', '', '', '', '', ''],
+  weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '',
 }
 
 const inputStyle = {
@@ -75,6 +136,83 @@ const labelStyle = {
   display: 'block', fontSize: '12px', fontWeight: 600 as const,
   color: 'var(--muted)', textTransform: 'uppercase' as const,
   letterSpacing: '0.05em', marginBottom: '6px',
+}
+
+function isLikelyUrl(value: string) {
+  try {
+    const u = new URL(value)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function ImageUrlBox({
+  index,
+  value,
+  onChange,
+}: {
+  index: number
+  value: string
+  onChange: (v: string) => void
+}) {
+  const [status, setStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
+
+  useEffect(() => {
+    const trimmed = value.trim()
+    if (!trimmed) {
+      setStatus('idle')
+      return
+    }
+    if (!isLikelyUrl(trimmed)) {
+      setStatus('invalid')
+      return
+    }
+    setStatus('checking')
+    let cancelled = false
+    const img = new Image()
+    img.onload = () => { if (!cancelled) setStatus('valid') }
+    img.onerror = () => { if (!cancelled) setStatus('invalid') }
+    img.src = trimmed
+    return () => { cancelled = true }
+  }, [value])
+
+  const statusColor =
+    status === 'valid' ? 'var(--green)' :
+    status === 'invalid' ? 'var(--red)' :
+    'var(--border)'
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div
+        style={{
+          width: '44px', height: '44px', borderRadius: '6px', flexShrink: 0,
+          border: '1px solid ' + statusColor, background: 'var(--bg)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+        }}
+      >
+        {status === 'valid' && (
+          <img src={value.trim()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        )}
+        {status === 'checking' && <span style={{ fontSize: '10px', color: 'var(--muted)' }}>...</span>}
+        {status === 'invalid' && <span style={{ fontSize: '16px', color: 'var(--red)' }}>!</span>}
+        {status === 'idle' && <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{index + 1}</span>}
+      </div>
+      <div style={{ flex: 1 }}>
+        <input
+          style={{ ...inputStyle, border: '1px solid ' + statusColor }}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Image ${index + 1} URL${index < MIN_IMAGES ? ' (required)' : ' (optional)'}`}
+        />
+        {status === 'invalid' && (
+          <div style={{ fontSize: '11px', color: 'var(--red)', marginTop: '4px' }}>
+            Couldn&apos;t load an image from this URL — check the link.
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function DashboardProductsPage() {
@@ -104,14 +242,16 @@ export default function DashboardProductsPage() {
 
   function openEdit(p: Product) {
     setEditProduct(p)
+    const imgs = (p.images ?? []).slice(0, MAX_IMAGES)
+    while (imgs.length < MAX_IMAGES) imgs.push('')
     setForm({
       name: p.name, description: p.description, price: String(p.price),
-      stock: String(p.stock), category: p.category, imageUrls: (p.images ?? []).join('\n'),
-      weightGrams: p.weightGrams != null ? String(p.weightGrams) : '',
-      lengthCm: p.lengthCm != null ? String(p.lengthCm) : '',
-      widthCm: p.widthCm != null ? String(p.widthCm) : '',
-      heightCm: p.heightCm != null ? String(p.heightCm) : '',
-      hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? 'CN',
+      stock: String(p.stock), category: p.category, images: imgs,
+      weightGrams: p.weightGrams !== null ? String(p.weightGrams) : '',
+      lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
+      widthCm: p.widthCm !== null ? String(p.widthCm) : '',
+      heightCm: p.heightCm !== null ? String(p.heightCm) : '',
+      hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
     })
     setError('')
     setShowForm(true)
@@ -122,16 +262,30 @@ export default function DashboardProductsPage() {
     setError('')
   }
 
+  function setImage(index: number, v: string) {
+    setForm(f => {
+      const images = [...f.images]
+      images[index] = v
+      return { ...f, images }
+    })
+    setError('')
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSaving(true)
     setError('')
+    const validImages = form.images.map(u => u.trim()).filter(Boolean)
+    if (validImages.length < MIN_IMAGES) {
+      setError(`Please add at least ${MIN_IMAGES} product images (you have ${validImages.length}).`)
+      return
+    }
+    setSaving(true)
     try {
       const payload = {
         name: form.name, description: form.description,
         price: parseFloat(form.price), stock: parseInt(form.stock, 10) || 0,
         category: form.category,
-        images: form.imageUrls.split('\n').map(u => u.trim()).filter(Boolean),
+        images: validImages,
         weightGrams: form.weightGrams ? parseInt(form.weightGrams, 10) : null,
         lengthCm: form.lengthCm ? parseFloat(form.lengthCm) : null,
         widthCm: form.widthCm ? parseFloat(form.widthCm) : null,
@@ -155,8 +309,9 @@ export default function DashboardProductsPage() {
 
   const hsInfo = hsChapterInfo(form.hsCode)
   const dutyGuide = form.hsCode?.length >= 2 ? DUTY_GUIDANCE[form.hsCode.slice(0, 2)] : null
+  const validImageCount = form.images.map(u => u.trim()).filter(Boolean).length
 
-  if (loading) return <div style={{ padding: '40px', color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Loading...</div>
+  if (loading) return <div style={{ padding: '40px', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>Loading...</div>
 
   return (
     <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)' }}>
@@ -172,8 +327,7 @@ export default function DashboardProductsPage() {
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '12px', padding: '32px', width: '100%', maxWidth: '680px', position: 'relative' }}>
-            <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer' }}>x</button>
+          <div style={{ background: 'var(--surface)', borderRadius: '12px', padding: '32px', maxWidth: '640px', width: '100%' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '24px' }}>
               {editProduct ? 'Edit Product' : 'New Product'}
             </h2>
@@ -201,15 +355,22 @@ export default function DashboardProductsPage() {
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Image URLs (one per line)</label>
-                <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical', fontFamily: 'monospace', fontSize: '12px' }} value={form.imageUrls} onChange={e => set('imageUrls', e.target.value)} />
+                <label style={labelStyle}>Product Images</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {form.images.map((url, i) => (
+                    <ImageUrlBox key={i} index={i} value={url} onChange={(v) => setImage(i, v)} />
+                  ))}
+                </div>
+                <div style={{ fontSize: '12px', color: validImageCount >= MIN_IMAGES ? 'var(--muted)' : 'var(--red)', marginTop: '8px' }}>
+                  {validImageCount} of {MAX_IMAGES} added — minimum {MIN_IMAGES} required
+                </div>
               </div>
 
               {/* Shipping section */}
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '18px' }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>Shipping & Customs</div>
                 <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '14px' }}>
-                  Required for accurate DDP duty calculation and label generation.
+                  Weight and dimensions are used for shipping labels. HS code is recommended if this item may ever ship internationally — Velor is a global marketplace, so a buyer anywhere could order it.
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
@@ -233,12 +394,13 @@ export default function DashboardProductsPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div>
-                    <label style={labelStyle}>HS Code (6-digit)</label>
+                    <label style={labelStyle}>HS Code (6-digit, recommended)</label>
                     <input style={inputStyle} value={form.hsCode} onChange={e => set('hsCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} placeholder="851712" maxLength={6} />
                   </div>
                   <div>
                     <label style={labelStyle}>Origin Country</label>
                     <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.originCountry} onChange={e => set('originCountry', e.target.value)}>
+                      <option value="">Select country</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
                   </div>
@@ -260,17 +422,14 @@ export default function DashboardProductsPage() {
                     )}
                     {!dutyGuide && (
                       <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                        Duty rates vary — verify at trade-tariff.service.gov.uk
+                        Duty rates vary by destination country — confirm with your carrier or the destination country's customs authority.
                       </div>
                     )}
                   </div>
                 )}
                 {!hsInfo && form.hsCode.length === 0 && (
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                    Enter your HS code to see duty rate guidance. Look up at{' '}
-                    <a href="https://trade-tariff.service.gov.uk/find_commodity" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-                      UK Trade Tariff
-                    </a>
+                    Recommended: enter your product&apos;s HS code to see duty rate guidance for international orders. You can find it using your country's official customs tariff lookup tool.
                   </div>
                 )}
               </div>
