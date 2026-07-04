@@ -22,8 +22,8 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
 
   const limits: Record<string, [number, number]> = {
-    '/api/chat':     [20, 60_000],
-    '/api/contact':  [5,  60_000],
+    '/api/chat': [20, 60_000],
+    '/api/contact': [5, 60_000],
     '/api/checkout': [10, 60_000],
   }
   for (const [route, [max, win]] of Object.entries(limits)) {
@@ -37,7 +37,9 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
 
   if (pathname.startsWith('/dashboard')) {
     if (!req.auth) {
-      return NextResponse.redirect(new URL('/auth/sign-in', req.url))
+      const signInUrl = new URL('/auth/sign-in', req.url)
+      signInUrl.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
+      return NextResponse.redirect(signInUrl)
     }
     const role = (req.auth as any)?.user?.role
     if (role === 'SELLER' && !pathname.startsWith('/dashboard/terms')) {
