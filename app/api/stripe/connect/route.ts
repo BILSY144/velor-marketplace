@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' as any });
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://velor-marketplace.vercel.app';
+
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -12,28 +13,32 @@ export async function POST() {
   }
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
   if (!seller) {
-    const debugMsg = 'No seller profile is linked to this account. [debug userId=' + session.user.id + ' email=' + session.user.email + ' role=' + (session.user as any).role + ']';
-    return NextResponse.json({
-      error: debugMsg,
-      debugUserId: session.user.id,
-      debugEmail: session.user.email,
-      debugRole: (session.user as any).role,
-    }, { status: 404 });
+    return NextResponse.json({ error: 'No seller profile is linked to this account.' }, { status: 404 });
   }
-  const account = await stripe.accounts.create({ type: 'express', capabilities: { card_payments: { requested: true }, transfers: { requested: true } } });
-  const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
+
   try {
-    await prisma.seller.update({
-      where: { id: seller.id },
-      data: { stripeAccountId: account.id } as unknown as Record<string, unknown>,
-    });
-  } catch (dbErr) {
-    console.error('Failed to persist new stripe account id', dbErr);
+    const account = await stripe.accounts.create({ type: 'express', capabilities: { card_payments: { requested: true }, transfers: { requested: true } } });
+    const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
+
+    try {
+      await prisma.seller.update({
+        where: { id: seller.id },
+        data: { stripeAccountId: account.id } as unknown as Record<string, unknown>,
+      });
+    } catch (dbErr) {
+      console.error('Failed to persist new stripe account id', dbErr);
+    }
+
+    const res = NextResponse.json({ onboardingUrl: accountLink.url, accountId: account.id });
+    res.cookies.set('seller_account_id', account.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
+    return res;
+  } catch (err) {
+    console.error('[stripe/connect POST] failed to create account/link', err);
+    const message = err instanceof Error ? err.message : 'Unknown Stripe error';
+    return NextResponse.json({ error: 'Could not start Stripe onboarding: ' + message }, { status: 502 });
   }
-  const res = NextResponse.json({ onboardingUrl: accountLink.url, accountId: account.id });
-  res.cookies.set('seller_account_id', account.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
-  return res;
 }
+
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -45,8 +50,15 @@ export async function GET(request: NextRequest) {
     if (seller?.stripeAccountId) accountId = seller.stripeAccountId;
   }
   if (!accountId) return NextResponse.json({ needsAccount: true });
-  const accountLink = await stripe.accountLinks.create({ account: accountId, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
-  const res = NextResponse.json({ onboardingUrl: accountLink.url });
-  res.cookies.set('seller_account_id', accountId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
-  return res;
+
+  try {
+    const accountLink = await stripe.accountLinks.create({ account: accountId, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
+    const res = NextResponse.json({ onboardingUrl: accountLink.url });
+    res.cookies.set('seller_account_id', accountId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
+    return res;
+  } catch (err) {
+    console.error('[stripe/connect GET] failed to create account link', err);
+    const message = err instanceof Error ? err.message : 'Unknown Stripe error';
+    return NextResponse.json({ error: 'Could not resume Stripe onboarding: ' + message }, { status: 502 });
+  }
 }
