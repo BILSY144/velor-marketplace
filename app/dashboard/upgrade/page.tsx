@@ -68,6 +68,7 @@ const TIERS = [
     borderColor: 'border-amber-500/40',
     badge: 'High-volume sellers',
     features: [
+      'Unlimited listings',
       'Everything in Pro',
       'Dedicated account manager',
       'API access and integrations',
