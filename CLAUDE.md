@@ -1,5 +1,5 @@
 # Velor Working Memory
-_Auto-loaded each session. Last updated: 2026-07-04 (Stripe Connect fully resolved)_
+_Auto-loaded each session. Last updated: 2026-07-04 (Seller tier limits updated)_
 
 ---
 
@@ -32,9 +32,9 @@ Review the 15 storefront themes — this was the original long-standing goal bef
 
 ## HOW TO START A NEW SESSION (read once, follow always)
 
-1. Read this file (auto-loaded via project instructions) â it now lives in the repo itself, so any session can pull it straight from GitHub instead of relying on a locally-copied file.
-2. Check "CURRENT SESSION STATE" above â resume any in-progress task.
-3. **Verify against live GitHub commits + Vercel deployments before trusting any "pending" claim in this file** â it goes stale between sessions like any doc.
+1. Read this file (auto-loaded via project instructions) — it now lives in the repo itself, so any session can pull it straight from GitHub instead of relying on a locally-copied file.
+2. Check "CURRENT SESSION STATE" above — resume any in-progress task.
+3. **Verify against live GitHub commits + Vercel deployments before trusting any "pending" claim in this file** — it goes stale between sessions like any doc.
 4. Ask user for GitHub PAT (never stored permanently).
 5. Continue from where the previous session left off.
 
@@ -42,21 +42,21 @@ Review the 15 storefront themes — this was the original long-standing goal bef
 
 ---
 
-## ACTIVE PROJECT â VELOR MARKETPLACE
+## ACTIVE PROJECT — VELOR MARKETPLACE
 
 **Repo**: https://github.com/BILSY144/velor-marketplace
 **Live domain**: https://velorcommerce.store
 **Vercel project ID**: `prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp` (team `velor1`)
 **Stack**: Next.js 15 App Router, TypeScript, Prisma + Vercel Postgres, NextAuth v5, Stripe Connect
-**Design rule**: Inline CSS with CSS variables everywhere; the seller upgrade page uses Tailwind utility classes â match each file's existing style, do not mix.
-**GitHub commit method**: Multi-file atomic commit via `javascript_tool` GitHub Trees API on a velorcommerce.store tab (CSP allows it there; stripe.com/vercel.com tabs block it).
-**PAT**: User provides at start of each session â never hardcode.
+**Design rule**: Inline CSS with CSS variables everywhere; the seller upgrade page uses Tailwind utility classes — match each file's existing style, do not mix.
+**GitHub commit method**: Multi-file atomic commit via `javascript_tool` GitHub Trees API on a velorcommerce.store tab (CSP allows it there; stripe.com/vercel.com tabs block it). GitHub web upload UI (pencil/upload) is also a proven fallback used successfully in recent sessions.
+**PAT**: User provides at start of each session — never hardcode.
 
 ---
 
-## LAW #1 â CODE OF CONDUCT (above all)
+## LAW #1 — CODE OF CONDUCT (above all)
 
-Never lie, fabricate, or invent actions/results. If a step was not taken, say so. If unconfirmed, say "unconfirmed". Applies to Claude and all subagents. No priority overrides this. This file itself can go stale â treat it as a claim to verify against GitHub/Vercel, not fact to repeat uncritically.
+Never lie, fabricate, or invent actions/results. If a step was not taken, say so. If unconfirmed, say "unconfirmed". Applies to Claude and all subagents. No priority overrides this. This file itself can go stale — treat it as a claim to verify against GitHub/Vercel, not fact to repeat uncritically.
 
 ---
 
@@ -67,39 +67,40 @@ Standing directives: 100% AI-operated; no emojis in code; only email willsinclai
 
 ---
 
-## SUBSCRIPTION TIERS & BILLING â LOCKED (2026-07-03)
+## SUBSCRIPTION TIERS & BILLING — LOCKED (updated 2026-07-04)
 
 Full detail: `docs/SUBSCRIPTION_AND_TIERS.md` in the repo. Summary:
 
 | Tier | Price | Commission | Listings |
 |------|-------|-----------|----------|
-| Starter | Free | 15% | 50 (hard cap) |
-| Pro | Â£49/mo | 8% | Unlimited + professional dashboard |
-| Enterprise | Â£199/mo fixed | 5% | Unlimited + personal manager + API service |
+| Starter | Free | 15% | 20 (hard cap) + seller dashboard + buyer protection |
+| Pro | £49/mo | 8% | 200 (hard cap) + free custom storefront + professional dashboard |
+| Enterprise | £199/mo fixed | 5% | Unlimited + personal manager + API service + free custom storefront |
 
 - Stripe LIVE prices: Pro `price_1TpCiTDB5eA3Wfmu2kP5Ilwg`, Enterprise `price_1TpCqXDB5eA3Wfmuw3y2bScF`.
 - Vercel env (Prod+Preview): `STRIPE_PRO_PRICE_ID`, `STRIPE_ENTERPRISE_PRICE_ID`.
 - Monthly charge automatic (Stripe recurring). Failed payment -> `past_due` + email + Stripe retries. Cancellation -> reset to STARTER.
-- Tier resolved in webhook by matching Stripe price id to env vars (NOT metadata) â guarantees Enterprise=5%, Pro=8%.
-- STARTER 50-listing cap hard-blocked at product creation (403 on 51st).
-- On downgrade: keep 50 oldest live listings, DELIST the excess (hidden, not deleted). NEVER delist a listing with a PENDING/PROCESSING/DISPUTED order at downgrade time.
+- Tier resolved in webhook by matching Stripe price id to env vars (NOT metadata) — guarantees Enterprise=5%, Pro=8%.
+- STARTER 20-listing cap hard-blocked at product creation (403 on 21st). PRO 200-listing cap hard-blocked (403 on 201st). ENTERPRISE has no cap.
+- On downgrade to Starter: keep 20 oldest live listings, DELIST the excess (hidden, not deleted). NEVER delist a listing with a PENDING/PROCESSING/DISPUTED order at downgrade time.
 - No DB migration needed (uses existing `DELISTED` status + tier fields).
+- 2026-07-04 change (William's decision): Starter cap lowered 50→20 (now explicitly markets seller dashboard + buyer protection); Pro cap changed from unlimited to 200 and now includes a free custom storefront (same entitlement Enterprise already had via `lib/store-themes.ts` `canUseTheme`); Enterprise unchanged but now also explicitly lists the free custom storefront. Commission rates (15/8/5%) unchanged.
 
 ---
 
-## PAYOUT ESCROW â LOCKED (2026-07-03)
+## PAYOUT ESCROW — LOCKED (2026-07-03)
 
 Full detail: `docs/PAYOUTS.md`. Funds held on the platform until delivery confirmed (Shippo), then released via `/api/cron/release-payouts`: 15 days for probation sellers, 72 hours for trusted (10+ delivered, 30+ day account, no unresolved disputes/returns). Open return/dispute freezes that order until resolved. payment-intent holds funds (no transfer_data); release uses PaymentIntent metadata `sellerShare` + `sellerAccountId`; idempotent transfers. Commit `1e72cec`.
 
 ---
 
-## SELLER STOREFRONT DESIGNS + CUSTOM LOGO â NEW (2026-07-04)
+## SELLER STOREFRONT DESIGNS + CUSTOM LOGO — (2026-07-04)
 
-**15-theme storefront system** â commit `1acff9d` "feat: 15-theme storefront system (picker, entitlements, themed storefront, all designs open for preview)". Deployed READY. Sellers get a theme picker; themes are gated by subscription tier under normal operation, but **`PREVIEW_OPEN` is currently `true`** so every design is unlocked for William to click through and judge before deciding which stay/which get gated. No separate spec doc exists for this yet (unlike tiers/payouts/ranking) â if writing one, add it as `docs/STORE_THEMES.md` for consistency.
+**15-theme storefront system** — commit `1acff9d` "feat: 15-theme storefront system (picker, entitlements, themed storefront, all designs open for preview)". Deployed READY. Sellers get a theme picker; themes are gated by subscription tier under normal operation (Pro and Enterprise both unlock all themes free — see `canUseTheme` in `lib/store-themes.ts`), but **`PREVIEW_OPEN` is currently `true`** so every design is unlocked for William to click through and judge before deciding which stay/which get gated. No separate spec doc exists for this yet (unlike tiers/payouts/ranking) — if writing one, add it as `docs/STORE_THEMES.md` for consistency.
 
-**Custom store logo upload** â commit `15dce0e` "feat: custom store logo upload (bundled with paid design, replaces store name in hero)". Deployed READY. Sellers upload a PNG/JPG/WebP on `/dashboard/storefront`; it's resized/compressed client-side and stored directly in Postgres (new `storeLogo` field â no blob storage integration exists yet, so this was the zero-new-infrastructure path). The logo replaces the store name in the storefront hero. Bundled free with Pro/Enterprise, or a Â£9.99 standalone unlock on Starter. Also open under `PREVIEW_OPEN` right now.
+**Custom store logo upload** — commit `15dce0e` "feat: custom store logo upload (bundled with paid design, replaces store name in hero)". Deployed READY. Sellers upload a PNG/JPG/WebP on `/dashboard/storefront`; it's resized/compressed client-side and stored directly in Postgres (new `storeLogo` field — no blob storage integration exists yet, so this was the zero-new-infrastructure path). The logo replaces the store name in the storefront hero. Bundled free with Pro/Enterprise, or a £9.99 standalone unlock on Starter. Also open under `PREVIEW_OPEN` right now.
 
-**Known gotcha discovered while building this**: the built-in file Edit tool silently truncated files mid-content more than once during this build (lost a function from the themes helper file, cut a page component mid-file, even truncated a draft of this CLAUDE.md). No error was thrown â the file just silently ended early. **Always verify a file's tail/byte-length after an Edit before trusting it and committing.** If truncated, rebuild the full file via a bash heredoc (reliable) rather than re-attempting Edit on the same file.
+**Known gotcha discovered while building this**: the built-in file Edit tool silently truncated files mid-content more than once during this build (lost a function from the themes helper file, cut a page component mid-file, even truncated a draft of this CLAUDE.md). No error was thrown — the file just silently ended early. **Always verify a file's tail/byte-length after an Edit before trusting it and committing.** If truncated, rebuild the full file via a bash heredoc (reliable) rather than re-attempting Edit on the same file. (Recurred again 2026-07-04 on `app/seller/[sellerId]/page.tsx` — same fix applied: full rewrite + byte-length verification before upload.)
 
 **Open decision**: re-lock preview (`PREVIEW_OPEN = false`) once William has judged the themes and logo feature, or leave preview open longer. Not yet decided as of this update.
 
@@ -107,23 +108,29 @@ Full detail: `docs/PAYOUTS.md`. Funds held on the platform until delivery confir
 
 ## TASK LOG (recent)
 
-### Custom store logo upload [COMPLETE â deployed 2026-07-04]
+### Seller tier limits updated [COMPLETE — deployed 2026-07-04]
+Starter listing cap 50→20 (headline: 20 listings, seller dashboard, buyer protection). Pro listing cap unlimited→200, added free custom storefront as a headline Pro feature. Enterprise unchanged, free custom storefront now explicitly listed. Commission rates unchanged. Updated: `app/dashboard/upgrade/page.tsx`, `app/api/dashboard/products/route.ts`, `app/api/seller/subscription/route.ts`, `app/api/stripe/webhook/route.ts`, `app/page.tsx`, `app/dashboard/terms/page.tsx`, `docs/SUBSCRIPTION_AND_TIERS.md`.
+
+### 404 pages eliminated site-wide [COMPLETE — deployed 2026-07-04]
+Seller storefront `notFound()` replaced with a friendly `StoreNotReady` component (owner still redirects to `/dashboard`, everyone else gets branded guidance instead of a 404). Global `app/not-found.tsx` had its "404" numeral removed and copy softened — this is the shared fallback for the seller storefront, `/shop/[productId]`, and `/marketplace/[id]` routes, so fixing it there covered all three.
+
+### Custom store logo upload [COMPLETE — deployed 2026-07-04]
 Commit `15dce0e`. New `storeLogo` Prisma field (auto `prisma db push`'d). Upload API route, dashboard picker card, hero rendering change.
 
-### 15-theme storefront system [COMPLETE â deployed 2026-07-04]
+### 15-theme storefront system [COMPLETE — deployed 2026-07-04]
 Commit `1acff9d`. Theme picker, per-tier entitlements, themed storefront rendering. Preview mode currently open (see above).
 
-### Subscription tiers, billing & downgrade enforcement [COMPLETE â LOCKED 2026-07-03]
-Commits on main: `e822609`, `894e1c8`, `64108af`, `47e57b7`, `1d8834d`, `26b3dc6`. All deployed READY. Canonical spec: `docs/SUBSCRIPTION_AND_TIERS.md`.
+### Subscription tiers, billing & downgrade enforcement [COMPLETE — LOCKED 2026-07-03, updated 2026-07-04]
+Commits on main: `e822609`, `894e1c8`, `64108af`, `47e57b7`, `1d8834d`, `26b3dc6`, plus the 2026-07-04 tier-limit update above. All deployed READY. Canonical spec: `docs/SUBSCRIPTION_AND_TIERS.md`.
 
-### Seller ranking system [COMPLETE â deployed]
+### Seller ranking system [COMPLETE — deployed]
 Spec: `docs/SELLER_RANKING.md`. Commits `d6608c3` (this specific deploy showed a Vercel Error), `ff7819e` (fixed a corrupted character, redeployed READY).
 
 ### Seller recruiting scout (Brave Search, compliant) [COMPLETE]
 `app/api/cron/scout-sellers/route.ts` (Brave), `BRAVE_SEARCH_API_KEY` in Vercel. Outreach email redesigned; unsubscribe flow live. Outreach sending gated by `OUTREACH_ENABLED` (still OFF until site is presentable).
 
 ### Homepage hero + desktop layout + mobile responsiveness [COMPLETE]
-Two-column hero with full image; globals.css mobile media layer; 404 links fixed. Flagship redesign (commit `891aa23`) plus several logo/wordmark branding passes (`8e20c6d`, `ab29657`, `b69c94b`, `913e231`, `f34726d`, `d966d18`, `0a35fb3`, `697191f` â ended on a non-neon, reduced-glow logo as current state).
+Two-column hero with full image; globals.css mobile media layer; 404 links fixed. Flagship redesign (commit `891aa23`) plus several logo/wordmark branding passes (`8e20c6d`, `ab29657`, `b69c94b`, `913e231`, `f34726d`, `d966d18`, `0a35fb3`, `697191f` — ended on a non-neon, reduced-glow logo as current state).
 
 ### Prior build (from earlier sessions) [COMPLETE]
 Seller dashboard, buyer checkout, Stripe Connect (15% fee), NextAuth v5, public shop, orders, messaging, admin moderation, security audit, Shippo shipping (DDP, including global-carrier rework removing UK-only assumptions), returns, director briefing email now on a recurring cron (`/api/admin/brief`).
@@ -143,13 +150,13 @@ Seller dashboard, buyer checkout, Stripe Connect (15% fee), NextAuth v5, public 
 ## KEY TECHNICAL DETAILS
 
 ### GitHub push (multi-file atomic commit)
-Run `javascript_tool` on a velorcommerce.store tab. Set `window._PAT` in a separate call (no content), then commit. Extract SHAs via `.url.split('/').pop()` (never `.sha`). Chrome security filter blocks returns containing `=`/`?`/`://`/`&`/`<`/`>` â sanitise outputs (reversible escaping) and only return scalars.
+Run `javascript_tool` on a velorcommerce.store tab. Set `window._PAT` in a separate call (no content), then commit. Extract SHAs via `.url.split('/').pop()` (never `.sha`). Chrome security filter blocks returns containing `=`/`?`/`://`/`&`/`<`/`>` — sanitise outputs (reversible escaping) and only return scalars. GitHub's own web upload UI (navigate to the target directory's `/upload/main/...` URL, drop the file, commit) is a simpler proven fallback used successfully in recent sessions — one file/directory per commit.
 
-### Editing files reliably (new 2026-07-04)
-The Edit tool has silently truncated files mid-content on this project more than once. After any Edit on a file of meaningful size, verify the tail/byte-length before trusting it. If truncated, rebuild via a bash heredoc rather than re-editing.
+### Editing files reliably (2026-07-04)
+The Edit tool has silently truncated files mid-content on this project more than once. After any Edit on a file of meaningful size, verify the tail/byte-length before trusting it. If truncated, rebuild via a full file rewrite rather than re-editing.
 
 ### Vercel deployment check (from vercel.com tab)
-`fetch('/api/v6/deployments?teamId=velor1&projectId=prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp&limit=3')` â map `state` + `meta.githubCommitMessage`.
+`fetch('/api/v6/deployments?teamId=velor1&projectId=prj_il5ADRFhW8FWnbzZmeGeBcUMj1cp&limit=3')` — map `state` + `meta.githubCommitMessage`. The Vercel dashboard deployments list page is also fine to check visually.
 
 ### Prisma enums
 `ProductStatus`: PENDING_REVIEW, APPROVED, REJECTED, DELISTED.
