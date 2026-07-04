@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
@@ -19,6 +20,14 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [sellerId, setSellerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/seller/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.id) setSellerId(d.id); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div style={{
@@ -159,7 +168,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           Seller Portal
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href="/" style={{ color: '#999999', fontSize: '13px', textDecoration: 'none' }}>
+          <Link href={sellerId ? `/seller/${sellerId}` : '/'} style={{ color: '#999999', fontSize: '13px', textDecoration: 'none' }}>
             View Store
           </Link>
           <div style={{

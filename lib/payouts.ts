@@ -11,8 +11,8 @@ export const TRUSTED_MIN_DELIVERED = 10
 export const TRUSTED_MIN_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 // A return/dispute counts as OPEN (blocks payout) unless it is in a resolved state.
-const RESOLVED_RETURN = ['RESOLVED', 'REJECTED', 'CLOSED', 'COMPLETED', 'REFUNDED', 'DENIED']
-const RESOLVED_DISPUTE = ['RESOLVED', 'CLOSED', 'WON', 'LOST']
+export const RESOLVED_RETURN = ['RESOLVED', 'REJECTED', 'CLOSED', 'COMPLETED', 'REFUNDED', 'DENIED', 'APPROVED']
+export const RESOLVED_DISPUTE = ['RESOLVED', 'CLOSED', 'WON', 'LOST']
 
 // A seller graduates off probation with 10+ delivered orders, a 30+ day old
 // account, and zero unresolved disputes/returns across their orders.

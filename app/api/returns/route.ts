@@ -19,6 +19,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // 15-day return window, calculated from confirmed delivery - matches the
+  // seller Terms & Conditions. Can't request a return before delivery either.
+  if (!order.deliveredAt) {
+    return NextResponse.json(
+      { error: 'Returns can only be requested once an order is confirmed delivered.' },
+      { status: 400 }
+    );
+  }
+  const RETURN_WINDOW_MS = 15 * 24 * 60 * 60 * 1000;
+  if (Date.now() > order.deliveredAt.getTime() + RETURN_WINDOW_MS) {
+    return NextResponse.json(
+      { error: 'The 15-day return window for this order has closed.' },
+      { status: 400 }
+    );
+  }
+
+  const existingActive = await prisma.returnRequest.count({
+    where: { orderId, status: { in: ['PENDING', 'PROCESSING'] } },
+  });
+  if (existingActive > 0) {
+    return NextResponse.json(
+      { error: 'A return request is already open for this order.' },
+      { status: 409 }
+    );
+  }
+
   const returnRequest = await prisma.returnRequest.create({
     data: { orderId, customerEmail: email, reason },
   });

@@ -48,7 +48,7 @@ export async function PATCH(
 
   const returnRequest = await prisma.returnRequest.findUnique({
     where: { id: returnId },
-    include: { order: true },
+    include: { order: { include: { payout: true } } },
   });
   if (!returnRequest) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -66,11 +66,29 @@ export async function PATCH(
   let stripeRefundId: string | undefined;
   if (body.status === 'APPROVED' && returnRequest.status !== 'APPROVED') {
     const order = returnRequest.order;
+
+    // If the seller's share was already transferred out (hold window passed
+    // before this return was approved), pull it back first so the platform
+    // is not left out of pocket - the buyer refund below covers their side.
+    if (order.payout && order.payout.stripeTransferId) {
+      try {
+        await stripe.transfers.createReversal(
+          order.payout.stripeTransferId,
+          {},
+          { idempotencyKey: `return_reverse_${returnId}` }
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to reverse seller payout';
+        return NextResponse.json({ error: 'Could not reverse the seller payout, so the return was not approved: ' + message }, { status: 502 });
+      }
+    }
+
     if (order.stripePaymentId) {
       try {
-        const refund = await stripe.refunds.create({
-          payment_intent: order.stripePaymentId,
-        });
+        const refund = await stripe.refunds.create(
+          { payment_intent: order.stripePaymentId },
+          { idempotencyKey: `return_refund_${returnId}` }
+        );
         stripeRefundId = refund.id;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Stripe refund failed';
@@ -86,6 +104,15 @@ export async function PATCH(
       ...(body.notes !== undefined && { notes: body.notes }),
     },
   });
+
+  // Keep Order.status truthful once a return is approved and refunded -
+  // it was sitting unused as an enum value before this.
+  if (body.status === 'APPROVED' && returnRequest.status !== 'APPROVED') {
+    await prisma.order.update({
+      where: { id: returnRequest.orderId },
+      data: { status: 'REFUNDED' },
+    });
+  }
 
   await prisma.agentLog.create({
     data: {
