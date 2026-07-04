@@ -112,3 +112,10 @@ export function canUseTheme(tier: string | undefined, unlocked: boolean | undefi
 export function hasAllThemes(tier: string | undefined, unlocked: boolean | undefined): boolean {
   return tier === 'PRO' || tier === 'ENTERPRISE' || unlocked === true
 }
+
+// A custom store logo is bundled with a paid design: Pro/Enterprise, or the one-time
+// Starter unlock. Open to everyone while PREVIEW_OPEN is on so the owner can test it.
+export function canBrandLogo(tier: string | undefined, unlocked: boolean | undefined): boolean {
+  if (PREVIEW_OPEN) return true
+  return hasAllThemes(tier, unlocked)
+}

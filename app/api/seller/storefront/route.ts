@@ -8,11 +8,12 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
-  const s = seller as unknown as { tier?: string; storeTheme?: string; storefrontUnlocked?: boolean }
+  const s = seller as unknown as { tier?: string; storeTheme?: string; storefrontUnlocked?: boolean; storeLogo?: string }
   return NextResponse.json({
     theme: s.storeTheme || 'classic',
     tier: s.tier || 'STARTER',
     unlocked: s.storefrontUnlocked === true,
+    logo: s.storeLogo || null,
   })
 }
 

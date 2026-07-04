@@ -132,6 +132,7 @@ model Seller {
   scoreBreakdown               Json?
   storeTheme                   String              @default("classic")
   storefrontUnlocked           Boolean             @default(false)
+  storeLogo                    String?
   createdAt                    DateTime            @default(now())
   updatedAt                    DateTime            @updatedAt
 }

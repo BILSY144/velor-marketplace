@@ -54,6 +54,7 @@ export default async function SellerProfilePage({
 
   const theme = getTheme((seller as unknown as { storeTheme?: string }).storeTheme)
   const tk = theme.tokens
+  const sellerLogo = (seller as unknown as { storeLogo?: string }).storeLogo || null
 
   const allReviews = seller.products.flatMap((p) => p.reviews)
   const totalReviews = allReviews.length
@@ -111,7 +112,7 @@ export default async function SellerProfilePage({
                 flexShrink: 0,
               }}
             >
-              {initials(seller.storeName)}
+              {sellerLogo ? <img src={sellerLogo} alt={seller.storeName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(seller.storeName)}
             </div>
 
             {/* Info */}
@@ -125,7 +126,7 @@ export default async function SellerProfilePage({
                   margin: '0 0 8px 0',
                 }}
               >
-                {seller.storeName}
+                {sellerLogo ? '' : seller.storeName}
               </h1>
 
               {seller.sellerBadge && seller.sellerBadge !== 'NEW' && (() => {
