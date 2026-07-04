@@ -19,15 +19,27 @@ interface Product {
   reviewCount: number
 }
 
+// The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
+// and the Category dropdown on the seller's Add Product form exactly). This
+// list is used directly as the value stored on Product.category, so a
+// listing routes straight to the matching category filter here.
 const CATEGORIES = [
-  { slug: 'fitness-gym', label: 'Home Gym' },
-  { slug: 'cardio', label: 'Cardio' },
-  { slug: 'electronics', label: 'Electronics' },
-  { slug: 'home-garden', label: 'Home & Garden' },
-  { slug: 'sports', label: 'Sports' },
-  { slug: 'beauty', label: 'Beauty' },
-  { slug: 'toys', label: 'Toys' },
-  { slug: 'automotive', label: 'Automotive' },
+  'Electronics',
+  'Fashion',
+  'Home & Garden',
+  'Beauty & Health',
+  'Sports & Outdoors',
+  'Jewellery & Watches',
+  'Toys & Games',
+  'Baby & Kids',
+  'Pet Supplies',
+  'Automotive',
+  'Books & Education',
+  'Art & Crafts',
+  'Office & Stationery',
+  'Travel & Luggage',
+  'Food & Grocery',
+  'Fitness & Gym',
 ]
 
 function ShopContent() {
@@ -112,7 +124,7 @@ function ShopContent() {
     router.push(`/shop?${p}`)
   }
 
-  const sym = (c: string) => c === 'GBP' ? '\u00a3' : c + ' '
+  const sym = (c: string) => c === 'GBP' ? '£' : c + ' '
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
@@ -120,7 +132,7 @@ function ShopContent() {
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '24px', letterSpacing: '-0.5px' }}>VELOR</Link>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px', color: 'var(--text)' }}>
-            {category ? CATEGORIES.find(c => c.slug === category)?.label || category : 'All Products'}
+            {category || 'All Products'}
             {total > 0 && <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>{total} items</span>}
           </h1>
           <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
@@ -148,11 +160,11 @@ function ShopContent() {
             </button>
             {CATEGORIES.map(c => (
               <button
-                key={c.slug}
-                onClick={() => navigate({ category: c.slug })}
-                style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: category === c.slug ? 'var(--accent)' : 'transparent', color: category === c.slug ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                key={c}
+                onClick={() => navigate({ category: c })}
+                style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: category === c ? 'var(--accent)' : 'transparent', color: category === c ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
               >
-                {c.label}
+                {c}
               </button>
             ))}
           </div>
@@ -193,7 +205,7 @@ function ShopContent() {
                       <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
                       {(p.avgRating ?? 0) != null && (
                         <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
-                          {'\u2605'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
+                          {'★'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
                           <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
                         </div>
                       )}
@@ -229,7 +241,7 @@ function ShopContent() {
                     lineHeight: 1,
                   }}
                 >
-                  {wishlistIds.has(p.id) ? '\u2665' : '\u2661'}
+                  {wishlistIds.has(p.id) ? '♥' : '♡'}
                 </button>
               </div>
             ))}
@@ -268,4 +280,4 @@ export default function ShopPage() {
       <ShopContent />
     </Suspense>
   )
-        }
+}
