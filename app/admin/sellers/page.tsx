@@ -29,6 +29,7 @@ export default function AdminSellersPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('PENDING')
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [sellers, setSellers] = useState<Seller[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -53,12 +54,19 @@ export default function AdminSellersPage() {
 
   async function loadSellers() {
     setLoading(true)
+    setLoadError(null)
     try {
       const q = activeTab === 'ALL' ? '' : `?status=${activeTab}`
       const res = await fetch(`/api/admin/sellers${q}`)
       const data = await res.json()
+      if (!res.ok) {
+        setLoadError(data.error || `Request failed (${res.status})`)
+        setSellers([])
+        return
+      }
       setSellers(data.sellers || [])
-    } catch {
+    } catch (e: any) {
+      setLoadError(e?.message || 'Network error')
       setSellers([])
     } finally {
       setLoading(false)
@@ -214,8 +222,10 @@ export default function AdminSellersPage() {
               </tr>
             ) : sellers.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#999999' }}>
-                  No {activeTab.toLowerCase() === 'all' ? '' : activeTab.toLowerCase() + ' '}sellers found
+                <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: loadError ? '#FF1744' : '#999999' }}>
+                  {loadError
+                    ? `Could not load sellers: ${loadError}`
+                    : `No ${activeTab.toLowerCase() === 'all' ? '' : activeTab.toLowerCase() + ' '}sellers found`}
                 </td>
               </tr>
             ) : sellers.map((seller, i) => (
