@@ -107,6 +107,7 @@ model Seller {
   storeName                    String
   description                  String?             @db.Text
   country                      String?
+currency                      String        @default("GBP")
   stripeAccountId              String?             @unique
   stripeOnboarded              Boolean             @default(false)
   approved                     Boolean             @default(false)
@@ -419,4 +420,14 @@ model ShipmentEvent {
   location    String?
   occurredAt  DateTime
   shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+}
+
+model FxRate {
+  id        String   @id @default(cuid())
+  base      String
+  quote     String
+  rate      Float
+  fetchedAt DateTime @default(now())
+
+  @@unique([base, quote])
 }
