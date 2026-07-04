@@ -57,7 +57,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.replace('/auth/signin?callbackUrl=/account')
+      router.replace('/auth/sign-in?callbackUrl=/account')
     }
   }, [status, router])
 
