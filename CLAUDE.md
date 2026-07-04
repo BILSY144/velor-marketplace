@@ -1,47 +1,32 @@
 # Velor Working Memory
-_Auto-loaded each session. Last updated: 2026-07-04 (overnight session)_
+_Auto-loaded each session. Last updated: 2026-07-04 (Stripe Connect fully resolved)_
 
 ---
 
 ## CURRENT SESSION STATE — READ THIS FIRST
 
-**Status: BLOCKED on a Stripe Dashboard setting — nothing more to code until William fixes this.**
+**Status: Stripe Connect onboarding is now FULLY WORKING end-to-end. No blockers remaining from the overnight session.**
 
-### Plain-English summary of tonight's session
+### What was wrong and how it was fixed (in order)
 
-William was testing the seller dashboard end-to-end for the first time. Found and fixed a long chain of real bugs, one leading to the next:
+1. **Restricted API key lacked permissions.** The live `STRIPE_SECRET_KEY` was a restricted key (`rk_live_...`) missing "Accounts Write" and two other Connect-related permissions. Rather than keep hunting for the exact permission rows, William created a brand new **standard secret key** (`sk_live_...`, named `velor-marketplace-prod`) via Stripe Dashboard → Developers → API keys → Standard keys → "Create secret key" → "Powering an integration you built". Pasted into Vercel Project Settings → Environment Variables → `STRIPE_SECRET_KEY`, then redeployed. This has full permissions by default.
+2. **Stripe account had never signed up for Connect.** After the key swap, a new, more specific error appeared: "You can only create new accounts if you've signed up for Connect." Fixed by going to `dashboard.stripe.com/connect` and completing the Connect signup flow (business model = **Marketplace** — "You collect payments and pay recipients", matching Velor's actual architecture of the platform collecting payment and paying out 85% to sellers).
+3. **"Go live" checklist had 2 incomplete steps.** In the Connect setup guide sidebar, under "Go live": "Verify your identity" was done, but "Confirm your integration choices" and "Get your API keys" were not. Completed both — confirmed integration summary (Stripe-hosted Express onboarding, platform liable for refunds/chargebacks, sellers redirected to Express Dashboard) and acknowledged the responsibilities checklist (refunds/chargebacks, onboarding/compliance, support for payment/risk inquiries).
+4. **End-to-end verification, live, on the test seller account** (`willsinclair144+testseller@gmail.com`): clicked "Connect with Stripe" → real Stripe Express onboarding loaded (`connect.stripe.com/setup/e/...`) → completed phone verification, business details, and real bank account details (this is a LIVE account, not test mode, so real bank details were required) → redirected back into the Velor dashboard → re-accepted seller terms (cookie had expired from an earlier sign-out) → Payouts page now shows **"Connected"** with green indicators for Charges, Payouts, and Verified.
 
-1. Admin bootstrap page was unreachable — fixed (moved to /setup-admin).
-2. Seller Terms & Conditions page had wrong/outdated info (pricing, payout timing, wrong contact email, wrong company scope) — rewritten to match the real business model, correct 15-day return window, correct payout escrow (15 days probation / 72 hours trusted).
-3. "No seller dashboard links accessible" — root cause: the middleware forced ANY signed-in user (including the admin account) with no Seller profile into the seller-terms page forever, since there's nothing to accept for a non-seller. Fixed: only SELLER-role accounts are gated behind terms now.
-4. Terms Accept button did nothing / silently failed — two separate bugs: (a) the button never turned off its "Saving..." state after a successful save, and (b) it used a soft client-side redirect that could get stuck instead of picking up the fresh cookie. Fixed with a hard redirect. **Terms acceptance is confirmed working now.**
-5. Storefront theme picker ("could not apply that design") — was only showing a generic error; now shows the real reason if it ever fails again.
-6. Analytics page crashed with "This page couldn't load" — the page never checked if its data request actually succeeded, so any error response made it crash instead of showing a message. Fixed.
-7. Payout Settings ("Connect Bank Account") did nothing at all — the button had no click behavior; now links to the real Stripe Connect page.
-8. Payout Settings "Complete Setup" button got stuck forever on "Redirecting..." — the status-check API was missing a field the page needed, so every seller saw the wrong button on their first visit and it had nothing to link to. Fixed. Also: the Stripe account id was only ever being remembered in a browser cookie, never saved to the database — meaning even a seller who successfully connected would never actually receive payouts, since the payout system looks up the bank account from the database, not a cookie. That's now saved properly to the Seller record.
+### Net result
 
-### The one remaining blocker — needs William, not code
+The full seller money flow is now confirmed working: seller connects Stripe → onboarding completes → account shows Connected/Charges/Payouts/Verified → ready to receive 85% payouts on future sales (Velor keeps 15% platform fee), matching the model chosen during Connect signup.
 
-When William (on the real seller test account) clicked "Connect with Stripe," Stripe itself rejected the request with:
+### Next planned topic (not started yet)
 
-> Permission denied. The provided key 'rk_live_...iTqWnN' does not have the required permissions for this endpoint on account 'acct_1TlcWCDB5eA3Wfmu'. Enabling "Full Bank Account Information Read", "Basic Business Contact Information Read", "Accounts Write" permissions on this key would allow this request to continue.
+Review the 15 storefront themes — this was the original long-standing goal before the seller-onboarding bug hunt took over. Nothing has been done on this yet this session.
 
-**In plain English:** the site's Stripe secret key (the one stored in Vercel's environment variables as `STRIPE_SECRET_KEY`) is a "restricted key" — a version of a Stripe API key that only has a limited set of permissions turned on. Whoever set it up didn't turn on the three permissions needed to create and manage seller bank-account connections (Stripe Connect). This is NOT a bug in the code — every fix above is deployed and working. This is a setting inside William's own Stripe Dashboard that only William can change (Claude should never handle live API keys directly).
+### Other still-open items (lower priority, not confirmed as next by William)
 
-**What William needs to do next session (2 options, pick one):**
-
-- **Option A — edit the existing key's permissions.** Stripe gave a direct link in the error: `dashboard.stripe.com/b/acct_1TlcWCDB5eA3Wfmu?destination=%2Fapikeys%2Fmk_1TleUfDB5eA3WfmuDPICNPlZ%2Fedit` (must be on the LIVE account, not the sandbox — there's a "Switch to live account" button if it opens in test mode). On that page, under the **Connect** section, find the **Accounts** row and set it to **Write** — this part is DONE as of the overnight session (confirmed via screenshot). Still needed: **"Basic business contact information" = Read** and **"Full bank account information" = Read**. These were NOT found under the "Connect" or "Connect Accounts" sections after scrolling through both in full — they're somewhere else in the list (100+ rows total, organized by product: Core, Climate, Commerce, Connect, Connect Accounts, Financial Connections, and others further down like Identity/Persons/Radar/etc. not yet checked). Fastest way to find them: click into the page first, then Ctrl+F (Windows) and search "bank account", then separately search "business contact" — this should jump straight to the right rows instead of scrolling through everything.
-- **Option B — simpler long-term fix, skips all of the above.** Replace the restricted key with the account's full secret key (starts with `sk_live_` instead of `rk_live_`). Full keys have every permission by default, which avoids re-hitting this same wall as more Stripe features get built later. Given how hard the specific permission rows were to locate, this may honestly be the faster path next time.
-
-**After changing the key (either option):** if the key VALUE itself changes (Option B, or if Stripe issues a new key), update the `STRIPE_SECRET_KEY` environment variable in Vercel → Project Settings → Environment Variables → redeploy. Claude can walk through the Vercel steps next session but will not handle the key value directly — William pastes it straight into Vercel himself, never into chat.
-
-**Once that's done:** retry "Connect with Stripe" on the seller test account (willsinclair144+testseller@gmail.com) and it should carry through to Stripe's real onboarding flow. That's the last step before the seller dashboard is fully working end to end.
-
-### Recent commits this session (main branch, in order)
-`e78cfdc` admin/sellers error surfacing → `40b9bb7` middleware role-gate fix → `847453d` storefront error surfacing → `a8edafd` stripe connect stuck-redirecting fix + DB persistence → `f43e2ff` analytics productsByStatus key mismatch → `fecb180` analytics crash fix + stripe connect debug → `c7a3bf4` folded debug info into error text → `5276057` terms accept stuck-on-saving fix → `1d5bed6` real Stripe error surfacing + debug text removed.
-
-### Next planned topic after the Stripe key is fixed
-Resume the original goal: sign in as the seller test account, go through Stripe Connect onboarding for real, then review the 15 storefront themes. After that: decide whether to re-lock `PREVIEW_OPEN` (currently `true`) now that themes/logo have been tested, and whether to flip `OUTREACH_ENABLED`. Also flagged but not yet started: the five other legal pages (app/legal/seller-agreement, app/legal/terms, app/seller-agreement, app/legal/privacy, app/returns) may have the same kind of stale/incorrect info that was just fixed in app/dashboard/terms — worth auditing next.
+- Audit the five other legal/agreement pages for stale/incorrect info, same issue already fixed in `app/dashboard/terms/page.tsx`: `app/legal/seller-agreement/page.tsx`, `app/legal/terms/page.tsx`, `app/seller-agreement/page.tsx`, `app/legal/privacy/page.tsx`, `app/returns/page.tsx`.
+- Whether to re-lock `PREVIEW_OPEN` (currently `true` in `lib/store-themes.ts`) now that themes/logo have been tested.
+- Whether to flip `OUTREACH_ENABLED`.
 
 ---
 
