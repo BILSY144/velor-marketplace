@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -20,7 +21,10 @@ export async function GET(request: Request) {
     if (maxPrice) (where.price as Record<string, number>).lte = parseFloat(maxPrice)
   }
 
-  let orderBy: Record<string, string> = { createdAt: 'desc' }
+  let orderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = [
+    { seller: { tier: 'desc' } },
+    { createdAt: 'desc' },
+  ]
   if (sort === 'price_asc') orderBy = { price: 'asc' }
   else if (sort === 'price_desc') orderBy = { price: 'desc' }
   else if (sort === 'popular') orderBy = { viewCount: 'desc' }
