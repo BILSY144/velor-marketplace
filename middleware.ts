@@ -39,7 +39,8 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
     if (!req.auth) {
       return NextResponse.redirect(new URL('/auth/sign-in', req.url))
     }
-    if (!pathname.startsWith('/dashboard/terms')) {
+    const role = (req.auth as any)?.user?.role
+    if (role === 'SELLER' && !pathname.startsWith('/dashboard/terms')) {
       const termsCookie = req.cookies.get('velor_terms')
       if (!termsCookie?.value) {
         return NextResponse.redirect(new URL('/dashboard/terms', req.url))

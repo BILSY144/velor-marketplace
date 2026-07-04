@@ -15,7 +15,10 @@ export default function TermsPage() {
     setError('');
     try {
       const res = await fetch('/api/seller/terms', { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to record acceptance');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to record acceptance (status ' + res.status + ')');
+      }
       router.push('/dashboard');
       router.refresh();
     } catch (e: any) {

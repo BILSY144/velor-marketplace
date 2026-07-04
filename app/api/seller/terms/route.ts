@@ -29,7 +29,7 @@ export async function POST() {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
-  if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
+  if (!seller) return NextResponse.json({ error: 'No seller profile is linked to this account. Sign in with your seller account to accept these terms.' }, { status: 404 });
 
   await prisma.seller.update({
     where: { id: seller.id },
