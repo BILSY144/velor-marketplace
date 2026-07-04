@@ -267,9 +267,9 @@ export default function DashboardProductsPage() {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(''); const [sellerCurrency, setSellerCurrency] = useState('GBP')
 
-  useEffect(() => { loadProducts() }, [])
+  useEffect(() => { loadProducts(); fetch('/api/dashboard/settings').then((r) => r.json()).then((d) => setSellerCurrency(d.currency || 'GBP')).catch(() => {}) }, [])
 
   async function loadProducts() {
     setLoading(true)
@@ -387,7 +387,7 @@ export default function DashboardProductsPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Price (GBP) *</label>
+                  <label style={labelStyle}>Price ({sellerCurrency}) *</label>
                   <input style={inputStyle} type="number" step="0.01" value={form.price} onChange={e => set('price', e.target.value)} required />
                 </div>
                 <div>
