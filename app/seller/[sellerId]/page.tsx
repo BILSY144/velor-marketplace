@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { getTheme } from '@/lib/store-themes'
+import { auth } from '@/auth'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 function initials(name: string): string {
   return name
@@ -18,9 +19,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       <span style={{ color: 'var(--accent)', fontSize: '16px' }}>
-        {'â'.repeat(full)}
+        {'â'.repeat(full)}
         {half ? 'Â½' : ''}
-        {'â'.repeat(5 - full - (half ? 1 : 0))}
+        {'â'.repeat(5 - full - (half ? 1 : 0))}
       </span>
       <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
         {rating.toFixed(1)} ({count})
@@ -50,7 +51,18 @@ export default async function SellerProfilePage({
     },
   })
 
-  if (!seller) notFound()
+  if (!seller) {
+    // Public storefronts only render once a seller is approved. If the person
+    // hitting this URL is the seller themselves (e.g. clicked "My Store" from
+    // the header before approval finished), send them to their dashboard
+    // instead of a confusing public 404 — genuine invalid/unknown seller IDs
+    // from anyone else still get a real 404.
+    const session = await auth()
+    if (session?.user?.sellerId === sellerId) {
+      redirect('/dashboard')
+    }
+    notFound()
+  }
 
   const theme = getTheme((seller as unknown as { storeTheme?: string }).storeTheme)
   const tk = theme.tokens
@@ -311,7 +323,7 @@ export default async function SellerProfilePage({
                         </span>
                         {pAvg !== null && (
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>{'â'}</span>{' '}
+                            <span style={{ color: 'var(--accent)' }}>{'â'}</span>{' '}
                             {pAvg.toFixed(1)} ({product.reviews.length})
                           </span>
                         )}
