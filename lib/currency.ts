@@ -15,9 +15,9 @@ export type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number]
 
 const STORAGE_KEY = 'velor-display-currency'
 
-// Maps a country code (from Intl locale region) to its most common currency.
-// Falls back to GBP for anything unmapped.
-const COUNTRY_TO_CURRENCY: Record<string, SupportedCurrency> = {
+// Maps a country code (from Intl locale region, or a seller's Origin Country
+// field) to its most common currency. Falls back to GBP for anything unmapped.
+export const COUNTRY_TO_CURRENCY: Record<string, SupportedCurrency> = {
   GB: 'GBP', US: 'USD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
   DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR',
   AT: 'EUR', IE: 'EUR', PT: 'EUR', FI: 'EUR', GR: 'EUR', LU: 'EUR',
