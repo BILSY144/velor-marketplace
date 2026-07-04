@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { SUPPORTED_CURRENCIES, CURRENCY_NAMES, COUNTRY_TO_CURRENCY, symbolFor } from '@/lib/currency'
 
 const HS_CATEGORY_MAP: Record<string, { label: string; example: string }> = {
   '01': { label: 'Live Animals', example: '010110 — horses' },
@@ -126,7 +127,7 @@ const MAX_IMAGE_DATA_URL_LEN = 350_000
 const emptyForm = {
   name: '', description: '', price: '', stock: '', category: '',
   images: ['', '', '', '', '', '', '', ''],
-  weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '',
+  weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '', currency: '',
 }
 
 const inputStyle = {
@@ -267,9 +268,13 @@ export default function DashboardProductsPage() {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(''); const [sellerCurrency, setSellerCurrency] = useState('GBP')
+  const [error, setError] = useState('')
+  const [sellerCurrency, setSellerCurrency] = useState('GBP')
 
-  useEffect(() => { loadProducts(); fetch('/api/dashboard/settings').then((r) => r.json()).then((d) => setSellerCurrency(d.currency || 'GBP')).catch(() => {}) }, [])
+  useEffect(() => {
+    loadProducts()
+    fetch('/api/dashboard/settings').then((r) => r.json()).then((d) => setSellerCurrency(d.currency || 'GBP')).catch(() => {})
+  }, [])
 
   async function loadProducts() {
     setLoading(true)
@@ -280,7 +285,7 @@ export default function DashboardProductsPage() {
 
   function openNew() {
     setEditProduct(null)
-    setForm(emptyForm)
+    setForm({ ...emptyForm, currency: sellerCurrency })
     setError('')
     setShowForm(true)
   }
@@ -297,6 +302,7 @@ export default function DashboardProductsPage() {
       widthCm: p.widthCm !== null ? String(p.widthCm) : '',
       heightCm: p.heightCm !== null ? String(p.heightCm) : '',
       hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+      currency: sellerCurrency,
     })
     setError('')
     setShowForm(true)
@@ -305,6 +311,26 @@ export default function DashboardProductsPage() {
   function set(k: keyof typeof emptyForm, v: string) {
     setForm(f => ({ ...f, [k]: v }))
     setError('')
+  }
+
+  // Picking an origin country auto-suggests the matching currency — the
+  // seller can still override it with the Currency dropdown right after.
+  function setOriginCountry(v: string) {
+    setForm(f => ({ ...f, originCountry: v, currency: COUNTRY_TO_CURRENCY[v] ?? f.currency }))
+    setError('')
+  }
+
+  // Currency here IS the seller's account-wide currency (products don't each
+  // have their own) — so changing it saves immediately to the seller profile,
+  // no separate trip to Settings required.
+  function setCurrency(v: string) {
+    setForm(f => ({ ...f, currency: v }))
+    setSellerCurrency(v)
+    fetch('/api/dashboard/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currency: v }),
+    }).catch(() => {})
   }
 
   function setImage(index: number, v: string) {
@@ -385,11 +411,26 @@ export default function DashboardProductsPage() {
                 <label style={labelStyle}>Description</label>
                 <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+
+              {/* Currency — auto-suggested from Origin Country below, but always
+                  editable here so pricing is never blocked on visiting Settings. */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Price ({sellerCurrency}) *</label>
+                  <label style={labelStyle}>Currency</label>
+                  <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.currency || sellerCurrency} onChange={e => setCurrency(e.target.value)}>
+                    {SUPPORTED_CURRENCIES.map(c => <option key={c} value={c}>{c} — {CURRENCY_NAMES[c]}</option>)}
+                  </select>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+                    Auto-suggested from Origin Country below. Applies to all your listings — buyers abroad see it converted automatically.
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Price ({form.currency || sellerCurrency}) *</label>
                   <input style={inputStyle} type="number" step="0.01" value={form.price} onChange={e => set('price', e.target.value)} required />
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={labelStyle}>Stock</label>
                   <input style={inputStyle} type="number" value={form.stock} onChange={e => set('stock', e.target.value)} />
@@ -444,7 +485,7 @@ export default function DashboardProductsPage() {
                   </div>
                   <div>
                     <label style={labelStyle}>Origin Country</label>
-                    <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.originCountry} onChange={e => set('originCountry', e.target.value)}>
+                    <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.originCountry} onChange={e => setOriginCountry(e.target.value)}>
                       <option value="">Select country</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
@@ -513,7 +554,7 @@ export default function DashboardProductsPage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
               <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                £{p.price.toFixed(2)} &middot; Stock: {p.stock} &middot;
+                {symbolFor(sellerCurrency)}{p.price.toFixed(2)} &middot; Stock: {p.stock} &middot;
                 {p.hsCode ? ' HS: ' + p.hsCode : ' No HS code'} &middot;
                 {p.weightGrams ? ' ' + p.weightGrams + 'g' : ' No weight'}
               </div>
