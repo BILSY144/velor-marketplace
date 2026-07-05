@@ -68,7 +68,10 @@ export default function DiscountCodesPage() {
   async function fetchCodes() {
     try {
       const r = await fetch('/api/dashboard/discount-codes')
-      if (r.ok) setCodes(await r.json())
+      if (r.ok) {
+        const data = await r.json()
+        setCodes(Array.isArray(data) ? data : (data.codes ?? []))
+      }
     } catch {}
     setLoading(false)
   }
@@ -84,14 +87,14 @@ export default function DiscountCodesPage() {
           code: form.code.toUpperCase().trim(),
           type: form.type,
           value: parseFloat(form.value),
-          minOrder: form.minOrder ? parseFloat(form.minOrder) : undefined,
+          minimumOrder: form.minOrder ? parseFloat(form.minOrder) : undefined,
           usageLimit: form.usageLimit ? parseInt(form.usageLimit) : undefined,
           expiresAt: form.expiresAt || undefined,
         }),
       })
       const data = await r.json()
       if (!r.ok) { setError(data.error || 'Failed to create code'); setSaving(false); return }
-      setCodes(prev => [data, ...prev])
+      setCodes(prev => [data.discount, ...prev])
       setShowModal(false)
       setForm({ code: '', type: 'PERCENTAGE', value: '', minOrder: '', usageLimit: '', expiresAt: '' })
     } catch { setError('Network error') }
@@ -113,7 +116,7 @@ export default function DiscountCodesPage() {
         }),
       })
       const data = await r.json()
-      if (r.ok) setCodes(prev => [data, ...prev])
+      if (r.ok) setCodes(prev => [data.discount, ...prev])
     } catch {}
     setQuickBusy(null)
   }
@@ -265,11 +268,4 @@ export default function DiscountCodesPage() {
             </div>
             <div style={S.modalFooter}>
               <button style={S.btnOutline} onClick={() => { setShowModal(false); setError('') }}>Cancel</button>
-              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create Code'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creatin
