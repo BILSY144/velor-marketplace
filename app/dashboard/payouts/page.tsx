@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
 
 interface PayoutRecord {
   id: string;
@@ -32,6 +33,11 @@ function StatusBadge({ status }: { status: PayoutRecord['status'] }) {
 }
 
 export default function PayoutsPage() {
+  const { tier, theme } = useSellerTier();
+  const isEnterprise = tier === 'ENTERPRISE';
+  const isElevated = tier !== 'STARTER';
+  const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
+
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -49,18 +55,39 @@ export default function PayoutsPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 28, fontWeight: 800, color: 'var(--text)', margin: 0 }}>
-          Payouts
-        </h1>
-        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
-          Track your earnings and withdraw funds
-        </p>
+      <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 28, fontWeight: 800, color: 'var(--text)', margin: 0 }}>
+              Payouts
+            </h1>
+            <PlanBadge tier={tier} />
+          </div>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
+            Track your earnings and withdraw funds
+          </p>
+        </div>
       </div>
+
+      {isElevated && (
+        <div style={tierCardStyle(theme, { padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12, position: 'relative', overflow: 'hidden' })}>
+          {isEnterprise && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+          )}
+          <span style={{ fontSize: 12, fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {isEnterprise ? 'Reduced Commission' : 'Lower Commission'}
+          </span>
+          <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
+            {isEnterprise
+              ? 'Enterprise sellers keep more of every sale — 5% platform commission, the lowest tier available.'
+              : 'Pro sellers pay 8% platform commission, down from the 15% Starter rate — more of every sale reaches your balance.'}
+          </span>
+        </div>
+      )}
 
       {/* Balance cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
+        <div style={tierCardStyle(theme, { padding: '24px' })}>
           <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
             Available Balance
           </div>
@@ -81,7 +108,7 @@ export default function PayoutsPage() {
           </button>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
+        <div style={tierCardStyle(theme, { padding: '24px' })}>
           <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
             Pending Balance
           </div>
@@ -93,7 +120,7 @@ export default function PayoutsPage() {
           </div>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
+        <div style={tierCardStyle(theme, { padding: '24px' })}>
           <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
             Lifetime Earnings
           </div>
@@ -107,7 +134,7 @@ export default function PayoutsPage() {
       </div>
 
       {/* Payout method */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 24, marginBottom: 24 }}>
+      <div style={tierCardStyle(theme, { padding: 24, marginBottom: 24 })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
             Payout Method
@@ -123,7 +150,7 @@ export default function PayoutsPage() {
       </div>
 
       {/* Payout history */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={tierCardStyle(theme, { overflow: 'hidden' })}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
             Payout History
