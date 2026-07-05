@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email'
 
 const FREE_TIER_MINUTES = 5000
 const FREE_TIER_GB = 50
@@ -60,14 +61,43 @@ export async function GET(req: NextRequest) {
   const shipMinutesPct = pct(totalWebRtcMinutes, SHIP_TIER_MINUTES)
   const shipGbPct = pct(estimatedBandwidthGB, SHIP_TIER_GB)
 
-  return NextResponse.json({
+  const freeStatus = tierStatus(freeMinutesPct, freeGbPct)
+  const shipStatus = tierStatus(shipMinutesPct, shipGbPct)
+
+  const result = {
     month: monthStart.toISOString().slice(0, 7),
     streamCount: streams.length,
     broadcastMinutes: Math.round(broadcastMinutes),
     viewerMinutes: Math.round(viewerMinutes),
     totalWebRtcMinutes: Math.round(totalWebRtcMinutes),
     estimatedBandwidthGB: Math.round(estimatedBandwidthGB * 10) / 10,
-    freeTier: { minutesUsedPct: freeMinutesPct, gbUsedPct: freeGbPct, status: tierStatus(freeMinutesPct, freeGbPct) },
-    shipTier: { minutesUsedPct: shipMinutesPct, gbUsedPct: shipGbPct, status: tierStatus(shipMinutesPct, shipGbPct) },
-  })
+    freeTier: { minutesUsedPct: freeMinutesPct, gbUsedPct: freeGbPct, status: freeStatus },
+    shipTier: { minutesUsedPct: shipMinutesPct, gbUsedPct: shipGbPct, status: shipStatus },
+  }
+
+  if (freeStatus !== 'ok' || shipStatus !== 'ok') {
+    const tierLabel = freeStatus !== 'ok' ? 'free LiveKit Build tier' : 'paid LiveKit Ship tier ($50/mo)'
+    const action = freeStatus === 'upgrade_recommended'
+      ? 'Time to upgrade: add a card at cloud.livekit.io and move to the Ship plan ($50/mo).'
+      : shipStatus === 'upgrade_recommended'
+      ? 'Ship plan is no longer enough - talk to LiveKit about the Scale plan ($500/mo) or review usage.'
+      : `Usage is approaching the limit of your ${tierLabel} - no action needed yet, but keep an eye on it.`
+    try {
+      await sendEmail({
+        to: 'willsinclair144@gmail.com',
+        subject: `Velor Live Shopping - usage alert (${result.month})`,
+        html: `<p>Live Shopping usage this month (${result.month}):</p>
+<ul>
+<li>${result.streamCount} streams</li>
+<li>${result.totalWebRtcMinutes} total WebRTC minutes (free tier limit: 5,000, Ship tier limit: 150,000)</li>
+<li>~${result.estimatedBandwidthGB} GB estimated bandwidth (free tier limit: 50GB, Ship tier limit: 250GB)</li>
+</ul>
+<p><strong>${action}</strong></p>`,
+      })
+    } catch (err) {
+      console.error('live-usage-check alert email failed', err)
+    }
+  }
+
+  return NextResponse.json(result)
 }
