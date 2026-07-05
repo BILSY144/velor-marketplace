@@ -15,6 +15,7 @@ const navItems = [
   { href: '/dashboard/discount-codes', label: 'Discounts', icon: 'DC' },
   { href: '/dashboard/payouts', label: 'Payouts', icon: 'PY' },
   { href: '/dashboard/analytics', label: 'Analytics', icon: 'AN' },
+  { href: '/dashboard/live', label: 'Go Live', icon: 'GL' },
   { href: '/dashboard/settings', label: 'Settings', icon: 'ST' },
   { href: '/dashboard/support', label: 'Support', icon: 'SP' },
   { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK' },
