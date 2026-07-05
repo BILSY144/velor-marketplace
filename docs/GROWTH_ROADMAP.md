@@ -34,3 +34,22 @@ Two items sit outside the phase numbering above but remain open. First, the OPEN
 ## Working rule for this roadmap
 
 No phase in this document is marked complete unless the underlying feature is genuinely built, deployed, and verified live - not merely coded, and not merely copy-edited to soften a claim. Where a claim cannot yet be backed by real functionality, the correct interim fix is to mark it "coming soon" or remove it, never to leave it advertised as live.
+
+## Phase 2 - Live shopping (proposed, not started)
+
+William raised this on 2026-07-05: sellers going live on Velor to sell products in real time, from anywhere in the world, with easy setup. Researched before writing anything down. The data backs it - live shopping converts at 9-30% industry-wide versus 2-3% for normal ecommerce, with fashion and beauty sellers seeing up to 70% in some cases. The US market alone is forecast at roughly $68B by 2026. This is not a novelty feature, it is one of the highest-leverage things a multi-seller marketplace can add.
+
+The important architectural decision is that Velor is a marketplace of many independent sellers, not one brand selling its own catalogue. That rules out the turnkey single-brand SaaS platforms (Bambuser, Firework, Livescale) - they are built for one company embedding video commerce on its own site, cost $1,000-$10,000/month, and do not fit a model where thousands of unrelated sellers each need their own channel. The closer analog is Whatnot, a live-auction marketplace for independent sellers, which is built on LiveKit - an open-source, WebRTC-based media server (an SFU) with usage-based pricing rather than a flat enterprise SaaS fee. That is the right foundation for Velor: build the marketplace-specific product (go-live button, product pinning, chat, checkout integration) ourselves, and buy the underlying video transport instead of trying to engineer WebRTC infrastructure in-house.
+
+Proposed phasing, each one shippable and useful on its own rather than one giant release:
+
+- **2.1 - Scheduled go-live MVP.** A seller starts a stream from their dashboard (camera + mic via the browser, no app needed), buyers watch on a live page reachable from the seller's storefront and a site-wide "Live now" rail. One or two products are pinned on screen during the stream with a tap-to-buy button that hands off to the existing cart/checkout flow untouched - no new payment logic, no new currency logic, it reuses everything already built in Phases 0-1.
+- **2.2 - Live chat and reactions.** Buyers can chat and react during a stream. This is what makes live shopping feel live rather than like a video ad, and it is what drives the impulse-buy conversion the research keeps pointing to.
+- **2.3 - Drop mechanics.** Limited-quantity reveals, countdown timers, live sold-out badges. This is the single biggest lever fashion/beauty/collectibles sellers use to hit the higher end of the conversion range.
+- **2.4 - Follow and notify.** Buyers follow sellers and get notified the moment they go live, so a seller can build a returning audience instead of starting from zero every stream.
+- **2.5 - Replay as shoppable VOD.** Every stream automatically becomes a shoppable recorded video on the seller's storefront afterward, so the value of a single live session keeps converting long after the seller logs off.
+- **2.6 - Seller analytics for streams.** Concurrent viewers, peak viewers, chat volume, conversion per stream - slotted into the tiered analytics dashboard already built in Phase 0.3 so Pro/Enterprise sellers see real depth here too.
+
+Deliberately not proposing a native mobile app as a prerequisite - browser-based capture (getUserMedia) and browser-based viewing covers the MVP and every phase above without an app-store dependency or review cycle. A dedicated seller mobile app can be revisited later if sellers ask for camera-roll-style always-ready streaming.
+
+Not yet scoped in detail: moderation for live video content (real-time, higher risk than static listing moderation), the cost model at scale (LiveKit/media server hosting bills scale with concurrent viewers and stream hours, needs a real usage estimate before committing spend), and whether the go-live capability should be tier-gated (e.g. Pro/Enterprise only at launch) or open to all approved sellers from day one. These need a decision from William before Phase 2.1 implementation starts - this section documents the plan, it is not yet authorized to build.
