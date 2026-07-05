@@ -116,7 +116,7 @@ export default function LiveViewerPage() {
               </div>
             )}
             {status === 'connected' && (
-              <span style={{ position: 'absolute', top: 12, left: 12, background: '#ff3b3b', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>LIVE</span>
+              <span style={{ position: 'absolute', top: 12, left: 12, background: accent, color: '#111', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>LIVE</span>
             )}
           </div>
           <div style={{ marginTop: 16 }}>
