@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES, COUNTRY_TO_CURRENCY, symbolFor } from '@/lib/currency'
+import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
 
 const HS_CATEGORY_MAP: Record<string, { label: string; example: string }> = {
   '01': { label: 'Live Animals', example: '010110 — horses' },
@@ -35,7 +36,7 @@ function getListingSuggestions(
   form: { description: string; category: string; price: string; weightGrams: string },
   validImageCount: number,
   categoryStats: { count: number; avgPrice: number; medianPrice: number } | null
-  ): ListingSuggestion[] {
+): ListingSuggestion[] {
   const suggestions: ListingSuggestion[] = []
   if (validImageCount < 5) {
     suggestions.push({ level: 'tip', text: `Add ${5 - validImageCount} more photo${5 - validImageCount === 1 ? '' : 's'} — listings with 5+ photos get more views and buyer trust.` })
@@ -321,6 +322,10 @@ function ImageUploadBox({
 }
 
 export default function DashboardProductsPage() {
+  const { tier, theme } = useSellerTier()
+  const isEnterprise = tier === 'ENTERPRISE'
+  const isElevated = tier !== 'STARTER'
+
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -366,6 +371,27 @@ export default function DashboardProductsPage() {
     while (imgs.length < MAX_IMAGES) imgs.push('')
     setForm({
       name: p.name, description: p.description, price: String(p.price),
+      stock: String(p.stock), category: p.category, images: imgs,
+      weightGrams: p.weightGrams !== null ? String(p.weightGrams) : '',
+      lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
+      widthCm: p.widthCm !== null ? String(p.widthCm) : '',
+      heightCm: p.heightCm !== null ? String(p.heightCm) : '',
+      hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+      currency: sellerCurrency,
+    })
+    setError('')
+    setShowForm(true)
+  }
+
+  // Enterprise-only: pre-fills the New Product form with an existing
+  // product's data (no id attached) so submitting creates a brand new
+  // listing — a genuine time-saver for sellers with large catalogues.
+  function openDuplicate(p: Product) {
+    setEditProduct(null)
+    const imgs = (p.images ?? []).slice(0, MAX_IMAGES)
+    while (imgs.length < MAX_IMAGES) imgs.push('')
+    setForm({
+      name: `${p.name} (Copy)`, description: p.description, price: String(p.price),
       stock: String(p.stock), category: p.category, images: imgs,
       weightGrams: p.weightGrams !== null ? String(p.weightGrams) : '',
       lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
@@ -458,7 +484,10 @@ export default function DashboardProductsPage() {
   return (
     <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>Products</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>Products</h1>
+          <PlanBadge tier={tier} />
+        </div>
         <button onClick={openNew} style={{
           padding: '10px 20px', background: 'var(--accent)', color: '#fff',
           border: 'none', borderRadius: '6px', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
@@ -534,18 +563,18 @@ export default function DashboardProductsPage() {
                   {validImageCount} of {MAX_IMAGES} added — minimum {MIN_IMAGES} required
                 </div>
                 {(() => {
-                          const suggestions = getListingSuggestions(form, validImageCount, categoryStats)
-                          if (suggestions.length === 0) return null
-                          return (
-                            <div style={{ marginTop: '18px', padding: '14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>Listing Health</div>
-                              {suggestions.map((s, i) => (
-                                <div key={i} style={{ fontSize: '12px', color: s.level === 'warning' ? 'var(--red)' : 'var(--muted)', marginBottom: '6px' }}>
-                                  {s.level === 'warning' ? 'Warning: ' : 'Tip: '}{s.text}
-                                </div>
-                              ))}
-                            </div>
-                          )
+                  const suggestions = getListingSuggestions(form, validImageCount, categoryStats)
+                  if (suggestions.length === 0) return null
+                  return (
+                    <div style={{ marginTop: '18px', padding: '14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>Listing Health</div>
+                      {suggestions.map((s, i) => (
+                        <div key={i} style={{ fontSize: '12px', color: s.level === 'warning' ? 'var(--red)' : 'var(--muted)', marginBottom: '6px' }}>
+                          {s.level === 'warning' ? 'Warning: ' : 'Tip: '}{s.text}
+                        </div>
+                      ))}
+                    </div>
+                  )
                 })()}
               </div>
 
@@ -644,7 +673,15 @@ export default function DashboardProductsPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {products.map(p => (
-          <div key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div key={p.id} style={tierCardStyle(theme, {
+            padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', position: 'relative', overflow: 'hidden',
+          })}>
+            {isElevated && (
+              <div style={{
+                position: 'absolute', top: 0, left: 0, bottom: 0, width: 3,
+                background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
+              }} />
+            )}
             {p.images?.[0] && (
               <img src={p.images[0]} alt={p.name} style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '6px' }} />
             )}
@@ -661,6 +698,12 @@ export default function DashboardProductsPage() {
               background: p.status === 'APPROVED' ? 'rgba(0,230,118,0.15)' : 'rgba(255,107,0,0.15)',
               color: p.status === 'APPROVED' ? 'var(--green)' : 'var(--accent)',
             }}>{p.status.replace('_', ' ')}</span>
+            {isEnterprise && (
+              <button onClick={() => openDuplicate(p)} title="Create a new listing pre-filled with this product's details" style={{
+                padding: '7px 14px', background: 'rgba(255,213,74,0.1)', border: '1px solid rgba(255,213,74,0.4)', borderRadius: '6px',
+                color: '#FFD54A', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+              }}>Duplicate</button>
+            )}
             <button onClick={() => openEdit(p)} style={{
               padding: '7px 16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px',
               color: 'var(--text)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
@@ -668,7 +711,7 @@ export default function DashboardProductsPage() {
           </div>
         ))}
         {products.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '60px 20px', fontSize: '14px' }}>
+          <div style={tierCardStyle(theme, { textAlign: 'center', color: 'var(--muted)', padding: '60px 20px', fontSize: '14px' })}>
             No products yet. Add your first product to get started.
           </div>
         )}
