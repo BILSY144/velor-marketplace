@@ -192,3 +192,28 @@ The Edit tool has silently truncated files mid-content on this project more than
 
 ### Patterns
 Next.js 15 async params: `const { id } = await params`. Server components use Prisma; client components use hooks. Stripe apiVersion `'2025-02-24.acacia'`. Use `updateMany` for non-@id unique filters.
+
+
+---
+
+## SESSION UPDATE — 2026-07-05 (Growth Roadmap Phases 0.1–0.5)
+
+Following William's instruction to continue the phased growth roadmap derived from the Pro/Enterprise feature audit, this session executed:
+
+**Phase 0.1 — Fix inverted priority-placement sort bug [COMPLETE]** Pro/Enterprise "priority placement in search" was sorting backwards. Fixed and deployed.
+
+**Phase 0.2 — Rule-based AI listing optimisation MVP [COMPLETE]** Built a real, non-fabricated rule-based suggestion engine backing the "AI-powered listing optimisation" Pro/Enterprise claim. Deployed.
+
+**Phase 0.3 — Tier-differentiated analytics dashboard [COMPLETE]** Analytics dashboard now genuinely differs by tier. Also fixed a hardcoded 15% commission bug found during this work (now correctly reflects 15/8/5% by tier).
+
+**Phase 0.4 — Priority support flag + Enterprise contact channel [COMPLETE, LIVE]** Built a real seller support system backing the "dedicated account manager" / priority-support Enterprise claim: Prisma `SupportTicket` model plus `SupportPriority` (STANDARD/PRIORITY) and `SupportTicketStatus` (OPEN/RESOLVED) enums and a `Seller.supportTickets` relation; `app/api/dashboard/support/route.ts` (GET lists the seller's own tickets, POST creates one and auto-flags PRIORITY for Enterprise tier, emails sellers@velorcommerce.store tagged [PRIORITY] for Enterprise, and sends the seller an acknowledgement via Resend); `app/dashboard/support/page.tsx` (tier-gated banner, send-message form, ticket history); nav link added to `app/dashboard/layout.tsx`. Live-verified at velorcommerce.store/dashboard/support on an authenticated seller session.
+
+**Phase 0.5 — Minimal real seller API access for Enterprise [IN PROGRESS]** Building a genuinely real, if minimal, version of the "full API access & integrations" Enterprise claim rather than just softening marketing copy. Committed and live on main so far: Prisma `ApiKey` model (id, sellerId, name, keyPrefix, hashedKey, lastUsedAt, revokedAt, createdAt) plus `Seller.apiKeys` relation; `lib/apiKey.ts` crypto helper (`generateApiKey`, `hashApiKey`, `isValidApiKeyFormat`, key format `vlk_live_<hex>`, SHA-256 hashed for storage); `app/api/dashboard/api-keys/route.ts` authenticated management endpoint, Enterprise-tier gated, GET lists the seller's own keys (prefix/lastUsed/revoked only, never the raw key), POST generates a new key (max 5 active, returns plaintext once), DELETE revokes by id. Still to build: public `/api/v1/...` read-only endpoint(s) authenticated via `Authorization: Bearer <key>` with hash-match lookup and per-request Enterprise-tier re-verification, a dashboard UI page to generate/view/revoke keys with a usage example, and a nav link.
+
+**Audit finding driving Phase 0.5:** a repo-wide search for "API access" found "Full API access & integrations" advertised as an Enterprise feature with zero backing implementation in five places: this file's OPEN REVIEW ITEM above (item 2), `docs/SUBSCRIPTION_AND_TIERS.md`, `app/page.tsx` homepage tier card, `components/dashboard/TierUpgradeView.tsx` feature list and comparison table, and `app/dashboard/terms/page.tsx`. Phase 0.5 is building a real minimal version rather than only editing copy. The OPEN REVIEW ITEM above is NOT being marked resolved by this work — William still needs to review and sign off; this note only records that concrete progress has been made on one of the five items he flagged as unconfirmed.
+
+**Also shipped this session, adjacent to the roadmap:** advanced AI Velor chat assistant for the marketplace (William added ANTHROPIC_API_KEY to Vercel); fixed a hardcoded 15% commission bug in the analytics route that was ignoring the seller's actual tier commission rate.
+
+**Not started, carried forward from earlier sessions, unrelated to the roadmap (currency work):** add a currency switcher to the site header; convert displayed prices on shop/product/marketplace pages to the switched currency; fix checkout to charge the buyer's exact converted total. The underlying FX infrastructure (`lib/fx.ts`, FX rates API, `lib/currency.ts`, seller currency setting) is already built — these three are the remaining consumer-facing steps.
+
+**Immediate next steps, in order:** finish Phase 0.5 (public `/api/v1/products` Bearer-token read endpoint, dashboard API-key management UI, nav link); commit `docs/GROWTH_ROADMAP.md` to the repo (exists only as a working document from this session so far, not yet pushed); revisit the three currency tasks above; keep surfacing the OPEN REVIEW ITEM at the top of this file every session until William signs off — do not mark it resolved unilaterally.
