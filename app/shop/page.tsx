@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface Product {
   id: string
@@ -43,6 +44,7 @@ const CATEGORIES = [
 ]
 
 function ShopContent() {
+  const { symbol, convert } = useCurrencyDisplay()
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -210,7 +212,7 @@ function ShopContent() {
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{sym(p.currency)}{p.price.toFixed(2)}</span>
+                        <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
                         <span style={{ fontSize: '11px', color: 'var(--muted)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
                       </div>
                     </div>
