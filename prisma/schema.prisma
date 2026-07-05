@@ -129,6 +129,7 @@ currency                      String        @default("GBP")
   verification                 SellerVerification?
   supportTickets               SupportTicket[]
   apiKeys                      ApiKey[]
+  liveStreams                   LiveStream[]
   sellerScore                  Float               @default(0)
   sellerBadge                  String?
   sellerScoreUpdatedAt         DateTime?
@@ -469,4 +470,32 @@ model ApiKey {
   lastUsedAt  DateTime?
   revokedAt   DateTime?
   createdAt   DateTime  @default(now())
+}
+
+enum LiveStreamStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model LiveStream {
+  id           String           @id @default(cuid())
+  sellerId     String
+  seller       Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?          @db.Text
+  roomName     String           @unique
+  status       LiveStreamStatus @default(SCHEDULED)
+  scheduledFor DateTime?
+  startedAt    DateTime?
+  endedAt      DateTime?
+  productIds   String[]
+  peakViewers  Int              @default(0)
+  recordingUrl String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([sellerId])
+  @@index([status])
 }
