@@ -225,7 +225,7 @@ See all live sellers →
 Our Enterprise sellers, broadcasting live from anywhere in the world - a perk earned, not bought.
 </p>
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
-{Array.from({ length: 10 }).map((_, i) => {
+{Array.from({ length: 12 }).map((_, i) => {
 const ls = liveStreams[i]
 if (ls) {
 return (
