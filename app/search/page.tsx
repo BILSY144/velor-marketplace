@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay';
 
 interface SearchResult {
   id: string;
@@ -15,6 +16,7 @@ interface SearchResult {
 }
 
 function SearchContent() {
+  const { symbol, convert } = useCurrencyDisplay();
   const searchParams = useSearchParams();
   const router = useRouter();
   const q = searchParams.get('q') ?? '';
@@ -163,7 +165,7 @@ function SearchContent() {
                         by {item.sellerName}
                       </p>
                       <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>
-                        ÃÂ£{item.price.toFixed(2)}
+                        {symbol}{convert(item.price).toFixed(2)}
                       </p>
                     </div>
                   </div>
