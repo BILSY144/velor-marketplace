@@ -2,7 +2,9 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
+import { useSellerTier, tierCardStyle, DASHBOARD_TIER_THEME } from '@/lib/dashboard-theme'
 
 const COUNTRIES = [
   'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany', 'France',
@@ -22,6 +24,14 @@ const COUNTRY_CURRENCY: Record<string, string> = {
   'Hong Kong': 'HKD', 'India': 'INR', 'Brazil': 'BRL', 'Mexico': 'MXN', 'Other': 'GBP',
 }
 
+// Feature list shown in the new "Your Plan" card so sellers can see exactly
+// what their subscription buys them, and what upgrading would add.
+const PLAN_FEATURES: Record<string, string[]> = {
+  STARTER: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in', '15% commission'],
+  PRO: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics', '8% commission'],
+  ENTERPRISE: ['Unlimited listings', 'Dedicated account manager', 'Full API access', 'Live Shopping', 'Priority support', '5% commission'],
+}
+
 interface Settings {
   name: string
   email: string
@@ -33,6 +43,7 @@ interface Settings {
 
 export default function SettingsPage() {
   const { update } = useSession()
+  const { tier, theme } = useSellerTier()
   const [form, setForm] = useState<Settings>({
     name: '',
     email: '',
@@ -104,13 +115,7 @@ export default function SettingsPage() {
     }
   }
 
-  const card: React.CSSProperties = {
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '32px',
-    marginBottom: '24px',
-  }
+  const card: React.CSSProperties = tierCardStyle(theme, { padding: '32px', marginBottom: '24px' })
 
   const label: React.CSSProperties = {
     display: 'block',
@@ -167,6 +172,10 @@ export default function SettingsPage() {
     )
   }
 
+  const isEnterprise = tier === 'ENTERPRISE'
+  const isPro = tier === 'PRO'
+  const nextTier = tier === 'STARTER' ? 'PRO' : tier === 'PRO' ? 'ENTERPRISE' : null
+
   return (
     <div style={{ maxWidth: '680px' }}>
       <div style={{ marginBottom: '32px' }}>
@@ -184,6 +193,64 @@ export default function SettingsPage() {
         <p style={{ color: 'var(--muted)', marginTop: '6px', fontSize: '14px' }}>
           Manage your profile and store details
         </p>
+      </div>
+
+      {/* Your Plan — shown first so sellers see exactly what their subscription buys them */}
+      <div style={tierCardStyle(theme, { padding: '28px 32px', marginBottom: '24px', position: 'relative', overflow: 'hidden' })}>
+        {isEnterprise && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+        )}
+        {isPro && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#4FC3F7' }} />
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              Your Plan
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 24,
+                fontWeight: 800,
+                color: isEnterprise ? '#FFD54A' : isPro ? '#4FC3F7' : 'var(--text)',
+                marginBottom: 12,
+              }}
+            >
+              {isEnterprise ? '★ Enterprise' : isPro ? 'Pro' : 'Starter'}
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {PLAN_FEATURES[tier].map((f) => (
+                <li key={f} style={{ fontSize: 13, color: 'var(--muted)', display: 'flex', gap: 8 }}>
+                  <span style={{ color: 'var(--green)' }}>✔</span> {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {nextTier && (
+            <Link
+              href={`/dashboard/upgrade/${nextTier.toLowerCase()}`}
+              style={{
+                flexShrink: 0,
+                background: nextTier === 'ENTERPRISE' ? 'linear-gradient(90deg, #FFD54A, #FF6B00)' : '#4FC3F7',
+                color: nextTier === 'ENTERPRISE' ? '#111' : '#001018',
+                fontWeight: 800,
+                fontSize: 13,
+                textDecoration: 'none',
+                padding: '10px 18px',
+                borderRadius: 999,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Upgrade to {DASHBOARD_TIER_THEME[nextTier].label}
+            </Link>
+          )}
+          {isEnterprise && (
+            <span style={{ flexShrink: 0, color: '#FFD54A', fontWeight: 700, fontSize: 13 }}>
+              You&apos;re on our top plan
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Profile */}
@@ -291,7 +358,7 @@ export default function SettingsPage() {
             </select>
             <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
               Auto-suggested from your country. All your product prices are set in this
-              currency — buyers abroad automatically see them converted to their own using live exchange rates. Rates move constantly on a global marketplace, so we reconfirm the exact charge for the buyer right before they pay. Your payout is always calculated from the price you set here, in your own currency.
+              currency — buyers abroad automatically see them converted to their own.
             </div>
           </div>
         </div>
