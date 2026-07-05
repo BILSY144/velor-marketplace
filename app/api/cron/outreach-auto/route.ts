@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
@@ -17,7 +17,12 @@ function unsub(email: string | null): string {
   return 'https://velorcommerce.store/unsubscribe?u=' + Buffer.from(email || '', 'utf8').toString('base64url');
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
   if (process.env.OUTREACH_ENABLED !== 'true') {
     return NextResponse.json({ ok: true, skipped: 'outreach disabled' });
   }
