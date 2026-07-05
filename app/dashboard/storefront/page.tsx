@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { STORE_THEMES, canUseTheme, canBrandLogo, type StoreTheme } from '@/lib/store-themes'
+import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
 
 function Preview({ t }: { t: StoreTheme }) {
   const k = t.tokens
@@ -28,6 +29,10 @@ function Preview({ t }: { t: StoreTheme }) {
 }
 
 export default function StorefrontDesign() {
+  const { tier: sellerTier, theme } = useSellerTier()
+  const isEnterprise = sellerTier === 'ENTERPRISE'
+  const isPro = sellerTier === 'PRO'
+
   const [active, setActive] = useState('classic')
   const [tier, setTier] = useState('STARTER')
   const [unlocked, setUnlocked] = useState(false)
@@ -174,17 +179,21 @@ export default function StorefrontDesign() {
   }
 
   const canAll = tier === 'PRO' || tier === 'ENTERPRISE' || unlocked
+  const accentColor = isEnterprise ? '#FFD54A' : isPro ? '#4FC3F7' : 'var(--accent)'
 
   return (
     <div style={{ padding: '32px 28px', maxWidth: 1200, margin: '0 auto', fontFamily: 'var(--font-body)', color: 'var(--text)' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, margin: 0 }}>Storefront design</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, margin: 0 }}>Storefront design</h1>
+        <PlanBadge tier={sellerTier} />
+      </div>
       <p style={{ color: 'var(--muted)', fontSize: 15, margin: '8px 0 4px' }}>
         Choose how your store looks to buyers. Preview any design — apply it in one click.
       </p>
       {canAll ? (
-        <p style={{ color: 'var(--green)', fontSize: 13.5, fontWeight: 600, margin: '0 0 24px' }}>
+        <p style={{ color: isPro || isEnterprise ? accentColor : 'var(--green)', fontSize: 13.5, fontWeight: 700, margin: '0 0 24px' }}>
           {tier === 'PRO' || tier === 'ENTERPRISE'
-            ? 'Every design is included with your plan.'
+            ? `Every design is included with your ${tier === 'ENTERPRISE' ? 'Enterprise' : 'Pro'} plan.`
             : 'You have unlocked every design.'}
         </p>
       ) : (
@@ -193,7 +202,13 @@ export default function StorefrontDesign() {
         </p>
       )}
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18, margin: '0 0 24px', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+      <div style={tierCardStyle(theme, { padding: 18, margin: '0 0 24px', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' })}>
+        {isEnterprise && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+        )}
+        {isPro && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />
+        )}
         <div style={{ width: 64, height: 64, borderRadius: 14, background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           {logo ? (
             <img src={logo} alt="Your store logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -242,7 +257,7 @@ export default function StorefrontDesign() {
                   borderRadius: 16,
                   padding: 12,
                   background: 'var(--surface)',
-                  border: isActive ? '2px solid var(--accent)' : '1px solid var(--border)',
+                  border: isActive ? `2px solid ${accentColor}` : '1px solid var(--border)',
                   position: 'relative',
                 }}
               >
@@ -260,11 +275,11 @@ export default function StorefrontDesign() {
                     <div style={{ color: 'var(--muted)', fontSize: 12.5 }}>{t.tagline}</div>
                   </div>
                   {isActive ? (
-                    <span style={{ background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Active</span>
+                    <span style={{ background: accentColor, color: isEnterprise ? '#111' : '#000', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Active</span>
                   ) : locked ? (
                     <span style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>Preview</span>
                   ) : (
-                    <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>Apply</span>
+                    <span style={{ color: accentColor, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>Apply</span>
                   )}
                 </div>
               </div>
