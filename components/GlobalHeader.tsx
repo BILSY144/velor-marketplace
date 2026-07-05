@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
 
 const CATEGORIES = [
   'Electronics',
@@ -34,6 +35,17 @@ export default function GlobalHeader() {
   const [catsOpen, setCatsOpen] = useState(false)
   const [acctOpen, setAcctOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [currency, setCurrency] = useState('GBP')
+
+  useEffect(() => {
+    setCurrency(getDisplayCurrency())
+    const onCurrencyChange = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail
+      if (detail) setCurrency(detail)
+    }
+    window.addEventListener('velor-currency-changed', onCurrencyChange)
+    return () => window.removeEventListener('velor-currency-changed', onCurrencyChange)
+  }, [])
 
   const catsRef = useRef<HTMLDivElement>(null)
   const acctRef = useRef<HTMLDivElement>(null)
@@ -271,7 +283,23 @@ export default function GlobalHeader() {
                 </span>
               )}
             </Link>
-
+            {/* Currency switcher */}
+            <div style={{ ...navLink, display: 'flex', alignItems: 'center' }}>
+              <select
+                value={currency}
+                onChange={(e) => {
+                  setCurrency(e.target.value)
+                  setStoredCurrency(e.target.value)
+                }}
+                style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+                >
+                {SUPPORTED_CURRENCIES.map((c) => (
+                  <option key={c} value={c} style={{ color: '#000' }}>
+                    {c}
+                  </option>
+                  ))}
+              </select>
+            </div>
             {/* Account */}
             <div ref={acctRef} style={{ position: 'relative' }}>
               <button
