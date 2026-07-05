@@ -260,7 +260,7 @@ export default function GlobalHeader() {
             <Link href="/account/wishlist" className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="Wishlist">
               ♡
             </Link>
-            <Link href="/checkout" style={{ ...navLink, padding: 0, position: 'relative' }} title="Cart">
+            <Link href="/checkout" style={{ ...navLink, padding: 0, position: 'relative' }} title="Cart — prices convert live to your currency and are reconfirmed at checkout, so there is never a surprise charge.">
               <span style={{ fontSize: 18 }}>🛒</span>
               {cartCount > 0 && (
                 <span
