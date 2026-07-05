@@ -7,8 +7,20 @@ import { prisma } from '@/lib/prisma'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const secret = searchParams.get('secret')
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const envSecret = process.env.CRON_SECRET
+  if (!envSecret || secret !== envSecret) {
+    return NextResponse.json({
+      error: 'Unauthorized',
+      debug: {
+        envIsSet: !!envSecret,
+        envLength: envSecret ? envSecret.length : 0,
+        givenLength: secret ? secret.length : 0,
+        envFirst6: envSecret ? envSecret.slice(0, 6) : null,
+        givenFirst6: secret ? secret.slice(0, 6) : null,
+        envLast6: envSecret ? envSecret.slice(-6) : null,
+        givenLast6: secret ? secret.slice(-6) : null,
+      },
+    }, { status: 401 })
   }
 
 const email = searchParams.get('email')
