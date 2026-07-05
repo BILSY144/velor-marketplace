@@ -156,7 +156,7 @@ export default function WishlistPage() {
                     <button
                       onClick={() => addToCart(item)}
                       style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
-   £{item.product.price.toFixed(2)}                 >
+                       >
                       Add to Cart
                     </button>
                     <button
