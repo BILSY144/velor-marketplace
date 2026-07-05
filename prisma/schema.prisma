@@ -492,6 +492,7 @@ model LiveStream {
   endedAt      DateTime?
   productIds   String[]
   peakViewers  Int              @default(0)
+  reportCount  Int              @default(0)
   recordingUrl String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
