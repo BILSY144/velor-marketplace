@@ -43,7 +43,7 @@ const S: Record<string, React.CSSProperties> = {
 
 // Pro+ one-click discount presets — generates a ready-to-use code instantly
 // instead of making the seller fill out the full create form.
-const QUICK_PRESETS = [10, 15, 20]
+const QUICK_PRESETS = [5, 10, 15, 20]
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 6).toUpperCase()
