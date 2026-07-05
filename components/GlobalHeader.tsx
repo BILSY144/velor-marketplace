@@ -421,7 +421,28 @@ export default function GlobalHeader() {
         {mobileOpen && (
           <div style={{ borderTop: '1px solid var(--border)', padding: '10px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Link href="/shop" style={menuItem}>Shop</Link>
-            <Link href="/live" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Live</Link>
+            <div style={{ padding: '11px 16px' }}>
+              <Link
+                href="/live"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'var(--accent)',
+                  color: '#000',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-body)',
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
+                Live
+              </Link>
+            </div>
             <Link href="/sell" style={menuItem}>Sell on Velor</Link>
             <Link href="/about" style={menuItem}>How it works</Link>
             <Link href="/orders" style={menuItem}>My orders</Link>
