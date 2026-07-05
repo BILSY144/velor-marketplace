@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
 
 const stats = [
   { label: 'Total Revenue', value: '£0.00', sub: 'All time', color: 'var(--accent)' },
@@ -37,116 +37,208 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function DashboardOverview() {
+  const { tier, theme } = useSellerTier();
+  const isPro = tier === 'PRO';
+  const isEnterprise = tier === 'ENTERPRISE';
+  const isElevated = isPro || isEnterprise;
+
   return (
-    <div>
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{
-          fontFamily: 'var(--font-display), system-ui, sans-serif',
-          fontSize: 28, fontWeight: 800, color: 'var(--text)', margin: 0,
-        }}>
-          Overview
-        </h1>
-        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
-          Welcome back. Here is what is happening with your store.
-        </p>
-      </div>
+    <div style={{ position: 'relative' }}>
+      {/* Enterprise gets a soft ambient wash behind the whole page — Pro and Starter don't */}
+      {isEnterprise && (
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: -20,
+            left: -20,
+            right: -20,
+            height: 260,
+            background: theme.sectionGradient,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
 
-      {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
-        {stats.map(stat => (
-          <div key={stat.label} style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 10,
-            padding: '20px 24px',
-          }}>
-            <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              {stat.label}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h1 style={{
+                fontFamily: 'var(--font-display), system-ui, sans-serif',
+                fontSize: 28, fontWeight: 800, color: 'var(--text)', margin: 0,
+              }}>
+                Overview
+              </h1>
+              <PlanBadge tier={tier} />
             </div>
-            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 28, fontWeight: 800, color: stat.color }}>
-              {stat.value}
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-              {stat.sub}
-            </div>
+            <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
+              {isEnterprise
+                ? 'Welcome back. Your Enterprise concierge dashboard is live.'
+                : isPro
+                ? 'Welcome back. Here is what is happening with your store.'
+                : 'Welcome back. Here is what is happening with your store.'}
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Recent orders */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 24 }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-            Recent Orders
-          </h2>
-          <Link href="/dashboard/orders" style={{ color: 'var(--accent)', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
-            View all
-          </Link>
         </div>
 
-        {recentOrders.length === 0 ? (
-          <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--border)' }}>--</div>
-            <div style={{ color: 'var(--muted)', fontSize: 14 }}>No orders yet</div>
-            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Orders will appear here once customers start buying</div>
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                {['Order', 'Customer', 'Product', 'Amount', 'Status', 'Date'].map(h => (
-                  <th key={h} style={{ padding: '12px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((order, i) => (
-                <tr key={order.id} style={{ borderTop: '1px solid var(--border)' }}>
-                  <td style={{ padding: '14px 24px', color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>{order.id}</td>
-                  <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13 }}>{order.customer}</td>
-                  <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.product}</td>
-                  <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13, fontWeight: 600 }}>{order.amount}</td>
-                  <td style={{ padding: '14px 24px' }}><StatusBadge status={order.status} /></td>
-                  <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+        {/* Stats grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: isElevated ? 20 : 32 }}>
+          {stats.map((stat, i) => (
+            <div key={stat.label} style={tierCardStyle(theme, {
+              padding: '20px 24px',
+              position: 'relative',
+              overflow: 'hidden',
+            })}>
+              {isEnterprise && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+              )}
+              {isPro && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />
+              )}
+              <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                {stat.label}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-display), system-ui, sans-serif',
+                fontSize: 28,
+                fontWeight: 800,
+                color: i === 0 && isElevated ? theme.statValueColor : stat.color,
+              }}>
+                {stat.value}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
+                {stat.sub}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Quick actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Link href="/dashboard/products" style={{
-          display: 'block',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 10,
-          padding: '20px 24px',
-          textDecoration: 'none',
-          transition: 'border-color 0.15s',
-        }}>
-          <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-            Add Products
+        {/* Enterprise concierge strip */}
+        {isEnterprise && (
+          <div style={tierCardStyle(theme, {
+            padding: '18px 24px',
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+          })}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                Enterprise Concierge
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: 13.5 }}>
+                You have a dedicated account manager and priority support — response times under 2 hours.
+              </div>
+            </div>
+            <Link href="/dashboard/support" style={{
+              flexShrink: 0,
+              background: 'linear-gradient(90deg, #FFD54A, #FF6B00)',
+              color: '#111',
+              fontWeight: 800,
+              fontSize: 13,
+              textDecoration: 'none',
+              padding: '10px 18px',
+              borderRadius: 999,
+            }}>
+              Contact your manager
+            </Link>
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>List your first products to start selling</div>
-        </Link>
-        <Link href="/dashboard/payouts" style={{
-          display: 'block',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 10,
-          padding: '20px 24px',
-          textDecoration: 'none',
-        }}>
-          <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-            Set Up Payouts
+        )}
+
+        {/* Pro growth tip strip */}
+        {isPro && (
+          <div style={tierCardStyle(theme, {
+            padding: '16px 24px',
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+          })}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#4FC3F7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Pro Insight
+            </span>
+            <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
+              Check Analytics for growth trends and your top opportunity this week.
+            </span>
+            <Link href="/dashboard/analytics" style={{ marginLeft: 'auto', color: '#4FC3F7', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              View Analytics →
+            </Link>
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>Connect your bank to receive earnings</div>
-        </Link>
+        )}
+
+        {/* Recent orders */}
+        <div style={tierCardStyle(theme, { overflow: 'hidden', marginBottom: 24 })}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+              Recent Orders
+            </h2>
+            <Link href="/dashboard/orders" style={{ color: theme.headingAccent === 'var(--text)' ? 'var(--accent)' : theme.headingAccent, fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
+              View all
+            </Link>
+          </div>
+
+          {recentOrders.length === 0 ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--border)' }}>--</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14 }}>No orders yet</div>
+              <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Orders will appear here once customers start buying</div>
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  {['Order', 'Customer', 'Product', 'Amount', 'Status', 'Date'].map(h => (
+                    <th key={h} style={{ padding: '12px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order.id} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td style={{ padding: '14px 24px', color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>{order.id}</td>
+                    <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13 }}>{order.customer}</td>
+                    <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.product}</td>
+                    <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13, fontWeight: 600 }}>{order.amount}</td>
+                    <td style={{ padding: '14px 24px' }}><StatusBadge status={order.status} /></td>
+                    <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Quick actions */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <Link href="/dashboard/products" style={{
+            ...tierCardStyle(theme, { padding: '20px 24px' }),
+            display: 'block',
+            textDecoration: 'none',
+            transition: 'border-color 0.15s',
+          }}>
+            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+              Add Products
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>List your first products to start selling</div>
+          </Link>
+          <Link href="/dashboard/payouts" style={{
+            ...tierCardStyle(theme, { padding: '20px 24px' }),
+            display: 'block',
+            textDecoration: 'none',
+          }}>
+            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+              Set Up Payouts
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>Connect your bank to receive earnings</div>
+          </Link>
+        </div>
       </div>
     </div>
   );
