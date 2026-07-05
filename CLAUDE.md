@@ -228,3 +228,20 @@ Following William's instruction to continue the phased growth roadmap derived fr
 **OPEN REVIEW ITEM at the top of this file is still NOT resolved** - left completely untouched, still awaiting William's review and sign-off as before.
 
 **Operational note:** William has asked for CLAUDE.md to be updated regularly, roughly every 40 minutes, to reflect real progress. A recurring scheduled task has been set up to do this automatically. This update reflects that request.
+
+
+## SESSION UPDATE — 2026-07-05 (scheduled check-in: growth roadmap items shipped)
+
+This is an automated scheduled check-in comparing this file against live GitHub commits and Vercel deployments. Since the last logged update (commit cf88df3, roughly 12 hours prior), all three "immediate next steps" it named have shipped and are verified deployed and Ready in Vercel production.
+
+First, the API Keys nav link was added to the dashboard layout (commit 7c83f0b), which was the last missing piece of Phase 0.5. Checking commit history also showed the public Bearer-token read endpoint at app/api/v1/products/route.ts (commit 4b7c778) was already built and live before that prior update was written, so Phase 0.5 (Prisma ApiKey model, crypto helpers, the authenticated key-management endpoint, the public read endpoint, and now the nav link) is fully complete end to end, not merely nearly complete as the previous note said.
+
+Second, docs/GROWTH_ROADMAP.md was committed to the repo (commit a0c15f2), closing out that pending item.
+
+Third, the three remaining consumer-facing currency steps were all built and deployed: a currency switcher in GlobalHeader (commit c977dcc), a useCurrencyDisplay hook for conversion (commit f0eeccd), and currency display integrated into the shop page (commit c53fce7), the product page (commit 312337e), and search results (commit 306b2fa). All of these show Ready in Vercel production deployments as of this check.
+
+Not yet done: converting checkout to charge the buyer's exact converted total. This touches live Stripe charging logic, so per the standing note in the prior update it should pause for William's explicit confirmation before being built, even under overnight autonomous authorization. No commit for this exists yet and none should be assumed.
+
+The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. Nothing in this update resolves it or should be read as resolving it.
+
+Next steps identified this check-in: build the checkout currency-conversion step only after William explicitly confirms it; no other new pending items were identified beyond what is already listed in PENDING / NEXT above.
