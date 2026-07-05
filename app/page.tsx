@@ -67,6 +67,8 @@ border: `1px solid ${b.color}55`,
 export default function Home() {
 const [products, setProducts] = useState<Product[]>([])
 const [sellers, setSellers] = useState<Seller[]>([])
+type LiveCard = { id: string; title: string; roomName: string; status: string; sellerName: string; products: { images: string[] }[] }
+const [liveStreams, setLiveStreams] = useState<LiveCard[]>([])
 
 useEffect(() => {
 fetch('/api/shop/products?limit=8')
@@ -76,6 +78,10 @@ fetch('/api/shop/products?limit=8')
 fetch('/api/sellers/featured')
 .then((r) => r.json())
 .then((d) => setSellers(Array.isArray(d.sellers) ? d.sellers : []))
+.catch(() => {})
+fetch('/api/live')
+.then((r) => r.json())
+.then((d) => setLiveStreams(Array.isArray(d.streams) ? d.streams.filter((x: LiveCard) => x.status === 'LIVE') : []))
 .catch(() => {})
 }, [])
 
@@ -204,6 +210,71 @@ gap: 16,
 ))}
 </div>
 </section>
+
+{liveStreams.length > 0 && (
+<section style={{ ...section, padding: '32px 24px 8px' }}>
+<div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+<span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ff3b3b', display: 'inline-block' }} />
+<h2 style={h2}>Live now</h2>
+</div>
+<Link href="/live" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+See all live sellers →
+</Link>
+</div>
+<p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
+Enterprise sellers, live right now - a perk of Velor Enterprise. Watch and shop in real time.
+</p>
+<div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
+{liveStreams.map((ls) => (
+<Link
+key={ls.id}
+href={`/live/${ls.roomName}`}
+style={{
+flex: '0 0 240px',
+display: 'block',
+borderRadius: 16,
+overflow: 'hidden',
+background: 'var(--surface)',
+border: '1px solid var(--border)',
+textDecoration: 'none',
+color: 'inherit',
+}}
+>
+<div style={{ position: 'relative', aspectRatio: '16/9', background: '#111' }}>
+<span
+style={{
+position: 'absolute',
+top: 10,
+left: 10,
+background: '#ff3b3b',
+color: '#fff',
+fontSize: 11,
+fontWeight: 700,
+padding: '4px 10px',
+borderRadius: 999,
+zIndex: 1,
+}}
+>
+LIVE
+</span>
+{ls.products?.[0]?.images?.[0] && (
+<img
+src={ls.products[0].images[0]}
+alt=""
+style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65 }}
+/>
+)}
+</div>
+<div style={{ padding: 12 }}>
+<div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, marginBottom: 2 }}>{ls.sellerName}</div>
+<div style={{ fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.title}</div>
+</div>
+</Link>
+))}
+</div>
+</section>
+)}
 
 {/* CATEGORIES */}
 <section style={{ ...section, padding: '64px 24px 20px' }}>
