@@ -23,25 +23,25 @@ export async function GET(req: NextRequest) {
     }, { status: 401 })
   }
 
-const email = searchParams.get('email')
+  const email = searchParams.get('email')
   const tier = searchParams.get('tier')
   const validTiers = ['STARTER', 'PRO', 'ENTERPRISE']
   if (!email || !tier || !validTiers.includes(tier)) {
     return NextResponse.json({ error: 'Provide email and tier (STARTER|PRO|ENTERPRISE)' }, { status: 400 })
   }
 
-const seller = await prisma.seller.findFirst({
-  where: { user: { email } },
-  include: { user: { select: { email: true } } },
-})
+  const seller = await prisma.seller.findFirst({
+    where: { user: { email } },
+    include: { user: { select: { email: true } } },
+  })
   if (!seller) {
     return NextResponse.json({ error: 'No seller found for that email' }, { status: 404 })
   }
 
-const updated = await prisma.seller.update({
-  where: { id: seller.id },
-  data: { tier: tier as any },
-})
+  const updated = await prisma.seller.update({
+    where: { id: seller.id },
+    data: { tier: tier as any },
+  })
 
-return NextResponse.json({ ok: true, email: seller.user.email, tier: updated.tier })
+  return NextResponse.json({ ok: true, email: seller.user.email, tier: updated.tier })
 }
