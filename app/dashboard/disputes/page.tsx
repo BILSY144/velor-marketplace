@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
 
 interface OrderItem {
   id: string;
@@ -39,6 +40,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function SellerDisputesPage() {
+  const { tier, theme } = useSellerTier();
+  const isEnterprise = tier === 'ENTERPRISE';
+  const isElevated = tier !== 'STARTER';
+
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,16 +58,30 @@ export default function SellerDisputesPage() {
   return (
     <div style={{ padding: '32px', maxWidth: 900 }}>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-          Disputes
-          {open > 0 && (
-            <span style={{ marginLeft: 12, background: 'var(--red)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
-              {open} open
-            </span>
-          )}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+            Disputes
+            {open > 0 && (
+              <span style={{ marginLeft: 12, background: 'var(--red)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
+                {open} open
+              </span>
+            )}
+          </h1>
+          <PlanBadge tier={tier} />
+        </div>
         <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>Buyer disputes raised against your orders. Contact Velor admin if you need to respond.</p>
       </div>
+
+      {isEnterprise && open > 0 && (
+        <div style={tierCardStyle(theme, { padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 })}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Priority Handling
+          </span>
+          <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
+            As an Enterprise seller, open disputes on your account are escalated to Velor admin for priority review.
+          </span>
+        </div>
+      )}
 
       {loading && <p style={{ color: 'var(--muted)' }}>Loading...</p>}
       {!loading && disputes.length === 0 && (
@@ -70,7 +89,13 @@ export default function SellerDisputesPage() {
       )}
 
       {disputes.map((dispute) => (
-        <div key={dispute.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 20, marginBottom: 16 }}>
+        <div key={dispute.id} style={tierCardStyle(theme, { padding: 20, marginBottom: 16, position: 'relative', overflow: 'hidden' })}>
+          {isElevated && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, bottom: 0, width: 3,
+              background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
+            }} />
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <div>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>Dispute #{dispute.id.slice(-8)}</span>
