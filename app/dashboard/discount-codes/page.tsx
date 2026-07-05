@@ -268,4 +268,11 @@ export default function DiscountCodesPage() {
             </div>
             <div style={S.modalFooter}>
               <button style={S.btnOutline} onClick={() => { setShowModal(false); setError('') }}>Cancel</button>
-              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creatin
+              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create Code'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
