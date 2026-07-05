@@ -63,3 +63,9 @@ Go-live is launching **Enterprise tier only**. Rationale: Enterprise already pay
 **Tier gating:** enforced server-side on every write path (starting a stream, generating a broadcast token) by checking `seller.tier === 'ENTERPRISE'` - the same pattern already used for analytics and priority support gating. Not just hidden in the UI. Widening to Pro or all sellers later is a one-line change to that check, not a rebuild.
 
 This is now approved and Phase 2.1 (scheduled go-live MVP, Enterprise-only) is being implemented directly in the codebase.
+
+### Standing rule (2026-07-05, William): homepage shows only the top 12, everyone else climbs a ranking on /live
+
+Only the 12 best-ranked live/scheduled Enterprise sellers appear in the homepage "Velor Live Shopping" grid. Every other live Enterprise seller is not hidden - they appear on the public /live hub page, ordered by the same ranking, so they can see exactly where they stand and climb it. This turns /live into a genuine incentive ladder rather than a flat list.
+
+Ranking is computed server-side in app/api/live/route.ts on every request: primary sort key is each seller's delivered-order count for the current live/scheduled batch of sellers (a direct sales-volume signal, queried live via prisma.order.groupBy on status DELIVERED), with the existing overall seller.sellerScore (lib/seller-ranking.ts) as the tie-breaker. Each stream in the API response carries rank (1-based position), topTier (true for rank 1-12), and volumeCount (the delivered-order count driving the rank), so the /live page can eventually surface "you are rank 14, sell more to climb" messaging directly to sellers. The homepage simply renders the first 12 items of this already-sorted list - no separate homepage-side ranking logic exists, so the two views can never drift out of sync.
