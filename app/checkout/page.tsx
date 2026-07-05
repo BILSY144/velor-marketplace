@@ -89,10 +89,10 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
         fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '16px',
         cursor: paying ? 'not-allowed' : 'pointer', width: '100%',
       }}>
-        {paying ? 'Processing...' : 'Pay ' + fmt(total) + ' (DDP â No Surprise Fees)'}
+        {paying ? 'Processing...' : 'Pay ' + fmt(total) + ' (DDP — No Surprise Charges)'}
       </button>
       <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
-        Duties and taxes are included in your total. You will not be charged anything on delivery.
+        Duties and taxes are included in your total. Velor is a global marketplace, so this was reconfirmed at today's exchange rate right before you paid — you will not be charged anything extra on delivery.
       </p>
     </form>
   )
@@ -110,6 +110,7 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState('')
   const [creatingIntent, setCreatingIntent] = useState(false)
   const [currency, setCurrency] = useState('GBP')
+  const [confirmed, setConfirmed] = useState<{ currency: string; productSubtotal: number; shippingCost: number; dutiesAmount: number; total: number } | null>(null)
 
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const shippingCost = selectedRate?.amount ?? 0
@@ -174,16 +175,16 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productSubtotal: Math.round(productSubtotal * 100),
-          shippingCost: Math.round(shippingCost * 100),
-          dutiesAmount: Math.round(dutiesAmount * 100),
-          currency: currency.toLowerCase(),
-          sellerId: items[0]?.sellerId ?? null,
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+          currency,
+          shippingAmount: selectedRate?.amount ?? 0,
+          shippingCurrency: selectedRate?.currency ?? 'GBP',
+          dutiesAmountGBP: landedCost?.totalTaxGBP ?? 0,
         }),
       })
       const data = await res.json()
       if (data.clientSecret) {
+        if (data.breakdown) setConfirmed(data.breakdown)
         const piId = (data.clientSecret as string).split('_secret_')[0]
         localStorage.setItem('velor-last-order', JSON.stringify({
           orderNumber: 'VLR-' + Date.now(),
@@ -200,10 +201,10 @@ export default function CheckoutPage() {
             country: address.country,
           },
           shippingMethod: selectedRate?.service ?? '',
-          shippingCost,
-          subtotal: productSubtotal,
-          total,
-          currency,
+          shippingCost: data.breakdown ? data.breakdown.shippingCost : shippingCost,
+          subtotal: data.breakdown ? data.breakdown.productSubtotal : productSubtotal,
+          total: data.breakdown ? data.breakdown.total : total,
+          currency: data.breakdown ? data.breakdown.currency : currency,
           placedAt: new Date().toISOString(),
           sellerId: items[0]?.sellerId ?? null,
           rateId: selectedRate?.rateId ?? null,
@@ -248,6 +249,9 @@ export default function CheckoutPage() {
           {step === 'shipping' && (
             <>
               <div style={surface}>
+                <div style={{ background: 'rgba(255,140,0,0.08)', border: '1px solid rgba(255,140,0,0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: 'var(--text)', lineHeight: 1.5 }}>
+                  Velor is a global marketplace — prices convert live using current exchange rates, and we reconfirm your exact total right before you pay. No surprise charges, ever.
+                </div>
                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '20px' }}>
                   Shipping Address
                 </h2>
@@ -324,7 +328,7 @@ export default function CheckoutPage() {
                         <input type="radio" name="rate" checked={selectedRate?.rateId === rate.rateId} onChange={() => setSelectedRate(rate)} style={{ accentColor: 'var(--accent)' }} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
-                            {rate.carrier} â {rate.service}
+                            {rate.carrier} — {rate.service}
                             {rate.isDDP && (
                               <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(0,230,118,0.15)', color: 'var(--green)', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
                                 DDP
@@ -356,6 +360,9 @@ export default function CheckoutPage() {
                     >
                       {creatingIntent ? 'Setting Up Payment...' : 'Continue to Payment'}
                     </button>
+                    <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '8px', lineHeight: 1.4 }}>
+                      Your total will be reconfirmed at today's exchange rate on the next screen — exactly what you see is exactly what you pay.
+                    </p>
                   )}
                 </div>
               )}
@@ -369,13 +376,13 @@ export default function CheckoutPage() {
               </button>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '20px' }}>Payment</h2>
               <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#FF6B00', colorBackground: '#0D0D0D', colorText: '#FFFFFF', colorDanger: '#FF1744', fontFamily: 'Inter, sans-serif', borderRadius: '6px' } } }}>
-                <CheckoutForm clientSecret={clientSecret} total={total} currency={currency} onSuccess={() => {}} />
+                <CheckoutForm clientSecret={clientSecret} total={confirmed ? confirmed.total : total} currency={confirmed ? confirmed.currency : currency} onSuccess={() => {}} />
               </Elements>
             </div>
           )}
         </div>
 
-        {/* RIGHT â Order Summary */}
+        {/* RIGHT — Order Summary */}
         <div style={{ ...surface, position: 'sticky', top: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>Order Summary</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
@@ -395,11 +402,11 @@ export default function CheckoutPage() {
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-              <span style={{ color: 'var(--text)' }}>{fmt(productSubtotal)}</span>
+              <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.productSubtotal : productSubtotal)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(shippingCost) : 'â'}</span>
+              <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(confirmed ? confirmed.shippingCost : shippingCost) : '—'}</span>
             </div>
             {landedCost && !landedCost.isDomestic && dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
@@ -407,15 +414,18 @@ export default function CheckoutPage() {
                   Duties and Taxes (DDP)
                   {landedCost.belowDeMinimis && <span style={{ color: 'var(--green)', fontSize: '11px', marginLeft: '4px' }}>below threshold</span>}
                 </span>
-                <span style={{ color: 'var(--text)' }}>{fmt(dutiesAmount)}</span>
+                <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.dutiesAmount : dutiesAmount)}</span>
               </div>
             )}
             {landedCost?.isDomestic && (
-              <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic â no import duties</div>
+              <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic — no import duties</div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
               <span style={{ color: 'var(--text)' }}>Total</span>
-              <span style={{ color: 'var(--accent)' }}>{fmt(total)}</span>
+              <span style={{ color: 'var(--accent)' }}>{fmt(confirmed ? confirmed.total : total)}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: confirmed ? 'var(--green)' : 'var(--muted)', textAlign: 'right', marginTop: '4px' }}>
+              {confirmed ? 'Reconfirmed just now — exactly what you pay, no surprise charges' : 'Estimated — reconfirmed live the moment you continue to payment'}
             </div>
           </div>
           {dutiesAmount > 0 && (
