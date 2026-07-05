@@ -180,6 +180,7 @@ export default function GlobalHeader() {
             style={{ display: 'flex', alignItems: 'center', gap: 22 }}
           >
             <Link href="/shop" style={navLink}>Shop</Link>
+            <Link href="/live" style={navLink}>Live</Link>
             <div ref={catsRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setCatsOpen((v) => !v)}
