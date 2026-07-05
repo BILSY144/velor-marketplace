@@ -291,7 +291,7 @@ export default function SettingsPage() {
             </select>
             <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
               Auto-suggested from your country. All your product prices are set in this
-              currency — buyers abroad automatically see them converted to their own.
+              currency — buyers abroad automatically see them converted to their own using live exchange rates. Rates move constantly on a global marketplace, so we reconfirm the exact charge for the buyer right before they pay. Your payout is always calculated from the price you set here, in your own currency.
             </div>
           </div>
         </div>
