@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSellerTier, PlanBadge } from '@/lib/dashboard-theme';
 
 interface OtherUser {
   id: string;
@@ -30,6 +31,11 @@ interface Message {
 }
 
 export default function DashboardMessagesPage() {
+  const { tier, theme } = useSellerTier();
+  const isEnterprise = tier === 'ENTERPRISE';
+  const isElevated = tier !== 'STARTER';
+  const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
+
   const [conversations, setConversations] = useState<ConversationEntry[]>([]);
   const [selected, setSelected] = useState<ConversationEntry | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -119,12 +125,13 @@ export default function DashboardMessagesPage() {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', fontFamily: 'var(--font-body)' }}>
       {/* Conversation list */}
-      <div style={{ width: 320, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 320, borderRight: `1px solid ${isElevated ? theme.cardBorder : 'var(--border)'}`, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Inbox</h2>
           {totalUnread > 0 && (
-            <span style={{ background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
+            <span style={{ background: accentColor, color: isEnterprise ? '#111' : '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
           )}
+          <PlanBadge tier={tier} />
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -143,8 +150,9 @@ export default function DashboardMessagesPage() {
                   style={{
                     width: '100%',
                     textAlign: 'left',
-                    background: isSelected ? 'var(--surface)' : 'transparent',
+                    background: isSelected ? (isElevated ? theme.rowHoverBg : 'var(--surface)') : 'transparent',
                     border: 'none',
+                    borderLeft: isSelected && isElevated ? `3px solid ${accentColor}` : '3px solid transparent',
                     borderBottom: '1px solid var(--border)',
                     padding: '14px 16px',
                     cursor: 'pointer',
@@ -153,7 +161,7 @@ export default function DashboardMessagesPage() {
                     alignItems: 'flex-start',
                   }}
                 >
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: accentColor, flexShrink: 0 }}>
                     {initials(conv.otherUser.name, conv.otherUser.email)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -162,14 +170,14 @@ export default function DashboardMessagesPage() {
                       <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{formatTime(conv.lastMessage.createdAt)}</span>
                     </div>
                     {conv.product && (
-                      <div style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.product.title}</div>
+                      <div style={{ fontSize: 11, color: accentColor, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.product.title}</div>
                     )}
                     <div style={{ fontSize: 13, color: conv.unreadCount > 0 ? 'var(--text)' : 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {conv.lastMessage.senderId === currentUserId ? 'You: ' : ''}{conv.lastMessage.content}
                     </div>
                   </div>
                   {conv.unreadCount > 0 && (
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: 6 }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: accentColor, flexShrink: 0, marginTop: 6 }} />
                   )}
                 </button>
               );
@@ -187,8 +195,11 @@ export default function DashboardMessagesPage() {
         ) : (
           <>
             {/* Thread header */}
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
+              {isEnterprise && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+              )}
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: accentColor }}>
                 {initials(otherUser?.name ?? selected.otherUser.name, otherUser?.email ?? selected.otherUser.email)}
               </div>
               <div>
@@ -217,8 +228,8 @@ export default function DashboardMessagesPage() {
                           style={{
                             padding: '10px 14px',
                             borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                            background: isMine ? 'var(--accent)' : 'var(--surface)',
-                            color: isMine ? '#000' : 'var(--text)',
+                            background: isMine ? accentColor : 'var(--surface)',
+                            color: isMine ? (isEnterprise ? '#111' : '#000') : 'var(--text)',
                             fontSize: 14,
                             lineHeight: 1.5,
                             border: isMine ? 'none' : '1px solid var(--border)',
@@ -263,8 +274,8 @@ export default function DashboardMessagesPage() {
                 onClick={sendMessage}
                 disabled={sending || !draft.trim()}
                 style={{
-                  background: 'var(--accent)',
-                  color: '#000',
+                  background: accentColor,
+                  color: isEnterprise ? '#111' : '#000',
                   border: 'none',
                   borderRadius: 10,
                   padding: '10px 20px',
