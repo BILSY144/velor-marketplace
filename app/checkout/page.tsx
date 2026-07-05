@@ -347,6 +347,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {selectedRate && (
+                  <>
                     <button
                       onClick={proceedToPayment}
                       disabled={creatingIntent}
@@ -363,6 +364,7 @@ export default function CheckoutPage() {
                     <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '8px', lineHeight: 1.4 }}>
                       Your total will be reconfirmed at today's exchange rate on the next screen — exactly what you see is exactly what you pay.
                     </p>
+                  </>
                   )}
                 </div>
               )}
