@@ -17,6 +17,7 @@ const navItems = [
   { href: '/dashboard/analytics', label: 'Analytics', icon: 'AN' },
   { href: '/dashboard/settings', label: 'Settings', icon: 'ST' },
   { href: '/dashboard/support', label: 'Support', icon: 'SP' },
+  { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
