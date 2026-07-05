@@ -156,7 +156,7 @@ export default function GoLivePage() {
         {activeStream ? (
           <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff3b3b', display: 'inline-block' }} />
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
               <strong>LIVE</strong>
               <span style={{ color: '#aaa' }}>{activeStream.title}</span>
             </div>
