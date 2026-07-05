@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface WishlistProduct {
   id: string
@@ -23,6 +24,7 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
+  const { symbol, convert } = useCurrencyDisplay()
   const { data: session, status } = useSession()
   const router = useRouter()
   const [items, setItems] = useState<WishlistItem[]>([])
@@ -148,13 +150,13 @@ export default function WishlistPage() {
                     </div>
                   )}
                   <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', marginBottom: '14px', marginTop: 'auto' }}>
-                    \u00a3{item.product.price.toFixed(2)}
+                    {symbol}{convert(item.product.price).toFixed(2)}
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => addToCart(item)}
                       style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
-                    >
+   £{item.product.price.toFixed(2)}                 >
                       Add to Cart
                     </button>
                     <button
