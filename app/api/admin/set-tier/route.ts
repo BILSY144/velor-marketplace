@@ -14,19 +14,7 @@ export async function GET(req: NextRequest) {
   const secret = searchParams.get('secret')
   const envSecret = process.env.CRON_SECRET
   if (!envSecret || secret !== envSecret) {
-    return NextResponse.json({
-      error: 'Unauthorized',
-      debug: {
-        envIsSet: !!envSecret,
-        envLength: envSecret ? envSecret.length : 0,
-        givenLength: secret ? secret.length : 0,
-        envFirst6: envSecret ? envSecret.slice(0, 6) : null,
-        givenFirst6: secret ? secret.slice(0, 6) : null,
-        envLast6: envSecret ? envSecret.slice(-6) : null,
-        givenLast6: secret ? secret.slice(-6) : null,
-        buildTag: 'debug-v2-dynamic',
-      },
-    }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const email = searchParams.get('email')
