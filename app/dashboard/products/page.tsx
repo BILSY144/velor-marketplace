@@ -498,6 +498,9 @@ export default function DashboardProductsPage() {
                 <div>
                   <label style={labelStyle}>Price ({form.currency || sellerCurrency}) *</label>
                   <input style={inputStyle} type="number" step="0.01" value={form.price} onChange={e => set('price', e.target.value)} required />
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                    Buyers worldwide see this converted live to their currency and reconfirmed at checkout. Exchange rates move, but your payout is always based on the price you set here.
+                  </div>
                 </div>
               </div>
 
