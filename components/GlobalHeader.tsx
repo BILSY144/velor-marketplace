@@ -107,6 +107,20 @@ export default function GlobalHeader() {
     padding: '8px 2px',
     opacity: 0.9,
   }
+  const liveNavButton: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    background: 'var(--accent)',
+    color: '#000',
+    textDecoration: 'none',
+    fontSize: 13,
+    fontWeight: 800,
+    fontFamily: 'var(--font-body)',
+    padding: '6px 14px',
+    borderRadius: 999,
+    whiteSpace: 'nowrap',
+  }
   const menuItem: React.CSSProperties = {
     display: 'block',
     padding: '11px 16px',
@@ -180,7 +194,10 @@ export default function GlobalHeader() {
             style={{ display: 'flex', alignItems: 'center', gap: 22 }}
           >
             <Link href="/shop" style={navLink}>Shop</Link>
-            <Link href="/live" style={navLink}>Live</Link>
+            <Link href="/live" style={liveNavButton}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
+              Live
+            </Link>
             <div ref={catsRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setCatsOpen((v) => !v)}
@@ -404,6 +421,7 @@ export default function GlobalHeader() {
         {mobileOpen && (
           <div style={{ borderTop: '1px solid var(--border)', padding: '10px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Link href="/shop" style={menuItem}>Shop</Link>
+            <Link href="/live" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Live</Link>
             <Link href="/sell" style={menuItem}>Sell on Velor</Link>
             <Link href="/about" style={menuItem}>How it works</Link>
             <Link href="/orders" style={menuItem}>My orders</Link>
