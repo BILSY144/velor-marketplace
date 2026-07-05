@@ -127,6 +127,7 @@ currency                      String        @default("GBP")
   discountCodes                DiscountCode[]
   payouts                      Payout[]
   verification                 SellerVerification?
+  supportTickets               SupportTicket[]
   sellerScore                  Float               @default(0)
   sellerBadge                  String?
   sellerScoreUpdatedAt         DateTime?
@@ -430,4 +431,28 @@ model FxRate {
   fetchedAt DateTime @default(now())
 
   @@unique([base, quote])
+}
+
+enum SupportPriority {
+  STANDARD
+  PRIORITY
+}
+
+enum SupportTicketStatus {
+  OPEN
+  RESOLVED
+}
+
+model SupportTicket {
+  id        String              @id @default(cuid())
+  sellerId  String?
+  seller    Seller?             @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  name      String
+  email     String
+  subject   String
+  message   String              @db.Text
+  priority  SupportPriority     @default(STANDARD)
+  status    SupportTicketStatus @default(OPEN)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 }
