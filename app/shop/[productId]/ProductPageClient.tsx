@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface Variant {
   id: string
@@ -44,6 +45,7 @@ export default function ProductPageClient() {
   const router = useRouter()
   const { data: session } = useSession()
   const productId = params?.productId as string
+  const { symbol, convert } = useCurrencyDisplay()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -217,7 +219,7 @@ export default function ProductPageClient() {
           )}
 
           <div style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, marginBottom: '24px', color: 'var(--text)' }}>
-            {sym(product.currency)}{currentPrice.toFixed(2)}
+            {symbol}{convert(currentPrice, product.currency).toFixed(2)}
           </div>
 
           {product.variants.length > 0 && (
