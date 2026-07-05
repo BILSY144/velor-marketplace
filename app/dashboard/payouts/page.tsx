@@ -219,7 +219,7 @@ export default function PayoutsPage() {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
           )}
           <div style={{ fontSize: 12, fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-            {isEnterprise ? 'Your commission — lowest tier available' : 'Your commission — lower than Starter'}
+            {isEnterprise ? 'Our commission rate — lowest tier available' : 'Our commission rate — lower than Starter'}
           </div>
           <CommissionLadder tier={tier} accentColor={accentColor} />
         </div>
