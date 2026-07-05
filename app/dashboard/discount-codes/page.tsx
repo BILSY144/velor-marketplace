@@ -60,6 +60,9 @@ export default function DiscountCodesPage() {
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [quickBusy, setQuickBusy] = useState<number | null>(null)
+  const [customValue, setCustomValue] = useState('')
+  const [customBusy, setCustomBusy] = useState(false)
+  const [customError, setCustomError] = useState('')
   const [form, setForm] = useState({ code: '', type: 'PERCENTAGE', value: '', minOrder: '', usageLimit: '', expiresAt: '' })
   const [error, setError] = useState('')
 
@@ -121,6 +124,29 @@ export default function DiscountCodesPage() {
     setQuickBusy(null)
   }
 
+  // Manual quick-create — lets the seller type any percentage they want
+  // instead of being limited to the fixed presets above.
+  async function customCreate() {
+    const val = parseFloat(customValue)
+    if (!val || val <= 0 || val > 100) { setCustomError('Enter a percentage between 1 and 100'); return }
+    setCustomBusy(true); setCustomError('')
+    try {
+      const r = await fetch('/api/dashboard/discount-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: `SAVE${val}-${randomSuffix()}`,
+          type: 'PERCENTAGE',
+          value: val,
+        }),
+      })
+      const data = await r.json()
+      if (r.ok) { setCodes(prev => [data.discount, ...prev]); setCustomValue('') }
+      else setCustomError(data.error || 'Failed to create code')
+    } catch { setCustomError('Network error') }
+    setCustomBusy(false)
+  }
+
   async function toggleActive(id: string, isActive: boolean) {
     await fetch('/api/dashboard/discount-codes', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, isActive: !isActive }) })
     setCodes(prev => prev.map(c => c.id === id ? { ...c, isActive: !isActive } : c))
@@ -171,10 +197,41 @@ export default function DiscountCodesPage() {
                 {quickBusy === p ? 'Creating…' : `${p}% off — one click`}
               </button>
             ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--muted)', fontSize: 12.5, fontWeight: 600 }}>Or set your own:</span>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              placeholder="e.g. 25"
+              value={customValue}
+              onChange={e => setCustomValue(e.target.value)}
+              style={{
+                width: 90, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6,
+                padding: '7px 10px', color: 'var(--text)', fontSize: 13, fontWeight: 600, outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            <span style={{ color: 'var(--muted)', fontSize: 13 }}>%</span>
+            <button
+              onClick={customCreate}
+              disabled={customBusy || !customValue}
+              style={{
+                background: accentColor, color: '#000', border: 'none', borderRadius: 999,
+                padding: '8px 18px', fontSize: 13, fontWeight: 700,
+                cursor: customBusy || !customValue ? 'not-allowed' : 'pointer',
+                opacity: !customValue ? 0.6 : 1,
+              }}
+            >
+              {customBusy ? 'Creating…' : 'Create custom code'}
+            </button>
             <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
               Instantly creates an active code — no form needed.
             </span>
           </div>
+          {customError && (
+            <div style={{ color: 'var(--red)', fontSize: 12.5, marginTop: 10 }}>{customError}</div>
+          )}
         </div>
       )}
 
