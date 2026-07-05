@@ -58,7 +58,7 @@ export default function LiveHubPage() {
                 <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ aspectRatio: '16/9', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {s.status === 'LIVE' && (
-                      <span style={{ position: 'absolute', top: 10, left: 10, background: '#ff3b3b', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>LIVE</span>
+                      <span style={{ position: 'absolute', top: 10, left: 10, background: accent, color: '#111', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>LIVE</span>
                     )}
                     {s.products[0]?.images?.[0] ? (
                       <img src={s.products[0].images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
