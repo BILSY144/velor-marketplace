@@ -51,6 +51,13 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
   }
 
   if (pathname.startsWith('/api/admin')) {
+    // Internal QA tool: does its own CRON_SECRET query-param check inside the
+    // route handler (needs to work from a plain browser URL, so it can't rely
+    // on a custom Authorization header). Exempt it from the generic
+    // ADMIN_SECRET/header check below.
+    if (pathname === '/api/admin/set-tier') {
+      return NextResponse.next()
+    }
     const secret = process.env.ADMIN_SECRET
     const authHeader = req.headers.get('authorization')
     if (!secret || authHeader !== 'Bearer ' + secret) {
