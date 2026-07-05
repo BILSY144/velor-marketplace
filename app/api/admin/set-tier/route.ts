@@ -4,23 +4,17 @@ import { prisma } from '@/lib/prisma'
 // Internal QA tool only - lets the site owner flip a seller's tier directly,
 // bypassing Stripe, so tier-gated pages/features can be reviewed without paying.
 // Protected by CRON_SECRET (already set in Vercel). Never share this URL.
+// force-dynamic: without this, Next.js can cache this GET handler's response
+// at build/edge time and serve the same frozen output to every request,
+// ignoring query params entirely.
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const secret = searchParams.get('secret')
   const envSecret = process.env.CRON_SECRET
   if (!envSecret || secret !== envSecret) {
-    return NextResponse.json({
-      error: 'Unauthorized',
-      debug: {
-        envIsSet: !!envSecret,
-        envLength: envSecret ? envSecret.length : 0,
-        givenLength: secret ? secret.length : 0,
-        envFirst6: envSecret ? envSecret.slice(0, 6) : null,
-        givenFirst6: secret ? secret.slice(0, 6) : null,
-        envLast6: envSecret ? envSecret.slice(-6) : null,
-        givenLast6: secret ? secret.slice(-6) : null,
-      },
-    }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const email = searchParams.get('email')
