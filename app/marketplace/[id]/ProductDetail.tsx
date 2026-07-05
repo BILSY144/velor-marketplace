@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface Product {
   id: string
@@ -20,6 +21,7 @@ interface Product {
 
 export default function ProductDetail({ id }: { id: string }) {
   const router = useRouter()
+  const { symbol, convert } = useCurrencyDisplay()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -160,7 +162,7 @@ export default function ProductDetail({ id }: { id: string }) {
                 <div className="pd-seller-name">{product.seller.storeName}</div>
               </div>
 
-              <div className="pd-price">Â£{product.price.toFixed(2)}</div>
+              <div className="pd-price">{symbol}{convert(product.price).toFixed(2)}</div>
 
               <p className="pd-desc">{product.description}</p>
 
