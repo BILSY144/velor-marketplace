@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { DASHBOARD_TIER_THEME, PlanBadge, tierCardStyle, type SellerTier } from '@/lib/dashboard-theme'
 
 interface AnalyticsData {
     tier: string
@@ -50,7 +51,7 @@ function fmtPct(value: number | null | undefined): string {
     return `${sign}${value.toFixed(1)}%`
 }
 
-function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
+function RevenueChart({ data, lineColor }: { data: { date: string; revenue: number }[]; lineColor: string }) {
     const maxRevenue = Math.max(...data.map((d) => d.revenue), 1)
     const W = 680
     const H = 200
@@ -92,7 +93,7 @@ function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
                 </div>
                          )
   }
-  
+
     return (
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
             {yLabels.map((l, i) => (
@@ -108,12 +109,12 @@ function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
                       {new Date(p.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </text>
                   ))}
-                <path d={areaD} fill="#FF6B00" fillOpacity="0.12" />
-                <path d={pathD} fill="none" stroke="#FF6B00" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                <path d={areaD} fill={lineColor} fillOpacity="0.12" />
+                <path d={pathD} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
             {pts
                       .filter((p) => p.revenue > 0)
                       .map((p, i) => (
-                                  <circle key={i} cx={p.x} cy={p.y} r="3" fill="#FF6B00" />
+                                  <circle key={i} cx={p.x} cy={p.y} r="3" fill={lineColor} />
                                 ))}
           </svg>
         )
@@ -163,6 +164,21 @@ function exportCsv(data: AnalyticsData) {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 }
+
+// Simple client-side 30-day forward projection from the last 30 days of
+// revenue. Enterprise-only bonus widget — no backend change required.
+function forecastNext30(dailyRevenue: { date: string; revenue: number }[]) {
+    const withSales = dailyRevenue.filter((d) => d.revenue > 0)
+    if (withSales.length < 3) return null
+    const avgDaily = dailyRevenue.reduce((s, d) => s + d.revenue, 0) / dailyRevenue.length
+    const half = Math.floor(dailyRevenue.length / 2)
+    const firstHalfAvg = dailyRevenue.slice(0, half).reduce((s, d) => s + d.revenue, 0) / Math.max(half, 1)
+    const secondHalfAvg = dailyRevenue.slice(half).reduce((s, d) => s + d.revenue, 0) / Math.max(dailyRevenue.length - half, 1)
+    const momentum = firstHalfAvg > 0 ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg : 0
+    const projected = avgDaily * 30 * (1 + Math.max(-0.5, Math.min(1, momentum)))
+    return { projected: Math.max(0, projected), momentum }
+}
+
 export default function AnalyticsPage() {
     const [data, setData] = useState<AnalyticsData | null>(null)
     const [loading, setLoading] = useState(true)
@@ -215,7 +231,7 @@ export default function AnalyticsPage() {
                 </div>
               )
   }
-  
+
     if (!data) {
           return (
                   <div style={{ color: 'var(--muted)', padding: '40px 0' }}>Failed to load analytics.</div>
@@ -223,8 +239,12 @@ export default function AnalyticsPage() {
     }
 
   const { summary, dailyRevenue, topProducts, productsByStatus } = data
+    const tier = (data.tier as SellerTier) in DASHBOARD_TIER_THEME ? (data.tier as SellerTier) : 'STARTER'
+    const theme = DASHBOARD_TIER_THEME[tier]
     const isPro = data.tier === 'PRO' || data.tier === 'ENTERPRISE'
     const isEnterprise = data.tier === 'ENTERPRISE'
+    const tCard = (extra?: React.CSSProperties) => tierCardStyle(theme, { padding: '24px', ...extra })
+    const forecast = isEnterprise ? forecastNext30(dailyRevenue) : null
 
   const statCards = [
     { label: 'Total Revenue', value: fmt(summary.totalRevenue), sub: 'Gross all time' },
@@ -247,17 +267,20 @@ export default function AnalyticsPage() {
         <div>
               <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                                <h1
-                                              style={{
-                                                              fontFamily: 'var(--font-display)',
-                                                              fontSize: '28px',
-                                                              fontWeight: 700,
-                                                              color: 'var(--text)',
-                                                              margin: 0,
-                                              }}
-                                            >
-                                            Analytics
-                                </h1>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                          <h1
+                                                        style={{
+                                                                        fontFamily: 'var(--font-display)',
+                                                                        fontSize: '28px',
+                                                                        fontWeight: 700,
+                                                                        color: 'var(--text)',
+                                                                        margin: 0,
+                                                        }}
+                                                      >
+                                                      Analytics
+                                          </h1>
+                                          <PlanBadge tier={tier} />
+                                </div>
                                 <p style={{ color: 'var(--muted)', marginTop: '6px', fontSize: '14px' }}>
                                             Track your store performance
                                 </p>
@@ -266,13 +289,13 @@ export default function AnalyticsPage() {
                     <button
                                   onClick={() => exportCsv(data)}
                                   style={{
-                                                  background: 'var(--accent)',
+                                                  background: 'linear-gradient(90deg, #FFD54A, #FF6B00)',
                                                   color: '#111111',
                                                   border: 'none',
                                                   borderRadius: '8px',
                                                   padding: '10px 18px',
                                                   fontSize: '13px',
-                                                  fontWeight: 700,
+                                                  fontWeight: 800,
                     cursor: 'pointer',
                                   }}
                                 >
@@ -281,8 +304,45 @@ export default function AnalyticsPage() {
                       )}
               </div>
 
+          {/* Stat cards get a coloured top accent for Pro/Enterprise */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            {statCards.map((s, i) => (
+              <div key={s.label} style={tCard({ position: 'relative', overflow: 'hidden', padding: '20px 22px' })}>
+                {isEnterprise && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />}
+                {isPro && !isEnterprise && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />}
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                  {s.label}
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: s.accent ? theme.statValueColor : 'var(--text)' }}>
+                  {s.value}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {isEnterprise && forecast && (
+                  <div style={tCard({ marginBottom: '24px', position: 'relative', overflow: 'hidden' })}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          Enterprise Forecast
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Projected next 30 days, based on your recent momentum</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 800, color: '#FFD54A' }}>
+                          {fmt(forecast.projected)}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: forecast.momentum >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {forecast.momentum >= 0 ? '↑' : '↓'} {Math.abs(forecast.momentum * 100).toFixed(0)}% momentum
+                        </span>
+                      </div>
+                  </div>
+          )}
+
           {isPro && data.trend && (
-                  <div style={{ ...card, marginBottom: '24px' }}>
+                  <div style={{ ...tCard(), marginBottom: '24px' }}>
                               <h2
                                             style={{
                                                             fontFamily: 'var(--font-display)',
@@ -313,8 +373,8 @@ export default function AnalyticsPage() {
                                         </div>
                             </div>
                     {data.topOpportunity && (
-                                <div style={{ padding: '14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                                              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent)', marginBottom: '4px' }}>
+                                <div style={{ padding: '14px', background: 'var(--bg)', border: `1px solid ${theme.cardBorder}`, borderRadius: '8px' }}>
+                                              <div style={{ fontSize: '12px', fontWeight: 700, color: theme.headingAccent, marginBottom: '4px' }}>
                                                               Top Opportunity
                                               </div>
                                               <div style={{ fontSize: '13px', color: 'var(--text)' }}>{data.topOpportunity.message}</div>
@@ -324,7 +384,7 @@ export default function AnalyticsPage() {
               )}
 
           {isEnterprise && data.previousPeriod && (
-                  <div style={{ ...card, marginBottom: '24px' }}>
+                  <div style={{ ...tCard(), marginBottom: '24px' }}>
                               <h2
                                             style={{
                                                             fontFamily: 'var(--font-display)',
@@ -359,7 +419,7 @@ export default function AnalyticsPage() {
                   </div>
               )}
 
-                <div style={{ ...card, marginBottom: '24px' }}>
+                <div style={{ ...tCard(), marginBottom: '24px' }}>
                           <h2
                                       style={{
                                                     fontFamily: 'var(--font-display)',
@@ -371,11 +431,11 @@ export default function AnalyticsPage() {
                                     >
                                     Revenue, Last 30 Days
                           </h2>
-                        <RevenueChart data={dailyRevenue} />
+                        <RevenueChart data={dailyRevenue} lineColor={theme.chartLine} />
                 </div>
-        
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                      <div style={card}>
+                      <div style={tCard()}>
                                 <h2
                                               style={{
                                                               fontFamily: 'var(--font-display)',
@@ -416,7 +476,7 @@ export default function AnalyticsPage() {
                                                                         </div>
                                                                         <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{p.units} sold</div>
                                                       </div>
-                                                      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>
+                                                      <div style={{ fontSize: '14px', fontWeight: 700, color: theme.headingAccent === 'var(--text)' ? 'var(--accent)' : theme.headingAccent, flexShrink: 0 }}>
                                                         {fmt(p.revenue)}
                                                       </div>
                                       </div>
@@ -424,7 +484,7 @@ export default function AnalyticsPage() {
                     )}
                       </div>
 
-                        <div style={card}>
+                        <div style={tCard()}>
                                     <h2
                                                   style={{
                                                                   fontFamily: 'var(--font-display)',
