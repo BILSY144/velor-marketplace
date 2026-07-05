@@ -496,7 +496,20 @@ model LiveStream {
   recordingUrl String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  viewerSessions LiveStreamViewerSession[]
 
   @@index([sellerId])
   @@index([status])
+}
+
+model LiveStreamViewerSession {
+  id         String     @id @default(cuid())
+  streamId   String
+  liveStream LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  identity   String
+  joinedAt   DateTime   @default(now())
+  leftAt     DateTime?
+
+  @@index([streamId])
+  @@index([joinedAt])
 }
