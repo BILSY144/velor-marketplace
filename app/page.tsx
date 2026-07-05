@@ -211,29 +211,30 @@ gap: 16,
 </div>
 </section>
 
-{liveStreams.length > 0 && (
-<section style={{ ...section, padding: '32px 24px 8px' }}>
+<section style={{ ...section, padding: '32px 24px 20px' }}>
 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ff3b3b', display: 'inline-block' }} />
-<h2 style={h2}>Live now</h2>
+<h2 style={h2}>Velor Live Shopping</h2>
 </div>
 <Link href="/live" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
 See all live sellers →
 </Link>
 </div>
 <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
-Enterprise sellers, live right now - a perk of Velor Enterprise. Watch and shop in real time.
+Our Enterprise sellers, broadcasting live from anywhere in the world - a perk earned, not bought.
 </p>
-<div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
-{liveStreams.map((ls) => (
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+{Array.from({ length: 10 }).map((_, i) => {
+const ls = liveStreams[i]
+if (ls) {
+return (
 <Link
 key={ls.id}
 href={`/live/${ls.roomName}`}
 style={{
-flex: '0 0 240px',
 display: 'block',
-borderRadius: 16,
+borderRadius: 14,
 overflow: 'hidden',
 background: 'var(--surface)',
 border: '1px solid var(--border)',
@@ -241,17 +242,17 @@ textDecoration: 'none',
 color: 'inherit',
 }}
 >
-<div style={{ position: 'relative', aspectRatio: '16/9', background: '#111' }}>
+<div style={{ position: 'relative', aspectRatio: '3/4', background: '#111' }}>
 <span
 style={{
 position: 'absolute',
-top: 10,
-left: 10,
+top: 8,
+left: 8,
 background: '#ff3b3b',
 color: '#fff',
-fontSize: 11,
+fontSize: 10,
 fontWeight: 700,
-padding: '4px 10px',
+padding: '3px 8px',
 borderRadius: 999,
 zIndex: 1,
 }}
@@ -262,21 +263,41 @@ LIVE
 <img
 src={ls.products[0].images[0]}
 alt=""
-style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65 }}
+style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
 />
 )}
 </div>
-<div style={{ padding: 12 }}>
-<div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, marginBottom: 2 }}>{ls.sellerName}</div>
-<div style={{ fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.title}</div>
+<div style={{ padding: 8 }}>
+<div style={{ fontSize: 10.5, color: 'var(--accent)', fontWeight: 700, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.sellerName}</div>
+<div style={{ fontSize: 11.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.title}</div>
 </div>
 </Link>
-))}
+)
+}
+return (
+<div
+key={`live-slot-${i}`}
+style={{
+borderRadius: 14,
+overflow: 'hidden',
+background: 'var(--surface)',
+border: '1px dashed var(--border)',
+display: 'flex',
+flexDirection: 'column',
+alignItems: 'center',
+justifyContent: 'center',
+gap: 6,
+aspectRatio: '3/4',
+color: 'var(--muted)',
+}}
+>
+<span style={{ fontSize: 20, opacity: 0.5 }}>&#9679;</span>
+<span style={{ fontSize: 11, textAlign: 'center', padding: '0 10px' }}>Live slot open</span>
 </div>
-</section>
-)}
-
-{/* CATEGORIES */}
+)
+})}
+</div>
+</section>{/* CATEGORIES */}
 <section style={{ ...section, padding: '64px 24px 20px' }}>
 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 22 }}>
 <h2 style={h2}>Shop by category</h2>
