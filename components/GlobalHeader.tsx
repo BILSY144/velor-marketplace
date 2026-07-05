@@ -135,6 +135,8 @@ export default function GlobalHeader() {
         Verified &amp; ranked sellers
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
         Secure Stripe checkout
+        <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
+        Global marketplace — prices convert live, reconfirmed at checkout
       </div>
 
       {/* Main bar */}
@@ -286,6 +288,7 @@ export default function GlobalHeader() {
             {/* Currency switcher */}
             <div style={{ ...navLink, display: 'flex', alignItems: 'center' }}>
               <select
+                title="Velor is a global marketplace. Prices are converted live using current exchange rates and reconfirmed at checkout, so you never see a surprise charge."
                 value={currency}
                 onChange={(e) => {
                   setCurrency(e.target.value)
