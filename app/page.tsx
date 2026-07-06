@@ -64,6 +64,80 @@ function Badge({ code }: { code?: string | null }) {
   )
 }
 
+// Coded globe / network graphic for the hero — pure SVG, no raster images, so
+// it scales cleanly, respects dark mode, and costs nothing to load.
+function GlobeGraphic() {
+  return (
+    <svg viewBox="0 0 520 520" style={{ width: '100%', height: 'auto', display: 'block' }} aria-hidden="true">
+      <defs>
+        <radialGradient id="velorGlobeGlow" cx="50%" cy="45%" r="60%">
+          <stop offset="0%" stopColor="rgba(255,107,0,0.35)" />
+          <stop offset="100%" stopColor="rgba(255,107,0,0)" />
+        </radialGradient>
+        <linearGradient id="velorGlobeFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1c1c1c" />
+          <stop offset="100%" stopColor="#0a0a0a" />
+        </linearGradient>
+      </defs>
+
+      <circle cx="260" cy="256" r="230" fill="url(#velorGlobeGlow)" />
+
+      {/* outer orbit rings */}
+      <ellipse cx="260" cy="256" rx="232" ry="92" fill="none" stroke="var(--border)" strokeWidth="1" transform="rotate(-16 260 256)" />
+      <ellipse cx="260" cy="256" rx="205" ry="205" fill="none" stroke="var(--border)" strokeWidth="1" opacity="0.55" />
+
+      {/* the globe */}
+      <circle cx="260" cy="256" r="152" fill="url(#velorGlobeFill)" stroke="var(--accent)" strokeWidth="1.5" />
+
+      {/* latitude lines */}
+      <ellipse cx="260" cy="256" rx="152" ry="46" fill="none" stroke="rgba(255,107,0,0.35)" strokeWidth="1" />
+      <ellipse cx="260" cy="256" rx="152" ry="92" fill="none" stroke="rgba(255,107,0,0.25)" strokeWidth="1" />
+      <ellipse cx="260" cy="256" rx="152" ry="132" fill="none" stroke="rgba(255,107,0,0.16)" strokeWidth="1" />
+      {/* longitude lines */}
+      <ellipse cx="260" cy="256" rx="46" ry="152" fill="none" stroke="rgba(255,107,0,0.25)" strokeWidth="1" />
+      <ellipse cx="260" cy="256" rx="96" ry="152" fill="none" stroke="rgba(255,107,0,0.16)" strokeWidth="1" />
+      <line x1="260" y1="104" x2="260" y2="408" stroke="rgba(255,107,0,0.2)" strokeWidth="1" />
+
+      {/* network nodes orbiting the globe */}
+      <circle cx="472" cy="220" r="6" fill="var(--accent)" />
+      <circle cx="86" cy="336" r="5" fill="var(--green)" />
+      <circle cx="332" cy="66" r="5" fill="var(--accent)" />
+      <circle cx="150" cy="120" r="4" fill="var(--green)" opacity="0.85" />
+
+      {/* connecting lines from nodes into the globe */}
+      <line x1="472" y1="220" x2="384" y2="240" stroke="var(--accent)" strokeWidth="1" opacity="0.55" />
+      <line x1="86" y1="336" x2="176" y2="304" stroke="var(--green)" strokeWidth="1" opacity="0.55" />
+      <line x1="332" y1="66" x2="300" y2="132" stroke="var(--accent)" strokeWidth="1" opacity="0.55" />
+      <line x1="150" y1="120" x2="205" y2="160" stroke="var(--green)" strokeWidth="1" opacity="0.4" />
+    </svg>
+  )
+}
+
+function HeroChip({ style, children }: { style: React.CSSProperties; children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '7px 13px',
+        borderRadius: 999,
+        background: 'rgba(10,10,10,0.75)',
+        border: '1px solid var(--border)',
+        fontSize: 12.5,
+        fontWeight: 700,
+        color: 'var(--text)',
+        backdropFilter: 'blur(6px)',
+        whiteSpace: 'nowrap',
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [sellers, setSellers] = useState<Seller[]>([])
@@ -94,6 +168,13 @@ export default function Home() {
     margin: 0,
   }
 
+  const trustBadges: Array<[string, string]> = [
+    ['🌍', 'Global Reach'],
+    ['🔒', 'Secure Payments'],
+    ['📦', 'Reliable Shipping'],
+    ['🧠', 'Smart Logistics'],
+  ]
+
   return (
     <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
       {/* HERO */}
@@ -106,79 +187,159 @@ export default function Home() {
               'radial-gradient(1100px 500px at 80% -10%, rgba(255,107,0,0.18), transparent 60%), radial-gradient(800px 500px at 0% 110%, rgba(0,230,118,0.10), transparent 55%)',
           }}
         />
-        <div style={{ ...section, position: 'relative', padding: '86px 24px 92px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 14px',
-              borderRadius: 999,
-              border: '1px solid var(--border)',
-              background: 'rgba(255,255,255,0.03)',
-              fontSize: 12.5,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: 22,
-            }}
-          >
-            <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--green)' }} />
-            The first fully AI-run marketplace
-          </div>
 
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: 'clamp(38px, 6vw, 68px)',
-              lineHeight: 1.04,
-              letterSpacing: '-0.02em',
-              margin: 0,
-              maxWidth: 900,
-            }}
-          >
-            A world of independent sellers.
-            <br />
-            <span style={{ color: 'var(--accent)' }}>Protected</span> every step of the way.
-          </h1>
-
-          <p style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
-            Buy from vetted sellers around the world with total confidence. Your payment is held
-            safely until you confirm your order arrived — and the whole marketplace is run,
-            monitored and protected by AI, around the clock.
-          </p>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <Link
-              href="/shop"
+        <div
+          style={{
+            ...section,
+            position: 'relative',
+            padding: '86px 24px 48px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: 48,
+            alignItems: 'center',
+          }}
+        >
+          {/* LEFT: copy + dual CTAs */}
+          <div>
+            <div
               style={{
-                background: 'var(--accent)',
-                color: '#000',
-                fontWeight: 800,
-                fontSize: 15,
-                textDecoration: 'none',
-                padding: '15px 30px',
-                borderRadius: 999,
-              }}
-            >
-              Shop now
-            </Link>
-            <Link
-              href="/sell"
-              style={{
-                background: 'transparent',
-                color: 'var(--text)',
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: 'none',
-                padding: '15px 30px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 14px',
                 borderRadius: 999,
                 border: '1px solid var(--border)',
+                background: 'rgba(255,255,255,0.03)',
+                fontSize: 12.5,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                color: 'var(--muted)',
+                marginBottom: 22,
               }}
             >
-              Start selling
-            </Link>
+              <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--green)' }} />
+              Global Marketplace · AI-run, worldwide
+            </div>
+
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: 'clamp(38px, 6vw, 66px)',
+                lineHeight: 1.04,
+                letterSpacing: '-0.02em',
+                margin: 0,
+                maxWidth: 620,
+              }}
+            >
+              A world of independent sellers.
+              <br />
+              <span style={{ color: 'var(--accent)' }}>Protected</span> every step of the way.
+            </h1>
+
+            <p style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 560, margin: '22px 0 30px' }}>
+              Buy from vetted sellers around the world with total confidence. Your payment is held
+              safely until you confirm your order arrived — and the whole marketplace is run,
+              monitored and protected by AI, around the clock.
+            </p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 34 }}>
+              <Link
+                href="/shop"
+                style={{
+                  background: 'var(--accent)',
+                  color: '#000',
+                  fontWeight: 800,
+                  fontSize: 15,
+                  textDecoration: 'none',
+                  padding: '15px 30px',
+                  borderRadius: 999,
+                }}
+              >
+                Shop now
+              </Link>
+              <Link
+                href="/sell"
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  textDecoration: 'none',
+                  padding: '15px 30px',
+                  borderRadius: 999,
+                  border: '1px solid var(--border)',
+                }}
+              >
+                Start selling
+              </Link>
+            </div>
+
+            {/* buyer / seller split callouts */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, maxWidth: 560 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 18 }}>🛍️</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>For buyers</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.4 }}>Funds held until delivery is confirmed.</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 18 }}>🏪</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>For sellers</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.4 }}>List free, reach buyers worldwide.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: coded globe / network graphic */}
+          <div style={{ position: 'relative', maxWidth: 460, width: '100%', margin: '0 auto' }}>
+            <GlobeGraphic />
+            <HeroChip style={{ top: '4%', right: '0%' }}>
+              <span style={{ fontSize: 15 }}>🛍️</span> Buyers
+            </HeroChip>
+            <HeroChip style={{ bottom: '8%', left: '-2%' }}>
+              <span style={{ fontSize: 15 }}>🏪</span> Sellers
+            </HeroChip>
+            <HeroChip style={{ top: '1%', left: '20%' }}>
+              <span style={{ fontSize: 15 }}>🌍</span> Worldwide
+            </HeroChip>
+          </div>
+        </div>
+
+        {/* in-hero trust badge strip */}
+        <div style={{ ...section, position: 'relative', padding: '0 24px 44px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 12,
+              justifyContent: 'center',
+              paddingTop: 28,
+              borderTop: '1px solid var(--border)',
+            }}
+          >
+            {trustBadges.map(([icon, label]) => (
+              <div
+                key={label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 16px',
+                  borderRadius: 999,
+                  border: '1px solid var(--border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                }}
+              >
+                <span style={{ fontSize: 15 }}>{icon}</span> {label}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -297,7 +458,9 @@ export default function Home() {
             )
           })}
         </div>
-      </section>{/* CATEGORIES */}
+      </section>
+
+      {/* CATEGORIES */}
       <section style={{ ...section, padding: '64px 24px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 22 }}>
           <h2 style={h2}>Shop by category</h2>
