@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ...baseNavItems.slice(0, analyticsIdx),
     payoutItem,
     ...baseNavItems.slice(analyticsIdx),
-  ];
+  ].filter((i) => (i as { special?: string }).special !== 'live' || tier === 'ENTERPRISE');
 
   return (
     <div style={{
