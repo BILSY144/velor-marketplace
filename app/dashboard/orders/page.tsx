@@ -94,10 +94,11 @@ export default function DashboardOrdersPage() {
   }, [])
 
   function updateShipForm(orderId: string, field: keyof ShipFormState, value: string) {
-    setShipForms(f => ({
-      ...f,
-      [orderId]: { carrier: '', trackingNumber: '', trackingUrl: '', ...f[orderId], [field]: value },
-    }))
+    setShipForms(f => {
+      const current: ShipFormState = f[orderId] ?? { carrier: '', trackingNumber: '', trackingUrl: '' }
+      const next: ShipFormState = { ...current, [field]: value }
+      return { ...f, [orderId]: next }
+    })
   }
 
   async function markShipped(orderId: string) {
