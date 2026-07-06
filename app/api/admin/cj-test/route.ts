@@ -1,29 +1,23 @@
 import { NextResponse } from 'next/server'
-import { getAccessToken } from '@/lib/cj'
+import { getAccessToken, getCategories } from '@/lib/cj'
 
-// Temporary verification endpoint -- confirms the CJ_API_KEY env var and the
-// auth flow in lib/cj.ts actually work against a live CJ account, and prints
-// the RAW category-endpoint response so we can see CJ's actual response
-// shape before trusting our typed wrapper. Gated by ADMIN_SECRET via
-// middleware.ts. Safe to delete once CJ integration is proven.
+// Temporary verification endpoint -- confirms CJ_API_KEY + the auth flow +
+// category fetch all work end-to-end against a live CJ account. Gated by
+// ADMIN_SECRET via middleware.ts. Safe to delete once CJ integration is
+// proven and the real import/order routes exist.
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
     const token = await getAccessToken()
-    const res = await fetch('https://developers.cjdropshipping.com/api2.0/v1/product/getCategory', {
-      headers: { 'CJ-Access-Token': token },
-    })
-    const raw = await res.text()
+    const categories = await getCategories()
     return NextResponse.json({
       ok: true,
       tokenPrefix: token.slice(0, 8) + '...',
-      httpStatus: res.status,
-      rawBodyPrefix: raw.slice(0, 1500),
+      categoryCount: categories.length,
+      firstCategory: categories[0]?.categoryFirstName || null,
     })
   } catch (err) {
     return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }
-
-// retrigger 1783349464435
