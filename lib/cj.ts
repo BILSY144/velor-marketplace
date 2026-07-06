@@ -132,8 +132,7 @@ export interface CjCategory {
 }
 
 export async function getCategories(): Promise<CjCategory[]> {
-  const json = await cjFetch<{ data: CjCategory[] }>('/product/getCategory')
-  return json.data
+  return cjFetch<CjCategory[]>('/product/getCategory')
 }
 
 // ---------------------------------------------------------------------------
@@ -157,8 +156,8 @@ export async function searchProducts(params: { categoryId?: string; keyWord?: st
   qs.set('page', String(params.page || 1))
   qs.set('size', String(params.size || 20))
 
-  const json = await cjFetch<{ data: { list: CjProduct[] } }>(`/product/listV2?${qs.toString()}`)
-  return json.data.list
+  const json = await cjFetch<{ list: CjProduct[] }>(`/product/listV2?${qs.toString()}`)
+  return json.list
 }
 
 export interface CjProductDetail {
@@ -177,8 +176,7 @@ export interface CjProductDetail {
 }
 
 export async function getProductDetail(pid: string): Promise<CjProductDetail> {
-  const json = await cjFetch<{ data: CjProductDetail }>(`/product/query?pid=${encodeURIComponent(pid)}`)
-  return json.data
+  return cjFetch<CjProductDetail>(`/product/query?pid=${encodeURIComponent(pid)}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +193,7 @@ export interface CjFreightOption {
 }
 
 export async function checkUkFreight(vid: string, quantity: number, startCountryCode = 'CN'): Promise<CjFreightOption[]> {
-  const json = await cjFetch<{ data: CjFreightOption[] }>('/logistic/freightCalculate', {
+  const json = await cjFetch<CjFreightOption[]>('/logistic/freightCalculate', {
     method: 'POST',
     body: {
       startCountryCode,
@@ -203,7 +201,7 @@ export async function checkUkFreight(vid: string, quantity: number, startCountry
       products: [{ vid, quantity }],
     },
   })
-  return json.data || []
+  return json || []
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +232,7 @@ export interface CjCreateOrderResult {
 }
 
 export async function createOrder(params: CjCreateOrderParams): Promise<CjCreateOrderResult> {
-  const json = await cjFetch<{ data: { orderId: string } }>('/shopping/order/createOrderV2', {
+  const json = await cjFetch<{ orderId: string }>('/shopping/order/createOrderV2', {
     method: 'POST',
     body: {
       orderNumber: params.orderNumber,
@@ -251,7 +249,7 @@ export async function createOrder(params: CjCreateOrderParams): Promise<CjCreate
       products: params.products.map((p) => ({ vid: p.vid, quantity: p.quantity })),
     },
   })
-  return { orderId: json.data.orderId }
+  return { orderId: json.orderId }
 }
 
 // ---------------------------------------------------------------------------
@@ -268,6 +266,5 @@ export interface CjTrackingInfo {
 // account -- verify this against developers.cjdropshipping.com/en/api/api2/api/logistic.html
 // once we have credentials, before relying on it in the fulfillment webhook.
 export async function getTracking(cjOrderId: string): Promise<CjTrackingInfo | null> {
-  const json = await cjFetch<{ data: CjTrackingInfo | null }>(`/logistic/trackInfo?orderId=${encodeURIComponent(cjOrderId)}`)
-  return json.data
+  return cjFetch<CjTrackingInfo | null>(`/logistic/trackInfo?orderId=${encodeURIComponent(cjOrderId)}`)
 }
