@@ -18,7 +18,7 @@ const baseNavItems = [
   { href: '/dashboard/live', label: 'Go Live', icon: 'GL', special: 'live' },
   { href: '/dashboard/settings', label: 'Settings', icon: 'ST' },
   { href: '/dashboard/support', label: 'Support', icon: 'SP' },
-  { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK' },
+  { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK', special: 'enterprise' },
 ];
 
 type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE';
@@ -98,7 +98,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ...baseNavItems.slice(0, analyticsIdx),
     payoutItem,
     ...baseNavItems.slice(analyticsIdx),
-  ].filter((i) => (i as { special?: string }).special !== 'live' || tier === 'ENTERPRISE');
+  ].filter((i) => {
+    const special = (i as { special?: string }).special;
+    if (special === 'live' || special === 'enterprise') return tier === 'ENTERPRISE';
+    return true;
+  });
 
   return (
     <div style={{
