@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getProductDetail } from '@/lib/cj'
+import { isAuthorizedAdmin } from '@/lib/adminAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,8 +9,7 @@ export const dynamic = 'force-dynamic'
 // CJ-sourced products that were imported before ProductVariant existed.
 // Safe to re-run -- skips products that already have variants.
 export async function POST(request: NextRequest) {
-  const adminSecret = request.headers.get('x-admin-secret')
-  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+  if (!(await isAuthorizedAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
