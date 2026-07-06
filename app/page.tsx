@@ -471,7 +471,7 @@ export default function Home() {
                 >
                   <div style={{ aspectRatio: '1 / 1', background: '#141414' }}>
                     {img ? (
-                      <img src={img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div
                         style={{
