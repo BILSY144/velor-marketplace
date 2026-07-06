@@ -21,7 +21,6 @@ interface SupportData {
 export default function SupportPage() {
   const { tier, theme } = useSellerTier()
   const isEnterprise = tier === 'ENTERPRISE'
-  const isPro = tier === 'PRO'
 
   const [data, setData] = useState<SupportData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -100,23 +99,13 @@ export default function SupportPage() {
             Priority Support
           </span>
           <span style={{ color: 'var(--text)', fontSize: 14 }}>
-            As an Enterprise seller, messages you send here are flagged for priority review by our team — response times under 2 hours.
-          </span>
-        </div>
-      ) : isPro ? (
-        <div style={tierCardStyle(theme, { padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
-          <span style={{ background: '#4FC3F7', color: '#001018', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 12, padding: '4px 10px', borderRadius: 999, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-            Pro Support
-          </span>
-          <span style={{ color: 'var(--text)', fontSize: 14 }}>
-            As a Pro seller you&apos;re on our faster response track.
-            <a href="/dashboard/upgrade/enterprise" style={{ color: '#4FC3F7' }}> Upgrade to Enterprise for priority-flagged, sub-2-hour support.</a>
+            As a {tier === 'ENTERPRISE' ? 'Enterprise' : 'Pro'} seller, messages you send here are flagged for priority review by our team - response times under 2 hours.
           </span>
         </div>
       ) : (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px 20px', marginBottom: 28, color: 'var(--muted)', fontSize: 14 }}>
-          Our team typically responds within 1-2 business days. Enterprise sellers get priority-flagged support
-          <a href="/dashboard/upgrade/enterprise" style={{ color: 'var(--accent)' }}> - see the Enterprise plan</a>.
+          Our team typically responds within 1-2 business days. Pro and Enterprise sellers get priority-flagged support
+          <a href="/dashboard/upgrade/pro" style={{ color: 'var(--accent)' }}> - see the Pro plan</a>.
         </div>
       )}
 
