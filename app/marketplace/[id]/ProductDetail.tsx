@@ -159,7 +159,7 @@ export default function ProductDetail({ id }: { id: string }) {
         <div className="pd-nav">
           <Link href="/marketplace" className="">Marketplace</Link>
           <span>/</span>
-          <span style={{ color: '#fff' }}>{product?.name ?? 'Product'}</span>
+          <span style={{ color: '#fff' }}>{product?.title ?? 'Product'}</span>
         </div>
 
         {loading ? (
