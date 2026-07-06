@@ -9,6 +9,7 @@ interface SearchResult {
   id: string;
   name: string;
   price: number;
+  currency: string;
   image: string | null;
   category: string;
   sellerId: string;
@@ -165,7 +166,7 @@ function SearchContent() {
                         by {item.sellerName}
                       </p>
                       <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>
-                        {symbol}{convert(item.price).toFixed(2)}
+                        {symbol}{convert(item.price, item.currency).toFixed(2)}
                       </p>
                     </div>
                   </div>
