@@ -39,6 +39,20 @@ interface LandedCost {
   dutyAmountGBP: number; vatAmountGBP: number; totalTaxGBP: number;
   belowDeMinimis: boolean; deMinimisGBP: number; isDomestic: boolean;
 }
+interface AppliedDiscount {
+  code: string
+  description: string
+  discountAmountGBP: number
+}
+interface ConfirmedBreakdown {
+  currency: string
+  productSubtotal: number
+  shippingCost: number
+  dutiesAmount: number
+  discountAmount: number
+  discountCode: string | null
+  total: number
+}
 
 function useCartItems(): CartItem[] {
   const [items, setItems] = useState<CartItem[]>([])
@@ -109,13 +123,22 @@ export default function CheckoutPage() {
   const [rateError, setRateError] = useState('')
   const [clientSecret, setClientSecret] = useState('')
   const [creatingIntent, setCreatingIntent] = useState(false)
+  const [paymentSetupError, setPaymentSetupError] = useState('')
   const [currency, setCurrency] = useState('GBP')
-  const [confirmed, setConfirmed] = useState<{ currency: string; productSubtotal: number; shippingCost: number; dutiesAmount: number; total: number } | null>(null)
+  const [confirmed, setConfirmed] = useState<ConfirmedBreakdown | null>(null)
+
+  // Discount code — only ever discounts the product subtotal, never
+  // shipping or duties/taxes.
+  const [discountCodeInput, setDiscountCodeInput] = useState('')
+  const [discountApplying, setDiscountApplying] = useState(false)
+  const [discountError, setDiscountError] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null)
 
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const shippingCost = selectedRate?.amount ?? 0
   const dutiesAmount = landedCost?.totalTaxGBP ?? 0
-  const total = productSubtotal + shippingCost + dutiesAmount
+  const discountAmount = appliedDiscount?.discountAmountGBP ?? 0
+  const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
 
   function setAddr(k: keyof typeof address, v: string) {
     setAddress(a => ({ ...a, [k]: v }))
@@ -126,6 +149,43 @@ export default function CheckoutPage() {
       setSelectedRate(null)
       setLandedCost(null)
     }
+  }
+
+  async function applyDiscountCode() {
+    if (!discountCodeInput.trim() || items.length === 0) return
+    setDiscountApplying(true)
+    setDiscountError('')
+    try {
+      const res = await fetch('/api/discount/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: discountCodeInput.trim(),
+          sellerId: items[0]?.sellerId ?? null,
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+        }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedDiscount({
+          code: data.code,
+          description: data.description ?? 'Discount applied',
+          discountAmountGBP: data.discountAmountGBP ?? 0,
+        })
+        setDiscountCodeInput('')
+      } else {
+        setDiscountError(data.error || 'Invalid or expired discount code')
+      }
+    } catch {
+      setDiscountError('Could not check this code. Please try again.')
+    } finally {
+      setDiscountApplying(false)
+    }
+  }
+
+  function removeDiscount() {
+    setAppliedDiscount(null)
+    setDiscountError('')
   }
 
   async function fetchRatesAndDuties() {
@@ -170,6 +230,7 @@ export default function CheckoutPage() {
   async function proceedToPayment() {
     if (!selectedRate) return
     setCreatingIntent(true)
+    setPaymentSetupError('')
     try {
       const res = await fetch('/api/stripe/payment-intent', {
         method: 'POST',
@@ -180,9 +241,18 @@ export default function CheckoutPage() {
           shippingAmount: selectedRate?.amount ?? 0,
           shippingCurrency: selectedRate?.currency ?? 'GBP',
           dutiesAmountGBP: landedCost?.totalTaxGBP ?? 0,
+          discountCode: appliedDiscount?.code ?? undefined,
         }),
       })
       const data = await res.json()
+      if (!res.ok) {
+        setPaymentSetupError(data.error || 'Could not set up payment. Please try again.')
+        // If the code stopped being valid between "Apply" and checkout
+        // (e.g. usage limit hit by someone else), drop it so the seller
+        // total the buyer sees matches what they'll actually be asked to pay.
+        if (appliedDiscount) setAppliedDiscount(null)
+        return
+      }
       if (data.clientSecret) {
         if (data.breakdown) setConfirmed(data.breakdown)
         const piId = (data.clientSecret as string).split('_secret_')[0]
@@ -203,6 +273,8 @@ export default function CheckoutPage() {
           shippingMethod: selectedRate?.service ?? '',
           shippingCost: data.breakdown ? data.breakdown.shippingCost : shippingCost,
           subtotal: data.breakdown ? data.breakdown.productSubtotal : productSubtotal,
+          discountCode: data.breakdown ? data.breakdown.discountCode : (appliedDiscount?.code ?? null),
+          discountAmount: data.breakdown ? data.breakdown.discountAmount : discountAmount,
           total: data.breakdown ? data.breakdown.total : total,
           currency: data.breakdown ? data.breakdown.currency : currency,
           placedAt: new Date().toISOString(),
@@ -346,25 +418,31 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
+                  {paymentSetupError && (
+                    <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
+                      {paymentSetupError}
+                    </div>
+                  )}
+
                   {selectedRate && (
-                  <>
-                    <button
-                      onClick={proceedToPayment}
-                      disabled={creatingIntent}
-                      style={{
-                        marginTop: '20px', padding: '13px', width: '100%',
-                        background: creatingIntent ? 'var(--border)' : 'var(--accent)',
-                        color: '#fff', border: 'none', borderRadius: '8px',
-                        fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px',
-                        cursor: creatingIntent ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {creatingIntent ? 'Setting Up Payment...' : 'Continue to Payment'}
-                    </button>
-                    <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '8px', lineHeight: 1.4 }}>
-                      Your total will be reconfirmed at today's exchange rate on the next screen — exactly what you see is exactly what you pay.
-                    </p>
-                  </>
+                    <>
+                      <button
+                        onClick={proceedToPayment}
+                        disabled={creatingIntent}
+                        style={{
+                          marginTop: '20px', padding: '13px', width: '100%',
+                          background: creatingIntent ? 'var(--border)' : 'var(--accent)',
+                          color: '#fff', border: 'none', borderRadius: '8px',
+                          fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px',
+                          cursor: creatingIntent ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {creatingIntent ? 'Setting Up Payment...' : 'Continue to Payment'}
+                      </button>
+                      <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '8px', lineHeight: 1.4 }}>
+                        Your total will be reconfirmed at today's exchange rate on the next screen — exactly what you see is exactly what you pay.
+                      </p>
+                    </>
                   )}
                 </div>
               )}
@@ -401,11 +479,62 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
+
+          {step === 'shipping' && (
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  style={{ ...inputStyle, flex: 1 }}
+                  placeholder="Discount code"
+                  value={discountCodeInput}
+                  onChange={e => setDiscountCodeInput(e.target.value.toUpperCase())}
+                  disabled={!!appliedDiscount}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyDiscountCode() } }}
+                />
+                {appliedDiscount ? (
+                  <button
+                    onClick={removeDiscount}
+                    style={{ padding: '10px 16px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--muted)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    onClick={applyDiscountCode}
+                    disabled={discountApplying || !discountCodeInput.trim()}
+                    style={{
+                      padding: '10px 16px',
+                      background: discountApplying || !discountCodeInput.trim() ? 'var(--border)' : 'var(--accent)',
+                      color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                      cursor: discountApplying || !discountCodeInput.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const,
+                    }}
+                  >
+                    {discountApplying ? '...' : 'Apply'}
+                  </button>
+                )}
+              </div>
+              {discountError && (
+                <div style={{ color: 'var(--red)', fontSize: '12px', marginTop: '6px' }}>{discountError}</div>
+              )}
+              {appliedDiscount && (
+                <div style={{ color: 'var(--green)', fontSize: '12px', marginTop: '6px' }}>
+                  &quot;{appliedDiscount.code}&quot; applied — {appliedDiscount.description}
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-              <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.productSubtotal : productSubtotal)}</span>
+              <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.productSubtotal + confirmed.discountAmount : productSubtotal)}</span>
             </div>
+            {(confirmed ? confirmed.discountAmount > 0 : discountAmount > 0) && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--green)' }}>Discount{appliedDiscount ? ` (${appliedDiscount.code})` : confirmed?.discountCode ? ` (${confirmed.discountCode})` : ''}</span>
+                <span style={{ color: 'var(--green)' }}>-{fmt(confirmed ? confirmed.discountAmount : discountAmount)}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Shipping</span>
               <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(confirmed ? confirmed.shippingCost : shippingCost) : '—'}</span>
