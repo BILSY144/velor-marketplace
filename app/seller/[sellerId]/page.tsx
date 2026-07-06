@@ -3,6 +3,7 @@ import { getTheme } from '@/lib/store-themes'
 import { auth } from '@/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { countryFlagUrl } from '@/lib/countryFlag'
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -255,7 +256,15 @@ export default async function SellerProfilePage({
                   marginBottom: '14px',
                 }}
               >
-                {seller.country && <span>{seller.country}</span>}
+                {countryFlagUrl(seller.country) && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <img
+                      src={countryFlagUrl(seller.country)!}
+                      alt={seller.country || ''}
+                      style={{ width: 18, height: 13, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
+                    />
+                  </span>
+                )}
                 <span>{seller.products.length} products</span>
                 <span>Member since {memberSince}</span>
               </div>
