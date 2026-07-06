@@ -373,3 +373,16 @@ Next steps identified this check-in: continue flagging the automatic discount sy
 No new commits have landed on main since the previous entry above. That entry, written by the last scheduled check-in, already documented the homepage hero image swap to a real photo supplied by William, covering commits 6f50877, 26703c5, 749751a, and 808ffd9, and it was itself committed as 5e4bbce. Checking the commit history for main again just now, 5e4bbce is still the most recent commit. No code work has shipped this cycle, so there is nothing new to log.
 
 The OPEN REVIEW ITEM at the top of this file remains open and untouched. All previously flagged items awaiting William's attention are unchanged since the last check-in: the automatic discount system, the homepage hero image swap, the Phase 2 Live Shopping review, and the checkout currency-charging review.
+
+
+## SESSION UPDATE — 2026-07-06 (cycle 2)
+
+Real progress has landed since the previous entry (which was logged as commit 14ae747, written when 5e4bbce was the most recent commit). Nine new commits have shipped on main since then: 37fc2c8, 89faa49, 1dc5a43, 568c82a, bfa0d18, 8b7672d, b27d287, 568bc18, and 2654fde.
+
+The seller recruitment badge graphic went through several rounds of visual fixes: removing a duplicate FOR label, removing a stray headphone icon, centering the LIST text, splitting it into a two-line LIST (white) and FOR FREE (orange) layout, rebuilding it from the pristine original artwork for a clean circular clip with no stray square corners, and finally correcting the fill color to a hardcoded near-black after the previous version was accidentally sampling the globe glow color.
+
+Outreach emails were also touched this cycle: the hero image now links through to /apply and uses the corrected Calling All Sellers graphic, and the copy was updated to reflect the confirmed 6th August buyer opening date.
+
+Separately, the BOOST SALES card copy was fixed to remove a duplicate "and".
+
+None of this cycle's commits touch the OPEN REVIEW ITEM below, so it remains fully open and unresolved. The previously flagged items requiring William's attention are unchanged: the automatic discount system, the homepage hero image swap, the Phase 2 Live Shopping review, the checkout currency-charging review, and the tiered seller plan pages OPEN REVIEW ITEM. This check-in is bookkeeping only; no product decisions were made.
