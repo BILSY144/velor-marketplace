@@ -391,7 +391,7 @@ export default function Home() {
                 >
                   <div style={{ aspectRatio: '1 / 1', background: '#141414', position: 'relative' }}>
                     {thumb ? (
-                      <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div
                         style={{
@@ -471,7 +471,7 @@ export default function Home() {
                 >
                   <div style={{ aspectRatio: '1 / 1', background: '#141414' }}>
                     {img ? (
-                      <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div
                         style={{
