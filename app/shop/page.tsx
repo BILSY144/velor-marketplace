@@ -18,6 +18,8 @@ interface Product {
   sellerName: string
   avgRating: number | null
   reviewCount: number
+  discountedPrice: number | null
+  percentOff: number | null
 }
 
 // The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
@@ -187,15 +189,22 @@ function ShopContent() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-            {products.map(p => (
+            {products.map(p => {
+              const onSale = p.discountedPrice !== null && p.discountedPrice < p.price
+              return (
               <div key={p.id} style={{ position: 'relative' }}>
                 <Link href={`/shop/${p.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                  <div style={{ background: 'var(--surface)', border: onSale ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
                     <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
                       {p.images[0]
                         ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '13px' }}>No image</div>
                       }
+                      {onSale && (
+                        <div style={{ position: 'absolute', top: 10, left: 10, background: 'var(--accent)', color: '#000', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '4px', letterSpacing: '0.3px' }}>
+                          {p.percentOff}% OFF
+                        </div>
+                      )}
                       {p.stock > 0 && p.stock < 5 && (
                         <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
                           ONLY {p.stock} LEFT
@@ -212,7 +221,20 @@ function ShopContent() {
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
+                        <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
+                          {onSale ? (
+                            <>
+                              <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--accent)' }}>
+                                {symbol}{convert(p.discountedPrice as number, p.currency).toFixed(2)}
+                              </span>
+                              <span style={{ fontSize: '13px', color: 'var(--muted)', textDecoration: 'line-through' }}>
+                                {symbol}{convert(p.price, p.currency).toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
+                          )}
+                        </span>
                         <span style={{ fontSize: '11px', color: 'var(--muted)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
                       </div>
                     </div>
@@ -225,7 +247,8 @@ function ShopContent() {
                   style={{
                     position: 'absolute',
                     top: '10px',
-                    left: '10px',
+                    left: onSale ? undefined : '10px',
+                    right: onSale ? '10px' : undefined,
                     width: '34px',
                     height: '34px',
                     borderRadius: '50%',
@@ -246,7 +269,8 @@ function ShopContent() {
                   {wishlistIds.has(p.id) ? '♥' : '♡'}
                 </button>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
