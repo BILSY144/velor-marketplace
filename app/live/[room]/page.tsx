@@ -1,4 +1,5 @@
 'use client'
+import { addToCart as addToSharedCart } from '@/lib/cart'
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
@@ -73,14 +74,14 @@ export default function LiveViewerPage() {
   }, [room])
 
   function buyNow(p: ProductInfo) {
-    const cart = JSON.parse(localStorage.getItem('velor-cart') || '[]')
-    const idx = cart.findIndex((c: { id: string }) => c.id === p.id)
-    if (idx >= 0) {
-      cart[idx].quantity += 1
-    } else {
-      cart.push({ id: p.id, name: p.title, price: p.price, quantity: 1, image: p.images[0] || '' })
-    }
-    localStorage.setItem('velor-cart', JSON.stringify(cart))
+    addToSharedCart({
+      id: p.id,
+      productId: p.id,
+      name: p.title,
+      price: p.price,
+      quantity: 1,
+      image: p.images[0] || '',
+    })
     setAddedId(p.id)
     setTimeout(() => router.push('/checkout'), 500)
   }
