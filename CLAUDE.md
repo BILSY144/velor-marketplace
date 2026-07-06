@@ -465,3 +465,26 @@ The OPEN REVIEW ITEM at the top of this file remains fully open and untouched, a
 Ran the scheduled bookkeeping check again around 09:49 UTC. Reviewed the commit history on the main branch and confirmed no new commits have landed since the last logged entry (commit 2b8ce0f, made at 08:20 UTC today, itself a no-change bookkeeping note). This is now the third consecutive scheduled check with nothing new to report. The last real product commits remain the Go Live video shopping consistency pass (homepage, Enterprise upgrade page, and tier comparison table) logged earlier today.
 
 The OPEN REVIEW ITEM at the top of this file remains fully open and untouched, awaiting William's review.
+
+
+## SESSION UPDATE — 2026-07-06: Real-time new-seller signup email alert
+
+William asked for a real-time email to willsinclair144@gmail.com every time a new seller signs up, using the existing Resend integration (not a new provider, not folded into the 07:00 UTC daily director briefing).
+
+**Design decision — what counts as "seller signup":**
+Investigated the full seller-creation surface of the codebase before picking a trigger point. Two candidate pipelines exist:
+
+1. `app/api/seller/apply/route.ts` — the outreach/agent-driven application pipeline (Agent 3, Seller Onboarding). This only creates a `SellerApplication` row. It does NOT create a `Seller` or `User` row.
+2. `app/api/agents/applications/[id]/route.ts` (PATCH, admin-only) — approves/rejects a `SellerApplication` and sends `buildSellerApprovedEmail`/`buildSellerRejectedEmail`. Read the full file (3100 chars) and confirmed it contains no `seller.create`/`seller: {` anywhere — approving an application does NOT create a `Seller` row either. This pipeline currently has no confirmed conversion into a real seller account anywhere in the live code.
+3. `app/api/auth/register/route.ts` — the direct self-serve registration endpoint. This is the ONLY place in the codebase that actually creates a `Seller` row: a single atomic `prisma.user.create()` with a nested `seller: { create: { storeName } }` write, creating `User` (role SELLER) and `Seller` (tier defaults to STARTER, approved defaults to false) together in one transaction.
+
+**Decision: "signed up" = the moment `app/api/auth/register/route.ts` successfully creates the User+Seller pair.** There is no meaningful separate "completed onboarding" step in this codebase — the Seller row exists atomically from the first moment of registration, unapproved by default. Approval/verification is a later lifecycle change on an already-existing Seller row, not a separate account-creation event. This is also simply the only real signup event that exists in the code today.
+
+**Known gap (disclosed honestly, not silently glossed over):** the outreach/application pipeline (`SellerApplication` → admin approval) does not currently create a `Seller` account at all. If that pipeline is ever built out to actually convert an approved application into a real seller account, this alert will NOT fire for that path unless the same alert call is added at that future conversion point. Right now this is a non-issue only because that conversion doesn't exist yet — but it's worth remembering if/when Agent 3 gets finished.
+
+**What was built:**
+- Added `buildNewSellerAlertEmail(d: { name, email, storeName, tier, signedUpAt })` to `lib/email.ts`, following the existing `WRAP_OPEN`/`WRAP_CLOSE`/`h()`-escaping conventions used by the other `build*Email` functions. Returns `{ subject, html }` with a simple field table (name, email, store name, tier, signup timestamp) and a note that the seller is unapproved by default.
+- Updated `app/api/auth/register/route.ts`: after the existing `prisma.user.create()` call (now with `include: { seller: true }` so the real `tier`/`storeName`/`createdAt` are read back from the row that was actually written, not just echoed from the request body), the route now fires a second email via the shared `lib/email.ts` `sendEmail()` + `buildNewSellerAlertEmail()` to `willsinclair144@gmail.com`, inside the same `Promise.allSettled([...])` as the existing applicant-facing welcome email. This is a genuinely real-time, per-request send — not a cron job.
+- **Bonus fix, called out explicitly (not silently bundled):** the existing applicant-facing welcome email in this route had a mojibake-corrupted subject line (`'Welcome to Velor Marketplace ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Application Received'` — a multiply-mis-encoded em dash), which was live and affecting every new seller's welcome email. Fixed the subject to a clean em dash while in this file. Did not otherwise change the applicant welcome email's transport (left it on its own lightweight raw-fetch `sendEmail` helper, since it uses `reply_to` which the shared `lib/email.ts` `EmailOptions` interface doesn't currently support — did not want to widen that shared interface as an unrequested side effect of this task).
+
+Committed as `e3c3006` (lib/email.ts) and `67e15e8` (register route). Both deployed to Production (Ready) on Vercel.
