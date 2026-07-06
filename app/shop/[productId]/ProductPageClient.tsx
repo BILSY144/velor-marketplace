@@ -255,7 +255,7 @@ export default function ProductPageClient() {
             {onSale ? (
               <>
                 <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--accent)' }}>
-                  {symbol}{convert(product.discountedPrice as number, 'GBP').toFixed(2)}
+                  {symbol}{convert(product.discountedPrice as number, product.seller?.currency || 'GBP').toFixed(2)}
                 </span>
                 <span style={{ fontSize: '20px', color: 'var(--muted)', textDecoration: 'line-through' }}>
                   {symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}
