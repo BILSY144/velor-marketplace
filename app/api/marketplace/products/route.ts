@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        seller: { select: { id: true, storeName: true, country: true } },
+        seller: { select: { id: true, storeName: true, country: true, currency: true } },
         reviews: { select: { rating: true } },
         _count: { select: { reviews: true, wishlistItems: true } },
       },
