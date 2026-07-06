@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         // named in the listing. Skip any candidate with more than one
         // distinct option before it ever reaches the import queue.
         const uniqueOptionKeys = new Set(
-          (detail.variants || []).map((v: any) => v.key || v.sku).filter(Boolean)
+          (detail.variants || []).map((v: any) => v.variantKey || v.variantSku).filter(Boolean)
         )
         if (uniqueOptionKeys.size > 1) continue
 
