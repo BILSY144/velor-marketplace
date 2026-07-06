@@ -60,7 +60,7 @@ interface ConfirmedBreakdown {
   total: number
 }
 
-function useCartItems(): CartItem[] {
+function useCartItems(): { items: CartItem[]; removeItem: (productId: string) => void } {
   const [items, setItems] = useState<CartItem[]>([])
   useEffect(() => {
     try {
@@ -69,7 +69,14 @@ function useCartItems(): CartItem[] {
       setItems(parsed?.state?.items ?? [])
     } catch { setItems([]) }
   }, [])
-  return items
+  const removeItem = (productId: string) => {
+    setItems((prev) => {
+      const next = prev.filter((i) => i.productId !== productId)
+      try { localStorage.setItem('velor-cart', JSON.stringify({ state: { items: next } })) } catch {}
+      return next
+    })
+  }
+  return { items, removeItem }
 }
 
 function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
@@ -119,7 +126,7 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
 }
 
 export default function CheckoutPage() {
-  const items = useCartItems()
+  const { items, removeItem } = useCartItems()
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
   const [address, setAddress] = useState({ name: '', email: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
   const [rates, setRates] = useState<ShippingRate[]>([])
@@ -131,7 +138,8 @@ export default function CheckoutPage() {
   const [creatingIntent, setCreatingIntent] = useState(false)
   const [paymentSetupError, setPaymentSetupError] = useState('')
   const { displayCurrency: currency, convert } = useCurrencyDisplay()
-  const fmtRaw = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(convert(val, 'GBP'))
+  const fmtRaw = (val: number, fromCurrency: string = 'GBP') => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(convert(val, fromCurrency))
+  const fmtDisplay = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(val)
   const fmtConfirmed = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: (confirmed && confirmed.currency) || currency }).format(val)
   const [confirmed, setConfirmed] = useState<ConfirmedBreakdown | null>(null)
 
@@ -143,7 +151,29 @@ export default function CheckoutPage() {
   const [autoDiscount, setAutoDiscount] = useState<AutoDiscountResult | null>(null)
   const [autoDiscountLoading, setAutoDiscountLoading] = useState(false)
 
+  const [itemCurrencies, setItemCurrencies] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const missing = Array.from(new Set(items.map((i) => i.productId))).filter((id) => !(id in itemCurrencies))
+    if (missing.length === 0) return
+    let cancelled = false
+    Promise.all(missing.map((id) =>
+      fetch(`/api/shop/products/${id}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    )).then((results) => {
+      if (cancelled) return
+      setItemCurrencies((prev) => {
+        const next = { ...prev }
+        results.forEach((data, idx) => {
+          next[missing[idx]] = data?.seller?.currency || 'GBP'
+        })
+        return next
+      })
+    })
+    return () => { cancelled = true }
+  }, [items, itemCurrencies])
+
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const productSubtotalConverted = items.reduce((s, i) => s + convert(i.price * i.quantity, itemCurrencies[i.productId] || 'GBP'), 0)
   const shippingCost = Number(selectedRate?.amount) || 0
   const dutiesAmount = landedCost?.totalTaxGBP ?? 0
   const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
@@ -399,7 +429,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                          {fmtRaw(rate.amount)}
+                          {fmtRaw(rate.amount, rate.currency || 'GBP')}
                         </div>
                       </label>
                     ))}
@@ -462,7 +492,17 @@ export default function CheckoutPage() {
                   <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{item.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{confirmed && productSubtotal > 0 ? fmtConfirmed((item.price * item.quantity / productSubtotal) * (confirmed.productSubtotal + confirmed.discountAmount)) : fmtRaw(item.price * item.quantity)}</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{confirmed && productSubtotal > 0 ? fmtConfirmed((item.price * item.quantity / productSubtotal) * (confirmed.productSubtotal + confirmed.discountAmount)) : fmtRaw(item.price * item.quantity, itemCurrencies[item.productId] || 'GBP')}</div>
+                {step === 'shipping' && !confirmed && (
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.productId)}
+                    aria-label={`Remove ${item.name} from cart`}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 0 4px 8px', lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -484,7 +524,7 @@ export default function CheckoutPage() {
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-              <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.productSubtotal + confirmed.discountAmount) : fmtRaw(productSubtotal)}</span>
+              <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.productSubtotal + confirmed.discountAmount) : fmtDisplay(productSubtotalConverted)}</span>
             </div>
             {(confirmed ? confirmed.discountAmount > 0 : discountAmount > 0) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
