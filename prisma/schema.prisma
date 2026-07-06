@@ -446,6 +446,20 @@ model FxRate {
   @@unique([base, quote])
 }
 
+// Single-row cache for CJ Dropshipping's access/refresh token. Serverless
+// functions don't share memory between invocations, so the token has to be
+// persisted here rather than kept in a module-level variable. lib/cj.ts reads
+// this first, and only calls CJ's getAccessToken endpoint again if missing or
+// past accessTokenExpiry.
+model CjAuthToken {
+  id                    String   @id @default(cuid())
+  accessToken           String
+  accessTokenExpiry     DateTime
+  refreshToken          String
+  refreshTokenExpiry    DateTime
+  updatedAt             DateTime @updatedAt
+}
+
 enum SupportPriority {
   STANDARD
   PRIORITY
