@@ -179,7 +179,7 @@ export default function CheckoutPage() {
   // converted once via convert(x, 'GBP') -- never via fmtRaw, which assumes its
   // input is raw GBP and would double-convert or misread a non-GBP raw sum.
   const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
-  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, 'GBP') + convert(dutiesAmount, 'GBP')
+  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, selectedRate?.currency || 'GBP') + convert(dutiesAmount, 'GBP')
 
   useEffect(() => {
     if (items.length === 0) return
@@ -536,7 +536,7 @@ export default function CheckoutPage() {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--text)' }}>{selectedRate ? (confirmed ? fmtConfirmed(confirmed.shippingCost) : fmtRaw(shippingCost)) : '—'}</span>
+              <span style={{ color: 'var(--text)' }}>{selectedRate ? (confirmed ? fmtConfirmed(confirmed.shippingCost) : fmtRaw(shippingCost, selectedRate?.currency || 'GBP')) : '—'}</span>
             </div>
             {landedCost && !landedCost.isDomestic && dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
