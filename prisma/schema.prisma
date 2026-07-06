@@ -209,6 +209,7 @@ model Product {
   cjSourced     Boolean       @default(false)
   cjProductId   String?
   cjVid         String?
+  variants      ProductVariant[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
   messages      Message[]
@@ -249,6 +250,24 @@ model OrderItem {
   quantity   Int
   price      Float
   commission Float?
+  variantId  String?
+  cjVid      String?
+  color      String?
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cjVid      String
+  color      String?
+  sku        String?
+  image      String?
+  sellPrice  Float?
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+  @@unique([productId, cjVid])
 }
 
 model Shipment {
