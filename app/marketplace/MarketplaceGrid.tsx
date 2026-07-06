@@ -14,6 +14,8 @@ interface Product {
   status: string
   createdAt: string
   seller: { storeName: string }
+  discountedPrice: number | null
+  percentOff: number | null
 }
 
 export default function MarketplaceGrid() {
@@ -28,7 +30,8 @@ export default function MarketplaceGrid() {
     fetch('/api/marketplace/products')
       .then(r => r.json())
       .then(data => {
-        setProducts(Array.isArray(data) ? data : [])
+        // The API returns { products, pagination } — not a bare array.
+        setProducts(Array.isArray(data.products) ? data.products : [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -96,11 +99,14 @@ export default function MarketplaceGrid() {
         .mp-card-img { height: 220px; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
         .mp-card-img img { width: 100%; height: 100%; object-fit: cover; }
         .mp-card-img-placeholder { color: #333; font-size: 40px; }
+        .mp-card-badge { position: absolute; top: 10px; left: 10px; background: #FF6B00; color: #000; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.3px; }
         .mp-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .mp-card-cat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #FF6B00; }
         .mp-card-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
         .mp-card-seller { font-size: 12px; color: #666; }
-        .mp-card-price { font-size: 17px; font-weight: 700; color: #fff; margin-top: auto; padding-top: 8px; }
+        .mp-card-price { font-size: 17px; font-weight: 700; color: #fff; margin-top: auto; padding-top: 8px; display: flex; align-items: baseline; gap: 8px; }
+        .mp-card-price-was { font-size: 13px; font-weight: 500; color: #666; text-decoration: line-through; }
+        .mp-card-price-now { color: #FF6B00; }
         .mp-card-btn { margin: 0 14px 14px; background: #FF6B00; color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; display: block; text-decoration: none; }
         .mp-empty { text-align: center; padding: 80px 20px; color: #444; }
         .mp-empty-title { font-size: 20px; font-weight: 700; color: #666; margin-bottom: 8px; }
@@ -179,7 +185,9 @@ export default function MarketplaceGrid() {
           </div>
         ) : (
           <div className="mp-grid">
-            {filtered.map(product => (
+            {filtered.map(product => {
+              const onSale = product.discountedPrice != null && product.discountedPrice < product.price
+              return (
               <Link key={product.id} href={`/marketplace/${product.id}`} className="mp-card">
                 <div className="mp-card-img">
                   {product.images?.[0] ? (
@@ -187,16 +195,25 @@ export default function MarketplaceGrid() {
                   ) : (
                     <span className="mp-card-img-placeholder">*</span>
                   )}
+                  {onSale && <span className="mp-card-badge">{product.percentOff}% OFF</span>}
                 </div>
                 <div className="mp-card-body">
                   <div className="mp-card-cat">{product.category}</div>
                   <div className="mp-card-name">{product.name}</div>
                   <div className="mp-card-seller">by {product.seller?.storeName}</div>
-                  <div className="mp-card-price">£{product.price.toFixed(2)}</div>
+                  {onSale ? (
+                    <div className="mp-card-price">
+                      <span className="mp-card-price-now">£{(product.discountedPrice as number).toFixed(2)}</span>
+                      <span className="mp-card-price-was">£{product.price.toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <div className="mp-card-price">£{product.price.toFixed(2)}</div>
+                  )}
                 </div>
                 <span className="mp-card-btn">View Product</span>
               </Link>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
