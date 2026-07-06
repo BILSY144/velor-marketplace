@@ -14,6 +14,7 @@ interface WishlistProduct {
   currency: string
   images: string[]
   category: string
+  sellerId: string
   sellerName: string
   avgRating: number
   reviewCount: number
@@ -69,6 +70,7 @@ export default function WishlistPage() {
       price: item.product.price,
       quantity: 1,
       image: item.product.images[0] || '',
+      sellerId: item.product.sellerId,
     })
   }
 
