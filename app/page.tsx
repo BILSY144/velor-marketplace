@@ -25,6 +25,12 @@ type Seller = {
   products?: { id: string; title: string; price: number; images?: string[] }[]
 }
 
+function countryFlag(code?: string | null) {
+  if (!code || code.length !== 2) return code || ''
+  const cc = code.toUpperCase()
+  return String.fromCodePoint(...[...cc].map((ch) => 127397 + ch.charCodeAt(0)))
+}
+
 const CATEGORIES = [
   'Electronics', 'Fashion', 'Home & Garden', 'Beauty & Health',
   'Sports & Outdoors', 'Jewellery & Watches', 'Toys & Games', 'Baby & Kids',
@@ -416,7 +422,7 @@ export default function Home() {
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{s.storeName}</div>
                     <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
-                      {(s._count?.products ?? 0)} products{s.country ? ` · ${s.country}` : ''}
+                      {(s._count?.products ?? 0)} products{s.country ? ` · ${countryFlag(s.country)}` : ''}
                     </div>
                   </div>
                 </Link>
@@ -498,9 +504,7 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    {p.seller?.storeName && (
-                      <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{p.seller.storeName}</div>
-                    )}
+                    
                   </div>
                 </Link>
               )
