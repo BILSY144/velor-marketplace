@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/cron/scout-sellers",
-      "schedule": "0 8 * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/cron/enrich-emails",
@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/outreach-auto",
-      "schedule": "0 9,17 * * *"
+      "schedule": "0 */2 * * *"
     },
     {
       "path": "/api/cron/traffic-check",
