@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { sendEmail as sendAlertEmail, buildNewSellerAlertEmail } from '@/lib/email'
 
 async function sendEmail(payload: object) {
   return fetch('https://api.resend.com/emails', {
@@ -48,6 +49,9 @@ export async function POST(req: NextRequest) {
         },
       },
     },
+    include: {
+      seller: true,
+    },
   })
 
   await Promise.allSettled([
@@ -55,8 +59,18 @@ export async function POST(req: NextRequest) {
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'customerservice@velorcommerce.store',
       to: email,
-      subject: 'Welcome to Velor Marketplace ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Application Received',
+      subject: 'Welcome to Velor Marketplace — Application Received',
       html: `<p>Hi ${name},</p><p>Thank you for applying to sell on Velor Marketplace. We will review your application and be in touch shortly.</p><p>The Velor Team</p>`,
+    }),
+    sendAlertEmail({
+      to: 'willsinclair144@gmail.com',
+      ...buildNewSellerAlertEmail({
+        name,
+        email,
+        storeName: user.seller?.storeName ?? storeName,
+        tier: user.seller?.tier ?? 'STARTER',
+        signedUpAt: user.seller?.createdAt ?? new Date(),
+      }),
     }),
   ])
 
