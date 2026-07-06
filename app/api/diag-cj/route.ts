@@ -18,7 +18,7 @@ export async function GET() {
       return NextResponse.json({ ok: true, ...result, note: 'search returned zero products' })
     }
 
-    const first = products[0] as Record<string, unknown>
+    const first = products[0] as unknown as Record<string, unknown>
     result.firstProductRaw = first
 
     result.step = 'getProductDetail'
