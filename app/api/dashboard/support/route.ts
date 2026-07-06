@@ -19,7 +19,7 @@ export async function GET() {
 
   return NextResponse.json({
         tier: seller.tier,
-        isPriority: seller.tier === 'ENTERPRISE',
+        isPriority: seller.tier === 'ENTERPRISE' || seller.tier === 'PRO',
         tickets,
   })
 }
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 })
     }
 
-  const isPriority = seller.tier === 'ENTERPRISE'
+  const isPriority = seller.tier === 'ENTERPRISE' || seller.tier === 'PRO'
     const sellerEmail = seller.user.email ?? ''
 
   const ticket = await prisma.supportTicket.create({
