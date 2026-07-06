@@ -39,10 +39,15 @@ interface LandedCost {
   dutyAmountGBP: number; vatAmountGBP: number; totalTaxGBP: number;
   belowDeMinimis: boolean; deMinimisGBP: number; isDomestic: boolean;
 }
-interface AppliedDiscount {
+interface AppliedAutoDiscount {
+  discountId: string
   code: string
+  amountGBP: number
   description: string
-  discountAmountGBP: number
+}
+interface AutoDiscountResult {
+  totalDiscountGBP: number
+  applied: AppliedAutoDiscount[]
 }
 interface ConfirmedBreakdown {
   currency: string
@@ -50,7 +55,7 @@ interface ConfirmedBreakdown {
   shippingCost: number
   dutiesAmount: number
   discountAmount: number
-  discountCode: string | null
+  discountCodes: string[]
   total: number
 }
 
@@ -127,18 +132,38 @@ export default function CheckoutPage() {
   const [currency, setCurrency] = useState('GBP')
   const [confirmed, setConfirmed] = useState<ConfirmedBreakdown | null>(null)
 
-  // Discount code — only ever discounts the product subtotal, never
-  // shipping or duties/taxes.
-  const [discountCodeInput, setDiscountCodeInput] = useState('')
-  const [discountApplying, setDiscountApplying] = useState(false)
-  const [discountError, setDiscountError] = useState('')
-  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null)
+  // Discounts are automatic — the seller applies them to the listing, the
+  // buyer sees them on the listing/product page, and the exact same amount
+  // is looked up again here from lib/discount.ts. There is nothing for the
+  // buyer to type. Only ever discounts the product subtotal, never shipping
+  // or duties/taxes.
+  const [autoDiscount, setAutoDiscount] = useState<AutoDiscountResult | null>(null)
+  const [autoDiscountLoading, setAutoDiscountLoading] = useState(false)
 
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const shippingCost = selectedRate?.amount ?? 0
   const dutiesAmount = landedCost?.totalTaxGBP ?? 0
-  const discountAmount = appliedDiscount?.discountAmountGBP ?? 0
+  const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
   const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
+
+  useEffect(() => {
+    if (items.length === 0) return
+    const sellerId = items[0]?.sellerId
+    if (!sellerId) return
+    setAutoDiscountLoading(true)
+    fetch('/api/discount/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sellerId,
+        items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => setAutoDiscount(data))
+      .catch(() => setAutoDiscount(null))
+      .finally(() => setAutoDiscountLoading(false))
+  }, [items])
 
   function setAddr(k: keyof typeof address, v: string) {
     setAddress(a => ({ ...a, [k]: v }))
@@ -149,43 +174,6 @@ export default function CheckoutPage() {
       setSelectedRate(null)
       setLandedCost(null)
     }
-  }
-
-  async function applyDiscountCode() {
-    if (!discountCodeInput.trim() || items.length === 0) return
-    setDiscountApplying(true)
-    setDiscountError('')
-    try {
-      const res = await fetch('/api/discount/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: discountCodeInput.trim(),
-          sellerId: items[0]?.sellerId ?? null,
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
-        }),
-      })
-      const data = await res.json()
-      if (data.valid) {
-        setAppliedDiscount({
-          code: data.code,
-          description: data.description ?? 'Discount applied',
-          discountAmountGBP: data.discountAmountGBP ?? 0,
-        })
-        setDiscountCodeInput('')
-      } else {
-        setDiscountError(data.error || 'Invalid or expired discount code')
-      }
-    } catch {
-      setDiscountError('Could not check this code. Please try again.')
-    } finally {
-      setDiscountApplying(false)
-    }
-  }
-
-  function removeDiscount() {
-    setAppliedDiscount(null)
-    setDiscountError('')
   }
 
   async function fetchRatesAndDuties() {
@@ -241,16 +229,11 @@ export default function CheckoutPage() {
           shippingAmount: selectedRate?.amount ?? 0,
           shippingCurrency: selectedRate?.currency ?? 'GBP',
           dutiesAmountGBP: landedCost?.totalTaxGBP ?? 0,
-          discountCode: appliedDiscount?.code ?? undefined,
         }),
       })
       const data = await res.json()
       if (!res.ok) {
         setPaymentSetupError(data.error || 'Could not set up payment. Please try again.')
-        // If the code stopped being valid between "Apply" and checkout
-        // (e.g. usage limit hit by someone else), drop it so the seller
-        // total the buyer sees matches what they'll actually be asked to pay.
-        if (appliedDiscount) setAppliedDiscount(null)
         return
       }
       if (data.clientSecret) {
@@ -273,7 +256,7 @@ export default function CheckoutPage() {
           shippingMethod: selectedRate?.service ?? '',
           shippingCost: data.breakdown ? data.breakdown.shippingCost : shippingCost,
           subtotal: data.breakdown ? data.breakdown.productSubtotal : productSubtotal,
-          discountCode: data.breakdown ? data.breakdown.discountCode : (appliedDiscount?.code ?? null),
+          discountCodes: data.breakdown ? data.breakdown.discountCodes : (autoDiscount?.applied.map(a => a.code) ?? []),
           discountAmount: data.breakdown ? data.breakdown.discountAmount : discountAmount,
           total: data.breakdown ? data.breakdown.total : total,
           currency: data.breakdown ? data.breakdown.currency : currency,
@@ -308,6 +291,9 @@ export default function CheckoutPage() {
       </div>
     )
   }
+
+  const confirmedCodes = confirmed?.discountCodes ?? []
+  const displayedCodes = confirmedCodes.length > 0 ? confirmedCodes : (autoDiscount?.applied.map(a => a.code) ?? [])
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 20px 80px', fontFamily: 'var(--font-body)' }}>
@@ -480,47 +466,17 @@ export default function CheckoutPage() {
             ))}
           </div>
 
-          {step === 'shipping' && (
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  style={{ ...inputStyle, flex: 1 }}
-                  placeholder="Discount code"
-                  value={discountCodeInput}
-                  onChange={e => setDiscountCodeInput(e.target.value.toUpperCase())}
-                  disabled={!!appliedDiscount}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyDiscountCode() } }}
-                />
-                {appliedDiscount ? (
-                  <button
-                    onClick={removeDiscount}
-                    style={{ padding: '10px 16px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--muted)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' as const }}
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    onClick={applyDiscountCode}
-                    disabled={discountApplying || !discountCodeInput.trim()}
-                    style={{
-                      padding: '10px 16px',
-                      background: discountApplying || !discountCodeInput.trim() ? 'var(--border)' : 'var(--accent)',
-                      color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
-                      cursor: discountApplying || !discountCodeInput.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const,
-                    }}
-                  >
-                    {discountApplying ? '...' : 'Apply'}
-                  </button>
-                )}
+          {step === 'shipping' && autoDiscountLoading && (
+            <div style={{ marginBottom: '16px', fontSize: '12px', color: 'var(--muted)' }}>Checking for available discounts...</div>
+          )}
+          {step === 'shipping' && !autoDiscountLoading && autoDiscount && autoDiscount.totalDiscountGBP > 0 && (
+            <div style={{ marginBottom: '16px', padding: '10px 12px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--green)' }}>
+                Discount applied automatically — {fmt(autoDiscount.totalDiscountGBP)} off
               </div>
-              {discountError && (
-                <div style={{ color: 'var(--red)', fontSize: '12px', marginTop: '6px' }}>{discountError}</div>
-              )}
-              {appliedDiscount && (
-                <div style={{ color: 'var(--green)', fontSize: '12px', marginTop: '6px' }}>
-                  &quot;{appliedDiscount.code}&quot; applied — {appliedDiscount.description}
-                </div>
-              )}
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                No code needed — this was already reflected in the product price you saw.
+              </div>
             </div>
           )}
 
@@ -531,7 +487,7 @@ export default function CheckoutPage() {
             </div>
             {(confirmed ? confirmed.discountAmount > 0 : discountAmount > 0) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                <span style={{ color: 'var(--green)' }}>Discount{appliedDiscount ? ` (${appliedDiscount.code})` : confirmed?.discountCode ? ` (${confirmed.discountCode})` : ''}</span>
+                <span style={{ color: 'var(--green)' }}>Discount{displayedCodes.length > 0 ? ` (${displayedCodes.join(', ')})` : ''}</span>
                 <span style={{ color: 'var(--green)' }}>-{fmt(confirmed ? confirmed.discountAmount : discountAmount)}</span>
               </div>
             )}
