@@ -488,3 +488,13 @@ Investigated the full seller-creation surface of the codebase before picking a t
 - **Bonus fix, called out explicitly (not silently bundled):** the existing applicant-facing welcome email in this route had a mojibake-corrupted subject line (`'Welcome to Velor Marketplace ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Application Received'` — a multiply-mis-encoded em dash), which was live and affecting every new seller's welcome email. Fixed the subject to a clean em dash while in this file. Did not otherwise change the applicant welcome email's transport (left it on its own lightweight raw-fetch `sendEmail` helper, since it uses `reply_to` which the shared `lib/email.ts` `EmailOptions` interface doesn't currently support — did not want to widen that shared interface as an unrequested side effect of this task).
 
 Committed as `e3c3006` (lib/email.ts) and `67e15e8` (register route). Both deployed to Production (Ready) on Vercel.
+
+---
+
+## SESSION UPDATE — 2026-07-06 (routine check: hero revert logged, no new commits since last entry)
+
+Ran the scheduled CLAUDE.md bookkeeping check. Reviewed the commit history on the main branch: the newest commit is `5aee0a4`, which is the CLAUDE.md update itself that logged the real-time seller-signup-alert work above (`e3c3006`, `67e15e8`). No commits have landed on main since that entry was written, so there is nothing new to report on that feature.
+
+While reviewing history for this check, found one earlier shipped commit that had not been recorded in this file: `9d0d26e`, "Revert homepage hero to the original text-only layout per William's request." This removed the uploaded hero image and restored the eyebrow badge, headline, and dual-CTA hero that predated the hero redesign. It landed between the last routine bookkeeping note (`540939e`) and the seller-alert email work, but was not mentioned in the subsequent log entry, so recording it now for an accurate history.
+
+Next: no outstanding work identified from commit history this cycle. The OPEN REVIEW ITEM above remains fully open and untouched, awaiting William's review.
