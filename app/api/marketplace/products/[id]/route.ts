@@ -19,6 +19,7 @@ export async function GET(
           country: true,
           createdAt: true,
           approved: true,
+          currency: true,
           _count: { select: { products: true } },
         },
       },
