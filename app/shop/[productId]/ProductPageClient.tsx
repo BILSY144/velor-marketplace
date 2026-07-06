@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -23,7 +24,7 @@ interface Review {
 
 interface Product {
   id: string
-  name: string
+  title: string
   description: string
   price: number
   currency: string
@@ -33,6 +34,7 @@ interface Product {
   stock: number
   sellerId: string
   sellerName: string
+  seller?: { storeName: string; currency?: string } | null
   avgRating: number | null
   reviewCount: number
   variants: Variant[]
@@ -70,6 +72,7 @@ export default function ProductPageClient() {
   const router = useRouter()
   const { data: session } = useSession()
   const productId = params?.productId as string
+  const { symbol, convert } = useCurrencyDisplay()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -171,7 +174,7 @@ export default function ProductPageClient() {
       cart.push({
         id: cartId,
         productId: product.id,
-        name: product.name + (selectedVariant ? ` - ${selectedVariant.name}` : ''),
+        name: product.title + (selectedVariant ? ` - ${selectedVariant.name}` : ''),
         price,
         quantity: qty,
         image,
@@ -188,7 +191,6 @@ export default function ProductPageClient() {
     router.push('/checkout')
   }
 
-  const sym = (c: string) => c === 'GBP' ? 'Â£' : c + ' '
   const currentPrice = selectedVariant ? selectedVariant.price : product?.price ?? 0
   const currentStock = selectedVariant ? selectedVariant.stock : product?.stock ?? 0
   // Automatic discounts only ever apply to the base product listing (they
@@ -223,7 +225,7 @@ export default function ProductPageClient() {
           <span>/</span>
           <Link href="/shop" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Shop</Link>
           <span>/</span>
-          <span style={{ color: 'var(--text)' }}>{product.name}</span>
+          <span style={{ color: 'var(--text)' }}>{product.title}</span>
         </div>
       </div>
 
@@ -245,7 +247,7 @@ export default function ProductPageClient() {
             ))}
           </div>
           <div style={{ flex: 1, aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: '#222', position: 'relative' }}>
-            <img src={images[mainImage]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
                 {product.percentOff}% OFF
@@ -256,7 +258,7 @@ export default function ProductPageClient() {
 
         <div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{product.category}</div>
-          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.name}</h1>
+          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.title}</h1>
 
           {(product.avgRating ?? 0) != null && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
@@ -270,10 +272,10 @@ export default function ProductPageClient() {
             {onSale ? (
               <>
                 <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--accent)' }}>
-                  {sym(product.currency)}{(product.discountedPrice as number).toFixed(2)}
+                  {symbol}{convert(product.discountedPrice as number, 'GBP').toFixed(2)}
                 </span>
                 <span style={{ fontSize: '20px', color: 'var(--muted)', textDecoration: 'line-through' }}>
-                  {sym(product.currency)}{product.price.toFixed(2)}
+                  {symbol}{convert(product.price, 'GBP').toFixed(2)}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#000', background: 'var(--accent)', padding: '4px 10px', borderRadius: '5px' }}>
                   SAVE {product.percentOff}%
@@ -281,7 +283,7 @@ export default function ProductPageClient() {
               </>
             ) : (
               <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--text)' }}>
-                {sym(product.currency)}{currentPrice.toFixed(2)}
+                {symbol}{convert(currentPrice, 'GBP').toFixed(2)}
               </span>
             )}
           </div>
@@ -326,7 +328,7 @@ export default function ProductPageClient() {
           </div>
 
           <div style={{ marginBottom: '12px', padding: '12px 16px', background: 'rgba(0,230,118,0.08)', borderRadius: '8px', fontSize: '14px', color: 'var(--green)', fontWeight: 600 }}>
-            Free UK Delivery
+            Free Delivery
           </div>
 
           <button
@@ -350,7 +352,7 @@ export default function ProductPageClient() {
             disabled={wishlistLoading}
             style={{ width: '100%', padding: '12px', background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            <span style={{ fontSize: '18px' }}>{isWishlisted ? 'â¥' : 'â¡'}</span>
+            <span style={{ fontSize: '18px' }}>{isWishlisted ? '♥' : '♡'}</span>
             {isWishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
           </button>
 
@@ -370,9 +372,9 @@ export default function ProductPageClient() {
             Contact Seller
           </button>
 
-          {product.sellerName && (
+          {product.seller?.storeName && (
             <div style={{ marginTop: '20px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)' }}>
-              Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.sellerName}</span>
+              Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span>
             </div>
           )}
         </div>
@@ -429,7 +431,7 @@ export default function ProductPageClient() {
             </button>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Contact Seller</h2>
             <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '0 0 24px' }}>
-              Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.sellerName}</span> about this product
+              Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span> about this product
             </p>
             {contactSent ? (
               <div style={{ padding: '20px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '10px', color: 'var(--green)', fontWeight: 600, textAlign: 'center', fontSize: '15px' }}>
