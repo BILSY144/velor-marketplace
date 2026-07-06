@@ -42,6 +42,21 @@ export async function POST(request: Request): Promise<NextResponse> {
           data: { status: 'PAID', stripePaymentId: pi.id },
         });
       }
+
+      // Only count a discount code as "used" once payment actually succeeds —
+      // never at PaymentIntent creation time, so abandoned/failed checkouts
+      // don't burn a seller's usage limit.
+      const discountId = pi.metadata?.discountId;
+      if (discountId) {
+        try {
+          await prisma.discountCode.update({
+            where: { id: discountId },
+            data: { usedCount: { increment: 1 } },
+          });
+        } catch (err) {
+          console.error('[webhook] failed to increment discount usedCount', err);
+        }
+      }
       break;
     }
 
