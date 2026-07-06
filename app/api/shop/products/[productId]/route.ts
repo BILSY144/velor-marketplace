@@ -17,6 +17,7 @@ export async function GET(
           storeName: true,
           description: true,
           country: true,
+          currency: true,
           createdAt: true,
           _count: { select: { products: true } },
         },
