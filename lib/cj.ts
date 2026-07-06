@@ -196,6 +196,14 @@ export interface CjProductDetail {
   productNameEn: string
   description: string
   productImageSet: string[]
+  // Confirmed present on the raw /product/query response per CJ's official
+  // API docs (developers.cjdropshipping.com/en/api/api2/api/product.html).
+  // Often an empty string for ORDINARY_PRODUCT (CJ manages the inventory
+  // itself, so there is no separate named supplier) -- only populated for
+  // SUPPLIER_PRODUCT / SUPPLIER_SHIPPED_PRODUCT types. Callers must not
+  // fabricate a name when this is blank.
+  supplierName?: string
+  supplierId?: string
   variants: {
     vid: string
     variantSku: string
