@@ -94,10 +94,10 @@ export default function ProductDetail({ id }: { id: string }) {
         @media (max-width: 900px) { .pd-inner { grid-template-columns: 1fr; padding: 24px 16px; gap: 32px; } .pd-nav { padding: 16px; } }
         .pd-gallery { display: flex; gap: 12px; }
         .pd-thumbs { display: flex; flex-direction: column; gap: 8px; }
-        .pd-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 2px solid transparent; cursor: pointer; background: #1A1A1A; }
+        .pd-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: contain; border: 2px solid transparent; cursor: pointer; background: #1A1A1A; }
         .pd-thumb.active { border-color: #FF6B00; }
         .pd-main-img { flex: 1; aspect-ratio: 1; background: #1A1A1A; border-radius: 12px; overflow: hidden; border: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: center; position: relative; }
-        .pd-main-img img { width: 100%; height: 100%; object-fit: cover; }
+        .pd-main-img img { width: 100%; height: 100%; object-fit: contain; }
         .pd-main-placeholder { color: #333; font-size: 80px; }
         .pd-sale-badge { position: absolute; top: 14px; left: 14px; background: #FF6B00; color: #000; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 6px; letter-spacing: 0.3px; }
         .pd-info { display: flex; flex-direction: column; gap: 20px; }
