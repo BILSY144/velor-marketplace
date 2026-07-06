@@ -171,7 +171,15 @@ export default function CheckoutPage() {
   const shippingCost = Number(selectedRate?.amount) || 0
   const dutiesAmount = landedCost?.totalTaxGBP ?? 0
   const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
+  // NOTE: productSubtotal/total below are kept in each seller's native currency
+  // (unconverted) intentionally -- they must never be passed to fmtRaw/fmtDisplay
+  // directly. shippingCost/dutiesAmount/discountAmount are GBP-denominated.
+  // The buyer-facing total MUST be built from productSubtotalConverted (already
+  // converted to the buyer's display currency) plus the GBP-denominated pieces
+  // converted once via convert(x, 'GBP') -- never via fmtRaw, which assumes its
+  // input is raw GBP and would double-convert or misread a non-GBP raw sum.
   const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
+  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, 'GBP') + convert(dutiesAmount, 'GBP')
 
   useEffect(() => {
     if (items.length === 0) return
@@ -480,7 +488,7 @@ export default function CheckoutPage() {
             {items.map(item => (
               <div key={item.productId} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 {item.image && (
-                  <img src={item.image} alt={item.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', background: 'var(--bg)' }} />
+                  <img src={item.image} alt={item.name} style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px', background: 'var(--bg)' }} />
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{item.name}</div>
@@ -544,7 +552,7 @@ export default function CheckoutPage() {
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
               <span style={{ color: 'var(--text)' }}>Total</span>
-              <span style={{ color: 'var(--accent)' }}>{confirmed ? fmtConfirmed(confirmed.total) : fmtRaw(total)}</span>
+              <span style={{ color: 'var(--accent)' }}>{confirmed ? fmtConfirmed(confirmed.total) : fmtDisplay(totalConverted)}</span>
             </div>
             <div style={{ fontSize: '11px', color: confirmed ? 'var(--green)' : 'var(--muted)', textAlign: 'right', marginTop: '4px' }}>
               {confirmed ? 'Reconfirmed just now — exactly what you pay, no surprise charges' : 'Estimated — reconfirmed live the moment you continue to payment'}
