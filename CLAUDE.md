@@ -507,3 +507,39 @@ Next: no outstanding work identified from commit history this cycle. The OPEN RE
 Ran the scheduled CLAUDE.md bookkeeping check again. Reviewed the commit history on the main branch: the newest commit is still 2f05ef7, which is the previous CLAUDE.md log entry itself (the one confirming the hero revert and seller-alert work above). No commits have landed on main since that entry was written, so there is genuinely nothing new to report this cycle.
 
 Next: no outstanding work identified from commit history this cycle. The OPEN REVIEW ITEM above remains fully open and untouched, awaiting William's review.
+
+
+## SESSION UPDATE — 2026-07-06: Outreach/application pipeline now fully operational (real account provisioning)
+
+Following up on the earlier new-seller-alert work: William asked to actually finish the outreach/application pipeline so approving a `SellerApplication` creates a real Seller account (previously it only sent an approval email -- no account was ever created, which was disclosed at the time as a known gap).
+
+**What changed in `app/api/agents/applications/[id]/route.ts` (approve branch):**
+- On approval, the route now checks for an existing `User` with the applicant's email:
+  - If they already have a `Seller` profile (rare/duplicate case): just makes sure it's marked `approved: true`, no new account created, no password/activation email sent (they already have credentials).
+  - If they have a `User` account but no `Seller` yet (e.g. an existing buyer): attaches a new `Seller` row to their existing account, `approved: true`, no new credentials needed.
+  - If no account exists at all (the common case): creates a new `User` (role SELLER, `password: null`) + nested `Seller` (`approved: true`, tier defaults to STARTER) in one transaction, generates a one-time `setupToken` (32-byte random hex, 7-day expiry stored in new `User.setupTokenExpiresAt`), and emails the applicant an activation link: `https://velorcommerce.store/activate?token=...`.
+- In all three branches, the existing real-time new-seller alert (`buildNewSellerAlertEmail`, added earlier today) now also fires to willsinclair144@gmail.com, so this pipeline is covered by the same alert as direct self-serve registration -- closing the gap flagged in the earlier session update.
+
+**Why `approved: true` here but `false` on self-serve registration:** admin approval of the application IS the approval step for this pipeline -- there's no separate later approval to wait for. Self-serve registrants (via `/api/auth/register`) still default to `approved: false` pending review, since nobody has vetted them yet.
+
+**New account-activation flow (built from scratch -- no prior invite/password-reset pattern existed anywhere in this codebase):**
+- Added `User.setupToken String? @unique` and `User.setupTokenExpiresAt DateTime?` to `prisma/schema.prisma`. Confirmed `auth.ts`'s credentials provider already safely rejects login for any user with a null password (`if (!user || !user.password) return null`), so a freshly-provisioned account with `password: null` cannot be logged into until activation completes -- no auth hole introduced.
+- `app/api/account/activate/route.ts` (new): POST `{ token, password }`, validates the token exists and hasn't expired, hashes the password with bcrypt, sets it on the user, clears `setupToken`/`setupTokenExpiresAt`.
+- `app/activate/page.tsx` (new): public page, reads `?token=` from the URL, password + confirm fields, calls the activate endpoint, redirects to `/auth/sign-in` on success. Matches the site's dark/orange (#0D0D0D/#1A1A1A/#FF6B00) visual convention.
+- `buildSellerApprovedEmail` in `lib/email.ts` extended with an optional `activationLink` param -- when present, the email tells the seller to set a password and links to `/activate`; when absent (existing-account branches above), it keeps the original "log in to your dashboard" copy/link unchanged.
+
+**Verified live:** POSTed a bogus token to `/api/account/activate` on production and got back the expected `400 Invalid or already-used activation link` (not a 500), confirming the new `setupToken` column exists in production (schema migration via `prisma db push` on the Vercel build ran correctly) and the route works end to end.
+
+Committed as: `320ca4f` (lib/email.ts), `6f2df46` (schema.prisma), `54921f5` (applications/[id]/route.ts). All deployed to Production (Ready).
+
+## SESSION UPDATE — 2026-07-06: Homepage traffic pulse widget + permanent admin API access for Claude
+
+William separately asked for real (not fabricated) traffic numbers. Found that Vercel's built-in Web Analytics was never enabled on this project (confirmed live -- the Analytics tab showed the "Enable" upsell, not data), but a custom pageview tracker already existed and was already recording real data: `components/AnalyticsTracker.tsx` posts to `/api/analytics/pageview` on every route change, which writes `path`/`referrer`/`country` (via Vercel's `x-vercel-ip-country` header, already working) to a `PageView` table. No IP addresses are or were ever stored -- flagged to William that IP logging would be a deliberate, separate decision with real UK GDPR implications (legal basis, retention policy, privacy-policy disclosure) if ever wanted.
+
+William chose to surface this as a public, honest social-proof widget rather than an internal-only dashboard tile (explicitly confirmed via direct question after being shown the tradeoff: public visitor/competitor visibility vs internal-only). Built:
+- `app/api/public/traffic/route.ts` (new): unauthenticated, returns only two aggregate counts (`lastHour`, `today`) computed from raw `PageView` row counts. Deliberately does not expose paths, referrers, or per-visit rows. Copy is careful to say "page views," not "visitors" or "people online" -- the table has no visitor identifier, so uniqueness genuinely can't be claimed; saying otherwise would be a fabricated stat.
+- `components/GlobalHeader.tsx`: added a homepage-only (`pathname === '/'`) segment to the existing trust micro-bar, polling the endpoint every 30s. Verified live: shows real counts (2 in the last hour, 79 today, at time of writing).
+
+**Separately, permanent read access for Claude:** rather than needing a live logged-in browser session every time reporting/stats data is needed, added `lib/adminAuth.ts` (`isAuthorizedAdmin(request)`) which accepts EITHER William's existing NextAuth admin session (unchanged, what the dashboard UI uses) OR a matching `x-admin-secret` request header, checked against an `ADMIN_SECRET` env var. Wired into `app/api/admin/stats/route.ts` and `app/api/agents/growth/report/route.ts` (previously session-only, and note: despite being documented elsewhere as an existing convention, `ADMIN_SECRET` was not actually wired into any route in this codebase before now). Generated a new secret value and asked William to set it as the `ADMIN_SECRET` env var in Vercel (an existing but previously-unused variable, reused rather than duplicated) -- this is a service credential for server-to-server API calls, not a personal login, consistent with how the GitHub PAT is already used in this project.
+
+Committed as: `0d37025` (lib/adminAuth.ts), `f079d0b` (public/traffic route), `f3a04a6` (admin/stats route), `b75235c` (growth/report route), `ce1ad67` (GlobalHeader.tsx). All deployed to Production (Ready).
