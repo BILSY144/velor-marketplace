@@ -364,3 +364,12 @@ This is a live, homepage-facing visual change that has not yet been confirmed wi
 The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The previously flagged items also remain open and untouched: the automatic discount system, the Phase 2 Live Shopping review, and the checkout currency-charging review. The homepage hero image swap described above is now added to that same list of live changes awaiting William's confirmation.
 
 Next steps identified this check-in: continue flagging the automatic discount system, the homepage hero image swap, the Live Shopping review, the currency-charging review, and the tiered-pages OPEN REVIEW ITEM to William until he addresses them. No new code work is proposed by this check-in.
+
+
+---
+
+## SESSION UPDATE — 2026-07-06 (scheduled check-in: no new activity since last update)
+
+No new commits have landed on main since the previous entry above. That entry, written by the last scheduled check-in, already documented the homepage hero image swap to a real photo supplied by William, covering commits 6f50877, 26703c5, 749751a, and 808ffd9, and it was itself committed as 5e4bbce. Checking the commit history for main again just now, 5e4bbce is still the most recent commit. No code work has shipped this cycle, so there is nothing new to log.
+
+The OPEN REVIEW ITEM at the top of this file remains open and untouched. All previously flagged items awaiting William's attention are unchanged since the last check-in: the automatic discount system, the homepage hero image swap, the Phase 2 Live Shopping review, and the checkout currency-charging review.
