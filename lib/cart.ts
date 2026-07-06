@@ -3,12 +3,18 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export interface CartItem {
+  // Unique line-item key. Defaults to productId when the product has no
+  // variant selection. MUST be variant-specific (e.g. `${productId}-${variantId}`)
+  // for products with colour/size options, otherwise two different variants
+  // of the same product collapse into one line and removing one removes both.
+  id?: string
   productId: string
   name: string
   price: number
   quantity: number
   image: string
   sellerId?: string
+  sellerName?: string
   color?: string
   size?: string
   variantName?: string
@@ -16,6 +22,10 @@ export interface CartItem {
 
 const CART_KEY = 'velor-cart'
 export const CART_EVENT = 'cart-updated'
+
+function lineKey(i: Pick<CartItem, 'id' | 'productId'>): string {
+  return i.id || i.productId
+}
 
 function safeParse(raw: string | null): CartItem[] {
   if (!raw) return []
@@ -42,18 +52,10 @@ export function setCart(items: CartItem[]): void {
   window.dispatchEvent(new Event(CART_EVENT))
 }
 
-function sameLine(a: CartItem, b: Pick<CartItem, 'productId' | 'color' | 'size' | 'variantName'>): boolean {
-  return (
-    a.productId === b.productId &&
-    (a.color || '') === (b.color || '') &&
-    (a.size || '') === (b.size || '') &&
-    (a.variantName || '') === (b.variantName || '')
-  )
-}
-
 export function addToCart(item: CartItem): CartItem[] {
   const items = getCart()
-  const existingIndex = items.findIndex((i) => sameLine(i, item))
+  const key = lineKey(item)
+  const existingIndex = items.findIndex((i) => lineKey(i) === key)
   let next: CartItem[]
   if (existingIndex >= 0) {
     next = items.map((i, idx) =>
@@ -66,15 +68,15 @@ export function addToCart(item: CartItem): CartItem[] {
   return next
 }
 
-export function removeFromCart(productId: string): CartItem[] {
-  const next = getCart().filter((i) => i.productId !== productId)
+export function removeFromCart(lineId: string): CartItem[] {
+  const next = getCart().filter((i) => lineKey(i) !== lineId)
   setCart(next)
   return next
 }
 
-export function updateQuantity(productId: string, delta: number): CartItem[] {
+export function updateQuantity(lineId: string, delta: number): CartItem[] {
   const next = getCart().map((i) =>
-    i.productId === productId ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i
+    lineKey(i) === lineId ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i
   )
   setCart(next)
   return next
@@ -87,6 +89,10 @@ export function clearCart(): void {
 export function getCartCount(items?: CartItem[]): number {
   const list = items || getCart()
   return list.reduce((s, i) => s + (i.quantity || 1), 0)
+}
+
+export function getLineKey(item: Pick<CartItem, 'id' | 'productId'>): string {
+  return lineKey(item)
 }
 
 export function useCart() {
@@ -110,12 +116,12 @@ export function useCart() {
     setItems(addToCart(item))
   }, [])
 
-  const removeItem = useCallback((productId: string) => {
-    setItems(removeFromCart(productId))
+  const removeItem = useCallback((lineId: string) => {
+    setItems(removeFromCart(lineId))
   }, [])
 
-  const changeQuantity = useCallback((productId: string, delta: number) => {
-    setItems(updateQuantity(productId, delta))
+  const changeQuantity = useCallback((lineId: string, delta: number) => {
+    setItems(updateQuantity(lineId, delta))
   }, [])
 
   const clear = useCallback(() => {
