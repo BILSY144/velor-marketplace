@@ -580,3 +580,16 @@ lib/cj.ts originally had `checkUkFreight()` hardcoding `endCountryCode: 'GB'` �
 Fixed: renamed to `checkFreight(vid, quantity, endCountryCode, startCountryCode='CN')` — destination country must always be passed in from the actual buyer/shipment address, never hardcoded. This matches the rest of the marketplace, which already supports a full global origin-country list, per-seller currency, and live FX conversion.
 
 Standing rule for all future CJ listings-seeding work (import mechanism, order fulfillment, freight/availability filtering): never assume or default to any single destination country. Every freight check, availability check, and shipping cost calculation must resolve the destination from the real buyer/shipment data.
+
+
+---
+
+## SESSION UPDATE — 2026-07-06: CJ Dropshipping wired in as a listings source for velor-marketplace
+
+Since the last logged update (homepage traffic pulse widget and admin API access), work has focused on connecting CJ Dropshipping as a backend listings source for velor-marketplace, separate from the old co.uk dropshipping site. lib/cj.ts now implements the full CJ API v2 client (auth, product search, freight check, order create, tracking), backed by a new CjAuthToken model and new CJ linkage fields on Product, Seller, and Shipment. The decision to use CJ purely for listings-seeding was documented as separate from the permanent ban on rebuilding the old dropshipping business.
+
+A global-not-UK correction also went in: the freight check originally hardcoded destination country to GB, a leftover from the old UK-only site. William confirmed velor-marketplace is global with no UK-specific logic, so this was renamed to checkFreight() and now requires the real destination country on every freight and shipping calculation. Separately, repo identity confusion was resolved (the old dropshipping business was BILSY144/velor, not velor1/velor), and that old Vercel project, GitHub repo, and the velorcommerce.co.uk domain attachment were fully decommissioned. The standing ban on rebuilding the dropshipping business still stands, it just now refers to a repo that no longer exists.
+
+A series of admin test routes then verified the CJ integration against live credentials (auth, categories, freight calculate, product search), which surfaced a response-shape bug: CJ's listV2 search endpoint returns results at data.content[].productList[], not data.list. That was fixed in the latest commit (1545477), deployed and showing Ready in Vercel production along with every other commit in this window. With the fix in, a CJ candidate-search route (keyword search plus freight-availability pre-filtering), a final CJ import route (creates Product rows from approved candidates), and an idempotent internal CJ seller account route are all in place.
+
+In progress: no listings have actually been seeded into the live catalogue yet, since the parsing fix just landed. Next: run the candidate-search to approve to import flow end-to-end against a real CJ category, confirm freight-availability filtering behaves correctly for non-UK destinations, and begin seeding real listings once that is confirmed. One small unrelated commit also landed in this window: hid the scrollbar on the homepage's live-shopping swipe row.
