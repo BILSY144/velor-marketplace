@@ -20,6 +20,7 @@ interface ImportItem {
   images: string[]
   variants?: ImportVariant[]
   category: string
+  supplierName?: string | null
 }
 
 function stripHtml(input: string): string {
@@ -94,6 +95,10 @@ export async function POST(request: NextRequest) {
           cjSourced: true,
           cjProductId: item.pid,
           cjVid: item.vid,
+          // Real CJ supplier name only -- never fall back to a fabricated
+          // name. Empty/undefined stays null; the product page falls back
+          // to an honest "CJ Dropshipping" label in that case.
+          cjSupplierName: item.supplierName || null,
           // Real CJ variant rows (vid + colour/style + image + real sell
           // price per variant) -- NOT squashed into description text.
           // checkFreight() and the variant picker both need a real vid per
