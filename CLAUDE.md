@@ -570,3 +570,13 @@ William confirmed this repo had zero dependency from velor-marketplace, and that
 - Domain `velorcommerce.co.uk` — removed from the `velor1` Vercel team (was already unattached to any project; DNS/nameservers are third-party, so this had zero effect on eBay/CJ fulfillment)
 
 The permanent dropshipping ban stated elsewhere in this file still stands — it just now correctly refers to a repo that no longer exists.
+
+---
+
+## CORRECTION — 2026-07-06: velor-marketplace is GLOBAL, not UK-specific
+
+lib/cj.ts originally had `checkUkFreight()` hardcoding `endCountryCode: 'GB'` — a leftover assumption copied from the old velorcommerce.co.uk dropshipping site (which really was UK-only). That assumption does not apply here. William, verbatim: "we are a global market place, there is no uk references. global not just uk."
+
+Fixed: renamed to `checkFreight(vid, quantity, endCountryCode, startCountryCode='CN')` — destination country must always be passed in from the actual buyer/shipment address, never hardcoded. This matches the rest of the marketplace, which already supports a full global origin-country list, per-seller currency, and live FX conversion.
+
+Standing rule for all future CJ listings-seeding work (import mechanism, order fulfillment, freight/availability filtering): never assume or default to any single destination country. Every freight check, availability check, and shipping cost calculation must resolve the destination from the real buyer/shipment data.
