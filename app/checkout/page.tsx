@@ -144,7 +144,7 @@ export default function CheckoutPage() {
   const [autoDiscountLoading, setAutoDiscountLoading] = useState(false)
 
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
-  const shippingCost = selectedRate?.amount ?? 0
+  const shippingCost = Number(selectedRate?.amount) || 0
   const dutiesAmount = landedCost?.totalTaxGBP ?? 0
   const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
   const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
@@ -462,7 +462,7 @@ export default function CheckoutPage() {
                   <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{item.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{fmtRaw(item.price * item.quantity)}</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{confirmed && productSubtotal > 0 ? fmtConfirmed((item.price * item.quantity / productSubtotal) * (confirmed.productSubtotal + confirmed.discountAmount)) : fmtRaw(item.price * item.quantity)}</div>
               </div>
             ))}
           </div>
