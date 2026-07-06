@@ -192,12 +192,14 @@ export interface CjFreightOption {
   logisticAging: string // e.g. "7-12 days"
 }
 
-export async function checkUkFreight(vid: string, quantity: number, startCountryCode = 'CN'): Promise<CjFreightOption[]> {
+export async function checkFreight(vid: string, quantity: number, endCountryCode: string, startCountryCode = 'CN'): Promise<CjFreightOption[]> {
+  // Global marketplace — destination is whichever country the buyer/shipment is in.
+  // Never hardcode a destination country here.
   const json = await cjFetch<CjFreightOption[]>('/logistic/freightCalculate', {
     method: 'POST',
     body: {
       startCountryCode,
-      endCountryCode: 'GB',
+      endCountryCode,
       products: [{ vid, quantity }],
     },
   })
