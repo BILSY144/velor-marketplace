@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // ---------------------------------------------------------------------------
-// Global Seller Scout Agent — runs every 6 hours via Vercel Cron
-// Sources: Etsy · eBay (multi-market) · Google Custom Search · Bing Web Search
-// Scouts ALL sellers — individual makers, small businesses, and large brands —
+// Global Seller Scout Agent â runs every 6 hours via Vercel Cron
+// Sources: Etsy Â· eBay (multi-market) Â· Google Custom Search Â· Bing Web Search
+// Scouts ALL sellers â individual makers, small businesses, and large brands â
 // across every major market worldwide. NEVER fabricates data.
 // ---------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ interface ProspectCandidate {
   notes: string;
 }
 
-// ── Etsy types ───────────────────────────────────────────────────────────────
+// ââ Etsy types âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 interface EtsyShop {
   shop_name: string;
   title: string | null;
@@ -33,19 +33,19 @@ interface EtsyShop {
 interface EtsyListing { listing_id: number; shop_id: number; }
 interface EtsyListingsResponse { results: EtsyListing[]; }
 
-// ── eBay types ───────────────────────────────────────────────────────────────
+// ââ eBay types âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 interface EbayTokenResponse { access_token: string; }
 interface EbaySeller { username: string; feedbackScore: number; feedbackPercentage: string; }
 interface EbayItemSummary { seller?: EbaySeller; title: string; itemWebUrl: string; }
 interface EbaySearchResponse { itemSummaries?: EbayItemSummary[]; }
 
-// ── Web search types (Google + Bing) ─────────────────────────────────────────
+// ââ Web search types (Google + Bing) âââââââââââââââââââââââââââââââââââââââââ
 interface GoogleItem { title: string; link: string; displayLink: string; snippet: string; }
 interface GoogleSearchResponse { items?: GoogleItem[]; }
 interface BingWebPage { name: string; url: string; displayUrl: string; snippet: string; }
 interface BingSearchResponse { webPages?: { value?: BingWebPage[] }; }
 
-// ── Etsy search targets (global — all niches, all sizes) ─────────────────────
+// ââ Etsy search targets (global â all niches, all sizes) âââââââââââââââââââââ
 const ETSY_TARGETS = [
   { keywords: 'handmade jewellery silver gold artisan', category: 'Jewellery' },
   { keywords: 'luxury jewellery brand fine jewelry', category: 'Jewellery' },
@@ -69,7 +69,7 @@ const ETSY_TARGETS = [
   { keywords: 'glass bead jewellery handmade lampwork', category: 'Jewellery' },
 ];
 
-// ── eBay search targets ───────────────────────────────────────────────────────
+// ââ eBay search targets âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const EBAY_TARGETS = [
   { query: 'handmade jewellery silver artisan gold', categoryId: '10968', category: 'Jewellery' },
   { query: 'luxury jewellery brand fine necklace bracelet', categoryId: '10968', category: 'Jewellery' },
@@ -85,7 +85,7 @@ const EBAY_TARGETS = [
   { query: 'woodwork handmade home decor gift artisan', categoryId: '183446', category: 'Home & Living' },
 ];
 
-// eBay marketplaces to search — global coverage
+// eBay marketplaces to search â global coverage
 const EBAY_MARKETS = [
   { id: 'EBAY_GB', label: 'UK' },
   { id: 'EBAY_US', label: 'US' },
@@ -95,9 +95,13 @@ const EBAY_MARKETS = [
   { id: 'EBAY_CA', label: 'CA' },
   { id: 'EBAY_IT', label: 'IT' },
   { id: 'EBAY_ES', label: 'ES' },
+  { id: 'EBAY_NL', label: 'NL' },
+  { id: 'EBAY_IE', label: 'IE' },
+  { id: 'EBAY_AT', label: 'AT' },
+  { id: 'EBAY_CH', label: 'CH' },
 ];
 
-// ── Google search targets ─────────────────────────────────────────────────────
+// ââ Google search targets âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const GOOGLE_TARGETS = [
   // UK
   { query: 'independent handmade jewellery brand uk shop buy', category: 'Jewellery', market: 'uk' },
@@ -131,9 +135,29 @@ const GOOGLE_TARGETS = [
   { query: 'ceramic pottery studio independent shop handmade global', category: 'Home & Living', market: 'global' },
   { query: 'independent illustration art studio print shop buy', category: 'Art & Prints', market: 'global' },
   { query: 'premium wellness beauty brand independent online shop', category: 'Beauty', market: 'global' },
+  // Middle East
+  { query: 'independent luxury jewellery brand dubai uae shop buy online', category: 'Jewellery', market: 'ae' },
+  { query: 'artisan home decor luxury brand middle east dubai shop buy', category: 'Home & Living', market: 'ae' },
+  // Asia-Pacific
+  { query: 'independent handmade jewellery brand singapore shop buy online', category: 'Jewellery', market: 'sg' },
+  { query: 'independent luxury accessories brand japan shop buy english', category: 'Accessories', market: 'jp' },
+  { query: 'independent artisan gift brand south korea shop buy online', category: 'Gifts', market: 'kr' },
+  { query: 'independent handmade jewellery brand india shop buy online', category: 'Jewellery', market: 'in' },
+  { query: 'independent artisan brand new zealand shop buy online', category: 'Gifts', market: 'nz' },
+  { query: 'independent luxury accessories brand hong kong shop buy', category: 'Accessories', market: 'hk' },
+  // Latin America
+  { query: 'independent handmade jewellery brand brazil shop buy online', category: 'Jewellery', market: 'br' },
+  { query: 'independent artisan accessories brand mexico shop buy online', category: 'Accessories', market: 'mx' },
+  // Africa
+  { query: 'independent handmade jewellery brand south africa shop buy', category: 'Jewellery', market: 'za' },
+  // Named EU markets (more precise targeting than generic 'europe')
+  { query: 'unabhaengige Schmuckmarke handgefertigt shop online kaufen', category: 'Jewellery', market: 'de' },
+  { query: 'marque bijoux artisanale independante boutique en ligne', category: 'Jewellery', market: 'fr' },
+  { query: 'independent luxury home decor brand netherlands shop buy', category: 'Home & Living', market: 'nl' },
+  { query: 'independent artisan jewellery brand italy shop buy online', category: 'Jewellery', market: 'it' },
 ];
 
-// ── Bing search targets (complementary — different phrasing to surface new sellers) ──
+// ââ Bing search targets (complementary â different phrasing to surface new sellers) ââ
 const BING_TARGETS = [
   // Wholesale and B2B brands
   { query: 'handmade jewellery brand wholesale trade stockist wanted', category: 'Jewellery' },
@@ -160,7 +184,7 @@ const BING_TARGETS = [
   { query: 'handmade resin art jewellery home decor shop', category: 'Art & Prints' },
   { query: 'artisan woodwork furniture accessories brand buy online', category: 'Home & Living' },
 ];
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 function extractEmail(text: string | null): string | null {
   if (!text) return null;
@@ -192,7 +216,7 @@ function isExcluded(displayLink: string): boolean {
   return WEB_EXCLUDED_DOMAINS.some((ex) => domain.includes(ex));
 }
 
-// ── Source: Etsy ─────────────────────────────────────────────────────────────
+// ââ Source: Etsy âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 async function scoutEtsy(
   apiKey: string
@@ -243,7 +267,7 @@ async function scoutEtsy(
   return { candidates, errors };
 }
 
-// ── Source: eBay (multi-marketplace) ─────────────────────────────────────────
+// ââ Source: eBay (multi-marketplace) âââââââââââââââââââââââââââââââââââââââââ
 
 async function scoutEbay(
   appId: string, certId: string
@@ -268,7 +292,7 @@ async function scoutEbay(
 
   const seenSellers = new Set<string>();
 
-  // Rotate through markets — run 3 targets per market to stay within time budget
+  // Rotate through markets â run 3 targets per market to stay within time budget
   for (const market of EBAY_MARKETS) {
     const targetsForMarket = EBAY_TARGETS.slice(0, 8); // 8 searches per market for higher-volume scouting
     for (const target of targetsForMarket) {
@@ -324,7 +348,7 @@ async function scoutEbay(
   }
   return { candidates, errors };
 }
-// ── Source: Google Custom Search ─────────────────────────────────────────────
+// ââ Source: Google Custom Search âââââââââââââââââââââââââââââââââââââââââââââ
 // Uses Google's official Custom Search JSON API only. Legal: authenticated API
 // call returning public web results. Emails extracted only from publicly listed
 // text in search snippets that sellers have voluntarily published.
@@ -349,7 +373,7 @@ async function scoutGoogle(
         const domain = item.displayLink?.replace(/^www\./, '');
         if (!domain || seenDomains.has(domain) || isExcluded(item.displayLink)) continue;
         seenDomains.add(domain);
-        const name = (item.title?.split('|')[0]?.split('–')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
+        const name = (item.title?.split('|')[0]?.split('â')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
         candidates.push({
           name,
           platform: 'independent',
@@ -368,7 +392,7 @@ async function scoutGoogle(
   return { candidates, errors };
 }
 
-// ── Source: Bing Web Search ───────────────────────────────────────────────────
+// ââ Source: Bing Web Search âââââââââââââââââââââââââââââââââââââââââââââââââââ
 // Uses Microsoft Bing Web Search API v7 only. Legal: authenticated official API.
 // Surfaces independent sellers not indexed prominently in Google.
 
@@ -395,7 +419,7 @@ async function scoutBing(
         const domain = displayLink.replace(/^www\./, '');
         if (!domain || seenDomains.has(domain) || isExcluded(displayLink)) continue;
         seenDomains.add(domain);
-        const name = (page.name?.split('|')[0]?.split('–')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
+        const name = (page.name?.split('|')[0]?.split('â')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
         candidates.push({
           name,
           platform: 'independent',
@@ -414,7 +438,7 @@ async function scoutBing(
   return { candidates, errors };
 }
 
-// ── Main Handler ─────────────────────────────────────────────────────────────
+// ââ Main Handler âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 // -- Brave Search: compliant independent-seller discovery (Shopify / DTC stores) --
 const BRAVE_TARGETS: Array<{ query: string; category: string }> = [
@@ -542,28 +566,28 @@ export async function GET(req: NextRequest) {
     await prisma.agentLog.create({ data: { agentName: 'seller-scout', action: 'source_skipped', status: 'warning', details: { source: 'brave', reason: 'BRAVE_SEARCH_API_KEY not set' } } });
   }
 
-  // Etsy — official Etsy Open API v3
+  // Etsy â official Etsy Open API v3
   if (process.env.ETSY_API_KEY) {
     sources.push({ name: 'etsy', result: await scoutEtsy(process.env.ETSY_API_KEY) });
   } else {
     await prisma.agentLog.create({ data: { agentName: 'seller-scout', action: 'source_skipped', status: 'warning', details: { source: 'etsy', reason: 'ETSY_API_KEY not set' } } });
   }
 
-  // eBay — official eBay Browse API (OAuth2), 8 global marketplaces
+  // eBay â official eBay Browse API (OAuth2), 8 global marketplaces
   if (process.env.EBAY_APP_ID && process.env.EBAY_CERT_ID) {
     sources.push({ name: 'ebay', result: await scoutEbay(process.env.EBAY_APP_ID, process.env.EBAY_CERT_ID) });
   } else {
     await prisma.agentLog.create({ data: { agentName: 'seller-scout', action: 'source_skipped', status: 'warning', details: { source: 'ebay', reason: 'EBAY_APP_ID or EBAY_CERT_ID not set' } } });
   }
 
-  // Google — official Google Custom Search JSON API
+  // Google â official Google Custom Search JSON API
   if (process.env.GOOGLE_SEARCH_API_KEY && process.env.GOOGLE_SEARCH_CX) {
     sources.push({ name: 'google', result: await scoutGoogle(process.env.GOOGLE_SEARCH_API_KEY, process.env.GOOGLE_SEARCH_CX) });
   } else {
     await prisma.agentLog.create({ data: { agentName: 'seller-scout', action: 'source_skipped', status: 'warning', details: { source: 'google', reason: 'GOOGLE_SEARCH_API_KEY or GOOGLE_SEARCH_CX not set' } } });
   }
 
-  // Bing — official Microsoft Bing Web Search API v7
+  // Bing â official Microsoft Bing Web Search API v7
   if (process.env.BING_SEARCH_API_KEY) {
     sources.push({ name: 'bing', result: await scoutBing(process.env.BING_SEARCH_API_KEY) });
   } else {
