@@ -348,3 +348,19 @@ Not yet verified this check-in: whether William has reviewed or been made aware 
 The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The previously flagged items also remain open and untouched since their respective last updates: the automatic discount system, including this newly-documented checkout change, the Phase 2 Live Shopping review, and the checkout currency-charging review.
 
 Next steps identified this check-in: continue flagging the automatic discount system, now fully code-free at checkout, to William for review, alongside the still-open Live Shopping review, the currency-charging review, and the tiered-pages OPEN REVIEW ITEM, until he addresses them. No new code work is proposed by this check-in beyond what is already listed in PENDING / NEXT above.
+
+---
+
+## SESSION UPDATE — 2026-07-06 (scheduled check-in: homepage hero swapped to real image, stray upload cleaned up)
+
+Four commits landed on main since the last SESSION UPDATE entry, all now deployed to Production and showing Ready in Vercel. The current production tip is 808ffd9.
+
+In commit order: 6f50877 redesigned the homepage hero with a coded SVG globe and network graphic, dual buyer and seller call-to-action buttons, and a trust badge strip along the bottom of the hero section. This was never documented in a SESSION UPDATE at the time it shipped, so it is being logged now for completeness. That redesign was short-lived: 26703c5 uploaded a real hero image William supplied, titled velor hero homepage global image.PNG, into the public folder, and the very next commit, 749751a titled velor email template, replaced the coded SVG globe entirely with that real image as a full-bleed hero graphic, simplifying the hero section down to the image plus two buttons, Shop now and Start selling, underneath it. The dual buyer and seller callout panels, the trust badge strip, and the uppercase eyebrow tag from the coded redesign were all removed as part of that same change. The 749751a commit also mistakenly committed a duplicate copy of the image to app/velor email template.PNG, a 1.53MB file in the wrong location. The following commit, 808ffd9, deleted that stray file, leaving the correct image living only in public/velor hero homepage global image.PNG as intended.
+
+Net effect: the homepage now shows William's actual supplied photo or graphic as the hero, not a coded illustration, and there is no leftover duplicate file cluttering the app directory. All four commits are confirmed Ready in Vercel with no build errors.
+
+This is a live, homepage-facing visual change that has not yet been confirmed with William, in the same way prior automatic-discount and shipping-cost changes were flagged as unconfirmed. Adding it to the list of items awaiting his review.
+
+The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The previously flagged items also remain open and untouched: the automatic discount system, the Phase 2 Live Shopping review, and the checkout currency-charging review. The homepage hero image swap described above is now added to that same list of live changes awaiting William's confirmation.
+
+Next steps identified this check-in: continue flagging the automatic discount system, the homepage hero image swap, the Live Shopping review, the currency-charging review, and the tiered-pages OPEN REVIEW ITEM to William until he addresses them. No new code work is proposed by this check-in.
