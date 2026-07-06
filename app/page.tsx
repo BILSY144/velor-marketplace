@@ -64,10 +64,6 @@ function Badge({ code }: { code?: string | null }) {
   )
 }
 
-// The real hero graphic William supplied, committed to /public. The filename
-// has spaces and an uppercase extension, so it's referenced pre-encoded.
-const HERO_IMAGE_SRC = '/velor%20hero%20homepage%20global%20image.PNG'
-
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [sellers, setSellers] = useState<Seller[]>([])
@@ -100,52 +96,90 @@ export default function Home() {
 
   return (
     <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
-      {/* HERO — William's actual Global Marketplace graphic, full-bleed */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border)', background: '#000' }}>
-        <img
-          src={HERO_IMAGE_SRC}
-          alt="Velor Global Marketplace — buyers and sellers connected worldwide, with order confirmation, secure payments, reliable shipping and smart logistics"
-          style={{ display: 'block', width: '100%', height: 'auto' }}
-        />
+      {/* HERO */}
+      <section style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
         <div
           style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 14,
-            justifyContent: 'center',
-            padding: '28px 24px',
-            background: '#000',
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(1100px 500px at 80% -10%, rgba(255,107,0,0.18), transparent 60%), radial-gradient(800px 500px at 0% 110%, rgba(0,230,118,0.10), transparent 55%)',
           }}
-        >
-          <Link
-            href="/shop"
+        />
+        <div style={{ ...section, position: 'relative', padding: '86px 24px 92px' }}>
+          <div
             style={{
-              background: 'var(--accent)',
-              color: '#000',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '6px 14px',
+              borderRadius: 999,
+              border: '1px solid var(--border)',
+              background: 'rgba(255,255,255,0.03)',
+              fontSize: 12.5,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: 'var(--muted)',
+              marginBottom: 22,
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--green)' }} />
+            The first fully AI-run marketplace
+          </div>
+
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 15,
-              textDecoration: 'none',
-              padding: '15px 30px',
-              borderRadius: 999,
+              fontSize: 'clamp(38px, 6vw, 68px)',
+              lineHeight: 1.04,
+              letterSpacing: '-0.02em',
+              margin: 0,
+              maxWidth: 900,
             }}
           >
-            Shop now
-          </Link>
-          <Link
-            href="/sell"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 15,
-              textDecoration: 'none',
-              padding: '15px 30px',
-              borderRadius: 999,
-              border: '1px solid rgba(255,255,255,0.28)',
-            }}
-          >
-            Start selling
-          </Link>
+            A world of independent sellers.
+            <br />
+            <span style={{ color: 'var(--accent)' }}>Protected</span> every step of the way.
+          </h1>
+
+          <p style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
+            Buy from vetted sellers around the world with total confidence. Your payment is held
+            safely until you confirm your order arrived — and the whole marketplace is run,
+            monitored and protected by AI, around the clock.
+          </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+            <Link
+              href="/shop"
+              style={{
+                background: 'var(--accent)',
+                color: '#000',
+                fontWeight: 800,
+                fontSize: 15,
+                textDecoration: 'none',
+                padding: '15px 30px',
+                borderRadius: 999,
+              }}
+            >
+              Shop now
+            </Link>
+            <Link
+              href="/sell"
+              style={{
+                background: 'transparent',
+                color: 'var(--text)',
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: 'none',
+                padding: '15px 30px',
+                borderRadius: 999,
+                border: '1px solid var(--border)',
+              }}
+            >
+              Start selling
+            </Link>
+          </div>
         </div>
       </section>
 
