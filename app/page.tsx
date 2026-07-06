@@ -389,7 +389,7 @@ export default function Home() {
                     color: 'var(--text)',
                   }}
                 >
-                  <div style={{ aspectRatio: '3 / 2', background: '#141414', position: 'relative' }}>
+                  <div style={{ aspectRatio: '1 / 1', background: '#141414', position: 'relative' }}>
                     {thumb ? (
                       <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
@@ -410,12 +410,12 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div style={{ padding: '14px 16px 16px' }}>
-                    <div style={{ marginBottom: 8 }}>
+                  <div style={{ padding: '8px 12px 10px' }}>
+                    <div style={{ marginBottom: 4 }}>
                       <Badge code={s.sellerBadge} />
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{s.storeName}</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
+                    <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
                       {(s._count?.products ?? 0)} products{s.country ? ` · ${s.country}` : ''}
                     </div>
                   </div>
@@ -469,7 +469,7 @@ export default function Home() {
                     color: 'var(--text)',
                   }}
                 >
-                  <div style={{ aspectRatio: '3 / 2', background: '#141414' }}>
+                  <div style={{ aspectRatio: '1 / 1', background: '#141414' }}>
                     {img ? (
                       <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
@@ -488,9 +488,9 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div style={{ padding: '13px 14px 15px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 38 }}>{p.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <div style={{ padding: '8px 12px 10px' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 19, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
                       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>{symbol}{convert(p.price, p.seller?.currency || 'GBP').toFixed(2)}</span>
                       {count > 0 && (
                         <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
@@ -499,7 +499,7 @@ export default function Home() {
                       )}
                     </div>
                     {p.seller?.storeName && (
-                      <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 6 }}>{p.seller.storeName}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{p.seller.storeName}</div>
                     )}
                   </div>
                 </Link>
