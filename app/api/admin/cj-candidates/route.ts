@@ -81,6 +81,10 @@ export async function GET(request: NextRequest) {
           name: detail.productNameEn || detail.productName,
           cost,
           computedPrice,
+          // Real CJ supplier name (empty string for ORDINARY_PRODUCT, since
+          // CJ manages that inventory itself with no separate named
+          // supplier) -- never fabricate a name when this is blank.
+          supplierName: detail.supplierName || null,
           images: detail.productImageSet || [],
           description: detail.description || '',
           variants: detail.variants.map((v) => ({
