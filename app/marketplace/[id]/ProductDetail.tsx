@@ -92,11 +92,11 @@ export default function ProductDetail({ id }: { id: string }) {
         .pd-nav span { color: #444; font-size: 13px; }
         .pd-inner { max-width: 1200px; margin: 0 auto; padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
         @media (max-width: 900px) { .pd-inner { grid-template-columns: 1fr; padding: 24px 16px; gap: 32px; } .pd-nav { padding: 16px; } }
-        .pd-gallery { display: flex; gap: 12px; }
-        .pd-thumbs { display: flex; flex-direction: column; gap: 8px; }
+        .pd-gallery { display: flex; flex-direction: column; gap: 16px; }
+        .pd-thumbs { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; }
         .pd-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: contain; border: 2px solid transparent; cursor: pointer; background: #1A1A1A; }
         .pd-thumb.active { border-color: #FF6B00; }
-        .pd-main-img { flex: 1; aspect-ratio: 1; background: #1A1A1A; border-radius: 12px; overflow: hidden; border: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: center; position: relative; }
+        .pd-main-img { width: 100%; max-width: 420px; max-height: 420px; aspect-ratio: 1; margin: 0 auto; background: transparent; border-radius: 12px; overflow: hidden; border: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: center; position: relative; }
         .pd-main-img img { width: 100%; height: 100%; object-fit: contain; }
         .pd-main-placeholder { color: #333; font-size: 80px; }
         .pd-sale-badge { position: absolute; top: 14px; left: 14px; background: #FF6B00; color: #000; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 6px; letter-spacing: 0.3px; }
@@ -155,6 +155,14 @@ export default function ProductDetail({ id }: { id: string }) {
         ) : product ? (
           <div className="pd-inner">
             <div className="pd-gallery">
+              <div className="pd-main-img">
+                {onSale && <span className="pd-sale-badge">{product.percentOff}% OFF</span>}
+                {product.images[activeImg] ? (
+                  <img src={product.images[activeImg]} alt={product.title} />
+                ) : (
+                  <div className="pd-main-placeholder">+</div>
+                )}
+              </div>
               {product.images.length > 1 && (
                 <div className="pd-thumbs">
                   {product.images.map((img, i) => (
@@ -168,14 +176,6 @@ export default function ProductDetail({ id }: { id: string }) {
                   ))}
                 </div>
               )}
-              <div className="pd-main-img">
-                {onSale && <span className="pd-sale-badge">{product.percentOff}% OFF</span>}
-                {product.images[activeImg] ? (
-                  <img src={product.images[activeImg]} alt={product.title} />
-                ) : (
-                  <div className="pd-main-placeholder">+</div>
-                )}
-              </div>
             </div>
 
             <div className="pd-info">
