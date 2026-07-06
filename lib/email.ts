@@ -297,7 +297,7 @@ export function buildOutreachEmail(d: {
         <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
         <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>GLOBAL MARKETPLACE</span>
       </div>
-      <img src='https://velorcommerce.store/velor-email-hero.jpg' width='600' alt='Velor Global Marketplace' style='display:block;width:100%;max-width:600px;height:auto;border:0;' />
+      <a href='https://velorcommerce.store/apply' style='display:block;text-decoration:none;line-height:0;'><img src='https://velorcommerce.store/email-assets/248a565b-5f33-438e-a12b-046983ea0b4b.png' width='600' alt='Velor Global Marketplace - Calling All Sellers, list for free' style='display:block;width:100%;max-width:600px;height:auto;border:0;' /></a>
       <div style='padding:32px;'>
         <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>OPENING TO BUYERS IN 30 DAYS</div>
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>List now &mdash; for free.</div>
