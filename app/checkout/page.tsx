@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { useCart } from '@/lib/cart'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -60,24 +61,6 @@ interface ConfirmedBreakdown {
   total: number
 }
 
-function useCartItems(): { items: CartItem[]; removeItem: (productId: string) => void } {
-  const [items, setItems] = useState<CartItem[]>([])
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('velor-cart')
-      const parsed = stored ? JSON.parse(stored) : { state: { items: [] } }
-      setItems(parsed?.state?.items ?? [])
-    } catch { setItems([]) }
-  }, [])
-  const removeItem = (productId: string) => {
-    setItems((prev) => {
-      const next = prev.filter((i) => i.productId !== productId)
-      try { localStorage.setItem('velor-cart', JSON.stringify({ state: { items: next } })) } catch {}
-      return next
-    })
-  }
-  return { items, removeItem }
-}
 
 function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
   clientSecret: string; total: number; currency: string; onSuccess: () => void;
@@ -126,7 +109,18 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
 }
 
 export default function CheckoutPage() {
-  const { items, removeItem } = useCartItems()
+  const { items, removeItem: removeCartItem } = useCart()
+  const handleRemoveItem = (productId: string) => {
+    removeCartItem(productId)
+    // If a Stripe PaymentIntent was already created, its amount is now stale.
+    // Invalidate it and send the buyer back to shipping so the total is re-quoted
+    // fresh before any payment can be submitted.
+    if (clientSecret || confirmed) {
+      setClientSecret('')
+      setConfirmed(null)
+      setStep('shipping')
+    }
+  }
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
   const [address, setAddress] = useState({ name: '', email: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
   const [rates, setRates] = useState<ShippingRate[]>([])
@@ -493,10 +487,10 @@ export default function CheckoutPage() {
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
                 </div>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{confirmed && productSubtotal > 0 ? fmtConfirmed((item.price * item.quantity / productSubtotal) * (confirmed.productSubtotal + confirmed.discountAmount)) : fmtRaw(item.price * item.quantity, itemCurrencies[item.productId] || 'GBP')}</div>
-                {step === 'shipping' && !confirmed && (
+                {!creatingIntent && (
                   <button
                     type="button"
-                    onClick={() => removeItem(item.productId)}
+                    onClick={() => handleRemoveItem(item.productId)}
                     aria-label={`Remove ${item.name} from cart`}
                     style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 0 4px 8px', lineHeight: 1 }}
                   >
