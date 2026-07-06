@@ -124,7 +124,7 @@ export default function DiscountCodesPage() {
   }
 
   async function handleCreate() {
-    if (!form.code || !form.value) { setError('Code and value are required'); return }
+    if (!form.code || !form.value) { setError('Name and value are required'); return }
     if (scope === 'specific' && selectedProductIds.length === 0) {
       setError('Select at least one product, or switch to "All products"')
       return
@@ -145,7 +145,7 @@ export default function DiscountCodesPage() {
         }),
       })
       const data = await r.json()
-      if (!r.ok) { setError(data.error || 'Failed to create code'); setSaving(false); return }
+      if (!r.ok) { setError(data.error || 'Failed to create discount'); setSaving(false); return }
       setCodes(prev => [data.discount, ...prev])
       setShowModal(false)
       setForm({ code: '', type: 'PERCENTAGE', value: '', minOrder: '', usageLimit: '', expiresAt: '' })
@@ -156,7 +156,7 @@ export default function DiscountCodesPage() {
   }
 
   // One-click preset: instantly creates an active, store-wide PERCENTAGE
-  // code, e.g. "SAVE10-XXXX" — Pro and Enterprise only.
+  // discount, e.g. internal reference "SAVE10-XXXX" — Pro and Enterprise only.
   async function quickCreate(percent: number) {
     setQuickBusy(percent)
     try {
@@ -177,7 +177,7 @@ export default function DiscountCodesPage() {
 
   // Manual quick-create — lets the seller type any percentage they want
   // instead of being limited to the fixed presets above. Also store-wide;
-  // use the full form below to restrict a code to specific products.
+  // use the full form below to restrict a discount to specific products.
   async function customCreate() {
     const val = parseFloat(customValue)
     if (!val || val <= 0 || val > 100) { setCustomError('Enter a percentage between 1 and 100'); return }
@@ -194,7 +194,7 @@ export default function DiscountCodesPage() {
       })
       const data = await r.json()
       if (r.ok) { setCodes(prev => [data.discount, ...prev]); setCustomValue('') }
-      else setCustomError(data.error || 'Failed to create code')
+      else setCustomError(data.error || 'Failed to create discount')
     } catch { setCustomError('Network error') }
     setCustomBusy(false)
   }
@@ -205,7 +205,7 @@ export default function DiscountCodesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this discount code?')) return
+    if (!confirm('Delete this discount?')) return
     await fetch(`/api/dashboard/discount-codes?id=${id}`, { method: 'DELETE' })
     setCodes(prev => prev.filter(c => c.id !== id))
   }
@@ -222,10 +222,22 @@ export default function DiscountCodesPage() {
     <div style={S.page}>
       <div style={S.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={S.title}>Discount Codes</h1>
+          <h1 style={S.title}>Discounts</h1>
           <PlanBadge tier={tier} />
         </div>
-        <button style={S.btn} onClick={openCreateModal}>+ Create Code</button>
+        <button style={S.btn} onClick={openCreateModal}>+ Create Discount</button>
+      </div>
+
+      <div style={{
+        marginBottom: 24, padding: '14px 18px', borderRadius: 10,
+        background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)',
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>
+          Fully automatic — no codes for buyers to enter
+        </div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+          The moment a discount below is active, it shows up directly as a reduced price on your product listing and product page — buyers see it before they even add to cart. It carries through to checkout automatically, with the same amount applied to the exact same products. There's nothing to hand out, remember, or type in: no discount codes, no coupons, no promo boxes. The "name" you give a discount is only for your own reference in this dashboard.
+        </div>
       </div>
 
       {isElevated && (
@@ -283,17 +295,17 @@ export default function DiscountCodesPage() {
                 opacity: !customValue ? 0.6 : 1,
               }}
             >
-              {customBusy ? 'Creating…' : 'Create custom code'}
+              {customBusy ? 'Creating…' : 'Create custom discount'}
             </button>
             <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
-              Instantly creates a store-wide active code — no form needed.
+              Instantly creates a store-wide active discount — applies automatically, no form needed.
             </span>
           </div>
           {customError && (
             <div style={{ color: 'var(--red)', fontSize: 12.5, marginTop: 10 }}>{customError}</div>
           )}
           <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 12 }}>
-            Want a discount on just one item? Use <strong style={{ color: accentColor }}>+ Create Code</strong> above — it lets you pick specific products.
+            Want a discount on just one item? Use <strong style={{ color: accentColor }}>+ Create Discount</strong> above — it lets you pick specific products.
           </div>
         </div>
       )}
@@ -302,15 +314,15 @@ export default function DiscountCodesPage() {
         <p style={{ color: 'var(--muted)' }}>Loading...</p>
       ) : codes.length === 0 ? (
         <div style={S.empty}>
-          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No discount codes yet</p>
-          <p style={{ fontSize: '14px' }}>Create codes to offer discounts to your buyers</p>
+          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No discounts yet</p>
+          <p style={{ fontSize: '14px' }}>Create a discount and it will show automatically on your listings — buyers never need a code</p>
         </div>
       ) : (
         <div style={tierCardStyle(theme, { overflow: 'hidden' })}>
           <table style={S.table}>
             <thead>
               <tr>
-                <th style={S.th}>Code</th>
+                <th style={S.th}>Name</th>
                 <th style={S.th}>Discount</th>
                 <th style={S.th}>Applies To</th>
                 <th style={S.th}>Status</th>
@@ -371,10 +383,13 @@ export default function DiscountCodesPage() {
       {showModal && (
         <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div style={S.modal}>
-            <h2 style={S.modalTitle}>Create Discount Code</h2>
+            <h2 style={S.modalTitle}>Create Discount</h2>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20, padding: '10px 12px', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+              This applies automatically — the moment you save it, eligible products show the reduced price on your listings and it carries through checkout on its own. Buyers never see or type a code.
+            </div>
             {error && <p style={{ color: 'var(--red)', fontSize: '13px', marginBottom: '16px' }}>{error}</p>}
             <div style={S.field}>
-              <label style={S.label}>Code</label>
+              <label style={S.label}>Internal Name (for your reference only)</label>
               <input style={S.input} placeholder="e.g. SUMMER20" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} />
             </div>
             <div style={S.row2}>
@@ -475,7 +490,7 @@ export default function DiscountCodesPage() {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
                     {selectedProductIds.length === 0
-                      ? 'Select one or more products this code should discount.'
+                      ? 'Select one or more products this discount should apply to.'
                       : `${selectedProductIds.length} product${selectedProductIds.length > 1 ? 's' : ''} selected — everything else stays full price.`}
                   </div>
                 </div>
@@ -484,7 +499,7 @@ export default function DiscountCodesPage() {
 
             <div style={S.modalFooter}>
               <button style={S.btnOutline} onClick={() => { setShowModal(false); setError('') }}>Cancel</button>
-              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create Code'}</button>
+              <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create Discount'}</button>
             </div>
           </div>
         </div>
