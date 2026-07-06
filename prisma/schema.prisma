@@ -140,6 +140,7 @@ model Seller {
   storeTheme                    String    @default("classic")
   storefrontUnlocked            Boolean   @default(false)
   storeLogo                     String?
+  isInternal                     Boolean   @default(false)
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 }
@@ -205,6 +206,9 @@ model Product {
   heightCm      Float?
   hsCode        String?
   originCountry String?
+  cjSourced     Boolean       @default(false)
+  cjProductId   String?
+  cjVid         String?
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
   messages      Message[]
@@ -256,6 +260,7 @@ model Shipment {
   shippoShipmentId  String?
   shippoRateId      String?
   shippoLabelId     String?
+  cjOrderId         String?
   trackingNumber    String?
   trackingUrl       String?
   carrier           String?
