@@ -1,4 +1,4 @@
-# Velor Working Memory
+———————————# Velor Working Memory
 _Auto-loaded each session. Last updated: 2026-07-04 (Seller tier limits updated)_
 
 ---
@@ -312,3 +312,22 @@ This is an automated scheduled check-in comparing this file against live GitHub 
 The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The items flagged in the previous update also remain open: the new automatic discount system has not yet been confirmed as reviewed by William, and the Live Shopping review and checkout currency charging items from earlier updates have not been addressed since.
 
 Next steps: unchanged from the last check-in. Flag the automatic discount system to William directly since it touches live pricing and checkout, and continue surfacing the Live Shopping review, the currency charging review, the dashboard tier theming progress, and the tiered pages OPEN REVIEW ITEM until William addresses them.
+
+
+## SESSION UPDATE — 2026-07-06 (Velor never buys shipping labels — William's decision, zero platform capital)
+
+William raised: as a new company, Velor has no funds to pay out of its own pocket for anything, and the platform must never front money for shipping or otherwise. This session made a real architecture change to guarantee that.
+
+Decision: Velor no longer purchases shipping labels or spends any of its own money on carrier costs. Sellers fulfil every order themselves, using their own carrier account and their own money, then report tracking details back to Velor. Full spec amendment in docs/PAYOUTS.md.
+
+What was found before the fix: Velor's own Shippo account balance was paying for the physical label at ship time, a real cash outlay, while the seller's payout separately included the buyer's full shipping payment with nothing reconciling the two, meaning Velor was effectively paying for shipping twice on every order. This was flagged directly to William when he asked who pays for shipping, before he gave the zero-out-of-pocket instruction that drove this session.
+
+What changed (commits a01208e, e2c2bd4, dpl_CKPfPVo1RNctBqJzmThgaHPwVDfP): lib/shippo.ts, purchaseLabel is no longer called anywhere in the app (kept only for reference); added createTrack and normalizeCarrierToken, which use Shippo's free tracks endpoint to register a seller-purchased tracking number for status updates, at no cost. app/api/dashboard/shipping/label/route.ts, fully rewritten: no longer calls Shippo's paid transactions endpoint at all; now accepts seller-entered carrier, tracking number, and optional tracking URL, creates the Shipment row, marks the order SHIPPED, and best-effort registers the tracking number with Shippo, non-blocking, never stops the order being marked shipped even if Shippo doesn't recognise the carrier. app/dashboard/orders/page.tsx, the old Create Shipping Label DDP button that triggered a Velor-funded Shippo purchase was replaced with a Mark as Shipped form, carrier, tracking number, optional tracking URL, and updated copy explaining sellers ship themselves and are reimbursed at normal payout time.
+
+What did NOT change, confirmed directly with William: the buyer is still charged the full amount, product plus shipping plus duties, in one Stripe PaymentIntent at checkout, and that money is still held on the platform, untouched, until delivery is confirmed and the hold window passes, 72 hours for trusted sellers or 15 days for probation sellers, exactly as the existing PAYOUT ESCROW spec already required. Nothing about the escrow or hold-window mechanism changed; only how the physical shipping gets paid for changed.
+
+Build issue found and fixed during this session: the first upload of the new orders/page.tsx, commit 35f7936, broke the Vercel build. Next.js's type checker flagged carrier is specified more than once in the updateShipForm helper, because a literal carrier property and a computed field property existed in the same object literal, and field's type, keyof ShipFormState, includes the literal carrier. William reported that the last build errored, and the next commit, dpl_CKPfPVo1RNctBqJzmThgaHPwVDfP, message Fix TS error computed and literal key collision in updateShipForm, fixed it by building the object in two steps instead of one literal with both a literal and a computed key. Confirmed back to Ready and live in Production before this note was written. Also worth recording: this session hit the previously documented local file cache versus bash mount desync bug again while making that fix, the Edit tool's own output looked correct when read back, but the bash mounted copy used for the pre upload esbuild check was still serving a stale, truncated version of the file. Rewriting the verified content to a fresh filename and re-verifying that new file via bash resolved it, consistent with the existing mitigation already written up elsewhere in this project's history.
+
+Not yet independently re-verified this session: a live end-to-end test of a seller actually using the new Mark as Shipped form on a real order, confirming the Shipment row, order status change, and best-effort Shippo tracking registration all work exactly as coded. The build is green and the code was read closely before writing, but no live click-through test was performed in this session.
+
+The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The previously flagged Phase 2 Live Shopping review and checkout currency-charging items remain open and untouched since the last update on those specifically.
