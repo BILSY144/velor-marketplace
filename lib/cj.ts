@@ -149,6 +149,20 @@ export interface CjProduct {
   categoryName: string
 }
 
+interface CjRawSearchProduct {
+  id: string
+  nameEn: string
+  name?: string
+  bigImage: string
+  sku: string
+  sellPrice: string
+  categoryId?: string
+}
+
+interface CjSearchData {
+  content: { productList: CjRawSearchProduct[] }[]
+}
+
 export async function searchProducts(params: { categoryId?: string; keyWord?: string; page?: number; size?: number }): Promise<CjProduct[]> {
   const qs = new URLSearchParams()
   if (params.categoryId) qs.set('categoryId', params.categoryId)
@@ -156,8 +170,24 @@ export async function searchProducts(params: { categoryId?: string; keyWord?: st
   qs.set('page', String(params.page || 1))
   qs.set('size', String(params.size || 20))
 
-  const json = await cjFetch<{ list: CjProduct[] }>(`/product/listV2?${qs.toString()}`)
-  return json.list
+  // NOTE: CJ's real listV2 response is grouped -- data.content[].productList[],
+  // not the flat data.list the docs imply. Confirmed 2026-07-06 via raw
+  // response inspection. Field names also differ from the docs: id (not
+  // pid), nameEn, bigImage, sku. sellPrice can be a range string like
+  // "0.62 -- 0.70" for multi-variant products -- callers should treat it as
+  // a display-only estimate and always get the real per-variant price from
+  // getProductDetail().variants[].variantSellPrice before charging anyone.
+  const json = await cjFetch<CjSearchData>(`/product/listV2?${qs.toString()}`)
+  const flat = (json.content || []).flatMap((c) => c.productList || [])
+  return flat.map((p) => ({
+    pid: p.id,
+    productName: p.name || p.nameEn,
+    productNameEn: p.nameEn,
+    productImage: p.bigImage,
+    productSku: p.sku,
+    sellPrice: p.sellPrice,
+    categoryName: p.categoryId || '',
+  }))
 }
 
 export interface CjProductDetail {
