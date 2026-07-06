@@ -151,7 +151,7 @@ export default function ProductPageClient() {
     }
   }
 
-  // Cart items store the ORIGINAL price, never the discounted one — the
+  // Cart items store the ORIGINAL price, never the discounted one â the
   // automatic discount is recomputed server-side at checkout from the
   // seller's live discount codes, so the buyer is always charged against
   // the current rules rather than a client-supplied number. The discount
@@ -188,7 +188,7 @@ export default function ProductPageClient() {
     router.push('/checkout')
   }
 
-  const sym = (c: string) => c === 'GBP' ? '£' : c + ' '
+  const sym = (c: string) => c === 'GBP' ? 'Â£' : c + ' '
   const currentPrice = selectedVariant ? selectedVariant.price : product?.price ?? 0
   const currentStock = selectedVariant ? selectedVariant.stock : product?.stock ?? 0
   // Automatic discounts only ever apply to the base product listing (they
@@ -260,7 +260,7 @@ export default function ProductPageClient() {
 
           {(product.avgRating ?? 0) != null && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
+              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'â'.repeat(Math.round(product.avgRating ?? 0))}</span>
               <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
               <span style={{ color: 'var(--muted)', fontSize: '14px' }}>({product.reviewCount} reviews)</span>
             </div>
@@ -287,11 +287,11 @@ export default function ProductPageClient() {
           </div>
           {onSale && (
             <div style={{ marginTop: '-14px', marginBottom: '20px', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
-              Discount applied automatically — no code needed. It will carry through to your cart and checkout.
+              Discount applied automatically â no code needed. It will carry through to your cart and checkout.
             </div>
           )}
 
-          {product.variants.length > 0 && (
+          {(product.variants && product.variants.length > 0) && (
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '10px', fontWeight: 600 }}>Variant</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -350,7 +350,7 @@ export default function ProductPageClient() {
             disabled={wishlistLoading}
             style={{ width: '100%', padding: '12px', background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            <span style={{ fontSize: '18px' }}>{isWishlisted ? '♥' : '♡'}</span>
+            <span style={{ fontSize: '18px' }}>{isWishlisted ? 'â¥' : 'â¡'}</span>
             {isWishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
           </button>
 
@@ -396,7 +396,7 @@ export default function ProductPageClient() {
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '24px' }}>
               Reviews
               {(product.avgRating ?? 0) != null && (
-                <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} ★</span>
+                <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} â</span>
               )}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -404,7 +404,7 @@ export default function ProductPageClient() {
                 <div key={r.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                     <span style={{ fontWeight: 600, fontSize: '14px' }}>{r.user.name}</span>
-                    <span style={{ color: 'var(--accent)', fontSize: '13px' }}>{'★'.repeat(r.rating)}</span>
+                    <span style={{ color: 'var(--accent)', fontSize: '13px' }}>{'â'.repeat(r.rating)}</span>
                     <span style={{ color: 'var(--muted)', fontSize: '12px' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
                   </div>
                   <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
