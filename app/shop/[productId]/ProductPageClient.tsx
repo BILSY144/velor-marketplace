@@ -310,10 +310,6 @@ export default function ProductPageClient() {
             )}
           </div>
 
-          <div style={{ marginBottom: '12px', padding: '12px 16px', background: 'rgba(0,230,118,0.08)', borderRadius: '8px', fontSize: '14px', color: 'var(--green)', fontWeight: 600 }}>
-            Free Delivery
-          </div>
-
           <button
             onClick={addToCart}
             disabled={currentStock === 0}
