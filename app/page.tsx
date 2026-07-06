@@ -389,7 +389,7 @@ export default function Home() {
                     color: 'var(--text)',
                   }}
                 >
-                  <div style={{ aspectRatio: '1 / 1', background: '#141414', position: 'relative' }}>
+                  <div style={{ aspectRatio: '3 / 2', background: '#141414', position: 'relative' }}>
                     {thumb ? (
                       <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
@@ -469,7 +469,7 @@ export default function Home() {
                     color: 'var(--text)',
                   }}
                 >
-                  <div style={{ aspectRatio: '1 / 1', background: '#141414' }}>
+                  <div style={{ aspectRatio: '3 / 2', background: '#141414' }}>
                     {img ? (
                       <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
