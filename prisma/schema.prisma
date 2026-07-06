@@ -48,22 +48,22 @@ enum VerificationStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String    @default("user")
-  accounts      Account[]
-  sentMessages     Message[]       @relation("SentMessages")
-  receivedMessages Message[]       @relation("ReceivedMessages")
-  reviews          Review[]
-  sessions      Session[]
-  seller        Seller?
-  wishlistItems WishlistItem[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  name              String?
+  email             String    @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  role              String    @default("user")
+  accounts          Account[]
+  sentMessages      Message[] @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
+  reviews           Review[]
+  sessions          Session[]
+  seller            Seller?
+  wishlistItems     WishlistItem[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Account {
@@ -101,101 +101,101 @@ model VerificationToken {
 }
 
 model Seller {
-  id                           String              @id @default(cuid())
-  userId                       String              @unique
-  user                         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName                    String
-  description                  String?             @db.Text
-  country                      String?
-currency                      String        @default("GBP")
-  stripeAccountId              String?             @unique
-  stripeOnboarded              Boolean             @default(false)
-  approved                     Boolean             @default(false)
-  tier                         SellerTier          @default(STARTER)
-  stripeCustomerId             String?             @unique
-  stripeSubscriptionId         String?             @unique
-  subscriptionStatus           String?
-  subscriptionCurrentPeriodEnd DateTime?
-  termsAcceptedAt              DateTime?
-  termsVersion                 String?
-  featuredSlotsUsed            Int                 @default(0)
-  featuredSlotsResetAt         DateTime?
-  products                     Product[]
-  orders                       Order[]
-  shipments                    Shipment[]
-  shippingProfile              SellerShippingProfile?
-  discountCodes                DiscountCode[]
-  payouts                      Payout[]
-  verification                 SellerVerification?
-  supportTickets               SupportTicket[]
-  apiKeys                      ApiKey[]
+  id                            String    @id @default(cuid())
+  userId                        String    @unique
+  user                          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName                     String
+  description                   String?   @db.Text
+  country                       String?
+  currency                      String    @default("GBP")
+  stripeAccountId               String?   @unique
+  stripeOnboarded               Boolean   @default(false)
+  approved                      Boolean   @default(false)
+  tier                          SellerTier @default(STARTER)
+  stripeCustomerId              String?   @unique
+  stripeSubscriptionId          String?   @unique
+  subscriptionStatus            String?
+  subscriptionCurrentPeriodEnd  DateTime?
+  termsAcceptedAt               DateTime?
+  termsVersion                  String?
+  featuredSlotsUsed             Int       @default(0)
+  featuredSlotsResetAt          DateTime?
+  products                      Product[]
+  orders                        Order[]
+  shipments                     Shipment[]
+  shippingProfile               SellerShippingProfile?
+  discountCodes                 DiscountCode[]
+  payouts                       Payout[]
+  verification                  SellerVerification?
+  supportTickets                SupportTicket[]
+  apiKeys                       ApiKey[]
   liveStreams                   LiveStream[]
-  sellerScore                  Float               @default(0)
-  sellerBadge                  String?
-  sellerScoreUpdatedAt         DateTime?
-  scoreBreakdown               Json?
-  storeTheme                   String              @default("classic")
-  storefrontUnlocked           Boolean             @default(false)
-  storeLogo                    String?
-  createdAt                    DateTime            @default(now())
-  updatedAt                    DateTime            @updatedAt
+  sellerScore                   Float     @default(0)
+  sellerBadge                   String?
+  sellerScoreUpdatedAt          DateTime?
+  scoreBreakdown                Json?
+  storeTheme                    String    @default("classic")
+  storefrontUnlocked            Boolean   @default(false)
+  storeLogo                     String?
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
 }
 
 model SellerVerification {
-  id                 String             @id @default(cuid())
-  sellerId           String             @unique
-  seller             Seller             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  status             VerificationStatus @default(NOT_SUBMITTED)
-  fullLegalName      String?
-  dateOfBirth        String?
-  nationality        String?
-  idType             String?
-  idDocumentUrl      String?            @db.Text
-  businessName       String?
-  businessType       String?
-  businessRegNumber  String?
-  businessCountry    String?
-  taxId              String?
-  businessDocUrl     String?            @db.Text
-  verificationNotes  String?            @db.Text
-  submittedAt        DateTime?
-  reviewedAt         DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                String              @id @default(cuid())
+  sellerId          String              @unique
+  seller            Seller              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  status            VerificationStatus  @default(NOT_SUBMITTED)
+  fullLegalName     String?
+  dateOfBirth       String?
+  nationality       String?
+  idType            String?
+  idDocumentUrl     String?             @db.Text
+  businessName      String?
+  businessType      String?
+  businessRegNumber String?
+  businessCountry   String?
+  taxId             String?
+  businessDocUrl    String?             @db.Text
+  verificationNotes String?             @db.Text
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 model SellerShippingProfile {
-  id           String   @id @default(cuid())
-  sellerId     String   @unique
-  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  name         String
-  company      String?
-  street1      String
-  street2      String?
-  city         String
-  state        String?
-  zip          String
-  country      String
-  phone        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(cuid())
+  sellerId  String   @unique
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name      String
+  company   String?
+  street1   String
+  street2   String?
+  city      String
+  state     String?
+  zip       String
+  country   String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id          String        @id @default(cuid())
-  sellerId    String
-  seller      Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  title       String
-  description String?       @db.Text
-  price       Float
-  compareAt   Float?
-  images      String[]
-  category    String
-  tags        String[]
-  stock       Int           @default(0)
-  status      ProductStatus @default(PENDING_REVIEW)
-  featured    Boolean       @default(false)
-  featuredAt  DateTime?
+  id            String        @id @default(cuid())
+  sellerId      String
+  seller        Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?       @db.Text
+  price         Float
+  compareAt     Float?
+  images        String[]
+  category      String
+  tags          String[]
+  stock         Int           @default(0)
+  status        ProductStatus @default(PENDING_REVIEW)
+  featured      Boolean       @default(false)
+  featuredAt    DateTime?
   weightGrams   Float?
   lengthCm      Float?
   widthCm       Float?
@@ -207,60 +207,60 @@ model Product {
   messages      Message[]
   reviews       Review[]
   createdAt     DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  updatedAt     DateTime      @updatedAt
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  sellerId        String
-  seller          Seller      @relation(fields: [sellerId], references: [id])
-  stripePaymentId String?     @unique
-  status          OrderStatus @default(PENDING)
-  deliveredAt     DateTime?
-  subtotal        Float
-  platformFee     Float       @default(0)
-  sellerEarnings  Float       @default(0)
-  currency        String      @default("gbp")
-  customerEmail   String
-  customerName    String?
-  shippingAddress Json?
-  items           OrderItem[]
-  returnRequests  ReturnRequest[]
-  shipment        Shipment?
-  payout          Payout?
-  dispute         Dispute?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                String          @id @default(cuid())
+  sellerId          String
+  seller            Seller          @relation(fields: [sellerId], references: [id])
+  stripePaymentId   String?         @unique
+  status            OrderStatus     @default(PENDING)
+  deliveredAt       DateTime?
+  subtotal          Float
+  platformFee       Float           @default(0)
+  sellerEarnings    Float           @default(0)
+  currency          String          @default("gbp")
+  customerEmail     String
+  customerName      String?
+  shippingAddress   Json?
+  items             OrderItem[]
+  returnRequests    ReturnRequest[]
+  shipment          Shipment?
+  payout            Payout?
+  dispute           Dispute?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
+  id         String  @id @default(cuid())
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
   quantity   Int
   price      Float
   commission Float?
 }
 
 model Shipment {
-  id               String         @id @default(cuid())
-  sellerId         String
-  seller           Seller         @relation(fields: [sellerId], references: [id])
-  orderId          String         @unique
-  order            Order          @relation(fields: [orderId], references: [id])
-  shippoShipmentId String?
-  shippoRateId     String?
-  shippoLabelId    String?
-  trackingNumber   String?
-  trackingUrl      String?
-  carrier          String?
-  status           ShipmentStatus @default(PENDING)
-  labelUrl         String?
-  events           ShipmentEvent[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                String          @id @default(cuid())
+  sellerId          String
+  seller            Seller          @relation(fields: [sellerId], references: [id])
+  orderId           String          @unique
+  order             Order           @relation(fields: [orderId], references: [id])
+  shippoShipmentId  String?
+  shippoRateId      String?
+  shippoLabelId     String?
+  trackingNumber    String?
+  trackingUrl       String?
+  carrier           String?
+  status            ShipmentStatus  @default(PENDING)
+  labelUrl          String?
+  events            ShipmentEvent[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model DiscountCode {
@@ -276,6 +276,9 @@ model DiscountCode {
   usedCount   Int       @default(0)
   expiresAt   DateTime?
   isActive    Boolean   @default(true)
+  // Empty array = applies to the seller's entire catalogue (store-wide).
+  // Non-empty = restricted to only these product IDs.
+  productIds  String[]  @default([])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -446,30 +449,29 @@ enum SupportTicketStatus {
 }
 
 model SupportTicket {
-  id        String              @id @default(cuid())
+  id        String               @id @default(cuid())
   sellerId  String?
-  seller    Seller?             @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  seller    Seller?              @relation(fields: [sellerId], references: [id], onDelete: SetNull)
   name      String
   email     String
   subject   String
-  message   String              @db.Text
-  priority  SupportPriority     @default(STANDARD)
-  status    SupportTicketStatus @default(OPEN)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  message   String               @db.Text
+  priority  SupportPriority      @default(STANDARD)
+  status    SupportTicketStatus  @default(OPEN)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 }
 
-
 model ApiKey {
-  id          String    @id @default(cuid())
-  sellerId    String
-  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  name        String
-  keyPrefix   String
-  hashedKey   String    @unique
-  lastUsedAt  DateTime?
-  revokedAt   DateTime?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  sellerId   String
+  seller     Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name       String
+  keyPrefix  String
+  hashedKey  String    @unique
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
 }
 
 enum LiveStreamStatus {
@@ -480,22 +482,22 @@ enum LiveStreamStatus {
 }
 
 model LiveStream {
-  id           String           @id @default(cuid())
-  sellerId     String
-  seller       Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  title        String
-  description  String?          @db.Text
-  roomName     String           @unique
-  status       LiveStreamStatus @default(SCHEDULED)
-  scheduledFor DateTime?
-  startedAt    DateTime?
-  endedAt      DateTime?
-  productIds   String[]
-  peakViewers  Int              @default(0)
-  reportCount  Int              @default(0)
-  recordingUrl String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id            String                     @id @default(cuid())
+  sellerId      String
+  seller        Seller                     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?                    @db.Text
+  roomName      String                     @unique
+  status        LiveStreamStatus           @default(SCHEDULED)
+  scheduledFor  DateTime?
+  startedAt     DateTime?
+  endedAt       DateTime?
+  productIds    String[]
+  peakViewers   Int                        @default(0)
+  reportCount   Int                        @default(0)
+  recordingUrl  String?
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
   viewerSessions LiveStreamViewerSession[]
 
   @@index([sellerId])
