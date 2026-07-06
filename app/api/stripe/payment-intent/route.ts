@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { convert } from '@/lib/fx'
-import { evaluateDiscount, DiscountCartItem } from '@/lib/discount'
+import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       shippingAmount = 0,
       shippingCurrency = 'GBP',
       dutiesAmountGBP = 0,
-      discountCode,
     } = await request.json()
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -73,26 +72,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Discount codes are re-validated here from scratch — the client never
-    // gets to assert its own discount amount. A code with productIds set
-    // only discounts the matching line items; everything else in the cart
-    // is charged in full.
-    let discountId: string | null = null
-    let discountAmountGBP = 0
-    let discountCodeApplied: string | null = null
-    if (discountCode && typeof discountCode === 'string' && discountCode.trim()) {
-      const result = await evaluateDiscount(discountCode, sellerDbId, discountCartItems)
-      if (!result.valid) {
-        return NextResponse.json({ error: result.error || 'Invalid discount code' }, { status: 400 })
-      }
-      discountId = result.discountId ?? null
-      discountAmountGBP = result.discountAmountGBP ?? 0
-      discountCodeApplied = result.code ?? null
-    }
+    // Discounts are automatic and buyer-invisible-to-input: there is no
+    // discount code for the client to send. The exact same seller discount
+    // codes that were shown on the listing/detail pages and at checkout are
+    // re-looked-up here from scratch, so the buyer is always charged the
+    // number they were shown — never a client-supplied amount.
+    const { totalDiscountGBP, applied } = await findAutomaticDiscounts(sellerDbId, discountCartItems)
+    const discountAmountGBP = totalDiscountGBP
+    const discountIds = applied.map((a) => a.discountId)
+    const discountCodesApplied = applied.map((a) => a.code)
 
     // Discounts only ever reduce the product subtotal — never shipping or
     // duties/taxes. Those are computed independently below and added back
-    // in full, untouched by any discount code.
+    // in full, untouched by any discount.
     const discountedSubtotalGBP = Math.max(0, subtotalGBP - discountAmountGBP)
 
     const shippingCurrencyCode = String(shippingCurrency).toUpperCase()
@@ -136,8 +128,11 @@ export async function POST(request: NextRequest) {
         subtotalGBP: subtotalGBP.toFixed(2),
         discountedSubtotalGBP: discountedSubtotalGBP.toFixed(2),
         discountAmountGBP: discountAmountGBP.toFixed(2),
-        discountId: discountId ?? '',
-        discountCode: discountCodeApplied ?? '',
+        // Multiple automatic discounts can apply to one order (one per
+        // product, each from a different code) — stored comma-joined since
+        // Stripe metadata values are flat strings.
+        discountIds: discountIds.join(','),
+        discountCodes: discountCodesApplied.join(','),
         shippingGBP: shippingGBP.toFixed(2),
         dutiesGBP: dutiesGBP.toFixed(2),
         totalGBP: totalGBP.toFixed(2),
@@ -164,7 +159,7 @@ export async function POST(request: NextRequest) {
         shippingCost: Number(shippingCharge.toFixed(2)),
         dutiesAmount: Number(dutiesCharge.toFixed(2)),
         discountAmount: Number(discountCharge.toFixed(2)),
-        discountCode: discountCodeApplied,
+        discountCodes: discountCodesApplied,
         total: Number(totalCharge.toFixed(2)),
       },
     })
