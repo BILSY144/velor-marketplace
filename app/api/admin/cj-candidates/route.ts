@@ -54,12 +54,23 @@ export async function GET(request: NextRequest) {
         }
 
         const cost = parseFloat(variant.variantSellPrice || item.sellPrice)
+        // Total landed cost must include shipping, not just item price --
+        // Velor advertises Free Delivery to buyers, so the CJ freight charge
+        // has to be baked into the sale price up front rather than passed on.
+        // Checkout has no country allowlist (worldwide), so the highest
+        // shipping cost seen across the worldwide basket is used as the
+        // basis so no single destination sells at a loss.
+        const shippingCosts = Object.values(freightByCountry).map((f) => (f.available ? f.cost || 0 : 0))
+        const maxShippingCost = shippingCosts.length ? Math.max(...shippingCosts) : 0
+        const totalCost = cost + maxShippingCost
         candidates.push({
           pid: item.pid,
           vid: variant.vid,
           name: detail.productNameEn || detail.productName,
           cost,
-          computedPrice: Math.ceil(cost * 1.2),
+          shippingCost: maxShippingCost,
+          totalCost,
+          computedPrice: Math.ceil(totalCost * 1.3),
           images: detail.productImageSet || [],
           description: detail.description || '',
           variants: detail.variants.map((v) => ({
