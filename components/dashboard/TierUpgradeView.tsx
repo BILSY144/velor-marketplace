@@ -98,6 +98,7 @@ const TIERS: Record<TierId, TierDef> = {
     features: [
       'Unlimited active listings',
       'Everything included in Pro',
+      'Go Live video shopping',
       'Dedicated account manager',
       'Full API access & integrations',
       'Free custom storefront',
@@ -124,6 +125,7 @@ function CompareModal({ onClose }: { onClose: () => void }) {
     ['Listings', '20', '200', 'Unlimited'],
     ['Custom storefront', '—', 'Free', 'Free'],
     ['Search placement', 'Standard', 'Priority', 'Priority'],
+    ['Go Live video shopping', '—', '—', 'Yes'],
     ['Account manager', '—', '—', 'Dedicated'],
     ['API access', '—', '—', 'Full'],
   ]
