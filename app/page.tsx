@@ -372,7 +372,7 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
             {sellers.map((s) => {
               const thumb = s.products?.[0]?.images?.[0]
               return (
@@ -389,7 +389,7 @@ export default function Home() {
                     color: 'var(--text)',
                   }}
                 >
-                  <div style={{ height: 120, background: '#141414', position: 'relative' }}>
+                  <div style={{ aspectRatio: '1 / 1', background: '#141414', position: 'relative' }}>
                     {thumb ? (
                       <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
@@ -447,7 +447,7 @@ export default function Home() {
             New listings are arriving as our first sellers go live. Check back very soon.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
             {products.map((p) => {
               const img = p.images?.[0] || p.image
               const count = p._count?.reviews ?? p.reviews?.length ?? 0
