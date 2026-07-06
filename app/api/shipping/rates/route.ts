@@ -223,11 +223,11 @@ export async function POST(request: NextRequest) {
           return {
             description: item.name || 'Product',
             quantity: item.quantity || 1,
-            netWeight: String((pr?.weightGrams || 200) / 1000),
-            massUnit: 'kg',
-            valueAmount: String(item.price || pr?.price || 0),
-            valueCurrency: 'GBP',
-            originCountry: pr?.originCountry || addressFrom.country,
+            net_weight: String((pr?.weightGrams || 200) / 1000),
+            mass_unit: 'kg',
+            value_amount: String(item.price || pr?.price || 0),
+            value_currency: 'GBP',
+            origin_country: pr?.originCountry || addressFrom.country,
           }
         })
 
