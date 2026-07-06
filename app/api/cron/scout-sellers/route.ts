@@ -209,7 +209,7 @@ async function scoutEtsy(
       const res = await fetch(url.toString(), { headers: { 'x-api-key': apiKey }, next: { revalidate: 0 } });
       if (!res.ok) { errors.push(`Etsy "${target.keywords}": HTTP ${res.status}`); continue; }
       const data: EtsyListingsResponse = await res.json();
-      const shopIds = [...new Set((data.results ?? []).map((l) => l.shop_id))].slice(0, 8);
+      const shopIds = [...new Set((data.results ?? []).map((l) => l.shop_id))].slice(0, 20);
       for (const shopId of shopIds) {
         try {
           const shopRes = await fetch(
@@ -270,7 +270,7 @@ async function scoutEbay(
 
   // Rotate through markets — run 3 targets per market to stay within time budget
   for (const market of EBAY_MARKETS) {
-    const targetsForMarket = EBAY_TARGETS.slice(0, 3); // 3 searches per market = 24 total
+    const targetsForMarket = EBAY_TARGETS.slice(0, 8); // 8 searches per market for higher-volume scouting
     for (const target of targetsForMarket) {
       try {
         const url = new URL('https://api.ebay.com/buy/browse/v1/item_summary/search');
