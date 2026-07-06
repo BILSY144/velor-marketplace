@@ -599,3 +599,16 @@ In progress: no listings have actually been seeded into the live catalogue yet, 
 ## SESSION UPDATE — 2026-07-06 (later check-in)
 
 No new commits have landed on main since the previous entry above. HEAD is still 4c42a36, the same commit that authored that entry, so there is nothing new to report this cycle. The CJ Dropshipping integration remains at the point already logged: the searchProducts response-shape fix, the candidate-search route, the final import route, and the internal seller account route are merged and deployed, but no listings have actually been seeded into the live catalogue yet. Next check-in will look for progress on running the candidate-search-to-import flow end-to-end and on seeding real listings.
+
+
+## SESSION UPDATE — 2026-07-06 (later check-in #2)
+
+Real progress since the previous entry above (HEAD was 4c42a36, now 47a3a61). Ten new commits landed on main.
+
+Build health: three consecutive production deployments broke (ac47caa, 3f6d300, 0347833) after a product.title/product.name field rename touched more call sites than expected, including a breadcrumb component. This was caught and fixed by 31a00c7, and every deployment since has been Ready. Current production HEAD 47a3a61 is a healthy build.
+
+Bug fixes shipped: product.name to product.title rename completed everywhere, fixing blank product titles on the marketplace page and "undefined" cart item names. Mojibake (broken UTF-8) currency symbols and em-dashes were fixed across symbolFor(), the product page, and the checkout Order Summary. The checkout Order Summary now shows real currency conversion via useCurrencyDisplay instead of raw GBP mislabeled with the address-derived currency. CJ-sourced items now get a real Free Delivery shipping rate at checkout instead of a nonsensical "contact seller for shipping quote" message, since CJ ships direct and has no ShippingProfile. The shop product page crash from an undefined product.variants array was guarded.
+
+CJ variant data model: added a real ProductVariant model plus OrderItem.variantId/cjVid/color fields, replacing the previous approach of squashing CJ colour/variant options into plain description text. The cj-import route now creates real ProductVariant rows per CJ colour/variant on new imports, and a one-time backfill route was added to populate ProductVariant rows for CJ products that were imported before this model existed.
+
+Net effect: the CJ Dropshipping listings pipeline is more structurally sound now (real variants, real currency display, real shipping rates) but per the previous entry, no listings have actually been seeded into the live catalogue yet via the candidate-search-to-import flow. Next check-in will look for progress on that seeding step, and on confirming the ProductVariant backfill actually ran against existing CJ products.
