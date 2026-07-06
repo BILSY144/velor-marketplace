@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 type Product = {
   id: string
-  name: string
+  title: string
   price: number
   images?: string[]
   image?: string
   category?: string
-  seller?: { id: string; storeName: string; sellerBadge?: string | null }
+  seller?: { id: string; storeName: string; sellerBadge?: string | null; currency?: string | null }
   reviews?: { rating: number }[]
   _count?: { reviews: number }
 }
@@ -65,6 +66,7 @@ function Badge({ code }: { code?: string | null }) {
 }
 
 export default function Home() {
+  const { symbol, convert } = useCurrencyDisplay()
   const [products, setProducts] = useState<Product[]>([])
   const [sellers, setSellers] = useState<Seller[]>([])
   type LiveCard = { id: string; title: string; roomName: string; status: string; sellerName: string; products: { images: string[] }[] }
@@ -487,9 +489,9 @@ export default function Home() {
                     )}
                   </div>
                   <div style={{ padding: '13px 14px 15px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 38 }}>{p.name}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 38 }}>{p.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>{money(p.price)}</span>
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>{symbol}{convert(p.price, p.seller?.currency || 'GBP').toFixed(2)}</span>
                       {count > 0 && (
                         <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
                           ★ {avg.toFixed(1)} ({count})
