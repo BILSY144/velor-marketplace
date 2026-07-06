@@ -14,9 +14,37 @@ interface Product {
   category: string
   createdAt: string
   seller: {
+    id: string
     storeName: string
     user: { name: string; email: string }
   }
+  discountedPrice: number | null
+  percentOff: number | null
+}
+
+interface StoredCartItem {
+  id: string
+  productId: string
+  name: string
+  price: number
+  quantity: number
+  image: string
+  sellerId?: string
+  sellerName?: string
+}
+
+function readCart(): StoredCartItem[] {
+  try {
+    const stored = localStorage.getItem('velor-cart')
+    const parsed = stored ? JSON.parse(stored) : { state: { items: [] } }
+    return parsed?.state?.items ?? []
+  } catch {
+    return []
+  }
+}
+
+function writeCart(items: StoredCartItem[]) {
+  localStorage.setItem('velor-cart', JSON.stringify({ state: { items } }))
 }
 
 export default function ProductDetail({ id }: { id: string }) {
@@ -41,27 +69,35 @@ export default function ProductDetail({ id }: { id: string }) {
       .catch(() => setLoading(false))
   }, [id])
 
+  // Cart stores the ORIGINAL price — the automatic discount is recomputed
+  // server-side at checkout from the seller's live discount codes, so what
+  // the buyer is charged always matches the current rules, not a stale
+  // client-supplied number. The same discount shown here is guaranteed to
+  // match checkout because both read from lib/discount.ts.
   function addToCart() {
     if (!product) return
-    const existing = JSON.parse(localStorage.getItem('velor-cart') || '[]')
-    const idx = existing.findIndex((i: any) => i.id === product.id)
+    const cart = readCart()
+    const idx = cart.findIndex(i => i.id === product.id)
     if (idx >= 0) {
-      existing[idx].quantity += qty
+      cart[idx].quantity += qty
     } else {
-      existing.push({
+      cart.push({
         id: product.id,
+        productId: product.id,
         name: product.name,
         price: product.price,
         image: product.images?.[0] || '',
         quantity: qty,
-        sellerId: undefined,
+        sellerId: product.seller.id,
         sellerName: product.seller.storeName,
       })
     }
-    localStorage.setItem('velor-cart', JSON.stringify(existing))
+    writeCart(cart)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
+
+  const onSale = product?.discountedPrice != null && product.discountedPrice < product.price
 
   return (
     <>
@@ -78,16 +114,22 @@ export default function ProductDetail({ id }: { id: string }) {
         .pd-thumbs { display: flex; flex-direction: column; gap: 8px; }
         .pd-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 2px solid transparent; cursor: pointer; background: #1A1A1A; }
         .pd-thumb.active { border-color: #FF6B00; }
-        .pd-main-img { flex: 1; aspect-ratio: 1; background: #1A1A1A; border-radius: 12px; overflow: hidden; border: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: center; }
+        .pd-main-img { flex: 1; aspect-ratio: 1; background: #1A1A1A; border-radius: 12px; overflow: hidden; border: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: center; position: relative; }
         .pd-main-img img { width: 100%; height: 100%; object-fit: cover; }
         .pd-main-placeholder { color: #333; font-size: 80px; }
+        .pd-sale-badge { position: absolute; top: 14px; left: 14px; background: #FF6B00; color: #000; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 6px; letter-spacing: 0.3px; }
         .pd-info { display: flex; flex-direction: column; gap: 20px; }
         .pd-cat { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #FF6B00; }
         .pd-name { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; line-height: 1.2; color: #fff; margin: 0; }
         .pd-seller-box { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 10px; padding: 14px 16px; }
         .pd-seller-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
         .pd-seller-name { font-size: 15px; font-weight: 600; color: #fff; }
+        .pd-price-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
         .pd-price { font-size: 40px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; color: #fff; }
+        .pd-price.sale { color: #FF6B00; }
+        .pd-price-was { font-size: 22px; color: #666; text-decoration: line-through; }
+        .pd-save-chip { font-size: 13px; font-weight: 700; color: #000; background: #FF6B00; padding: 4px 10px; border-radius: 5px; }
+        .pd-auto-note { font-size: 13px; color: #FF6B00; font-weight: 600; margin-top: -12px; }
         .pd-desc { font-size: 15px; line-height: 1.7; color: #bbb; }
         .pd-qty-row { display: flex; align-items: center; gap: 12px; }
         .pd-qty-label { font-size: 13px; color: #999; font-weight: 600; }
@@ -145,6 +187,7 @@ export default function ProductDetail({ id }: { id: string }) {
                 </div>
               )}
               <div className="pd-main-img">
+                {onSale && <span className="pd-sale-badge">{product.percentOff}% OFF</span>}
                 {product.images[activeImg] ? (
                   <img src={product.images[activeImg]} alt={product.name} />
                 ) : (
@@ -162,7 +205,18 @@ export default function ProductDetail({ id }: { id: string }) {
                 <div className="pd-seller-name">{product.seller.storeName}</div>
               </div>
 
-              <div className="pd-price">{symbol}{convert(product.price).toFixed(2)}</div>
+              {onSale ? (
+                <>
+                  <div className="pd-price-row">
+                    <span className="pd-price sale">{symbol}{convert(product.discountedPrice as number).toFixed(2)}</span>
+                    <span className="pd-price-was">{symbol}{convert(product.price).toFixed(2)}</span>
+                    <span className="pd-save-chip">SAVE {product.percentOff}%</span>
+                  </div>
+                  <div className="pd-auto-note">Discount applied automatically — no code needed. Carries through to cart and checkout.</div>
+                </>
+              ) : (
+                <div className="pd-price">{symbol}{convert(product.price).toFixed(2)}</div>
+              )}
 
               <p className="pd-desc">{product.description}</p>
 
