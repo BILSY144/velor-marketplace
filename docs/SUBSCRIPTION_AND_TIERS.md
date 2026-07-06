@@ -11,7 +11,7 @@ Last locked: 2026-07-04.
 |------|-------|-----------|----------|--------|
 | Starter | Free | 15% | Up to 20 (hard cap) | Seller dashboard, analytics, order tools, buyer protection on every sale |
 | Pro | £49/mo | 8% | Up to 200 (hard cap) | Free custom storefront, professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
-| Enterprise | £199/mo (fixed, non-negotiable) | 5% | Unlimited | Everything in Pro + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
+| Enterprise | £199/mo (fixed, non-negotiable) | 5% | Unlimited | Everything in Pro + Go Live video shopping + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
 
 ## Stripe (LIVE mode, acct_1TlcWCDB5eA3Wfmu — VELOR COMMERCE LTD)
 
