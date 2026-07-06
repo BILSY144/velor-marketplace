@@ -224,7 +224,17 @@ export default function Home() {
         <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
           Our Enterprise sellers, broadcasting live from anywhere in the world - a perk earned, not bought.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+        <div
+          className="velor-live-scroll"
+          style={{
+            display: 'flex',
+            gap: 14,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: 8,
+          }}
+        >
           {Array.from({ length: 12 }).map((_, i) => {
             const ls = liveStreams[i]
             if (ls) {
@@ -234,6 +244,8 @@ export default function Home() {
                   href={`/live/${ls.roomName}`}
                   style={{
                     display: 'block',
+                    flex: '0 0 180px',
+                    scrollSnapAlign: 'start',
                     borderRadius: 14,
                     overflow: 'hidden',
                     background: 'var(--surface)',
@@ -278,6 +290,8 @@ export default function Home() {
               <div
                 key={`live-slot-${i}`}
                 style={{
+                  flex: '0 0 180px',
+                  scrollSnapAlign: 'start',
                   borderRadius: 14,
                   overflow: 'hidden',
                   background: 'var(--surface)',
