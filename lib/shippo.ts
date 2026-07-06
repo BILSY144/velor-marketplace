@@ -1,4 +1,4 @@
-// Shippo API client â no SDK, pure fetch, DDP-first
+// Shippo API client — no SDK, pure fetch, DDP-first
 // Docs: https://docs.goshippo.com/
 
 const SHIPPO_BASE = 'https://api.goshippo.com'
@@ -105,6 +105,9 @@ export function buildParcelFromItems(
   }
 }
 
+// Rate quoting only — this Shippo endpoint is free (no label is purchased).
+// Used to show buyers a live shipping cost at checkout. Velor's platform
+// Shippo balance is never charged by this call.
 export async function createShippoShipment(params: {
   addressFrom: ShippoAddress
   addressTo: ShippoAddress
@@ -148,6 +151,12 @@ export async function createShippoShipment(params: {
   return res.json()
 }
 
+// NOT CALLED ANYWHERE as of 2026-07-06 (William's decision: Velor is a pure
+// platform and never spends its own money on shipping). Kept only for
+// reference / possible future opt-in (e.g. a seller-funded label-purchase
+// feature that draws from the seller's own connected balance, not Velor's).
+// Do not wire this back up without an explicit new decision from William —
+// see docs/PAYOUTS.md.
 export async function purchaseLabel(rateId: string): Promise<ShippoTransaction> {
   const res = await fetch(SHIPPO_BASE + '/transactions/', {
     method: 'POST',
@@ -161,6 +170,59 @@ export async function purchaseLabel(rateId: string): Promise<ShippoTransaction> 
   }
 
   return res.json()
+}
+
+// Common carrier-name -> Shippo tracking-carrier-token mapping, for sellers
+// who type a human name ("Royal Mail", "DHL") into the manual ship form.
+// Falls back to a lowercase/underscored guess if not found — best effort only.
+const CARRIER_TOKEN_MAP: Record<string, string> = {
+  'royal mail': 'royal_mail',
+  'royalmail': 'royal_mail',
+  'dhl': 'dhl_express',
+  'dhl express': 'dhl_express',
+  'ups': 'ups',
+  'fedex': 'fedex',
+  'usps': 'usps',
+  'dpd': 'dpd',
+  'hermes': 'evri',
+  'evri': 'evri',
+  'canada post': 'canada_post',
+  'australia post': 'australia_post',
+  'auspost': 'australia_post',
+  'tnt': 'tnt',
+  'an post': 'an_post',
+  'yodel': 'yodel',
+  'parcelforce': 'parcelforce',
+  'china post': 'china_post',
+  'sf express': 'sf_express',
+}
+
+export function normalizeCarrierToken(carrier: string): string {
+  const key = carrier.trim().toLowerCase()
+  return CARRIER_TOKEN_MAP[key] ?? key.replace(/\s+/g, '_')
+}
+
+// Registers an ALREADY-SHIPPED, seller-purchased tracking number for status
+// updates. This is Shippo's free /tracks/ endpoint — no label is bought and
+// no money is spent — it just subscribes Velor's webhook to that carrier's
+// tracking events for this tracking number. This is what lets the existing
+// Shippo delivery webhook keep stamping deliveredAt (and therefore drive the
+// normal payout-escrow release) even though Velor never purchases the label
+// itself; the seller ships with their own carrier account and their own
+// money, and simply reports the tracking number back to Velor.
+// Best-effort by design: callers should catch and swallow errors rather than
+// block marking an order as shipped (some regional carriers aren't
+// recognised by Shippo's tracking API).
+export async function createTrack(carrier: string, trackingNumber: string): Promise<void> {
+  const res = await fetch(SHIPPO_BASE + '/tracks/', {
+    method: 'POST',
+    headers: shippoHeaders(),
+    body: JSON.stringify({ carrier, tracking_number: trackingNumber }),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error('Shippo /tracks error ' + res.status + ': ' + err)
+  }
 }
 
 // Sort rates: DHL first (best DDP), then FedEx, then UPS, then others, cheapest within group
