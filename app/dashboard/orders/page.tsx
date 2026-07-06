@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
 
 interface OrderItem {
@@ -9,7 +9,7 @@ interface OrderItem {
 }
 interface Shipment {
   id: string; status: string; trackingNumber: string | null;
-  labelUrl: string | null; carrier: string | null;
+  trackingUrl: string | null; labelUrl: string | null; carrier: string | null;
 }
 interface Order {
   id: string; status: string; total: number; productSubtotal: number;
@@ -17,6 +17,12 @@ interface Order {
   buyerEmail: string; buyerName: string; createdAt: string;
   shippingAddress: Record<string, string>;
   items: OrderItem[]; shipments: Shipment[];
+}
+
+interface ShipFormState {
+  carrier: string
+  trackingNumber: string
+  trackingUrl: string
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -61,11 +67,17 @@ function exportOrdersCsv(orders: Order[]) {
   URL.revokeObjectURL(url)
 }
 
+const inputStyle: CSSProperties = {
+  width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+  borderRadius: 6, padding: '9px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
+}
+
 export default function DashboardOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [labelLoading, setLabelLoading] = useState<Record<string, boolean>>({})
-  const [labelErrors, setLabelErrors] = useState<Record<string, string>>({})
+  const [shipLoading, setShipLoading] = useState<Record<string, boolean>>({})
+  const [shipErrors, setShipErrors] = useState<Record<string, string>>({})
+  const [shipForms, setShipForms] = useState<Record<string, ShipFormState>>({})
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -81,27 +93,44 @@ export default function DashboardOrdersPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  async function createLabel(orderId: string) {
-    setLabelLoading(l => ({ ...l, [orderId]: true }))
-    setLabelErrors(e => ({ ...e, [orderId]: '' }))
+  function updateShipForm(orderId: string, field: keyof ShipFormState, value: string) {
+    setShipForms(f => ({
+      ...f,
+      [orderId]: { carrier: '', trackingNumber: '', trackingUrl: '', ...f[orderId], [field]: value },
+    }))
+  }
+
+  async function markShipped(orderId: string) {
+    const form = shipForms[orderId] ?? { carrier: '', trackingNumber: '', trackingUrl: '' }
+    if (!form.carrier.trim() || !form.trackingNumber.trim()) {
+      setShipErrors(e => ({ ...e, [orderId]: 'Carrier and tracking number are both required' }))
+      return
+    }
+    setShipLoading(l => ({ ...l, [orderId]: true }))
+    setShipErrors(e => ({ ...e, [orderId]: '' }))
     try {
       const res = await fetch('/api/dashboard/shipping/label', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({
+          orderId,
+          carrier: form.carrier.trim(),
+          trackingNumber: form.trackingNumber.trim(),
+          trackingUrl: form.trackingUrl.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
-        setLabelErrors(e => ({ ...e, [orderId]: data.error ?? 'Label creation failed' }))
+        setShipErrors(e => ({ ...e, [orderId]: data.error ?? 'Could not mark this order as shipped' }))
         return
       }
-      // Refresh orders to show new shipment
+      // Refresh orders to show the new shipment
       const refreshed = await fetch('/api/dashboard/orders').then(r => r.json())
       setOrders(refreshed.orders ?? [])
     } catch {
-      setLabelErrors(e => ({ ...e, [orderId]: 'Network error — please try again' }))
+      setShipErrors(e => ({ ...e, [orderId]: 'Network error — please try again' }))
     } finally {
-      setLabelLoading(l => ({ ...l, [orderId]: false }))
+      setShipLoading(l => ({ ...l, [orderId]: false }))
     }
   }
 
@@ -191,11 +220,12 @@ export default function DashboardOrdersPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {visibleOrders.map(order => {
             const currency = order.currency ?? 'GBP'
-            const hasLabel = order.shipments && order.shipments.length > 0
+            const hasShipment = order.shipments && order.shipments.length > 0
             const latestShipment = order.shipments?.[0]
-            const canLabel = ['PAID', 'PROCESSING'].includes(order.status)
+            const canShip = ['PAID', 'PROCESSING'].includes(order.status)
             const isExpanded = expandedOrder === order.id
             const addr = order.shippingAddress as Record<string, string>
+            const form = shipForms[order.id] ?? { carrier: '', trackingNumber: '', trackingUrl: '' }
             return (
               <div key={order.id} style={tierCardStyle(theme, { overflow: 'hidden' })}>
                 <div
@@ -275,20 +305,26 @@ export default function DashboardOrdersPage() {
                       ))}
                     </div>
 
-                    {/* Shipment / Label section */}
-                    {hasLabel && latestShipment ? (
+                    {/* Shipment section */}
+                    {hasShipment && latestShipment ? (
                       <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
                           Shipment
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
                           <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                            {latestShipment.carrier ?? 'DHL Express'} &middot; {statusBadge(latestShipment.status)}
+                            {latestShipment.carrier ?? 'Carrier'} &middot; {statusBadge(latestShipment.status)}
                           </div>
                           {latestShipment.trackingNumber && (
                             <div style={{ fontSize: '13px', color: 'var(--muted)', fontFamily: 'monospace' }}>
                               {latestShipment.trackingNumber}
                             </div>
+                          )}
+                          {latestShipment.trackingUrl && (
+                            <a href={latestShipment.trackingUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ padding: '6px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>
+                              Track Package
+                            </a>
                           )}
                           {latestShipment.labelUrl && (
                             <a href={latestShipment.labelUrl} target="_blank" rel="noopener noreferrer"
@@ -298,28 +334,60 @@ export default function DashboardOrdersPage() {
                           )}
                         </div>
                       </div>
-                    ) : canLabel ? (
-                      <div>
-                        {labelErrors[order.id] && (
+                    ) : canShip ? (
+                      <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+                          Mark as Shipped
+                        </div>
+                        <p style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.6, marginTop: 0, marginBottom: '14px' }}>
+                          Ship this order yourself with your own carrier account, then enter the tracking details below so your buyer can follow it. Your shipping payment from the buyer is included in your normal payout after delivery is confirmed and the hold window passes — same as your product proceeds.
+                        </p>
+                        {shipErrors[order.id] && (
                           <div style={{ padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px', marginBottom: '12px' }}>
-                            {labelErrors[order.id]}
+                            {shipErrors[order.id]}
                           </div>
                         )}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>Carrier *</label>
+                            <input
+                              value={form.carrier}
+                              onChange={e => updateShipForm(order.id, 'carrier', e.target.value)}
+                              placeholder="e.g. Royal Mail, DHL, UPS"
+                              style={inputStyle}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>Tracking Number *</label>
+                            <input
+                              value={form.trackingNumber}
+                              onChange={e => updateShipForm(order.id, 'trackingNumber', e.target.value)}
+                              placeholder="e.g. RR123456789GB"
+                              style={inputStyle}
+                            />
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 14 }}>
+                          <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>Tracking URL (optional)</label>
+                          <input
+                            value={form.trackingUrl}
+                            onChange={e => updateShipForm(order.id, 'trackingUrl', e.target.value)}
+                            placeholder="Link your buyer can use to follow the parcel"
+                            style={inputStyle}
+                          />
+                        </div>
                         <button
-                          onClick={() => createLabel(order.id)}
-                          disabled={labelLoading[order.id]}
+                          onClick={() => markShipped(order.id)}
+                          disabled={shipLoading[order.id]}
                           style={{
-                            padding: '10px 22px', background: labelLoading[order.id] ? 'var(--border)' : 'var(--accent)',
+                            padding: '10px 22px', background: shipLoading[order.id] ? 'var(--border)' : 'var(--accent)',
                             color: '#fff', border: 'none', borderRadius: '6px',
                             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px',
-                            cursor: labelLoading[order.id] ? 'not-allowed' : 'pointer',
+                            cursor: shipLoading[order.id] ? 'not-allowed' : 'pointer',
                           }}
                         >
-                          {labelLoading[order.id] ? 'Creating Label...' : 'Create Shipping Label (DDP)'}
+                          {shipLoading[order.id] ? 'Saving...' : 'Mark as Shipped'}
                         </button>
-                        <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>
-                          Purchases a DHL Express DDP label via Shippo. Duties pre-collected — buyer will not be charged at delivery.
-                        </p>
                       </div>
                     ) : null}
                   </div>
