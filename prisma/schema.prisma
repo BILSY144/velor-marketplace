@@ -62,6 +62,8 @@ model User {
   sessions          Session[]
   seller            Seller?
   wishlistItems     WishlistItem[]
+  setupToken            String?   @unique
+  setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 }
