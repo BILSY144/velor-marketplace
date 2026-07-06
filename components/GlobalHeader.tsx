@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
+import { useCart } from '@/lib/cart'
 
 const CATEGORIES = [
   'Electronics',
@@ -46,7 +47,7 @@ export default function GlobalHeader() {
     return () => { active = false; clearInterval(interval) }
   }, [pathname])
 
-  const [cartCount, setCartCount] = useState(0)
+  const { count: cartCount } = useCart()
   const [query, setQuery] = useState('')
   const [catsOpen, setCatsOpen] = useState(false)
   const [acctOpen, setAcctOpen] = useState(false)
@@ -66,27 +67,7 @@ export default function GlobalHeader() {
   const catsRef = useRef<HTMLDivElement>(null)
   const acctRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const readCart = () => {
-      try {
-        const raw = localStorage.getItem('velor-cart')
-        const items = raw ? JSON.parse(raw) : []
-        const count = Array.isArray(items)
-          ? items.reduce((s: number, i: { quantity?: number }) => s + (i.quantity || 1), 0)
-          : 0
-        setCartCount(count)
-      } catch {
-        setCartCount(0)
-      }
-    }
-    readCart()
-    window.addEventListener('storage', readCart)
-    window.addEventListener('cart-updated', readCart)
-    return () => {
-      window.removeEventListener('storage', readCart)
-      window.removeEventListener('cart-updated', readCart)
-    }
-  }, [pathname])
+  
 
   useEffect(() => {
     setCatsOpen(false)
