@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
 
   const body = await request.json()
-  const { code, type, value, minimumOrder, maxDiscount, usageLimit, expiresAt } = body
+  const { code, type, value, minimumOrder, maxDiscount, usageLimit, expiresAt, productIds } = body
 
   if (!code || !type || !value) {
     return NextResponse.json({ error: 'Code, type, and value are required' }, { status: 400 })
@@ -46,6 +46,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Code already exists' }, { status: 400 })
   }
 
+  // productIds is optional — an empty/omitted array means the code applies
+  // store-wide. When provided, every ID must actually belong to this
+  // seller — silently drop anything that doesn't (never trust the client
+  // to only send its own product IDs).
+  let ownedProductIds: string[] = []
+  if (Array.isArray(productIds) && productIds.length > 0) {
+    const owned = await prisma.product.findMany({
+      where: { id: { in: productIds }, sellerId: seller.id },
+      select: { id: true },
+    })
+    ownedProductIds = owned.map((p) => p.id)
+    if (ownedProductIds.length === 0) {
+      return NextResponse.json(
+        { error: 'None of the selected products belong to your store' },
+        { status: 400 }
+      )
+    }
+  }
+
   const discount = await prisma.discountCode.create({
     data: {
       sellerId: seller.id,
@@ -57,6 +76,7 @@ export async function POST(request: NextRequest) {
       usageLimit: usageLimit ? parseInt(usageLimit) : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       isActive: true,
+      productIds: ownedProductIds,
     },
   })
 
