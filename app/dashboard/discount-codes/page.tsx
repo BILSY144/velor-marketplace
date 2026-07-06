@@ -14,7 +14,15 @@ interface DiscountCode {
   usageLimit: number | null
   expiresAt: string | null
   isActive: boolean
+  productIds: string[]
   createdAt: string
+}
+
+interface SellerProduct {
+  id: string
+  title: string
+  price: number
+  status: string
 }
 
 const S: Record<string, React.CSSProperties> = {
@@ -28,8 +36,8 @@ const S: Record<string, React.CSSProperties> = {
   td: { padding: '14px 16px', fontSize: '14px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle' as const },
   code: { fontFamily: 'monospace', background: 'rgba(255,107,0,0.12)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, fontSize: '13px' },
   badge: { padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const },
-  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '32px', width: '480px', maxWidth: '90vw' },
+  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
+  modal: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '32px', width: '520px', maxWidth: '90vw', maxHeight: '88vh', overflowY: 'auto' as const },
   modalTitle: { fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 24px' },
   field: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' },
@@ -41,8 +49,9 @@ const S: Record<string, React.CSSProperties> = {
   empty: { textAlign: 'center' as const, padding: '60px', color: 'var(--muted)' },
 }
 
-// Pro+ one-click discount presets — generates a ready-to-use code instantly
-// instead of making the seller fill out the full create form.
+// Pro+ one-click discount presets — generates a ready-to-use, store-wide code
+// instantly instead of making the seller fill out the full create form.
+// Per-product targeting lives in the full "+ Create Code" form below.
 const QUICK_PRESETS = [5, 10, 15, 20]
 
 function randomSuffix() {
@@ -66,6 +75,15 @@ export default function DiscountCodesPage() {
   const [form, setForm] = useState({ code: '', type: 'PERCENTAGE', value: '', minOrder: '', usageLimit: '', expiresAt: '' })
   const [error, setError] = useState('')
 
+  // Per-product targeting — "all" discounts the seller's whole catalogue
+  // (the old, only behaviour); "specific" restricts the code to just the
+  // products checked below.
+  const [scope, setScope] = useState<'all' | 'specific'>('all')
+  const [products, setProducts] = useState<SellerProduct[]>([])
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
+  const [productFilter, setProductFilter] = useState('')
+
   useEffect(() => { fetchCodes() }, [])
 
   async function fetchCodes() {
@@ -79,8 +97,38 @@ export default function DiscountCodesPage() {
     setLoading(false)
   }
 
+  async function fetchProducts() {
+    if (products.length > 0 || productsLoading) return
+    setProductsLoading(true)
+    try {
+      const r = await fetch('/api/dashboard/products')
+      if (r.ok) {
+        const data = await r.json()
+        const list = Array.isArray(data) ? data : (data.products ?? [])
+        setProducts(list)
+      }
+    } catch {}
+    setProductsLoading(false)
+  }
+
+  function openCreateModal() {
+    setScope('all')
+    setSelectedProductIds([])
+    setProductFilter('')
+    setShowModal(true)
+    fetchProducts()
+  }
+
+  function toggleProductSelected(id: string) {
+    setSelectedProductIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
+  }
+
   async function handleCreate() {
     if (!form.code || !form.value) { setError('Code and value are required'); return }
+    if (scope === 'specific' && selectedProductIds.length === 0) {
+      setError('Select at least one product, or switch to "All products"')
+      return
+    }
     setSaving(true); setError('')
     try {
       const r = await fetch('/api/dashboard/discount-codes', {
@@ -93,6 +141,7 @@ export default function DiscountCodesPage() {
           minimumOrder: form.minOrder ? parseFloat(form.minOrder) : undefined,
           usageLimit: form.usageLimit ? parseInt(form.usageLimit) : undefined,
           expiresAt: form.expiresAt || undefined,
+          productIds: scope === 'specific' ? selectedProductIds : [],
         }),
       })
       const data = await r.json()
@@ -100,12 +149,14 @@ export default function DiscountCodesPage() {
       setCodes(prev => [data.discount, ...prev])
       setShowModal(false)
       setForm({ code: '', type: 'PERCENTAGE', value: '', minOrder: '', usageLimit: '', expiresAt: '' })
+      setScope('all')
+      setSelectedProductIds([])
     } catch { setError('Network error') }
     setSaving(false)
   }
 
-  // One-click preset: instantly creates an active PERCENTAGE code, e.g.
-  // "SAVE10-XXXX", with no form to fill in — Pro and Enterprise only.
+  // One-click preset: instantly creates an active, store-wide PERCENTAGE
+  // code, e.g. "SAVE10-XXXX" — Pro and Enterprise only.
   async function quickCreate(percent: number) {
     setQuickBusy(percent)
     try {
@@ -125,7 +176,8 @@ export default function DiscountCodesPage() {
   }
 
   // Manual quick-create — lets the seller type any percentage they want
-  // instead of being limited to the fixed presets above.
+  // instead of being limited to the fixed presets above. Also store-wide;
+  // use the full form below to restrict a code to specific products.
   async function customCreate() {
     const val = parseFloat(customValue)
     if (!val || val <= 0 || val > 100) { setCustomError('Enter a percentage between 1 and 100'); return }
@@ -158,6 +210,14 @@ export default function DiscountCodesPage() {
     setCodes(prev => prev.filter(c => c.id !== id))
   }
 
+  function productTitle(id: string) {
+    return products.find(p => p.id === id)?.title ?? id
+  }
+
+  const filteredProducts = productFilter.trim()
+    ? products.filter(p => p.title.toLowerCase().includes(productFilter.trim().toLowerCase()))
+    : products
+
   return (
     <div style={S.page}>
       <div style={S.header}>
@@ -165,7 +225,7 @@ export default function DiscountCodesPage() {
           <h1 style={S.title}>Discount Codes</h1>
           <PlanBadge tier={tier} />
         </div>
-        <button style={S.btn} onClick={() => setShowModal(true)}>+ Create Code</button>
+        <button style={S.btn} onClick={openCreateModal}>+ Create Code</button>
       </div>
 
       {isElevated && (
@@ -174,7 +234,7 @@ export default function DiscountCodesPage() {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
           )}
           <div style={{ fontSize: 12, fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-            Quick Presets
+            Quick Presets — Whole Store
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             {QUICK_PRESETS.map((p) => (
@@ -226,12 +286,15 @@ export default function DiscountCodesPage() {
               {customBusy ? 'Creating…' : 'Create custom code'}
             </button>
             <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
-              Instantly creates an active code — no form needed.
+              Instantly creates a store-wide active code — no form needed.
             </span>
           </div>
           {customError && (
             <div style={{ color: 'var(--red)', fontSize: 12.5, marginTop: 10 }}>{customError}</div>
           )}
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 12 }}>
+            Want a discount on just one item? Use <strong style={{ color: accentColor }}>+ Create Code</strong> above — it lets you pick specific products.
+          </div>
         </div>
       )}
 
@@ -249,6 +312,7 @@ export default function DiscountCodesPage() {
               <tr>
                 <th style={S.th}>Code</th>
                 <th style={S.th}>Discount</th>
+                <th style={S.th}>Applies To</th>
                 <th style={S.th}>Status</th>
                 <th style={S.th}>Uses</th>
                 <th style={S.th}>Min Order</th>
@@ -257,31 +321,48 @@ export default function DiscountCodesPage() {
               </tr>
             </thead>
             <tbody>
-              {codes.map(c => (
-                <tr key={c.id}>
-                  <td style={S.td}><span style={S.code}>{c.code}</span></td>
-                  <td style={S.td}>
-                    {c.type === 'PERCENTAGE' ? `${c.value}% off` : `£${c.value.toFixed(2)} off`}
-                    {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max £{c.maxDiscount})</span> : null}
-                  </td>
-                  <td style={S.td}>
-                    <span style={{ ...S.badge, background: c.isActive ? 'rgba(0,230,118,0.15)' : 'rgba(153,153,153,0.15)', color: c.isActive ? 'var(--green)' : 'var(--muted)' }}>
-                      {c.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td style={S.td}>{c.usedCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
-                  <td style={S.td}>{c.minOrder ? `£${c.minOrder.toFixed(2)}` : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
-                  <td style={S.td}>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-GB') : <span style={{ color: 'var(--muted)' }}>Never</span>}</td>
-                  <td style={S.td}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button style={{ ...S.btnSm, background: c.isActive ? 'rgba(153,153,153,0.15)' : 'rgba(0,230,118,0.15)', color: c.isActive ? 'var(--muted)' : 'var(--green)' }} onClick={() => toggleActive(c.id, c.isActive)}>
-                        {c.isActive ? 'Disable' : 'Enable'}
-                      </button>
-                      <button style={{ ...S.btnSm, background: 'rgba(255,23,68,0.15)', color: 'var(--red)' }} onClick={() => handleDelete(c.id)}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {codes.map(c => {
+                const scoped = Array.isArray(c.productIds) && c.productIds.length > 0
+                return (
+                  <tr key={c.id}>
+                    <td style={S.td}><span style={S.code}>{c.code}</span></td>
+                    <td style={S.td}>
+                      {c.type === 'PERCENTAGE' ? `${c.value}% off` : `£${c.value.toFixed(2)} off`}
+                      {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max £{c.maxDiscount})</span> : null}
+                    </td>
+                    <td style={S.td}>
+                      {scoped ? (
+                        <span
+                          title={c.productIds.map(productTitle).join(', ')}
+                          style={{ ...S.badge, background: 'rgba(79,195,247,0.15)', color: '#4FC3F7', cursor: 'default' }}
+                        >
+                          {c.productIds.length} product{c.productIds.length > 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        <span style={{ ...S.badge, background: 'rgba(153,153,153,0.12)', color: 'var(--muted)' }}>
+                          All products
+                        </span>
+                      )}
+                    </td>
+                    <td style={S.td}>
+                      <span style={{ ...S.badge, background: c.isActive ? 'rgba(0,230,118,0.15)' : 'rgba(153,153,153,0.15)', color: c.isActive ? 'var(--green)' : 'var(--muted)' }}>
+                        {c.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td style={S.td}>{c.usedCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
+                    <td style={S.td}>{c.minOrder ? `£${c.minOrder.toFixed(2)}` : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
+                    <td style={S.td}>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-GB') : <span style={{ color: 'var(--muted)' }}>Never</span>}</td>
+                    <td style={S.td}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button style={{ ...S.btnSm, background: c.isActive ? 'rgba(153,153,153,0.15)' : 'rgba(0,230,118,0.15)', color: c.isActive ? 'var(--muted)' : 'var(--green)' }} onClick={() => toggleActive(c.id, c.isActive)}>
+                          {c.isActive ? 'Disable' : 'Enable'}
+                        </button>
+                        <button style={{ ...S.btnSm, background: 'rgba(255,23,68,0.15)', color: 'var(--red)' }} onClick={() => handleDelete(c.id)}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -323,6 +404,84 @@ export default function DiscountCodesPage() {
               <label style={S.label}>Expires At</label>
               <input style={S.input} type="date" value={form.expiresAt} onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))} />
             </div>
+
+            <div style={{ ...S.field, borderTop: '1px solid var(--border)', paddingTop: 18, marginTop: 4 }}>
+              <label style={S.label}>Applies To</label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setScope('all')}
+                  style={{
+                    flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${scope === 'all' ? accentColor : 'var(--border)'}`,
+                    background: scope === 'all' ? `${accentColor}18` : 'transparent',
+                    color: scope === 'all' ? accentColor : 'var(--text)',
+                  }}
+                >
+                  All products
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope('specific')}
+                  style={{
+                    flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${scope === 'specific' ? accentColor : 'var(--border)'}`,
+                    background: scope === 'specific' ? `${accentColor}18` : 'transparent',
+                    color: scope === 'specific' ? accentColor : 'var(--text)',
+                  }}
+                >
+                  Specific products
+                </button>
+              </div>
+
+              {scope === 'specific' && (
+                <div>
+                  <input
+                    style={{ ...S.input, marginBottom: 8 }}
+                    placeholder="Search your products..."
+                    value={productFilter}
+                    onChange={e => setProductFilter(e.target.value)}
+                  />
+                  <div style={{
+                    maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8,
+                    background: 'var(--bg)',
+                  }}>
+                    {productsLoading ? (
+                      <div style={{ padding: 16, fontSize: 13, color: 'var(--muted)' }}>Loading your products…</div>
+                    ) : filteredProducts.length === 0 ? (
+                      <div style={{ padding: 16, fontSize: 13, color: 'var(--muted)' }}>
+                        {products.length === 0 ? 'No products found.' : 'No products match your search.'}
+                      </div>
+                    ) : (
+                      filteredProducts.map(p => (
+                        <label
+                          key={p.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                            borderBottom: '1px solid var(--border)', cursor: 'pointer', fontSize: 13,
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedProductIds.includes(p.id)}
+                            onChange={() => toggleProductSelected(p.id)}
+                            style={{ accentColor, width: 15, height: 15, flexShrink: 0 }}
+                          />
+                          <span style={{ flex: 1, color: 'var(--text)' }}>{p.title}</span>
+                          <span style={{ color: 'var(--muted)' }}>£{Number(p.price).toFixed(2)}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
+                    {selectedProductIds.length === 0
+                      ? 'Select one or more products this code should discount.'
+                      : `${selectedProductIds.length} product${selectedProductIds.length > 1 ? 's' : ''} selected — everything else stays full price.`}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div style={S.modalFooter}>
               <button style={S.btnOutline} onClick={() => { setShowModal(false); setError('') }}>Cancel</button>
               <button style={S.btn} onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create Code'}</button>
