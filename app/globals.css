@@ -84,3 +84,11 @@ h1, h2, h3, h4, h5, h6 {
   header [style*='height:64px'] { flex-wrap: wrap !important; height: auto !important; padding-top: 10px !important; padding-bottom: 10px !important; }
   header [style*='max-width:600px'] { order: 3 !important; flex: 1 0 100% !important; max-width: 100% !important; margin: 8px 0 0 0 !important; }
 }
+
+.velor-live-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.velor-live-scroll::-webkit-scrollbar {
+  display: none;
+}
