@@ -279,15 +279,15 @@ export function buildOutreachEmail(d: {
   const unsub = d.unsubscribeUrl || 'https://velorcommerce.store/unsubscribe';
 
   const subjects: Record<OutreachEmailType, string> = {
-    initial: `List free on Velor - we open to buyers in 30 days`,
-    followup1: `Still free to list - Velor opens to buyers soon`,
-    followup2: `Last call: list free before Velor opens to buyers`,
+    initial: `List free on Velor - we open to buyers 6th August`,
+    followup1: `Still free to list - Velor opens to buyers 6th August`,
+    followup2: `Last call: list free before Velor opens to buyers 6th August`,
   };
 
   const intros: Record<OutreachEmailType, string> = {
-    initial: `We came across your ${h(p.platform)} store and loved your ${h(p.category)} range. Velor is a new global marketplace, and we open our doors to buyers in 30 days. List your products now, for free, so you are front and centre the moment buyers arrive.`,
-    followup1: `Following up about Velor Commerce. Listing is still free and we open to buyers soon. It takes about five minutes to get your ${h(p.category)} products live.`,
-    followup2: `Last note from us. Velor opens to buyers shortly and listing stays free until then. If a growing global marketplace suits your ${h(p.category)} business, now is the moment.`,
+    initial: `We came across your ${h(p.platform)} store and loved your ${h(p.category)} range. Velor is a new global marketplace, and we open our doors to buyers on 6th August. List your products now, for free, so you are front and centre the moment buyers arrive.`,
+    followup1: `Following up about Velor Commerce. Listing is still free and we open to buyers on 6th August. It takes about five minutes to get your ${h(p.category)} products live.`,
+    followup2: `Last note from us. Velor opens to buyers on 6th August and listing stays free until then. If a growing global marketplace suits your ${h(p.category)} business, now is the moment.`,
   };
 
   const html = `
@@ -299,7 +299,7 @@ export function buildOutreachEmail(d: {
       </div>
       <a href='https://velorcommerce.store/apply' style='display:block;text-decoration:none;line-height:0;'><img src='https://velorcommerce.store/email-assets/248a565b-5f33-438e-a12b-046983ea0b4b.png' width='600' alt='Velor Global Marketplace - Calling All Sellers, list for free' style='display:block;width:100%;max-width:600px;height:auto;border:0;' /></a>
       <div style='padding:32px;'>
-        <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>OPENING TO BUYERS IN 30 DAYS</div>
+        <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>OPENING TO BUYERS — 6TH AUGUST</div>
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>List now &mdash; for free.</div>
         <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 16px;'>Hi ${h(p.name)},</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 22px;'>${intros[emailType]}</p>
