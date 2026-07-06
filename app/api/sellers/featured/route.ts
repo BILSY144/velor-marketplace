@@ -23,7 +23,8 @@ export async function GET() {
       _count: { select: { products: true } },
     },
     take: 6,
-    orderBy: [{ tier: 'desc' }, { sellerScore: 'desc' }, { createdAt: 'desc' }],
+    // Merit-first with a bounded tier boost baked into rankingScore - see lib/seller-ranking.ts.
+    orderBy: [{ rankingScore: 'desc' }, { createdAt: 'desc' }],
   })
 
   return NextResponse.json({ sellers })
