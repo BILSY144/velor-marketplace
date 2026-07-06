@@ -11,6 +11,7 @@ interface WishlistProduct {
   id: string
   name: string
   price: number
+  currency: string
   images: string[]
   category: string
   sellerName: string
@@ -145,7 +146,7 @@ export default function WishlistPage() {
                     </div>
                   )}
                   <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', marginBottom: '14px', marginTop: 'auto' }}>
-                    {symbol}{convert(item.product.price).toFixed(2)}
+                    {symbol}{convert(item.product.price, item.product.currency).toFixed(2)}
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
