@@ -12,7 +12,7 @@ type StreamInfo = {
   title: string
   description: string | null
   status: string
-  seller: { storeName: string; currency: string }
+  seller: { id: string; storeName: string; currency: string }
 }
 
 export default function LiveViewerPage() {
@@ -81,6 +81,8 @@ export default function LiveViewerPage() {
       price: p.price,
       quantity: 1,
       image: p.images[0] || '',
+      sellerId: stream?.seller.id,
+      sellerName: stream?.seller.storeName,
     })
     setAddedId(p.id)
     setTimeout(() => router.push('/checkout'), 500)
