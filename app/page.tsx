@@ -513,7 +513,7 @@ export default function Home() {
           {[
             { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false, intent: 'starter', cta: 'Get started' },
             { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true, intent: 'pro', cta: 'Choose Pro' },
-            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false, intent: 'enterprise', cta: 'Choose Enterprise' },
+            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Go Live video shopping', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false, intent: 'enterprise', cta: 'Choose Enterprise' },
           ].map((t) => (
             <Link
               key={t.name}
