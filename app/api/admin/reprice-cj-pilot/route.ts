@@ -28,7 +28,7 @@ export async function GET() {
       const detail = await getProductDetail(t.cjProductId)
       await sleep(1100)
       const variant = detail.variants.find((v: { vid: string }) => v.vid === t.cjVid) || detail.variants[0]
-      const cost = parseFloat(variant.variantSellPrice || detail.sellPrice)
+      const cost = parseFloat(variant.variantSellPrice)
 
       let maxShippingCost = 0
       for (const country of WORLDWIDE_BASKET) {
