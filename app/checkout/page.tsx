@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -129,7 +130,9 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState('')
   const [creatingIntent, setCreatingIntent] = useState(false)
   const [paymentSetupError, setPaymentSetupError] = useState('')
-  const [currency, setCurrency] = useState('GBP')
+  const { displayCurrency: currency, convert } = useCurrencyDisplay()
+  const fmtRaw = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(convert(val, 'GBP'))
+  const fmtConfirmed = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: (confirmed && confirmed.currency) || currency }).format(val)
   const [confirmed, setConfirmed] = useState<ConfirmedBreakdown | null>(null)
 
   // Discounts are automatic — the seller applies them to the listing, the
@@ -168,8 +171,6 @@ export default function CheckoutPage() {
   function setAddr(k: keyof typeof address, v: string) {
     setAddress(a => ({ ...a, [k]: v }))
     if (k === 'country') {
-      const newCurrency = CURRENCIES[v] ?? 'GBP'
-      setCurrency(newCurrency)
       setRates([])
       setSelectedRate(null)
       setLandedCost(null)
@@ -398,7 +399,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                          {fmt(rate.amount)}
+                          {fmtRaw(rate.amount)}
                         </div>
                       </label>
                     ))}
@@ -461,7 +462,7 @@ export default function CheckoutPage() {
                   <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{item.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{fmt(item.price * item.quantity)}</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{fmtRaw(item.price * item.quantity)}</div>
               </div>
             ))}
           </div>
@@ -472,7 +473,7 @@ export default function CheckoutPage() {
           {step === 'shipping' && !autoDiscountLoading && autoDiscount && autoDiscount.totalDiscountGBP > 0 && (
             <div style={{ marginBottom: '16px', padding: '10px 12px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--green)' }}>
-                Discount applied automatically — {fmt(autoDiscount.totalDiscountGBP)} off
+                Discount applied automatically — {fmtRaw(autoDiscount.totalDiscountGBP)} off
               </div>
               <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
                 No code needed — this was already reflected in the product price you saw.
@@ -483,17 +484,17 @@ export default function CheckoutPage() {
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-              <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.productSubtotal + confirmed.discountAmount : productSubtotal)}</span>
+              <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.productSubtotal + confirmed.discountAmount) : fmtRaw(productSubtotal)}</span>
             </div>
             {(confirmed ? confirmed.discountAmount > 0 : discountAmount > 0) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                 <span style={{ color: 'var(--green)' }}>Discount{displayedCodes.length > 0 ? ` (${displayedCodes.join(', ')})` : ''}</span>
-                <span style={{ color: 'var(--green)' }}>-{fmt(confirmed ? confirmed.discountAmount : discountAmount)}</span>
+                <span style={{ color: 'var(--green)' }}>-{confirmed ? fmtConfirmed(confirmed.discountAmount) : fmtRaw(discountAmount)}</span>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
               <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--text)' }}>{selectedRate ? fmt(confirmed ? confirmed.shippingCost : shippingCost) : '—'}</span>
+              <span style={{ color: 'var(--text)' }}>{selectedRate ? (confirmed ? fmtConfirmed(confirmed.shippingCost) : fmtRaw(shippingCost)) : '—'}</span>
             </div>
             {landedCost && !landedCost.isDomestic && dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
@@ -501,7 +502,7 @@ export default function CheckoutPage() {
                   Duties and Taxes (DDP)
                   {landedCost.belowDeMinimis && <span style={{ color: 'var(--green)', fontSize: '11px', marginLeft: '4px' }}>below threshold</span>}
                 </span>
-                <span style={{ color: 'var(--text)' }}>{fmt(confirmed ? confirmed.dutiesAmount : dutiesAmount)}</span>
+                <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.dutiesAmount) : fmtRaw(dutiesAmount)}</span>
               </div>
             )}
             {landedCost?.isDomestic && (
@@ -509,7 +510,7 @@ export default function CheckoutPage() {
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
               <span style={{ color: 'var(--text)' }}>Total</span>
-              <span style={{ color: 'var(--accent)' }}>{fmt(confirmed ? confirmed.total : total)}</span>
+              <span style={{ color: 'var(--accent)' }}>{confirmed ? fmtConfirmed(confirmed.total) : fmtRaw(total)}</span>
             </div>
             <div style={{ fontSize: '11px', color: confirmed ? 'var(--green)' : 'var(--muted)', textAlign: 'right', marginTop: '4px' }}>
               {confirmed ? 'Reconfirmed just now — exactly what you pay, no surprise charges' : 'Estimated — reconfirmed live the moment you continue to payment'}
