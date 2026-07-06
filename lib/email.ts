@@ -107,22 +107,26 @@ export function buildWelcomeEmail(d: { name: string }): { subject: string; html:
 export function buildSellerApprovedEmail(d: {
   sellerName: string;
   storeName: string;
+  activationLink?: string;
 }): { subject: string; html: string } {
+  const cta = d.activationLink
+    ? `<a href="${d.activationLink}" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Activate your account</a>
+    <p style="color:#777;font-size:12px;line-height:1.6;margin:16px 0 0">This link expires in 7 days. You will be asked to set a password to finish setting up your account.</p>`
+    : `<a href="https://velorcommerce.store/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Go to seller dashboard</a>`;
+
   const html = `${WRAP_OPEN}
     <h2 style="color:#4ADE80;font-size:22px;margin:0 0 16px">Your application has been approved</h2>
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
       Hi ${h(d.sellerName)}, we are pleased to confirm that <strong style="color:#FFF">${h(d.storeName)}</strong> has been approved to sell on Velor Commerce.
     </p>
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 24px">
-      You can now log in to your seller dashboard to set up your store, add products, and start selling.
+      ${d.activationLink ? 'Set a password to activate your seller account, then you can log in to your dashboard to set up your store, add products, and start selling.' : 'You can now log in to your seller dashboard to set up your store, add products, and start selling.'}
     </p>
-    <a href="https://velorcommerce.store/seller/dashboard" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Go to seller dashboard</a>
+    ${cta}
     ${WRAP_CLOSE}`;
 
   return { subject: `Approved: ${d.storeName} on Velor Commerce`, html };
 }
-
-// ---- Seller Rejected ----
 
 export function buildSellerRejectedEmail(d: {
   contactName: string;
