@@ -209,6 +209,7 @@ model Product {
   cjSourced     Boolean       @default(false)
   cjProductId   String?
   cjVid         String?
+  cjSupplierName String?
   variants      ProductVariant[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
