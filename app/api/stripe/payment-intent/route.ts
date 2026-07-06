@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { convert } from '@/lib/fx'
+import { evaluateDiscount, DiscountCartItem } from '@/lib/discount'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,126 +16,161 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-try {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-02-24.acacia',
-  })
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-02-24.acacia',
+    })
 
-  const {
-    items,
-    currency = 'GBP',
-    shippingAmount = 0,
-    shippingCurrency = 'GBP',
-    dutiesAmountGBP = 0,
-  } = await request.json()
+    const {
+      items,
+      currency = 'GBP',
+      shippingAmount = 0,
+      shippingCurrency = 'GBP',
+      dutiesAmountGBP = 0,
+      discountCode,
+    } = await request.json()
 
-  if (!Array.isArray(items) || items.length === 0) {
-    return NextResponse.json({ error: 'items required' }, { status: 400 })
-  }
-
-  const buyerCurrency = String(currency).toUpperCase()
-
-  const productIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: {
-      id: true,
-      price: true,
-      seller: { select: { id: true, currency: true, stripeAccountId: true, tier: true } },
-    },
-  })
-  const productMap = new Map(products.map((p) => [p.id, p]))
-
-  let subtotalGBP = 0
-  let sellerDbId = ''
-  let sellerAccountId = ''
-  let commissionRate = PLATFORM_COMMISSION_RATE
-
-  for (const item of items) {
-    const product = productMap.get(item.productId)
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found: ' + item.productId }, { status: 400 })
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'items required' }, { status: 400 })
     }
-    const qty = Math.max(1, Number(item.quantity) || 1)
-    const sellerCurrency = product.seller?.currency ?? 'GBP'
-    const lineGBP = sellerCurrency === 'GBP'
-    ? product.price * qty
-      : await convert(product.price * qty, sellerCurrency, 'GBP')
-    subtotalGBP += lineGBP
 
-  if (!sellerDbId && product.seller) {
-    sellerDbId = product.seller.id
-    sellerAccountId = product.seller.stripeAccountId ?? ''
-    commissionRate = TIER_COMMISSION[product.seller.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
-  }
-  }
+    const buyerCurrency = String(currency).toUpperCase()
 
-  const shippingCurrencyCode = String(shippingCurrency).toUpperCase()
-  const shippingGBP = shippingCurrencyCode === 'GBP'
-  ? Number(shippingAmount) || 0
-    : await convert(Number(shippingAmount) || 0, shippingCurrencyCode, 'GBP')
+    const productIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        price: true,
+        seller: { select: { id: true, currency: true, stripeAccountId: true, tier: true } },
+      },
+    })
+    const productMap = new Map(products.map((p) => [p.id, p]))
 
-  const dutiesGBP = Number(dutiesAmountGBP) || 0
+    let subtotalGBP = 0
+    let sellerDbId = ''
+    let sellerAccountId = ''
+    let commissionRate = PLATFORM_COMMISSION_RATE
+    const discountCartItems: DiscountCartItem[] = []
 
-  const totalGBP = subtotalGBP + shippingGBP + dutiesGBP
-
-  let subtotalCharge = subtotalGBP
-  let shippingCharge = shippingGBP
-  let dutiesCharge = dutiesGBP
-  let totalCharge = totalGBP
-
-  if (buyerCurrency !== 'GBP') {
-    subtotalCharge = await convert(subtotalGBP, 'GBP', buyerCurrency)
-    shippingCharge = await convert(shippingGBP, 'GBP', buyerCurrency)
-    dutiesCharge = await convert(dutiesGBP, 'GBP', buyerCurrency)
-    totalCharge = await convert(totalGBP, 'GBP', buyerCurrency)
-  }
-
-  const amountMinorUnits = Math.round(totalCharge * 100)
-  if (amountMinorUnits <= 0) {
-    return NextResponse.json({ error: 'Total must be greater than zero' }, { status: 400 })
-  }
-
-  const applicationFeeAmount = Math.round(subtotalGBP * commissionRate * 100)
-  const sellerShareGBP = totalGBP - subtotalGBP * commissionRate
-
-  const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
-    amount: amountMinorUnits,
-    currency: buyerCurrency.toLowerCase(),
-    metadata: {
-      items: JSON.stringify(items ?? []),
-      subtotalGBP: subtotalGBP.toFixed(2),
-      shippingGBP: shippingGBP.toFixed(2),
-      dutiesGBP: dutiesGBP.toFixed(2),
-      totalGBP: totalGBP.toFixed(2),
-      chargeCurrency: buyerCurrency,
-      chargeAmount: totalCharge.toFixed(2),
-      applicationFee: String(applicationFeeAmount),
-      commissionRate: String(commissionRate),
-      sellerShareGBP: sellerShareGBP.toFixed(2),
-      sellerDbId,
-      sellerAccountId,
-    },
+    for (const item of items) {
+      const product = productMap.get(item.productId)
+      if (!product) {
+        return NextResponse.json({ error: 'Product not found: ' + item.productId }, { status: 400 })
       }
+      const qty = Math.max(1, Number(item.quantity) || 1)
+      const sellerCurrency = product.seller?.currency ?? 'GBP'
+      const unitGBP =
+        sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
+      const lineGBP = unitGBP * qty
+      subtotalGBP += lineGBP
+      discountCartItems.push({ productId: item.productId, quantity: qty, priceGBP: unitGBP })
 
-  // Funds are HELD on the platform (no transfer_data). The payout-release cron
-  // transfers the seller share after delivery plus the hold window.
+      if (!sellerDbId && product.seller) {
+        sellerDbId = product.seller.id
+        sellerAccountId = product.seller.stripeAccountId ?? ''
+        commissionRate = TIER_COMMISSION[product.seller.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
+      }
+    }
 
-  const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams)
+    // Discount codes are re-validated here from scratch — the client never
+    // gets to assert its own discount amount. A code with productIds set
+    // only discounts the matching line items; everything else in the cart
+    // is charged in full.
+    let discountId: string | null = null
+    let discountAmountGBP = 0
+    let discountCodeApplied: string | null = null
+    if (discountCode && typeof discountCode === 'string' && discountCode.trim()) {
+      const result = await evaluateDiscount(discountCode, sellerDbId, discountCartItems)
+      if (!result.valid) {
+        return NextResponse.json({ error: result.error || 'Invalid discount code' }, { status: 400 })
+      }
+      discountId = result.discountId ?? null
+      discountAmountGBP = result.discountAmountGBP ?? 0
+      discountCodeApplied = result.code ?? null
+    }
 
-  return NextResponse.json({
-    clientSecret: paymentIntent.client_secret,
-    breakdown: {
-      currency: buyerCurrency,
-      productSubtotal: Number(subtotalCharge.toFixed(2)),
-      shippingCost: Number(shippingCharge.toFixed(2)),
-      dutiesAmount: Number(dutiesCharge.toFixed(2)),
-      total: Number(totalCharge.toFixed(2)),
-    },
-  })
-} catch (err) {
-  console.error('[payment-intent]', err)
-  const msg = err instanceof Error ? err.message : 'Unknown error'
-  return NextResponse.json({ error: msg }, { status: 500 })
-}
+    // Discounts only ever reduce the product subtotal — never shipping or
+    // duties/taxes. Those are computed independently below and added back
+    // in full, untouched by any discount code.
+    const discountedSubtotalGBP = Math.max(0, subtotalGBP - discountAmountGBP)
+
+    const shippingCurrencyCode = String(shippingCurrency).toUpperCase()
+    const shippingGBP = shippingCurrencyCode === 'GBP'
+      ? Number(shippingAmount) || 0
+      : await convert(Number(shippingAmount) || 0, shippingCurrencyCode, 'GBP')
+
+    const dutiesGBP = Number(dutiesAmountGBP) || 0
+
+    const totalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP
+
+    let subtotalCharge = discountedSubtotalGBP
+    let shippingCharge = shippingGBP
+    let dutiesCharge = dutiesGBP
+    let totalCharge = totalGBP
+    let discountCharge = discountAmountGBP
+
+    if (buyerCurrency !== 'GBP') {
+      subtotalCharge = await convert(discountedSubtotalGBP, 'GBP', buyerCurrency)
+      shippingCharge = await convert(shippingGBP, 'GBP', buyerCurrency)
+      dutiesCharge = await convert(dutiesGBP, 'GBP', buyerCurrency)
+      totalCharge = await convert(totalGBP, 'GBP', buyerCurrency)
+      if (discountAmountGBP > 0) {
+        discountCharge = await convert(discountAmountGBP, 'GBP', buyerCurrency)
+      }
+    }
+
+    const amountMinorUnits = Math.round(totalCharge * 100)
+    if (amountMinorUnits <= 0) {
+      return NextResponse.json({ error: 'Total must be greater than zero' }, { status: 400 })
+    }
+
+    const applicationFeeAmount = Math.round(discountedSubtotalGBP * commissionRate * 100)
+    const sellerShareGBP = totalGBP - discountedSubtotalGBP * commissionRate
+
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
+      amount: amountMinorUnits,
+      currency: buyerCurrency.toLowerCase(),
+      metadata: {
+        items: JSON.stringify(items ?? []),
+        subtotalGBP: subtotalGBP.toFixed(2),
+        discountedSubtotalGBP: discountedSubtotalGBP.toFixed(2),
+        discountAmountGBP: discountAmountGBP.toFixed(2),
+        discountId: discountId ?? '',
+        discountCode: discountCodeApplied ?? '',
+        shippingGBP: shippingGBP.toFixed(2),
+        dutiesGBP: dutiesGBP.toFixed(2),
+        totalGBP: totalGBP.toFixed(2),
+        chargeCurrency: buyerCurrency,
+        chargeAmount: totalCharge.toFixed(2),
+        applicationFee: String(applicationFeeAmount),
+        commissionRate: String(commissionRate),
+        sellerShareGBP: sellerShareGBP.toFixed(2),
+        sellerDbId,
+        sellerAccountId,
+      },
+    }
+
+    // Funds are HELD on the platform (no transfer_data). The payout-release cron
+    // transfers the seller share after delivery plus the hold window.
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams)
+
+    return NextResponse.json({
+      clientSecret: paymentIntent.client_secret,
+      breakdown: {
+        currency: buyerCurrency,
+        productSubtotal: Number(subtotalCharge.toFixed(2)),
+        shippingCost: Number(shippingCharge.toFixed(2)),
+        dutiesAmount: Number(dutiesCharge.toFixed(2)),
+        discountAmount: Number(discountCharge.toFixed(2)),
+        discountCode: discountCodeApplied,
+        total: Number(totalCharge.toFixed(2)),
+      },
+    })
+  } catch (err) {
+    console.error('[payment-intent]', err)
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }
