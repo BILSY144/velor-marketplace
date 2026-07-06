@@ -275,7 +275,7 @@ export default function ProductPageClient() {
                   {symbol}{convert(product.discountedPrice as number, 'GBP').toFixed(2)}
                 </span>
                 <span style={{ fontSize: '20px', color: 'var(--muted)', textDecoration: 'line-through' }}>
-                  {symbol}{convert(product.price, 'GBP').toFixed(2)}
+                  {symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#000', background: 'var(--accent)', padding: '4px 10px', borderRadius: '5px' }}>
                   SAVE {product.percentOff}%
@@ -283,7 +283,7 @@ export default function ProductPageClient() {
               </>
             ) : (
               <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--text)' }}>
-                {symbol}{convert(currentPrice, 'GBP').toFixed(2)}
+                {symbol}{convert(currentPrice, product.seller?.currency || 'GBP').toFixed(2)}
               </span>
             )}
           </div>
