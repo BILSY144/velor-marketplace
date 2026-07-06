@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface Variant {
   id: string
@@ -38,6 +37,32 @@ interface Product {
   reviewCount: number
   variants: Variant[]
   reviews: Review[]
+  discountedPrice: number | null
+  percentOff: number | null
+}
+
+interface StoredCartItem {
+  id: string
+  productId: string
+  name: string
+  price: number
+  quantity: number
+  image: string
+  sellerId?: string
+}
+
+function readCart(): StoredCartItem[] {
+  try {
+    const stored = localStorage.getItem('velor-cart')
+    const parsed = stored ? JSON.parse(stored) : { state: { items: [] } }
+    return parsed?.state?.items ?? []
+  } catch {
+    return []
+  }
+}
+
+function writeCart(items: StoredCartItem[]) {
+  localStorage.setItem('velor-cart', JSON.stringify({ state: { items } } ))
 }
 
 export default function ProductPageClient() {
@@ -45,7 +70,6 @@ export default function ProductPageClient() {
   const router = useRouter()
   const { data: session } = useSession()
   const productId = params?.productId as string
-  const { symbol, convert } = useCurrencyDisplay()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -127,19 +151,34 @@ export default function ProductPageClient() {
     }
   }
 
+  // Cart items store the ORIGINAL price, never the discounted one — the
+  // automatic discount is recomputed server-side at checkout from the
+  // seller's live discount codes, so the buyer is always charged against
+  // the current rules rather than a client-supplied number. The discount
+  // is shown here and at checkout, and both are guaranteed to match because
+  // they both call the same computeListingDiscount/findAutomaticDiscounts
+  // logic in lib/discount.ts.
   function addToCart() {
     if (!product) return
-    const cart = JSON.parse(localStorage.getItem('velor-cart') || '[]')
+    const cart = readCart()
     const cartId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id
-    const idx = cart.findIndex((c: { id: string }) => c.id === cartId)
+    const idx = cart.findIndex(c => c.id === cartId)
     const price = selectedVariant ? selectedVariant.price : product.price
     const image = (selectedVariant?.image) || product.images[0] || ''
     if (idx >= 0) {
       cart[idx].quantity += qty
     } else {
-      cart.push({ id: cartId, name: product.name + (selectedVariant ? ` - ${selectedVariant.name}` : ''), price, quantity: qty, image })
+      cart.push({
+        id: cartId,
+        productId: product.id,
+        name: product.name + (selectedVariant ? ` - ${selectedVariant.name}` : ''),
+        price,
+        quantity: qty,
+        image,
+        sellerId: product.sellerId,
+      })
     }
-    localStorage.setItem('velor-cart', JSON.stringify(cart))
+    writeCart(cart)
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
   }
@@ -152,6 +191,10 @@ export default function ProductPageClient() {
   const sym = (c: string) => c === 'GBP' ? '£' : c + ' '
   const currentPrice = selectedVariant ? selectedVariant.price : product?.price ?? 0
   const currentStock = selectedVariant ? selectedVariant.stock : product?.stock ?? 0
+  // Automatic discounts only ever apply to the base product listing (they
+  // are scoped by productId, not by variant), so only show the "was/now"
+  // treatment when no variant is selected or the product has no variants.
+  const onSale = !selectedVariant && product?.discountedPrice != null && product.discountedPrice < product.price
 
   if (loading) {
     return (
@@ -201,8 +244,13 @@ export default function ProductPageClient() {
               </div>
             ))}
           </div>
-          <div style={{ flex: 1, aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: '#222' }}>
+          <div style={{ flex: 1, aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: '#222', position: 'relative' }}>
             <img src={images[mainImage]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {onSale && (
+              <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
+                {product.percentOff}% OFF
+              </div>
+            )}
           </div>
         </div>
 
@@ -218,9 +266,30 @@ export default function ProductPageClient() {
             </div>
           )}
 
-          <div style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, marginBottom: '24px', color: 'var(--text)' }}>
-            {symbol}{convert(currentPrice, product.currency).toFixed(2)}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '24px' }}>
+            {onSale ? (
+              <>
+                <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--accent)' }}>
+                  {sym(product.currency)}{(product.discountedPrice as number).toFixed(2)}
+                </span>
+                <span style={{ fontSize: '20px', color: 'var(--muted)', textDecoration: 'line-through' }}>
+                  {sym(product.currency)}{product.price.toFixed(2)}
+                </span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#000', background: 'var(--accent)', padding: '4px 10px', borderRadius: '5px' }}>
+                  SAVE {product.percentOff}%
+                </span>
+              </>
+            ) : (
+              <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--text)' }}>
+                {sym(product.currency)}{currentPrice.toFixed(2)}
+              </span>
+            )}
           </div>
+          {onSale && (
+            <div style={{ marginTop: '-14px', marginBottom: '20px', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
+              Discount applied automatically — no code needed. It will carry through to your cart and checkout.
+            </div>
+          )}
 
           {product.variants.length > 0 && (
             <div style={{ marginBottom: '24px' }}>
