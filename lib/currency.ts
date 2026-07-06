@@ -2,7 +2,7 @@
 
 // Client-side currency helpers: symbol formatting, locale-based detection of
 // a buyer's likely currency, and persisting their chosen display currency.
-// This is a display-layer concern only — the actual amount charged at
+// This is a display-layer concern only â the actual amount charged at
 // checkout is computed server-side (see app/checkout and the FX conversion
 // there), so what a buyer sees here is guaranteed to match what they pay.
 
@@ -45,7 +45,7 @@ export function formatMoney(amount: number, currency: string): string {
 }
 
 // Best-effort guess at the buyer's currency from their browser locale.
-// Never throws — always returns a supported currency, defaulting to GBP.
+// Never throws â always returns a supported currency, defaulting to GBP.
 export function detectCurrencyFromLocale(): SupportedCurrency {
   if (typeof navigator === 'undefined') return 'GBP'
   try {
@@ -53,7 +53,7 @@ export function detectCurrencyFromLocale(): SupportedCurrency {
     const region = new Intl.Locale(locale).maximize().region
     if (region && COUNTRY_TO_CURRENCY[region]) return COUNTRY_TO_CURRENCY[region]
   } catch {
-    // Intl.Locale unsupported or malformed locale — fall through to default.
+    // Intl.Locale unsupported or malformed locale â fall through to default.
   }
   return 'GBP'
 }
