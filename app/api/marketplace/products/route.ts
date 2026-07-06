@@ -23,7 +23,11 @@ export async function GET(request: Request) {
   }
 
   let orderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = [
-    { seller: { tier: 'desc' } },
+    // Merit-first ranking with a bounded tier boost baked into rankingScore
+    // (score + tier bonus, see lib/seller-ranking.ts). Replaces a hard
+    // tier-first sort that let any paid seller outrank all free sellers
+    // regardless of performance - authorised change by William 2026-07-06.
+    { seller: { rankingScore: 'desc' } },
     { createdAt: 'desc' },
   ]
   if (sort === 'price_asc') orderBy = { price: 'asc' }
