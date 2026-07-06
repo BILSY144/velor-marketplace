@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Final step of the CJ import pipeline. Takes candidates that have already
-// passed (a) freight-availability screening via /api/admin/cj-candidates
-// and (b) a real browser read of CJ's per-product restriction warning
-// (done manually per item, not automatable -- see CLAUDE.md 2026-07-06).
-// Creates real Product rows attached to the internal CJ seller. Idempotent
-// per cjProductId so it is safe to re-run.
 export const dynamic = 'force-dynamic'
+
+interface ImportVariant {
+  vid: string
+  sku?: string
+  key?: string
+  price?: string
+  image?: string
+}
 
 interface ImportItem {
   pid: string
@@ -16,19 +18,36 @@ interface ImportItem {
   description: string
   computedPrice: number
   images: string[]
+  variants?: ImportVariant[]
   category: string
 }
 
 function stripHtml(input: string): string {
-  return input
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return input.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 function stripEmoji(input: string): string {
   return input.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim()
+}
+
+// Velor has no ProductVariant/color-selector model or UI today (confirmed --
+// zero 'variant' references anywhere in app/**/*.tsx). Until that is built as
+// its own feature, real CJ colour/style options are surfaced two ways so
+// nothing is silently dropped: (1) every real product image -- including
+// colour-swatch photos -- goes into Product.images so buyers can see the full
+// range in the gallery, and (2) the real option names are listed in the
+// description text. The listing itself is fulfilled using the first variant
+// real vid/price, matching what actually gets ordered from CJ.
+function buildDescription(rawDescription: string, variants?: ImportVariant[]): string {
+  const base = stripEmoji(stripHtml(rawDescription))
+  const optionNames = (variants || [])
+    .map((v) => v.key || v.sku)
+    .filter((v): v is string => Boolean(v))
+  const uniqueOptions = Array.from(new Set(optionNames))
+  if (uniqueOptions.length > 1) {
+    return (base + '\n\nAvailable options: ' + uniqueOptions.join(', ')).trim()
+  }
+  return base
 }
 
 export async function POST(request: NextRequest) {
@@ -37,27 +56,24 @@ export async function POST(request: NextRequest) {
     if (!sellerId || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ ok: false, error: 'sellerId and items[] required' }, { status: 400 })
     }
-
     const created = []
     const skipped = []
-
     for (const item of items) {
       const existing = await prisma.product.findFirst({ where: { cjProductId: item.pid, sellerId } })
       if (existing) {
         skipped.push({ pid: item.pid, reason: 'already imported', productId: existing.id })
         continue
       }
-
       const title = stripEmoji(item.name).slice(0, 200)
-      const description = stripEmoji(stripHtml(item.description)).slice(0, 4000)
-
+      const description = buildDescription(item.description, item.variants).slice(0, 4000)
+      const images = Array.from(new Set((item.images || []).filter(Boolean)))
       const product = await prisma.product.create({
         data: {
           sellerId,
           title,
           description: description || null,
           price: item.computedPrice,
-          images: item.images,
+          images,
           category: item.category,
           tags: [],
           stock: 999,
@@ -67,9 +83,8 @@ export async function POST(request: NextRequest) {
           cjVid: item.vid,
         },
       })
-      created.push({ pid: item.pid, productId: product.id, title })
+      created.push({ pid: item.pid, productId: product.id, title, imageCount: images.length })
     }
-
     return NextResponse.json({ ok: true, createdCount: created.length, skippedCount: skipped.length, created, skipped })
   } catch (err) {
     return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 })
