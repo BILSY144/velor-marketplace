@@ -302,3 +302,13 @@ One build stability note worth flagging directly: five consecutive Vercel deploy
 Not yet verified this check-in: whether William is aware of or has reviewed the new automatic discount system, since it was not mentioned anywhere in this file's PENDING/NEXT list prior to this update and it touches live pricing and checkout. The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off; nothing in this update resolves it or should be read as resolving it. The previously flagged Phase 2 Live Shopping review and checkout currency charging items from earlier updates have not been addressed since.
 
 Next steps identified this check-in: flag the new automatic discount system to William directly, since it is new pricing affecting functionality that shipped without a prior entry in this file; otherwise keep surfacing the still open Live Shopping review, the currency charging review, the dashboard tier theming progress, and the tiered pages OPEN REVIEW ITEM until William addresses them.
+
+
+
+## SESSION UPDATE — 2026-07-06 (scheduled check-in: no new activity since last update)
+
+This is an automated scheduled check-in comparing this file against live GitHub commits and Vercel deployments. Since the last logged update (commit f608fb7), no new commits have landed on main. Commit f608fb7 remains the current tip of the main branch, and it is confirmed Ready in Vercel production as of this check. No code, feature, or configuration changes have occurred in this window, so there is genuinely nothing new to report this cycle.
+
+The OPEN REVIEW ITEM at the top of this file is unchanged and still awaiting William's sign-off. The items flagged in the previous update also remain open: the new automatic discount system has not yet been confirmed as reviewed by William, and the Live Shopping review and checkout currency charging items from earlier updates have not been addressed since.
+
+Next steps: unchanged from the last check-in. Flag the automatic discount system to William directly since it touches live pricing and checkout, and continue surfacing the Live Shopping review, the currency charging review, the dashboard tier theming progress, and the tiered pages OPEN REVIEW ITEM until William addresses them.
