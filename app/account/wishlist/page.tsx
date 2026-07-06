@@ -1,4 +1,5 @@
 'use client'
+import { addToCart as addToSharedCart } from '@/lib/cart'
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
@@ -60,20 +61,14 @@ export default function WishlistPage() {
   }
 
   function addToCart(item: WishlistItem) {
-    const cart = JSON.parse(localStorage.getItem('velor-cart') || '[]')
-    const idx = cart.findIndex((c: { id: string }) => c.id === item.product.id)
-    if (idx >= 0) {
-      cart[idx].quantity += 1
-    } else {
-      cart.push({
-        id: item.product.id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: 1,
-        image: item.product.images[0] || '',
-      })
-    }
-    localStorage.setItem('velor-cart', JSON.stringify(cart))
+    addToSharedCart({
+      id: item.product.id,
+      productId: item.product.id,
+      name: item.product.name,
+      price: item.product.price,
+      quantity: 1,
+      image: item.product.images[0] || '',
+    })
   }
 
   if (loading || status === 'loading') {
