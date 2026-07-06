@@ -54,23 +54,21 @@ export async function GET(request: NextRequest) {
         }
 
         const cost = parseFloat(variant.variantSellPrice || item.sellPrice)
-        // Total landed cost must include shipping, not just item price --
-        // Velor advertises Free Delivery to buyers, so the CJ freight charge
-        // has to be baked into the sale price up front rather than passed on.
-        // Checkout has no country allowlist (worldwide), so the highest
-        // shipping cost seen across the worldwide basket is used as the
-        // basis so no single destination sells at a loss.
-        const shippingCosts = Object.values(freightByCountry).map((f) => (f.available ? f.cost || 0 : 0))
-        const maxShippingCost = shippingCosts.length ? Math.max(...shippingCosts) : 0
-        const totalCost = cost + maxShippingCost
+        // Price = item cost + 30% margin ONLY. Shipping is quoted live and
+        // charged separately at checkout via Shippo -- it must never be
+        // folded into the item price here (that would double-charge the
+        // buyer: once via an inflated item price, again via the real
+        // shipping quote). Round to the nearest CENT (2dp), never to the
+        // nearest whole currency unit -- ceiling to a whole dollar/pound
+        // massively over-inflates margin on sub-$5 items (a $0.70 cost
+        // item would otherwise ceiling to $1.00, a ~43% markup, not 30%).
+        const computedPrice = Math.ceil(cost * 1.3 * 100) / 100
         candidates.push({
           pid: item.pid,
           vid: variant.vid,
           name: detail.productNameEn || detail.productName,
           cost,
-          shippingCost: maxShippingCost,
-          totalCost,
-          computedPrice: Math.ceil(totalCost * 1.3),
+          computedPrice,
           images: detail.productImageSet || [],
           description: detail.description || '',
           variants: detail.variants.map((v) => ({
