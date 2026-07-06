@@ -81,6 +81,23 @@ export async function POST(request: NextRequest) {
           cjSourced: true,
           cjProductId: item.pid,
           cjVid: item.vid,
+          // Real CJ variant rows (vid + colour/style + image + real sell
+          // price per variant) -- NOT squashed into description text.
+          // checkFreight() and the variant picker both need a real vid per
+          // colour, not just the one representative vid on the product row.
+          variants: item.variants && item.variants.length
+            ? {
+                create: item.variants
+                  .filter((v) => v.vid)
+                  .map((v) => ({
+                    cjVid: v.vid,
+                    color: v.key || null,
+                    sku: v.sku || null,
+                    image: v.image || null,
+                    sellPrice: v.price ? Number(v.price) : null,
+                  })),
+              }
+            : undefined,
         },
       })
       created.push({ pid: item.pid, productId: product.id, title, imageCount: images.length })
