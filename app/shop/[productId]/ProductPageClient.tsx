@@ -43,6 +43,8 @@ interface Product {
   percentOff: number | null
 }
 
+import { addToCart as addToSharedCart } from '@/lib/cart'
+
 interface StoredCartItem {
   id: string
   productId: string
@@ -53,19 +55,7 @@ interface StoredCartItem {
   sellerId?: string
 }
 
-function readCart(): StoredCartItem[] {
-  try {
-    const stored = localStorage.getItem('velor-cart')
-    const parsed = stored ? JSON.parse(stored) : { state: { items: [] } }
-    return parsed?.state?.items ?? []
-  } catch {
-    return []
-  }
-}
 
-function writeCart(items: StoredCartItem[]) {
-  localStorage.setItem('velor-cart', JSON.stringify({ state: { items } } ))
-}
 
 export default function ProductPageClient() {
   const params = useParams()
@@ -163,25 +153,18 @@ export default function ProductPageClient() {
   // logic in lib/discount.ts.
   function addToCart() {
     if (!product) return
-    const cart = readCart()
     const cartId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id
-    const idx = cart.findIndex(c => c.id === cartId)
     const price = selectedVariant ? selectedVariant.price : product.price
     const image = (selectedVariant?.image) || product.images[0] || ''
-    if (idx >= 0) {
-      cart[idx].quantity += qty
-    } else {
-      cart.push({
-        id: cartId,
-        productId: product.id,
-        name: product.title + (selectedVariant ? ` - ${selectedVariant.name}` : ''),
-        price,
-        quantity: qty,
-        image,
-        sellerId: product.sellerId,
-      })
-    }
-    writeCart(cart)
+    addToSharedCart({
+      id: cartId,
+      productId: product.id,
+      name: product.title + (selectedVariant ? ` - ${selectedVariant.name}` : ''),
+      price,
+      quantity: qty,
+      image,
+      sellerId: product.sellerId,
+    })
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
   }
