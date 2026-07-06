@@ -7,7 +7,7 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface Product {
   id: string
-  name: string
+  title: string
   description: string
   price: number
   images: string[]
@@ -69,7 +69,7 @@ export default function ProductDetail({ id }: { id: string }) {
       .catch(() => setLoading(false))
   }, [id])
 
-  // Cart stores the ORIGINAL price — the automatic discount is recomputed
+  // Cart stores the ORIGINAL price â the automatic discount is recomputed
   // server-side at checkout from the seller's live discount codes, so what
   // the buyer is charged always matches the current rules, not a stale
   // client-supplied number. The same discount shown here is guaranteed to
@@ -84,7 +84,7 @@ export default function ProductDetail({ id }: { id: string }) {
       cart.push({
         id: product.id,
         productId: product.id,
-        name: product.name,
+        name: product.title,
         price: product.price,
         image: product.images?.[0] || '',
         quantity: qty,
@@ -189,7 +189,7 @@ export default function ProductDetail({ id }: { id: string }) {
               <div className="pd-main-img">
                 {onSale && <span className="pd-sale-badge">{product.percentOff}% OFF</span>}
                 {product.images[activeImg] ? (
-                  <img src={product.images[activeImg]} alt={product.name} />
+                  <img src={product.images[activeImg]} alt={product.title} />
                 ) : (
                   <div className="pd-main-placeholder">+</div>
                 )}
@@ -198,7 +198,7 @@ export default function ProductDetail({ id }: { id: string }) {
 
             <div className="pd-info">
               <div className="pd-cat">{product.category}</div>
-              <h1 className="pd-name">{product.name}</h1>
+              <h1 className="pd-name">{product.title}</h1>
 
               <div className="pd-seller-box">
                 <div className="pd-seller-label">Sold by</div>
@@ -212,7 +212,7 @@ export default function ProductDetail({ id }: { id: string }) {
                     <span className="pd-price-was">{symbol}{convert(product.price).toFixed(2)}</span>
                     <span className="pd-save-chip">SAVE {product.percentOff}%</span>
                   </div>
-                  <div className="pd-auto-note">Discount applied automatically — no code needed. Carries through to cart and checkout.</div>
+                  <div className="pd-auto-note">Discount applied automatically â no code needed. Carries through to cart and checkout.</div>
                 </>
               ) : (
                 <div className="pd-price">{symbol}{convert(product.price).toFixed(2)}</div>
