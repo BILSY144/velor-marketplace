@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchProducts, getProductDetail, checkFreight } from '@/lib/cj'
 
-// Returns a small batch of CJ candidates for a keyword search, each already
-// checked for at least one freight/shipping option to a representative
-// destination (US). This is the automatable half of import screening --
-// it does NOT check CJ's client-rendered per-product restriction warning
-// text (that requires a real browser visit, done separately per William's
-// 2026-07-06 instruction: "there is always a red area ... we need to read
-// them before listing anything").
-//
-// CJ's API is rate-limited to 1 QPS, so this processes a small page at a
-// time (default 6) with a delay between calls, rather than trying to
-// screen an entire category in one request and risking a function timeout.
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
+
+// Representative global basket spanning every inhabited continent, chosen to
+// match the countries Velor's own currency system already recognises
+// (see lib/currency.ts COUNTRY_TO_CURRENCY). Velor has no checkout country
+// allowlist -- buyers can check out from anywhere -- so "ships worldwide"
+// is verified here as "a real paid CJ shipping method exists to all of
+// these", not literally all ~195 countries (CJ's 1 QPS rate limit makes
+// checking every country per candidate infeasible at import scale).
+const WORLDWIDE_BASKET = ['US', 'GB', 'DE', 'AU', 'JP', 'AE', 'BR', 'ZA']
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,9 +25,7 @@ export async function GET(request: NextRequest) {
     if (!keyword) {
       return NextResponse.json({ ok: false, error: 'keyword required' }, { status: 400 })
     }
-
     const results = await searchProducts({ keyWord: keyword, page, size: pageSize })
-
     const candidates = []
     for (const item of results) {
       try {
@@ -36,8 +33,26 @@ export async function GET(request: NextRequest) {
         await sleep(1100)
         const variant = detail.variants[0]
         if (!variant) continue
-        const freightOptions = await checkFreight(variant.vid, 1, 'US')
-        await sleep(1100)
+
+        // Check freight against the worldwide basket. Stop at the first
+        // country with no available paid shipping method -- no need to
+        // burn through the rest of the basket for a candidate that already
+        // fails the worldwide bar.
+        const freightByCountry: Record<string, { available: boolean; cost?: number; method?: string }> = {}
+        let worldwide = true
+        for (const country of WORLDWIDE_BASKET) {
+          const freightOptions = await checkFreight(variant.vid, 1, country)
+          await sleep(1100)
+          const available = freightOptions.length > 0
+          freightByCountry[country] = available
+            ? { available: true, cost: freightOptions[0].logisticPrice, method: freightOptions[0].logisticName }
+            : { available: false }
+          if (!available) {
+            worldwide = false
+            break
+          }
+        }
+
         const cost = parseFloat(variant.variantSellPrice || item.sellPrice)
         candidates.push({
           pid: item.pid,
@@ -45,18 +60,24 @@ export async function GET(request: NextRequest) {
           name: detail.productNameEn || detail.productName,
           cost,
           computedPrice: Math.ceil(cost * 1.2),
-          images: detail.productImageSet?.slice(0, 8) || [],
+          images: detail.productImageSet || [],
           description: detail.description || '',
-          freightAvailable: freightOptions.length > 0,
-          freightOptionCount: freightOptions.length,
+          variants: detail.variants.map((v) => ({
+            vid: v.vid,
+            sku: v.variantSku,
+            key: v.variantKey,
+            price: v.variantSellPrice,
+            image: v.variantImage,
+          })),
+          worldwideShipping: worldwide,
+          freightByCountry,
           productUrl: `https://cjdropshipping.com/product/x-p-${item.pid}.html`,
         })
       } catch (innerErr) {
         candidates.push({ pid: item.pid, error: innerErr instanceof Error ? innerErr.message : String(innerErr) })
       }
     }
-
-    return NextResponse.json({ ok: true, keyword, page, pageSize, resultCount: results.length, candidates })
+    return NextResponse.json({ ok: true, keyword, page, pageSize, resultCount: results.length, worldwideBasket: WORLDWIDE_BASKET, candidates })
   } catch (err) {
     return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
