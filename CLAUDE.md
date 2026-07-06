@@ -426,3 +426,13 @@ Next: swap in the new seller recruitment graphic once it is ready, and keep an e
 **Deferred / not built this round:** true multi-turn tool-use (the assistant reads a data snapshot taken at the start of the conversation rather than issuing live lookups mid-conversation - acceptable for now since the snapshot is refetched on every new message, but worth revisiting if sellers want to ask about an order that just changed status mid-chat). Refunds and payout actions remain entirely out of the assistant's reach, as instructed - it can only draft, look up, and escalate.
 
 The OPEN REVIEW ITEM at the top of this file remains fully open and untouched by this work.
+
+---
+
+## SESSION UPDATE — 2026-07-06 (Go Live video shopping consistency pass)
+
+Since the last logged update (AI assistant upgraded to a tiered account manager), three small commits shipped adding Go Live video shopping as a stated Enterprise tier benefit across every surface that lists Enterprise features. The homepage now lists Go Live video shopping under Enterprise tier benefits. The dedicated Enterprise upgrade page adds it to both its feature list and its comparison table. The general tier comparison table also gained Go Live video shopping under Enterprise extras, matching the homepage and upgrade page.
+
+This was a marketing copy consistency fix, not new product functionality. Go Live video shopping was already referenced as an Enterprise capability; these commits made sure it is listed everywhere Enterprise benefits are described so the three surfaces no longer disagree with each other.
+
+Nothing else of substance has changed since the last update. The OPEN REVIEW ITEM at the top of this file remains fully open and untouched, awaiting William's review.
