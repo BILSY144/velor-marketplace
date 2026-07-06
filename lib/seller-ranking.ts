@@ -5,6 +5,12 @@ const W = { rating: 30, fulfilment: 20, dispute: 15, cancel: 10, volume: 15, res
 const VOLUME_CAP = 200 // delivered orders for full volume marks
 const BADGE_MIN_ORDERS = 10 // completed (delivered) orders required to unlock a badge
 
+// Tier ranking boost — authorised by William 2026-07-06 (see docs/SELLER_RANKING.md).
+// Additive on top of the 0-100 merit score, bounded so a well-performing free
+// seller can still outrank a poorly-performing paid seller. This does NOT affect
+// the buyer-facing sellerScore/sellerBadge fields — those stay pure merit.
+const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 15 }
+
 export type ScoreBreakdown = {
   rating: number
   fulfilment: number
@@ -36,7 +42,7 @@ function badgeFor(score: number, deliveredOrders: number): string {
 export async function computeSellerScore(sellerId: string) {
   const seller = await prisma.seller.findUnique({
     where: { id: sellerId },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, tier: true },
   })
   if (!seller) return null
 
@@ -83,6 +89,7 @@ export async function computeSellerScore(sellerId: string) {
     ratingScore + fulfilmentScore + disputeScore + cancelScore + volumeScore + responseScore
   )
   const badge = badgeFor(score, deliveredOrders)
+  const rankingScore = score + (TIER_BOOST[(seller as { tier?: string }).tier ?? 'STARTER'] ?? 0)
 
   const breakdown: ScoreBreakdown = {
     rating: Math.round(ratingScore),
@@ -109,10 +116,11 @@ export async function computeSellerScore(sellerId: string) {
       sellerBadge: badge,
       sellerScoreUpdatedAt: new Date(),
       scoreBreakdown: breakdown as unknown as object,
+      rankingScore,
     } as unknown as Record<string, unknown>,
   })
 
-  return { score, badge, breakdown }
+  return { score, badge, rankingScore, breakdown }
 }
 
 // Recompute every approved seller (used by the daily cron).
