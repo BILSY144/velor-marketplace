@@ -34,6 +34,18 @@ export async function GET(request: NextRequest) {
         const variant = detail.variants[0]
         if (!variant) continue
 
+        // Velor lists single-option products only -- no variant/colour
+        // picker UI exists on the buyer-facing product pages, and CJ import
+        // always fulfils using variants[0] regardless of what the
+        // description text implies. Letting a multi-option product through
+        // risks the buyer receiving a different colour/design than the one
+        // named in the listing. Skip any candidate with more than one
+        // distinct option before it ever reaches the import queue.
+        const uniqueOptionKeys = new Set(
+          (detail.variants || []).map((v: any) => v.key || v.sku).filter(Boolean)
+        )
+        if (uniqueOptionKeys.size > 1) continue
+
         // Check freight against the worldwide basket. Stop at the first
         // country with no available paid shipping method -- no need to
         // burn through the rest of the basket for a candidate that already
