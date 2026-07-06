@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { countryFlagUrl } from '@/lib/countryFlag'
 
 type Product = {
   id: string
@@ -417,10 +418,10 @@ export default function Home() {
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{s.storeName}</div>
                     <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
                       <span>{(s._count?.products ?? 0)} products</span>
-                      {s.country && (
+                      {countryFlagUrl(s.country) && (
                         <img
-                          src={`https://flagcdn.com/${s.country.toLowerCase()}.svg`}
-                          alt={s.country}
+                          src={countryFlagUrl(s.country)!}
+                          alt={s.country || ''}
                           style={{ width: 15, height: 11, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
                         />
                       )}
