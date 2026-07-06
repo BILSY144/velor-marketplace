@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { convert } from '@/lib/fx'
-import { evaluateDiscount, DiscountCartItem } from '@/lib/discount'
+import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
 
-// Re-quotes a discount code against the buyer's real cart using prices
-// pulled fresh from the database — never trusts prices sent by the client.
-// This is the same "always re-verify server-side" pattern used by
-// /api/stripe/payment-intent, so a code preview here always matches what
-// actually gets charged.
+// Automatic discount lookup — buyers never type a code. Checkout calls this
+// on mount (and whenever the cart changes) to show exactly what will be
+// deducted, using prices pulled fresh from the database rather than trusting
+// anything the client sends. /api/stripe/payment-intent uses the same
+// findAutomaticDiscounts() function to compute the real charge, so the
+// number shown here always matches what the buyer is actually charged.
 export async function POST(request: NextRequest) {
   try {
-    const { code, sellerId, items } = await request.json()
+    const { sellerId, items } = await request.json()
 
-    if (!code || typeof code !== 'string') {
-      return NextResponse.json({ valid: false, error: 'Code is required' }, { status: 400 })
-    }
     if (!sellerId || typeof sellerId !== 'string') {
-      return NextResponse.json({ valid: false, error: 'Missing seller for this cart' }, { status: 400 })
+      return NextResponse.json({ totalDiscountGBP: 0, applied: [] })
     }
     if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ valid: false, error: 'Cart is empty' }, { status: 400 })
+      return NextResponse.json({ totalDiscountGBP: 0, applied: [] })
     }
 
     const productIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
@@ -45,13 +43,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (cartItems.length === 0) {
-      return NextResponse.json({ valid: false, error: 'No matching items found in cart' }, { status: 400 })
+      return NextResponse.json({ totalDiscountGBP: 0, applied: [] })
     }
 
-    const result = await evaluateDiscount(code, sellerId, cartItems)
+    const result = await findAutomaticDiscounts(sellerId, cartItems)
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Discount validate error:', error)
-    return NextResponse.json({ valid: false, error: 'Server error' }, { status: 500 })
+    console.error('Discount lookup error:', error)
+    return NextResponse.json({ totalDiscountGBP: 0, applied: [] }, { status: 500 })
   }
 }
