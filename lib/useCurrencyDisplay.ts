@@ -33,8 +33,8 @@ const ensureRates = useCallback((from: string) => {
   .catch(() => {})
 }, [])
 
-const convert = useCallback((amount: number, from?: string) => {
-  const fromCode = (from || 'GBP').toUpperCase()
+const convert = useCallback((amount: number, from: string) => {
+  const fromCode = from.toUpperCase()
   const toCode = displayCurrency.toUpperCase()
   if (fromCode === toCode) return amount
   const table = ratesRef.current[fromCode]
