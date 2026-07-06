@@ -4,34 +4,33 @@ import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-02-24.acacia',
 });
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = 'Velor Marketplace <customerservice@velorcommerce.co.uk>';
-
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = await request.text();
-  const sig = request.headers.get('stripe-signature');
+    const body = await request.text();
+    const sig = request.headers.get('stripe-signature');
 
   if (!sig) {
-    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
+        return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
   let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch (err: any) {
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
-  }
+    try {
+          event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    } catch (err: any) {
+          return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    }
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      const cs = event.data.object as Stripe.Checkout.Session
-      if (cs.metadata?.type === 'storefront_unlock' && cs.metadata?.sellerId) {
-        await prisma.seller.update({ where: { id: cs.metadata.sellerId }, data: { storefrontUnlocked: true } as unknown as Record<string, unknown> })
-      }
-      break
+            const cs = event.data.object as Stripe.Checkout.Session
+            if (cs.metadata?.type === 'storefront_unlock' && cs.metadata?.sellerId) {
+                      await prisma.seller.update({ where: { id: cs.metadata.sellerId }, data: { storefrontUnlocked: true } as unknown as Record<string, unknown> })
+            }
+            break
     }
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent;
@@ -43,14 +42,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
       }
 
-      // Only count a discount code as "used" once payment actually succeeds —
-      // never at PaymentIntent creation time, so abandoned/failed checkouts
-      // don't burn a seller's usage limit.
-      const discountId = pi.metadata?.discountId;
-      if (discountId) {
+      const discountIds = (pi.metadata?.discountIds ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+      if (discountIds.length > 0) {
         try {
-          await prisma.discountCode.update({
-            where: { id: discountId },
+          await prisma.discountCode.updateMany({
+            where: { id: { in: discountIds } },
             data: { usedCount: { increment: 1 } },
           });
         } catch (err) {
@@ -90,7 +89,6 @@ export async function POST(request: Request): Promise<NextResponse> {
           subscriptionCurrentPeriodEnd: null,
         },
       });
-      // Enforce STARTER 20-listing cap: keep 20 oldest live listings, delist the rest
       for (const s of downgraded) {
         const live = await prisma.product.findMany({
           where: { sellerId: s.id, status: 'APPROVED' },
@@ -107,8 +105,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         if (live.length > 20) {
           const excess = live.slice(20);
           const toDelist = excess
-            .filter((p) => p.orderItems.length === 0)
-            .map((p) => p.id);
+          .filter((p) => p.orderItems.length === 0)
+          .map((p) => p.id);
           if (toDelist.length > 0) {
             await prisma.product.updateMany({
               where: { id: { in: toDelist } },
@@ -135,23 +133,23 @@ export async function POST(request: Request): Promise<NextResponse> {
           data: { subscriptionStatus: 'past_due' },
         });
 
-        const sellerEmail = seller.user?.email;
+      const sellerEmail = seller.user?.email;
         const sellerName = seller.user?.name ?? seller.storeName;
 
-        if (sellerEmail) {
-          const nextRetry = (invoice as any).next_payment_attempt
-            ? new Date((invoice as any).next_payment_attempt * 1000).toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'long', year: 'numeric',
-              })
-            : 'shortly';
+      if (sellerEmail) {
+        const nextRetry = (invoice as any).next_payment_attempt
+        ? new Date((invoice as any).next_payment_attempt * 1000).toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        })
+          : 'shortly';
 
-          await resend.emails.send({
-            from: FROM_EMAIL,
-            to: [sellerEmail],
-            subject: 'Action required: Your Velor Pro subscription payment failed',
-            html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#f8f8f8;margin:0;padding:40px 20px;"><div style="max-width:560px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;"><div style="background:#0f0f0f;padding:32px 40px;"><p style="color:white;font-size:22px;font-weight:700;margin:0;">Velor Marketplace</p></div><div style="padding:40px;"><h1 style="font-size:20px;font-weight:700;color:#111;margin:0 0 16px;">Payment failed for your Pro subscription</h1><p style="color:#555;line-height:1.6;margin:0 0 20px;">Hi ${sellerName},</p><p style="color:#555;line-height:1.6;margin:0 0 20px;">We were unable to charge your payment method for your Velor Pro subscription. We will retry the payment on <strong>${nextRetry}</strong>.</p><p style="color:#555;line-height:1.6;margin:0 0 24px;">Until this is resolved, your account remains active but if payment continues to fail, your subscription will be cancelled and your store will revert to the Starter plan (15% commission, 20 listing cap).</p><a href="https://velorcommerce.store/dashboard/upgrade" style="display:inline-block;background:#7c3aed;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">Update payment method</a><hr style="border:none;border-top:1px solid #eee;margin:32px 0;"/><p style="color:#999;font-size:12px;margin:0;">Questions? <a href="mailto:customerservice@velorcommerce.co.uk" style="color:#7c3aed;">customerservice@velorcommerce.co.uk</a></p></div></div></body></html>`,
-          });
-        }
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: [sellerEmail],
+          subject: 'Action required: Your Velor Pro subscription payment failed',
+          html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#f8f8f8;margin:0;padding:40px 20px;"><div style="max-width:560px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;"><div style="background:#0f0f0f;padding:32px 40px;"><p style="color:white;font-size:22px;font-weight:700;margin:0;">Velor Marketplace</p></div><div style="padding:40px;"><h1 style="font-size:20px;font-weight:700;color:#111;margin:0 0 16px;">Payment failed for your Pro subscription</h1><p style="color:#555;line-height:1.6;margin:0 0 20px;">Hi ${sellerName},</p><p style="color:#555;line-height:1.6;margin:0 0 20px;">We were unable to charge your payment method for your Velor Pro subscription. We will retry the payment on <strong>${nextRetry}</strong>.</p><p style="color:#555;line-height:1.6;margin:0 0 24px;">Until this is resolved, your account remains active but if payment continues to fail, your subscription will be cancelled and your store will revert to the Starter plan (15% commission, 20 listing cap).</p><a href="https://velorcommerce.store/dashboard/upgrade" style="display:inline-block;background:#7c3aed;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">Update payment method</a><hr style="border:none;border-top:1px solid #eee;margin:32px 0;"/><p style="color:#999;font-size:12px;margin:0;">Questions? <a href="mailto:customerservice@velorcommerce.co.uk" style="color:#7c3aed;">customerservice@velorcommerce.co.uk</a></p></div></div></body></html>`,
+        });
+      }
       }
       break;
     }
@@ -183,5 +181,5 @@ export async function POST(request: Request): Promise<NextResponse> {
       break;
   }
 
-  return NextResponse.json({ received: true });
+return NextResponse.json({ received: true });
 }
