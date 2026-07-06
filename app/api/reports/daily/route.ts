@@ -64,7 +64,7 @@ function appCard(a: {
       <tbody>
         ${row('Contact', `${a.contactName} &lt;${a.contactEmail}&gt;`)}
         ${row('Country', a.country ?? 'Unknown')}
-        ${row('Categories', a.productCategories.join(', ') || 'â')}
+        ${row('Categories', a.productCategories.join(', ') || ' - ')}
         ${row('Received', new Date(a.createdAt).toLocaleDateString('en-GB', { day:'numeric',month:'short',year:'numeric' }))}
       </tbody>
     </table>`;
@@ -123,6 +123,16 @@ function buildDailyReportHtml(d: {
   uncontactedProspects: { id: string; name: string; platform: string; storeUrl: string; email: string | null; category: string; score: number; status: string; sellerType: string; country: string | null; createdAt: Date }[];
   // Agent activity
   agentLogs: { agentName: string; action: string; status: string; details: unknown; createdAt: Date }[];
+  // Website traffic
+  yesterdayViews: number;
+  dayBeforeViews: number;
+  topPagesRaw: { path: string; _count: { path: number } }[];
+  // Business snapshot (other information)
+  totalSellersCount: number;
+  ordersLast24hCount: number;
+  revenueLast24hResult: { _sum: { subtotal: number | null } };
+  pendingReturnsCount: number;
+  disputedOrdersCount: number;
 }): string {
 
   // Pipeline funnel
@@ -175,15 +185,15 @@ function buildDailyReportHtml(d: {
   const pendingAppsHtml = d.pendingApplications.length > 0
     ? `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:12px">
         <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#92400e">${d.pendingApplications.length} application${d.pendingApplications.length > 1 ? 's' : ''} awaiting your review</p>
-        ${d.pendingApplications.map(a => `<div style="font-size:12px;color:#92400e;padding:2px 0">â¢ ${a.businessName} â ${a.contactEmail}</div>`).join('')}
+        ${d.pendingApplications.map(a => `<div style="font-size:12px;color:#92400e;padding:2px 0">- ${a.businessName}  -  ${a.contactEmail}</div>`).join('')}
       </div>`
     : '';
 
   const uncontactedHtml = d.uncontactedProspects.length > 0
     ? `<div style="background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;padding:12px 16px;margin-bottom:12px">
         <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#1e40af">${d.uncontactedProspects.length} prospect${d.uncontactedProspects.length > 1 ? 's' : ''} discovered but not yet contacted</p>
-        ${d.uncontactedProspects.slice(0, 5).map(p => `<div style="font-size:12px;color:#1e40af;padding:2px 0">â¢ ${p.name} â ${p.platform} (score: ${p.score})</div>`).join('')}
-        ${d.uncontactedProspects.length > 5 ? `<div style="font-size:12px;color:#1e40af;padding:2px 0">â¦ and ${d.uncontactedProspects.length - 5} more</div>` : ''}
+        ${d.uncontactedProspects.slice(0, 5).map(p => `<div style="font-size:12px;color:#1e40af;padding:2px 0">- ${p.name}  -  ${p.platform} (score: ${p.score})</div>`).join('')}
+        ${d.uncontactedProspects.length > 5 ? `<div style="font-size:12px;color:#1e40af;padding:2px 0">... and ${d.uncontactedProspects.length - 5} more</div>` : ''}
       </div>`
     : '';
 
@@ -211,26 +221,64 @@ function buildDailyReportHtml(d: {
       </table>`
     : `<p style="color:#6b7280;font-size:13px;margin:0;padding:12px 0">No agent activity in the last 24 hours.</p>`;
 
+  // Website traffic - yesterday vs day before
+  const viewsDelta = d.yesterdayViews - d.dayBeforeViews;
+  const viewsDeltaPercent = d.dayBeforeViews > 0 ? Math.round((viewsDelta / d.dayBeforeViews) * 100) : null;
+  const viewsGrowing = d.yesterdayViews > d.dayBeforeViews;
+  const topPages = d.topPagesRaw.map(p => ({ path: p.path, views: p._count.path }));
+  const trafficHtml = `
+    <div style="display:flex;margin:0 0 16px">
+      ${stat('Views Yesterday', d.yesterdayViews)}
+      ${stat('Views Day Before', d.dayBeforeViews)}
+      ${stat(viewsGrowing ? 'Up' : 'Down', viewsDeltaPercent !== null ? `${viewsDeltaPercent}%` : 'n/a')}
+    </div>
+    ${topPages.length > 0 ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f9fafb">
+        <th style="padding:6px 12px;text-align:left;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Page</th>
+        <th style="padding:6px 12px;text-align:left;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Views</th>
+      </tr></thead>
+      <tbody>
+        ${topPages.map(p => `<tr>
+          <td style="padding:6px 12px;border-bottom:1px solid #f3f4f6;color:#374151">${p.path}</td>
+          <td style="padding:6px 12px;border-bottom:1px solid #f3f4f6;color:#374151">${p.views}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<p style="color:#6b7280;font-size:13px;margin:0;padding:12px 0">No pageviews recorded yesterday.</p>`}`;
+
+  // Business snapshot - other information
+  const revenueLast24h = ((d.revenueLast24hResult._sum.subtotal || 0) / 100).toFixed(2);
+  const businessHtml = `
+    <div style="display:flex;flex-wrap:wrap;margin:0 0 4px">
+      ${stat('Total Sellers', d.totalSellersCount)}
+      ${stat('Orders (24h)', d.ordersLast24hCount)}
+      ${stat('Revenue (24h)', `GBP ${revenueLast24h}`)}
+      ${stat('Pending Returns', d.pendingReturnsCount)}
+      ${stat('Disputed Orders', d.disputedOrdersCount)}
+    </div>`;
+
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;padding:24px;background:#fff;color:#1a1a1a">
 
   <div style="background:#1a1a1a;padding:20px 24px;border-radius:8px;margin-bottom:28px">
     <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600">Velor Marketplace</h1>
-    <p style="margin:4px 0 0;color:#9ca3af;font-size:13px">Seller Pipeline Report Â· ${d.date} Â· Live Data</p>
+    <p style="margin:4px 0 0;color:#9ca3af;font-size:13px">Daily Report - ${d.date} - Live Data</p>
   </div>
 
   ${statsHtml}
 
   ${section('Pipeline Funnel (All Time)', funnelHtml)}
   ${section('Pending Actions', pendingActionsHtml)}
-  ${section('New Applications â Last 7 Days', newAppsHtml)}
-  ${section('New Prospects Discovered â Last 7 Days', newProspectsHtml)}
-  ${section('Outreach Sent â Last 7 Days', outreachHtml)}
-  ${section('Agent Activity â Last 24 Hours', agentHtml)}
+  ${section('New Applications  -  Last 7 Days', newAppsHtml)}
+  ${section('New Prospects Discovered  -  Last 7 Days', newProspectsHtml)}
+  ${section('Outreach Sent  -  Last 7 Days', outreachHtml)}
+  ${section('Agent Activity  -  Last 24 Hours', agentHtml)}
+  ${section('Website Traffic  -  Yesterday', trafficHtml)}
+  ${section('Business Snapshot  -  Other Information', businessHtml)}
 
   <div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">
-    <p style="font-size:11px;color:#9ca3af;margin:0">Velor Marketplace Â· Automated Report Â· ${d.date}</p>
+    <p style="font-size:11px;color:#9ca3af;margin:0">Velor Marketplace - Automated Report - ${d.date}</p>
   </div>
 
 </body></html>`;
@@ -238,14 +286,32 @@ function buildDailyReportHtml(d: {
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // DST-safe gate: only actually generate + send once it is truly 08:00 in the UK.
+  // Vercel Cron runs in UTC and does not shift for BST/GMT, so this route is
+  // invoked hourly (06:00-09:00 UTC) and self-selects the correct hour year-round.
+  const forceRun = req.nextUrl.searchParams.get('force') === 'true';
+  const londonHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hour12: false }).format(new Date()));
+  if (!forceRun && londonHour !== 8) {
+    return NextResponse.json({ ok: true, skipped: 'not 08:00 Europe/London yet', londonHour });
   }
 
   try {
     const now = new Date();
     const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayStart = new Date(now);
+    yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
+    yesterdayStart.setUTCHours(0, 0, 0, 0);
+    const yesterdayEnd = new Date(yesterdayStart);
+    yesterdayEnd.setUTCHours(23, 59, 59, 999);
+    const dayBeforeStart = new Date(yesterdayStart);
+    dayBeforeStart.setUTCDate(dayBeforeStart.getUTCDate() - 1);
+    const dayBeforeEnd = new Date(dayBeforeStart);
+    dayBeforeEnd.setUTCHours(23, 59, 59, 999);
 
     const [
       totalProspectsCount,
@@ -261,6 +327,14 @@ export async function GET(req: NextRequest) {
       pendingApplications,
       uncontactedProspects,
       agentLogs,
+      yesterdayViews,
+      dayBeforeViews,
+      topPagesRaw,
+      totalSellersCount,
+      ordersLast24hCount,
+      revenueLast24hResult,
+      pendingReturnsCount,
+      disputedOrdersCount,
     ] = await Promise.all([
       // All-time funnel counts
       prisma.sellerProspect.count(),
@@ -308,6 +382,24 @@ export async function GET(req: NextRequest) {
         take: 50,
         select: { agentName: true, action: true, status: true, details: true, createdAt: true },
       }),
+
+      // Website traffic - yesterday vs day before (UTC calendar days)
+      prisma.pageView.count({ where: { createdAt: { gte: yesterdayStart, lte: yesterdayEnd } } }),
+      prisma.pageView.count({ where: { createdAt: { gte: dayBeforeStart, lte: dayBeforeEnd } } }),
+      prisma.pageView.groupBy({
+        by: ['path'],
+        where: { createdAt: { gte: yesterdayStart, lte: yesterdayEnd } },
+        _count: { path: true },
+        orderBy: { _count: { path: 'desc' } },
+        take: 5,
+      }),
+
+      // Business snapshot (other information)
+      prisma.seller.count(),
+      prisma.order.count({ where: { createdAt: { gte: since24h } } }),
+      prisma.order.aggregate({ where: { createdAt: { gte: since24h } }, _sum: { subtotal: true } }),
+      prisma.returnRequest.count({ where: { status: 'PENDING' } }),
+      prisma.order.count({ where: { status: 'DISPUTED' } }),
     ]);
 
     const dateStr = now.toLocaleDateString('en-GB', {
@@ -329,11 +421,19 @@ export async function GET(req: NextRequest) {
       pendingApplications,
       uncontactedProspects,
       agentLogs,
+      yesterdayViews,
+      dayBeforeViews,
+      topPagesRaw,
+      totalSellersCount,
+      ordersLast24hCount,
+      revenueLast24hResult,
+      pendingReturnsCount,
+      disputedOrdersCount,
     });
 
     await sendEmail({
       to: REPORT_RECIPIENT,
-      subject: `Velor Seller Pipeline â ${dateStr}`,
+      subject: `Velor Daily Report - ${dateStr}`,
       html,
     });
 
