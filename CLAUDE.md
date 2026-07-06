@@ -386,3 +386,14 @@ Outreach emails were also touched this cycle: the hero image now links through t
 Separately, the BOOST SALES card copy was fixed to remove a duplicate "and".
 
 None of this cycle's commits touch the OPEN REVIEW ITEM below, so it remains fully open and unresolved. The previously flagged items requiring William's attention are unchanged: the automatic discount system, the homepage hero image swap, the Phase 2 Live Shopping review, the checkout currency-charging review, and the tiered seller plan pages OPEN REVIEW ITEM. This check-in is bookkeeping only; no product decisions were made.
+
+
+---
+
+## SESSION UPDATE — 2026-07-06 (outreach scaling push)
+
+Five new commits landed on main since the last logged update (fcdb261, at 04:49 GMT+1), running through 05:03 GMT+1 today. The flawed AI-generated seller recruitment image was removed and the outreach email hero image was reverted to the stable placeholder graphic while a proper replacement is prepared. Separately, the autonomous outreach and scouting system was scaled up: scouting now runs every 6 hours and outreach-auto every 2 hours, the per-run outreach cap was raised from 8 to 30 with outreach defaulting ON unless explicitly disabled, and scouting volume was increased with more Etsy shops and eBay searches per run to feed the larger campaign. All five commits deployed cleanly to production on Vercel, each showing Ready with build times between 43 and 51 seconds.
+
+In progress: a proper replacement graphic for the seller recruitment image is still pending; the placeholder remains live in the meantime.
+
+Next: swap in the new seller recruitment graphic once it is ready, and keep an eye on the scaled outreach and scouting cadence for volume and quality as the campaign ramps up. The OPEN REVIEW ITEM above remains fully open and untouched, and the other previously flagged items — the automatic discount system, the homepage hero image swap, the Phase 2 Live Shopping review, and the checkout currency-charging review — are all still awaiting William's review; nothing in this cycle resolved them.
