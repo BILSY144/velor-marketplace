@@ -322,3 +322,45 @@ export function buildOutreachEmail(d: {
 
   return { subject: subjects[emailType], html };
 }
+
+
+export function buildNewSellerAlertEmail(d: {
+  name: string;
+  email: string;
+  storeName: string;
+  tier: string;
+  signedUpAt: Date;
+}): { subject: string; html: string } {
+  const html = `${WRAP_OPEN}
+    <h2 style="color:#FFF;font-size:22px;margin:0 0 16px">New seller signed up</h2>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
+      A new seller just registered on Velor Marketplace.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Name</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.name)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Email</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.email)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Store name</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.storeName)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Tier</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.tier)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Signed up</td>
+        <td style="padding:8px 0;color:#FFF;font-size:14px;text-align:right">${h(d.signedUpAt.toUTCString())}</td>
+      </tr>
+    </table>
+    <p style="color:#777;font-size:12px;line-height:1.6;margin:0">
+      This seller is unapproved by default until verified in the admin dashboard.
+    </p>
+  ${WRAP_CLOSE}`;
+  return { subject: `New seller signup: ${d.storeName}`, html };
+}
