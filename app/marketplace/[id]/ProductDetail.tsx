@@ -16,6 +16,7 @@ interface Product {
   seller: {
     id: string
     storeName: string
+    currency?: string
     user: { name: string; email: string }
   }
   discountedPrice: number | null
@@ -189,14 +190,14 @@ export default function ProductDetail({ id }: { id: string }) {
               {onSale ? (
                 <>
                   <div className="pd-price-row">
-                    <span className="pd-price sale">{symbol}{convert(product.discountedPrice as number).toFixed(2)}</span>
-                    <span className="pd-price-was">{symbol}{convert(product.price).toFixed(2)}</span>
+                    <span className="pd-price sale">{symbol}{convert(product.discountedPrice as number, product.seller?.currency || 'GBP').toFixed(2)}</span>
+                    <span className="pd-price-was">{symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}</span>
                     <span className="pd-save-chip">SAVE {product.percentOff}%</span>
                   </div>
                   <div className="pd-auto-note">Discount applied automatically â no code needed. Carries through to cart and checkout.</div>
                 </>
               ) : (
-                <div className="pd-price">{symbol}{convert(product.price).toFixed(2)}</div>
+                <div className="pd-price">{symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}</div>
               )}
 
               <p className="pd-desc">{product.description}</p>
