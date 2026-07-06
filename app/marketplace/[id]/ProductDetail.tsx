@@ -33,19 +33,7 @@ interface StoredCartItem {
   sellerName?: string
 }
 
-function readCart(): StoredCartItem[] {
-  try {
-    const stored = localStorage.getItem('velor-cart')
-    const parsed = stored ? JSON.parse(stored) : { state: { items: [] } }
-    return parsed?.state?.items ?? []
-  } catch {
-    return []
-  }
-}
-
-function writeCart(items: StoredCartItem[]) {
-  localStorage.setItem('velor-cart', JSON.stringify({ state: { items } }))
-}
+import { addToCart as addToSharedCart } from '@/lib/cart'
 
 export default function ProductDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -76,23 +64,16 @@ export default function ProductDetail({ id }: { id: string }) {
   // match checkout because both read from lib/discount.ts.
   function addToCart() {
     if (!product) return
-    const cart = readCart()
-    const idx = cart.findIndex(i => i.id === product.id)
-    if (idx >= 0) {
-      cart[idx].quantity += qty
-    } else {
-      cart.push({
-        id: product.id,
-        productId: product.id,
-        name: product.title,
-        price: product.price,
-        image: product.images?.[0] || '',
-        quantity: qty,
-        sellerId: product.seller.id,
-        sellerName: product.seller.storeName,
-      })
-    }
-    writeCart(cart)
+    addToSharedCart({
+      id: product.id,
+      productId: product.id,
+      name: product.title,
+      price: product.price,
+      image: product.images?.[0] || '',
+      quantity: qty,
+      sellerId: product.seller.id,
+      sellerName: product.seller.storeName,
+    })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
