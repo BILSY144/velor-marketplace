@@ -64,6 +64,19 @@ export async function POST(request: NextRequest) {
         skipped.push({ pid: item.pid, reason: 'already imported', productId: existing.id })
         continue
       }
+      // Defense-in-depth: cj-candidates already filters these out before they
+      // reach this route, but reject here too in case items are ever posted
+      // from another source. No variant/colour picker UI exists on the
+      // buyer-facing pages, and this route always fulfils using item.vid
+      // (the first variant) -- letting a multi-option item through risks
+      // shipping a different colour/design than the one implied in the listing.
+      const uniqueOptionKeys = new Set(
+        (item.variants || []).map((v) => v.key || v.sku).filter(Boolean)
+      )
+      if (uniqueOptionKeys.size > 1) {
+        skipped.push({ pid: item.pid, reason: 'multi-option product -- no variant picker UI exists' })
+        continue
+      }
       const title = stripEmoji(item.name).slice(0, 200)
       const description = buildDescription(item.description, item.variants).slice(0, 4000)
       const images = Array.from(new Set((item.images || []).filter(Boolean)))
