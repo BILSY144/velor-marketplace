@@ -29,7 +29,7 @@ const COUNTRIES = [
 ]
 
 interface CartItem {
-  productId: string; name: string; price: number; quantity: number;
+  id?: string; productId: string; name: string; price: number; quantity: number;
   image: string; sellerId?: string;
 }
 interface ShippingRate {
@@ -490,7 +490,7 @@ export default function CheckoutPage() {
                 {!creatingIntent && (
                   <button
                     type="button"
-                    onClick={() => handleRemoveItem(item.productId)}
+                    onClick={() => handleRemoveItem(item.id || item.productId)}
                     aria-label={`Remove ${item.name} from cart`}
                     style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 0 4px 8px', lineHeight: 1 }}
                   >
