@@ -25,12 +25,6 @@ type Seller = {
   products?: { id: string; title: string; price: number; images?: string[] }[]
 }
 
-function countryFlag(code?: string | null) {
-  if (!code || code.length !== 2) return code || ''
-  const cc = code.toUpperCase()
-  return String.fromCodePoint(...[...cc].map((ch) => 127397 + ch.charCodeAt(0)))
-}
-
 const CATEGORIES = [
   'Electronics', 'Fashion', 'Home & Garden', 'Beauty & Health',
   'Sports & Outdoors', 'Jewellery & Watches', 'Toys & Games', 'Baby & Kids',
@@ -421,8 +415,15 @@ export default function Home() {
                       <Badge code={s.sellerBadge} />
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{s.storeName}</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
-                      {(s._count?.products ?? 0)} products{s.country ? ` · ${countryFlag(s.country)}` : ''}
+                    <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span>{(s._count?.products ?? 0)} products</span>
+                      {s.country && (
+                        <img
+                          src={`https://flagcdn.com/${s.country.toLowerCase()}.svg`}
+                          alt={s.country}
+                          style={{ width: 15, height: 11, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
+                        />
+                      )}
                     </div>
                   </div>
                 </Link>
