@@ -30,6 +30,22 @@ export default function GlobalHeader() {
   const pathname = usePathname()
   const router = useRouter()
 
+  const [traffic, setTraffic] = useState<{ lastHour: number; today: number } | null>(null)
+
+  useEffect(() => {
+    if (pathname !== '/') return
+    let active = true
+    const load = () => {
+      fetch('/api/public/traffic')
+        .then((r) => r.json())
+        .then((d) => { if (active) setTraffic(d) })
+        .catch(() => {})
+    }
+    load()
+    const interval = setInterval(load, 30000)
+    return () => { active = false; clearInterval(interval) }
+  }, [pathname])
+
   const [cartCount, setCartCount] = useState(0)
   const [query, setQuery] = useState('')
   const [catsOpen, setCatsOpen] = useState(false)
@@ -151,6 +167,13 @@ export default function GlobalHeader() {
         Secure Stripe checkout
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
         Global marketplace — prices convert live, reconfirmed at checkout
+        {pathname === '/' && traffic && (
+          <>
+            <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
+            <span style={{ color: 'var(--green)' }}>●</span>{' '}
+            {traffic.lastHour} page view{traffic.lastHour === 1 ? '' : 's'} in the last hour · {traffic.today} today
+          </>
+        )}
       </div>
 
       {/* Main bar */}
