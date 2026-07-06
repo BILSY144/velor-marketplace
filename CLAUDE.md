@@ -555,3 +555,18 @@ Decision, confirmed by William 2026-07-06:
 This note exists so a future session does not misread the dropshipping ban above as covering this feature too. The two are separate: the co.uk site itself stays permanently untouched; using CJ's product/order API as a backend data source for velor-marketplace listings is allowed.
 
 Status as of this entry: research only (CJ API v2 endpoints confirmed via developers.cjdropshipping.com docs — auth, product search, categories, freight calc, order create). No credentials added, no code written yet. Waiting on William to supply CJ API credentials.
+
+---
+
+## CORRECTION — 2026-07-06: repo identity of the old dropshipping business
+
+A previous session's CLAUDE.md note incorrectly logged the old dropshipping business as living at `velor1/velor`. It does not. The actual repo was **`BILSY144/velor`** (Vercel project `velor`, domain `velor-flame.vercel.app`), discovered while debugging a velor-marketplace deployment stall. William confirmed directly: "yes that was for old dropshipping account. velorcommerce.co.uk"
+
+This repo was found via an active Vercel Observability alert on its own `/api/cj-webhook` endpoint (500 errors from GitHub 409 conflicts writing to `data/products.json`) — unrelated to velor-marketplace, but on the same Vercel team. Its build/webhook activity is suspected (not confirmed) to have contributed to why velor-marketplace deployments were silently failing to trigger around the same time.
+
+William confirmed this repo had zero dependency from velor-marketplace, and that his real eBay/CJ fulfillment workflow is "handled inside CJ/eBay directly" — not dependent on this website. He then authorized full decommissioning, executed via live walkthrough (William performed each destructive click himself; Claude staged/navigated but never executed the deletions):
+- Vercel project `velor` (BILSY144/velor) — deleted
+- GitHub repo `BILSY144/velor` — deleted
+- Domain `velorcommerce.co.uk` — removed from the `velor1` Vercel team (was already unattached to any project; DNS/nameservers are third-party, so this had zero effect on eBay/CJ fulfillment)
+
+The permanent dropshipping ban stated elsewhere in this file still stands — it just now correctly refers to a repo that no longer exists.
