@@ -8,7 +8,7 @@ import {
 export const dynamic = 'force-dynamic'
 
 // No DEFAULT_ORIGIN. Every seller must have a ShippingProfile with their real dispatch address.
-// A seller without a shipping profile is skipped with a warning â we never invent an origin.
+// A seller without a shipping profile is skipped with a warning Ã¢ÂÂ we never invent an origin.
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     for (const [stripeAccountId, items] of sellerGroups) {
       try {
         if (stripeAccountId === '__unknown__') {
-          console.warn('[shipping/rates] Cart item missing sellerStripeAccountId â skipping')
+          console.warn('[shipping/rates] Cart item missing sellerStripeAccountId Ã¢ÂÂ skipping')
           continue
         }
 
@@ -82,6 +82,37 @@ export async function POST(request: NextRequest) {
           where: { stripeAccountId },
           include: { shippingProfile: true },
         })
+
+        // CJ-sourced items are dropshipped directly from CJ Dropshipping to the
+        // buyer -- Velor has no physical dispatch address for them, so a
+        // ShippingProfile/Shippo rate is never applicable. Their listed price
+        // already includes the total CJ dropshipping cost (see cj-import
+        // route), so shipping really is free -- never "contact seller for a
+        // quote", which would contradict the Free Delivery badge shown on
+        // the product page.
+        const itemProductIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
+        const itemProducts = itemProductIds.length
+          ? await prisma.product.findMany({
+              where: { id: { in: itemProductIds } },
+              select: { cjSourced: true },
+            })
+          : []
+        const allCjSourced = itemProducts.length > 0 && itemProducts.every((pr) => pr.cjSourced)
+
+        if (allCjSourced) {
+          const freeRate = {
+            rateId: 'cj-free-' + stripeAccountId,
+            carrier: 'CJ Dropshipping',
+            service: 'Standard International Delivery (Free)',
+            amount: '0.00',
+            currency: 'GBP',
+            estimatedDays: 15,
+            isDDP: true,
+            isFallback: false,
+          }
+          combinedRates = combinedRates ? combinedRates : [freeRate]
+          continue
+        }
 
         if (!seller?.shippingProfile) {
           console.warn('[shipping/rates] Seller has no ShippingProfile, cannot calculate rates:', stripeAccountId)
@@ -187,7 +218,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!combinedRates || combinedRates.length === 0) {
-      // Shippo returned no rates for this route â show a single contact-us option
+      // Shippo returned no rates for this route Ã¢ÂÂ show a single contact-us option
       combinedRates = [
         {
           rateId: 'quote-required',
