@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
+import { computeListingDiscount } from '@/lib/discount'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -51,13 +52,42 @@ export async function GET(request: Request) {
     }),
   ])
 
+  // Automatic discounts, computed in bulk — one query for every seller
+  // represented on this page, not one query per product. Buyers see the
+  // exact same discounted price here that checkout will actually charge.
+  const sellerIds = Array.from(new Set(products.map((p) => p.seller.id)))
+  const codes = sellerIds.length
+    ? await prisma.discountCode.findMany({
+        where: { sellerId: { in: sellerIds }, isActive: true },
+      })
+    : []
+  const codesBySeller = new Map<string, typeof codes>()
+  for (const c of codes) {
+    const list = codesBySeller.get(c.sellerId) ?? []
+    list.push(c)
+    codesBySeller.set(c.sellerId, list)
+  }
+
+  const productsWithExtras = products.map((p) => {
+    const avgRating =
+      p.reviews.length > 0 ? p.reviews.reduce((sum, r) => sum + r.rating, 0) / p.reviews.length : null
+    const sellerCodes = codesBySeller.get(p.seller.id) ?? []
+    const discount = computeListingDiscount(sellerCodes, p.id, p.price)
+    return {
+      ...p,
+      avgRating: avgRating !== null ? Math.round(avgRating * 10) / 10 : null,
+      reviewCount: p._count.reviews,
+      discountedPrice: discount?.discountedPriceGBP ?? null,
+      percentOff: discount?.percentOff ?? null,
+    }
+  })
+
+  const pages = Math.ceil(total / limit)
+
   return NextResponse.json({
-    products,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
+    products: productsWithExtras,
+    total,
+    pages,
+    pagination: { page, limit, total, pages },
   })
 }
