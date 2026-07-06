@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, buildOutreachEmail } from '@/lib/email';
 
-const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 8;
+const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 30;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
 const SELLER_FROM = 'Velor Seller Team <sellers@velorcommerce.store>';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
-  if (process.env.OUTREACH_ENABLED !== 'true') {
+  if (process.env.OUTREACH_ENABLED === 'false') {
     return NextResponse.json({ ok: true, skipped: 'outreach disabled' });
   }
 
