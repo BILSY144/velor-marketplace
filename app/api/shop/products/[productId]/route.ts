@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { computeListingDiscount } from '@/lib/discount'
 
 export async function GET(
   _request: Request,
@@ -40,8 +41,18 @@ export async function GET(
       ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
       : 0
 
+  // Automatic discount preview — same rules and same numbers checkout will
+  // actually charge, so what the buyer sees here is what they pay.
+  const now = new Date()
+  const codes = await prisma.discountCode.findMany({
+    where: { sellerId: product.seller.id, isActive: true },
+  })
+  const discount = computeListingDiscount(codes, product.id, product.price, now)
+
   return NextResponse.json({
     ...product,
     avgRating: Math.round(avgRating * 10) / 10,
+    discountedPrice: discount?.discountedPriceGBP ?? null,
+    percentOff: discount?.percentOff ?? null,
   })
 }
