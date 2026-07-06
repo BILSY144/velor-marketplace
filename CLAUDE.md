@@ -593,3 +593,9 @@ A global-not-UK correction also went in: the freight check originally hardcoded 
 A series of admin test routes then verified the CJ integration against live credentials (auth, categories, freight calculate, product search), which surfaced a response-shape bug: CJ's listV2 search endpoint returns results at data.content[].productList[], not data.list. That was fixed in the latest commit (1545477), deployed and showing Ready in Vercel production along with every other commit in this window. With the fix in, a CJ candidate-search route (keyword search plus freight-availability pre-filtering), a final CJ import route (creates Product rows from approved candidates), and an idempotent internal CJ seller account route are all in place.
 
 In progress: no listings have actually been seeded into the live catalogue yet, since the parsing fix just landed. Next: run the candidate-search to approve to import flow end-to-end against a real CJ category, confirm freight-availability filtering behaves correctly for non-UK destinations, and begin seeding real listings once that is confirmed. One small unrelated commit also landed in this window: hid the scrollbar on the homepage's live-shopping swipe row.
+
+---
+
+## SESSION UPDATE — 2026-07-06 (later check-in)
+
+No new commits have landed on main since the previous entry above. HEAD is still 4c42a36, the same commit that authored that entry, so there is nothing new to report this cycle. The CJ Dropshipping integration remains at the point already logged: the searchProducts response-shape fix, the candidate-search route, the final import route, and the internal seller account route are merged and deployed, but no listings have actually been seeded into the live catalogue yet. Next check-in will look for progress on running the candidate-search-to-import flow end-to-end and on seeding real listings.
