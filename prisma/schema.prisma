@@ -134,6 +134,7 @@ model Seller {
   sellerBadge                   String?
   sellerScoreUpdatedAt          DateTime?
   scoreBreakdown                Json?
+  rankingScore                   Float     @default(0)
   storeTheme                    String    @default("classic")
   storefrontUnlocked            Boolean   @default(false)
   storeLogo                     String?
