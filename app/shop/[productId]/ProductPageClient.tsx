@@ -225,12 +225,12 @@ export default function ProductPageClient() {
                   flexShrink: 0,
                 }}
               >
-                <img src={img} alt='' style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={img} alt='' style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
             ))}
           </div>
           <div style={{ flex: 1, aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: '#222', position: 'relative' }}>
-            <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
                 {product.percentOff}% OFF
