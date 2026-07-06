@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccessToken, getCategories, getProductDetail } from '@/lib/cj'
 
-// Temporary verification endpoint -- confirms CJ_API_KEY + the auth flow +
-// category fetch all work end-to-end against a live CJ account. Gated by
-// ADMIN_SECRET via middleware.ts. Safe to delete once CJ integration is
-// proven and the real import/order routes exist.
-//
-// DEBUG MODE: ?pid=<cjProductId> dumps the RAW (untyped) freightCalculate
-// response for that product's first variant shipped to the US, so we can
-// see whether CJ's API surfaces shipping-restriction remarks (e.g. "no PO
-// Box delivery") the same way the CJ web UI shows them in red text on the
-// product page. This determines whether restriction-checking can be fully
-// automated via API or requires a manual read of the product page.
-const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1'
-
 export const dynamic = 'force-dynamic'
+const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1'
 
 export async function GET(request: NextRequest) {
   try {
     const pid = request.nextUrl.searchParams.get('pid')
+    const keyword = request.nextUrl.searchParams.get('keyword')
+
+    if (keyword) {
+      const token = await getAccessToken()
+      const qs = new URLSearchParams()
+      qs.set('keyWord', keyword)
+      qs.set('page', '1')
+      qs.set('size', '3')
+      const res = await fetch(`${CJ_BASE}/product/listV2?${qs.toString()}`, {
+        headers: { 'CJ-Access-Token': token },
+      })
+      const rawJson = await res.json()
+      return NextResponse.json({ ok: true, keyword, rawSearchResponse: rawJson })
+    }
 
     if (pid) {
       const token = await getAccessToken()
