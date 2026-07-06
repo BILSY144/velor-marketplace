@@ -539,3 +539,19 @@ Committed as: `0d37025` (lib/adminAuth.ts), `f079d0b` (public/traffic route), `f
 ## STANDING DIRECTIVE — 2026-07-06: Dropshipping business (velorcommerce.co.uk / velor1/velor) is off-limits
 
 William: "the dropshipping business is never to be worked on again." This repo (BILSY144/velor-marketplace, velorcommerce.store) is unaffected and is the only active Velor project going forward. Do not open, edit, or take any action against github.com/velor1/velor or velorcommerce.co.uk unless William explicitly reverses this instruction in a future conversation. The velor-ceo-ops and velor-listing-protocol skill content (CJ Dropshipping, China trip, dropshipping margin rules) is no longer applicable to any live work and should not be used to guide decisions on this project.
+
+## CLARIFICATION — 2026-07-06: CJ Dropshipping IS permitted on velor-marketplace, but ONLY for the listings-seeding feature below
+
+The ban logged above ("the dropshipping business is never to be worked on again") refers to the OTHER project only: github.com/velor1/velor and velorcommerce.co.uk. It does NOT prohibit using CJ Dropshipping as a product-sourcing tool inside velor-marketplace itself.
+
+William, verbatim: "this has nothing to do with velorcommerce.co.uk we are merely just using cj dropshipperes indepently for listings"
+
+Decision, confirmed by William 2026-07-06:
+- Purpose: seed initial product listings across marketplace categories to give the site content and give prospective sellers a concrete reason to sign up (a working, populated marketplace), and to test our own order-fulfillment API path before real Enterprise sellers rely on it.
+- Disclosure: CJ-sourced products BLEND IN as regular seller listings. No "Velor Official" badge, no special label, no visual distinction from any other seller's storefront. William explicitly rejected the labelled option.
+- Fulfillment: REAL automation from day one — Stripe order to CJ order-placement API to tracking sync — not a manual/hand-fulfilled pilot. William explicitly rejected "manual to start."
+- Attribution: CJ-sourced products are attached to a real internal Seller account (not scattered across fake sellers), which will need its own handling in the payout/Stripe Connect flow since it is not a genuine third-party seller.
+
+This note exists so a future session does not misread the dropshipping ban above as covering this feature too. The two are separate: the co.uk site itself stays permanently untouched; using CJ's product/order API as a backend data source for velor-marketplace listings is allowed.
+
+Status as of this entry: research only (CJ API v2 endpoints confirmed via developers.cjdropshipping.com docs — auth, product search, categories, freight calc, order create). No credentials added, no code written yet. Waiting on William to supply CJ API credentials.
