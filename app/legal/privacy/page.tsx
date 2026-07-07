@@ -6,7 +6,7 @@ export default function PrivacyPage() {
     },
     {
       title: "2. Data We Collect",
-      body: "We collect: (a) Account data — name, email address, password hash; (b) Transaction data — order details, shipping address, payment confirmation; (c) Seller data — business name, Stripe Connect account details; (d) Usage data — pages visited, device type, browser; (e) Communications — messages sent via the platform.",
+      body: "We collect: (a) Account data — name, email address, password hash; (b) Transaction data — order details, shipping address, payment confirmation; (c) Seller data — business name and payout account details (Stripe Connect, or Payoneer where applicable); (d) Usage data — pages visited, device type, browser; (e) Communications — messages sent via the platform.",
     },
     {
       title: "3. How We Use Your Data",
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
     },
     {
       title: "5. Data Sharing",
-      body: "We share data with: (a) Sellers — order details necessary to fulfil your purchase; (b) Stripe — payment processing; (c) Vercel — platform hosting; (d) Resend — transactional email delivery. We do not sell personal data to third parties.",
+      body: "We share data with: (a) Sellers — order details necessary to fulfil your purchase; (b) Stripe — payment processing and seller payouts; (c) Payoneer — seller payouts, for sellers in countries where Stripe payouts are not available; (d) Vercel — platform hosting; (e) Resend — transactional email delivery. We do not sell personal data to third parties.",
     },
     {
       title: "6. International Transfers",
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
     <main style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
       <section style={{ maxWidth: 760, margin: '0 auto', padding: '80px 24px' }}>
         <h1 style={{ fontSize: 40, fontWeight: 800, fontFamily: 'var(--font-display)', marginBottom: 8 }}>Privacy Policy</h1>
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 48 }}>Last updated: 1 July 2026</p>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 48 }}>Last updated: 7 July 2026</p>
         {sections.map(s => (
           <div key={s.title} style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>{s.title}</h2>
