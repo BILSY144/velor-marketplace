@@ -141,6 +141,8 @@ model Seller {
   storefrontUnlocked            Boolean   @default(false)
   storeLogo                     String?
   isInternal                     Boolean   @default(false)
+  payoutRail                    String    @default("STRIPE")
+  payoneerPayeeId               String?   @unique
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 }
@@ -325,6 +327,7 @@ model Payout {
   amount           Float
   currency         String   @default("gbp")
   stripeTransferId String?  @unique
+  payoneerPayoutId String?  @unique
   status           String   @default("pending")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
