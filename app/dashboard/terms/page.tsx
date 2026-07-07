@@ -72,15 +72,15 @@ export default function TermsPage() {
           <p style={pStyle}>Commission is deducted from each transaction before payout. Subscription fees are billed monthly via Stripe and are non-refundable except where required by applicable law. Optional add-on features (for example, additional storefront themes or custom branding beyond what your tier includes) may be offered for a separate one-time or recurring fee, disclosed at the point of purchase. The Platform reserves the right to adjust fee structures with 30 days notice.</p>
 
           <h3 style={h3Style}>5. Payouts</h3>
-          <p style={pStyle}>Buyer payments are held on the Platform's account, not transferred directly to Sellers at the time of sale. Once an order is confirmed delivered (via carrier tracking), the Seller's share (sale price plus shipping and duties, minus commission) is released to the Seller's connected Stripe account after a hold period:</p>
+          <p style={pStyle}>Buyer payments are held on the Platform's account, not transferred directly to Sellers at the time of sale. Once an order is confirmed delivered (via carrier tracking), the Seller's share (sale price plus shipping and duties, minus commission) is released to the Seller's connected payout account - Stripe Connect where Stripe supports payouts in the Seller's country, or Payoneer where it does not - after a hold period:</p>
           <ul style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
             <li><strong style={{ color: '#FFFFFF' }}>New (probation) Sellers:</strong> 15 days after confirmed delivery.</li>
             <li><strong style={{ color: '#FFFFFF' }}>Trusted Sellers:</strong> 72 hours after confirmed delivery. A Seller becomes Trusted automatically once they have 10+ delivered orders, an account at least 30 days old, and no unresolved disputes or returns.</li>
           </ul>
-          <p style={pStyle}>If a return or dispute is opened on an order, that order's payout is frozen until the return or dispute is resolved, regardless of the hold period above. Sellers must complete Stripe Connect onboarding to receive payouts; funds remain safely held on the Platform until onboarding is complete.</p>
+          <p style={pStyle}>If a return or dispute is opened on an order, that order's payout is frozen until the return or dispute is resolved, regardless of the hold period above. Sellers must complete payout onboarding with the applicable provider (Stripe Connect, or Payoneer where applicable) to receive payouts; funds remain safely held on the Platform until onboarding is complete.</p>
 
           <h3 style={h3Style}>6. Prohibited Items</h3>
-          <p style={pStyle}>The following are strictly prohibited: weapons, firearms, controlled substances, counterfeit goods, adult content, hazardous materials, live animals subject to CITES restrictions, human remains, stolen goods, financial instruments, items subject to trade sanctions, and any item prohibited under UK law or under applicable law in the Seller's or Buyer's jurisdiction.</p>
+          <p style={pStyle}>The following are strictly prohibited: weapons, firearms, controlled substances, counterfeit goods, adult content, hazardous materials, live animals subject to CITES restrictions, human remains, stolen goods, financial instruments, items subject to trade sanctions, and any item prohibited under UK law or under applicable law in the Seller's or Buyer's jurisdiction. Regulated materials (for example CITES-listed wildlife or plant products) may only be listed with valid permits, per the Seller Rules and Product Compliance Policy at /legal/seller-rules.</p>
 
           <h3 style={h3Style}>7. Seller Responsibilities</h3>
           <p style={pStyle}>Sellers are solely responsible for: (a) accuracy of all product descriptions and images; (b) holding appropriate title to sell all listed items; (c) fulfilling orders promptly; (d) packaging goods safely; (e) complying with consumer protection regulations in destination countries; (f) handling customer service professionally; (g) providing tracking information for all shipments.</p>
@@ -94,13 +94,13 @@ export default function TermsPage() {
           <p style={pStyle}>The Platform reserves the right to: (a) remove any listing at its sole discretion; (b) suspend or terminate a Seller account for breach of these terms; (c) withhold payouts pending investigation of suspected fraud; (d) modify these terms with 30 days notice to active Sellers.</p>
 
           <h3 style={h3Style}>10. Data Protection</h3>
-          <p style={pStyle}>The Platform processes Seller personal data in accordance with its Privacy Policy, UK GDPR, and other data protection laws that apply given the Seller's location. Seller data is shared with Stripe Inc. solely for processing transactions and payouts. Buyer shipping data must only be used for fulfilment.</p>
+          <p style={pStyle}>The Platform processes Seller personal data in accordance with its Privacy Policy, UK GDPR, and other data protection laws that apply given the Seller's location. Seller data is shared with Stripe Inc. - and with Payoneer Inc. where Payoneer is the Seller's payout provider - solely for processing transactions and payouts. Buyer shipping data must only be used for fulfilment.</p>
 
           <h3 style={h3Style}>11. Intellectual Property</h3>
           <p style={pStyle}>Sellers retain ownership of their original product images and descriptions. By listing on the Platform, Sellers grant the Platform a non-exclusive licence to display listing content for operating and promoting the Platform. Sellers must not list products that infringe third-party intellectual property rights. Custom storefront branding (including uploaded logos and theme selections) remains the Seller's property; by uploading it the Seller grants the Platform the same non-exclusive licence described above to display it as part of the Seller's storefront.</p>
 
           <h3 style={h3Style}>12. Tax Obligations</h3>
-          <p style={pStyle}>Sellers are solely responsible for determining and fulfilling their own tax obligations, including income tax, VAT, GST, and import duties. The Platform does not provide tax advice or remit taxes on behalf of Sellers.</p>
+          <p style={pStyle}>Sellers are solely responsible for determining and fulfilling their own tax obligations, including income tax, VAT, GST, and import duties, except where marketplace facilitator laws require the Platform to collect and remit sales tax or VAT on facilitated orders. The Platform does not provide tax advice.</p>
 
           <h3 style={h3Style}>13. Limitation of Liability</h3>
           <p style={pStyle}>The Platform's total liability to a Seller shall not exceed the total commission paid by that Seller in the 3 months preceding the claim. The Platform is not liable for indirect, consequential, incidental, or punitive damages.</p>
@@ -112,7 +112,7 @@ export default function TermsPage() {
           <p style={pStyle}>These terms are governed by the laws of England and Wales, the jurisdiction of Velor Commerce Ltd. Disputes shall be submitted to binding arbitration under the rules of the London Court of International Arbitration (LCIA).</p>
 
           <h3 style={h3Style}>16. Entire Agreement</h3>
-          <p style={pStyle}>These terms, together with the Platform Privacy Policy, constitute the entire agreement between the Seller and the Platform. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
+          <p style={pStyle}>These terms, together with the Platform Privacy Policy and the Seller Rules and Product Compliance Policy, constitute the entire agreement between the Seller and the Platform. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
 
           <p style={{ color: '#666666', fontSize: '12px', margin: '24px 0 0' }}>
             Effective date: 4 July 2026 - Version 1.2 - Operated by Velor Commerce Ltd - Contact: customerservice@velorcommerce.store
