@@ -307,6 +307,190 @@ Remove
 )
 }
 
+const CERT_TYPES = [
+{ value: 'EXPORT_PERMIT', label: 'Export permit (e.g. CITES)' },
+{ value: 'IMPORT_PERMIT', label: 'Import permit (destination country)' },
+{ value: 'PHYTOSANITARY', label: 'Phytosanitary certificate' },
+{ value: 'OTHER', label: 'Other compliance document' },
+]
+
+const MAX_CERT_DATA_URL_LEN = 1_900_000
+
+function readFileAsDataUrl(file: File): Promise<string> {
+return new Promise((resolve, reject) => {
+if (!/^(image\/(png|jpeg|jpg|webp)|application\/pdf)$/.test(file.type)) {
+reject(new Error('Please upload a PDF, PNG, JPG or WebP file.'))
+return
+}
+const reader = new FileReader()
+reader.onload = () => {
+const dataUrl = reader.result as string
+if (dataUrl.length > MAX_CERT_DATA_URL_LEN) {
+reject(new Error('File too large — please upload a file under 1.4 MB.'))
+return
+}
+resolve(dataUrl)
+}
+reader.onerror = () => reject(new Error('Could not read this file.'))
+reader.readAsDataURL(file)
+})
+}
+
+interface CertRecord {
+id: string; type: string; fileName: string | null; destinationCountry: string | null;
+issuedBy: string | null; expiresAt: string | null; status: string; reviewNotes: string | null; createdAt: string;
+}
+
+function CertificatePanel({ product, onClose }: { product: Product; onClose: () => void }) {
+const [certs, setCerts] = useState<CertRecord[]>([])
+const [loadingCerts, setLoadingCerts] = useState(true)
+const [certType, setCertType] = useState('EXPORT_PERMIT')
+const [certFile, setCertFile] = useState<{ data: string; name: string } | null>(null)
+const [certDest, setCertDest] = useState('')
+const [certIssuer, setCertIssuer] = useState('')
+const [certExpiry, setCertExpiry] = useState('')
+const [certBusy, setCertBusy] = useState(false)
+const [certError, setCertError] = useState('')
+const [certOk, setCertOk] = useState('')
+
+async function loadCerts() {
+setLoadingCerts(true)
+try {
+const data = await fetch('/api/dashboard/certificates?productId=' + product.id).then(r => r.json())
+setCerts(data.certificates ?? [])
+} catch {
+setCerts([])
+} finally {
+setLoadingCerts(false)
+}
+}
+useEffect(() => { loadCerts() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+async function onCertFile(e: React.ChangeEvent<HTMLInputElement>) {
+const file = e.target.files?.[0]
+e.target.value = ''
+if (!file) return
+setCertError('')
+try {
+const data = await readFileAsDataUrl(file)
+setCertFile({ data, name: file.name })
+} catch (err) {
+setCertError(err instanceof Error ? err.message : 'Could not read this file.')
+}
+}
+
+async function submitCert(e: React.FormEvent) {
+e.preventDefault()
+setCertError('')
+setCertOk('')
+if (!certFile) { setCertError('Please choose a document to upload.'); return }
+setCertBusy(true)
+try {
+const res = await fetch('/api/dashboard/certificates', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+productId: product.id,
+type: certType,
+documentData: certFile.data,
+fileName: certFile.name,
+destinationCountry: certDest || null,
+issuedBy: certIssuer || null,
+expiresAt: certExpiry || null,
+}),
+})
+const data = await res.json()
+if (!res.ok) { setCertError(data.error ?? 'Upload failed'); return }
+setCertOk('Certificate submitted for review.')
+setCertFile(null); setCertDest(''); setCertIssuer(''); setCertExpiry('')
+await loadCerts()
+} catch {
+setCertError('Network error')
+} finally {
+setCertBusy(false)
+}
+}
+
+const statusColor = (s: string) => s === 'VERIFIED' ? 'var(--green)' : s === 'REJECTED' ? 'var(--red)' : 'var(--accent)'
+
+return (
+<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(2px)', zIndex: 1100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
+<div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '28px', maxWidth: '560px', width: '100%' }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+<h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>Certificates</h2>
+<button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 20, cursor: 'pointer' }}>&times;</button>
+</div>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: 16 }}>{product.name}</div>
+<div style={{ fontSize: '12px', lineHeight: 1.6, color: 'var(--muted)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', marginBottom: 18 }}>
+This listing contains a regulated material, so it cannot go live until a valid permit is uploaded and verified by our team. Export permits are typically valid 6 months — we track expiry and will ask for renewal. See the <a href="/legal/seller-rules" target="_blank" style={{ color: 'var(--accent)' }}>Seller Rules</a>.
+</div>
+
+{loadingCerts ? (
+<div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Loading documents...</div>
+) : certs.length > 0 ? (
+<div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+{certs.map(c => (
+<div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
+<div style={{ flex: 1 }}>
+<div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{CERT_TYPES.find(t => t.value === c.type)?.label ?? c.type}</div>
+<div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+{c.fileName ?? 'document'}{c.destinationCountry ? ' · dest ' + c.destinationCountry : ''}{c.expiresAt ? ' · expires ' + new Date(c.expiresAt).toLocaleDateString() : ''}
+</div>
+{c.reviewNotes && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 2 }}>{c.reviewNotes}</div>}
+</div>
+<span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, color: statusColor(c.status) }}>{c.status}</span>
+</div>
+))}
+</div>
+) : (
+<div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 18 }}>No documents uploaded yet.</div>
+)}
+
+<form onSubmit={submitCert} style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+<div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Upload a document</div>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+<div>
+<label style={labelStyle}>Document type</label>
+<select style={{ ...inputStyle, cursor: 'pointer' }} value={certType} onChange={e => setCertType(e.target.value)}>
+{CERT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+</select>
+</div>
+<div>
+<label style={labelStyle}>Destination country (if import permit)</label>
+<select style={{ ...inputStyle, cursor: 'pointer' }} value={certDest} onChange={e => setCertDest(e.target.value)}>
+<option value="">Not destination-specific</option>
+{COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+</select>
+</div>
+</div>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+<div>
+<label style={labelStyle}>Issuing authority</label>
+<input style={inputStyle} value={certIssuer} onChange={e => setCertIssuer(e.target.value)} placeholder="e.g. UK APHA, US FWS" maxLength={200} />
+</div>
+<div>
+<label style={labelStyle}>Expiry date</label>
+<input style={inputStyle} type="date" value={certExpiry} onChange={e => setCertExpiry(e.target.value)} />
+</div>
+</div>
+<div>
+<label style={labelStyle}>Document (PDF or photo, max 1.4 MB)</label>
+<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" onChange={onCertFile} style={{ fontSize: 13, color: 'var(--muted)' }} />
+{certFile && <div style={{ fontSize: 12, color: 'var(--green)', marginTop: 4 }}>Ready: {certFile.name}</div>}
+</div>
+{certError && <div style={{ fontSize: 12, color: 'var(--red)' }}>{certError}</div>}
+{certOk && <div style={{ fontSize: 12, color: 'var(--green)' }}>{certOk}</div>}
+<button type="submit" disabled={certBusy} style={{
+padding: '10px 20px', background: certBusy ? 'var(--border)' : 'var(--accent)', color: '#fff',
+border: 'none', borderRadius: 6, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14,
+cursor: certBusy ? 'not-allowed' : 'pointer', alignSelf: 'flex-start',
+}}>{certBusy ? 'Uploading...' : 'Submit for review'}</button>
+</form>
+</div>
+</div>
+)
+}
+
 export default function DashboardProductsPage() {
 const { tier, theme } = useSellerTier()
 const isEnterprise = tier === 'ENTERPRISE'
@@ -323,6 +507,7 @@ const [saving, setSaving] = useState(false)
 const [error, setError] = useState('')
 const [sellerCurrency, setSellerCurrency] = useState('GBP')
 const [categoryStats, setCategoryStats] = useState<{ count: number; avgPrice: number; medianPrice: number } | null>(null)
+const [certProduct, setCertProduct] = useState<Product | null>(null)
 
 useEffect(() => {
 loadProducts()
@@ -761,6 +946,8 @@ cursor: saving || !rulesAccepted ? 'not-allowed' : 'pointer',
 </div>
 )}
 
+{certProduct && <CertificatePanel product={certProduct} onClose={() => { setCertProduct(null); loadProducts() }} />}
+
 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
 {products.map(p => (
 <div key={p.id} style={tierCardStyle(theme, {
@@ -788,6 +975,12 @@ background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F
 padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em',
 background: 'rgba(255,213,74,0.15)', color: '#FFD54A',
 }}>Certificate Required</span>
+)}
+{p.requiresCertificate && (
+<button onClick={() => setCertProduct(p)} title="Upload or check permit documents for this listing" style={{
+padding: '7px 14px', background: 'rgba(255,213,74,0.1)', border: '1px solid rgba(255,213,74,0.4)', borderRadius: '6px',
+color: '#FFD54A', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+}}>Certificates</button>
 )}
 <span style={{
 padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em',
