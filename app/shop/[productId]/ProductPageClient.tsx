@@ -221,6 +221,13 @@ export default function ProductPageClient() {
                 {product.percentOff}% OFF
               </div>
             )}
+            {currentStock === 0 && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ background: '#000', color: '#fff', fontSize: '15px', fontWeight: 800, padding: '8px 22px', borderRadius: '5px', letterSpacing: '2px', border: '1px solid #fff' }}>
+                  SOLD OUT
+                </span>
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px' }}>
             {images.map((img, i) => (
