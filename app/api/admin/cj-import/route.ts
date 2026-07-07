@@ -125,3 +125,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }
+
+
+// One-off admin utility: reassign a CJ-imported product to a different
+// (already-resolved) internal seller. Used to correct a product that was
+// imported under the shared "CJ Dropshippers" fallback before its real CJ
+// supplier name was resolved into its own seller record.
+export async function PATCH(request: NextRequest) {
+  try {
+    const { productId, sellerId } = (await request.json()) as { productId: string; sellerId: string }
+    if (!productId || !sellerId) {
+      return NextResponse.json({ ok: false, error: 'productId and sellerId are required' }, { status: 400 })
+    }
+    const seller = await prisma.seller.findUnique({ where: { id: sellerId } })
+    if (!seller) {
+      return NextResponse.json({ ok: false, error: 'seller not found' }, { status: 404 })
+    }
+    const updated = await prisma.product.update({ where: { id: productId }, data: { sellerId } })
+    return NextResponse.json({ ok: true, productId: updated.id, sellerId: updated.sellerId })
+  } catch (err) {
+    return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 })
+  }
+}
