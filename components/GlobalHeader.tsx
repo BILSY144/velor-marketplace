@@ -6,25 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
 import { useCart } from '@/lib/cart'
-
-const CATEGORIES = [
-  'Electronics',
-  'Fashion',
-  'Home & Garden',
-  'Beauty & Health',
-  'Sports & Outdoors',
-  'Jewellery & Watches',
-  'Toys & Games',
-  'Baby & Kids',
-  'Pet Supplies',
-  'Automotive',
-  'Books & Education',
-  'Art & Crafts',
-  'Office & Stationery',
-  'Travel & Luggage',
-  'Food & Grocery',
-  'Fitness & Gym',
-]
+import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
 
 export default function GlobalHeader() {
   const { data: session } = useSession()
