@@ -69,31 +69,54 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
   const elements = useElements()
   const [paying, setPaying] = useState(false)
   const [err, setErr] = useState('')
+  const [elementsReady, setElementsReady] = useState(false)
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault()
-    if (!stripe || !elements) return
+    // Guard against the Payment Element iframe not being fully mounted yet --
+    // useElements() returns a non-null object as soon as <Elements> renders,
+    // which is BEFORE the child <PaymentElement> has finished mounting. Without
+    // this ready check, clicking Pay in that gap makes stripe.confirmPayment()
+    // throw "elements should have a mounted Payment Element", which (with no
+    // try/catch below) left "paying" stuck true forever -- the reported
+    // Processing... hang.
+    if (!stripe || !elements || !elementsReady) return
     setPaying(true)
     setErr('')
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: window.location.origin + '/checkout/confirmation' },
-    })
-    if (error) setErr(error.message ?? 'Payment failed')
-    setPaying(false)
+    try {
+      // Validates and finalizes the Payment Element's current state before
+      // confirming -- required by Stripe so integration errors come back as a
+      // normal { error } result instead of a thrown exception.
+      const { error: submitError } = await elements.submit()
+      if (submitError) {
+        setErr(submitError.message ?? 'Payment failed')
+        return
+      }
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: window.location.origin + '/checkout/confirmation' },
+      })
+      if (error) setErr(error.message ?? 'Payment failed')
+    } catch (e) {
+      // Defense in depth: never leave the button stuck on "Processing..." even
+      // if Stripe throws instead of resolving with an error.
+      setErr(e instanceof Error ? e.message : 'Payment failed. Please try again.')
+    } finally {
+      setPaying(false)
+    }
   }
 
   const fmt = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(val)
 
   return (
     <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <PaymentElement />
+      <PaymentElement onReady={() => setElementsReady(true)} />
       {err && (
         <div style={{ padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
           {err}
         </div>
       )}
-      <button type="submit" disabled={!stripe || paying} style={{
+      <button type="submit" disabled={!stripe || !elementsReady || paying} style={{
         padding: '14px', background: paying ? 'var(--border)' : 'var(--accent)',
         color: '#fff', border: 'none', borderRadius: '8px',
         fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '16px',
