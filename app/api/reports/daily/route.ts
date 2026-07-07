@@ -140,7 +140,7 @@ function buildDailyReportHtml(d: {
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px">
       ${funnelBar('Prospects Discovered', d.totalProspects, d.totalProspects, '#6366f1')}
       ${funnelBar('Contacted via Outreach', d.totalContacted, d.totalProspects, '#3b82f6')}
-      ${funnelBar('Responded / Engaged', d.totalResponded, d.totalProspects, '#10b981')}
+      ${funnelBar('Responded / Engaged (not tracked yet)', d.totalResponded, d.totalProspects, '#10b981')}
       ${funnelBar('Applications Submitted', d.totalApplications, d.totalProspects, '#f59e0b')}
       ${funnelBar('Approved as Sellers', d.totalApproved, d.totalApplications || 1, '#10b981')}
     </div>`;
@@ -338,8 +338,8 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       // All-time funnel counts
       prisma.sellerProspect.count(),
-      prisma.sellerProspect.count({ where: { status: { in: ['CONTACTED', 'RESPONDED', 'CONVERTED'] } } }),
-      prisma.sellerProspect.count({ where: { status: { in: ['RESPONDED', 'CONVERTED'] } } }),
+      prisma.sellerProspect.count({ where: { outreachLogs: { some: {} } } }), // real signal: has received at least one outreach email (status enum values below were never actually written by any code path)
+      prisma.sellerProspect.count({ where: { status: { in: ['RESPONDED', 'CONVERTED'] } } }), // NOTE: no code path ever sets these values -- there is no reply-tracking system yet, so this is always 0. Labelled as 'not tracked' in the email rather than faked.
       prisma.sellerApplication.count(),
       prisma.sellerApplication.count({ where: { status: 'APPROVED' } }),
       prisma.sellerApplication.count({ where: { status: 'REJECTED' } }),
@@ -369,7 +369,7 @@ export async function GET(req: NextRequest) {
         select: { id: true, businessName: true, contactEmail: true, contactName: true, status: true, country: true, productCategories: true, createdAt: true },
       }),
       prisma.sellerProspect.findMany({
-        where: { status: 'DISCOVERED' },
+        where: { status: 'prospected', outreachLogs: { none: {} } }, // real 'never contacted' signal, matching the exact predicate outreach-auto uses to pick who to email next ('DISCOVERED' status is never actually written anywhere)
         orderBy: { score: 'desc' },
         take: 20,
         select: { id: true, name: true, platform: true, storeUrl: true, email: true, category: true, score: true, status: true, sellerType: true, country: true, createdAt: true },
