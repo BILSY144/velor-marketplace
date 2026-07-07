@@ -19,6 +19,7 @@ async function fulfillViaCjIfInternal(orderId: string, sellerId: string, rawAddr
   try {
     const address = (typeof rawAddress === 'string' ? JSON.parse(rawAddress) : rawAddress) as {
       name?: string
+      phone?: string
       line1?: string
       city?: string
       state?: string
@@ -62,7 +63,7 @@ async function fulfillViaCjIfInternal(orderId: string, sellerId: string, rawAddr
       orderNumber: orderId,
       shippingAddress: {
         customerName: address.name || orderWithItems.customerName || orderWithItems.customerEmail,
-        phone: '',
+        phone: address.phone || '',
         email: orderWithItems.customerEmail,
         country: countryNameFromCode(address.country),
         countryCode: address.country,
