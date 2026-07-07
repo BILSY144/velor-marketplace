@@ -306,6 +306,7 @@ export default function CheckoutPage() {
             phone: '',
             address: [address.line1, address.line2].filter(Boolean).join(', '),
             city: address.city,
+            state: address.state,
             postcode: address.postalCode,
             country: address.country,
           },
