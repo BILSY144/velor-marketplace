@@ -497,7 +497,7 @@ export default function CheckoutPage() {
                 &larr; Back to shipping
               </button>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '20px' }}>Payment</h2>
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#FF6B00', colorBackground: '#0D0D0D', colorText: '#FFFFFF', colorDanger: '#FF1744', fontFamily: 'Inter, sans-serif', borderRadius: '6px' } } }}>
                 <CheckoutForm clientSecret={clientSecret} total={confirmed ? confirmed.total : total} currency={confirmed ? confirmed.currency : currency} onSuccess={() => {}} />
               </Elements>
             </div>
