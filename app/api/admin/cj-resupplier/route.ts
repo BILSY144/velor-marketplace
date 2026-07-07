@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     const candidates = await prisma.product.findMany({
       where: { cjSourced: true, cjSupplierName: null, cjProductId: { not: null } },
       take: limit,
-      select: { id: true, cjProductId: true, name: true, sellerId: true },
+      select: { id: true, cjProductId: true, title: true, sellerId: true },
     })
 
     const foundReal: Array<{ productId: string; name: string; supplierName: string; sellerId: string }> = []
@@ -90,10 +90,10 @@ export async function POST(request: NextRequest) {
             where: { id: p.id },
             data: { sellerId: seller.id, cjSupplierName: supplierName },
           })
-          foundReal.push({ productId: p.id, name: p.name, supplierName, sellerId: seller.id })
+          foundReal.push({ productId: p.id, name: p.title, supplierName, sellerId: seller.id })
         } else {
           await prisma.product.update({ where: { id: p.id }, data: { cjSupplierName: '' } })
-          confirmedNoSupplier.push({ productId: p.id, name: p.name })
+          confirmedNoSupplier.push({ productId: p.id, name: p.title })
         }
       } catch (err) {
         errors.push({ productId: p.id, error: err instanceof Error ? err.message : String(err) })
