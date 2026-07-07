@@ -16,6 +16,7 @@ interface Product {
   seller: { storeName: string }
   discountedPrice: number | null
   percentOff: number | null
+  isHandmade: boolean
 }
 
 export default function MarketplaceGrid() {
@@ -86,6 +87,7 @@ const filtered = useMemo(() => {
         .mp-card-img img { width: 100%; height: 100%; object-fit: cover; }
         .mp-card-img-placeholder { color: #333; font-size: 40px; }
         .mp-card-badge { position: absolute; top: 10px; left: 10px; background: #FF6B00; color: #000; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.3px; }
+        .mp-card-badge-handmade { position: absolute; bottom: 10px; left: 10px; background: #1A1A1A; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.3px; border: 1px solid #FF6B00; }
         .mp-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .mp-card-cat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #FF6B00; }
         .mp-card-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
@@ -167,6 +169,7 @@ const filtered = useMemo(() => {
                     <span className="mp-card-img-placeholder">*</span>
                   )}
                   {onSale && <span className="mp-card-badge">{product.percentOff}% OFF</span>}
+                  {product.isHandmade && <span className="mp-card-badge-handmade">HANDMADE</span>}
                 </div>
                 <div className="mp-card-body">
                   <div className="mp-card-cat">{product.category}</div>
