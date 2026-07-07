@@ -160,6 +160,7 @@ id: string; name: string; description: string; price: number; stock: number;
 category: string; images: string[]; status: string;
 weightGrams: number | null; lengthCm: number | null; widthCm: number | null; heightCm: number | null;
 hsCode: string | null; originCountry: string | null;
+isHandmade: boolean; makerStory: string | null;
 }
 
 const MIN_IMAGES = 3
@@ -171,6 +172,7 @@ const emptyForm = {
 name: '', description: '', price: '', stock: '', category: '',
 images: ['', '', '', '', '', '', '', ''],
 weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '', currency: '',
+isHandmade: '', makerStory: '',
 }
 
 const inputStyle = {
@@ -361,6 +363,7 @@ lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
 widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 currency: sellerCurrency,
 })
 setError('')
@@ -382,6 +385,7 @@ lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
 widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 currency: sellerCurrency,
 })
 setError('')
@@ -443,6 +447,8 @@ widthCm: form.widthCm ? parseFloat(form.widthCm) : null,
 heightCm: form.heightCm ? parseFloat(form.heightCm) : null,
 hsCode: form.hsCode || null,
 originCountry: form.originCountry || null,
+isHandmade: form.isHandmade === 'true',
+makerStory: form.makerStory.trim() || null,
 }
 const url = editProduct ? '/api/dashboard/products?id=' + editProduct.id : '/api/dashboard/products'
 const method = editProduct ? 'PATCH' : 'POST'
@@ -556,6 +562,28 @@ Buyers worldwide see this converted live to their currency and reconfirmed at ch
 Matches Velor&apos;s live categories — your listing goes straight to the right category page.
 </div>
 </div>
+</div>
+<div style={{ marginTop: '16px' }}>
+<label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
+<input
+type="checkbox"
+checked={form.isHandmade === 'true'}
+onChange={(e) => set('isHandmade', e.target.checked ? 'true' : '')}
+/>
+This is a handmade or artisan-made product
+</label>
+{form.isHandmade === 'true' && (
+<div style={{ marginTop: '10px' }}>
+<label style={labelStyle}>Maker &amp; origin story (optional)</label>
+<textarea
+style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' as const }}
+value={form.makerStory}
+onChange={(e) => set('makerStory', e.target.value)}
+placeholder="Who made this, where, and what tradition does it come from? Shown to buyers on the product page."
+maxLength={2000}
+/>
+</div>
+)}
 </div>
 <div>
 <label style={labelStyle}>Product Photos</label>
