@@ -5,20 +5,20 @@ const FAQS = [
   {
     category: 'Buying',
     items: [
-      { q: 'How do I place an order?', a: 'Browse the shop, add items to your cart, and proceed to checkout. We accept major cards and support 8 currencies.' },
+      { q: 'How do I place an order?', a: 'Browse the shop, add items to your cart, and proceed to checkout. We accept major cards and display prices in 20 currencies.' },
       { q: 'What payment methods are accepted?', a: 'We accept Visa, Mastercard, American Express, and other major cards via Stripe. All payments are processed securely.' },
       { q: 'Can I track my order?', a: 'Yes. Once your order ships, the seller will update the tracking details. You can view your orders from your account page.' },
-      { q: 'What is your returns policy?', a: 'Most items can be returned within 14 days of receipt. Contact the seller directly via the order page to initiate a return.' },
+      { q: 'What is your returns policy?', a: 'Most items can be returned within 15 days of confirmed delivery. Contact the seller directly via the order page to initiate a return.' },
       { q: 'My item arrived damaged — what do I do?', a: 'Open a dispute from your order page within 7 days. Our team will review the case and ensure a fair resolution.' },
     ],
   },
   {
     category: 'Selling',
     items: [
-      { q: 'How do I start selling on Velor?', a: 'Apply via the "Sell on Velor" page. Once approved, you can list products and receive payouts directly via Stripe Connect.' },
-      { q: 'What is the platform fee?', a: 'Velor charges a 15% platform fee on each sale. This covers payment processing, buyer protection, and platform costs.' },
-      { q: 'How do payouts work?', a: 'Payments go directly to your Stripe Connect account, minus the platform fee. Payouts follow your Stripe account schedule.' },
-      { q: 'Can I sell internationally?', a: 'Yes. Velor supports buyers in 25+ countries. Your listings are visible globally by default.' },
+      { q: 'How do I start selling on Velor?', a: 'Apply via the "Sell on Velor" page. Once approved, you can list products and receive payouts via Stripe Connect — or via Payoneer if Stripe does not support payouts in your country.' },
+      { q: 'What is the platform fee?', a: 'Commission depends on your tier: 15% on the free Starter tier, 8% on Pro, and 5% on Enterprise. This covers payment processing, buyer protection, and platform costs.' },
+      { q: 'How do payouts work?', a: 'Funds are held safely until your buyer confirms delivery, then released to your Stripe Connect account (or Payoneer where Stripe is unavailable), minus commission — within 15 days for new sellers, dropping to 72 hours once you build a trusted delivery record.' },
+      { q: 'Can I sell internationally?', a: 'Yes. Velor is a global marketplace — your listings are visible to buyers worldwide by default, with prices converted live into the buyer’s currency.' },
       { q: 'How do I get my products approved?', a: 'Submit your listing and our team will review it within 1–2 business days. You will receive an email once approved or rejected.' },
     ],
   },
