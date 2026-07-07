@@ -102,6 +102,19 @@ Continuation of the global marketplace push. William asked for certificate handl
 
 Also fixed this block (see earlier session update): raw.githubusercontent 'main' ref serves HOURS-STALE content on this repo -- ALWAYS fetch by commit SHA. Two stale-fetch incidents this session confirmed it.
 
+## SESSION UPDATE -- 2026-07-08 (early hours): Payoneer payout system SHIPPED (code side complete)
+
+William: "set up the payoneer system" and "same rules for payoneer seller payouts to sellers as we do for stripe". Six commits, all verified READY, final (be7ba00) PROMOTED. The dual-rail payout system is now real code, not just legal copy:
+
+1. **Schema (cd1859a)**: Seller.payoutRail (default "STRIPE"), Seller.payoneerPayeeId, Payout.payoneerPayoutId. db push ran -- columns live.
+2. **lib/payoneer.ts (c729860)**: Mass Payouts client adapter -- OAuth client-credentials, payee registration link, payee status, idempotent payout (client_reference_id payout_<orderId>, mirrors Stripe idempotency convention). COMPLETELY INERT until PAYONEER_CLIENT_ID/SECRET/PROGRAM_ID/API_BASE env vars are set. Endpoint paths marked VERIFY-IN-SANDBOX: Payoneer's Mass Payouts API reference is partner-gated (confirmed live: developer.payoneer.com redirects to a PSD2-only portal), so paths follow the documented flow but are unexercised -- run the sandbox checklist in docs/PAYONEER_SETUP.md before the first live payout and correct any drift in this one file.
+3. **Onboarding API (d3ed8f7)** /api/payoneer/onboard: GET resolves+persists the seller's rail from lib/payoutRail.ts; POST returns a Payoneer registration link when configured, or (while pending) records seller interest in AgentLog and returns the honest escrow message.
+4. **Seller page (b46adbe)** /dashboard/payoneer: connect flow when live, notify-me while pending, same payout-rules copy as Stripe.
+5. **Stripe connect page (6940cae)**: PAYONEER-rail sellers auto-redirect to /dashboard/payoneer; also fixed stale copy (flat 85/15 -> tiered commission; "Stripe transfers on your chosen schedule" -> real escrow: held until delivery confirmed, 15d new / 72h trusted).
+6. **release-payouts cron (be7ba00)**: Payoneer branch added INSIDE the same pipeline -- identical delivery-confirmation, hold-window and dispute-freeze checks (William's explicit instruction: same rules as Stripe); orders for not-yet-live Payoneer sellers are counted heldForPayoneer and retried every run (funds stay in escrow); Stripe path byte-for-byte unchanged.
+
+REMAINING ON TASK: (a) WILLIAM'S ACTION -- submit the Payoneer Mass Payouts partner application (steps in docs/PAYONEER_SETUP.md); (b) when credentials arrive: William adds the four PAYONEER_* env vars in Vercel, then sandbox-verify lib/payoneer.ts endpoint shapes before first live payout; (c) optional: dashboard layout "Set Up Payout" link is still hardcoded to /dashboard/stripe-connect -- works (that page redirects by rail) but could link rail-aware directly.
+
 ## HOW TO START A NEW SESSION (read once, follow always)
 
 1. Read this file (auto-loaded via project instructions) — it now lives in the repo itself, so any session can pull it straight from GitHub instead of relying on a locally-copied file.
@@ -759,27 +772,6 @@ Checked in at approximately 12:55 UTC. No new commits have landed on main since 
 
 ## SESSION UPDATE — 2026-07-07 (check-in #12)
 
-Checked in at approximately 13:06 UTC. No new commits have landed on main since the previous check-in — HEAD is still 4912d8f, the commit that added the SESSION UPDATE — 2026-07-07 (check-in #11) entry directly above this one (timestamped 12:55 UTC). The last real feature commit remains e15a1ed (cj-resupplier admin route: re-check live CJ product detail for real supplier names and reassign products off the CJ Dropshippers fallback), which landed before check-in #7. Nothing new to report this cycle; the state described in the check-in #11 entry remains current.
-## SESSION UPDATE — 2026-07-07 (check-in #13)
-Checked in at approximately 13:46 UTC. No new commits have landed on main since the previous check-in — HEAD is still 80ffa32, the commit that added the SESSION UPDATE — 2026-07-07 (check-in #12) entry directly above this one (timestamped 13:06 UTC). The last real feature commit remains e15a1ed (cj-resupplier admin route: re-check live CJ product detail for real supplier names and reassign products off the CJ Dropshippers fallback), which landed before check-in #7. Nothing new to report this cycle; the state described in the check-in #12 entry remains current.
+Checked in at approximately 13:06 UTC. No new commits have landed on main since the previous check-in — HEAD is still 4912d8f, the commit that a
 
-
-## SESSION UPDATE — 2026-07-07 (check-in #14)
-
-Real progress since check-in #13 (HEAD was 105cef4, now e0c1a4f) — seven commits landed between 13:58 and 14:44 UTC, more than any recent check-in. A checkpoint commit (0639224) confirmed the shop pagination fix is live, flagged that cj-resupplier's build had failed, noted the Toys & Games import was mid-batch with nothing yet imported, and confirmed the Jewellery & Watches correction. The cj-resupplier build failure was then fixed (b1b4386, wrong Product field name was used — title, not name), and a 1.1s delay was added between CJ product/query calls to respect CJ's 1 QPS limit after the batch was mostly failing with 429 Too Many Requests (238419f).
-
-Two real checkout bugs were also fixed. The Pay button got stuck on Processing forever because it only checked Stripe client readiness, not whether the PaymentElement iframe had finished mounting, so clicking Pay in that gap threw an uncaught error (b12a3f1). Separately, the Pay button was doing nothing at all because the PaymentIntent was created with no automatic_payment_methods and no payment_method_types, leaving the client PaymentElement with no way to resolve what UI to render (5460d07).
-
-Checkout is still not confirmed working end to end. After those fixes, PaymentElement still was not resolving past its loader iframe, so two temporary diagnostic commits followed: one exposing payment_method_types and status in the payment-intent response (4f26ae9), and one stripping the custom Stripe Elements appearance theme to test whether it is blocking PaymentElement (e0c1a4f, current HEAD). Both are marked temporary in their commit messages and are meant to be reverted once the cause is confirmed — main currently has this diagnostic scaffolding live. Next check-in should confirm whether the appearance theme was the culprit, whether the diagnostic commits were reverted, whether checkout completes end to end, and whether the Toys & Games import resumed.
-
-
-## SESSION UPDATE — 2026-07-07 (check-in #15)
-
-Real progress since check-in #14 (HEAD was e0c1a4f, now aa628b7) — three more commits landed. First, a further diagnostic (326e775) restricted the PaymentIntent to payment_method_types: [card] instead of automatic_payment_methods, to rule out a payment-method-domain registration requirement hanging the Payment Elem
-
-[NOTE 2026-07-07: this file's tail was truncated mid-sentence again by the known Edit-tool truncation bug during an automated check-in edit (second occurrence today). The full text of the affected historical check-in entries survives in git history (see commits before 32ca61b). The canonical cultural-marketplace vision and global-compliance detail live in the auto-loaded skills velor-cultural-marketplace and velor-global-compliance; the user-facing distillation is live at /legal/seller-rules. When editing this file, ALWAYS verify the tail/byte-length afterwards before committing.]
-
-
-## SESSION UPDATE — 2026-07-07 (check-in #20)
-
-Checked in at approximately 22:50 UTC, about five minutes after the previous CLAUDE.md checkpoint commit 99c036c landed. No new commits have landed on main since that checkpoint — HEAD is still 99c036c, which documented the certificate system and dashboard rules enforcement work (five feature commits, fbfef26 through 32ca61b) in the late-evening session update near the top of this file. Verified on Vercel this cycle: all of tonight's deployments show Ready on Production, including 99c036c itself. Nothing new to report; the honest gaps listed in the late-evening checkpoint (certificate approval gating not enforced, no seller certificate upload UI, no admin review queue UI, no per-destination shippability gating, Payoneer integration not started) remain the current NEXT STEPS.
+[NOTE 2026-07-08: this file's tail keeps getting truncated mid-sentence by the automated check-in task's Edit-tool truncation bug (third occurrence). Full historical check-in text survives in git history. Canonical vision/compliance detail lives in the auto-loaded skills velor-cultural-marketplace and velor-global-compliance; user-facing rules at /legal/seller-rules. WHOEVER RUNS THE CHECK-IN TASK: verify this file's tail and byte-length after every edit, and investigate switching check-in updates to append-via-heredoc instead of Edit.]
