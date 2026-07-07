@@ -103,9 +103,25 @@ export default function CountryOriginStrip() {
     // threshold, hit-test the release point directly and navigate from
     // here rather than relying on the (unreliable) native click.
     if (!drag.current.moved) {
-      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-      const code = el?.closest<HTMLElement>('[data-country-code]')?.dataset.countryCode
-      if (code) router.push(`/shop?origin=${code}`)
+      // Don't use document.elementFromPoint here -- the flag buttons are
+      // set to pointer-events: none while isDragging is true, and
+      // setIsDragging(false) above is an async React state update, so the
+      // DOM still has that style applied at this exact synchronous point,
+      // meaning the browser's hit-test would skip the button entirely and
+      // return the track div instead. Do the containment check ourselves
+      // against each button's real bounding rect so it's independent of
+      // that CSS state.
+      const track = trackRef.current
+      const buttons = track?.querySelectorAll<HTMLElement>('[data-country-code]')
+      if (buttons) {
+        for (const btn of buttons) {
+          const r = btn.getBoundingClientRect()
+          if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+            router.push(`/shop?origin=${btn.dataset.countryCode}`)
+            break
+          }
+        }
+      }
     }
   }, [runMomentum, router])
 
