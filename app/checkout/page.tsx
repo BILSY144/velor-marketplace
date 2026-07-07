@@ -145,7 +145,7 @@ export default function CheckoutPage() {
     }
   }
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
-  const [address, setAddress] = useState({ name: '', email: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
+  const [address, setAddress] = useState({ name: '', email: '', phone: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
   const [rates, setRates] = useState<ShippingRate[]>([])
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null)
   const [landedCost, setLandedCost] = useState<LandedCost | null>(null)
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
             firstName: address.name.split(' ')[0] ?? address.name,
             lastName: address.name.split(' ').slice(1).join(' ') ?? '',
             email: address.email,
-            phone: '',
+            phone: address.phone,
             address: [address.line1, address.line2].filter(Boolean).join(', '),
             city: address.city,
             state: address.state,
@@ -380,6 +380,10 @@ export default function CheckoutPage() {
                       <label style={labelStyle}>Email *</label>
                       <input style={inputStyle} type="email" value={address.email} onChange={e => setAddr('email', e.target.value)} required />
                     </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Phone Number *</label>
+                    <input style={inputStyle} type="tel" value={address.phone} onChange={e => setAddr('phone', e.target.value)} placeholder="e.g. 07123456789" required />
                   </div>
                   <div>
                     <label style={labelStyle}>Address Line 1 *</label>
