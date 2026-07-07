@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 interface Product {
   id: string
@@ -59,6 +60,8 @@ function ShopContent() {
   const [wishlistPending, setWishlistPending] = useState<string | null>(null)
 
   const category = searchParams.get('category') || ''
+  const origin = searchParams.get('origin') || ''
+  const originCountry = origin ? WORLD_COUNTRIES.find((c) => c.code === origin.toUpperCase()) : null
   const search = searchParams.get('search') || ''
   const page = parseInt(searchParams.get('page') || '1')
 
@@ -68,6 +71,7 @@ function ShopContent() {
       const params = new URLSearchParams()
       if (category) params.set('category', category)
       if (search) params.set('search', search)
+      if (origin) params.set('origin', origin)
       params.set('page', String(page))
       const res = await fetch(`/api/shop/products?${params}`)
       if (!res.ok) throw new Error('Failed')
@@ -80,7 +84,7 @@ function ShopContent() {
     } finally {
       setLoading(false)
     }
-  }, [category, search, page])
+  }, [category, search, page, origin])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
   useEffect(() => { setSearchInput(search) }, [search])
@@ -141,6 +145,11 @@ function ShopContent() {
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px', color: 'var(--text)' }}>
             {category || 'All Products'}
             {total > 0 && <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>{total} items</span>}
+            {originCountry && (
+              <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>
+                from {originCountry.name} &middot; <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Clear origin filter</Link>
+              </span>
+            )}
           </h1>
           <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
             <input
