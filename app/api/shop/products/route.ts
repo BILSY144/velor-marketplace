@@ -78,6 +78,10 @@ export async function GET(request: Request) {
     const discount = computeListingDiscount(sellerCodes, p.id, p.price)
     return {
       ...p,
+      name: p.title,
+      sellerId: p.seller.id,
+      sellerName: p.seller.storeName,
+      currency: p.seller.currency || 'GBP',
       avgRating: avgRating !== null ? Math.round(avgRating * 10) / 10 : null,
       reviewCount: p._count.reviews,
       discountedPrice: discount?.discountedPriceGBP ?? null,
