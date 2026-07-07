@@ -10,6 +10,7 @@ interface ShippingForm {
   phone: string
   address: string
   city: string
+  state?: string
   postcode: string
   country: string
 }
@@ -90,6 +91,7 @@ function ConfirmationContent() {
           name: buyerName,
           line1: order.shipping.address ?? '',
           city: order.shipping.city ?? '',
+          state: order.shipping.state ?? '',
           postcode: order.shipping.postcode ?? '',
           country: order.shipping.country ?? '',
         },
