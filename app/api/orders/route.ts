@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
-import { createOrder, getOrderDetail, findCommonLogistic } from '@/lib/cj'
+import { createOrder, getOrderDetail, findCommonLogistic, countryNameFromCode } from '@/lib/cj'
 import { sendEmail } from '@/lib/email'
 
 // Places and pays (via CJ account balance) a CJ order for every item in a
@@ -60,15 +60,18 @@ async function fulfillViaCjIfInternal(orderId: string, sellerId: string, rawAddr
 
     const result = await createOrder({
       orderNumber: orderId,
-      shippingCustomerName: address.name || orderWithItems.customerName || orderWithItems.customerEmail,
-      shippingAddress: address.line1,
-      shippingCity: address.city,
-      shippingProvince: address.state,
-      shippingZip: address.postcode,
-      shippingCountryCode: address.country,
-      email: orderWithItems.customerEmail,
+      shippingAddress: {
+        customerName: address.name || orderWithItems.customerName || orderWithItems.customerEmail,
+        phone: '',
+        email: orderWithItems.customerEmail,
+        country: countryNameFromCode(address.country),
+        countryCode: address.country,
+        province: address.state,
+        city: address.city,
+        address: address.line1,
+        zip: address.postcode,
+      },
       logisticName,
-      fromCountryCode: 'CN',
       products: cjItems,
     })
 
