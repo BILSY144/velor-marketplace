@@ -35,6 +35,9 @@ export async function GET(req: NextRequest) {
           user: { select: { name: true, email: true } },
         },
       },
+      certificates: {
+        select: { id: true, type: true, status: true, destinationCountry: true, expiresAt: true },
+      },
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -51,6 +54,34 @@ export async function PATCH(req: NextRequest) {
   const { productId, action, note } = await req.json()
   if (!productId || !['approve', 'reject'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  // Certificate gate: a regulated-material listing can never be approved
+  // until at least one certificate has been VERIFIED by admin review and is
+  // not expired. See /legal/seller-rules section 4 and the
+  // velor-global-compliance research -- default-deny is deliberate.
+  if (action === 'approve') {
+    const target = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { requiresCertificate: true },
+    })
+    if (!target) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (target.requiresCertificate) {
+      const validCert = await prisma.productCertificate.findFirst({
+        where: {
+          productId,
+          status: 'VERIFIED',
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        select: { id: true },
+      })
+      if (!validCert) {
+        return NextResponse.json({
+          error: 'This listing is certificate-gated: it cannot be approved until a valid certificate has been verified in the certificate review queue (/api/admin/certificates).',
+          certificateRequired: true,
+        }, { status: 409 })
+      }
+    }
   }
 
   const product = await prisma.product.update({
@@ -76,16 +107,16 @@ export async function PATCH(req: NextRequest) {
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'support@velorcommerce.store',
       to: sellerEmail,
-      subject: `Your listing has been approved â ${product.title}`,
-      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Your listing is live</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} â your product has been reviewed and approved.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div><div style="font-size:20px;font-weight:700;color:#FF6B00;margin-top:8px;">Â£${Number(product.price).toFixed(2)}</div></div><div style="color:#00E676;font-size:14px;font-weight:600;">Your listing is now visible to buyers on Velor Marketplace.</div></div></div>`,
+      subject: `Your listing has been approved - ${product.title}`,
+      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Your listing is live</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} - your product has been reviewed and approved.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div><div style="font-size:20px;font-weight:700;color:#FF6B00;margin-top:8px;">${Number(product.price).toFixed(2)}</div></div><div style="color:#00E676;font-size:14px;font-weight:600;">Your listing is now visible to buyers on Velor Marketplace.</div></div></div>`,
     })
   } else {
     await sendEmail({
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'support@velorcommerce.store',
       to: sellerEmail,
-      subject: `Update on your listing â ${product.title}`,
-      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Listing requires changes</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} â your listing could not be approved in its current form.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div></div>${note ? `<div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:12px;color:#FF1744;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px;">Reason</div><div style="color:#fff;font-size:14px;line-height:1.6;">${note}</div></div>` : ''}<div style="color:#999;font-size:14px;line-height:1.6;">Please update your listing and resubmit for review. If you have questions, contact support@velorcommerce.store</div></div></div>`,
+      subject: `Update on your listing - ${product.title}`,
+      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Listing requires changes</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} - your listing could not be approved in its current form.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div></div>${note ? `<div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:12px;color:#FF1744;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px;">Reason</div><div style="color:#fff;font-size:14px;line-height:1.6;">${note}</div></div>` : ''}<div style="color:#999;font-size:14px;line-height:1.6;">Please update your listing and resubmit for review. If you have questions, contact support@velorcommerce.store</div></div></div>`,
     })
   }
 
