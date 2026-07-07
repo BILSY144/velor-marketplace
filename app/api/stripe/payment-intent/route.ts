@@ -138,6 +138,12 @@ export async function POST(request: NextRequest) {
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: amountMinorUnits,
       currency: buyerCurrency.toLowerCase(),
+      // Required for the client's <PaymentElement> to actually resolve and render
+      // payment-method UI. Without this, Stripe.js has nothing telling it which
+      // methods to offer and the Payment Element hangs on its internal loader
+      // iframe forever -- the buyer sees a bare 'Pay' button with no card fields
+      // and clicking it does nothing (elements never reports ready).
+      automatic_payment_methods: { enabled: true },
       metadata: {
         items: JSON.stringify(items ?? []),
         subtotalGBP: subtotalGBP.toFixed(2),
