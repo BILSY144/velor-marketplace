@@ -12,7 +12,7 @@ type Product = {
   images?: string[]
   image?: string
   category?: string
-  seller?: { id: string; storeName: string; sellerBadge?: string | null; currency?: string | null }
+  seller?: { id: string; storeName: string; sellerBadge?: string | null; currency?: string | null; country?: string | null }
   reviews?: { rating: number }[]
   _count?: { reviews: number }
 }
@@ -506,7 +506,15 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    
+                    {p.seller?.country && countryFlagUrl(p.seller.country) && (
+                      <div style={{ marginTop: 6 }}>
+                        <img
+                          src={countryFlagUrl(p.seller.country)!}
+                          alt={p.seller.country}
+                          style={{ width: 16, height: 12, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </Link>
               )
