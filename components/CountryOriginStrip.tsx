@@ -98,9 +98,13 @@ export default function CountryOriginStrip() {
 
   useEffect(() => stopMomentum, [stopMomentum])
 
-  const handleFlagClick = (code: string) => {
-    if (drag.current.moved) return
-    router.push(`/shop?origin=${code}`)
+  const handleFlagClick = () => {
+    // Takes buyers to the full, unfiltered product catalogue rather than
+    // pre-filtering by origin country -- most origin values are not yet
+    // populated on live listings, so an origin filter here would silently
+    // show "no products found" for the vast majority of flags. Buyers can
+    // use the search bar on /shop to find what they're after by keyword.
+    router.push('/shop')
   }
 
   return (
@@ -149,8 +153,8 @@ export default function CountryOriginStrip() {
             key={c.code}
             type="button"
             title={c.name}
-            aria-label={`Shop products from ${c.name}`}
-            onClick={() => handleFlagClick(c.code)}
+            aria-label={`Shop all products (${c.name} flag)`}
+            onClick={() => handleFlagClick()}
             style={{
               flexShrink: 0,
               width: '28px',
