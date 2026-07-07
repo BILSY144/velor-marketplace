@@ -161,6 +161,7 @@ category: string; images: string[]; status: string;
 weightGrams: number | null; lengthCm: number | null; widthCm: number | null; heightCm: number | null;
 hsCode: string | null; originCountry: string | null;
 isHandmade: boolean; makerStory: string | null;
+materials: string | null; requiresCertificate: boolean;
 }
 
 const MIN_IMAGES = 3
@@ -172,7 +173,7 @@ const emptyForm = {
 name: '', description: '', price: '', stock: '', category: '',
 images: ['', '', '', '', '', '', '', ''],
 weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '', currency: '',
-isHandmade: '', makerStory: '',
+isHandmade: '', makerStory: '', materials: '', containsRegulated: '',
 }
 
 const inputStyle = {
@@ -317,6 +318,7 @@ const [loading, setLoading] = useState(true)
 const [showForm, setShowForm] = useState(false)
 const [editProduct, setEditProduct] = useState<Product | null>(null)
 const [form, setForm] = useState(emptyForm)
+const [rulesAccepted, setRulesAccepted] = useState(false)
 const [saving, setSaving] = useState(false)
 const [error, setError] = useState('')
 const [sellerCurrency, setSellerCurrency] = useState('GBP')
@@ -347,6 +349,7 @@ setLoading(false)
 function openNew() {
 setEditProduct(null)
 setForm({ ...emptyForm, currency: sellerCurrency })
+setRulesAccepted(false)
 setError('')
 setShowForm(true)
 }
@@ -364,8 +367,10 @@ widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
+materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 currency: sellerCurrency,
 })
+setRulesAccepted(false)
 setError('')
 setShowForm(true)
 }
@@ -386,8 +391,10 @@ widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
+materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 currency: sellerCurrency,
 })
+setRulesAccepted(false)
 setError('')
 setShowForm(true)
 }
@@ -434,6 +441,10 @@ if (validImages.length < MIN_IMAGES) {
 setError(`Please add at least ${MIN_IMAGES} product images (you have ${validImages.length}).`)
 return
 }
+if (!rulesAccepted) {
+setError('Please confirm this listing complies with the Seller Rules and Product Compliance Policy.')
+return
+}
 setSaving(true)
 try {
 const payload = {
@@ -449,6 +460,9 @@ hsCode: form.hsCode || null,
 originCountry: form.originCountry || null,
 isHandmade: form.isHandmade === 'true',
 makerStory: form.makerStory.trim() || null,
+materials: form.materials.trim() || null,
+containsRegulatedMaterial: form.containsRegulated === 'true',
+rulesAccepted: rulesAccepted,
 }
 const url = editProduct ? '/api/dashboard/products?id=' + editProduct.id : '/api/dashboard/products'
 const method = editProduct ? 'PATCH' : 'POST'
@@ -585,6 +599,35 @@ maxLength={2000}
 </div>
 )}
 </div>
+
+{/* Materials & regulated-material declaration — see /legal/seller-rules */}
+<div>
+<label style={labelStyle}>Materials</label>
+<input
+style={inputStyle}
+value={form.materials}
+onChange={e => set('materials', e.target.value)}
+placeholder="e.g. brass, cotton, sheesham wood, glass beads"
+maxLength={300}
+/>
+<div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+Listing what this product is made from builds buyer trust and is used for customs and compliance screening.
+</div>
+<label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)', marginTop: '12px' }}>
+<input
+type="checkbox"
+checked={form.containsRegulated === 'true'}
+onChange={(e) => set('containsRegulated', e.target.checked ? 'true' : '')}
+style={{ marginTop: '2px' }}
+/>
+<span>This product contains a regulated material (wildlife or plant material such as exotic leather, coral, feathers, protected wood, or similar)</span>
+</label>
+{form.containsRegulated === 'true' && (
+<div style={{ marginTop: '10px', padding: '12px 14px', background: 'rgba(255,107,0,0.08)', border: '1px solid var(--accent)', borderRadius: '8px', fontSize: '12px', lineHeight: 1.6, color: 'var(--muted)' }}>
+Regulated materials need valid permits (for example CITES export permits) before this listing can go live. After saving, upload your permit documents from the product list — the listing stays in review until our team verifies them. See the <a href="/legal/seller-rules" target="_blank" style={{ color: 'var(--accent)' }}>Seller Rules</a> for details. Declaring honestly here protects your shipments from customs seizure.
+</div>
+)}
+</div>
 <div>
 <label style={labelStyle}>Product Photos</label>
 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -684,6 +727,20 @@ Recommended: enter your product&apos;s HS code to see duty rate guidance for int
 {error}
 </div>
 )}
+
+{/* Seller Rules acknowledgment — required on every save, enforced server-side too */}
+<label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>
+<input
+type="checkbox"
+checked={rulesAccepted}
+onChange={(e) => setRulesAccepted(e.target.checked)}
+style={{ marginTop: '2px' }}
+/>
+<span>
+I confirm this listing is accurate and complies with the <a href="/legal/seller-rules" target="_blank" style={{ color: 'var(--accent)' }}>Seller Rules and Product Compliance Policy</a>, including the prohibited items and regulated materials rules.
+</span>
+</label>
+
 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
 <button type="button" onClick={() => setShowForm(false)} style={{
 padding: '10px 20px', background: 'var(--bg)', color: 'var(--text)',
@@ -691,10 +748,10 @@ border: '1px solid var(--border)', borderRadius: '6px', fontFamily: 'var(--font-
 }}>
 Cancel
 </button>
-<button type="submit" disabled={saving} style={{
-padding: '10px 20px', background: saving ? 'var(--border)' : accentColor, color: isElevated ? '#000' : '#fff',
+<button type="submit" disabled={saving || !rulesAccepted} style={{
+padding: '10px 20px', background: saving || !rulesAccepted ? 'var(--border)' : accentColor, color: isElevated ? '#000' : '#fff',
 border: 'none', borderRadius: '6px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '14px',
-cursor: saving ? 'not-allowed' : 'pointer',
+cursor: saving || !rulesAccepted ? 'not-allowed' : 'pointer',
 }}>
 {saving ? 'Saving...' : editProduct ? 'Save Changes' : 'Create Product'}
 </button>
@@ -726,6 +783,12 @@ background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F
 {p.weightGrams ? ' ' + p.weightGrams + 'g' : ' No weight'}
 </div>
 </div>
+{p.requiresCertificate && (
+<span style={{
+padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+background: 'rgba(255,213,74,0.15)', color: '#FFD54A',
+}}>Certificate Required</span>
+)}
 <span style={{
 padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em',
 background: p.status === 'APPROVED' ? 'rgba(0,230,118,0.15)' : 'rgba(255,107,0,0.15)',
