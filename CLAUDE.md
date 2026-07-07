@@ -734,3 +734,62 @@ The most important fix in this batch was a real, live-breaking bug: /api/orders 
 The rest of the batch satisfies CJ's requirement for a buyer phone number, which CJ rejects orders without. A required phone field was added to the checkout shipping form (33310f1), passed through to /api/orders (9718225), and threaded into the actual CJ order placement call (7207bca). A country-code dial dropdown was added to the phone field (9ff06ca) and then expanded to the full global list of 248 countries, leaving the separate shipping-destination list unchanged (7a4b413). An admin endpoint was added to manually retry CJ order placement for orders whose auto-fulfillment failed (c293c5a), and the final commit of the batch (db7a2b3, current HEAD) fixed a TS build error where detail could be null in cj-retry-order.
 
 Not yet verified this cycle: whether a live checkout now completes end to end and actually triggers a successful CJ order placement now that both the /api/orders 400 bug and the missing-phone rejection are fixed. The Toys & Games import status noted as unresolved in check-in #15 (flagged mid-batch, nothing imported as of check-in #14) also has not been independently reconfirmed. Both should be checked directly next cycle rather than assumed resolved.
+
+---
+
+# Velor Global Cultural Marketplace — Standing Vision & Requirements
+
+**Add this as a skill/standing instruction whenever working on Velor Marketplace (velorcommerce.store). Trigger on: cultural marketplace, artisan sellers, heritage products, shop the world, global culture, authentic products, seller recruiting for culture, maker story, CITES, fair trade.**
+
+## The Vision
+
+Every other major marketplace (Amazon, eBay, Temu, AliExpress, Shein, and most dropshipping-based platforms including Velor's own CJ-sourced filler listings) sells the same mass-produced catalogue sourced from a handful of manufacturing hubs. Velor's differentiator is becoming the place where a buyer in one country can genuinely discover and buy authentic, culturally distinctive products made by real people in another country — crafts, textiles, food, art, and goods tied to a specific place and tradition — something the other platforms structurally cannot offer because their supply chains are built around generic mass manufacturing, not individual makers and cultural heritage.
+
+This does not mean rejecting sellers with generic/mass-market products — they remain profitable and welcome. It means actively building the infrastructure, recruiting pipeline, and on-site experience needed to make authentic cultural commerce Velor's core differentiator, on top of the normal marketplace business. Generic CJ-dropship filler listings are a temporary stopgap for populating category pages while this real seller base grows, and should be wound down as authentic sellers replace them (see velor-listing-protocol for current CJ rules).
+
+## Legal & Regulatory Requirements (do not skip — these can get shipments seized or expose Velor to liability)
+
+1. **CITES-restricted materials.** Many culturally significant materials are internationally regulated wildlife/plant products requiring export/import permits that individual artisans and small marketplaces essentially never have: ivory, tortoiseshell, coral, certain exotic leathers and skins (reptile, some furs), certain feathers (many protected under the US Migratory Bird Treaty Act and equivalents elsewhere), rosewood and other CITES-listed woods, and some traditional medicine ingredients. CITES covers over 40,000 species. **Screen every new cultural/handicraft listing's stated materials against this list before approval.** If a seller lists a product containing or claiming to contain any CITES-listed material, reject the listing unless the seller can supply valid CITES export AND import permits for the specific destination — in practice, assume "reject" for a marketplace at Velor's stage rather than trying to adjudicate permits.
+2. **Cultural property / antiquities export law.** Genuine antiques, archaeological artifacts, and religious/ceremonial cultural heritage items are frequently illegal to export under national patrimony laws and the UNESCO 1970 Convention, regardless of how the seller acquired them. Velor should only allow **newly made** cultural/artisan goods (crafted specifically for sale), never antiques, artifacts, or items presented as historically/archaeologically significant.
+3. **Standard customs documentation.** Every cross-border shipment needs an accurate customs declaration (contents, declared value, country of origin) and correct HS code — same requirement already built for CJ products (`Product.hsCode`, `Product.originCountry`) should extend to all cultural/artisan listings, not just CJ-sourced ones.
+4. **Food products.** Only shelf-stable items with 6+ months shelf life may be listed (dried spices, coffee, tea, dried fruit/nuts, sealed sauces/condiments, confectionery, preserved goods, alcohol where the destination legally allows it). No fresh, refrigerated, frozen, dairy, meat, or fresh produce — Velor has no cold-chain shipping capability. Destination-country import rules vary significantly (Australia in particular restricts almost any food/plant/animal product) — flag food listings for extra review and destination-country awareness rather than assuming universal shippability.
+5. **Trademark / cultural appropriation risk.** Avoid listings that misappropriate protected indigenous designs, sacred symbols, or trademarked cultural marks without the maker's own legitimate connection to that tradition. The authenticity requirement below (maker story, seller's own cultural/geographic connection to the product) is the main practical safeguard here.
+
+## Payments & Payouts — a real structural gap to plan around
+
+Stripe Connect (which Velor's seller payout system depends on via `Seller.stripeAccountId`) has full marketplace-payout support in roughly 40+ countries, expanding gradually via Stripe Global Payouts/Accounts v2. Many countries with the richest artisan/cultural-craft traditions are **not** in that list or have only partial support. This is a genuine onboarding blocker, not a UI problem to design around superficially.
+
+- Before recruiting sellers from a given country, check whether Stripe Connect supports payouts there.
+- For countries Stripe doesn't cover, the realistic alternative is **Payoneer** (supports 150+ countries, 200+ currencies) as a payout rail — Payoneer is a payout/receiving tool, not a checkout gateway, so buyer-facing checkout stays on Stripe regardless; only the seller payout leg would need to route through Payoneer for unsupported countries. This is a real build item, not yet implemented, and should be scoped before recruiting sellers from Stripe-unsupported regions.
+- Do not promise seller onboarding from a country until payout capability for that country has actually been confirmed.
+
+## Authenticity, Trust & the Novica Model
+
+The most successful precedent for this exact vision is **Novica** (est. 1999, fair-trade artisan marketplace, ~$143.8M sent to artisans, ~40,000 SKUs). Its core mechanic worth adopting directly: **every product is paired with the maker's personal story — photo, biography, and cultural context** — not just a product description. This is what makes "authentic" credible to a buyer rather than just a marketing claim.
+
+Requirements to build toward:
+- Add a **maker/origin story** field to product listings (and/or seller profile) — who made it, where, what tradition it comes from — separate from the generic product description.
+- Add a **materials** field to listings, used both for CITES screening (above) and buyer transparency.
+- Prefer sellers who are individual artisans, family workshops, or cooperatives with a genuine connection to the culture/region represented — not resellers of generic goods relabeled as "cultural."
+- Fair-trade-style principles worth adopting as marketing/vetting signals even without formal certification: fair and consistent compensation to makers, safe working conditions, sustainable/traditional materials and methods where applicable.
+
+## Seller Onboarding — plan for real barriers, not just translation
+
+Research on artisan e-commerce adoption (India, Ethiopia and similar markets) consistently shows: only ~20% of traditional artisans have had any training in digital selling, language barriers are significant, and device/connectivity access is uneven. A standard English-language web application form will systematically exclude much of the exact seller base this vision targets. Practical implications:
+
+- Outreach and application intake should not assume high digital literacy — favor simpler intake channels (WhatsApp-based initial contact, phone/voice follow-up, multi-language application forms) over expecting artisans to self-serve a complex English-only dashboard.
+- Consider partnering with existing artisan cooperatives, fair-trade organizations, or export-promotion bodies in target regions as aggregation points, rather than only recruiting individuals one at a time — this also helps with the CITES/customs compliance burden, since established cooperatives are more likely to already understand export rules for their own region's goods.
+- Localization (translated listings, multi-currency — Velor already has a currency switcher — and eventually multi-language site UI) directly affects both seller and buyer trust; ~70% of buyers prefer support in their native language.
+
+## On-Site Discovery Experience
+
+Standard product-type categories (Home & Garden, Jewellery, etc.) don't surface "this is culturally distinctive" — that needs its own cross-cutting discovery layer:
+- A "Shop the World" / browse-by-country-or-region experience, separate from and layered on top of standard categories.
+- Origin-country flags/badges on product cards (already in progress as Task #213 — this is directly in service of this vision, keep building it).
+- Homepage storytelling section highlighting the cultural-marketplace angle distinctly from the generic catalogue.
+
+## Sequencing note
+
+This is being pursued in parallel with retooling the seller Prospecting and Outreach agents (see velor-agents skill) to actively target authentic cultural/heritage/artisan sellers, rather than sequencing one before the other. Generic CJ category-seeding tasks have been paused while this push is underway (resume only on explicit instruction).
+
+---
