@@ -109,7 +109,7 @@ export default function SellerAgreementGate({ children }: { children: React.Reac
               Velor charges 15% on every completed sale, applied to the total price including VAT. No listing fees or monthly subscription fees.
             </GateRule>
             <GateRule title="Permitted Categories Only">
-              You may list products in any of Velor's current marketplace categories: Electronics, Fashion, Home & Garden, Beauty & Health, Sports & Outdoors, Jewellery & Watches, Toys & Games, Baby & Kids, Pet Supplies, Automotive, Books & Education, Art & Crafts, Office & Stationery, Travel & Luggage, Food & Grocery, and Fitness & Gym. No age-restricted products.
+              You may list products in any of Velor's current marketplace categories: Electronics, Fashion, Home & Garden, Beauty & Health, Sports & Outdoors, Jewellery & Watches, Toys & Games, Baby & Kids, Pet Supplies, Automotive, Books & Education, Art, Crafts & Handmade, Musical Instruments, Office & Stationery, Travel & Luggage, Specialty & Gourmet Foods, and Fitness & Gym. No age-restricted products.
             </GateRule>
             <GateRule title="Prohibited Items — Strict Policy">
               Prohibited: clothing, shoes, supplements, counterfeit goods, products without UK CE/UKCA marking, weapons, adult content, or any item illegal in the UK. Violations result in immediate removal and may cause permanent account suspension.
