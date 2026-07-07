@@ -41,6 +41,8 @@ interface Product {
   reviews: Review[]
   discountedPrice: number | null
   percentOff: number | null
+  isHandmade: boolean
+  makerStory: string | null
 }
 
 import { addToCart as addToSharedCart } from '@/lib/cart'
@@ -361,6 +363,13 @@ export default function ProductPageClient() {
           {product.seller?.storeName && (
             <div style={{ marginTop: '20px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)' }}>
               Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span>
+            </div>
+          )}
+
+          {product.isHandmade && (
+            <div style={{ marginTop: '12px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--accent)', fontSize: '13px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>Handmade / Artisan-made</div>
+              {product.makerStory && <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>{product.makerStory}</p>}
             </div>
           )}
         </div>
