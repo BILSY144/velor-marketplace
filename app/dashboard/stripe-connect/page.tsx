@@ -1,15 +1,34 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
 export default function StripeConnectPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => { fetchStatus(); }, []);
+  useEffect(() => { init(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function init() {
+    setLoading(true);
+    try {
+      // Sellers in countries Stripe does not support are paid via Payoneer
+      // instead -- same escrow and hold rules, different rail.
+      const railRes = await fetch('/api/payoneer/onboard');
+      if (railRes.ok) {
+        const rail = await railRes.json();
+        if (rail?.rail === 'PAYONEER') {
+          router.replace('/dashboard/payoneer');
+          return;
+        }
+      }
+    } catch {}
+    await fetchStatus();
+  }
 
   async function fetchStatus() {
-    setLoading(true);
     try {
       const r = await fetch('/api/stripe/connect/account');
       const d = await r.json();
@@ -71,7 +90,7 @@ export default function StripeConnectPage() {
         Payout Settings
       </h1>
       <p style={{ color: '#999999', fontSize: 15, marginBottom: 32 }}>
-        Connect your Stripe account to receive 85% of every sale automatically.
+        Connect your Stripe account to receive your share of every sale automatically.
       </p>
 
       {error && (
@@ -112,7 +131,7 @@ export default function StripeConnectPage() {
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24, marginBottom: 24 }}>
               <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Set Up Payouts</h3>
               <p style={{ color: '#999999', fontSize: 14, marginBottom: 20 }}>
-                You will earn 85% of every sale. Velor retains 15% as a platform fee. Payouts are processed by Stripe.
+                You keep every sale minus your tier&apos;s commission (15% Starter, 8% Pro, 5% Enterprise). Payouts are processed by Stripe.
               </p>
               <button
                 onClick={handleConnect}
@@ -147,9 +166,9 @@ export default function StripeConnectPage() {
             <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>How payouts work</h3>
             {[
               { step: '1', text: 'A customer purchases your product' },
-              { step: '2', text: 'Velor deducts a 15% platform fee' },
-              { step: '3', text: 'You receive 85% directly to your Stripe account' },
-              { step: '4', text: 'Stripe transfers funds on your chosen schedule' },
+              { step: '2', text: "Velor deducts your tier's commission (15% Starter, 8% Pro, 5% Enterprise)" },
+              { step: '3', text: 'Funds are held safely until the buyer confirms delivery' },
+              { step: '4', text: 'Your share is released to your Stripe account -- within 15 days for new sellers, 72 hours once trusted' },
             ].map(item => (
               <div key={item.step} style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'flex-start' }}>
                 <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#FF6B00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700 }}>
