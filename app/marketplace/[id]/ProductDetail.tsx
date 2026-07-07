@@ -24,6 +24,8 @@ interface Product {
   percentOff: number | null
   cjSourced?: boolean
   cjSupplierName?: string | null
+  isHandmade: boolean
+  makerStory: string | null
 }
 
 interface StoredCartItem {
@@ -111,6 +113,9 @@ export default function ProductDetail({ id }: { id: string }) {
         .pd-seller-box { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 10px; padding: 14px 16px; }
         .pd-seller-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
         .pd-seller-name { font-size: 15px; font-weight: 600; color: #fff; }
+        .pd-maker-box { background: #1A1A1A; border: 1px solid #FF6B00; border-radius: 10px; padding: 14px 16px; }
+        .pd-maker-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #FF6B00; margin-bottom: 6px; }
+        .pd-maker-story { font-size: 14px; line-height: 1.5; color: #ccc; margin: 0; }
         .pd-price-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
         .pd-price { font-size: 40px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; color: #fff; }
         .pd-price.sale { color: #FF6B00; }
@@ -200,6 +205,13 @@ export default function ProductDetail({ id }: { id: string }) {
                     : product.seller.storeName}
                 </div>
               </div>
+
+              {product.isHandmade && (
+                <div className="pd-maker-box">
+                  <div className="pd-maker-label">Handmade / Artisan-made</div>
+                  {product.makerStory && <p className="pd-maker-story">{product.makerStory}</p>}
+                </div>
+              )}
 
               {onSale ? (
                 <>
