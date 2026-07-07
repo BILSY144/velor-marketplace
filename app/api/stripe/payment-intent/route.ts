@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         price: true,
+        stock: true,
+        title: true,
         seller: { select: { id: true, currency: true, stripeAccountId: true, tier: true } },
       },
     })
@@ -58,6 +60,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Product not found: ' + item.productId }, { status: 400 })
       }
       const qty = Math.max(1, Number(item.quantity) || 1)
+      if (product.stock < qty) {
+        return NextResponse.json(
+          {
+            error: product.stock <= 0
+              ? `${product.title} is now sold out.`
+              : `Only ${product.stock} left of ${product.title} -- please reduce the quantity.`,
+            outOfStock: true,
+            productId: item.productId,
+            availableStock: product.stock,
+          },
+          { status: 409 }
+        )
+      }
       const sellerCurrency = product.seller?.currency ?? 'GBP'
       const unitGBP =
         sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
