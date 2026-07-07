@@ -94,7 +94,20 @@ export default function CountryOriginStrip() {
     setIsDragging(false)
     drag.current.pointerId = -1
     if (Math.abs(drag.current.velocity) > MIN_VELOCITY) runMomentum()
-  }, [runMomentum])
+
+    // Pointer capture (set in onPointerDown, needed for the drag/momentum
+    // mechanism) causes the browser to swallow the native "click" event on
+    // the flag button underneath the pointer -- a real mouse or touch tap
+    // never reaches the button's onClick handler. Detect a genuine tap
+    // ourselves instead: if the pointer never moved past the drag
+    // threshold, hit-test the release point directly and navigate from
+    // here rather than relying on the (unreliable) native click.
+    if (!drag.current.moved) {
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+      const code = el?.closest<HTMLElement>('[data-country-code]')?.dataset.countryCode
+      if (code) router.push(`/shop?origin=${code}`)
+    }
+  }, [runMomentum, router])
 
   useEffect(() => stopMomentum, [stopMomentum])
 
@@ -155,6 +168,7 @@ export default function CountryOriginStrip() {
             type="button"
             title={c.name}
             aria-label={`Shop products from ${c.name}`}
+            data-country-code={c.code}
             onClick={() => handleFlagClick(c.code)}
             style={{
               flexShrink: 0,
