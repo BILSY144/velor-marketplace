@@ -14,7 +14,7 @@ export default function SellerAgreementPage() {
     },
     {
       title: "4. Payouts",
-      body: "Payouts are processed via Stripe Connect to your connected bank account. You must complete Stripe's identity verification to receive payouts. To protect buyers, funds for each order are held until delivery is confirmed and are then released automatically -- within 15 days for new sellers, reducing to 72 hours once you build a trusted delivery track record. Orders with an open return or dispute are held until the case is resolved. Velor is not responsible for delays caused by Stripe or your bank.",
+      body: "Payouts are processed via Stripe Connect to your connected bank account where Stripe supports payouts in your country. Because Velor is a global marketplace, sellers in countries not supported by Stripe are paid via Payoneer instead -- your payout method and its availability for your country are confirmed during seller onboarding, before you start selling. In both cases you must complete the payout provider's identity verification to receive payouts. To protect buyers, funds for each order are held until delivery is confirmed and are then released automatically -- within 15 days for new sellers, reducing to 72 hours once you build a trusted delivery track record. Orders with an open return or dispute are held until the case is resolved. Velor is not responsible for delays caused by the payout provider or your bank.",
     },
     {
       title: "5. Returns and Disputes",
