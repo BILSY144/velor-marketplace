@@ -143,7 +143,13 @@ export async function POST(request: NextRequest) {
       // methods to offer and the Payment Element hangs on its internal loader
       // iframe forever -- the buyer sees a bare 'Pay' button with no card fields
       // and clicking it does nothing (elements never reports ready).
-      automatic_payment_methods: { enabled: true },
+      // Restricted to card only (not automatic_payment_methods) -- automatic detection
+      // was pulling in Klarna/Link/Revolut Pay/Amazon Pay, several of which require the
+      // domain to be registered as a Stripe "payment method domain" before Stripe.js will
+      // finish resolving the Payment Element. If that registration is missing/pending,
+      // the whole element hangs on its internal loader forever with zero console error.
+      // Plain 'card' has no such requirement and always renders.
+      payment_method_types: ['card'],
       metadata: {
         items: JSON.stringify(items ?? []),
         subtotalGBP: subtotalGBP.toFixed(2),
