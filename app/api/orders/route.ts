@@ -52,25 +52,38 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const order = await prisma.order.create({
-      data: {
-        sellerId,
-        customerEmail: String(buyerEmail).toLowerCase().trim(),
-        customerName: buyerName ?? String(buyerEmail),
-        shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
-        subtotal: Number(total),
-        status: 'PAID',
-        stripePaymentId: paymentIntentId ?? null,
-        items: {
-          create: items.map((item) => ({
-            productId: item.productId ?? item.id ?? '',
-            quantity: Number(item.quantity),
-            price: Number(item.price),
-            commission: Number(item.price) * Number(item.quantity) * 0.15,
-          })),
+    const [order] = await prisma.$transaction([
+      prisma.order.create({
+        data: {
+          sellerId,
+          customerEmail: String(buyerEmail).toLowerCase().trim(),
+          customerName: buyerName ?? String(buyerEmail),
+          shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
+          subtotal: Number(total),
+          status: 'PAID',
+          stripePaymentId: paymentIntentId ?? null,
+          items: {
+            create: items.map((item) => ({
+              productId: item.productId ?? item.id ?? '',
+              quantity: Number(item.quantity),
+              price: Number(item.price),
+              commission: Number(item.price) * Number(item.quantity) * 0.15,
+            })),
+          },
         },
-      },
-    })
+      }),
+      // Decrement stock atomically with order creation. The payment-intent
+      // route already blocked the charge if quantity exceeded stock, so this
+      // should always have enough -- the stock:{gte} guard here is just
+      // defense against a race between two near-simultaneous checkouts, so
+      // stock can never go negative even in that edge case.
+      ...items.map((item) =>
+        prisma.product.updateMany({
+          where: { id: item.productId ?? item.id ?? '', stock: { gte: Number(item.quantity) || 0 } },
+          data: { stock: { decrement: Number(item.quantity) || 0 } },
+        })
+      ),
+    ])
     return NextResponse.json({ orderId: order.id }, { status: 201 })
   } catch (err: unknown) {
     console.error('[POST /api/orders]', err)
