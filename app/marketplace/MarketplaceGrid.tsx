@@ -23,7 +23,6 @@ export default function MarketplaceGrid() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
-  const [activeSubcategory, setActiveSubcategory] = useState('All')
   const [sort, setSort] = useState<'newest' | 'price-asc' | 'price-desc'>('newest')
 
   useEffect(() => {
@@ -37,31 +36,18 @@ export default function MarketplaceGrid() {
       .catch(() => setLoading(false))
   }, [])
 
-  // Active category object from taxonomy
-  const activeCategoryObj = useMemo(() =>
-    CATEGORIES.find(c => c.name === activeCategory) ?? null,
-    [activeCategory]
-  )
-
-  // Subcategories for active category
-  const subcategories = useMemo(() =>
-    activeCategoryObj ? ['All', ...activeCategoryObj.subcategories.map(s => s.name)] : [],
-    [activeCategoryObj]
-  )
-
-  const filtered = useMemo(() => {
+const filtered = useMemo(() => {
     let list = products.filter(p => {
       const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.description?.toLowerCase().includes(search.toLowerCase())
       const matchCat = activeCategory === 'All' || p.category === activeCategory
-      const matchSub = activeSubcategory === 'All' || p.category === activeSubcategory
-      return matchSearch && matchCat && matchSub
+      return matchSearch && matchCat
     })
     if (sort === 'newest') list = list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     if (sort === 'price-asc') list = list.sort((a, b) => a.price - b.price)
     if (sort === 'price-desc') list = list.sort((a, b) => b.price - a.price)
     return list
-  }, [products, search, activeCategory, activeSubcategory, sort])
+  }, [products, search, activeCategory, sort])
 
   // Count products per category for badge display
   const categoryCounts = useMemo(() => {
@@ -144,7 +130,7 @@ export default function MarketplaceGrid() {
         <div className="mp-cats">
           <button
             className={`mp-cat-btn ${activeCategory === 'All' ? 'active' : ''}`}
-            onClick={() => { setActiveCategory('All'); setActiveSubcategory('All') }}
+            onClick={() => setActiveCategory('All')}
           >
             All <span className="mp-cat-count">({products.length})</span>
           </button>
@@ -152,28 +138,13 @@ export default function MarketplaceGrid() {
             <button
               key={cat.slug}
               className={`mp-cat-btn ${activeCategory === cat.name ? 'active' : ''}`}
-              onClick={() => { setActiveCategory(cat.name); setActiveSubcategory('All') }}
+              onClick={() => setActiveCategory(cat.name)}
             >
               {cat.name}
               <span className="mp-cat-count">({categoryCounts[cat.name] ?? 0})</span>
             </button>
           ))}
         </div>
-
-        {/* Subcategory chips — show when a category is selected */}
-        {activeCategoryObj && subcategories.length > 1 && (
-          <div className="mp-subcats">
-            {subcategories.map(sub => (
-              <button
-                key={sub}
-                className={`mp-subcat-btn ${activeSubcategory === sub ? 'active' : ''}`}
-                onClick={() => setActiveSubcategory(sub)}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Products grid */}
         {loading ? (
