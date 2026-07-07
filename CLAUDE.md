@@ -9,9 +9,25 @@ The review item opened 2026-07-04 is now closed. William reviewed the three tier
 
 ## CURRENT SESSION STATE - READ THIS FIRST
 
-**Checkpoint saved 2026-07-07 (this commit). Everything below is verified against actual commit SHAs / live deployment status, not memory. Per LAW #1, anything not yet verified is explicitly marked as such rather than assumed done.**
+**Checkpoint saved 2026-07-07 (emergency checkpoint -- William's screen crashed mid-session, laptop restart in progress). Everything below is verified against actual commit SHAs / live deployment status / live API responses, not memory. Per LAW #1, anything not yet verified is explicitly marked as such rather than assumed done.**
 
-### 1. The 6 previously-relayed tasks + stock/inventory work -- VERIFIED LIVE (confirmed earlier this session, commit 75edc78, re-confirmed via the Vercel Deployments list just now)
+### NEXT STEPS FOR NEXT SESSION (in priority order)
+
+1. **Diagnose and fix the cj-resupplier build failure.** Commit e15a1ed (`app/api/admin/cj-resupplier/route.ts`) shows an "Error" deployment status on Vercel (~30s build time). The build log has NOT been read yet. The route is NOT live -- calling it 404s. This blocks Task #240 (replacing "CJ Dropshippers" fallback name with real supplier names on the 74 already-imported fallback products). Start here: open vercel.com/velor1/velor-marketplace/deployments, find deployment e15a1ed (it is NOT in the most recent 20 deployments as of this checkpoint, so scroll back further or search by commit sha), read the actual build error, and fix it.
+2. **Re-confirm the 6 previously-relayed tasks + stock/inventory work are still live.** These were already verified live earlier today (Task #237, completed) and re-confirmed again via the Vercel Deployments API during this session -- all showing "READY" in production. There is no known regression. A quick re-check is still worth doing before treating this as fully closed, since William asked for it directly: Pro-tier priority support (#154), tier-based ranking boost (#155), tiered AI assistant (#156), Go Live in Enterprise feature lists (#157), homepage hero reverted to text-only (#158), real-time new-seller email alert (#159), plus stock/inventory enforcement (#216-220, SOLD OUT banners, stock decrement on order, out-of-stock handling).
+3. **Resume shop pagination bug (#239 / #280).** This was the task actively in progress when the crash interrupted this session. Tested pages 1-3 of the unfiltered /shop listing (no category filter) -- could NOT reproduce the reported broken Next-button bug; pagination worked correctly there with distinct products per page. The Electronics category test was inconclusive (only 12 products -- fits on one page, no pagination control appears at all). NOT YET TESTED: a category filter that actually spans multiple pages. Next step is to find or create that scenario, or ask William for more specific repro details (which category, mobile vs desktop).
+4. **Task #240** (real CJ supplier-name backfill) is blocked on step 1 above -- do not attempt it until the cj-resupplier route actually deploys and works.
+
+### 1. Daily report stats-accuracy fix -- VERIFIED LIVE THIS SESSION (commit 9ecc43f, force-run confirmed)
+
+William reported the daily report's "Contacted" stat always read 0 despite real, verified outreach sends (confirmed via Resend). Root cause: the report queried `SellerProspect.status` for values (`CONTACTED`, `RESPONDED`, `CONVERTED`, `DISCOVERED`) that NO code path in the repo ever writes -- `status` is a plain string defaulting to `"prospected"`, only ever updated to `"outreached"` by `outreach-auto`'s followup2 stage. Fixed by switching to real `OutreachLog`-relation signals (`outreachLogs: { some: {} }` / `{ none: {} }`), matching the exact predicate `outreach-auto` already uses to pick who to email next. The untrackable "Responded / Engaged" stat was honestly relabeled "(not tracked yet)" instead of being faked, per William's explicit instruction: never show fabricated data.
+
+- Committed as **9ecc43f** -- Vercel deployment state: **READY** (confirmed via deployments API).
+- Force-ran `/api/reports/daily?force=true` live this session and got real corrected numbers back: **529 total prospects, 147 Contacted (28%)**, 20 uncontacted, 0 applications/approvals (accurate -- none exist yet).
+- Verified the corrected email genuinely landed in William's Gmail **Inbox** (not just "Delivered" per Resend) -- confirmed via direct Gmail search, sent 9:51 PM, Inbox label present.
+- Tomorrow's normal 7am cron run will use this same corrected logic automatically -- no further action needed on this item.
+
+### 2. The 6 previously-relayed tasks + stock/inventory work -- confirmed READY as of last check (see Next Steps #2 for re-verification)
 All showing "Ready" in production on vercel.com/velor1/velor-marketplace/deployments:
 - Pro-tier priority support (backend + copy) -- Task #154 -- deployed
 - Real tier-based ranking boost (Pro/Enterprise) -- Task #155 -- deployed
@@ -21,8 +37,8 @@ All showing "Ready" in production on vercel.com/velor1/velor-marketplace/deploym
 - Real-time email alert for new seller signups -- Task #159 -- deployed
 - Stock/inventory: checkout enforcement (commit 4ca451f), stock decrement on order creation (1849f1d), SOLD OUT banners on shop grid (81ff997), marketplace detail (6df63aa) and shop detail (f17a8b9) -- all "Ready" in production.
 
-### 2. This session's CJ Marketplace work (velor-marketplace / velorcommerce.store only -- CJ has zero relevance to velorcommerce.co.uk)
 
+### 3. This session's CJ Marketplace work (velor-marketplace / velorcommerce.store only -- CJ has zero relevance to velorcommerce.co.uk)
 **Seller attribution rework -- LIVE:**
 - `app/api/admin/cj-internal-seller/route.ts` rewritten for find-or-create-by-real-supplier-name (commit da755e3). "Nordholm Supply Co." test seller renamed live to "CJ Dropshippers" (existing seller id `cmr9f7yrr000212tmynmf7ffz`).
 - `app/api/admin/cj-import/route.ts` extended with a PATCH handler to reassign a product to a different resolved seller after the fact (commit 0fcf4c3).
@@ -46,6 +62,7 @@ William reported: on `/shop` with a category filter, clicking "Next" at the bott
 2. Run the resupplier batch against all 74 fallback-attributed products; report real-name hit rate honestly (CJ's own inventory may genuinely have few/no named suppliers -- that is an accurate outcome, not a failure to fix).
 3. Finish Toys & Games seeding (currently mid-batch, nothing imported yet) then continue through the remaining 9 categories, splitting each `cj-import` call by resolved seller (per the Jewellery & Watches lesson) rather than a single fallback call per category.
 4. Manually verify the pagination fix by clicking Next/Previous on a live category page.
+
 
 ## HOW TO START A NEW SESSION (read once, follow always)
 
