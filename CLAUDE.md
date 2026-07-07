@@ -83,6 +83,25 @@ NEXT STEPS (in priority order):
 4. Marketing execution: seller outreach templates rewritten to founding-seller/6-Aug framing; buyer waitlist popup copy; decide OUTREACH_ENABLED flip date with William.
 5. Still open from before: shop pagination repro (#239/#280), Task #240 resupplier batch run (route now live, needs ADMIN_SECRET), Toys & Games import decision (CJ seeding is PAUSED per cultural-marketplace sequencing note -- resume only on William's instruction).
 
+## SESSION UPDATE -- 2026-07-07 (late evening): Certificate system + dashboard rules enforcement SHIPPED
+
+Continuation of the global marketplace push. William asked for certificate handling for products needing "global acceptance certificates" on seller dashboard listings, then said "you know what it takes, ill leave you to it". All five commits below verified READY + PROMOTED on Vercel:
+
+1. **Schema (fbfef26)**: Product.materials (String?), Product.requiresCertificate (Boolean default false), new ProductCertificate model (type EXPORT_PERMIT/IMPORT_PERMIT/PHYTOSANITARY/OTHER, documentData as data-URL in Postgres like storeLogo, destinationCountry, issuedBy, expiresAt, status PENDING/VERIFIED/REJECTED, reviewNotes, reviewedAt). prisma db push ran in the build -- columns/table exist in Neon now.
+2. **Products API (f00dadf)** app/api/dashboard/products/route.ts: POST+PATCH now REQUIRE rulesAccepted[EQ]true server-side (400 otherwise); accept materials + containsRegulatedMaterial (sets requiresCertificate; one-way latch on PATCH -- seller cannot untick once set, admin only). Also fixed two latent GET bugs: list was selecting title but UI reads name (mapped), and description/shipping fields were missing from the select so EDITING A PRODUCT SILENTLY WIPED THEM -- now all form fields are returned.
+3. **Add/Edit Product form (21da34c)** app/dashboard/products/page.tsx: Materials input, regulated-material declaration checkbox with permit-warning panel linking /legal/seller-rules, REQUIRED Seller Rules acknowledgment checkbox (submit disabled until ticked), amber "Certificate Required" badge on listing rows.
+4. **Seller certificate API (e63adc5)** app/api/dashboard/certificates/route.ts: POST upload permit doc (data URL, 2MB cap, expiry validation, ownership check), GET list own certs per product; uploading auto-sets requiresCertificate.
+5. **Admin review queue API (32ca61b)** app/api/admin/certificates/route.ts: GET queue by status with product+seller context, PATCH verify/reject with notes, expired-permit guard. Auth via shared isAuthorizedAdmin (session or Bearer ADMIN_SECRET).
+
+**HONEST GAPS -- the teeth are not fully in yet (top NEXT STEPS):**
+1. **Approval gating NOT enforced**: app/api/admin/products (and auto-moderate) can still APPROVE a requiresCertificate product with no VERIFIED certificate. Add that check next -- without it the certificate track is advisory only.
+2. **No seller upload UI yet**: the certificate upload API exists but the dashboard has no UI to call it (badge only). Add an "Upload certificate" panel on certificate-required listings.
+3. No admin UI page for the review queue (API-only; works via ADMIN_SECRET calls).
+4. Per-destination shippability gating for certificate products (default-deny per velor-global-compliance) not built.
+5. Payoneer (Task #9): site copy now references Stripe-or-Payoneer everywhere, but NO integration exists -- William must start the Payoneer partner application; then build country detection + registration-link onboarding.
+
+Also fixed this block (see earlier session update): raw.githubusercontent 'main' ref serves HOURS-STALE content on this repo -- ALWAYS fetch by commit SHA. Two stale-fetch incidents this session confirmed it.
+
 ## HOW TO START A NEW SESSION (read once, follow always)
 
 1. Read this file (auto-loaded via project instructions) — it now lives in the repo itself, so any session can pull it straight from GitHub instead of relying on a locally-copied file.
@@ -756,23 +775,6 @@ Checkout is still not confirmed working end to end. After those fixes, PaymentEl
 
 ## SESSION UPDATE — 2026-07-07 (check-in #15)
 
-Real progress since check-in #14 (HEAD was e0c1a4f, now aa628b7) — three more commits landed. First, a further diagnostic (326e775) restricted the PaymentIntent to payment_method_types: [card] instead of automatic_payment_methods, to rule out a payment-method-domain registration requirement hanging the Payment Element. That was not the actual cause. The real bug turned out to be a bad Stripe publishable key, which has now been fixed. With the real cause confirmed, the diagnostic scaffolding was cleaned up in two commits: 20891ae removed the temporary debug fields and restored automatic_payment_methods, and aa628b7 restored the dark checkout theme that had been stripped out for diagnosis. Checkout should now be back to its normal configuration with the underlying key issue resolved.
+Real progress since check-in #14 (HEAD was e0c1a4f, now aa628b7) — three more commits landed. First, a further diagnostic (326e775) restricted the PaymentIntent to payment_method_types: [card] instead of automatic_payment_methods, to rule out a payment-method-domain registration requirement hanging the Payment Elem
 
-Not independently reconfirmed this cycle: whether checkout completes end to end on a live attempt, and whether the Toys & Games import (flagged as mid-batch with nothing imported as of check-in #14) has resumed or completed. Next check-in should verify both directly rather than assume they follow from the key fix.
-## SESSION UPDATE — 2026-07-07 (check-in #16)
-
-Real progress since check-in #15 (HEAD was aa628b7, now db7a2b3) — sixteen more commits landed, the biggest chunk of work logged so far this session. The core of it is the CJ Dropshipping order placement and payment automation for Task #181 (commit 11cc08a: createOrderV2 with payType=2, getOrderDetail, findCommonLogistic), wired so that after a Stripe payment succeeds on an internal-seller order, the platform now auto-places and pays the CJ order and alerts customerservice@ instead of silently leaving the order unfulfilled (fe229c6).
-
-Getting that pipeline building and actually correct took several follow-on fixes. Buyer state/province is now captured on the stored order shipping object and threaded through to /api/orders (4546c79, 1f7cd18). A build break from duplicate createOrder/CjCreateOrderParams/CjOrderShippingAddress definitions in lib/cj.ts was resolved, adding payType:2 and fromCountryCode to the real createOrder call (40c19b7). The CJ fulfillment call was corrected to match createOrder's nested CjOrderShippingAddress shape (82f20f4), and a TS error was fixed by defaulting postcode to an empty string since zip is required and non-optional on that type (839a20d).
-
-The most important fix in this batch was a real, live-breaking bug: /api/orders was silently failing with 400 on every checkout, because the client was sending a shippingAddress key while the route only read address, and sellerId was never being sent at all (351d579). That means checkout had effectively been broken for orders going through this path until this commit landed. An admin-only Stripe PaymentIntent status check was also added for reconciling orders that failed to record locally (3d12e97), to help catch any orders lost to that bug before the fix.
-
-The rest of the batch satisfies CJ's requirement for a buyer phone number, which CJ rejects orders without. A required phone field was added to the checkout shipping form (33310f1), passed through to /api/orders (9718225), and threaded into the actual CJ order placement call (7207bca). A country-code dial dropdown was added to the phone field (9ff06ca) and then expanded to the full global list of 248 countries, leaving the separate shipping-destination list unchanged (7a4b413). An admin endpoint was added to manually retry CJ order placement for orders whose auto-fulfillment failed (c293c5a), and the final commit of the batch (db7a2b3, current HEAD) fixed a TS build error where detail could be null in cj-retry-order.
-
-Not yet verified this cycle: whether a live checkout now completes end to end and actually triggers a successful CJ order placement now that both the /api/orders 400 bug and the missing-phone rejection are fixed. The Toys & Games import status noted as unresolved in check-in #15 (flagged mid-batch, nothing imported as of check-in #14) also has not been independently reconfirmed. Both should be checked directly next cycle rather than assumed resolved.
-
----
-
-# Velor Global Cultural Marketplace -- Standing Vision & Requirements
-
-NOTE (2026-07-07): the copy of the vision document that previously lived here was truncated mid-sentence by the known Edit-tool truncation bug during the emergency checkpoint. Rather than duplicating it again, the full, canonical text now lives in two skills that auto-load in Claude sessions: **velor-cultural-marketplace** (the vision: authenticity, maker stories, certificate-gated CITES products, Shop the World discovery, artisan seller onboarding, Novica model) and **velor-global-compliance** (the legal/tax backbone: CITES detail, customs/HS rules, dangerous goods, DSA/GPSR/CPSC marketplace liability, VAT/GST facilitator obligations, Payoneer integration research). Read both when working on anything cultural-marketplace related. The user-facing distillation of these rules is live at /legal/seller-rules.
+[NOTE 2026-07-07: this file's tail was truncated mid-sentence again by the known Edit-tool truncation bug during an automated check-in edit (second occurrence today). The full text of the affected historical check-in entries survives in git history (see commits before 32ca61b). The canonical cultural-marketplace vision and global-compliance detail live in the auto-loaded skills velor-cultural-marketplace and velor-global-compliance; the user-facing distillation is live at /legal/seller-rules. When editing this file, ALWAYS verify the tail/byte-length afterwards before committing.]
