@@ -98,13 +98,14 @@ export default function CountryOriginStrip() {
 
   useEffect(() => stopMomentum, [stopMomentum])
 
-  const handleFlagClick = () => {
-    // Takes buyers to the full, unfiltered product catalogue rather than
-    // pre-filtering by origin country -- most origin values are not yet
-    // populated on live listings, so an origin filter here would silently
-    // show "no products found" for the vast majority of flags. Buyers can
-    // use the search bar on /shop to find what they're after by keyword.
-    router.push('/shop')
+  const handleFlagClick = (code: string) => {
+    // Takes buyers straight to products whose Origin Country matches the
+    // flag they picked. The /shop search bar still works on top of this
+    // filter, so a buyer can narrow further by keyword within that country's
+    // listings. NOTE (2026-07-07): every live product currently has
+    // originCountry unset, so this filter shows zero results until sellers'
+    // products get a real origin country recorded -- see William re: backfill plan.
+    router.push(`/shop?origin=${code}`)
   }
 
   return (
@@ -153,8 +154,8 @@ export default function CountryOriginStrip() {
             key={c.code}
             type="button"
             title={c.name}
-            aria-label={`Shop all products (${c.name} flag)`}
-            onClick={() => handleFlagClick()}
+            aria-label={`Shop products from ${c.name}`}
+            onClick={() => handleFlagClick(c.code)}
             style={{
               flexShrink: 0,
               width: '28px',
