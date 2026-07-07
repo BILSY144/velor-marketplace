@@ -84,24 +84,7 @@ const DUTY_GUIDANCE: Record<string, string> = {
 // and app/shop/page.tsx filters exactly). The shop's products API does a
 // strict string match on category, so a listing only shows up under a
 // category page when this value matches one of these 16 names exactly.
-const PRODUCT_CATEGORIES = [
-'Electronics',
-'Fashion',
-'Home & Garden',
-'Beauty & Health',
-'Sports & Outdoors',
-'Jewellery & Watches',
-'Toys & Games',
-'Baby & Kids',
-'Pet Supplies',
-'Automotive',
-'Books & Education',
-'Art & Crafts',
-'Office & Stationery',
-'Travel & Luggage',
-'Food & Grocery',
-'Fitness & Gym',
-]
+import { CATEGORY_NAMES as PRODUCT_CATEGORIES } from '@/lib/categories'
 
 const COUNTRIES = [
 { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
