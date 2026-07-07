@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
+import { isPayoneerConfigured, createPayout as createPayoneerPayout } from '@/lib/payoneer'
 import {
   PROBATION_HOLD_MS,
   TRUSTED_HOLD_MS,
@@ -11,8 +12,11 @@ import {
 export const maxDuration = 60
 
 // Payout release cron. Holds funds on the platform until delivery is confirmed,
-// then releases the seller's share (from the PaymentIntent metadata) via a Stripe
-// transfer once the hold window passes and no return/dispute is open.
+// then releases the seller's share (from the PaymentIntent metadata) once the
+// hold window passes and no return/dispute is open. The rail differs by seller
+// (Stripe transfer, or Payoneer payout for Stripe-unsupported countries) but
+// the RULES are identical on both rails by explicit decision: same delivery
+// confirmation requirement, same 15-day/72-hour holds, same dispute freeze.
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -37,8 +41,10 @@ export async function GET(req: NextRequest) {
   })
 
   let released = 0
+  let releasedPayoneer = 0
   let heldOpen = 0
   let waiting = 0
+  let heldForPayoneer = 0
   let skipped = 0
 
   for (const o of candidates) {
@@ -63,38 +69,75 @@ export async function GET(req: NextRequest) {
       const md = (pi.metadata || {}) as Record<string, string>
       const sellerShare = parseInt(md.sellerShare || '0', 10)
       const sellerAccountId = md.sellerAccountId || ''
-      if (!sellerShare || sellerShare <= 0 || !sellerAccountId) {
+      if (!sellerShare || sellerShare <= 0) {
         skipped++
         continue
       }
       const chargeId = (pi as unknown as { latest_charge?: string }).latest_charge
       const currency = (pi.currency || o.currency || 'gbp').toLowerCase()
 
-      // Idempotency key keyed on the order guarantees we never double-transfer,
-      // even if a later step fails and the cron retries.
-      const transfer = await stripe.transfers.create(
-        {
-          amount: sellerShare,
-          currency,
-          destination: sellerAccountId,
-          transfer_group: o.id,
-          ...(chargeId ? { source_transaction: chargeId } : {}),
-          metadata: { orderId: o.id },
-        },
-        { idempotencyKey: `payout_${o.id}` }
-      )
+      if (sellerAccountId) {
+        // STRIPE rail. Idempotency key keyed on the order guarantees we never
+        // double-transfer, even if a later step fails and the cron retries.
+        const transfer = await stripe.transfers.create(
+          {
+            amount: sellerShare,
+            currency,
+            destination: sellerAccountId,
+            transfer_group: o.id,
+            ...(chargeId ? { source_transaction: chargeId } : {}),
+            metadata: { orderId: o.id },
+          },
+          { idempotencyKey: `payout_${o.id}` }
+        )
 
-      await prisma.payout.create({
-        data: {
-          sellerId: o.sellerId,
-          orderId: o.id,
+        await prisma.payout.create({
+          data: {
+            sellerId: o.sellerId,
+            orderId: o.id,
+            amount: sellerShare / 100,
+            currency,
+            stripeTransferId: transfer.id,
+            status: 'paid',
+          },
+        })
+        released++
+        continue
+      }
+
+      // No Stripe account on the PaymentIntent: PAYONEER-rail seller (or a
+      // seller who has not finished payout onboarding). Same holds and
+      // dispute checks already passed above -- only the transfer differs.
+      const seller = await prisma.seller.findUnique({
+        where: { id: o.sellerId },
+        select: { payoutRail: true, payoneerPayeeId: true },
+      })
+      if (seller?.payoutRail === 'PAYONEER' && seller.payoneerPayeeId && isPayoneerConfigured()) {
+        // client_reference_id `payout_<orderId>` mirrors the Stripe
+        // idempotency convention so a retried run can never double-pay.
+        const { payoutId } = await createPayoneerPayout({
+          payeeId: seller.payoneerPayeeId,
           amount: sellerShare / 100,
           currency,
-          stripeTransferId: transfer.id,
-          status: 'paid',
-        },
-      })
-      released++
+          clientReferenceId: `payout_${o.id}`,
+          description: `Velor Marketplace payout for order ${o.id}`,
+        })
+        await prisma.payout.create({
+          data: {
+            sellerId: o.sellerId,
+            orderId: o.id,
+            amount: sellerShare / 100,
+            currency,
+            payoneerPayoutId: payoutId,
+            status: 'paid',
+          },
+        })
+        releasedPayoneer++
+      } else {
+        // Rail not live or seller not onboarded yet: funds stay safely in
+        // the platform escrow and this order is retried on every run.
+        heldForPayoneer++
+      }
     } catch {
       skipped++
     }
@@ -104,8 +147,10 @@ export async function GET(req: NextRequest) {
     ok: true,
     scanned: candidates.length,
     released,
+    releasedPayoneer,
     heldOpen,
     waiting,
+    heldForPayoneer,
     skipped,
   })
 }
