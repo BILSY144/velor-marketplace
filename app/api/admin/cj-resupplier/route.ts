@@ -82,6 +82,11 @@ export async function POST(request: NextRequest) {
 
     for (const p of candidates) {
       try {
+        // CJ enforces a 1 request/second QPS limit on /product/query -- without
+        // this delay, batches beyond a handful of items fail with
+        // "[1600200] Too Many Requests". Matches the same enforced-sleep
+        // pattern already used for freight checks in cj-candidates.
+        await new Promise((r) => setTimeout(r, 1100))
         const detail = await getProductDetail(p.cjProductId as string)
         const supplierName = (detail.supplierName || '').trim()
         if (supplierName && supplierName.toLowerCase() !== 'nordholm supply co.') {
