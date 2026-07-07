@@ -687,3 +687,7 @@ Several shop and homepage fixes also landed. A /shop crash was fixed (the API ne
 Multi-variant CJ candidate exclusion work from the prior day (excluding multi-option CJ items from the import queue, removing already-imported multi-variant products, and fixing a broken multi-variant filter) appears fully landed and is not being carried forward as open.
 
 Next check-in should confirm on Vercel that the newest commits, including the cj-resupplier admin route and the pagination fix, built and deployed cleanly, since this could not be verified from GitHub commit history alone. Still carried forward and unconfirmed from earlier entries: whether any listings have actually been seeded into the live catalogue via the candidate-search-to-import flow, and whether the ProductVariant backfill route has been run against existing CJ products.
+
+## SESSION UPDATE — 2026-07-07 (check-in #6)
+
+Checked in at approximately 06:58 UTC. No new commits have landed on main since the previous check-in — HEAD is still d54926c, the commit that added the SESSION UPDATE — 2026-07-07 entry directly above this one (timestamped 03:35 UTC). Nothing new to report this cycle; the state described in that entry remains current.
