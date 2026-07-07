@@ -3,12 +3,7 @@
 import { useState } from 'react';
 
 import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories';
-
-const COUNTRIES = [
-  'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany',
-  'France', 'Italy', 'Spain', 'Netherlands', 'Japan', 'South Korea',
-  'China', 'India', 'Brazil', 'Other',
-];
+import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
 type FormState = {
   businessName: string;
@@ -166,6 +161,17 @@ const styles = {
     transition: 'background 0.15s',
     marginTop: '8px',
   }),
+  legalNote: {
+    fontSize: '12px',
+    color: '#777',
+    textAlign: 'center' as const,
+    marginTop: '16px',
+    lineHeight: 1.6,
+  },
+  legalLink: {
+    color: '#FF6B00',
+    textDecoration: 'none',
+  },
   error: {
     background: '#1A0A0A',
     border: '1px solid #5A1515',
@@ -278,8 +284,8 @@ export default function ApplyPage() {
           <div style={styles.logo}>VELOR</div>
           <h1 style={styles.h1}>Sell on Velor Commerce</h1>
           <p style={styles.subtitle}>
-            Join our curated marketplace of premium sellers. Tell us about your business
-            and we will be in touch.
+            Join a global marketplace of independent sellers. Wherever you are in the
+            world, tell us about your business and we will be in touch.
           </p>
         </div>
 
@@ -351,8 +357,8 @@ export default function ApplyPage() {
                   onChange={e => setField('country', e.target.value)}
                 >
                   <option value="">Select country</option>
-                  {COUNTRIES.map(c => (
-                    <option key={c} value={c}>{c}</option>
+                  {WORLD_COUNTRIES.map(c => (
+                    <option key={c.code} value={c.name}>{c.name}</option>
                   ))}
                 </select>
               </div>
@@ -396,6 +402,13 @@ export default function ApplyPage() {
           >
             {submitting ? 'Submitting...' : 'Submit application'}
           </button>
+
+          <p style={styles.legalNote}>
+            By submitting this application you agree to the{' '}
+            <a href="/legal/seller-agreement" style={styles.legalLink}>Seller Agreement</a>
+            {' '}and the{' '}
+            <a href="/legal/seller-rules" style={styles.legalLink}>Seller Rules and Product Compliance Policy</a>.
+          </p>
         </form>
       </div>
     </div>
