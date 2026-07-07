@@ -1213,3 +1213,11 @@ Shipped, all confirmed deployed: the country-origin browsing feature (WORLD_COUN
 The cj-resupplier build failure from e15a1ed (top NEXT STEP in the checkpoint above) is now resolved: 1cf2cbd fixed the type error (Product model field is title, not name) and bff6e10 restored the 1.1s CJ QPS delay that 1cf2cbd accidentally dropped. Both deployed Ready. Two intermediate Error deployments during the category refactor (3135c1d, deca0d9) were superseded by later green builds within minutes.
 
 Next: functionally verify the cj-resupplier route against CJ now that it builds (this unblocks Task #240, replacing the "CJ Dropshippers" fallback supplier name on the 74 already-imported fallback products), continue the pagination bug investigation preserved in the checkpoint, and confirm the CJ order automation from check-in #16 behaves correctly against a live order.
+
+## SESSION UPDATE — 2026-07-07 (check-in #19)
+
+Since check-in #18 (b6fdacd), five commits shipped, all on the global seller and compliance track. da85380 added the Seller Rules and Product Compliance policy page at /legal/seller-rules. 53001cb updated the Seller Agreement with tiered commission (15/8/5), payout escrow terms, a seller-rules reference, and a marketplace facilitator tax clause. 2ec7a74 expanded the apply form to the full world country list (was 14 countries) and added agreement/seller-rules acknowledgment plus global copy. c24dcc3 added GLOBAL_MARKETING_STRATEGY.md, the two-phase plan around the 6 Aug buyer launch (seller recruitment now, buyer push after). All four verified Ready on Vercel Production.
+
+A fifth commit, 5c51f53 (Seller Agreement: payouts via Stripe where supported, Payoneer where not, per William — method confirmed at onboarding), was still Building on Vercel at the time of this check-in. A session is actively working on the seller agreement right now, so re-verify its deploy status next check-in.
+
+Application-side next steps are unchanged from check-in #18: functionally verify the cj-resupplier route against CJ now that it builds (unblocks Task #240), continue the pagination bug investigation preserved in the emergency checkpoint, and confirm the CJ order automation from check-in #16 against a live order.
