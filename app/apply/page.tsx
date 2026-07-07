@@ -2,18 +2,7 @@
 
 import { useState } from 'react';
 
-const CATEGORIES = [
-  'Fashion & Accessories',
-  'Home & Living',
-  'Beauty & Wellness',
-  'Electronics & Tech',
-  'Sports & Outdoors',
-  'Art & Collectibles',
-  'Food & Gourmet',
-  'Kids & Baby',
-  'Jewellery',
-  'Other',
-];
+import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories';
 
 const COUNTRIES = [
   'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany',
