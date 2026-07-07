@@ -93,8 +93,10 @@ export async function POST(request: NextRequest) {
     let cjOrderCode: string | undefined
     try {
       const detail = await getOrderDetail(result.orderId)
-      cjOrderId = detail.cjOrderId
-      cjOrderCode = detail.cjOrderCode
+      if (detail) {
+        cjOrderId = detail.cjOrderId
+        cjOrderCode = detail.cjOrderCode
+      }
     } catch (e) {
       console.error('[cj-retry-order] getOrderDetail lookup failed (non-fatal)', e)
     }
