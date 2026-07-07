@@ -26,12 +26,7 @@ type Seller = {
   products?: { id: string; title: string; price: number; images?: string[] }[]
 }
 
-const CATEGORIES = [
-  'Electronics', 'Fashion', 'Home & Garden', 'Beauty & Health',
-  'Sports & Outdoors', 'Jewellery & Watches', 'Toys & Games', 'Baby & Kids',
-  'Pet Supplies', 'Automotive', 'Books & Education', 'Art & Crafts',
-  'Office & Stationery', 'Travel & Luggage', 'Food & Grocery', 'Fitness & Gym',
-]
+import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
 
 const BADGES: Record<string, { label: string; color: string; bg: string }> = {
   TOP_RATED: { label: 'Top Rated Seller', color: '#FFD54A', bg: 'rgba(255,213,74,0.12)' },
