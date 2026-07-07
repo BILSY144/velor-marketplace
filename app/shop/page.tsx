@@ -124,7 +124,10 @@ function ShopContent() {
   function navigate(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString())
     Object.entries(updates).forEach(([k, v]) => v ? p.set(k, v) : p.delete(k))
-    p.delete('page')
+    // Only reset to page 1 when the update is a filter change (search/category).
+    // Pagination itself calls navigate({ page: ... }) and must NOT have that
+    // value immediately stripped back off, or Next/Previous silently no-ops.
+    if (!('page' in updates)) p.delete('page')
     router.push(`/shop?${p}`)
   }
 
