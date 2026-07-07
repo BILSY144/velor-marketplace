@@ -28,6 +28,13 @@ const COUNTRIES = [
   { code: 'HK', name: 'Hong Kong' }, { code: 'IN', name: 'India' },
 ]
 
+const DIAL_CODES: Record<string, string> = {
+  GB: '+44', US: '+1', DE: '+49', FR: '+33', IT: '+39', ES: '+34',
+  NL: '+31', BE: '+32', SE: '+46', NO: '+47', DK: '+45', FI: '+358',
+  PL: '+48', CH: '+41', AT: '+43', AU: '+61', CA: '+1', JP: '+81',
+  SG: '+65', AE: '+971', HK: '+852', IN: '+91',
+}
+
 interface CartItem {
   id?: string; productId: string; name: string; price: number; quantity: number;
   image: string; sellerId?: string;
@@ -145,7 +152,7 @@ export default function CheckoutPage() {
     }
   }
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
-  const [address, setAddress] = useState({ name: '', email: '', phone: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
+  const [address, setAddress] = useState({ name: '', email: '', phone: '', phoneCountry: 'GB', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
   const [rates, setRates] = useState<ShippingRate[]>([])
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null)
   const [landedCost, setLandedCost] = useState<LandedCost | null>(null)
@@ -303,7 +310,7 @@ export default function CheckoutPage() {
             firstName: address.name.split(' ')[0] ?? address.name,
             lastName: address.name.split(' ').slice(1).join(' ') ?? '',
             email: address.email,
-            phone: address.phone,
+            phone: `${DIAL_CODES[address.phoneCountry] || ''} ${address.phone}`.trim(),
             address: [address.line1, address.line2].filter(Boolean).join(', '),
             city: address.city,
             state: address.state,
@@ -383,7 +390,14 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label style={labelStyle}>Phone Number *</label>
-                    <input style={inputStyle} type="tel" value={address.phone} onChange={e => setAddr('phone', e.target.value)} placeholder="e.g. 07123456789" required />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <select style={{ ...inputStyle, flex: '0 0 150px' }} value={address.phoneCountry} onChange={e => setAddr('phoneCountry', e.target.value)}>
+                        {COUNTRIES.map(c => (
+                          <option key={c.code} value={c.code}>{c.name} ({DIAL_CODES[c.code]})</option>
+                        ))}
+                      </select>
+                      <input style={{ ...inputStyle, flex: 1 }} type="tel" value={address.phone} onChange={e => setAddr('phone', e.target.value)} placeholder="e.g. 7123456789" required />
+                    </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Address Line 1 *</label>
