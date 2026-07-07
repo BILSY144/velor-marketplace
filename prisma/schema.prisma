@@ -210,6 +210,8 @@ model Product {
   cjProductId   String?
   cjVid         String?
   cjSupplierName String?
+  isHandmade    Boolean       @default(false)
+  makerStory    String?       @db.Text
   variants      ProductVariant[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
