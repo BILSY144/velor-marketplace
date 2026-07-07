@@ -10,6 +10,7 @@ interface Product {
   title: string
   description: string
   price: number
+  stock: number
   images: string[]
   category: string
   createdAt: string
@@ -102,6 +103,8 @@ export default function ProductDetail({ id }: { id: string }) {
         .pd-main-img img { width: 100%; height: 100%; object-fit: contain; }
         .pd-main-placeholder { color: #333; font-size: 80px; }
         .pd-sale-badge { position: absolute; top: 14px; left: 14px; background: #FF6B00; color: #000; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 6px; letter-spacing: 0.3px; }
+        .pd-soldout-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .pd-soldout-banner { background: #000; color: #fff; font-size: 15px; font-weight: 800; padding: 8px 22px; border-radius: 5px; letter-spacing: 2px; border: 1px solid #fff; }
         .pd-info { display: flex; flex-direction: column; gap: 20px; }
         .pd-cat { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #FF6B00; }
         .pd-name { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; line-height: 1.2; color: #fff; margin: 0; }
@@ -159,6 +162,11 @@ export default function ProductDetail({ id }: { id: string }) {
             <div className="pd-gallery">
               <div className="pd-main-img">
                 {onSale && <span className="pd-sale-badge">{product.percentOff}% OFF</span>}
+                {product.stock <= 0 && (
+                  <div className="pd-soldout-overlay">
+                    <span className="pd-soldout-banner">SOLD OUT</span>
+                  </div>
+                )}
                 {product.images[activeImg] ? (
                   <img src={product.images[activeImg]} alt={product.title} />
                 ) : (
@@ -222,8 +230,10 @@ export default function ProductDetail({ id }: { id: string }) {
               <button
                 className={`pd-add-btn ${added ? 'success' : ''}`}
                 onClick={addToCart}
+                disabled={product.stock <= 0}
+                style={product.stock <= 0 ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
               >
-                {added ? 'Added to cart' : 'Add to Cart'}
+                {product.stock <= 0 ? 'Out of Stock' : added ? 'Added to cart' : 'Add to Cart'}
               </button>
 
               <Link href="/checkout" className="pd-checkout-btn">
