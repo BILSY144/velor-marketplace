@@ -69,7 +69,7 @@ async function fulfillViaCjIfInternal(orderId: string, sellerId: string, rawAddr
         province: address.state,
         city: address.city,
         address: address.line1,
-        zip: address.postcode,
+        zip: address.postcode || '',
       },
       logisticName,
       products: cjItems,
