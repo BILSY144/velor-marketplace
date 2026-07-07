@@ -174,6 +174,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
+      _debugPaymentMethodTypes: paymentIntent.payment_method_types,
+      _debugStatus: paymentIntent.status,
       breakdown: {
         currency: buyerCurrency,
         productSubtotal: Number(subtotalCharge.toFixed(2)),
