@@ -212,6 +212,9 @@ model Product {
   cjSupplierName String?
   isHandmade    Boolean       @default(false)
   makerStory    String?       @db.Text
+  materials     String?
+  requiresCertificate Boolean @default(false)
+  certificates  ProductCertificate[]
   variants      ProductVariant[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
@@ -558,4 +561,43 @@ model LiveStreamViewerSession {
 
   @@index([streamId])
   @@index([joinedAt])
+}
+
+enum CertificateType {
+  EXPORT_PERMIT
+  IMPORT_PERMIT
+  PHYTOSANITARY
+  OTHER
+}
+
+enum CertificateStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// Certificate documents for regulated-material listings (CITES export/import
+// permits, phytosanitary certificates, etc). A product with
+// requiresCertificate set must have at least one VERIFIED certificate before
+// it can be APPROVED. Documents are stored as compressed data URLs in
+// Postgres (same zero-new-infrastructure pattern as Seller.storeLogo).
+// Retained indefinitely as the audit trail regulators could request.
+model ProductCertificate {
+  id                 String            @id @default(cuid())
+  productId          String
+  product            Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type               CertificateType   @default(EXPORT_PERMIT)
+  documentData       String            @db.Text
+  fileName           String?
+  destinationCountry String?
+  issuedBy           String?
+  expiresAt          DateTime?
+  status             CertificateStatus @default(PENDING)
+  reviewNotes        String?           @db.Text
+  reviewedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([productId])
+  @@index([status])
 }
