@@ -793,3 +793,387 @@ Standard product-type categories (Home & Garden, Jewellery, etc.) don't surface 
 This is being pursued in parallel with retooling the seller Prospecting and Outreach agents (see velor-agents skill) to actively target authentic cultural/heritage/artisan sellers, rather than sequencing one before the other. Generic CJ category-seeding tasks have been paused while this push is underway (resume only on explicit instruction).
 
 ---
+
+
+---
+name: velor-global-compliance
+description: >
+  Global trade law, shipping law, marketplace liability, tax, and payout
+  compliance knowledge for Velor Marketplace (velorcommerce.store). Use this
+  skill whenever working on: CITES or wildlife/plant material listings,
+  certificate-required products, customs/HS codes, dangerous goods/shipping
+  restrictions, phytosanitary certificates, marketplace liability (DSA, GPSR,
+  CPSC), consumer protection/distance-selling rules, VAT/GST/sales-tax
+  marketplace-facilitator obligations (IOSS, UK OMP, US state facilitator
+  laws, Australia GST), Payoneer or alternative payout-rail integration, or
+  seller KYC/onboarding compliance. Companion skill to
+  velor-cultural-marketplace -- this skill holds the underlying legal/tax
+  detail; velor-cultural-marketplace holds the product vision. Research
+  compiled 2026-07-07; treat all thresholds, dates, and figures below as
+  time-sensitive and re-verify before relying on them for a specific decision
+  more than a few months out, since several of the regimes below are
+  mid-transition.
+---
+
+# Velor Global Compliance — Trade Law, Shipping Law, Marketplace Liability & Tax
+
+This is real regulatory detail gathered via live research (sources cited
+inline), not general knowledge -- it exists so Velor can operate a
+certificate-accepting global cultural marketplace correctly rather than
+guessing. Where a rule is genuinely uncertain, contested, or mid-change, that
+is flagged explicitly below -- do not smooth over those flags when applying
+this skill.
+
+## 1. CITES & Wildlife/Plant Material Certificates
+
+**The three Appendix tiers**: Appendix I = trade-threatened species, commercial
+international trade essentially prohibited except narrow non-commercial
+cases, requiring BOTH export and import permits. Appendix II = not currently
+endangered but at risk if uncontrolled; needs only an export permit or
+re-export certificate (no CITES import permit required, though destination
+countries can still impose stricter domestic rules). Appendix III = a single
+country's unilateral listing; exports from that country need an export
+permit, exports from elsewhere need only a certificate of origin.
+
+**Permit validity**: export permits/re-export certificates are valid a
+maximum of 6 months; import permits up to 12 months. Each CITES Party has a
+national Management Authority (issues permits) and Scientific Authority
+(advises). In the US this is the Fish & Wildlife Service (apply via the
+ePermits online system, Login.gov-linked); in the UK it is APHA (Animal and
+Plant Health Agency -- apply online or via form FED0172, ~30-day processing,
+fee sometimes waivable for conservation purposes); in the EU each member
+state has its own Management Authority -- there is no single EU-wide permit.
+
+**What happens without proper paperwork**: customs/wildlife inspectors can
+detain, seize, and confiscate shipments; national law can add criminal
+exposure (e.g. India's Wildlife Protection Act allows up to 7 years'
+imprisonment for trafficking). In the US, CITES-regulated wildlife must clear
+through a designated port with an FWS inspector present unless a Designated
+Port Exception Permit was secured in advance. **Once a shipment reaches
+customs it is generally too late to retroactively apply for a CITES
+certificate** -- the permit must exist before dispatch. Carrier pre-screening
+(DHL/FedEx/UPS catching a missing-certificate shipment before it ships) is
+inconsistent and should not be relied on; assume destination-customs seizure
+is the realistic worst case, not a caught-in-time return.
+
+**Exemptions that generally do NOT help a marketplace seller**: the
+"personal/household effects" exemption is a traveler exemption for
+non-commercial, already-owned goods -- it does not cover a commercial sale to
+a buyer. **Pre-Convention specimens** and **worked antiques** (EU: altered
+from raw state before 3 March 1947) can qualify for exemption, but only if
+the seller can actually document/prove the pre-Convention or pre-1947 status
+-- unverifiable "it's old" claims are a common cause of real seizures and
+should not be accepted as sufficient by Velor's certificate-review process.
+
+**Materials to know by name**:
+- **Ivory** -- treat as an effective hard-ban across US/UK/China with only
+  narrow, hard-to-prove antique exemptions. Default to reject, not
+  certificate-gate.
+- **Exotic leather** -- American alligator (Appendix II, commercially
+  tradeable with permits); crocodile/python species vary by species and
+  population (Appendix I or II); farmed skins from licensed farms are
+  generally legal but still need a CITES export permit per shipment
+  regardless of farm-sourcing.
+- **Coral and tortoiseshell** -- hawksbill turtle ("tortoiseshell") has been
+  Appendix I since 1977; commercial trade is prohibited outright. Treat
+  tortoiseshell as a hard reject, not certificate-gated. Many coral species
+  are also CITES-listed; verify per species, do not assume all coral is fine.
+- **Feathers** -- beyond CITES, the US layers on the Migratory Bird Treaty
+  Act (bars sale of native migratory bird parts/feathers without permit) and
+  the Bald and Golden Eagle Protection Act (bars eagle parts/feathers
+  entirely without permit; penalties up to $200,000 and prison). These are
+  separate, stricter US-specific overlays -- a CITES-clean feather product
+  can still be illegal under these.
+- **Rosewood/agarwood/timber** -- the entire *Dalbergia* genus was
+  Appendix-II-listed in 2017; a 2019 amendment exempted finished musical
+  instruments/parts from permits, but **Brazilian rosewood (Dalbergia nigra)
+  remains Appendix I and is NOT covered by that instrument exemption**.
+
+**Cultural property/antiquities are a separate, stricter regime** governed by
+the UNESCO 1970 Convention and national patrimony laws (Egypt, India, Peru,
+China commonly cited as strict) -- private export of genuine antiquities is
+often barred outright regardless of acquisition history. **Because
+authenticity/provenance verification is not something a marketplace can
+reliably certificate-gate, treat "genuine antique/artifact" as a categorical
+hard-reject listing category, separate from and stricter than the
+CITES-certificate-gated flow.**
+
+## 2. Shipping, Customs & Dangerous Goods
+
+**Commercial invoice** is the foundational customs document (basis for
+valuation/duty calculation); customs declarations (CN22/CN23 for postal, or
+electronic for express carriers) and certificates of origin are needed on top
+when the destination/trade agreement requires them. All major express
+carriers now support "paperless trade" (electronic commercial invoice, no
+physical paper needed in the parcel).
+
+**HS codes are now a hard gate, not just best practice**: as of Sept 1 2025
+USPS requires a 6-digit HS code on all international commercial customs
+declarations; from Jan 1 2026 the EU applies stricter goods-description
+data-quality rules where vague descriptions ("gift," "craft item") can cause
+shipments to be held/rejected. Every listing needs an accurate, specific HS
+code and description -- generic filler descriptions are now a real shipping
+risk, not just sloppy.
+
+**Incoterms relevant to buyer experience**: DAP (Delivered at Place) = buyer
+pays import duties/taxes/clearance on arrival -- simpler to implement but the
+classic source of "surprise customs bill" complaints. DDP (Delivered Duty
+Paid) = seller/platform pays duties and handles clearance, giving an all-in
+landed price -- better buyer experience but operationally harder (needs
+accurate, current duty-rate knowledge and broker relationships; some
+countries legally require the local importer to clear goods themselves,
+making pure DDP unworkable everywhere). This is a real product decision for
+Velor's checkout, not just a legal footnote.
+
+**Dangerous goods relevant to artisan goods**:
+- Essential oils/perfumes are flammable liquids under IATA rules; small
+  quantities (roughly <5L in small inner packaging) can often ship under the
+  "Limited Quantity" exemption with a compliance mark, avoiding full hazmat
+  paperwork.
+- Batteries in equipment (electronics-embedded crafts/instruments) are
+  governed by IATA DGR UN3480/UN3481, Class 9; equipment with ≤4 cells/2
+  batteries per package can often ship without full DG paperwork. The 67th
+  edition IATA DGR (effective Jan 1 2026) tightened state-of-charge limits
+  for lithium-ion cells to ≤30% for certain UN3480 shipments.
+- Dyes/pigments are NOT uniformly classified -- it depends on chemical
+  composition/concentration/form, verified via the product's Safety Data
+  Sheet. Do not assume "traditional dye" is automatically non-hazmat; check
+  per product.
+- Surprising categories that catch small sellers off guard: alcohol-based
+  finishes/varnishes, aerosols, certain resins/adhesives used in
+  woodworking/jewelry-making, and battery-containing gift items.
+
+**Phytosanitary certificates** are required for plant-derived goods to attest
+freedom from pests/disease, commonly triggered by raw/minimally processed
+wood, bamboo, rattan, dried botanicals, and basketry. In the US, USDA APHIS
+issues these via the PCIT system; elsewhere each country's National Plant
+Protection Organization (NPPO) does the equivalent. Heavily processed/finished
+wood products with no bark/raw material are often exempt, but this
+determination is destination-specific -- never assume, always verify per
+destination.
+
+**De minimis / low-value thresholds -- actively changing, re-verify before
+relying on any figure below**:
+- **US Section 321 ($800 de minimis)**: suspended worldwide since Aug 2025
+  (EO 14257), with continuation confirmed Feb 2026 and no restoration date.
+  Practical effect: all US-bound commercial parcels now require formal/
+  informal customs entry and duty payment regardless of value.
+- **EU €150 customs-duty exemption**: removed 1 July 2026, replaced by a
+  temporary flat €3/item customs handling fee (through 1 July 2028, when the
+  EU Customs Data Hub brings in standard tariff-based duty). VAT was already
+  due below €150 before this change -- this only adds duty. IOSS (see tax
+  section) continues to function as the VAT mechanism; it was not replaced.
+- **UK £135 Low Value Consignment Relief**: not yet removed; expected removal
+  accelerated to around October 2028 per current consultation. Do not confuse
+  this customs-duty relief with the UK's OMP VAT rule below, which is
+  already fully in force and separate.
+
+## 3. Marketplace Liability & Consumer Protection
+
+**EU Digital Services Act (DSA) -- Article 30 "traceability of traders" is
+the one that matters now**, independent of Velor's size: before onboarding
+any seller who can conclude distance contracts with EU consumers, the
+platform must collect trader name, address, phone/email, an ID document copy,
+trade-register number where applicable, and a self-certification that the
+seller will only sell compliant products; the platform must make "best
+efforts" to verify this and suspend sellers with inaccurate/outdated info,
+retaining data 6 months post-relationship. Article 31 requires this info be
+visible to consumers in the interface. Only at Very Large Online Platform
+scale (45M+ average monthly EU users) do systemic-risk-assessment/audit
+duties kick in -- not relevant to Velor now, but worth tracking as a future
+trigger.
+
+**UK/EU consumer protection**: under the UK Consumer Contracts Regulations
+2013 and the EU Consumer Rights Directive, the seller/trader (not the
+platform) bears primary duties -- pre-contract info disclosure, 14-day
+cooling-off/right-of-withdrawal, returns handling. But the **platform has its
+own distinct duty**: disclosing to the buyer, per the seller's
+self-declaration, whether that seller is a "trader" or a private individual,
+because consumer-rights protections only apply against traders. Getting this
+disclosure wrong is a platform-level compliance failure, not just a seller
+issue. The UK's Digital Markets, Competition and Consumers Act 2024 (in force
+since April 2025) additionally requires platforms to take reasonable steps to
+prevent/remove fake reviews, actively enforced by the CMA.
+
+**Product safety -- UKCA/CE marking only applies to specific harmonised
+categories**: toys, electrical/electronic equipment, machinery, PPE, medical
+devices, radio equipment, gas appliances, pressure equipment, construction
+products. Textiles, cosmetics, foodstuffs, chemicals, most furniture,
+jewelry, and general home decor are generally NOT covered by CE/UKCA
+(governed by other, lighter regimes instead) -- a jewelry/textile item only
+triggers toy-marking rules if marketed/designed as a child's toy.
+
+**GPSR (EU Regulation 2023/988, effective 13 Dec 2024) has no handmade
+exemption and applies regardless of seller size.** It covers essentially any
+physical, non-food, non-antique consumer product sold to EU buyers. The
+marketplace-specific duty (Article 22): online marketplaces must register
+with the EU Safety Gate portal, designate a single EU point of contact for
+authorities, design the interface to display manufacturer/responsible-person
+details and warnings on listings, and cooperate with recalls/unsafe-product
+notices. Every non-EU seller/manufacturer separately needs an EU-based
+"Responsible Person." For handmade goods outside CE/UKCA-harmonised
+categories, self-assessment/internal risk documentation is generally
+sufficient; third-party testing is only required for categories like
+children's toys.
+
+**US CPSC and the evolving marketplace-liability trend**: CPSC ruled in July
+2024 that Amazon is a "distributor" under the Consumer Product Safety Act for
+its fulfillment program, making it liable for third-party hazardous products
+-- Amazon is actively litigating this (sued CPSC March 2025), so this is
+**contested, not settled law**. State-level trends (e.g. Illinois SB 1671,
+2025) are pushing toward joint-and-several marketplace liability for
+overseas-seller goods. Overall direction: regulatory/compliance obligations
+(KYC, safety-reporting, tax collection) are converging toward platform
+responsibility fast and are largely binding now (DSA Art. 30, GPSR); strict
+*civil liability* for a specific defective product remains genuinely
+contested and jurisdiction-dependent -- do not conflate the two when
+assessing Velor's exposure.
+
+## 4. Tax — VAT/GST/Sales-Tax Marketplace-Facilitator Obligations
+
+**EU "deemed supplier" rule (Article 14a, EU VAT Directive)**: when a
+marketplace facilitates a sale by a non-EU-established seller (goods
+imported ≤€150, or sold domestically/intra-EU by that non-EU seller through
+the platform), the marketplace is legally treated as if it bought the goods
+from the seller and resold them itself -- it, not the underlying seller, must
+charge/collect/remit EU VAT via IOSS. As a UK-based (non-EU) marketplace
+connecting worldwide sellers to worldwide buyers, **Velor is highly likely to
+be the deemed supplier for non-EU sellers' sales into the EU** and would need
+an IOSS registration (via an EU-established intermediary, since Velor itself
+is not EU-established) to collect VAT at checkout on qualifying orders. IOSS
+was NOT replaced by the 2026 EU customs-duty changes -- it continues as the
+VAT mechanism; the €3 flat fee is a separate, additional customs-duty charge.
+
+**UK OMP VAT rules -- already in force since 2021, separate from customs-duty
+relief phase-out**: where an overseas seller sells to UK consumers via a
+marketplace (goods ≤£135 imported, or already in the UK at sale), **the
+marketplace, not the seller, is legally liable to charge/collect/remit UK
+VAT** via a deemed-supply mechanism. A June 2026 HMRC consultation proposes
+extending this liability to UK-based sellers too -- **this is a live
+consultation, not yet enacted; do not treat as current law**, but monitor.
+
+**US marketplace facilitator laws**: all 46 US states with a state sales tax
+plus DC now require the platform (not the seller) to collect/remit sales tax
+on facilitated sales. A seller with independent nexus in a state (e.g. a
+warehouse there) must still separately register for non-marketplace sales.
+Operationally, marketplaces virtually always integrate a
+tax-calculation/filing API rather than building this in-house.
+
+**Australia GST on low-value imports**: goods ≤AUD 1,000 are "low value
+imported goods"; non-resident sellers and marketplaces with AUD 75,000+
+turnover connected to Australia must register for and charge 10% GST at
+point of sale, with the **marketplace deemed the supplier** when a sale is
+facilitated through it -- individual sellers do not separately register for
+these sales. Goods over AUD 1,000 are taxed at the border instead. This
+dovetails with Australia's already-strict food/biosecurity import controls
+noted in the cultural-marketplace vision.
+
+**Standard build pattern**: growing marketplaces virtually always use a
+tax-calculation/filing API rather than an in-house tax team. Options: Stripe
+Tax (native to Stripe Checkout, calculates VAT/GST/sales tax at checkout
+across 50+ countries, supports IOSS calculation once Velor holds an IOSS
+number, weaker on filing); TaxJar (Stripe-owned, US-focused, pairs with
+Stripe Tax for AutoFile remittance); Avalara AvaTax (enterprise-grade, 190+
+countries, usage-based pricing); Quaderno (payment-processor-agnostic,
+strong EU VAT/global GST coverage, good invoicing). None of these tools act
+as Velor's legal IOSS intermediary by default -- that still requires
+appointing a formal EU-established fiscal intermediary for IOSS filing
+specifically. This is a real, not-yet-built integration.
+
+## 5. Payoneer Payout Integration (Stripe-Gap Fallback)
+
+William already has a Payoneer account. Payoneer's **Mass Payout API** (and
+the superset **Mass Payout & Services API**, which adds 1099/1042/W-8/W-9 tax
+form collection) is the relevant product -- documented at
+developer.payoneer.com with a public Postman collection for scoping request/
+response shapes before formal approval.
+
+**Not pure self-serve**: expect a partner-approval gate -- register a
+corporate account, describe business model/expected volumes, submit company
+registration documents, and only then receive OAuth 2.0 API credentials and
+sandbox access. No public source confirms a hard minimum volume threshold for
+approval; existing named partners (eBay, Walmart, Airbnb, Fiverr, Upwork) are
+large, so budget for a genuine business-development conversation and possibly
+a slower/manual-first path (CSV-based Mass Payouts) before full API access,
+rather than assuming instant self-serve.
+
+**How sellers link accounts**: closer to Stripe Express than a raw
+email-push -- the marketplace submits payee profile data via API, Payoneer
+returns a registration link, the seller completes bank/ID details on that
+link, and the account becomes tied to Velor's payer ID. Velor does not need
+to custody seller funds inside Payoneer; Velor funds its own Mass Payouts
+balance and pushes payouts by seller ID/email.
+
+**Coverage/fees (note: Payoneer's own marketing is internally inconsistent on
+exact country/currency counts -- treat as directionally "150-200+ countries,
+70-150+ currencies" rather than one precise figure, and verify against
+Velor's actual target country list before committing)**: roughly 1% receiving
+fee on marketplace-sourced payouts, up to ~2% additional FX fee if
+withdrawing to a different-currency bank account, a flat ~$1.50 same-currency
+bank withdrawal fee (0.5% above $50k/month), $29.95/year account fee waived
+above $2,000/year received, $1 minimum fee under $100 transactions. Funds
+land within minutes to the Payoneer balance, up to 3 business days if routed
+onward to a local bank.
+
+**Alternatives worth benchmarking before committing fully to Payoneer**:
+Wise Platform (API) -- generally the cheapest/most transparent FX (~0.4-0.6%),
+strong alternative to cost-check against Payoneer; Airwallex -- API-first,
+deeper programmatic control, more common with tech-forward platforms;
+PingPong -- built around cross-border e-commerce repatriation, strong in
+Asia seller corridors specifically. None is a drop-in replacement for the
+exact "artisan-craft-country gap," but Wise is the most credible one to
+compare Payoneer against on cost.
+
+**This is a real build item, not yet implemented.** Do not represent
+Payoneer payouts as available to sellers until the partner application is
+approved and the registration-link onboarding flow is actually built.
+
+## 6. Certificate-Handling System — Design (from CITES research above)
+
+Velor will accept certificate-required products as a deliberate business
+decision rather than blanket-rejecting every regulated material. Build:
+
+- **"Requires Certificate" flag** on a listing -- set automatically when a
+  seller declares a regulated material (or an AI/keyword moderation check
+  flags one), and manually settable by admin review. Distinct from the
+  antiquities/cultural-property hard-reject category (section 1 above), which
+  is never certificate-gated -- it is always a straight reject.
+- **Certificate upload** -- seller attaches the export permit (and import
+  permit where required) as a document tied to the product/SKU, not just the
+  seller profile, since different products from the same seller may involve
+  different species/materials with different permit status.
+- **Per-destination validity gating, default-deny** -- a CITES export permit
+  from the origin country does not guarantee every destination will accept
+  import. The system must require a matching import permit or documented
+  exemption per destination country before that destination is allowed to
+  appear as shippable for that listing. Default every destination to blocked
+  until explicitly confirmed -- never assume shippability.
+- **Human admin verification queue** -- no certificate-flagged listing goes
+  live without a human (or AI-assisted check with mandatory human override)
+  confirming the certificate is genuine, current, and matches the declared
+  material/quantity. Given the "unverifiable claims cause real seizures"
+  finding above, this step cannot be automated away.
+- **Expiry tracking** -- permits are valid up to 6 months (export) or 12
+  months (import); the system must track expiry and automatically un-list or
+  flag for renewal before expiry, not after.
+- **Audit trail** -- retain certificate documents and verification decisions
+  indefinitely; this is exactly the kind of record a customs authority or
+  CITES Management Authority could request during an investigation, and the
+  DSA/GPSR marketplace-liability trend above makes this defensibility
+  increasingly important regardless of CITES specifically.
+
+This is a genuine build item (Prisma schema + admin UI + seller upload flow),
+not yet implemented as of this skill's creation. Do not represent any
+certificate-gated listing as live/shippable to any destination until this
+system exists and has been populated for that specific listing and
+destination.
+
+## Sequencing & Source Note
+
+This skill is the legal/compliance backbone for the velor-cultural-marketplace
+vision skill -- read both together. All figures, thresholds, and legal states
+above were gathered via live web research on 2026-07-07 and are explicitly
+time-sensitive (the US de minimis suspension, EU 2026 customs changes, and UK
+OMP-extension consultation are all actively moving) -- re-verify before
+relying on a specific number for a live decision more than a few months after
+that date.
