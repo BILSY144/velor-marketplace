@@ -14,11 +14,22 @@ export async function GET() {
         select: {
           id: true,
           title: true,
+          description: true,
           price: true,
           stock: true,
           status: true,
           category: true,
           images: true,
+          weightGrams: true,
+          lengthCm: true,
+          widthCm: true,
+          heightCm: true,
+          hsCode: true,
+          originCountry: true,
+          isHandmade: true,
+          makerStory: true,
+          materials: true,
+          requiresCertificate: true,
           createdAt: true,
           _count: { select: { orderItems: true } },
         },
@@ -28,7 +39,8 @@ export async function GET() {
 
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
 
-  const products = seller.products.map((p) => ({ ...p, sales: p._count.orderItems }))
+  // The dashboard UI reads product.name; the schema field is title.
+  const products = seller.products.map((p) => ({ ...p, name: p.title, sales: p._count.orderItems }))
   return NextResponse.json({ products })
 }
 
@@ -36,6 +48,27 @@ export async function GET() {
 // compressed data URL (see resizeAndCompressImage in the Add Product form).
 function isValidImage(u: unknown): u is string {
   return typeof u === 'string' && (u.startsWith('http') || u.startsWith('data:image/'))
+}
+
+interface ProductBody {
+  name?: string
+  description?: string
+  price?: number
+  stock?: number
+  category?: string
+  images?: string[]
+  tags?: string[]
+  weightGrams?: number | null
+  lengthCm?: number | null
+  widthCm?: number | null
+  heightCm?: number | null
+  hsCode?: string | null
+  originCountry?: string | null
+  isHandmade?: boolean
+  makerStory?: string | null
+  materials?: string | null
+  containsRegulatedMaterial?: boolean
+  rulesAccepted?: boolean
 }
 
 export async function POST(req: NextRequest) {
@@ -69,23 +102,14 @@ export async function POST(req: NextRequest) {
   const {
     name, description, price, stock, category, images, tags,
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
-    isHandmade, makerStory,
-  } = body as {
-    name?: string
-    description?: string
-    price?: number
-    stock?: number
-    category?: string
-    images?: string[]
-    tags?: string[]
-    weightGrams?: number | null
-    lengthCm?: number | null
-    widthCm?: number | null
-    heightCm?: number | null
-    hsCode?: string | null
-    originCountry?: string | null
-    isHandmade?: boolean
-    makerStory?: string | null
+    isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
+  } = body as ProductBody
+
+  // Every listing submission must confirm compliance with the Seller Rules
+  // and Product Compliance Policy (/legal/seller-rules). Enforced server-side
+  // so the checkbox cannot be bypassed by calling the API directly.
+  if (rulesAccepted !== true) {
+    return NextResponse.json({ error: 'You must confirm this listing complies with the Seller Rules and Product Compliance Policy.' }, { status: 400 })
   }
 
   if (!name || !category || price == null) {
@@ -123,6 +147,11 @@ export async function POST(req: NextRequest) {
       originCountry: originCountry || null,
       isHandmade: !!isHandmade,
       makerStory: makerStory || null,
+      materials: materials ? String(materials).trim() : null,
+      // Declared regulated material puts the listing on the certificate
+      // track: it stays in enhanced review and cannot be approved until a
+      // valid certificate is verified by admin (enforced at approval time).
+      requiresCertificate: !!containsRegulatedMaterial,
     },
   })
 
@@ -150,23 +179,11 @@ export async function PATCH(req: NextRequest) {
   const {
     name, description, price, stock, category, images, tags,
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
-    isHandmade, makerStory,
-  } = body as {
-    name?: string
-    description?: string
-    price?: number
-    stock?: number
-    category?: string
-    images?: string[]
-    tags?: string[]
-    weightGrams?: number | null
-    lengthCm?: number | null
-    widthCm?: number | null
-    heightCm?: number | null
-    hsCode?: string | null
-    originCountry?: string | null
-    isHandmade?: boolean
-    makerStory?: string | null
+    isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
+  } = body as ProductBody
+
+  if (rulesAccepted !== true) {
+    return NextResponse.json({ error: 'You must confirm this listing complies with the Seller Rules and Product Compliance Policy.' }, { status: 400 })
   }
 
   if (!name || !category || price == null) {
@@ -203,6 +220,11 @@ export async function PATCH(req: NextRequest) {
       originCountry: originCountry || null,
       isHandmade: !!isHandmade,
       makerStory: makerStory || null,
+      materials: materials ? String(materials).trim() : null,
+      // One-way latch: once a product is on the certificate track it cannot
+      // be taken off it by the seller unticking the box on a later edit --
+      // only admin review can clear requiresCertificate.
+      requiresCertificate: existing.requiresCertificate || !!containsRegulatedMaterial,
     },
   })
 
