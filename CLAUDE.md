@@ -9,57 +9,43 @@ The review item opened 2026-07-04 is now closed. William reviewed the three tier
 
 ## CURRENT SESSION STATE - READ THIS FIRST
 
-**Status (verified 2026-07-07 ~00:35 UTC): all 6 items William asked Claude to relay/confirm are LIVE and deployed on main, verified directly against the GitHub Commits API (not from memory, not by trusting this file's own prior prose - see LAW #1). The 2026-07-07 00:15-00:24 UTC stock/inventory commits are ALSO real, intentional, and were built directly with William in this same live conversation - not a hallucination, not a mix-up with another task.**
+**Checkpoint saved 2026-07-07 (this commit). Everything below is verified against actual commit SHAs / live deployment status, not memory. Per LAW #1, anything not yet verified is explicitly marked as such rather than assumed done.**
 
-This section was rewritten from scratch after a mid-session context loss. Every commit SHA below was independently fetched from https://api.github.com/repos/BILSY144/velor-marketplace/commits/{sha} and its date/message quoted verbatim from the real API response.
+### 1. The 6 previously-relayed tasks + stock/inventory work -- VERIFIED LIVE (confirmed earlier this session, commit 75edc78, re-confirmed via the Vercel Deployments list just now)
+All showing "Ready" in production on vercel.com/velor1/velor-marketplace/deployments:
+- Pro-tier priority support (backend + copy) -- Task #154 -- deployed
+- Real tier-based ranking boost (Pro/Enterprise) -- Task #155 -- deployed
+- Velor AI assistant upgraded to tiered autonomous account manager -- Task #156 -- deployed
+- Go Live added to Enterprise feature lists (homepage/upgrade page/docs) -- Task #157 -- deployed
+- Homepage hero reverted to text-only -- Task #158 -- deployed
+- Real-time email alert for new seller signups -- Task #159 -- deployed
+- Stock/inventory: checkout enforcement (commit 4ca451f), stock decrement on order creation (1849f1d), SOLD OUT banners on shop grid (81ff997), marketplace detail (6df63aa) and shop detail (f17a8b9) -- all "Ready" in production.
 
-### Verified status of the 6 relayed tasks
+### 2. This session's CJ Marketplace work (velor-marketplace / velorcommerce.store only -- CJ has zero relevance to velorcommerce.co.uk)
 
-1. Pro-tier support SLA (same "under 2hr" response as Enterprise) - LIVE.
-   3261f64 (2026-07-06T05:37:55Z) - extended isPriority gate to PRO in GET (dashboard read) and POST (ticket creation).
-   10159a8 (05:39:46Z) - merged Pro/Enterprise into one Priority Support banner, removed dead "upgrade to Enterprise for priority support" copy, repointed Starter's upsell at Pro.
+**Seller attribution rework -- LIVE:**
+- `app/api/admin/cj-internal-seller/route.ts` rewritten for find-or-create-by-real-supplier-name (commit da755e3). "Nordholm Supply Co." test seller renamed live to "CJ Dropshippers" (existing seller id `cmr9f7yrr000212tmynmf7ffz`).
+- `app/api/admin/cj-import/route.ts` extended with a PATCH handler to reassign a product to a different resolved seller after the fact (commit 0fcf4c3).
 
-2. Priority-placement ranking boost (Pro +8, Enterprise +15, additive to 0-100 merit score) - LIVE.
-   37f6ab3 (05:51:07Z) bounded tier boost added on top of merit score.
-   b1008f5 (05:51:34Z) Seller.rankingScore field added.
-   e73be61 (05:52:05Z) / 6b23325 (05:52:27Z) shop + marketplace listing sorts switched from hard tier-first to bounded rankingScore.
-   baaeb08 (05:54:15Z) featured sellers sort switched too.
-   acce724 (05:55:18Z) documented in SELLER_RANKING.md as William-authorised.
-   Buyer-facing badges remain pure merit (unchanged by the boost), per the original design constraint.
+**Category seeding progress (CJ candidates: single-variant only, worldwide-shipping-basket confirmed, manually screened for genuine category relevance):**
+- Pet Supplies, Electronics, Home & Garden, Beauty & Health, Sports & Outdoors: seeded earlier, all supplierName confirmed null at import time (CJ's own ORDINARY_PRODUCT inventory, no separate named supplier available) -- correctly under "CJ Dropshippers" fallback, no correction needed.
+- Jewellery & Watches: 12 items imported. One item ("Crystal Heart Tree Of Life Charm Bracelet...", product `cmra0rcy5001a2vz3mc055hbi`) had a real CJ supplierName ("义乌市芳拓饰品厂") that was missed during the initial bulk import and briefly filed under the fallback seller -- caught and corrected via the new PATCH endpoint; now correctly attributed to its own seller (`cmra0vu4h0004113mudiybydz`). Task #226 marked completed.
+- Toys & Games: IN PROGRESS, NOT YET IMPORTED. Two keyword-search batches run (14 keywords total), 7+ valid worldwide-shipping candidates found so far (fidget spinners, wooden puzzles, mini RC car, bubble machine). No `cj-import` POST has been made yet for this category -- nothing is live under Toys & Games yet. Second batch's exact final count was not confirmed before this checkpoint was requested.
+- Remaining 9 categories (Fashion, Baby & Kids, Automotive, Books & Education, Art & Crafts, Office & Stationery, Travel & Luggage, Food & Grocery, Fitness & Gym): NOT STARTED.
 
-3. AI assistant tiering (Starter=generic, Pro=real account data, Enterprise=+order detail/drafts/escalation) - LIVE.
-   c486e0c (06:07:25Z) "Tier the AI assistant for real: Pro gets its own live account data, Enterprise adds order lookups, drafting, and real escalation to a priority support ticket."
+**Real supplier-name backfill for the 74 already-fallback products -- BLOCKED, NOT YET WORKING:**
+William asked (this session) for a factual correction to be verified and for all products currently under "CJ Dropshippers" to be re-checked against CJ's live product data for real supplier names wherever they exist (CJ Dropshippers is last-resort only). Verified fact: shipping cost calculation (`checkFreight` in `lib/cj.ts`) is keyed only on the CJ variant id (`vid`) and destination country -- it does NOT depend on seller/supplier name, so this is a trust/transparency fix, not a shipping-accuracy fix.
+- Built `app/api/admin/cj-resupplier/route.ts`: re-queries CJ's live `/product/query` per already-imported product's stored `cjProductId`, and reassigns to a real-named seller wherever CJ actually returns a `supplierName` (never fabricates one; if CJ genuinely has none, the product stays under "CJ Dropshippers" and is marked as checked so it isn't re-queried every run).
+- Committed as e15a1ed -- **THIS DEPLOYMENT FAILED ("Error" status on Vercel, ~30s build time).** The build error has NOT yet been read/diagnosed (checkpoint request interrupted that investigation). The route is NOT live -- calling it currently 404s. **This is the top open item for next session/next turn: read the Vercel build log for deployment e15a1ed (or its retry), fix the compile error, redeploy, then run the batch against all 74 fallback-seller products.**
 
-4. "Go Live" listed as an Enterprise benefit (homepage, upgrade page, docs) - LIVE.
-   2a6695b (06:10:23Z) homepage, d747b43 (06:11:26Z) upgrade page + comparison table, 8a4332b (06:12:41Z) tier table consistency, f688658 (06:24:49Z) CLAUDE.md updated.
-   Live-verified 2026-07-07 by fetching / HTML directly: both "Go Live" and "Enterprise" strings present together on the real deployed homepage, not just committed.
+### 3. Shop page pagination bug -- FIXED AND LIVE
+William reported: on `/shop` with a category filter, clicking "Next" at the bottom did nothing. Root cause found by reading `app/shop/page.tsx`: the shared `navigate()` helper unconditionally called `p.delete('page')` immediately after setting whatever was passed in, so the Next/Previous handlers' own `navigate({ page: ... })` call had its value stripped before the URL push ever happened. Fixed to only clear `page` when the update is a filter change (search/category), not when `page` itself is being set. Committed as **36ed946 -- confirmed "Ready" in production.** Not yet manually click-tested end-to-end in a live browser session (build succeeded; behavioral click-test still outstanding).
 
-5. Dashboard hero rollback to original text-only hero - LIVE.
-   9d0d26e (2026-07-06T12:18:10Z) "Revert homepage hero to the original text-only layout per William's request - removes the uploaded hero image, restores the eyebrow badge + headline + dual CTA hero."
-   2f05ef7 (13:33:18Z) session log entry confirming the revert.
-   Live-verified 2026-07-07 by fetching / HTML directly: no hero image present, eyebrow badge text present.
-
-6. New-seller signup real-time email alert to willsinclair144@gmail.com - LIVE (fully shipped, not merely "in progress").
-   e3c3006 (12:35:46Z) buildNewSellerAlertEmail added.
-   67e15e8 (12:35:47Z) real-time alert wired to willsinclair144@gmail.com, mojibake welcome-email subject bug fixed at the same time.
-   5aee0a4 (12:38:48Z) design-decision doc + known SellerApplication-pipeline gap noted.
-   54921f5 (13:49:25Z) "Provision real Seller account on application approval (was previously email-only); fire new-seller alert" - the missing piece that made the alert fire against a real provisioned account rather than email-only.
-
-### Stock/inventory enforcement work (2026-07-07, 00:15-00:24 UTC) - CONFIRMED REAL AND INTENTIONAL
-
-Built directly with William, live, in this same conversation (Task Nos. 216-220 on Claude's own task list, all completed) - did not come through any relay/other channel, not a hallucination, not a mix-up with a different task.
-
-- ca687fe (00:15:50Z) labelled the review score "Rating:" so a 0-review product doesn't read as an out-of-stock count.
-- 4ca451f (00:19:56Z) checkout now rejects payment-intent creation with 409 if any cart item quantity exceeds current Product.stock.
-- 1849f1d (00:20:39Z) Product.stock now decrements atomically on order creation, guarded against going negative under race conditions.
-- 81ff997 (00:21:53Z) SOLD OUT banner overlay + dimmed image added to shop listing grid cards at stock 0.
-- 6df63aa (00:23:53Z) marketplace product detail page brought to parity with shop detail page (stock-aware, Out of Stock state, SOLD OUT banner).
-- f17a8b9 (00:24:28Z) SOLD OUT banner added over the main image on the shop product detail page too.
-
-### Known limitations honestly disclosed (not fixed, not being claimed as fixed)
-- Live functional re-testing of items 1-3 and 6 (e.g. actually logging in as a Pro seller, actually triggering the tiered AI assistant, actually approving a test application) was not repeated in this pass - verification here is commit-level (exact SHA + timestamp + message pulled live from the GitHub API), not a fresh UI click-through. Confidence is high because items 4 and 5, which WERE re-verified live via homepage HTML fetch, both checked out exactly as committed.
-- The live catalogue currently has exactly 1 real product (Cat pet nail clipper, seller "Nordholm Supply Co." - a test seller name being retired), so the ranking-boost sort order could not be functionally re-verified with multiple competing sellers.
-- Next up: rewrite app/api/admin/cj-internal-seller/route.ts to find-or-create sellers by real CJ supplier name (fallback name "CJ Dropshippers", not "Nordholm Supply Co." which must never be reused), rename the existing test seller record, then resume the bulk CJ listings-seeding mission (10-25 varied, verified, single-variant, worldwide-shipping products per category across all 16 categories).
+### Immediate next steps (in priority order)
+1. Diagnose and fix the e15a1ed build failure for `cj-resupplier`, redeploy, confirm "Ready".
+2. Run the resupplier batch against all 74 fallback-attributed products; report real-name hit rate honestly (CJ's own inventory may genuinely have few/no named suppliers -- that is an accurate outcome, not a failure to fix).
+3. Finish Toys & Games seeding (currently mid-batch, nothing imported yet) then continue through the remaining 9 categories, splitting each `cj-import` call by resolved seller (per the Jewellery & Watches lesson) rather than a single fallback call per category.
+4. Manually verify the pagination fix by clicking Next/Previous on a live category page.
 
 ## HOW TO START A NEW SESSION (read once, follow always)
 
