@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
 
 interface Product {
   id: string
@@ -27,24 +28,6 @@ interface Product {
 // and the Category dropdown on the seller's Add Product form exactly). This
 // list is used directly as the value stored on Product.category, so a
 // listing routes straight to the matching category filter here.
-const CATEGORIES = [
-  'Electronics',
-  'Fashion',
-  'Home & Garden',
-  'Beauty & Health',
-  'Sports & Outdoors',
-  'Jewellery & Watches',
-  'Toys & Games',
-  'Baby & Kids',
-  'Pet Supplies',
-  'Automotive',
-  'Books & Education',
-  'Art & Crafts',
-  'Office & Stationery',
-  'Travel & Luggage',
-  'Food & Grocery',
-  'Fitness & Gym',
-]
 
 function ShopContent() {
   const { symbol, convert } = useCurrencyDisplay()
