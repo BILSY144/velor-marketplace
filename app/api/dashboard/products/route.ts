@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { name, description, price, stock, category, images, tags } = body as {
+  const {
+    name, description, price, stock, category, images, tags,
+    weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
+    isHandmade, makerStory,
+  } = body as {
     name?: string
     description?: string
     price?: number
@@ -74,6 +78,14 @@ export async function POST(req: NextRequest) {
     category?: string
     images?: string[]
     tags?: string[]
+    weightGrams?: number | null
+    lengthCm?: number | null
+    widthCm?: number | null
+    heightCm?: number | null
+    hsCode?: string | null
+    originCountry?: string | null
+    isHandmade?: boolean
+    makerStory?: string | null
   }
 
   if (!name || !category || price == null) {
@@ -103,8 +115,96 @@ export async function POST(req: NextRequest) {
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
       status: 'PENDING_REVIEW',
+      weightGrams: weightGrams != null ? Number(weightGrams) : null,
+      lengthCm: lengthCm != null ? Number(lengthCm) : null,
+      widthCm: widthCm != null ? Number(widthCm) : null,
+      heightCm: heightCm != null ? Number(heightCm) : null,
+      hsCode: hsCode || null,
+      originCountry: originCountry || null,
+      isHandmade: !!isHandmade,
+      makerStory: makerStory || null,
     },
   })
 
   return NextResponse.json({ product }, { status: 201 })
+}
+
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
+
+  const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
+  if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
+
+  const existing = await prisma.product.findUnique({ where: { id } })
+  if (!existing || existing.sellerId !== seller.id) {
+    return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+  }
+
+  const body = await req.json()
+  const {
+    name, description, price, stock, category, images, tags,
+    weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
+    isHandmade, makerStory,
+  } = body as {
+    name?: string
+    description?: string
+    price?: number
+    stock?: number
+    category?: string
+    images?: string[]
+    tags?: string[]
+    weightGrams?: number | null
+    lengthCm?: number | null
+    widthCm?: number | null
+    heightCm?: number | null
+    hsCode?: string | null
+    originCountry?: string | null
+    isHandmade?: boolean
+    makerStory?: string | null
+  }
+
+  if (!name || !category || price == null) {
+    return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
+  }
+
+  const parsedPrice = parseFloat(String(price))
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
+  }
+
+  const validImages = Array.isArray(images) ? images.filter(isValidImage) : []
+  if (validImages.length < 3) {
+    return NextResponse.json({ error: 'Please add at least 3 product images' }, { status: 400 })
+  }
+
+  const product = await prisma.product.update({
+    where: { id },
+    data: {
+      title: String(name).trim(),
+      description: String(description || '').trim(),
+      price: parsedPrice,
+      stock: Math.max(0, parseInt(String(stock || 0))),
+      category: String(category).trim(),
+      images: validImages,
+      tags: Array.isArray(tags)
+        ? tags.filter((t: unknown) => typeof t === 'string')
+        : [],
+      weightGrams: weightGrams != null ? Number(weightGrams) : null,
+      lengthCm: lengthCm != null ? Number(lengthCm) : null,
+      widthCm: widthCm != null ? Number(widthCm) : null,
+      heightCm: heightCm != null ? Number(heightCm) : null,
+      hsCode: hsCode || null,
+      originCountry: originCountry || null,
+      isHandmade: !!isHandmade,
+      makerStory: makerStory || null,
+    },
+  })
+
+  return NextResponse.json({ product })
 }
