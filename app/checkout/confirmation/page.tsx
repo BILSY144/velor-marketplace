@@ -90,6 +90,7 @@ function ConfirmationContent() {
         currency: order.currency ?? 'GBP',
         address: {
           name: buyerName,
+          phone: order.shipping.phone ?? '',
           line1: order.shipping.address ?? '',
           city: order.shipping.city ?? '',
           state: order.shipping.state ?? '',
