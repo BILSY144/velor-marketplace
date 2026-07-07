@@ -308,3 +308,145 @@ export interface CjTrackingInfo {
 export async function getTracking(cjOrderId: string): Promise<CjTrackingInfo | null> {
   return cjFetch<CjTrackingInfo | null>(`/logistic/trackInfo?orderId=${encodeURIComponent(cjOrderId)}`)
 }
+
+
+// ---------------------------------------------------------------------------
+// Order placement + payment (fulfillment automation)
+//
+// Places and pays for a CJ order using CJ's own account balance, immediately
+// after a buyer's Stripe payment succeeds on a listing sourced from the
+// internal CJ seller (seller.isInternal === true).
+//
+// Verified against the "Order" section of
+// https://developers.cjdropshipping.cn/en/api/api2/api/shopping.html on
+// 2026-07-07 (read in full, field-by-field). The "Payment" section of that
+// same page (Get Balance / Pay Balance / Pay Balance V2) could NOT be
+// retrieved verbatim in this environment -- but createOrderV2's own
+// documented behavior for payType=2 is: "balance payment, and the order will
+// continue through add-to-cart, order confirmation, and balance deduction"
+// automatically. So this single call is used as the complete create+pay
+// flow; no separate payBalanceV2 call is made. If CJ ever changes this
+// behavior, the failure will surface as a non-success 'result' from this
+// same call (see cjFetch, which throws on { result: false }), and the
+// catch block in the caller alerts customerservice@ rather than silently
+// leaving an order unfulfilled.
+//
+// William's CJ account balance must be pre-funded for this to succeed --
+// this code cannot add funds. An insufficient-balance response from CJ will
+// throw out of createOrder() same as any other CJ error and must be handled
+// by the caller (alert + manual fallback), never retried silently.
+// ---------------------------------------------------------------------------
+
+export interface CjOrderProduct {
+  vid: string
+  quantity: number
+}
+
+export interface CjCreateOrderParams {
+  orderNumber: string
+  shippingCustomerName: string
+  shippingAddress: string
+  shippingCity: string
+  shippingProvince: string
+  shippingZip?: string
+  shippingCountryCode: string
+  shippingPhone?: string
+  email?: string
+  logisticName: string
+  fromCountryCode?: string
+  products: CjOrderProduct[]
+}
+
+export interface CjCreateOrderData {
+  orderId: string
+  orderNumber: string
+  orderStatus?: string
+  actualPayment?: number
+  interceptOrderReasons?: { code: string; message: string }[]
+}
+
+// Full English country name for a 2-letter ISO code, derived from the
+// platform's own locale data. Never hand-maintain a country list here --
+// that's exactly the kind of thing that goes stale or gets a country wrong.
+export function countryNameFromCode(code: string): string {
+  try {
+    const name = new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase())
+    return name || code
+  } catch {
+    return code
+  }
+}
+
+// payType: 2 = balance payment (see file header note above). CJ's docs list
+// shippingCountryCode, shippingCountry, shippingProvince, shippingCity,
+// shippingCustomerName, shippingAddress, logisticName, fromCountryCode, and
+// products[].quantity as required (Y); everything else here is optional
+// but sent whenever we have it.
+export async function createOrder(params: CjCreateOrderParams): Promise<CjCreateOrderData> {
+  return cjFetch<CjCreateOrderData>('/shopping/order/createOrderV2', {
+    method: 'POST',
+    body: {
+      orderNumber: params.orderNumber,
+      shippingCustomerName: params.shippingCustomerName,
+      shippingAddress: params.shippingAddress,
+      shippingCity: params.shippingCity,
+      shippingProvince: params.shippingProvince,
+      shippingZip: params.shippingZip,
+      shippingCountryCode: params.shippingCountryCode.toUpperCase(),
+      shippingCountry: countryNameFromCode(params.shippingCountryCode),
+      shippingPhone: params.shippingPhone || '',
+      email: params.email,
+      payType: 2,
+      logisticName: params.logisticName,
+      fromCountryCode: (params.fromCountryCode || 'CN').toUpperCase(),
+      platform: 'Api',
+      products: params.products,
+    },
+  })
+}
+
+export interface CjOrderDetail {
+  orderId: string
+  orderNum: string
+  cjOrderId?: string
+  cjOrderCode?: string
+  orderStatus: string
+  subStatus?: string
+  trackNumber?: string
+  trackingProvider?: string
+  trackingUrl?: string
+}
+
+// orderId here accepts either our own orderNumber or CJ's internal orderId
+// (CJ's docs: "support: Custom order id, CJ order id"). Used right after
+// createOrder() to recover the real cjOrderId/cjOrderCode -- createOrderV2's
+// own response does not include them.
+export async function getOrderDetail(orderId: string): Promise<CjOrderDetail | null> {
+  return cjFetch<CjOrderDetail | null>(`/shopping/order/getOrderDetail?orderId=${encodeURIComponent(orderId)}`)
+}
+
+// A multi-product order needs ONE logisticName valid for every item in it,
+// but checkFreight() is only ever keyed by a single vid. This checks each
+// item independently then intersects by logisticName, so the value handed to
+// createOrder() is genuinely valid for the whole basket -- never guessed or
+// assumed. Returns null (never fabricates a fallback) if no common option
+// exists; the caller must treat that as a hard failure needing manual
+// placement, not silently drop items from the order.
+export async function findCommonLogistic(
+  items: { vid: string; quantity: number }[],
+  endCountryCode: string,
+  startCountryCode = 'CN'
+): Promise<string | null> {
+  if (items.length === 0) return null
+  const optionSets = await Promise.all(
+    items.map((item) => checkFreight(item.vid, item.quantity, endCountryCode, startCountryCode))
+  )
+  if (optionSets.some((set) => set.length === 0)) return null
+  const [first, ...rest] = optionSets
+  const common = first.filter((opt) =>
+    rest.every((set) => set.some((o) => o.logisticName === opt.logisticName))
+  )
+  if (common.length === 0) return null
+  common.sort((a, b) => a.logisticPrice - b.logisticPrice)
+  return common[0].logisticName
+}
