@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation'
 import GlobalHeader from './GlobalHeader'
 import GlobalFooter from './GlobalFooter'
+import CountryOriginStrip from './CountryOriginStrip'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -9,6 +10,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   return (
     <>
       {isPublic && <GlobalHeader />}
+      {isPublic && <CountryOriginStrip />}
       {children}
       {isPublic && <GlobalFooter />}
     </>
