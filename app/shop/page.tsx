@@ -22,6 +22,7 @@ interface Product {
   reviewCount: number
   discountedPrice: number | null
   percentOff: number | null
+  isHandmade: boolean
 }
 
 // The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
@@ -198,6 +199,11 @@ function ShopContent() {
                       {onSale && (
                         <div style={{ position: 'absolute', top: 10, left: 10, background: 'var(--accent)', color: '#000', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '4px', letterSpacing: '0.3px' }}>
                           {p.percentOff}% OFF
+                        </div>
+                      )}
+                      {p.isHandmade && (
+                        <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'var(--surface)', color: 'var(--text)', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.3px', border: '1px solid var(--accent)' }}>
+                          HANDMADE
                         </div>
                       )}
                       {p.stock <= 0 && (
