@@ -82,12 +82,13 @@ function ConfirmationContent() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        sellerId: order.items?.[0]?.sellerId,
         paymentIntentId: order.paymentIntentId,
         buyerEmail: order.shipping.email,
         buyerName,
         total: order.total,
         currency: order.currency ?? 'GBP',
-        shippingAddress: {
+        address: {
           name: buyerName,
           line1: order.shipping.address ?? '',
           city: order.shipping.city ?? '',
