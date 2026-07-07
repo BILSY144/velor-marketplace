@@ -7,32 +7,59 @@ _Auto-loaded each session. Last updated: 2026-07-04 (Seller tier limits updated)
 
 The review item opened 2026-07-04 is now closed. William reviewed the three tier pages (`/dashboard/upgrade/starter`, `/pro`, `/enterprise`) and confirmed directly: "i reviewed the tiers and they are worth the money." Price-to-value, feature honesty, visual escalation, and in-dashboard experience were all covered by the original review checklist -- William's sign-off covers all of it, not just pricing. No further action needed on this item. Keeping this note rather than deleting the history, per the file's own instruction not to remove the item until confirmed.
 
-## CURRENT SESSION STATE — READ THIS FIRST
+## CURRENT SESSION STATE - READ THIS FIRST
 
-**Status: Stripe Connect onboarding is now FULLY WORKING end-to-end. No blockers remaining from the overnight session.**
+**Status (verified 2026-07-07 ~00:35 UTC): all 6 items William asked Claude to relay/confirm are LIVE and deployed on main, verified directly against the GitHub Commits API (not from memory, not by trusting this file's own prior prose - see LAW #1). The 2026-07-07 00:15-00:24 UTC stock/inventory commits are ALSO real, intentional, and were built directly with William in this same live conversation - not a hallucination, not a mix-up with another task.**
 
-### What was wrong and how it was fixed (in order)
+This section was rewritten from scratch after a mid-session context loss. Every commit SHA below was independently fetched from https://api.github.com/repos/BILSY144/velor-marketplace/commits/{sha} and its date/message quoted verbatim from the real API response.
 
-1. **Restricted API key lacked permissions.** The live `STRIPE_SECRET_KEY` was a restricted key (`rk_live_...`) missing "Accounts Write" and two other Connect-related permissions. Rather than keep hunting for the exact permission rows, William created a brand new **standard secret key** (`sk_live_...`, named `velor-marketplace-prod`) via Stripe Dashboard → Developers → API keys → Standard keys → "Create secret key" → "Powering an integration you built". Pasted into Vercel Project Settings → Environment Variables → `STRIPE_SECRET_KEY`, then redeployed. This has full permissions by default.
-2. **Stripe account had never signed up for Connect.** After the key swap, a new, more specific error appeared: "You can only create new accounts if you've signed up for Connect." Fixed by going to `dashboard.stripe.com/connect` and completing the Connect signup flow (business model = **Marketplace** — "You collect payments and pay recipients", matching Velor's actual architecture of the platform collecting payment and paying out 85% to sellers).
-3. **"Go live" checklist had 2 incomplete steps.** In the Connect setup guide sidebar, under "Go live": "Verify your identity" was done, but "Confirm your integration choices" and "Get your API keys" were not. Completed both — confirmed integration summary (Stripe-hosted Express onboarding, platform liable for refunds/chargebacks, sellers redirected to Express Dashboard) and acknowledged the responsibilities checklist (refunds/chargebacks, onboarding/compliance, support for payment/risk inquiries).
-4. **End-to-end verification, live, on the test seller account** (`willsinclair144+testseller@gmail.com`): clicked "Connect with Stripe" → real Stripe Express onboarding loaded (`connect.stripe.com/setup/e/...`) → completed phone verification, business details, and real bank account details (this is a LIVE account, not test mode, so real bank details were required) → redirected back into the Velor dashboard → re-accepted seller terms (cookie had expired from an earlier sign-out) → Payouts page now shows **"Connected"** with green indicators for Charges, Payouts, and Verified.
+### Verified status of the 6 relayed tasks
 
-### Net result
+1. Pro-tier support SLA (same "under 2hr" response as Enterprise) - LIVE.
+   3261f64 (2026-07-06T05:37:55Z) - extended isPriority gate to PRO in GET (dashboard read) and POST (ticket creation).
+   10159a8 (05:39:46Z) - merged Pro/Enterprise into one Priority Support banner, removed dead "upgrade to Enterprise for priority support" copy, repointed Starter's upsell at Pro.
 
-The full seller money flow is now confirmed working: seller connects Stripe → onboarding completes → account shows Connected/Charges/Payouts/Verified → ready to receive 85% payouts on future sales (Velor keeps 15% platform fee), matching the model chosen during Connect signup.
+2. Priority-placement ranking boost (Pro +8, Enterprise +15, additive to 0-100 merit score) - LIVE.
+   37f6ab3 (05:51:07Z) bounded tier boost added on top of merit score.
+   b1008f5 (05:51:34Z) Seller.rankingScore field added.
+   e73be61 (05:52:05Z) / 6b23325 (05:52:27Z) shop + marketplace listing sorts switched from hard tier-first to bounded rankingScore.
+   baaeb08 (05:54:15Z) featured sellers sort switched too.
+   acce724 (05:55:18Z) documented in SELLER_RANKING.md as William-authorised.
+   Buyer-facing badges remain pure merit (unchanged by the boost), per the original design constraint.
 
-### Next planned topic (not started yet)
+3. AI assistant tiering (Starter=generic, Pro=real account data, Enterprise=+order detail/drafts/escalation) - LIVE.
+   c486e0c (06:07:25Z) "Tier the AI assistant for real: Pro gets its own live account data, Enterprise adds order lookups, drafting, and real escalation to a priority support ticket."
 
-Review the 15 storefront themes — this was the original long-standing goal before the seller-onboarding bug hunt took over. Nothing has been done on this yet this session.
+4. "Go Live" listed as an Enterprise benefit (homepage, upgrade page, docs) - LIVE.
+   2a6695b (06:10:23Z) homepage, d747b43 (06:11:26Z) upgrade page + comparison table, 8a4332b (06:12:41Z) tier table consistency, f688658 (06:24:49Z) CLAUDE.md updated.
+   Live-verified 2026-07-07 by fetching / HTML directly: both "Go Live" and "Enterprise" strings present together on the real deployed homepage, not just committed.
 
-### Other still-open items (lower priority, not confirmed as next by William)
+5. Dashboard hero rollback to original text-only hero - LIVE.
+   9d0d26e (2026-07-06T12:18:10Z) "Revert homepage hero to the original text-only layout per William's request - removes the uploaded hero image, restores the eyebrow badge + headline + dual CTA hero."
+   2f05ef7 (13:33:18Z) session log entry confirming the revert.
+   Live-verified 2026-07-07 by fetching / HTML directly: no hero image present, eyebrow badge text present.
 
-- Audit the five other legal/agreement pages for stale/incorrect info, same issue already fixed in `app/dashboard/terms/page.tsx`: `app/legal/seller-agreement/page.tsx`, `app/legal/terms/page.tsx`, `app/seller-agreement/page.tsx`, `app/legal/privacy/page.tsx`, `app/returns/page.tsx`.
-- Whether to re-lock `PREVIEW_OPEN` (currently `true` in `lib/store-themes.ts`) now that themes/logo have been tested.
-- Whether to flip `OUTREACH_ENABLED`.
+6. New-seller signup real-time email alert to willsinclair144@gmail.com - LIVE (fully shipped, not merely "in progress").
+   e3c3006 (12:35:46Z) buildNewSellerAlertEmail added.
+   67e15e8 (12:35:47Z) real-time alert wired to willsinclair144@gmail.com, mojibake welcome-email subject bug fixed at the same time.
+   5aee0a4 (12:38:48Z) design-decision doc + known SellerApplication-pipeline gap noted.
+   54921f5 (13:49:25Z) "Provision real Seller account on application approval (was previously email-only); fire new-seller alert" - the missing piece that made the alert fire against a real provisioned account rather than email-only.
 
----
+### Stock/inventory enforcement work (2026-07-07, 00:15-00:24 UTC) - CONFIRMED REAL AND INTENTIONAL
+
+Built directly with William, live, in this same conversation (Task Nos. 216-220 on Claude's own task list, all completed) - did not come through any relay/other channel, not a hallucination, not a mix-up with a different task.
+
+- ca687fe (00:15:50Z) labelled the review score "Rating:" so a 0-review product doesn't read as an out-of-stock count.
+- 4ca451f (00:19:56Z) checkout now rejects payment-intent creation with 409 if any cart item quantity exceeds current Product.stock.
+- 1849f1d (00:20:39Z) Product.stock now decrements atomically on order creation, guarded against going negative under race conditions.
+- 81ff997 (00:21:53Z) SOLD OUT banner overlay + dimmed image added to shop listing grid cards at stock 0.
+- 6df63aa (00:23:53Z) marketplace product detail page brought to parity with shop detail page (stock-aware, Out of Stock state, SOLD OUT banner).
+- f17a8b9 (00:24:28Z) SOLD OUT banner added over the main image on the shop product detail page too.
+
+### Known limitations honestly disclosed (not fixed, not being claimed as fixed)
+- Live functional re-testing of items 1-3 and 6 (e.g. actually logging in as a Pro seller, actually triggering the tiered AI assistant, actually approving a test application) was not repeated in this pass - verification here is commit-level (exact SHA + timestamp + message pulled live from the GitHub API), not a fresh UI click-through. Confidence is high because items 4 and 5, which WERE re-verified live via homepage HTML fetch, both checked out exactly as committed.
+- The live catalogue currently has exactly 1 real product (Cat pet nail clipper, seller "Nordholm Supply Co." - a test seller name being retired), so the ranking-boost sort order could not be functionally re-verified with multiple competing sellers.
+- Next up: rewrite app/api/admin/cj-internal-seller/route.ts to find-or-create sellers by real CJ supplier name (fallback name "CJ Dropshippers", not "Nordholm Supply Co." which must never be reused), rename the existing test seller record, then resume the bulk CJ listings-seeding mission (10-25 varied, verified, single-variant, worldwide-shipping products per category across all 16 categories).
 
 ## HOW TO START A NEW SESSION (read once, follow always)
 
@@ -122,6 +149,9 @@ Each page is a single, no-page-scroll view (`height: calc(100dvh - 64px)`, `over
 ---
 
 ## TASK LOG (recent)
+
+### Context-recovery verification pass [COMPLETE - 2026-07-07 ~00:35 UTC]
+After a mid-session context loss (William's laptop crashed), independently re-verified all 6 previously-relayed tasks (Pro support SLA, ranking boost, AI assistant tiering, Go Live Enterprise listing, hero rollback, new-seller email alert) directly against the live GitHub Commits API rather than trusting memory or this file's own prior prose (per LAW #1). All 6 confirmed LIVE with exact commit SHAs + timestamps (see CURRENT SESSION STATE above). Also confirmed the 2026-07-07 00:15-00:24 UTC SOLD OUT / stock-decrement / checkout-stock-enforcement commits are real, intentional work built directly with William in this same conversation, not a hallucination. Full report delivered to William in chat.
 
 ### Seller tier limits updated [COMPLETE — deployed 2026-07-04]
 Starter listing cap 50→20 (headline: 20 listings, seller dashboard, buyer protection). Pro listing cap unlimited→200, added free custom storefront as a headline Pro feature. Enterprise unchanged, free custom storefront now explicitly listed. Commission rates unchanged. Updated: `app/dashboard/upgrade/page.tsx`, `app/api/dashboard/products/route.ts`, `app/api/seller/subscription/route.ts`, `app/api/stripe/webhook/route.ts`, `app/page.tsx`, `app/dashboard/terms/page.tsx`, `docs/SUBSCRIPTION_AND_TIERS.md`.
