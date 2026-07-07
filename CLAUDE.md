@@ -1177,3 +1177,11 @@ time-sensitive (the US de minimis suspension, EU 2026 customs changes, and UK
 OMP-extension consultation are all actively moving) -- re-verify before
 relying on a specific number for a live decision more than a few months after
 that date.
+
+---
+
+## SESSION UPDATE — 2026-07-07 (check-in #17)
+
+No application code has shipped since check-in #16 (HEAD remained db7a2b3, the CJ order automation and phone-field batch for Task #181). Two commits landed on CLAUDE.md itself in the meantime: the Global Cultural Marketplace standing vision (commit f785bef) and the Global Compliance skill covering CITES, shipping/customs, marketplace liability, tax, and Payoneer payout research (commit 9f124ff). Both are documentation-only additions from other automated skill work, not product changes, and both deployed cleanly to Vercel Production (Ready) since Vercel auto-deploys every push to main including doc-only commits. Current HEAD is 9f124ff.
+
+Nothing is in progress on the application side right now. The next real work remains what check-in #16 already flagged: confirming the CJ order automation and phone-capture batch behaves correctly against a live order, then picking up the next item on Task #181 or whatever William prioritizes next session.
