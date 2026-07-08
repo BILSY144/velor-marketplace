@@ -83,8 +83,9 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 
-/* Hint text that only makes sense on touch devices. */
-.velor-swipe-hint { display: none; }
+/* Affordance for the draggable rails. Shown on desktop too, because a grab
+   cursor alone does not tell people the rail moves. */
+.velor-swipe-hint { display: inline; color: var(--muted); }
 
 /* ============================================================
    MOBILE RESPONSIVE LAYER
@@ -117,7 +118,7 @@ h1, h2, h3, h4, h5, h6 {
     overflow-wrap: break-word;
   }
 
-  .velor-swipe-hint { display: inline; }
+
 
   /* --- Page container --- */
   .velor-section {
