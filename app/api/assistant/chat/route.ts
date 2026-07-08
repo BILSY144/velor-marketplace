@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' }, { status: 502 })
       }
       const data = await res.json()
-      const reply: string = data?.content?.[0]?.text || 'Sorry, I was not able to generate a response.'
+      const reply: string = (Array.isArray(data?.content) ? data.content.filter((b: { type?: string; text?: string }) => b?.type === 'text' && typeof b.text === 'string').map((b: { text?: string }) => b.text as string).join('\n').trim() : '') || 'Sorry, I was not able to generate a response.'
       return NextResponse.json({ reply })
     } catch (err) {
       console.error('Assistant buyer route error:', err)
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await anthropicRes.json()
-    let reply: string = data?.content?.[0]?.text || 'Sorry, I was not able to generate a response.'
+    let reply: string = (Array.isArray(data?.content) ? data.content.filter((b: { type?: string; text?: string }) => b?.type === 'text' && typeof b.text === 'string').map((b: { text?: string }) => b.text as string).join('\n').trim() : '') || 'Sorry, I was not able to generate a response.'
 
     let escalated = false
     if (capabilities.canEscalate && reply.includes('[[ESCALATE]]')) {
