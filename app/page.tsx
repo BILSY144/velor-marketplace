@@ -258,7 +258,7 @@ export default function HomePage() {
             </div>
             <div className="vh-escrow-badge">
               <div className="tick">&#10003;</div>
-              <div><strong>Held in escrow</strong><span>Released to the seller once delivery is confirmed.</span></div>
+              <div><strong>Held in escrow</strong><span>Your money is held until delivery is confirmed.</span></div>
             </div>
           </div>
         </div>
@@ -382,7 +382,7 @@ export default function HomePage() {
           <div className="vh-steps">
             <div className="vh-step active"><div className="num">STEP 01</div><h3>You pay Velor, not the seller</h3><p>Your card is charged at checkout through Stripe. The money sits in escrow, untouched.</p></div>
             <div className="vh-step"><div className="num">STEP 02</div><h3>The seller ships, you track</h3><p>Tracking is issued the moment the parcel is collected. You watch it the whole way.</p></div>
-            <div className="vh-step"><div className="num">STEP 03</div><h3>Delivery is confirmed, funds release</h3><p>Only then is the seller paid. Open a dispute and the funds freeze immediately.</p></div>
+            <div className="vh-step"><div className="num">STEP 03</div><h3>Delivery is confirmed</h3><p>Your money stayed protected the whole way. Anything wrong &mdash; open a dispute and the funds freeze immediately.</p></div>
           </div>
         </div>
       </section>
