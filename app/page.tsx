@@ -63,6 +63,16 @@ const CULTURE_REELS: {
       { name: 'Tea bowls', code: 'JP', img: px(14705063) },
       { name: 'Azulejo tiles', code: 'PT', img: px(34930529, 'free-photo-of-azulejos-tile-mural-in-lisbon-portugal') },
       { name: 'Iznik blues', code: 'TR', img: px(27729719, 'free-photo-of-a-room-with-many-blue-and-white-plates-on-display') },
+      { name: 'Delft blue', code: 'NL', img: px(30617002) },
+      { name: 'Amalfi maiolica', code: 'IT', img: px(33839188) },
+      { name: 'Tagine pots', code: 'MA', img: px(35509025) },
+      { name: 'Sake sets', code: 'JP', img: px(18198515) },
+      { name: 'Polish stoneware', code: 'PL', img: px(35057456) },
+      { name: 'Island pottery', code: 'GR', img: px(33557541) },
+      { name: 'Pottery villages', code: 'VN', img: px(31365719) },
+      { name: 'Terracotta', code: 'IN', img: px(9412408) },
+      { name: 'Andalusian tiles', code: 'ES', img: px(36342685) },
+      { name: 'Blue-and-white vases', code: 'CN', img: px(33393570) },
     ],
   },
   {
@@ -75,6 +85,17 @@ const CULTURE_REELS: {
       { name: 'Batik', code: 'ID', img: px(34465333, 'free-photo-of-intricate-batik-cloth-with-traditional-patterns') },
       { name: 'Block printing', code: 'IN', img: px(37619027, 'free-photo-of-hand-block-printing-on-yellow-fabric') },
       { name: 'Berber rugs', code: 'MA', img: px(33282224, 'free-photo-of-traditional-moroccan-rugs-in-marrakesh-market') },
+      { name: 'Persian rugs', code: 'IR', img: px(13796199) },
+      { name: 'Ikat', code: 'UZ', img: px(34191411) },
+      { name: 'Mayan weaving', code: 'GT', img: px(2928381) },
+      { name: 'Silk saris', code: 'IN', img: px(23964630) },
+      { name: 'Tartan', code: 'GB', img: px(6764920) },
+      { name: 'Thai silk', code: 'TH', img: px(37179770) },
+      { name: 'Turkish towels', code: 'TR', img: px(30982437) },
+      { name: 'Kimono', code: 'JP', img: px(8750728) },
+      { name: 'Embroidered dresses', code: 'MX', img: px(35526860) },
+      { name: 'Aran knitwear', code: 'IE', img: px(33865626) },
+      { name: 'Alpaca of the Andes', code: 'PE', img: px(35729525) },
     ],
   },
   {
@@ -87,6 +108,16 @@ const CULTURE_REELS: {
       { name: 'Molcajetes', code: 'MX', img: px(37215000, 'free-photo-of-gourmet-seafood-and-avocado-molcajete-feast') },
       { name: 'Paella pans', code: 'ES', img: px(26587044, 'free-photo-of-seafood-with-lime-on-pan') },
       { name: 'Mate gourds', code: 'AR', img: px(25436250, 'free-photo-of-yerba-mate-in-bombilla') },
+      { name: 'Woks', code: 'CN', img: px(175754) },
+      { name: 'Bamboo steamers', code: 'CN', img: px(37137709) },
+      { name: 'Moka pots', code: 'IT', img: px(12122684) },
+      { name: 'Tulip tea glasses', code: 'TR', img: px(16228379) },
+      { name: 'Ramen bowls', code: 'JP', img: px(31418932) },
+      { name: 'Granite mortars', code: 'TH', img: px(8559685) },
+      { name: 'Copper pans', code: 'FR', img: px(37533988) },
+      { name: 'Tortilla presses', code: 'MX', img: px(5737823) },
+      { name: 'Beer steins', code: 'DE', img: px(28702296) },
+      { name: 'Clay chai cups', code: 'IN', img: px(10377676) },
     ],
   },
   {
@@ -98,6 +129,16 @@ const CULTURE_REELS: {
       { name: 'Maasai beadwork', code: 'KE', img: px(29828564) },
       { name: 'Evil-eye charms', code: 'TR', img: px(36919208) },
       { name: 'Baltic amber beads', code: 'LT', img: px(18730034) },
+      { name: 'Kundan sets', code: 'IN', img: px(33154729) },
+      { name: 'Jhumka earrings', code: 'IN', img: px(37601639) },
+      { name: 'Pearls', code: 'JP', img: px(7514818) },
+      { name: 'Bridal mehndi', code: 'IN', img: px(38230058) },
+      { name: 'Silver filigree', code: 'PT', img: px(33873052) },
+      { name: 'Berber silver', code: 'MA', img: px(30327970) },
+      { name: 'Opals', code: 'AU', img: px(13595294) },
+      { name: 'Beadwork of Accra', code: 'GH', img: px(20618742) },
+      { name: 'Thai gold', code: 'TH', img: px(16853521) },
+      { name: 'Taxco silver', code: 'MX', img: px(14579309) },
     ],
   },
   {
@@ -110,6 +151,16 @@ const CULTURE_REELS: {
       { name: 'Spice markets', code: 'IN', img: px(17870116) },
       { name: 'Olive oil', code: 'GR', img: px(25745504) },
       { name: 'Gongfu tea ware', code: 'CN', img: px(30767475, 'free-photo-of-red-chinese-teapot-set-on-dark-wooden-table') },
+      { name: 'Phin coffee', code: 'VN', img: px(14226658) },
+      { name: 'Saffron', code: 'IR', img: px(10487658) },
+      { name: 'Vanilla', code: 'MG', img: px(14381803) },
+      { name: 'Masala chai', code: 'IN', img: px(34324342) },
+      { name: 'Kimchi', code: 'KR', img: px(6823262) },
+      { name: 'Maple syrup', code: 'CA', img: px(17052506) },
+      { name: 'Cacao', code: 'ID', img: px(6420910) },
+      { name: 'Deglet Nour dates', code: 'DZ', img: px(17877978) },
+      { name: 'Ceylon tea', code: 'LK', img: px(30204867) },
+      { name: 'Mint tea', code: 'MA', img: px(36157389) },
     ],
   },
   {
@@ -122,6 +173,16 @@ const CULTURE_REELS: {
       { name: 'Hammam textiles', code: 'TR', img: px(15528975) },
       { name: 'Woven baskets', code: 'RW', img: px(29604314) },
       { name: 'K-beauty', code: 'KR', img: px(34833637) },
+      { name: 'Argan oil', code: 'MA', img: px(10110225) },
+      { name: 'Shea butter', code: 'GH', img: px(11284698) },
+      { name: 'Salt lamps', code: 'PK', img: px(31349632) },
+      { name: 'Mosaic lamps', code: 'TR', img: px(4553630) },
+      { name: 'Marseille soap', code: 'FR', img: px(35305097) },
+      { name: 'Rattan light', code: 'ID', img: px(31875658) },
+      { name: 'Sauna culture', code: 'FI', img: px(36420270) },
+      { name: 'Murano chandeliers', code: 'IT', img: px(35687707) },
+      { name: 'Oud & attar', code: 'AE', img: px(36389331) },
+      { name: 'Rose oil', code: 'BG', img: px(18745781) },
     ],
   },
 ]
@@ -495,10 +556,10 @@ export default function HomePage() {
           <div className="vh-sellband">
             <div>
               <h2>Sell it live. List it always.</h2>
-              <p>Velor is a shopping channel &mdash; and sellers are the broadcasters. Go on air to
-              buyers worldwide, sell in the stream, and keep your listings selling around the clock.
-              The first verified seller from each country opens it &mdash; and keeps the founding badge
-              and Pro free for life. Decision within 24 hours of your verification.</p>
+              <p>Velor is a shopping channel &mdash; and sellers are the broadcasters. The first
+              verified seller from each country opens it &mdash; keeping the founding badge, Pro free
+              for life, and live broadcasting for life, which no standard subscription includes.
+              Decision within 24 hours of your verification.</p>
             </div>
             <Link className="vh-btn" href="/apply">Apply to sell</Link>
           </div>
