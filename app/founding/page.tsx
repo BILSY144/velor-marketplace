@@ -219,7 +219,7 @@ export default function FoundingPage() {
           <div className="vf-spot">
             {SPOTLIGHT.map(s => (
               <Link className="vf-sc" href="/apply" key={s.code}>
-                <video src={s.video} muted loop playsInline preload="metadata" />
+                <video src={s.video} autoPlay muted loop playsInline preload="metadata" />
                 <div className="vf-veil" />
                 <div className="vf-badge">{status(s.code) === 'live' ? 'Trading' : 'Seat open'}</div>
                 <div className="inner">

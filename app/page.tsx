@@ -309,7 +309,7 @@ export default function HomePage() {
           <div className="vh-reel" ref={reelRef}>
             {REEL.map(r => (
               <div className="vh-tile" key={r.src}>
-                <video src={r.src} muted loop playsInline preload="metadata" />
+                <video src={r.src} autoPlay muted loop playsInline preload="metadata" />
                 <div className="vh-scrim" />
                 <div className="vh-chip">Preview</div>
                 <div className="vh-flagtag">{r.flag}</div>
