@@ -75,6 +75,16 @@ You have three extra capabilities Pro and Starter do not have:
 }
 
 async function callAnthropic(systemPrompt: string, messages: { role: string; content: string }[], apiKey: string) {
+  // The widget seeds the conversation with an opening assistant greeting.
+  // The Anthropic Messages API requires the conversation to START with a
+  // user message, so drop any leading assistant messages (and any stray
+  // empty ones) before sending, otherwise the API returns no content.
+  const normalized = messages
+    .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content ?? '') }))
+    .filter((m) => m.content.trim().length > 0)
+  while (normalized.length > 0 && normalized[0].role !== 'user') {
+    normalized.shift()
+  }
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -86,10 +96,7 @@ async function callAnthropic(systemPrompt: string, messages: { role: string; con
       model: 'claude-sonnet-5',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: messages.map((m) => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.content,
-      })),
+      messages: normalized,
     }),
   })
 }
