@@ -481,3 +481,16 @@ profiles (15+ items per country, do NOT invent) on /origins country pages; PDP; 
 listing form with speciality picker (validateSpecialitySelection in the API); CJ strip.
 Vision brief: mind-blowing, never generic - live rail wired to real /live, buyer Passport
 concept (stamp countries you buy from), culture-literate search, postcards with orders._
+
+_Checkpoint 2026-07-08 (continued). Homepage v2 VERIFIED live in Chrome: VELOR LIVE h1, all six
+culture reels, 228 images, 0 broken (videos load only when the tab is visible - Chrome defers
+media in hidden tabs; not a bug). Two new William directives, both shipped: (1) the whole site
+reads as a SHOPPING CHANNEL - sellers should instantly see they can sell live on the channel
+AND with always-on listings. Homepage sections are numbered like channels (CH 01 the network,
+CH 02+ the culture reels, countries are "190 channels", specialities are the "Channel guide"),
+seller band is "Sell it live. List it always.", /sell hero is "Your country's shopping
+channel." with a LIVE stat card, /apply lede + perk list mention the live channel, /about
+manifesto calls Velor "the world's shopping channel". This is a STANDING RULE: channel framing
+everywhere, both sell rails (live + listings) in every seller pitch. (2) Homepage is FULL-BLEED:
+.vh-wrap is width:100% with clamp padding, no max-width dead space. Commits 036fb8f (homepage)
+and ae6d29f (sell/apply/about)._
