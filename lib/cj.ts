@@ -5,9 +5,9 @@ import { prisma } from '@/lib/prisma'
 // SCOPE: this integration exists ONLY to seed velor-marketplace product
 // listings (attached to one internal Seller account, seller.isInternal =
 // true) and to automate fulfillment for orders on those listings. It has
-// nothing to do with, and does not affect, the separate velorcommerce.co.uk
-// project -- see CLAUDE.md, "CLARIFICATION -- 2026-07-06" for the full
-// decision record.
+// nothing to do with any other Velor project. It seeds this marketplace only.
+//
+//
 //
 // Auth flow verified against https://developers.cjdropshipping.cn/en/api/api2/api/auth.html
 // on 2026-07-06:
