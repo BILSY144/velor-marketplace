@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildOutreachEmail, sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email'; import { buildOutreachEmail } from '@/lib/outreachEmail';
 
 const TEST_KEY = 'velor-test-9f3k2p7q8w1z4x6m0b5n';
 
