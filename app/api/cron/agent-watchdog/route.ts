@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const now = Date.now()
   const breaches: string[] = []
-  const checks: Record<string, unknown> = {}
+  const checks: Record<string, string | number> = {}
 
   // 1. Listings Quality (Agent 7): clean listings should never sit unmoderated
   // for 6h+ (auto-moderate runs every 5 minutes). Certificate-gated and
