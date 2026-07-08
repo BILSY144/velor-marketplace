@@ -157,9 +157,10 @@ export default function ApplyPage() {
             <div className="ap-eyebrow"><span className="ap-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
             <h1 className="ap-h1">Be the first from your country.</h1>
             <p className="ap-lede">
-              Velor is a global marketplace where the country and the maker stay on every
-              listing. Whoever arrives first from each of the world&apos;s 190 countries keeps
-              something no seller after them can ever earn.
+              Velor is the world&apos;s shopping channel — sellers broadcast live and sell in the
+              stream, while their listings sell around the clock. The country and the maker stay
+              on every listing, and whoever arrives first from each of the world&apos;s 190
+              countries keeps something no seller after them can ever earn.
             </p>
           </div>
           <div className="ap-perkbox">
@@ -168,7 +169,7 @@ export default function ApplyPage() {
               <li><i>&#10003;</i><span><b>Pro, free for life.</b> Never charged, for as long as the subscription runs unbroken.</span></li>
               <li><i>&#10003;</i><span><b>The founding badge.</b> Permanent, on your store and every listing.</span></li>
               <li><i>&#10003;</i><span><b>The first store on your country&apos;s page.</b> Front and centre until others arrive &mdash; credited as the seller who opened it, always.</span></li>
-              <li><i>&#10003;</i><span><b>The homepage showreel slot.</b> Your film, on the homepage.</span></li>
+              <li><i>&#10003;</i><span><b>Your own live channel.</b> Broadcast on Velor Live and sell in the stream &mdash; plus the homepage showreel slot: your film, on the homepage.</span></li>
             </ul>
           </div>
         </div>

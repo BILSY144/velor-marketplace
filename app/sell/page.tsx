@@ -118,11 +118,12 @@ export default function SellPage() {
         <div className="vs-hero">
           <div>
             <div className="vs-eyebrow"><span className="vs-dot" /> Sell on Velor &middot; buyers arrive 6 August</div>
-            <h1>Sell where origin matters.</h1>
+            <h1>Your country&apos;s shopping channel.</h1>
             <p className="vs-lede">
-              Velor buyers come looking for what your country does best — and your name, your
-              city and your story stay on every listing. No race to the bottom against anonymous
-              mass sellers.
+              Velor is a live shopping channel with a marketplace built in. Go on air from your
+              workshop, your stall, your kitchen — sell in the stream while buyers watch it made —
+              and your listings keep selling around the clock. Buyers come looking for what your
+              country does best, and your name, your city and your story stay on every listing.
             </p>
             <div>
               <Link className="vs-btn vs-btn-p" href="/apply">Apply to sell</Link>
@@ -135,6 +136,7 @@ export default function SellPage() {
             </div>
           </div>
           <div className="vs-stack">
+            <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Two ways to sell, one store.</b> Broadcast live on Velor Live and sell in the stream, while your listings sell around the clock. Every channel needs its broadcasters.</div></div>
             <div className="vs-stat"><div className="n">190</div><div className="t"><b>Countries, one marketplace.</b> Your country&apos;s page exists the day you list — and the first seller from each country opens it.</div></div>
             <div className="vs-stat"><div className="n">0%</div><div className="t"><b>Listing fees. None.</b> You pay commission when you sell, or a subscription that lowers it. Nothing to list.</div></div>
             <div className="vs-stat"><div className="n">{APPLICATION_SLA_HOURS}h</div><div className="t"><b>Application decision</b> within {APPLICATION_SLA_HOURS} hours of your identity verification completing. The clock is ours, the camera is yours.</div></div>

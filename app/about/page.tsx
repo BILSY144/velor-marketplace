@@ -57,8 +57,9 @@ export default function AboutPage() {
         </p>
         <p style={{ fontSize: 17.5, lineHeight: 1.7, color: 'var(--muted)', margin: 0, maxWidth: '58ch' }}>
           Most marketplaces flatten all of that into anonymous listings from nowhere. Velor is built the
-          other way up: a global marketplace where the origin is the organising idea, real makers are the
-          only sellers, and buying something means knowing exactly where it came from.
+          other way up: the world&apos;s shopping channel, where sellers broadcast live from the places
+          things are made, the origin is the organising idea, real makers are the only sellers, and
+          buying something means knowing exactly where it came from.
         </p>
 
         <div style={{ marginTop: 64 }}>
