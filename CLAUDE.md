@@ -397,3 +397,6 @@ identity rail and would move China out of "verification pending".
 - Six autoplaying videos need lazy-loading and an IntersectionObserver to pause off-screen, or phones suffer.
 
 Scheduled check-in 2026-07-08 17:48 UTC. Since the 17:07 check-in, one commit landed: 0da2b8c, which appended the homepage-redesign design-phase handover section to this file. No code commits after b78ff0c; the redesign remains design-only and nothing has been pushed to the codebase. Next steps remain as listed in the design section and NEXT STEPS above.
+
+
+Scheduled check-in 2026-07-08 18:06 UTC. No new work since the 17:48 check-in: the repo tip is 3b10cee, that check-in's own CLAUDE.md commit, and no code commits have landed after b78ff0c. The homepage redesign remains design-only in the Downloads folder. Nothing to log this cycle; next steps remain as listed in the design section and NEXT STEPS above.
