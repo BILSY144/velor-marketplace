@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmail, buildOutreachEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email';
+import { buildOutreachEmail } from '@/lib/outreachEmail';
+import { langForCountry } from '@/lib/outreachI18n';
 
 const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 30;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
@@ -17,18 +19,52 @@ function unsub(email: string | null): string {
   return 'https://velorcommerce.store/unsubscribe?u=' + Buffer.from(email || '', 'utf8').toString('base64url');
 }
 
+// Prospect shape we need. Kept loose because SellerProspect.country is free-text
+// on some scout sources (eBay/Etsy) and an ISO-2 market code on others.
+interface ProspectRow {
+  id: string;
+  name: string;
+  platform: string;
+  storeUrl: string;
+  category: string;
+  sellerType: string;
+  country: string | null;
+  email: string | null;
+}
+
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
+
   if (process.env.OUTREACH_ENABLED === 'false') {
     return NextResponse.json({ ok: true, skipped: 'outreach disabled' });
   }
 
   let initialSent = 0, followup1Sent = 0, followup2Sent = 0;
   const errors: string[] = [];
+  // Distribution of languages actually sent this run, for the director briefing.
+  const byLang: Record<string, number> = {};
+
+  async function sendTo(prospect: ProspectRow, emailType: 'initial' | 'followup1' | 'followup2') {
+    const { subject, html, lang } = buildOutreachEmail({
+      prospect: {
+        name: prospect.name,
+        platform: prospect.platform,
+        storeUrl: prospect.storeUrl,
+        category: prospect.category,
+        sellerType: safeSellerType(prospect.sellerType),
+        country: prospect.country,
+      },
+      emailType,
+      unsubscribeUrl: unsub(prospect.email),
+      lang: langForCountry(prospect.country),
+    });
+    await sendEmail({ from: SELLER_FROM, to: prospect.email as string, subject, html, bcc: MONITOR });
+    await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType, subject } });
+    byLang[lang] = (byLang[lang] || 0) + 1;
+  }
 
   // Stage 1: Initial outreach
   const newProspects = await prisma.sellerProspect.findMany({
@@ -39,14 +75,7 @@ export async function GET(req: NextRequest) {
   for (const prospect of newProspects) {
     if (!prospect.email) continue;
     try {
-      const { subject, html } = buildOutreachEmail({
-        prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-          category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
-        emailType: 'initial',
-        unsubscribeUrl: unsub(prospect.email),
-      });
-      await sendEmail({ from: SELLER_FROM, to: prospect.email, subject, html, bcc: MONITOR });
-      await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'initial', subject } });
+      await sendTo(prospect as ProspectRow, 'initial');
       initialSent++;
     } catch (err) { errors.push(`initial -> ${prospect.id}: ${err instanceof Error ? err.message : 'error'}`); }
   }
@@ -65,20 +94,13 @@ export async function GET(req: NextRequest) {
     for (const prospect of followup1Due) {
       if (!prospect.email) continue;
       try {
-        const { subject, html } = buildOutreachEmail({
-          prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-            category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
-          emailType: 'followup1',
-          unsubscribeUrl: unsub(prospect.email),
-        });
-        await sendEmail({ from: SELLER_FROM, to: prospect.email, subject, html, bcc: MONITOR });
-        await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup1', subject } });
+        await sendTo(prospect as ProspectRow, 'followup1');
         followup1Sent++;
       } catch (err) { errors.push(`followup1 -> ${prospect.id}: ${err instanceof Error ? err.message : 'error'}`); }
     }
   }
 
-  // Stage 3: Followup 2 (5+ days after followup1) — marks status 'outreached'
+  // Stage 3: Followup 2 (5+ days after followup1) - marks status 'outreached'
   const budget2 = MAX_PER_RUN - initialSent - followup1Sent;
   if (budget2 > 0) {
     const followup2Due = await prisma.sellerProspect.findMany({
@@ -92,14 +114,7 @@ export async function GET(req: NextRequest) {
     for (const prospect of followup2Due) {
       if (!prospect.email) continue;
       try {
-        const { subject, html } = buildOutreachEmail({
-          prospect: { name: prospect.name, platform: prospect.platform, storeUrl: prospect.storeUrl,
-            category: prospect.category, sellerType: safeSellerType(prospect.sellerType) },
-          emailType: 'followup2',
-          unsubscribeUrl: unsub(prospect.email),
-        });
-        await sendEmail({ from: SELLER_FROM, to: prospect.email, subject, html, bcc: MONITOR });
-        await prisma.outreachLog.create({ data: { prospectId: prospect.id, emailType: 'followup2', subject } });
+        await sendTo(prospect as ProspectRow, 'followup2');
         await prisma.sellerProspect.update({ where: { id: prospect.id }, data: { status: 'outreached' } });
         followup2Sent++;
       } catch (err) { errors.push(`followup2 -> ${prospect.id}: ${err instanceof Error ? err.message : 'error'}`); }
@@ -107,10 +122,16 @@ export async function GET(req: NextRequest) {
   }
 
   const totalSent = initialSent + followup1Sent + followup2Sent;
+  const details: Record<string, string | number> = {
+    initialSent, followup1Sent, followup2Sent, totalSent,
+    errorCount: errors.length,
+    errors: errors.slice(0, 10).join(' | '),
+    languages: Object.entries(byLang).map(([l, n]) => `${l}:${n}`).join(', '),
+  };
   await prisma.agentLog.create({
     data: { agentName: 'outreach-auto', action: 'outreach_run',
       status: errors.length === 0 ? 'success' : totalSent > 0 ? 'partial' : 'error',
-      details: { initialSent, followup1Sent, followup2Sent, totalSent, errorCount: errors.length, errors: errors.slice(0, 10) } },
+      details },
   });
-  return NextResponse.json({ ok: true, initialSent, followup1Sent, followup2Sent, totalSent, errors });
+  return NextResponse.json({ ok: true, initialSent, followup1Sent, followup2Sent, totalSent, byLang, errors });
 }
