@@ -71,24 +71,144 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 3px;
 }
 
-
-/* ---- Mobile responsive layer (max-width 640px only; desktop unaffected) ---- */
-@media (max-width: 640px) {
-  html, body { overflow-x: hidden; }
-  [style*='padding:0 40px'] { padding-left: 16px !important; padding-right: 16px !important; }
-  [style*='padding:0 48px'] { padding-left: 16px !important; padding-right: 16px !important; }
-  [style*='padding:80px 0'] { padding-top: 48px !important; padding-bottom: 48px !important; }
-  [style*='grid-template-columns:repeat(4, 1fr)'],
-  [style*='grid-template-columns:repeat(5, 1fr)'] { grid-template-columns: repeat(2, 1fr) !important; }
-  [style*='grid-template-columns:repeat(3, 1fr)'] { grid-template-columns: 1fr !important; }
-  header [style*='height:64px'] { flex-wrap: wrap !important; height: auto !important; padding-top: 10px !important; padding-bottom: 10px !important; }
-  header [style*='max-width:600px'] { order: 3 !important; flex: 1 0 100% !important; max-width: 100% !important; margin: 8px 0 0 0 !important; }
-}
-
-.velor-live-scroll {
+/* Draggable rails: the flag strip and the live-shopping rail. Hide the
+   scrollbar because both are driven by pointer drag + momentum. */
+.velor-live-scroll,
+.velor-origin-strip {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.velor-live-scroll::-webkit-scrollbar {
+.velor-live-scroll::-webkit-scrollbar,
+.velor-origin-strip::-webkit-scrollbar {
   display: none;
+}
+
+/* Hint text that only makes sense on touch devices. */
+.velor-swipe-hint { display: none; }
+
+/* ============================================================
+   MOBILE RESPONSIVE LAYER
+   ------------------------------------------------------------
+   IMPORTANT: the previous version of this layer targeted inline
+   styles with attribute substring selectors, e.g.
+       [style*='padding:0 40px']
+   Those never matched anything. React serialises inline styles
+   with a space after the colon ("padding: 0px 40px"), and it
+   normalises units, so the strings never appeared in the DOM.
+   The whole mobile layer was silently dead, which is why the
+   site rendered as a squeezed desktop page on a phone.
+
+   Rules below key off real class names instead. Any component
+   that needs mobile treatment must opt in by adding the class.
+   ============================================================ */
+
+/* Tablet and below */
+@media (max-width: 900px) {
+  .velor-desktop-nav { display: none !important; }
+  .velor-mobile-toggle { display: inline-flex !important; }
+}
+
+/* Phones */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    /* Never let a long unbroken word (a product title, a URL) push
+       the page wider than the viewport. */
+    overflow-wrap: break-word;
+  }
+
+  .velor-swipe-hint { display: inline; }
+
+  /* --- Page container --- */
+  .velor-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .velor-hero {
+    padding-top: 44px !important;
+    padding-bottom: 52px !important;
+  }
+  .velor-hero-sub { font-size: 15.5px !important; }
+  .velor-h2 { font-size: 22px !important; }
+
+  /* Full-width stacked CTAs: a 44px-plus tap target each. */
+  .velor-cta-row { flex-direction: column; align-items: stretch; }
+  .velor-cta-row > a { text-align: center; }
+
+  /* --- Grids --- */
+  /* Product and seller tiles: two per row rather than three cramped ones. */
+  .velor-grid-tiles {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  .velor-grid-cats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* --- Header --- */
+  .velor-trustbar {
+    text-align: left !important;
+    white-space: nowrap;
+    overflow-x: auto;
+    font-size: 11px !important;
+    padding: 6px 14px !important;
+    scrollbar-width: none;
+  }
+  .velor-trustbar::-webkit-scrollbar { display: none; }
+
+  .velor-headerbar {
+    height: auto !important;
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    flex-wrap: wrap;
+  }
+  /* Search drops onto its own full-width row underneath the logo. */
+  .velor-searchform {
+    order: 3;
+    flex: 1 0 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .velor-right {
+    gap: 16px !important;
+    margin-left: auto;
+  }
+  /* These live in the hamburger panel on mobile instead. */
+  .velor-currency,
+  .velor-account-btn { display: none !important; }
+
+  .velor-mobile-panel {
+    max-height: 72vh;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  /* Apple HIG 44pt / Material 48dp minimum tap target. */
+  .velor-mobile-panel a,
+  .velor-mobile-panel button,
+  .velor-mobile-panel select {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* --- Live rail --- */
+  /* Two cards visible with a third peeking, so it reads as swipeable. */
+  .velor-live-scroll > * {
+    flex: 0 0 42vw !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .velor-section {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .velor-grid-tiles { gap: 10px !important; }
+}
+
+/* Respect the user's reduced-motion setting. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }

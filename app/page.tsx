@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { countryFlagUrl } from '@/lib/countryFlag'
+import DragScroller from '@/components/DragScroller'
 
 type Product = {
   id: string
@@ -32,10 +33,6 @@ const BADGES: Record<string, { label: string; color: string; bg: string }> = {
   TOP_RATED: { label: 'Top Rated Seller', color: '#FFD54A', bg: 'rgba(255,213,74,0.12)' },
   TRUSTED: { label: 'Trusted Seller', color: '#C7CDD6', bg: 'rgba(199,205,214,0.12)' },
   ESTABLISHED: { label: 'Established Seller', color: '#CD8B5A', bg: 'rgba(205,139,90,0.12)' },
-}
-
-function money(n: number) {
-  return '£' + Number(n || 0).toFixed(2)
 }
 
 function Badge({ code }: { code?: string | null }) {
@@ -104,7 +101,7 @@ export default function Home() {
               'radial-gradient(1100px 500px at 80% -10%, rgba(255,107,0,0.18), transparent 60%), radial-gradient(800px 500px at 0% 110%, rgba(0,230,118,0.10), transparent 55%)',
           }}
         />
-        <div style={{ ...section, position: 'relative', padding: '86px 24px 92px' }}>
+        <div className="velor-section velor-hero" style={{ ...section, position: 'relative', padding: '86px 24px 92px' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -129,7 +126,7 @@ export default function Home() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 'clamp(38px, 6vw, 68px)',
+              fontSize: 'clamp(32px, 6vw, 68px)',
               lineHeight: 1.04,
               letterSpacing: '-0.02em',
               margin: 0,
@@ -141,13 +138,13 @@ export default function Home() {
             <span style={{ color: 'var(--accent)' }}>Protected</span> every step of the way.
           </h1>
 
-          <p style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
+          <p className="velor-hero-sub" style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
             Buy from vetted sellers around the world with total confidence. Your payment is held
             safely until you confirm your order arrived — and the whole marketplace is run,
             monitored and protected by AI, around the clock.
           </p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+          <div className="velor-cta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
             <Link
               href="/shop"
               style={{
@@ -184,6 +181,7 @@ export default function Home() {
       {/* TRUST STRIP */}
       <section style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
         <div
+          className="velor-section"
           style={{
             ...section,
             padding: '26px 24px',
@@ -209,30 +207,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section style={{ ...section, padding: '32px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+      {/* LIVE SHOPPING */}
+      <section className="velor-section" style={{ ...section, padding: '32px 24px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
-            <h2 style={h2}>Velor Live Shopping</h2>
+            <h2 className="velor-h2" style={h2}>Velor Live Shopping</h2>
           </div>
-          <Link href="/live" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+          <Link href="/live" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
             See all live sellers →
           </Link>
         </div>
         <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
           Our Enterprise sellers, broadcasting live from anywhere in the world - a perk earned, not bought.
+          <span className="velor-swipe-hint"> Drag to browse.</span>
         </p>
-        <div
-          className="velor-live-scroll"
-          style={{
-            display: 'flex',
-            gap: 14,
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-            paddingBottom: 8,
-          }}
-        >
+        <DragScroller className="velor-live-scroll" ariaLabel="Live sellers">
           {Array.from({ length: 12 }).map((_, i) => {
             const ls = liveStreams[i]
             if (ls) {
@@ -240,10 +230,11 @@ export default function Home() {
                 <Link
                   key={ls.id}
                   href={`/live/${ls.roomName}`}
+                  data-drag-href={`/live/${ls.roomName}`}
+                  draggable={false}
                   style={{
                     display: 'block',
                     flex: '0 0 180px',
-                    scrollSnapAlign: 'start',
                     borderRadius: 14,
                     overflow: 'hidden',
                     background: 'var(--surface)',
@@ -273,6 +264,7 @@ export default function Home() {
                       <img
                         src={ls.products[0].images[0]}
                         alt=""
+                        draggable={false}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
                       />
                     )}
@@ -289,7 +281,6 @@ export default function Home() {
                 key={`live-slot-${i}`}
                 style={{
                   flex: '0 0 180px',
-                  scrollSnapAlign: 'start',
                   borderRadius: 14,
                   overflow: 'hidden',
                   background: 'var(--surface)',
@@ -308,18 +299,18 @@ export default function Home() {
               </div>
             )
           })}
-        </div>
+        </DragScroller>
       </section>
 
       {/* CATEGORIES */}
-      <section style={{ ...section, padding: '64px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 22 }}>
-          <h2 style={h2}>Shop by category</h2>
-          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+      <section className="velor-section" style={{ ...section, padding: '64px 24px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 22 }}>
+          <h2 className="velor-h2" style={h2}>Shop by category</h2>
+          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
             View all →
           </Link>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+        <div className="velor-grid-cats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
           {CATEGORIES.map((c) => (
             <Link
               key={c}
@@ -345,9 +336,9 @@ export default function Home() {
       </section>
 
       {/* TOP-RATED SELLERS */}
-      <section style={{ ...section, padding: '54px 24px 20px' }}>
+      <section className="velor-section" style={{ ...section, padding: '54px 24px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-          <h2 style={h2}>Top-rated sellers</h2>
+          <h2 className="velor-h2" style={h2}>Top-rated sellers</h2>
         </div>
         <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
           Ranked by real delivery performance, reviews and reliability.
@@ -368,7 +359,7 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
+          <div className="velor-grid-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
             {sellers.map((s) => {
               const thumb = s.products?.[0]?.images?.[0]
               return (
@@ -430,10 +421,10 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section style={{ ...section, padding: '54px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 22 }}>
-          <h2 style={h2}>Fresh on Velor</h2>
-          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+      <section className="velor-section" style={{ ...section, padding: '54px 24px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 22 }}>
+          <h2 className="velor-h2" style={h2}>Fresh on Velor</h2>
+          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
             Browse all →
           </Link>
         </div>
@@ -450,7 +441,7 @@ export default function Home() {
             New listings are arriving as our first sellers go live. Check back very soon.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
+          <div className="velor-grid-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
             {products.map((p) => {
               const img = p.images?.[0] || p.image
               const count = p._count?.reviews ?? p.reviews?.length ?? 0
@@ -493,10 +484,10 @@ export default function Home() {
                   </div>
                   <div style={{ padding: '8px 12px 10px' }}>
                     <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 19, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 6 }}>
                       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>{symbol}{convert(p.price, p.seller?.currency || 'GBP').toFixed(2)}</span>
                       {count > 0 && (
-                        <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>
+                        <span style={{ color: 'var(--muted)', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                           ★ {avg.toFixed(1)} ({count})
                         </span>
                       )}
@@ -520,8 +511,8 @@ export default function Home() {
 
       {/* BUYER PROTECTION EXPLAINER */}
       <section style={{ borderTop: '1px solid var(--border)', marginTop: 54, background: 'var(--surface)' }}>
-        <div style={{ ...section, padding: '60px 24px' }}>
-          <h2 style={{ ...h2, textAlign: 'center' }}>How Velor protects your money</h2>
+        <div className="velor-section" style={{ ...section, padding: '60px 24px' }}>
+          <h2 className="velor-h2" style={{ ...h2, textAlign: 'center' }}>How Velor protects your money</h2>
           <p style={{ color: 'var(--muted)', fontSize: 15, textAlign: 'center', maxWidth: 620, margin: '12px auto 40px' }}>
             You should never pay and hope. On Velor, the seller only gets paid once you have your order.
           </p>
@@ -561,9 +552,9 @@ export default function Home() {
       </section>
 
       {/* SELL ON VELOR */}
-      <section style={{ ...section, padding: '68px 24px 20px' }}>
+      <section className="velor-section" style={{ ...section, padding: '68px 24px 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h2 style={h2}>Sell on Velor</h2>
+          <h2 className="velor-h2" style={h2}>Sell on Velor</h2>
           <p style={{ color: 'var(--muted)', fontSize: 15, maxWidth: 620, margin: '12px auto 0' }}>
             List for free and reach buyers worldwide. Upgrade any time for lower commission and more listings.
           </p>
@@ -643,6 +634,7 @@ export default function Home() {
           <Link
             href="/sell"
             style={{
+              display: 'inline-block',
               background: 'var(--accent)',
               color: '#000',
               fontWeight: 800,
@@ -658,23 +650,23 @@ export default function Home() {
       </section>
 
       {/* CLOSING */}
-      <section style={{ ...section, padding: '70px 24px 90px' }}>
+      <section className="velor-section" style={{ ...section, padding: '70px 24px 90px' }}>
         <div
           style={{
             borderRadius: 22,
             border: '1px solid var(--border)',
             background:
               'radial-gradient(600px 300px at 100% 0%, rgba(255,107,0,0.16), transparent 60%), var(--surface)',
-            padding: 'clamp(32px, 6vw, 60px)',
+            padding: 'clamp(24px, 6vw, 60px)',
             textAlign: 'center',
           }}
         >
-          <h2 style={{ ...h2, fontSize: 'clamp(26px, 4vw, 40px)' }}>A marketplace that runs itself.</h2>
+          <h2 className="velor-h2" style={{ ...h2, fontSize: 'clamp(24px, 4vw, 40px)' }}>A marketplace that runs itself.</h2>
           <p style={{ color: 'var(--muted)', fontSize: 16, maxWidth: 600, margin: '14px auto 30px' }}>
             Discovery, protection, sellers and support — all operated by AI, so buying and selling
             just works. Join the marketplace built for what commerce becomes next.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
+          <div className="velor-cta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
             <Link
               href="/shop"
               style={{ background: 'var(--accent)', color: '#000', fontWeight: 800, fontSize: 15, textDecoration: 'none', padding: '15px 30px', borderRadius: 999 }}
