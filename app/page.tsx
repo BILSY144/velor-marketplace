@@ -140,7 +140,7 @@ export default function Home() {
 
           <p className="velor-hero-sub" style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
             Buy from vetted sellers around the world with total confidence. Your payment is held
-            safely until you confirm your order arrived — and the whole marketplace is run,
+            safely until delivery is confirmed — and the whole marketplace is run,
             monitored and protected by AI, around the clock.
           </p>
 
@@ -191,7 +191,7 @@ export default function Home() {
           }}
         >
           {[
-            ['🛡️', 'Buyer protection', 'Funds are held until you confirm delivery.'],
+            ['🛡️', 'Buyer protection', 'Funds are held until delivery is confirmed.'],
             ['✔️', 'Verified & ranked sellers', 'Scored on real delivery performance.'],
             ['🔒', 'Secure Stripe checkout', 'Velor never sees your card details.'],
             ['🌍', 'Global marketplace', 'Independent sellers, one trusted account.'],
