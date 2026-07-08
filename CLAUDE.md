@@ -827,3 +827,12 @@ NOT YET VERIFIED (per LAW #1). No localized outreach email has been observed del
 PROCESS LESSONS from this session. Clicking "Commit changes" and then navigating in the same batch can cancel the commit, so always re-read the repo contents API to confirm a file actually landed. GitHub's CodeMirror 6 splits a line across many text nodes, so a naive text-node find-and-replace fails silently; set the whole .cm-line textContent instead and dispatch an InputEvent on .cm-content, and bring the target line into view first with ctrl+Home then PageDown. Never set "the last visible text input" by JS on the edit page, because that is the FILENAME field and it renames the file. CodeMirror auto-continues markdown lists and auto-indents, so write checkpoint prose as plain paragraphs. If another commit lands while the editor is open, GitHub refuses the commit; reload the edit page and retype rather than fighting it.
 
 Checkpoint saved 2026-07-08. Assistant and outreach are multilingual; builds green.
+
+
+## SESSION UPDATE — 2026-07-08 (scheduled check-in, ~02:50 UTC)
+
+Timestamp note: the previous check-in heading said ~03:10 UTC, but its commit (af6b522) landed at 02:10 UTC per GitHub, so earlier headings appear to have used BST labelled as UTC. This heading uses GitHub commit-clock UTC.
+
+Since the multilingual checkpoint commit (5773018, 02:17 UTC), four commits landed on main, all showing passing checks on GitHub: the CountryOriginStrip flag strip was restored under the header (ef14b9a), a DragScroller component plus header mobile classes and mobile currency handling were added (3e4df84), the live rail was made draggable and the mobile CSS layer was rebuilt because the old one never matched (534d491), and the dead English-only buildOutreachEmail export was deleted from lib/email.ts (195710a, HEAD at time of writing), which closes the CLEANUP ITEM noted in the checkpoint above.
+
+In progress and next: first live confirmation of a localized outreach email is still pending from the next outreach-auto cron run (check the AgentLog languages field). The Payoneer partner application remains submitted and awaiting approval. The cj-resupplier build-failure re-verification from the 2026-07-07 emergency checkpoint remains outstanding. Nothing in this update touches or resolves any review item above.
