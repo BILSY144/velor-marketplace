@@ -284,3 +284,6 @@ languages. No seller has completed a real verification yet, and Velor still
 holds ID scans through the old verify flow._
 
 _Scheduled check-in 2026-07-08, later the same day. Since the rewrite (418d64b), four small commits shipped: 0119439 removed lib/cj.ts's reference to a deleted CLAUDE.md section, 6ad3a35 made the assistant read every Anthropic text block instead of only the first, and 1c2207a plus b78ff0c aligned page and footer copy to "held until delivery is confirmed". Nothing else verified as changed this cycle; next steps remain as listed above._
+
+
+_Scheduled check-in 2026-07-08 16:06 UTC. No new work since the previous check-in: the repo tip is 7310359, which is that check-in's own CLAUDE.md commit, and no code commits have landed after b78ff0c. Nothing to log this cycle; next steps remain as listed above._
