@@ -13,14 +13,14 @@ export default function AboutPage() {
           Our platform handles payments, seller onboarding, and buyer protection â so sellers can focus on their products and buyers can shop with confidence.
         </p>
         <p style={{ fontSize: 17, lineHeight: 1.75, color: 'var(--muted)', marginBottom: 48 }}>
-          Velor Commerce Ltd is registered in England and Wales. We operate globally, supporting sellers and buyers in over 25 countries.
+          Velor Commerce Ltd is registered in England and Wales. We operate globally: sellers can list from, and ship to, 190 countries.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 64 }}>
           {[
             { label: 'Platform fee', value: '15%', note: 'Competitive and transparent' },
-            { label: 'Countries', value: '22', note: 'Global reach from day one' },
-            { label: 'Currencies', value: '8', note: 'Multi-currency checkout' },
+            { label: 'Countries', value: '190', note: 'Sell to, and ship from, anywhere' },
+            { label: 'Currencies', value: '20', note: 'Multi-currency checkout' },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '28px 24px' }}>
               <p style={{ fontSize: 36, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--accent)', marginBottom: 4 }}>{s.value}</p>
