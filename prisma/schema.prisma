@@ -375,6 +375,16 @@ model SellerApplication {
   sampleImages      String[]
   country           String?
   prospectId        String?
+  // Identity verification. No seller is approved without a VERIFIED document
+  // check. Velor never receives or stores the document itself -- Stripe hosts
+  // the capture and returns only a verdict. RESTRICTED means Stripe Identity is
+  // legally barred from verifying this jurisdiction (China, Russia, Cuba, Iran,
+  // North Korea, Syria); those wait for the Payoneer KYC rail.
+  // NOT_STARTED | PENDING | PROCESSING | VERIFIED | FAILED | CANCELED | RESTRICTED
+  verificationStatus    String    @default("NOT_STARTED")
+  verificationSessionId String?   @unique
+  verifiedAt            DateTime?
+  verificationNotes     String?   @db.Text
   status            String    @default("PENDING")
   reviewedAt        DateTime?
   reviewedBy        String?
