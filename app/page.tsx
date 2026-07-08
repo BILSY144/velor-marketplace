@@ -8,6 +8,12 @@
 // seller names, nothing that fakes a listing. Tiles swap to real product
 // cards as sellers list (the lattice API already feeds live counts).
 //
+// Framing (William, 2026-07-08): Velor IS a shopping channel. Sections are
+// numbered like channels (CH 01 the live network, CH 02+ the culture reels,
+// countries are "190 channels"), and the seller band pitches both rails:
+// sell live on the channel AND with always-on listings. Layout is full-bleed
+// — no max-width, the page uses the whole viewport.
+//
 // Standing rules honoured: zero-state honest; Preview labels, never fake
 // LIVE badges; culture not raw materials; opener language; buyer pages
 // carry no payout detail. Pexels imagery hotlinked for now — self-host and
@@ -150,10 +156,12 @@ function flagOf(code: string): string {
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
 .vh a{color:inherit;text-decoration:none}
-.vh-wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+.vh-wrap{width:100%;margin:0;padding:0 clamp(22px,2.6vw,48px)}
 .vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
 .vh section{padding:52px 0}
 .vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;gap:24px}
+.vh-chtag{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-size:10.5px;letter-spacing:.18em;font-weight:700;color:var(--accent);border:1px solid rgba(255,107,0,.4);border-radius:6px;padding:4px 10px;margin-bottom:11px;text-transform:uppercase}
+.vh-chtag .cd{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.8}
 .vh-shead h2{font-size:27px}
 .vh-shead .sub{font-size:14px;color:var(--muted);margin:7px 0 0;max-width:66ch;line-height:1.6}
 .vh-slink{font-size:14px;color:var(--accent) !important;flex:0 0 auto;white-space:nowrap}
@@ -316,13 +324,15 @@ export default function HomePage() {
       {/* ============ VELOR LIVE — the top of the page ============ */}
       <div className="vh-livesec">
         <div className="vh-wrap">
+          <span className="vh-chtag" style={{ marginBottom: 14 }}><span className="cd" />CH 01 &middot; The network</span>
           <div className="vh-livehead">
             <h1>VEL<span className="o">O</span>R LIVE</h1>
             <span className="vh-livedot"><span className="d" />{liveOnAir.length > 0 ? `${liveOnAir.length} on air now` : 'Channels open with our founding sellers'}</span>
           </div>
           <p className="vh-livestrap">
-            Sellers go live from the workshop, the market stall, the kitchen — you watch it made,
-            ask anything, and buy without leaving the stream.
+            The world&apos;s shopping channel. Sellers broadcast from the workshop, the market stall,
+            the kitchen — you watch it made, ask anything, and buy without leaving the stream. Their
+            listings sit one tap below the broadcast, selling around the clock.
           </p>
           <div className="vh-drag">
             {liveOnAir.map(s => (
@@ -351,11 +361,12 @@ export default function HomePage() {
       </div>
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
-      {CULTURE_REELS.map(reel => (
+      {CULTURE_REELS.map((reel, ri) => (
         <section key={reel.title} style={{ paddingBottom: 26 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
               <div>
+                <span className="vh-chtag"><span className="cd" />CH {String(ri + 2).padStart(2, '0')}</span>
                 <h2>{reel.title}</h2>
                 <p className="sub">{reel.line}</p>
               </div>
@@ -388,9 +399,11 @@ export default function HomePage() {
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
+              <span className="vh-chtag"><span className="cd" />190 channels</span>
               <h2>Start with a country</h2>
-              <p className="sub">Every country on earth, and the things it makes better than anywhere
-              else. This is what you&apos;ll be shopping — country by country, maker by maker.</p>
+              <p className="sub">Every country on earth is a channel of its own — the things it makes
+              better than anywhere else, sold live and by listing. Each one switches on the moment its
+              first verified seller opens it.</p>
             </div>
             <Link className="vh-slink" href="/founding">All 190 &rarr;</Link>
           </div>
@@ -419,6 +432,7 @@ export default function HomePage() {
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
+              <span className="vh-chtag"><span className="cd" />Channel guide</span>
               <h2>Or start with a speciality</h2>
               <p className="sub">Not departments. The things a place has spent centuries getting right —
               and the things it is good at now.</p>
@@ -480,9 +494,11 @@ export default function HomePage() {
         <div className="vh-wrap">
           <div className="vh-sellband">
             <div>
-              <h2>Make something your country is known for?</h2>
-              <p>The first verified seller from each country opens it on Velor &mdash; and keeps the
-              founding badge and Pro free for life. Decision within 24 hours of your verification.</p>
+              <h2>Sell it live. List it always.</h2>
+              <p>Velor is a shopping channel &mdash; and sellers are the broadcasters. Go on air to
+              buyers worldwide, sell in the stream, and keep your listings selling around the clock.
+              The first verified seller from each country opens it &mdash; and keeps the founding badge
+              and Pro free for life. Decision within 24 hours of your verification.</p>
             </div>
             <Link className="vh-btn" href="/apply">Apply to sell</Link>
           </div>
