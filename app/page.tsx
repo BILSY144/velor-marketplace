@@ -48,7 +48,9 @@ const css = `
 .vh-microtrust i{color:var(--green);font-style:normal;margin-right:6px}
 .vh-proof{position:relative}
 .vh-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.vh-card .img{aspect-ratio:4/3;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:#3c3c45;font-size:11.5px;letter-spacing:.1em}
+.vh-card .img{aspect-ratio:4/3;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:#3c3c45;font-size:11.5px;letter-spacing:.1em;position:relative;overflow:hidden}
+.vh-card .img video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vh-card .img .lbl{position:absolute;top:12px;left:12px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:4px 8px;color:#fff}
 .vh-card .body{padding:16px 18px}
 .vh-origin{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
 .vh-flagchip{font-size:10px;font-weight:700;letter-spacing:.08em;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--text)}
@@ -243,7 +245,10 @@ export default function HomePage() {
           </div>
           <div className="vh-proof">
             <div className="vh-card">
-              <div className="img">WHAT A VELOR LISTING LOOKS LIKE</div>
+              <div className="img">
+                <video src="https://videos.pexels.com/video-files/12690263/12690263-sd_640_360_24fps.mp4" autoPlay muted loop playsInline preload="metadata" />
+                <span className="lbl">What a Velor listing looks like</span>
+              </div>
               <div className="body">
                 <div className="vh-origin"><span className="vh-flagchip">CN</span> Jingdezhen, China</div>
                 <div className="vh-pname">Celadon porcelain tea set, fired in the city that invented it</div>
