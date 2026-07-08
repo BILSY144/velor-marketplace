@@ -179,10 +179,40 @@ function ShopContent() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--muted)' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>{search ? 'No results found' : 'No products yet'}</div>
-            <p>{search ? `No products match "${search}"` : 'Check back soon.'}</p>
-          </div>
+          search ? (
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--muted)' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '14px', color: 'var(--text)' }}>No results found</div>
+              <p>Nothing matches &quot;{search}&quot; yet — the world is still arriving.</p>
+            </div>
+          ) : (
+            /* Zero-catalogue state: the shelves are real and empty, and that is
+               the story — honest, and pointed at the founding moment. */
+            <div style={{ maxWidth: 760, margin: '0 auto', padding: '70px 20px 90px', textAlign: 'center' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, fontSize: 12, letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 600, marginBottom: 22 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
+                Buyers arrive 6 August
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 38, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 18px' }}>
+                The shelves are built.<br />The world is on its way.
+              </h2>
+              <p style={{ fontSize: 15.5, color: 'var(--muted)', lineHeight: 1.65, maxWidth: '52ch', margin: '0 auto 34px' }}>
+                Velor opens with founding sellers from around the world — real makers, identity-verified,
+                with the country and the maker on every listing. No filler stock, no placeholder products.
+                What appears here first will have earned its place.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link href="/founding" style={{ background: 'var(--accent)', color: '#160a00', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                  See which countries open first
+                </Link>
+                <Link href="/#specialities" style={{ border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                  Browse the specialities
+                </Link>
+              </div>
+              <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 30 }}>
+                Make something your country is known for? <Link href="/apply" style={{ color: 'var(--accent)', textDecoration: 'none' }}>The founding seat is open.</Link>
+              </p>
+            </div>
+          )
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
             {products.map(p => {
