@@ -4,9 +4,12 @@
 
     type ChatMessage = { role: 'user' | 'assistant'; content: string }
     type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE'
+    type Variant = 'buyer' | 'seller'
 
     // Velor's AI assistant persona image (circular, transparent background).
     const AVATAR = '/velor-assistant.png'
+
+    const BUYER_GREETING = "Hi, I'm Velor's AI Assistant. I'm here to help you shop with confidence — how our buyer protection works, tracking an order, returns and disputes, or finding something from our sellers around the world."
 
     const GREETINGS: Record<Tier, string> = {
       STARTER: "Hi, I'm Velor's AI Assistant. Ask me about fees, payouts, escrow timing, listing tips, or Velor policies.",
@@ -14,22 +17,27 @@
       ENTERPRISE: "Hi, I'm your dedicated Velor AI Account Manager. I can look up your recent orders, explain your payout timing, draft a reply for a buyer or for support, and flag anything urgent straight to our team.",
     }
 
+    const BUYER_LABELS = { title: 'Velor AI Assistant', subtitle: 'Here to help you shop', placeholder: 'Ask about buyer protection, orders, returns...' }
+
     const LABELS: Record<Tier, { title: string; subtitle: string; placeholder: string }> = {
       STARTER: { title: 'Velor AI Assistant', subtitle: 'Always-on AI, not a human', placeholder: 'Ask about fees, payouts, listings...' },
       PRO: { title: 'Velor AI Assistant — Pro', subtitle: 'Grounded in your account data', placeholder: 'Ask about your orders, payouts, or listings...' },
       ENTERPRISE: { title: 'Velor AI Account Manager', subtitle: 'Your dedicated AI account manager', placeholder: 'Ask me to look something up, draft a reply, or flag an issue...' },
     }
 
-    export default function VelorAssistant() {
+    export default function VelorAssistant({ variant = 'seller' }: { variant?: Variant }) {
+      const isBuyer = variant === 'buyer'
       const [isOpen, setIsOpen] = useState(false)
   const [tier, setTier] = useState<Tier>('STARTER')
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETINGS.STARTER }])
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: isBuyer ? BUYER_GREETING : GREETINGS.STARTER }])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // The buyer-facing assistant never looks up seller-tier data.
+    if (isBuyer) return
     fetch('/api/seller/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -40,7 +48,7 @@
         }
       })
       .catch(() => {})
-  }, [])
+  }, [isBuyer])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,7 +68,7 @@
       const res = await fetch('/api/assistant/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({ messages: nextMessages, audience: isBuyer ? 'buyer' : 'seller' }),
 })
       const data = await res.json()
       if (!res.ok) {
@@ -82,7 +90,7 @@
 }
 }
 
-  const labels = LABELS[tier]
+  const labels = isBuyer ? BUYER_LABELS : LABELS[tier]
 
   return (
     <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 200 }}>
