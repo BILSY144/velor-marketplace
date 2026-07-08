@@ -109,6 +109,40 @@ export const SPECIALITY_KINDS: SpecialityKind[] = [
   'Modern industry',
 ]
 
+
+// Buyer-facing display labels. The internal taxonomy keeps material terms
+// (sellers tag "Clay"); buyers are shown the finished cultural product
+// (William, 2026-07-08: "real culture is the selling point, not raw
+// materials"). Terms without an entry display as themselves.
+export const BUYER_LABELS: Record<string, string> = {
+  'Clay': 'Ceramics & porcelain',
+  'Silk': 'Silk goods',
+  'Iron': 'Ironware',
+  'Steel': 'Blades & steelware',
+  'Copper': 'Copperware',
+  'Brass': 'Brassware',
+  'Silver': 'Silver jewellery',
+  'Leather': 'Leather goods',
+  'Wool': 'Wool & knitwear',
+  'Alpaca': 'Alpaca knitwear',
+  'Glass': 'Glassware',
+  'Marble': 'Marble homeware',
+  'Amber': 'Amber jewellery',
+  'Cork': 'Cork goods',
+  'Paper': 'Paper & stationery',
+  'Tea': 'Teas & tea ware',
+  'Coffee': 'Coffee & brewing',
+  'Spice': 'Spices & blends',
+  'Chilli': 'Chillies & heat',
+  'Salt': 'Salts & seasoning',
+  'Cacao': 'Chocolate & cacao',
+  'Rice': 'Rice & grains',
+}
+
+export function buyerLabel(term: string): string {
+  return BUYER_LABELS[term] ?? term
+}
+
 const byTerm = new Map(SPECIALITIES.map((s) => [s.term, s]))
 
 export function getSpeciality(term: string): Speciality | undefined {

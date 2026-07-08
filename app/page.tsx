@@ -16,7 +16,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { SPECIALITIES, SPECIALITY_KINDS } from '@/lib/specialities'
+import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel } from '@/lib/specialities'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { cultureHints } from '@/lib/cultureHints'
 
 type LatticeSummary = {
   totalCountries: number
@@ -79,19 +81,23 @@ const css = `
 .vh-tile.claim .t{font-size:14px;font-weight:500;padding:0 16px}
 .vh-tile.claim .s{font-size:11.5px;color:var(--muted);padding:0 18px;line-height:1.5}
 .vh-swipehint{font-size:12px;color:var(--muted);margin-top:14px}
-.vh-countries{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.vh-country{border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--surface);min-height:190px;display:flex;flex-direction:column}
-.vh-country:hover{border-color:#3d3d46}
-.vh-country.live{border-color:rgba(46,204,113,.32)}
-.vh-country .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.vh-country h3{font-size:19px}
+.vh-creel{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:6px}
+.vh-creel::-webkit-scrollbar{display:none}
+.vh-creel.dragging{cursor:grabbing}
+.vh-creel.dragging *{pointer-events:none}
+.vh-ccard{flex:0 0 254px;border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
+.vh-ccard:hover{border-color:#3d3d46;transform:translateY(-2px)}
+.vh-ccard.live{border-color:rgba(46,204,113,.32)}
+.vh-ccard .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:10px}
+.vh-ccard h3{font-size:18px;line-height:1.2}
+.vh-cflag{font-size:19px;line-height:1;flex:0 0 auto}
 .vh-specs{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start}
 .vh-spec{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:4px 10px}
-.vh-country .foot{margin-top:16px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.vh-ccard .foot{margin-top:15px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
 .vh-foot-on{color:var(--green)}.vh-foot-off{color:var(--muted)}
-.vh-country.invite{border-style:dashed}
-.vh-country.invite h3{color:var(--accent);line-height:1.25}
-.vh-country.invite .known{font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;flex:1}
+.vh-ccard.invite{border-style:dashed;background:var(--bg)}
+.vh-ccard.invite h3{color:var(--accent);line-height:1.25}
+.vh-ccard.invite .known{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:10px;flex:1}
 .vh-kind{margin-bottom:38px}
 .vh-kind:last-child{margin-bottom:0}
 .vh-kindhead{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap}
@@ -143,9 +149,6 @@ const REEL = [
   { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'Spice · seat open' },
 ]
 
-// Editorial "known for" hints on the origins grid — recruitment copy, never a
-// claim that sellers exist. Live status comes from /api/lattice.
-// One line of character per family — shown in the wall headers.
 const KIND_LINES: Record<string, string> = {
   'Materials': 'The stuff itself — dug, grown, tanned and fired.',
   'Techniques': 'Ways of making that took centuries to learn.',
@@ -155,15 +158,22 @@ const KIND_LINES: Record<string, string> = {
   'Modern industry': 'Culture is not only old.',
 }
 
-const FEATURED_ORIGINS = [
-  { code: 'CN', name: 'China', known: ['Clay', 'Silk', 'Tea', 'Iron'] },
-  { code: 'JP', name: 'Japan', known: ['Steel', 'Clay', 'Paper', 'Lacquerware', 'Optics'] },
-  { code: 'MA', name: 'Morocco', known: ['Leather', 'Argan', 'Copper', 'Zellige', 'Wool'] },
-]
+// Curated front of the country reel — a deliberate regional spread with
+// strong cultural-product identities. Hints come from lib/cultureHints.ts:
+// finished cultural products, never raw materials (William, 2026-07-08 —
+// "real culture is the selling point"). After these come every other
+// country, hinted ones first, then the rest.
+const REEL_FIRST = ['CN', 'JP', 'MA', 'TR', 'IN', 'PE', 'MX', 'IT', 'KR', 'GH', 'ET', 'UZ', 'NP', 'EC', 'PT', 'VN', 'GR', 'AR', 'TH', 'NG']
+
+function flagOf(code: string): string {
+  if (!code || code.length !== 2) return ''
+  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
 
 export default function HomePage() {
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
   const reelRef = useRef<HTMLDivElement>(null)
+  const creelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/lattice')
@@ -172,32 +182,36 @@ export default function HomePage() {
       .catch(() => {})
   }, [])
 
-  // Pointer-capture drag scroll for the showreel.
+  // Pointer-capture drag scroll — shared by the showreel and the country reel.
   useEffect(() => {
-    const reel = reelRef.current
-    if (!reel) return
-    let down = false, startX = 0, startScroll = 0, moved = 0
-    const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft; reel.setPointerCapture(e.pointerId) }
-    const onMove = (e: PointerEvent) => {
-      if (!down) return
-      const dx = e.clientX - startX
-      if (Math.abs(dx) > 6) { reel.classList.add('dragging'); moved = Math.abs(dx) }
-      reel.scrollLeft = startScroll - dx
+    const cleanups: (() => void)[] = []
+    for (const ref of [reelRef, creelRef]) {
+      const reel = ref.current
+      if (!reel) continue
+      let down = false, startX = 0, startScroll = 0, moved = 0
+      const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft; reel.setPointerCapture(e.pointerId) }
+      const onMove = (e: PointerEvent) => {
+        if (!down) return
+        const dx = e.clientX - startX
+        if (Math.abs(dx) > 6) { reel.classList.add('dragging'); moved = Math.abs(dx) }
+        reel.scrollLeft = startScroll - dx
+      }
+      const onUp = (e: PointerEvent) => { if (!down) return; down = false; reel.classList.remove('dragging'); try { reel.releasePointerCapture(e.pointerId) } catch {} }
+      const onClick = (e: MouseEvent) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); moved = 0 } }
+      reel.addEventListener('pointerdown', onDown)
+      reel.addEventListener('pointermove', onMove)
+      reel.addEventListener('pointerup', onUp)
+      reel.addEventListener('pointercancel', onUp)
+      reel.addEventListener('click', onClick, true)
+      cleanups.push(() => {
+        reel.removeEventListener('pointerdown', onDown)
+        reel.removeEventListener('pointermove', onMove)
+        reel.removeEventListener('pointerup', onUp)
+        reel.removeEventListener('pointercancel', onUp)
+        reel.removeEventListener('click', onClick, true)
+      })
     }
-    const onUp = (e: PointerEvent) => { if (!down) return; down = false; reel.classList.remove('dragging'); try { reel.releasePointerCapture(e.pointerId) } catch {} }
-    const onClick = (e: MouseEvent) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); moved = 0 } }
-    reel.addEventListener('pointerdown', onDown)
-    reel.addEventListener('pointermove', onMove)
-    reel.addEventListener('pointerup', onUp)
-    reel.addEventListener('pointercancel', onUp)
-    reel.addEventListener('click', onClick, true)
-    return () => {
-      reel.removeEventListener('pointerdown', onDown)
-      reel.removeEventListener('pointermove', onMove)
-      reel.removeEventListener('pointerup', onUp)
-      reel.removeEventListener('pointercancel', onUp)
-      reel.removeEventListener('click', onClick, true)
-    }
+    return () => cleanups.forEach(fn => fn())
   }, [])
 
   // Pause off-screen showreel video — phones matter.
@@ -216,6 +230,25 @@ export default function HomePage() {
   }, [])
 
   const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
+
+  // Reel order: trading countries first, then the curated spread, then every
+  // other hinted country, then the rest of the world alphabetically.
+  const orderedCountries = (() => {
+    const seen = new Set<string>()
+    const out: { code: string; name: string }[] = []
+    const push = (code: string) => {
+      if (seen.has(code)) return
+      const c = WORLD_COUNTRIES.find(w => w.code === code)
+      if (!c) return
+      seen.add(code)
+      out.push(c)
+    }
+    ;(lattice?.countries ?? []).slice().sort((a, b) => b.products - a.products).forEach(c => push(c.code))
+    REEL_FIRST.forEach(push)
+    WORLD_COUNTRIES.forEach(c => { if (cultureHints(c.code).length) push(c.code) })
+    WORLD_COUNTRIES.forEach(c => push(c.code))
+    return out
+  })()
   const trading = lattice?.trading ?? 0
   const specStats = lattice?.specialities ?? {}
 
@@ -298,32 +331,34 @@ export default function HomePage() {
           <div className="vh-shead">
             <div>
               <h2>Start with a country</h2>
-              <p>Each country lists only the specialities its sellers actually offer. Nothing is
-              typed in by hand, so a country page can never promise what it hasn&apos;t got.</p>
+              <p>Every country on earth, and what its makers are known for — the finished thing,
+              not the raw material. A country only ever lists what its sellers actually offer.</p>
             </div>
+            <Link className="vh-slink" href="/founding">All 190 &rarr;</Link>
           </div>
-          <div className="vh-countries">
-            {FEATURED_ORIGINS.map(o => {
-              const live = byCode.get(o.code)
+          <div className="vh-creel" ref={creelRef}>
+            {orderedCountries.map(c => {
+              const live = byCode.get(c.code)
               const isLive = !!live && live.products > 0
-              const specs = isLive && live!.specialities.length ? live!.specialities : o.known
+              const hints = cultureHints(c.code)
               return (
-                <Link key={o.code} className={'vh-country' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${o.code}` : '/apply'}>
-                  <div className="top"><h3>{o.name}</h3><span className="vh-flagchip">{o.code}</span></div>
-                  <div className="vh-specs">{specs.map(s => <span className="vh-spec" key={s}>{s}</span>)}</div>
+                <Link key={c.code} className={'vh-ccard' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${c.code}` : '/apply'}>
+                  <div className="top"><h3>{c.name}</h3><span className="vh-cflag">{flagOf(c.code)}</span></div>
+                  <div className="vh-specs">{hints.map(h => <span className="vh-spec" key={h}>{h}</span>)}</div>
                   <div className={'foot ' + (isLive ? 'vh-foot-on' : 'vh-foot-off')}>
                     {isLive ? `${live!.products} product${live!.products === 1 ? '' : 's'} · open now` : 'Founding seat open'}
                   </div>
                 </Link>
               )
             })}
-            <Link className="vh-country invite" href="/apply">
-              <div className="top"><h3>Your country<br />is missing.</h3></div>
+            <Link className="vh-ccard invite" href="/apply">
+              <div className="top"><h3>Your country,<br />your culture.</h3></div>
               <div className="known">Be the first seller from your country and you keep the founding
               badge and Pro free for life &mdash; and your store opens the country page.</div>
               <div className="foot" style={{ color: 'var(--accent)' }}>Open it &rarr;</div>
             </Link>
           </div>
+          <div className="vh-swipehint">Drag to browse all 190 countries</div>
         </div>
       </section>
 
@@ -358,7 +393,7 @@ export default function HomePage() {
                     return (
                       <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/apply'} title={s.line}>
                         <span className="dotst" />
-                        {s.term}
+                        {buyerLabel(s.term)}
                         {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}
                       </Link>
                     )

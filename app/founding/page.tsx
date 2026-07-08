@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
+import { cultureHints } from '@/lib/cultureHints'
 
 type LatticeSummary = {
   trading: number
@@ -30,15 +31,10 @@ const REGION_BY_CODE: Record<string, string> = {
 }
 const REGION_ORDER = ['Africa', 'Asia', 'Europe', 'The Americas', 'Oceania', 'Elsewhere']
 
-// Editorial "known for" hints — recruitment copy, never a live claim.
-const KNOWN: Record<string, string> = {
-  JP:'Steel, Clay, Paper, Lacquerware',MA:'Leather, Argan, Copper, Zellige',TR:'Copper, Kilim weaving, Coffee',IN:'Tea, Block printing, Brass, Silk',PE:'Alpaca, Silver, Cacao',IT:'Leather, Glass, Marble, Tailoring',KR:'Skincare, Fermentation, Chilli',DE:'Steel, Optics, Engineering',PT:'Cork, Clay, Filigree',MX:'Silver, Clay, Chilli',ET:'Coffee',GR:'Olive oil, Marble, Honey',IR:'Kilim weaving, Rugs, Preserves',PL:'Amber',CH:'Watchmaking, Engineering',DK:'Design furniture, Joinery',FR:'Perfumery, Salt, Cookware',VN:'Lacquerware, Silk',TH:'Silk, Silver, Chilli',NP:'Copper, Wool',ID:'Block printing, Filigree',LK:'Tea, Spice',EG:'Glass, Brass, Marquetry',NG:'Indigo dyeing',ES:'Leather, Olive oil',CO:'Coffee, Cacao',EC:'Cacao',KE:'Tea',TW:'Tea, Electronics',UZ:'Silk, Embroidery',IE:'Wool, Instruments',SE:'Steel, Glassblowing',FI:'Knives, Design furniture',CZ:'Glass, Glassblowing',LT:'Amber',LV:'Amber',CL:'Copper',BO:'Alpaca, Salt',GH:'Cacao',TN:'Olive oil',OM:'Incense, Perfumery',YE:'Coffee, Honey',AF:'Kilim weaving',HU:'Embroidery, Chilli',GT:'Indigo dyeing',ML:'Instruments',NZ:'Honey',BR:'Coffee, Instruments',PK:'Salt',GE:'Fermentation',AR:'Leather',MM:'Lacquerware',GB:'Tailoring, Wool',CN:'Clay, Silk, Tea, Iron',
-}
-
 const SPOTLIGHT = [
-  { code: 'MA', name: 'Morocco', video: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', specs: ['Leather', 'Argan', 'Copper', 'Zellige', 'Wool'] },
-  { code: 'JP', name: 'Japan', video: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', specs: ['Steel', 'Clay', 'Paper', 'Lacquerware', 'Optics'] },
-  { code: 'TR', name: 'Turkey', video: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', specs: ['Copper', 'Kilim weaving', 'Coffee', 'Marble'] },
+  { code: 'MA', name: 'Morocco', video: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', specs: ['Leather babouches', 'Brass lanterns', 'Argan oil', 'Zellige tables'] },
+  { code: 'JP', name: 'Japan', video: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', specs: ['Hand-forged knives', 'Matcha bowls', 'Washi stationery', 'Incense'] },
+  { code: 'TR', name: 'Turkey', video: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', specs: ['Copper cezves', 'Kilim rugs', 'Hammam towels', 'Iznik ceramics'] },
 ]
 
 function flag(code: string): string {
@@ -270,7 +266,7 @@ export default function FoundingPage() {
                         <span className="vf-cn">{c.name}</span>
                         <span className="vf-fl" title={c.code}>{flag(c.code)}</span>
                       </div>
-                      {KNOWN[c.code] && <div className="vf-k">{KNOWN[c.code]}</div>}
+                      {cultureHints(c.code).length > 0 && <div className="vf-k">{cultureHints(c.code).slice(0, 4).join(' · ')}</div>}
                       <div className={'vf-st ' + st}>
                         {st === 'live' ? `${products} product${products === 1 ? '' : 's'} · trading`
                           : st === 'hold' ? 'Verification pending'
