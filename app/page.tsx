@@ -55,7 +55,7 @@ const css = `
 .vh-pname{font-size:15.5px;font-weight:500;margin-bottom:6px;line-height:1.35}
 .vh-price{font-family:var(--font-display);font-size:21px;font-weight:700}
 .vh-maker{font-size:12.5px;color:var(--muted);margin-top:2px}
-.vh-escrow-badge{position:absolute;left:-22px;bottom:34px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:11px;align-items:center;max-width:250px}
+.vh-escrow-badge{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;gap:11px;align-items:center;margin-top:14px}
 .vh-escrow-badge .tick{width:26px;height:26px;border-radius:50%;background:rgba(46,204,113,.14);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
 .vh-escrow-badge strong{display:block;font-size:12.5px;font-weight:600}
 .vh-escrow-badge span{color:var(--muted);font-size:12.5px;line-height:1.4}
@@ -90,16 +90,21 @@ const css = `
 .vh-country.invite{border-style:dashed}
 .vh-country.invite h3{color:var(--accent);line-height:1.25}
 .vh-country.invite .known{font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;flex:1}
-.vh-kind{margin-bottom:32px}
+.vh-kind{margin-bottom:38px}
 .vh-kind:last-child{margin-bottom:0}
-.vh-kindlbl{font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:14px}
-.vh-kindlbl::after{content:'';flex:1;height:1px;background:var(--border)}
-.vh-wall{display:flex;flex-wrap:wrap;gap:10px}
-.vh-sp{border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:14.5px;background:var(--surface);display:flex;align-items:baseline;gap:9px}
-.vh-sp:hover{border-color:var(--accent)}
-.vh-sp .n{font-size:11px;color:var(--muted)}
-.vh-sp.empty{opacity:.4;border-style:dashed;background:none}
-.vh-sp.hot{border-color:rgba(255,107,0,.42);opacity:1}
+.vh-kindhead{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.vh-kindlbl{font-family:var(--font-display);font-size:17px;font-weight:500;letter-spacing:-0.01em}
+.vh-kinddesc{font-size:13px;color:var(--muted)}
+.vh-kindline{flex:1;height:1px;background:var(--border);align-self:center;min-width:40px}
+.vh-wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.vh-sp{border:1px solid var(--border);border-radius:12px;padding:13px 15px;font-size:14px;font-weight:500;background:var(--surface);display:flex;align-items:center;gap:10px;transition:transform .13s,border-color .13s}
+.vh-sp:hover{border-color:var(--accent);transform:translateY(-2px)}
+.vh-sp .dotst{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.55;flex:0 0 auto}
+.vh-sp.hot .dotst{background:var(--green);opacity:1}
+.vh-sp .n{font-size:11px;color:var(--muted);margin-left:auto;font-weight:400;white-space:nowrap}
+.vh-sp.hot{border-color:rgba(46,204,113,.4)}
+.vh-walllegend{display:flex;gap:20px;font-size:12px;color:var(--muted);margin-bottom:26px}
+.vh-walllegend i{font-style:normal;margin-right:6px}
 .vh-escrow{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .vh-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
 .vh-step{border-left:2px solid var(--border);padding-left:20px}
@@ -121,7 +126,6 @@ const css = `
 .vh-countries{grid-template-columns:repeat(2,1fr)}
 .vh-steps,.vh-founding{grid-template-columns:1fr}
 .vh-founding{padding:32px 26px}
-.vh-escrow-badge{position:static;margin-top:14px;max-width:none}
 .vh-tile{flex:0 0 168px}
 }
 `
@@ -139,6 +143,16 @@ const REEL = [
 
 // Editorial "known for" hints on the origins grid — recruitment copy, never a
 // claim that sellers exist. Live status comes from /api/lattice.
+// One line of character per family — shown in the wall headers.
+const KIND_LINES: Record<string, string> = {
+  'Materials': 'The stuff itself — dug, grown, tanned and fired.',
+  'Techniques': 'Ways of making that took centuries to learn.',
+  'Consumables': 'Eaten, drunk, used up — from where it is actually from.',
+  'Forms': 'The objects a place is famous for.',
+  'Rituals': 'Bought for meaning, not function.',
+  'Modern industry': 'Culture is not only old.',
+}
+
 const FEATURED_ORIGINS = [
   { code: 'CN', name: 'China', known: ['Clay', 'Silk', 'Tea', 'Iron'] },
   { code: 'JP', name: 'Japan', known: ['Steel', 'Clay', 'Paper', 'Lacquerware', 'Optics'] },
@@ -317,19 +331,28 @@ export default function HomePage() {
               things it is good at now. Dashed means no seller has listed in it yet.</p>
             </div>
           </div>
+          <div className="vh-walllegend">
+            <span><i style={{ color: 'var(--green)' }}>&#9679;</i>Open now &mdash; sellers are listing it</span>
+            <span><i style={{ color: 'var(--accent)', opacity: .7 }}>&#9679;</i>Founding seat open &mdash; be the first to list it</span>
+          </div>
           {SPECIALITY_KINDS.map(kind => {
             const terms = SPECIALITIES.filter(s => s.kind === kind)
             // Claimed terms first within each family (Q5 decision).
             const sorted = [...terms].sort((a, b) => (specStats[b.term]?.products ?? 0) - (specStats[a.term]?.products ?? 0))
             return (
               <div className="vh-kind" key={kind}>
-                <div className="vh-kindlbl">{kind}</div>
+                <div className="vh-kindhead">
+                  <span className="vh-kindlbl">{kind}</span>
+                  <span className="vh-kinddesc">{KIND_LINES[kind]}</span>
+                  <span className="vh-kindline" />
+                </div>
                 <div className="vh-wall">
                   {sorted.map(s => {
                     const st = specStats[s.term]
                     const claimed = !!st && st.products > 0
                     return (
-                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : ' empty')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/apply'}>
+                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/apply'} title={s.line}>
+                        <span className="dotst" />
                         {s.term}
                         {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}
                       </Link>
