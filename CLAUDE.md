@@ -459,3 +459,25 @@ Scheduled check-in. Since the 20:12 UTC check-in (4f30d65), the design port has 
 ## SESSION UPDATE — 2026-07-08 21:47 UTC
 
 Scheduled check-in. Since the 20:50 UTC check-in (8fb4297), the design port has continued at pace: seven code commits landed on main and every one is deployed Ready in production. Commit 2881da3 made the homepage escrow copy buyer-facing only, with no payout timing. Commit 0d19a58 shipped batch 1b, rebuilding /sell and adding the /founding countries atlas. Commit 9ced245 put culture forward as the selling point with a country reel and product-level hints everywhere. Commit 94227ba rebalanced the homepage buyer-first with orange country cards and richer culture lists. Commit e20681e restored autoplay on the showreel and founding spotlight film. Commit 701e13c turned the header Categories menu into an Origins menu. Commit 2c43469 gave the shop an honest zero-catalogue state in the new design. At check-in time an eighth deployment, df26441 "About and Live rebuilt in the origin voice", was Building on Vercel — a working session is actively pushing. In progress: the origin-first design port, now covering homepage, /apply, /sell, /founding, header and shop. Next: finish the port across the remaining pages (PDP, lattice pages, listing form), then the Payoneer rail, per NEXT STEPS above.
+
+_Checkpoint 2026-07-09 ~01:30 UTC, marathon session with William. The redesign is LIVE on
+velorcommerce.store, pushed by PAT (revoke after session; get fresh next time). Shipped and
+browser-verified during the evening: /apply (founding pitch, form logic untouched), /sell
+(earnings calculator, real tier figures), /founding (190-country atlas, live statuses),
+header Origins menu (17-category dropdown gone), /shop zero state, /about manifesto, /live
+cinematic zero state, outreach PAUSED (cron removed from vercel.json - re-add
+{"path":"/api/cron/outreach-auto","schedule":"0 */2 * * *"} only after the new template and
+maker-only targeting are approved). New standing rules from William: buyer pages carry no
+payout timing; culture not raw materials (lib/cultureHints.ts is the buyer-facing layer,
+buyerLabel() maps material terms); homepage is ~90% buyer. Homepage v2 (commit 94e7573)
+opens on VELOR LIVE with the channel rail (real streams first, Preview film until then),
+then six swipeable culture reels of photographed cultural items (Pexels, hotlinked, tiles
+self-hide on broken images), country rail, speciality wall, trust, one seller band -
+type-checked and pushed but final live verification PENDING (William's Chrome disconnected;
+WebFetch returned a cached page). Verify homepage v2 renders first thing next session.
+Remaining sweep: contact/help/search polish, footer. Then: email template + scout-sellers
+maker-only retargeting (Eastern/global markets) for William's sign-off; researched cultural
+profiles (15+ items per country, do NOT invent) on /origins country pages; PDP; dashboard
+listing form with speciality picker (validateSpecialitySelection in the API); CJ strip.
+Vision brief: mind-blowing, never generic - live rail wired to real /live, buyer Passport
+concept (stamp countries you buy from), culture-literate search, postcards with orders._
