@@ -395,3 +395,5 @@ identity rail and would move China out of "verification pending".
 - Pexels clips are hotlinked in the mockups. Fine locally. Before production, self-host and confirm the
   licence covers commercial use. NOT VERIFIED.
 - Six autoplaying videos need lazy-loading and an IntersectionObserver to pause off-screen, or phones suffer.
+
+Scheduled check-in 2026-07-08 17:48 UTC. Since the 17:07 check-in, one commit landed: 0da2b8c, which appended the homepage-redesign design-phase handover section to this file. No code commits after b78ff0c; the redesign remains design-only and nothing has been pushed to the codebase. Next steps remain as listed in the design section and NEXT STEPS above.
