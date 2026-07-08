@@ -164,6 +164,11 @@ h1, h2, h3, h4, h5, h6 {
     gap: 10px !important;
     flex-wrap: wrap;
   }
+  /* Logo a third smaller on phones: the 24px desktop mark dominates a
+     narrow header once the search row wraps underneath it. */
+  .velor-headerbar img[alt='Velor'] {
+    height: 16px !important;
+  }
   /* Search drops onto its own full-width row underneath the logo. */
   .velor-searchform {
     order: 3;
