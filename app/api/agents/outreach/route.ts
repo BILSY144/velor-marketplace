@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { sendEmail, buildOutreachEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email'; import { buildOutreachEmail } from '@/lib/outreachEmail';
 
 async function requireAdmin() {
   const session = await auth();
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       platform: prospect.platform,
       storeUrl: prospect.storeUrl,
       category: prospect.category,
-      sellerType: prospect.sellerType as 'individual' | 'small_business' | 'brand',
+      sellerType: prospect.sellerType as 'individual' | 'small_business' | 'brand', country: prospect.country,
     },
     emailType: emailType as OutreachEmailType,
   });
