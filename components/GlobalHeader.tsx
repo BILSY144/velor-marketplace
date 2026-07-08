@@ -133,7 +133,7 @@ export default function GlobalHeader() {
           borderBottom: '1px solid var(--border)',
         }}
       >
-        <span style={{ color: 'var(--green)', fontWeight: 700 }}>Buyer protection</span> — your money is held until you confirm delivery
+        <span style={{ color: 'var(--green)', fontWeight: 700 }}>Buyer protection</span> — your money is held until delivery confirmation
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
         Verified &amp; ranked sellers
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
