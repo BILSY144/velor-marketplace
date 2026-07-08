@@ -209,6 +209,9 @@ model Product {
   hsCode        String?
   originCountry String?
   cjSourced     Boolean       @default(false)
+  // Closed vocabulary terms (max 2) from lib/specialities.ts - the origin x
+  // speciality lattice. Validated server-side via validateSpecialitySelection.
+  specialities  String[]      @default([])
   cjProductId   String?
   cjVid         String?
   cjSupplierName String?

@@ -1,687 +1,390 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+// Homepage — ported 2026-07-08 from velor-homepage-BUILD.html (design phase,
+// see CLAUDE.md "HOMEPAGE REDESIGN"). Positioning is ORIGIN: everywhere makes
+// something better than everywhere else. Two-axis lattice (origin x
+// speciality) replaces the old category tiles.
+//
+// Honesty rules baked in:
+// - Zero-state honest: no fake products, no fake sellers, no fake counts.
+//   Live counts come from /api/lattice; until sellers list, every country
+//   card shows "Founding seat open" and every speciality tile is dashed.
+// - Showreel is labelled "Preview" — no fake LIVE badge, no viewer counts.
+// - First-seller copy uses opener language: "opens", never "owns"/"claims".
+// - Pexels clips are hotlinked for now; self-host + confirm licence before
+//   heavy traffic (tracked in CLAUDE.md).
+
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
-import { countryFlagUrl } from '@/lib/countryFlag'
-import DragScroller from '@/components/DragScroller'
+import { SPECIALITIES, SPECIALITY_KINDS } from '@/lib/specialities'
 
-type Product = {
-  id: string
-  title: string
-  price: number
-  images?: string[]
-  image?: string
-  category?: string
-  seller?: { id: string; storeName: string; sellerBadge?: string | null; currency?: string | null; country?: string | null }
-  reviews?: { rating: number }[]
-  _count?: { reviews: number }
+type LatticeSummary = {
+  totalCountries: number
+  trading: number
+  countries: { code: string; name: string; products: number; specialities: string[] }[]
+  specialities: Record<string, { countries: number; products: number }>
 }
 
-type Seller = {
-  id: string
-  storeName: string
-  country?: string | null
-  sellerBadge?: string | null
-  _count?: { products: number }
-  products?: { id: string; title: string; price: number; images?: string[] }[]
+const css = `
+.vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
+.vh a{color:inherit;text-decoration:none}
+.vh-wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+.vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
+.vh section{padding:62px 0}
+.vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;gap:24px}
+.vh-shead h2{font-size:29px}
+.vh-shead p{font-size:14.5px;color:var(--muted);margin:8px 0 0;max-width:66ch;line-height:1.6}
+.vh-slink{font-size:14px;color:var(--accent) !important;flex:0 0 auto;white-space:nowrap}
+.vh-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:58px 0 50px}
+.vh-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
+.vh-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.vh-hero h1{font-size:50px;line-height:1.08;margin-bottom:18px;max-width:16ch}
+.vh-lede{font-size:17.5px;line-height:1.6;color:var(--muted);max-width:47ch;margin:0 0 28px}
+.vh-ctas{display:flex;gap:12px;margin-bottom:30px;flex-wrap:wrap}
+.vh-btn{border-radius:10px;padding:14px 26px;font-size:15px;font-weight:600;display:inline-block}
+.vh-btn-p{background:var(--accent);color:#160a00 !important}
+.vh-btn-s{border:1px solid var(--border)}
+.vh-microtrust{display:flex;gap:22px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.vh-microtrust i{color:var(--green);font-style:normal;margin-right:6px}
+.vh-proof{position:relative}
+.vh-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.vh-card .img{aspect-ratio:4/3;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:#3c3c45;font-size:11.5px;letter-spacing:.1em}
+.vh-card .body{padding:16px 18px}
+.vh-origin{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
+.vh-flagchip{font-size:10px;font-weight:700;letter-spacing:.08em;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--text)}
+.vh-pname{font-size:15.5px;font-weight:500;margin-bottom:6px;line-height:1.35}
+.vh-price{font-family:var(--font-display);font-size:21px;font-weight:700}
+.vh-maker{font-size:12.5px;color:var(--muted);margin-top:2px}
+.vh-escrow-badge{position:absolute;left:-22px;bottom:34px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:11px;align-items:center;max-width:250px}
+.vh-escrow-badge .tick{width:26px;height:26px;border-radius:50%;background:rgba(46,204,113,.14);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+.vh-escrow-badge strong{display:block;font-size:12.5px;font-weight:600}
+.vh-escrow-badge span{color:var(--muted);font-size:12.5px;line-height:1.4}
+.vh-reelsec{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.vh-reel{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:4px}
+.vh-reel::-webkit-scrollbar{display:none}
+.vh-reel.dragging{cursor:grabbing}
+.vh-reel.dragging *{pointer-events:none}
+.vh-tile{position:relative;flex:0 0 218px;aspect-ratio:9/16;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
+.vh-tile video{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
+.vh-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 36%,rgba(0,0,0,.78) 100%)}
+.vh-chip{position:absolute;top:12px;left:12px;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:4px 8px;color:#fff}
+.vh-flagtag{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;letter-spacing:.08em;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:3px 7px;color:#fff}
+.vh-tile .meta{position:absolute;left:14px;right:14px;bottom:14px}
+.vh-tile .meta .t{font-size:13.5px;font-weight:500;line-height:1.3;margin-bottom:5px}
+.vh-tile .meta .s{font-size:11.5px;color:#b9b9c2}
+.vh-tile.claim{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;border-style:dashed;background:var(--bg)}
+.vh-tile.claim .plus{width:42px;height:42px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px}
+.vh-tile.claim .t{font-size:14px;font-weight:500;padding:0 16px}
+.vh-tile.claim .s{font-size:11.5px;color:var(--muted);padding:0 18px;line-height:1.5}
+.vh-swipehint{font-size:12px;color:var(--muted);margin-top:14px}
+.vh-countries{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.vh-country{border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--surface);min-height:190px;display:flex;flex-direction:column}
+.vh-country:hover{border-color:#3d3d46}
+.vh-country.live{border-color:rgba(46,204,113,.32)}
+.vh-country .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.vh-country h3{font-size:19px}
+.vh-specs{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start}
+.vh-spec{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:4px 10px}
+.vh-country .foot{margin-top:16px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.vh-foot-on{color:var(--green)}.vh-foot-off{color:var(--muted)}
+.vh-country.invite{border-style:dashed}
+.vh-country.invite h3{color:var(--accent);line-height:1.25}
+.vh-country.invite .known{font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;flex:1}
+.vh-kind{margin-bottom:32px}
+.vh-kind:last-child{margin-bottom:0}
+.vh-kindlbl{font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.vh-kindlbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.vh-wall{display:flex;flex-wrap:wrap;gap:10px}
+.vh-sp{border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:14.5px;background:var(--surface);display:flex;align-items:baseline;gap:9px}
+.vh-sp:hover{border-color:var(--accent)}
+.vh-sp .n{font-size:11px;color:var(--muted)}
+.vh-sp.empty{opacity:.4;border-style:dashed;background:none}
+.vh-sp.hot{border-color:rgba(255,107,0,.42);opacity:1}
+.vh-escrow{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.vh-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.vh-step{border-left:2px solid var(--border);padding-left:20px}
+.vh-step.active{border-left-color:var(--green)}
+.vh-step .num{font-family:var(--font-display);font-size:12px;letter-spacing:.14em;color:var(--muted);margin-bottom:10px}
+.vh-step h3{font-size:17px;margin-bottom:8px}
+.vh-step p{font-size:14px;color:var(--muted);line-height:1.65;margin:0}
+.vh-founding{border:1px solid rgba(255,107,0,.32);border-radius:18px;padding:44px 48px;display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center;background:var(--surface)}
+.vh-founding h2{font-size:30px;line-height:1.15;margin-bottom:14px;max-width:20ch}
+.vh-founding p{font-size:15.5px;color:var(--muted);line-height:1.65;max-width:52ch;margin:0}
+.vh-fpoints{list-style:none;display:grid;gap:13px;margin:0;padding:0}
+.vh-fpoints li{display:flex;gap:11px;font-size:14.5px;line-height:1.5}
+.vh-fpoints i{color:var(--green);font-style:normal}
+.vh-fcta{margin-top:26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.vh-fnote{font-size:12.5px;color:var(--muted)}
+@media(max-width:960px){
+.vh-hero{grid-template-columns:1fr;gap:36px;padding:38px 0}
+.vh-hero h1{font-size:34px}
+.vh-countries{grid-template-columns:repeat(2,1fr)}
+.vh-steps,.vh-founding{grid-template-columns:1fr}
+.vh-founding{padding:32px 26px}
+.vh-escrow-badge{position:static;margin-top:14px;max-width:none}
+.vh-tile{flex:0 0 168px}
 }
+`
 
-import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
+// Showreel: speciality footage from Pexels (see velor-media-manifest.html).
+// Honest labelling — clips show the craft, not a specific seller.
+const REEL = [
+  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Clay · seat open' },
+  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Spice · seat open' },
+  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'Wool · seat open' },
+  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'The coffee table', s: 'Coffee · seat open' },
+  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'Clay · seat open' },
+  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'Spice · seat open' },
+]
 
-const BADGES: Record<string, { label: string; color: string; bg: string }> = {
-  TOP_RATED: { label: 'Top Rated Seller', color: '#FFD54A', bg: 'rgba(255,213,74,0.12)' },
-  TRUSTED: { label: 'Trusted Seller', color: '#C7CDD6', bg: 'rgba(199,205,214,0.12)' },
-  ESTABLISHED: { label: 'Established Seller', color: '#CD8B5A', bg: 'rgba(205,139,90,0.12)' },
-}
+// Editorial "known for" hints on the origins grid — recruitment copy, never a
+// claim that sellers exist. Live status comes from /api/lattice.
+const FEATURED_ORIGINS = [
+  { code: 'CN', name: 'China', known: ['Clay', 'Silk', 'Tea', 'Iron'] },
+  { code: 'JP', name: 'Japan', known: ['Steel', 'Clay', 'Paper', 'Lacquerware', 'Optics'] },
+  { code: 'MA', name: 'Morocco', known: ['Leather', 'Argan', 'Copper', 'Zellige', 'Wool'] },
+]
 
-function Badge({ code }: { code?: string | null }) {
-  if (!code || !BADGES[code]) return null
-  const b = BADGES[code]
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        padding: '3px 10px',
-        borderRadius: 999,
-        fontSize: 11,
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.04em',
-        color: b.color,
-        background: b.bg,
-        border: `1px solid ${b.color}55`,
-      }}
-    >
-      {b.label}
-    </span>
-  )
-}
-
-export default function Home() {
-  const { symbol, convert } = useCurrencyDisplay()
-  const [products, setProducts] = useState<Product[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
-  type LiveCard = { id: string; title: string; roomName: string; status: string; sellerName: string; products: { images: string[] }[] }
-  const [liveStreams, setLiveStreams] = useState<LiveCard[]>([])
+export default function HomePage() {
+  const [lattice, setLattice] = useState<LatticeSummary | null>(null)
+  const reelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetch('/api/shop/products?limit=8')
-      .then((r) => r.json())
-      .then((d) => setProducts(Array.isArray(d.products) ? d.products : []))
-      .catch(() => {})
-    fetch('/api/sellers/featured')
-      .then((r) => r.json())
-      .then((d) => setSellers(Array.isArray(d.sellers) ? d.sellers : []))
-      .catch(() => {})
-    fetch('/api/live')
-      .then((r) => r.json())
-      .then((d) => setLiveStreams(Array.isArray(d.streams) ? d.streams.filter((x: LiveCard) => x.status === 'LIVE') : []))
+    fetch('/api/lattice')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setLattice(d) })
       .catch(() => {})
   }, [])
 
-  const section: React.CSSProperties = { maxWidth: 1360, margin: '0 auto', padding: '0 24px' }
-  const h2: React.CSSProperties = {
-    fontFamily: 'var(--font-display)',
-    fontWeight: 800,
-    fontSize: 30,
-    letterSpacing: '-0.01em',
-    margin: 0,
-  }
+  // Pointer-capture drag scroll for the showreel.
+  useEffect(() => {
+    const reel = reelRef.current
+    if (!reel) return
+    let down = false, startX = 0, startScroll = 0, moved = 0
+    const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft; reel.setPointerCapture(e.pointerId) }
+    const onMove = (e: PointerEvent) => {
+      if (!down) return
+      const dx = e.clientX - startX
+      if (Math.abs(dx) > 6) { reel.classList.add('dragging'); moved = Math.abs(dx) }
+      reel.scrollLeft = startScroll - dx
+    }
+    const onUp = (e: PointerEvent) => { if (!down) return; down = false; reel.classList.remove('dragging'); try { reel.releasePointerCapture(e.pointerId) } catch {} }
+    const onClick = (e: MouseEvent) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); moved = 0 } }
+    reel.addEventListener('pointerdown', onDown)
+    reel.addEventListener('pointermove', onMove)
+    reel.addEventListener('pointerup', onUp)
+    reel.addEventListener('pointercancel', onUp)
+    reel.addEventListener('click', onClick, true)
+    return () => {
+      reel.removeEventListener('pointerdown', onDown)
+      reel.removeEventListener('pointermove', onMove)
+      reel.removeEventListener('pointerup', onUp)
+      reel.removeEventListener('pointercancel', onUp)
+      reel.removeEventListener('click', onClick, true)
+    }
+  }, [])
+
+  // Pause off-screen showreel video — phones matter.
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const v = e.target.querySelector('video')
+        if (!v) return
+        if (e.isIntersecting) v.play().catch(() => {})
+        else v.pause()
+      })
+    }, { rootMargin: '120px' })
+    document.querySelectorAll('.vh-tile').forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
+  const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
+  const trading = lattice?.trading ?? 0
+  const specStats = lattice?.specialities ?? {}
 
   return (
-    <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
-      {/* HERO */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'radial-gradient(1100px 500px at 80% -10%, rgba(255,107,0,0.18), transparent 60%), radial-gradient(800px 500px at 0% 110%, rgba(0,230,118,0.10), transparent 55%)',
-          }}
-        />
-        <div className="velor-section velor-hero" style={{ ...section, position: 'relative', padding: '86px 24px 92px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 14px',
-              borderRadius: 999,
-              border: '1px solid var(--border)',
-              background: 'rgba(255,255,255,0.03)',
-              fontSize: 12.5,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: 22,
-            }}
-          >
-            <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--green)' }} />
-            The first fully AI-run marketplace
+    <div className="vh">
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      <div className="vh-wrap">
+        <div className="vh-hero">
+          <div>
+            <div className="vh-eyebrow"><span className="vh-dot" /> 190 countries &middot; one checkout</div>
+            <h1>The world has more to sell than you&apos;ve been shown.</h1>
+            <p className="vh-lede">
+              Everywhere makes something better than everywhere else. Velor brings those things
+              to one place — with the country and the maker on every listing, so you always know
+              where it came from.
+            </p>
+            <div className="vh-ctas">
+              <Link className="vh-btn vh-btn-p" href="#origins">Start with a country</Link>
+              <Link className="vh-btn vh-btn-s" href="#protect">How protection works</Link>
+            </div>
+            <div className="vh-microtrust">
+              <span><i>&#10003;</i>Identity-verified sellers</span>
+              <span><i>&#10003;</i>Escrow on every order</span>
+              <span><i>&#10003;</i>Prices in your currency</span>
+            </div>
           </div>
-
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: 'clamp(32px, 6vw, 68px)',
-              lineHeight: 1.04,
-              letterSpacing: '-0.02em',
-              margin: 0,
-              maxWidth: 900,
-            }}
-          >
-            A world of independent sellers.
-            <br />
-            <span style={{ color: 'var(--accent)' }}>Protected</span> every step of the way.
-          </h1>
-
-          <p className="velor-hero-sub" style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1.6, maxWidth: 640, margin: '22px 0 34px' }}>
-            Buy from vetted sellers around the world with total confidence. Your payment is held
-            safely until delivery is confirmed — and the whole marketplace is run,
-            monitored and protected by AI, around the clock.
-          </p>
-
-          <div className="velor-cta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <Link
-              href="/shop"
-              style={{
-                background: 'var(--accent)',
-                color: '#000',
-                fontWeight: 800,
-                fontSize: 15,
-                textDecoration: 'none',
-                padding: '15px 30px',
-                borderRadius: 999,
-              }}
-            >
-              Shop now
-            </Link>
-            <Link
-              href="/sell"
-              style={{
-                background: 'transparent',
-                color: 'var(--text)',
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: 'none',
-                padding: '15px 30px',
-                borderRadius: 999,
-                border: '1px solid var(--border)',
-              }}
-            >
-              Start selling
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* TRUST STRIP */}
-      <section style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <div
-          className="velor-section"
-          style={{
-            ...section,
-            padding: '26px 24px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {[
-            ['🛡️', 'Buyer protection', 'Funds are held until delivery is confirmed.'],
-            ['✔️', 'Verified & ranked sellers', 'Scored on real delivery performance.'],
-            ['🔒', 'Secure Stripe checkout', 'Velor never sees your card details.'],
-            ['🌍', 'Global marketplace', 'Independent sellers, one trusted account.'],
-          ].map(([icon, t, d]) => (
-            <div key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 20 }}>{icon}</span>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14.5 }}>{t}</div>
-                <div style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.45 }}>{d}</div>
+          <div className="vh-proof">
+            <div className="vh-card">
+              <div className="img">WHAT A VELOR LISTING LOOKS LIKE</div>
+              <div className="body">
+                <div className="vh-origin"><span className="vh-flagchip">CN</span> Jingdezhen, China</div>
+                <div className="vh-pname">Celadon porcelain tea set, fired in the city that invented it</div>
+                <div className="vh-price">&pound;42.00</div>
+                <div className="vh-maker">Example listing &mdash; your store, your city, your name here</div>
               </div>
             </div>
-          ))}
+            <div className="vh-escrow-badge">
+              <div className="tick">&#10003;</div>
+              <div><strong>Held in escrow</strong><span>Released to the seller once delivery is confirmed.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section className="vh-reelsec">
+        <div className="vh-wrap">
+          <div className="vh-shead">
+            <div>
+              <h2>Shopping the world</h2>
+              <p>Short film from the places our sellers will work — the souk, the kiln, the loom,
+              the coffee house. Live shopping opens when our founding sellers go on air.</p>
+            </div>
+          </div>
+          <div className="vh-reel" ref={reelRef}>
+            {REEL.map(r => (
+              <div className="vh-tile" key={r.src}>
+                <video src={r.src} muted loop playsInline preload="metadata" />
+                <div className="vh-scrim" />
+                <div className="vh-chip">Preview</div>
+                <div className="vh-flagtag">{r.flag}</div>
+                <div className="meta"><div className="t">{r.t}</div><div className="s">{r.s}</div></div>
+              </div>
+            ))}
+            <Link className="vh-tile claim" href="/apply">
+              <div className="plus">+</div>
+              <div className="t">Your slot is open</div>
+              <div className="s">Founding sellers keep a permanent place on this rail.</div>
+            </Link>
+          </div>
+          <div className="vh-swipehint">Drag to browse</div>
         </div>
       </section>
 
-      {/* LIVE SHOPPING */}
-      <section className="velor-section" style={{ ...section, padding: '32px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
-            <h2 className="velor-h2" style={h2}>Velor Live Shopping</h2>
+      <section id="origins">
+        <div className="vh-wrap">
+          <div className="vh-shead">
+            <div>
+              <h2>Start with a country</h2>
+              <p>Each country lists only the specialities its sellers actually offer. Nothing is
+              typed in by hand, so a country page can never promise what it hasn&apos;t got.</p>
+            </div>
           </div>
-          <Link href="/live" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
-            See all live sellers →
-          </Link>
-        </div>
-        <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
-          Our Enterprise sellers, broadcasting live from anywhere in the world - a perk earned, not bought.
-          <span className="velor-swipe-hint"> Drag to browse.</span>
-        </p>
-        <DragScroller className="velor-live-scroll" ariaLabel="Live sellers">
-          {Array.from({ length: 12 }).map((_, i) => {
-            const ls = liveStreams[i]
-            if (ls) {
+          <div className="vh-countries">
+            {FEATURED_ORIGINS.map(o => {
+              const live = byCode.get(o.code)
+              const isLive = !!live && live.products > 0
+              const specs = isLive && live!.specialities.length ? live!.specialities : o.known
               return (
-                <Link
-                  key={ls.id}
-                  href={`/live/${ls.roomName}`}
-                  data-drag-href={`/live/${ls.roomName}`}
-                  draggable={false}
-                  style={{
-                    display: 'block',
-                    flex: '0 0 180px',
-                    borderRadius: 14,
-                    overflow: 'hidden',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                  }}
-                >
-                  <div style={{ position: 'relative', aspectRatio: '3/4', background: '#111' }}>
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        background: 'var(--accent)',
-                        color: '#000',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: 999,
-                        zIndex: 1,
-                      }}
-                    >
-                      LIVE
-                    </span>
-                    {ls.products?.[0]?.images?.[0] && (
-                      <img
-                        src={ls.products[0].images[0]}
-                        alt=""
-                        draggable={false}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ padding: 8 }}>
-                    <div style={{ fontSize: 10.5, color: 'var(--accent)', fontWeight: 700, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.sellerName}</div>
-                    <div style={{ fontSize: 11.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ls.title}</div>
+                <Link key={o.code} className={'vh-country' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${o.code}` : '/apply'}>
+                  <div className="top"><h3>{o.name}</h3><span className="vh-flagchip">{o.code}</span></div>
+                  <div className="vh-specs">{specs.map(s => <span className="vh-spec" key={s}>{s}</span>)}</div>
+                  <div className={'foot ' + (isLive ? 'vh-foot-on' : 'vh-foot-off')}>
+                    {isLive ? `${live!.products} product${live!.products === 1 ? '' : 's'} · open now` : 'Founding seat open'}
                   </div>
                 </Link>
               )
-            }
+            })}
+            <Link className="vh-country invite" href="/apply">
+              <div className="top"><h3>Your country<br />is missing.</h3></div>
+              <div className="known">Be the first seller from your country and you keep the founding
+              badge and Pro free for life &mdash; and your store opens the country page.</div>
+              <div className="foot" style={{ color: 'var(--accent)' }}>Open it &rarr;</div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section id="specialities" style={{ paddingTop: 0 }}>
+        <div className="vh-wrap">
+          <div className="vh-shead">
+            <div>
+              <h2>Or start with a speciality</h2>
+              <p>Not departments. The things a place has spent centuries getting right — and the
+              things it is good at now. Dashed means no seller has listed in it yet.</p>
+            </div>
+          </div>
+          {SPECIALITY_KINDS.map(kind => {
+            const terms = SPECIALITIES.filter(s => s.kind === kind)
+            // Claimed terms first within each family (Q5 decision).
+            const sorted = [...terms].sort((a, b) => (specStats[b.term]?.products ?? 0) - (specStats[a.term]?.products ?? 0))
             return (
-              <div
-                key={`live-slot-${i}`}
-                style={{
-                  flex: '0 0 180px',
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                  background: 'var(--surface)',
-                  border: '1px dashed var(--border)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  aspectRatio: '3/4',
-                  color: 'var(--muted)',
-                }}
-              >
-                <span style={{ fontSize: 20, opacity: 0.5 }}>&#9679;</span>
-                <span style={{ fontSize: 11, textAlign: 'center', padding: '0 10px' }}>Live slot open</span>
+              <div className="vh-kind" key={kind}>
+                <div className="vh-kindlbl">{kind}</div>
+                <div className="vh-wall">
+                  {sorted.map(s => {
+                    const st = specStats[s.term]
+                    const claimed = !!st && st.products > 0
+                    return (
+                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : ' empty')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/apply'}>
+                        {s.term}
+                        {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
             )
           })}
-        </DragScroller>
-      </section>
-
-      {/* CATEGORIES */}
-      <section className="velor-section" style={{ ...section, padding: '64px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 22 }}>
-          <h2 className="velor-h2" style={h2}>Shop by category</h2>
-          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
-            View all →
-          </Link>
-        </div>
-        <div className="velor-grid-cats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c}
-              href={`/shop?category=${encodeURIComponent(c)}`}
-              style={{
-                display: 'block',
-                padding: '18px 18px',
-                borderRadius: 14,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: 14.5,
-                transition: 'border-color 0.15s',
-              }}
-            >
-              {c}
-              <div style={{ color: 'var(--accent)', fontSize: 13, marginTop: 6 }}>Browse →</div>
-            </Link>
-          ))}
         </div>
       </section>
 
-      {/* TOP-RATED SELLERS */}
-      <section className="velor-section" style={{ ...section, padding: '54px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-          <h2 className="velor-h2" style={h2}>Top-rated sellers</h2>
+      <section className="vh-escrow" id="protect">
+        <div className="vh-wrap">
+          <div className="vh-shead">
+            <div>
+              <h2>How Velor protects your money</h2>
+              <p>Buying from a country you have never bought from before only works if the money
+              is safe. So it is.</p>
+            </div>
+          </div>
+          <div className="vh-steps">
+            <div className="vh-step active"><div className="num">STEP 01</div><h3>You pay Velor, not the seller</h3><p>Your card is charged at checkout through Stripe. The money sits in escrow, untouched.</p></div>
+            <div className="vh-step"><div className="num">STEP 02</div><h3>The seller ships, you track</h3><p>Tracking is issued the moment the parcel is collected. You watch it the whole way.</p></div>
+            <div className="vh-step"><div className="num">STEP 03</div><h3>Delivery is confirmed, funds release</h3><p>Only then is the seller paid. Open a dispute and the funds freeze immediately.</p></div>
+          </div>
         </div>
-        <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 22px' }}>
-          Ranked by real delivery performance, reviews and reliability.
-        </p>
-        {sellers.length === 0 ? (
-          <div
-            style={{
-              border: '1px dashed var(--border)',
-              borderRadius: 16,
-              padding: '40px 24px',
-              textAlign: 'center',
-              color: 'var(--muted)',
-            }}
-          >
-            Our founding sellers are being onboarded now.{' '}
-            <Link href="/sell" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700 }}>
-              Be one of the first →
-            </Link>
-          </div>
-        ) : (
-          <div className="velor-grid-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
-            {sellers.map((s) => {
-              const thumb = s.products?.[0]?.images?.[0]
-              return (
-                <Link
-                  key={s.id}
-                  href={`/seller/${s.id}`}
-                  style={{
-                    display: 'block',
-                    borderRadius: 16,
-                    overflow: 'hidden',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    textDecoration: 'none',
-                    color: 'var(--text)',
-                  }}
-                >
-                  <div style={{ aspectRatio: '1 / 1', background: '#141414', position: 'relative' }}>
-                    {thumb ? (
-                      <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontFamily: 'var(--font-display)',
-                          fontSize: 34,
-                          fontWeight: 800,
-                          color: 'var(--muted)',
-                        }}
-                      >
-                        {s.storeName?.[0] || 'V'}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '8px 12px 10px' }}>
-                    <div style={{ marginBottom: 4 }}>
-                      <Badge code={s.sellerBadge} />
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: 16 }}>{s.storeName}</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span>{(s._count?.products ?? 0)} products</span>
-                      {countryFlagUrl(s.country) && (
-                        <img
-                          src={countryFlagUrl(s.country)!}
-                          alt={s.country || ''}
-                          style={{ width: 15, height: 11, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
       </section>
 
-      {/* FEATURED PRODUCTS */}
-      <section className="velor-section" style={{ ...section, padding: '54px 24px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 22 }}>
-          <h2 className="velor-h2" style={h2}>Fresh on Velor</h2>
-          <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>
-            Browse all →
-          </Link>
-        </div>
-        {products.length === 0 ? (
-          <div
-            style={{
-              border: '1px dashed var(--border)',
-              borderRadius: 16,
-              padding: '40px 24px',
-              textAlign: 'center',
-              color: 'var(--muted)',
-            }}
-          >
-            New listings are arriving as our first sellers go live. Check back very soon.
-          </div>
-        ) : (
-          <div className="velor-grid-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 16 }}>
-            {products.map((p) => {
-              const img = p.images?.[0] || p.image
-              const count = p._count?.reviews ?? p.reviews?.length ?? 0
-              const avg =
-                p.reviews && p.reviews.length
-                  ? p.reviews.reduce((a, r) => a + r.rating, 0) / p.reviews.length
-                  : 0
-              return (
-                <Link
-                  key={p.id}
-                  href={`/shop/${p.id}`}
-                  style={{
-                    display: 'block',
-                    borderRadius: 16,
-                    overflow: 'hidden',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    textDecoration: 'none',
-                    color: 'var(--text)',
-                  }}
-                >
-                  <div style={{ aspectRatio: '1 / 1', background: '#141414' }}>
-                    {img ? (
-                      <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--muted)',
-                          fontSize: 13,
-                        }}
-                      >
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '8px 12px 10px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14.5, lineHeight: 1.3, minHeight: 19, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>{symbol}{convert(p.price, p.seller?.currency || 'GBP').toFixed(2)}</span>
-                      {count > 0 && (
-                        <span style={{ color: 'var(--muted)', fontSize: 12.5, whiteSpace: 'nowrap' }}>
-                          ★ {avg.toFixed(1)} ({count})
-                        </span>
-                      )}
-                    </div>
-                    {p.seller?.country && countryFlagUrl(p.seller.country) && (
-                      <div style={{ marginTop: 6 }}>
-                        <img
-                          src={countryFlagUrl(p.seller.country)!}
-                          alt={p.seller.country}
-                          style={{ width: 16, height: 12, objectFit: 'cover', borderRadius: 2, display: 'inline-block' }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* BUYER PROTECTION EXPLAINER */}
-      <section style={{ borderTop: '1px solid var(--border)', marginTop: 54, background: 'var(--surface)' }}>
-        <div className="velor-section" style={{ ...section, padding: '60px 24px' }}>
-          <h2 className="velor-h2" style={{ ...h2, textAlign: 'center' }}>How Velor protects your money</h2>
-          <p style={{ color: 'var(--muted)', fontSize: 15, textAlign: 'center', maxWidth: 620, margin: '12px auto 40px' }}>
-            You should never pay and hope. On Velor, the seller only gets paid once you have your order.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 18 }}>
-            {[
-              ['1', 'You pay securely', 'Your payment is taken by Stripe and held safely by Velor — not sent to the seller.'],
-              ['2', 'Seller ships, you receive', 'The seller dispatches your order and delivery is confirmed by tracking.'],
-              ['3', 'Then the seller is paid', 'Funds are only released after delivery and a protection window — and never while a return or dispute is open.'],
-            ].map(([n, t, d]) => (
-              <div
-                key={n}
-                style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, padding: '24px 22px' }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 999,
-                    background: 'var(--accent)',
-                    color: '#000',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 14,
-                  }}
-                >
-                  {n}
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{t}</div>
-                <div style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.55 }}>{d}</div>
+      <section id="founding">
+        <div className="vh-wrap">
+          <div className="vh-founding">
+            <div>
+              <div className="vh-eyebrow"><span className="vh-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
+              <h2>Be the first from your country.</h2>
+              <p>
+                {trading > 0
+                  ? `${trading} ${trading === 1 ? 'country is' : 'countries are'} trading on Velor. ${190 - trading} are not.`
+                  : 'A hundred and ninety countries. Not one founding seat taken yet.'}{' '}
+                Whoever arrives first from each of them keeps something no seller after them can ever earn.
+              </p>
+              <div className="vh-fcta">
+                <Link className="vh-btn vh-btn-p" href="/apply">Apply to sell</Link>
+                <span className="vh-fnote">Decision within 24 hours of your verification completing.</span>
               </div>
-            ))}
+            </div>
+            <ul className="vh-fpoints">
+              <li><i>&#10003;</i><span><b>Pro, free for life</b> &mdash; never charged, while the subscription runs unbroken.</span></li>
+              <li><i>&#10003;</i><span>The founding badge, permanently, on your store and every listing.</span></li>
+              <li><i>&#10003;</i><span>Your store opens your country&apos;s page &mdash; and every speciality you list credits you as its founding seller.</span></li>
+              <li><i>&#10003;</i><span>Identity-verified through Stripe. No document ever touches Velor.</span></li>
+            </ul>
           </div>
         </div>
       </section>
-
-      {/* SELL ON VELOR */}
-      <section className="velor-section" style={{ ...section, padding: '68px 24px 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h2 className="velor-h2" style={h2}>Sell on Velor</h2>
-          <p style={{ color: 'var(--muted)', fontSize: 15, maxWidth: 620, margin: '12px auto 0' }}>
-            List for free and reach buyers worldwide. Upgrade any time for lower commission and more listings.
-          </p>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18, maxWidth: 1040, margin: '0 auto' }}>
-          {[
-            { name: 'Starter', price: 'Free', comm: '15% commission', feat: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in'], hl: false, intent: 'starter', cta: 'Get started' },
-            { name: 'Pro', price: '£49/mo', comm: '8% commission', feat: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics'], hl: true, intent: 'pro', cta: 'Choose Pro' },
-            { name: 'Enterprise', price: '£199/mo', comm: '5% commission', feat: ['Unlimited listings', 'Everything in Pro', 'Go Live video shopping', 'Dedicated account manager', 'Full API access', 'Free custom storefront'], hl: false, intent: 'enterprise', cta: 'Choose Enterprise' },
-          ].map((t) => (
-            <Link
-              key={t.name}
-              href={`/dashboard/upgrade/${t.intent}`}
-              style={{
-                display: 'block',
-                background: 'var(--surface)',
-                border: t.hl ? '1px solid var(--accent)' : '1px solid var(--border)',
-                borderRadius: 18,
-                padding: '26px 24px',
-                position: 'relative',
-                color: 'inherit',
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {t.hl && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: -11,
-                    left: 24,
-                    background: 'var(--accent)',
-                    color: '#000',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    padding: '3px 10px',
-                    borderRadius: 999,
-                  }}
-                >
-                  Most popular
-                </span>
-              )}
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18 }}>{t.name}</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '8px 0 2px' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30 }}>{t.price}</span>
-              </div>
-              <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{t.comm}</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 18 }}>
-                {t.feat.map((f) => (
-                  <li key={f} style={{ color: 'var(--muted)', fontSize: 14, padding: '6px 0', display: 'flex', gap: 8 }}>
-                    <span style={{ color: 'var(--green)' }}>✔</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <div
-                style={{
-                  color: t.hl ? '#000' : 'var(--text)',
-                  background: t.hl ? 'var(--accent)' : 'transparent',
-                  border: t.hl ? 'none' : '1px solid var(--border)',
-                  borderRadius: 999,
-                  padding: '10px 0',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  fontSize: 14,
-                }}
-              >
-                {t.cta} →
-              </div>
-            </Link>
-          ))}
-        </div>
-        <p style={{ color: 'var(--muted)', fontSize: 13, textAlign: 'center', margin: '22px auto 0', maxWidth: 620 }}>
-          Payouts are automatic: funds release to your bank after delivery is confirmed — 15 days for new sellers,
-          72 hours once you build a trusted track record.
-        </p>
-        <div style={{ textAlign: 'center', marginTop: 26 }}>
-          <Link
-            href="/sell"
-            style={{
-              display: 'inline-block',
-              background: 'var(--accent)',
-              color: '#000',
-              fontWeight: 800,
-              fontSize: 15,
-              textDecoration: 'none',
-              padding: '15px 34px',
-              borderRadius: 999,
-            }}
-          >
-            Start selling today
-          </Link>
-        </div>
-      </section>
-
-      {/* CLOSING */}
-      <section className="velor-section" style={{ ...section, padding: '70px 24px 90px' }}>
-        <div
-          style={{
-            borderRadius: 22,
-            border: '1px solid var(--border)',
-            background:
-              'radial-gradient(600px 300px at 100% 0%, rgba(255,107,0,0.16), transparent 60%), var(--surface)',
-            padding: 'clamp(24px, 6vw, 60px)',
-            textAlign: 'center',
-          }}
-        >
-          <h2 className="velor-h2" style={{ ...h2, fontSize: 'clamp(24px, 4vw, 40px)' }}>A marketplace that runs itself.</h2>
-          <p style={{ color: 'var(--muted)', fontSize: 16, maxWidth: 600, margin: '14px auto 30px' }}>
-            Discovery, protection, sellers and support — all operated by AI, so buying and selling
-            just works. Join the marketplace built for what commerce becomes next.
-          </p>
-          <div className="velor-cta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
-            <Link
-              href="/shop"
-              style={{ background: 'var(--accent)', color: '#000', fontWeight: 800, fontSize: 15, textDecoration: 'none', padding: '15px 30px', borderRadius: 999 }}
-            >
-              Start shopping
-            </Link>
-            <Link
-              href="/sell"
-              style={{ background: 'transparent', color: 'var(--text)', fontWeight: 700, fontSize: 15, textDecoration: 'none', padding: '15px 30px', borderRadius: 999, border: '1px solid var(--border)' }}
-            >
-              Become a seller
-            </Link>
-          </div>
-        </div>
-      </section>
-    </main>
+    </div>
   )
 }

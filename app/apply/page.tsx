@@ -1,5 +1,14 @@
 'use client';
 
+// Seller application — the landing page for every outreach email
+// (lib/outreachEmail.ts links here). Redesigned 2026-07-08 to the founding-
+// seller design (velor-founding-seats-v3.html / velor-DESIGN-HANDOVER.md).
+// The form logic, fields and POST /api/seller/apply submission are unchanged
+// from the previous version — only the presentation moved.
+//
+// Language rule (standing): the first seller "opens" a country and is
+// "credited as the seller who opened it" — never "claims", "owns", "is yours".
+
 import { useState } from 'react';
 
 import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories';
@@ -25,192 +34,54 @@ const initialForm: FormState = {
   productCategories: [],
 };
 
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: '#0D0D0D',
-    color: '#F5F5F5',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    padding: '48px 16px',
-  },
-  container: {
-    maxWidth: '680px',
-    margin: '0 auto',
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-  },
-  logo: {
-    display: 'inline-block',
-    background: '#FF6B00',
-    color: '#FFF',
-    fontWeight: 800,
-    fontSize: '18px',
-    letterSpacing: '0.1em',
-    padding: '8px 20px',
-    marginBottom: '32px',
-  },
-  h1: {
-    fontSize: '32px',
-    fontWeight: 700,
-    margin: '0 0 12px',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    color: '#999',
-    fontSize: '16px',
-    margin: 0,
-    lineHeight: 1.6,
-  },
-  card: {
-    background: '#1A1A1A',
-    border: '1px solid #2A2A2A',
-    borderRadius: '12px',
-    padding: '40px',
-    marginBottom: '24px',
-  },
-  sectionTitle: {
-    fontSize: '13px',
-    fontWeight: 600,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase' as const,
-    color: '#FF6B00',
-    marginBottom: '24px',
-  },
-  fieldGroup: {
-    marginBottom: '20px',
-  },
-  label: {
-    display: 'block',
-    fontSize: '13px',
-    fontWeight: 500,
-    color: '#CCC',
-    marginBottom: '8px',
-  },
-  required: {
-    color: '#FF6B00',
-    marginLeft: '2px',
-  },
-  input: {
-    width: '100%',
-    background: '#111',
-    border: '1px solid #2A2A2A',
-    borderRadius: '6px',
-    color: '#F5F5F5',
-    fontSize: '15px',
-    padding: '11px 14px',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-    transition: 'border-color 0.15s',
-  },
-  textarea: {
-    width: '100%',
-    background: '#111',
-    border: '1px solid #2A2A2A',
-    borderRadius: '6px',
-    color: '#F5F5F5',
-    fontSize: '15px',
-    padding: '11px 14px',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-    resize: 'vertical' as const,
-    minHeight: '120px',
-    fontFamily: 'inherit',
-  },
-  select: {
-    width: '100%',
-    background: '#111',
-    border: '1px solid #2A2A2A',
-    borderRadius: '6px',
-    color: '#F5F5F5',
-    fontSize: '15px',
-    padding: '11px 14px',
-    outline: 'none',
-    appearance: 'none' as const,
-    cursor: 'pointer',
-  },
-  categoryGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '8px',
-    marginTop: '8px',
-  },
-  categoryBtn: (selected: boolean) => ({
-    background: selected ? '#FF6B00' : '#111',
-    border: selected ? '1px solid #FF6B00' : '1px solid #2A2A2A',
-    borderRadius: '6px',
-    color: selected ? '#FFF' : '#AAA',
-    fontSize: '13px',
-    padding: '9px 14px',
-    cursor: 'pointer',
-    textAlign: 'left' as const,
-    transition: 'all 0.15s',
-    fontWeight: selected ? 600 : 400,
-  }),
-  submitBtn: (disabled: boolean) => ({
-    width: '100%',
-    background: disabled ? '#333' : '#FF6B00',
-    color: disabled ? '#666' : '#FFF',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: 600,
-    padding: '16px',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'background 0.15s',
-    marginTop: '8px',
-  }),
-  legalNote: {
-    fontSize: '12px',
-    color: '#777',
-    textAlign: 'center' as const,
-    marginTop: '16px',
-    lineHeight: 1.6,
-  },
-  legalLink: {
-    color: '#FF6B00',
-    textDecoration: 'none',
-  },
-  error: {
-    background: '#1A0A0A',
-    border: '1px solid #5A1515',
-    borderRadius: '8px',
-    color: '#FF8080',
-    fontSize: '14px',
-    padding: '14px 16px',
-    marginBottom: '20px',
-  },
-  successCard: {
-    background: '#0A1A0A',
-    border: '1px solid #1A4A1A',
-    borderRadius: '12px',
-    padding: '48px 40px',
-    textAlign: 'center' as const,
-  },
-  successTitle: {
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#4ADE80',
-    marginBottom: '12px',
-  },
-  successText: {
-    color: '#999',
-    fontSize: '15px',
-    lineHeight: 1.7,
-    marginBottom: '24px',
-  },
-  refNum: {
-    background: '#111',
-    border: '1px solid #2A2A2A',
-    borderRadius: '6px',
-    color: '#FF6B00',
-    fontFamily: 'monospace',
-    fontSize: '13px',
-    padding: '10px 16px',
-    display: 'inline-block',
-  },
-};
+const css = `
+.ap-page{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-body);position:relative}
+.ap-page::before{content:'';position:fixed;top:-320px;left:50%;transform:translateX(-50%);width:900px;height:520px;background:radial-gradient(50% 50% at 50% 50%, rgba(255,107,0,.07) 0%, rgba(255,107,0,0) 100%);pointer-events:none}
+.ap-wrap{max-width:1100px;margin:0 auto;padding:0 24px;position:relative}
+.ap-hero{padding:64px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:52px;align-items:end}
+.ap-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;font-weight:600}
+.ap-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.ap-h1{font-family:var(--font-display);font-size:46px;line-height:1.06;margin:0 0 16px;font-weight:500;letter-spacing:-0.02em;max-width:15ch}
+.ap-lede{font-size:16.5px;color:var(--muted);line-height:1.62;max-width:50ch;margin:0}
+.ap-perkbox{border:1px solid rgba(255,107,0,.3);border-radius:16px;padding:24px 26px;background:var(--surface)}
+.ap-perkbox .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px}
+.ap-perkbox ul{list-style:none;display:grid;gap:11px;margin:0;padding:0}
+.ap-perkbox li{display:flex;gap:10px;font-size:13.5px;line-height:1.5}
+.ap-perkbox i{color:var(--green);font-style:normal;flex:0 0 auto}
+.ap-perkbox b{font-weight:600}
+.ap-trust{display:flex;gap:22px;font-size:13px;color:var(--muted);flex-wrap:wrap;padding:20px 0 34px;border-bottom:1px solid var(--border);margin-bottom:44px}
+.ap-trust i{color:var(--green);font-style:normal;margin-right:6px}
+.ap-formgrid{display:grid;grid-template-columns:1fr;gap:0;max-width:760px;margin:0 auto;padding-bottom:90px}
+.ap-sec{position:relative;padding:36px 0 34px;border-top:1px solid var(--border)}
+.ap-sec:first-child{border-top:0;padding-top:0}
+.ap-bignum{position:absolute;right:0;top:26px;font-family:var(--font-display);font-size:64px;font-weight:700;line-height:1;color:transparent;-webkit-text-stroke:1px #26262d;user-select:none;pointer-events:none}
+.ap-steplbl{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:9px}
+.ap-h2{font-family:var(--font-display);font-size:21px;margin:0 0 6px;font-weight:500}
+.ap-sub{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0 0 24px;max-width:58ch}
+.ap-label{display:block;font-size:13px;font-weight:500;margin-bottom:8px}
+.ap-req{color:var(--accent);margin-left:2px}
+.ap-field{margin-bottom:18px}
+.ap-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ap-input,.ap-textarea,.ap-select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-family:inherit;padding:13px 15px;outline:none;box-sizing:border-box;transition:border-color .15s, box-shadow .15s}
+.ap-input:focus,.ap-textarea:focus,.ap-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,0,.14)}
+.ap-input::placeholder,.ap-textarea::placeholder{color:#6b6b76}
+.ap-textarea{min-height:120px;resize:vertical;line-height:1.6}
+.ap-select{appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 21px) 50%,calc(100% - 16px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.ap-cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.ap-cat{border:1px solid var(--border);border-radius:999px;padding:8px 15px;font-size:13px;color:var(--muted);cursor:pointer;background:var(--surface);font-family:inherit;transition:all .13s}
+.ap-cat:hover{color:var(--text);transform:translateY(-1px)}
+.ap-cat.on{border-color:var(--accent);color:var(--text);background:rgba(255,107,0,.1);font-weight:500}
+.ap-submit{width:100%;border-radius:12px;padding:16px 0;font-size:15.5px;font-weight:600;border:0;cursor:pointer;font-family:inherit;background:var(--accent);color:#160a00;transition:opacity .2s;margin-top:6px}
+.ap-submit:disabled{opacity:.4;cursor:not-allowed}
+.ap-legal{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6}
+.ap-legal a{color:var(--accent);text-decoration:none}
+.ap-error{border:1px solid rgba(226,75,74,.4);border-radius:12px;background:rgba(226,75,74,.06);color:var(--text);font-size:14px;padding:14px 16px;margin-bottom:20px}
+.ap-success{max-width:640px;margin:80px auto;border:1px solid rgba(46,204,113,.32);border-radius:18px;background:var(--surface);padding:46px 44px;text-align:center}
+.ap-success h2{font-family:var(--font-display);font-size:26px;margin:0 0 12px;font-weight:500}
+.ap-success p{color:var(--muted);font-size:15px;line-height:1.7;margin:0 0 22px}
+.ap-ref{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--accent);font-family:monospace;font-size:13px;padding:10px 16px;display:inline-block}
+@media(max-width:900px){.ap-hero{grid-template-columns:1fr;gap:30px;padding:40px 0 26px}.ap-h1{font-size:33px}.ap-row{grid-template-columns:1fr}.ap-bignum{display:none}}
+`;
 
 export default function ApplyPage() {
   const [form, setForm] = useState<FormState>(initialForm);
@@ -259,18 +130,18 @@ export default function ApplyPage() {
 
   if (applicationId) {
     return (
-      <div style={styles.page}>
-        <div style={styles.container}>
-          <div style={styles.header}>
-            <div style={styles.logo}>VELOR</div>
-          </div>
-          <div style={styles.successCard}>
-            <div style={styles.successTitle}>Application received</div>
-            <p style={styles.successText}>
-              Thank you for applying to sell on Velor Commerce. Our team will review your
-              application and get back to you within 24 hours.
+      <div className="ap-page">
+        <style dangerouslySetInnerHTML={{ __html: css }} />
+        <div className="ap-wrap">
+          <div className="ap-success">
+            <h2>Application received.</h2>
+            <p>
+              Next: check your email for an identity verification link — every Velor seller
+              verifies a government ID through Stripe before their store opens, and Velor never
+              sees or stores the document. You will have our decision within 24 hours of your
+              verification completing.
             </p>
-            <div style={styles.refNum}>Reference: {applicationId}</div>
+            <div className="ap-ref">Reference: {applicationId}</div>
           </div>
         </div>
       </div>
@@ -278,137 +149,126 @@ export default function ApplyPage() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <div style={styles.logo}>VELOR</div>
-          <h1 style={styles.h1}>Sell on Velor Commerce</h1>
-          <p style={styles.subtitle}>
-            Join a global marketplace of independent sellers. Wherever you are in the
-            world, tell us about your business and we will be in touch.
-          </p>
+    <div className="ap-page">
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="ap-wrap">
+        <div className="ap-hero">
+          <div>
+            <div className="ap-eyebrow"><span className="ap-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
+            <h1 className="ap-h1">Be the first from your country.</h1>
+            <p className="ap-lede">
+              Velor is a global marketplace where the country and the maker stay on every
+              listing. Whoever arrives first from each of the world&apos;s 190 countries keeps
+              something no seller after them can ever earn.
+            </p>
+          </div>
+          <div className="ap-perkbox">
+            <div className="lbl">What the first seller keeps</div>
+            <ul>
+              <li><i>&#10003;</i><span><b>Pro, free for life.</b> Never charged, for as long as the subscription runs unbroken.</span></li>
+              <li><i>&#10003;</i><span><b>The founding badge.</b> Permanent, on your store and every listing.</span></li>
+              <li><i>&#10003;</i><span><b>The first store on your country&apos;s page.</b> Front and centre until others arrive &mdash; credited as the seller who opened it, always.</span></li>
+              <li><i>&#10003;</i><span><b>The homepage showreel slot.</b> Your film, on the homepage.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="ap-trust">
+          <span><i>&#10003;</i>Free to list &mdash; no listing fees, ever</span>
+          <span><i>&#10003;</i>Decision within 24 hours of your identity verification completing</span>
+          <span><i>&#10003;</i>Sell and get support in your own language</span>
+          <span><i>&#10003;</i>Buyers pay into escrow &mdash; so they buy with confidence</span>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div style={styles.error}>{error}</div>}
+          <div className="ap-formgrid">
+            {error && <div className="ap-error">{error}</div>}
 
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}>Business details</div>
+            <div className="ap-sec">
+              <div className="ap-bignum">01</div>
+              <div className="ap-steplbl">Your business</div>
+              <h2 className="ap-h2">Who are you?</h2>
+              <p className="ap-sub">Real details only &mdash; every application is reviewed, and every seller verifies a government ID before their store opens.</p>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>
-                Business name <span style={styles.required}>*</span>
-              </label>
-              <input
-                style={styles.input}
-                type="text"
-                value={form.businessName}
-                onChange={e => setField('businessName', e.target.value)}
-                placeholder="Your company or brand name"
-                required
-              />
+              <div className="ap-field">
+                <label className="ap-label">Business name <span className="ap-req">*</span></label>
+                <input className="ap-input" type="text" value={form.businessName}
+                  onChange={e => setField('businessName', e.target.value)}
+                  placeholder="Your company or brand name" required />
+              </div>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">Contact name <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="text" value={form.contactName}
+                    onChange={e => setField('contactName', e.target.value)}
+                    placeholder="Full name" required />
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">Contact email <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="email" value={form.contactEmail}
+                    onChange={e => setField('contactEmail', e.target.value)}
+                    placeholder="you@company.com" required />
+                </div>
+              </div>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">Website or store link</label>
+                  <input className="ap-input" type="url" value={form.website}
+                    onChange={e => setField('website', e.target.value)}
+                    placeholder="https://yourstore.com" />
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">Country</label>
+                  <select className="ap-select" value={form.country}
+                    onChange={e => setField('country', e.target.value)}>
+                    <option value="">Select country</option>
+                    {WORLD_COUNTRIES.map(c => (
+                      <option key={c.code} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>
-                  Contact name <span style={styles.required}>*</span>
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={form.contactName}
-                  onChange={e => setField('contactName', e.target.value)}
-                  placeholder="Full name"
-                  required
-                />
-              </div>
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>
-                  Contact email <span style={styles.required}>*</span>
-                </label>
-                <input
-                  style={styles.input}
-                  type="email"
-                  value={form.contactEmail}
-                  onChange={e => setField('contactEmail', e.target.value)}
-                  placeholder="you@company.com"
-                  required
-                />
-              </div>
-            </div>
+            <div className="ap-sec">
+              <div className="ap-bignum">02</div>
+              <div className="ap-steplbl">Your store</div>
+              <h2 className="ap-h2">What do you make or sell?</h2>
+              <p className="ap-sub">Tell us in your own words &mdash; what you sell, where it comes from, and what makes it worth crossing a border for.</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>Website</label>
-                <input
-                  style={styles.input}
-                  type="url"
-                  value={form.website}
-                  onChange={e => setField('website', e.target.value)}
-                  placeholder="https://yourstore.com"
-                />
+              <div className="ap-field">
+                <label className="ap-label">Store description</label>
+                <textarea className="ap-textarea" value={form.storeDescription}
+                  onChange={e => setField('storeDescription', e.target.value)}
+                  placeholder="What you sell, how it is made, and why buyers should care..." />
               </div>
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>Country</label>
-                <select
-                  style={styles.select}
-                  value={form.country}
-                  onChange={e => setField('country', e.target.value)}
-                >
-                  <option value="">Select country</option>
-                  {WORLD_COUNTRIES.map(c => (
-                    <option key={c.code} value={c.name}>{c.name}</option>
+
+              <div className="ap-field">
+                <label className="ap-label">Product categories</label>
+                <div className="ap-cats">
+                  {CATEGORIES.map(cat => (
+                    <button key={cat} type="button"
+                      className={'ap-cat' + (form.productCategories.includes(cat) ? ' on' : '')}
+                      onClick={() => toggleCategory(cat)}>
+                      {cat}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             </div>
+
+            <button className="ap-submit" type="submit" disabled={submitting}>
+              {submitting ? 'Submitting...' : 'Apply to sell'}
+            </button>
+
+            <p className="ap-legal">
+              By submitting this application you agree to the{' '}
+              <a href="/legal/seller-agreement">Seller Agreement</a>{' '}and the{' '}
+              <a href="/legal/seller-rules">Seller Rules and Product Compliance Policy</a>.
+            </p>
           </div>
-
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}>About your store</div>
-
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Store description</label>
-              <textarea
-                style={styles.textarea}
-                value={form.storeDescription}
-                onChange={e => setField('storeDescription', e.target.value)}
-                placeholder="Tell us about what you sell, your brand ethos, and what makes your products special..."
-              />
-            </div>
-
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Product categories</label>
-              <div style={styles.categoryGrid}>
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    style={styles.categoryBtn(form.productCategories.includes(cat))}
-                    onClick={() => toggleCategory(cat)}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            style={styles.submitBtn(submitting)}
-            disabled={submitting}
-          >
-            {submitting ? 'Submitting...' : 'Submit application'}
-          </button>
-
-          <p style={styles.legalNote}>
-            By submitting this application you agree to the{' '}
-            <a href="/legal/seller-agreement" style={styles.legalLink}>Seller Agreement</a>
-            {' '}and the{' '}
-            <a href="/legal/seller-rules" style={styles.legalLink}>Seller Rules and Product Compliance Policy</a>.
-          </p>
         </form>
       </div>
     </div>

@@ -196,7 +196,7 @@ export const WORLD_COUNTRIES: WorldCountry[] = [
   { code: 'UZ', name: 'Uzbekistan' },
   { code: 'VU', name: 'Vanuatu' },
   { code: 'VA', name: 'Vatican City' },
-  { code: 'VE', name: 'Venezela' },
+  { code: 'VE', name: 'Venezuela' },
   { code: 'VN', name: 'Vietnam' },
   { code: 'YE', name: 'Yemen' },
   { code: 'ZM', name: 'Zambia' },
