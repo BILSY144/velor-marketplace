@@ -184,7 +184,7 @@ export function buildApplicationReceivedEmail(d: {
       Hi ${h(d.contactName)}, we have received your seller application for <strong style="color:#FFF">${h(d.businessName)}</strong>.
     </p>
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 16px">
-      Our team reviews all applications within 3-5 business days. We will be in touch once a decision has been made.
+      Velor reviews every application within 24 hours. You will hear from us with a decision, either way.
     </p>
     <p style="color:#777;font-size:12px;margin:0 0 8px;letter-spacing:0.06em;text-transform:uppercase">Your reference number</p>
     <div style="background:#111;border:1px solid #2A2A2A;border-radius:6px;padding:12px 16px;font-family:monospace;font-size:13px;color:#FF6B00;margin-bottom:20px">${h(d.applicationId)}</div>
