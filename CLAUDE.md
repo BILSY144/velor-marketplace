@@ -798,3 +798,10 @@ In progress and next: the Payoneer partner application is submitted and awaiting
 Since the previous check-in (f0fd27c, ~00:53 UTC), four commits landed on main and every one deployed to production with status Ready on Vercel. The Velor AI assistant widget now has buyer and seller variants: public pages serve a buyer-help persona while the dashboard keeps the tier-aware seller persona (2285fd1). The assistant API gained a public buyer path that needs no login alongside the existing tier-aware seller path (082e0d1), the public widget passes variant=buyer so shoppers get the buyer persona (6409343), and empty assistant replies were fixed by dropping the leading assistant greeting so Anthropic messages start with a user turn (9cd651c, HEAD at time of writing).
 
 In progress and next: the Payoneer partner application remains submitted and awaiting approval. The agent-watchdog hourly cron is live following the d5e085b type fix. The cj-resupplier build-failure diagnosis from the 2026-07-07 emergency checkpoint still needs re-verification. Nothing in this update touches or resolves any review item above. Tail of this file verified intact after this edit.
+
+
+## SESSION UPDATE — 2026-07-08 (scheduled check-in, ~01:49 UTC)
+
+Since the previous check-in (HEAD 9cd651c, ~01:10 UTC), two commits landed on main, both showing passing status checks on GitHub: the Velor AI assistant now always replies in the language the user writes in (1a79fd6), and it greets visitors in their browser language across 18 languages with RTL support (5d514ee, HEAD at time of writing).
+
+In progress and next: the Payoneer partner application remains submitted and awaiting approval. The agent-watchdog hourly cron remains live. The cj-resupplier build-failure diagnosis from the 2026-07-07 emergency checkpoint still needs re-verification. Nothing in this update touches or resolves any review item above. Tail of this file verified intact after this edit.
