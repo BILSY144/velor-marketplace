@@ -74,7 +74,7 @@ export default function GlobalFooter() {
           }}
         >
           {[
-            ['Buyer protection', 'Your payment is held safely until you confirm your order arrived.'],
+            ['Buyer protection', 'Your payment is held safely until delivery is confirmed.'],
             ['Verified & ranked sellers', 'Every seller is checked and scored on real delivery performance.'],
             ['Secure Stripe checkout', 'Card details are handled by Stripe — Velor never sees them.'],
             ['A global marketplace', 'One account to buy from independent sellers worldwide.'],
