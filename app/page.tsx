@@ -85,19 +85,19 @@ const css = `
 .vh-creel::-webkit-scrollbar{display:none}
 .vh-creel.dragging{cursor:grabbing}
 .vh-creel.dragging *{pointer-events:none}
-.vh-ccard{flex:0 0 254px;border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
-.vh-ccard:hover{border-color:#3d3d46;transform:translateY(-2px)}
+.vh-ccard{flex:0 0 272px;border:1px solid rgba(255,107,0,.32);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
+.vh-ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
 .vh-ccard.live{border-color:rgba(46,204,113,.32)}
 .vh-ccard .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:10px}
 .vh-ccard h3{font-size:18px;line-height:1.2}
 .vh-cflag{font-size:19px;line-height:1;flex:0 0 auto}
 .vh-specs{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start}
-.vh-spec{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:4px 10px}
+.vh-spec{font-size:11.5px;color:#c6c6cf;border:1px solid #3a3a44;border-radius:999px;padding:4px 10px}
 .vh-ccard .foot{margin-top:15px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
 .vh-foot-on{color:var(--green)}.vh-foot-off{color:var(--muted)}
 .vh-ccard.invite{border-style:dashed;background:var(--bg)}
 .vh-ccard.invite h3{color:var(--accent);line-height:1.25}
-.vh-ccard.invite .known{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:10px;flex:1}
+.vh-ccard.invite .known{font-size:12.5px;color:#c6c6cf;line-height:1.55;margin-top:10px;flex:1}
 .vh-kind{margin-bottom:38px}
 .vh-kind:last-child{margin-bottom:0}
 .vh-kindhead{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap}
@@ -141,12 +141,12 @@ const css = `
 // Showreel: speciality footage from Pexels (see velor-media-manifest.html).
 // Honest labelling — clips show the craft, not a specific seller.
 const REEL = [
-  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Clay · seat open' },
-  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Spice · seat open' },
-  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'Wool · seat open' },
-  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'The coffee table', s: 'Coffee · seat open' },
-  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'Clay · seat open' },
-  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'Spice · seat open' },
+  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Clay' },
+  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Spice' },
+  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'Wool' },
+  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'The coffee table', s: 'Coffee' },
+  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'Clay' },
+  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'Spice' },
 ]
 
 const KIND_LINES: Record<string, string> = {
@@ -302,8 +302,8 @@ export default function HomePage() {
           <div className="vh-shead">
             <div>
               <h2>Shopping the world</h2>
-              <p>Short film from the places our sellers will work — the souk, the kiln, the loom,
-              the coffee house. Live shopping opens when our founding sellers go on air.</p>
+              <p>Short film from the places your things will come from — the souk, the kiln, the
+              loom, the coffee house. Live shopping opens with our founding sellers.</p>
             </div>
           </div>
           <div className="vh-reel" ref={reelRef}>
@@ -331,8 +331,8 @@ export default function HomePage() {
           <div className="vh-shead">
             <div>
               <h2>Start with a country</h2>
-              <p>Every country on earth, and what its makers are known for — the finished thing,
-              not the raw material. A country only ever lists what its sellers actually offer.</p>
+              <p>Every country on earth, and the things it makes better than anywhere else. This is
+              what you&apos;ll be shopping — country by country, maker by maker.</p>
             </div>
             <Link className="vh-slink" href="/founding">All 190 &rarr;</Link>
           </div>
@@ -342,11 +342,11 @@ export default function HomePage() {
               const isLive = !!live && live.products > 0
               const hints = cultureHints(c.code)
               return (
-                <Link key={c.code} className={'vh-ccard' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${c.code}` : '/apply'}>
+                <Link key={c.code} className={'vh-ccard' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${c.code}` : '/founding'}>
                   <div className="top"><h3>{c.name}</h3><span className="vh-cflag">{flagOf(c.code)}</span></div>
                   <div className="vh-specs">{hints.map(h => <span className="vh-spec" key={h}>{h}</span>)}</div>
                   <div className={'foot ' + (isLive ? 'vh-foot-on' : 'vh-foot-off')}>
-                    {isLive ? `${live!.products} product${live!.products === 1 ? '' : 's'} · open now` : 'Founding seat open'}
+                    {isLive ? `${live!.products} product${live!.products === 1 ? '' : 's'} · shop now` : 'Opening soon'}
                   </div>
                 </Link>
               )
@@ -372,8 +372,8 @@ export default function HomePage() {
             </div>
           </div>
           <div className="vh-walllegend">
-            <span><i style={{ color: 'var(--green)' }}>&#9679;</i>Open now &mdash; sellers are listing it</span>
-            <span><i style={{ color: 'var(--accent)', opacity: .7 }}>&#9679;</i>Founding seat open &mdash; be the first to list it</span>
+            <span><i style={{ color: 'var(--green)' }}>&#9679;</i>Open now &mdash; shop it today</span>
+            <span><i style={{ color: 'var(--accent)', opacity: .7 }}>&#9679;</i>Opening soon &mdash; arriving with our first sellers</span>
           </div>
           {SPECIALITY_KINDS.map(kind => {
             const terms = SPECIALITIES.filter(s => s.kind === kind)
@@ -391,7 +391,7 @@ export default function HomePage() {
                     const st = specStats[s.term]
                     const claimed = !!st && st.products > 0
                     return (
-                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/apply'} title={s.line}>
+                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'} title={s.line}>
                         <span className="dotst" />
                         {buyerLabel(s.term)}
                         {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}
