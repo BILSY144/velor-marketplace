@@ -449,3 +449,8 @@ resolved: products were seeded, William ordered full removal; real Chinese selle
 rail. Next: port the design, then Payoneer._
 
 Scheduled check-in 2026-07-08 20:12 UTC. Since the 19:46 check-in, William landed 7e80b16, a full rewrite of this file: design phase logged complete (seven pages), vocabulary v2 signed off, catalogue purge to zero recorded as executed (74 products deleted, both internal sellers deactivated), China contradiction resolved, NEXT STEPS reordered to put the design port first, and gap 8 added for stripping the remaining CJ machinery. No code commits after 269811a; repo tip is 7e80b16. Nothing further to log this cycle; next steps are as set out in NEXT STEPS above.
+
+
+## SESSION UPDATE — 2026-07-08 20:50 UTC
+
+Scheduled check-in. Since the 20:12 UTC check-in (4f30d65), the design port has started shipping: four code commits landed on main. Commit 8b59317 delivered origin-first redesign batch 1 with the new /apply page and homepage, the speciality vocabulary, and the lattice API. Commit aa56838 paused outbound seller outreach by removing the outreach-auto cron. Commit a31b79b polished the homepage, redesigning the speciality wall as a tile grid and repositioning the escrow badge. Commit 8f19d17 put film in the example listing card in the homepage hero. Vercel shows the latest production deployment (8f19d17) as Ready, so the redesigned homepage and /apply page are live. In progress: the origin-first design port, with batch 1 now deployed. Next: continue the port across the remaining pages, then the Payoneer rail, per NEXT STEPS above.
