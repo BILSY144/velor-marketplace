@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation'
 import GlobalHeader from './GlobalHeader'
 import GlobalFooter from './GlobalFooter'
+import CountryOriginStrip from './CountryOriginStrip'
 import VelorAssistant from './VelorAssistant'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,10 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   return (
     <>
       {isPublic && <GlobalHeader />}
+      {/* Shop-by-origin flag strip sits directly under the header on every
+          public page. Do not remove: it is the buyer's entry point into
+          browsing by country of origin. */}
+      {isPublic && <CountryOriginStrip />}
       {children}
       {isPublic && <GlobalFooter />}
       {/* Velor AI assistant on every public (buyer + prospective-seller) page.
