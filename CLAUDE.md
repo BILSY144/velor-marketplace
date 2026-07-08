@@ -888,3 +888,36 @@ Checkpoint saved 2026-07-08. Identity gate built and deployed but INERT until St
 ## SESSION UPDATE — 2026-07-08 (scheduled check-in, ~04:07 UTC)
 
 No change since the 04:00 UTC checkpoint (448d901), committed seven minutes before this check-in. HEAD is unchanged, no new code commits since 0e880a0 (mobile header logo) at 03:47 UTC, and nothing new to verify. Next steps remain exactly as listed in the checkpoint above: enable Stripe Identity, delete the old ID-document storage, shop pagination bug (task #3), and tune scout-sellers for Eastern markets (task #10).
+
+
+## Checkpoint 2026-07-08 04:30 UTC -- Stripe Identity LIVE end to end
+
+The verification chain is now fully wired and every link was verified against a live response, not assumed.
+
+WHAT IS DONE. Stripe Identity is ENABLED on acct_1TlcWCDB5eA3Wfmu (William submitted the Identity application: use case Trust & Safety, not a restricted business, both agreements accepted, Synthetic Identity Protection enabled, Native Mobile SDKs skipped because our flow uses Stripe's hosted page). Confirmed by all six identity.verification_session.* events now appearing in the webhook event picker; earlier the same picker was empty. The webhook destination exists: id we_1TqmtEDB5eA3WfmuzRM2Yf5h, status Active, endpoint https://velorcommerce.store/api/webhooks/stripe-identity, scope "Your account" (correct -- sessions belong to the platform account, not connected accounts), listening to exactly 4 events (verified, requires_input, processing, canceled). Its Stripe-side display name is the auto-generated "playful-celebration" because the name field did not persist through their React form -- cosmetic only, rename via Edit destination if it bothers you. STRIPE_IDENTITY_WEBHOOK_SECRET exists in Vercel (production + preview, type sensitive, created 04:20:39Z) and William redeployed; that deployment is READY and PROMOTED.
+
+HOW THE WEBHOOK WAS PROVED, and how to re-prove it. Two live POSTs to the production endpoint from a velorcommerce.store page. Sending no stripe-signature header returned 400 {"error":"Missing stripe-signature"}. Sending a forged signature with a fake identity.verification_session.verified payload returned 400 with Stripe's own "No signatures found matching the expected signature for payload" error. That second result is the important one: it proves the signing secret is loaded (a missing secret would instead throw "STRIPE_IDENTITY_WEBHOOK_SECRET is not set") AND that a forged "this seller is verified" event cannot approve anybody. Stripe's dashboard offers no "Send test event" for a live destination -- test events require sandbox mode -- so this probe is the strongest available check short of a real seller.
+
+NEW PAGE. app/apply/verified/page.tsx is the Stripe Identity return_url landing page. Verified live at https://velorcommerce.store/apply/verified?application=test123 -- renders, not a 404. CRITICAL DESIGN POINT, do not "improve" this into a success page: Stripe redirects the seller here for EVERY outcome (verified, requires_input, canceled) and may do so BEFORE the webhook lands. So the page only says "we have your verification, we will email you a decision within 24 hours of it completing" and never claims they passed. It also tells the seller their document went to Stripe and Velor never sees it, which is true and is the strongest trust line we have.
+
+NOT YET VERIFIED (LAW #1). No seller has completed a real verification. The full round trip -- agent creates session, seller photographs ID, Stripe posts a genuinely signed verified event, agent approves and provisions the User+Seller rows -- is UNTESTED. Also unverified: whether any PENDING applications exist right now, because Claude cannot query AgentLog or the database directly. The first real signal will be the next hourly review-applications run (:15 past the hour) and its AgentLog details.verificationsStarted count.
+
+BEHAVIOUR FROM NOW ON. isIdentityConfigured() only checks STRIPE_SECRET_KEY, which has always existed. So the agent creates Identity sessions and emails sellers verification links regardless; it is the webhook that needs the signing secret. Both are now in place, so the loop closes. First 50 Stripe Identity verifications are free, then USD 1.50 each. No seller can be approved without verificationStatus VERIFIED, set only by a signature-verified Stripe webhook.
+
+### NEXT STEPS (William's stated priorities first)
+
+1. FINISH THE PAYONEER SYSTEM. The partner Mass Payouts API application is submitted and still awaiting approval. When credentials arrive: add PAYONEER_CLIENT_ID, PAYONEER_CLIENT_SECRET, PAYONEER_PROGRAM_ID, PAYONEER_API_BASE to Vercel, then SANDBOX-VERIFY every endpoint shape in lib/payoneer.ts before the first live payout -- those endpoints were written from documentation Claude could not confirm and are marked VERIFY-IN-SANDBOX. Payouts go to the Monzo business account ("Velor commerce ltd", X-61363647), never CLEARBANK. Payoneer also unlocks the second identity rail: their white-label API exposes KYC webhooks, which is how China/Russia/Cuba/Iran/North Korea/Syria sellers (whom Stripe Identity is legally barred from verifying) finally get verified. Those applications are sitting at verificationStatus RESTRICTED right now, holding, with an honest email already sent.
+
+2. SCAN THE WEBSITE FOR ADD-ONS. William's words. A full pass for missing features and rough edges ahead of the 6 August buyer launch.
+
+3. DELETE VELOR'S OWN ID-DOCUMENT STORAGE. This is now a live GDPR liability and it is the highest-risk item on this list. app/api/seller/verify/route.ts, app/dashboard/verify/page.tsx, app/api/admin/verify/[id]/route.ts and SellerVerification.idDocumentUrl still cause Velor to hold passport and driving-licence scans on its own infrastructure. That flow ALSO verifies nothing: a human eyeballs a photo and no route gates listings, checkout or payouts on the result. It is now fully redundant -- Stripe holds the documents and returns a verdict. Delete it carefully: app/seller/[sellerId]/page.tsx and app/api/briefing/route.ts reference SellerVerification. Note prisma db push runs with --accept-data-loss on every build, so dropping the column drops the data.
+
+4. VERIFY THE FIRST REAL IDENTITY ROUND TRIP once a seller goes through it. Check AgentLog for a review_applications run with verificationsStarted > 0, then an identity_webhook entry with verificationStatus VERIFIED, then an approval.
+
+5. Task #3, the shop pagination bug (#239/#280) -- could not reproduce on unfiltered pages 1-3; needs a category spanning multiple pages.
+
+6. Task #10, tune scout-sellers Brave/Google queries for Eastern and global markets (India, Indonesia, Vietnam, Thailand, Turkey, Philippines, Eastern Europe, LATAM).
+
+7. Look at the site on a real phone. Claude never saw it at 390px -- resize_window does not move this Chrome's viewport and velorcommerce.store blocks iframing -- so all mobile work is verified by code and DOM inspection only.
+
+Checkpoint saved 2026-07-08 04:30 UTC. Stripe Identity live end to end; webhook signature-verified against forged events; post-verification landing page deployed; no seller has completed a real verification yet.
