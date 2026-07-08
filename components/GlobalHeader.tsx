@@ -6,7 +6,17 @@ import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
 import { useCart } from '@/lib/cart'
-import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
+import { cultureHints } from '@/lib/cultureHints'
+
+const NAV_ORIGINS: { code: string; name: string }[] = [
+  { code: 'CN', name: 'China' }, { code: 'JP', name: 'Japan' }, { code: 'MA', name: 'Morocco' },
+  { code: 'TR', name: 'Turkey' }, { code: 'IN', name: 'India' }, { code: 'PE', name: 'Peru' },
+  { code: 'MX', name: 'Mexico' }, { code: 'IT', name: 'Italy' }, { code: 'KR', name: 'South Korea' },
+  { code: 'GH', name: 'Ghana' },
+]
+function navFlag(code: string): string {
+  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
 
 // Mobile behaviour lives in the responsive layer of app/globals.css, keyed on
 // the velor-* class names used below. Do not target inline styles from CSS --
@@ -186,7 +196,7 @@ export default function GlobalHeader() {
                 onClick={() => setCatsOpen((v) => !v)}
                 style={{ ...navLink, background: 'none', border: 'none', cursor: 'pointer' }}
               >
-                Categories ▾
+                Origins ▾
               </button>
               {catsOpen && (
                 <div
@@ -194,26 +204,37 @@ export default function GlobalHeader() {
                     position: 'absolute',
                     top: 40,
                     left: 0,
-                    width: 440,
+                    width: 480,
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 14,
                     padding: 10,
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: 2,
                     boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
                   }}
                 >
-                  {CATEGORIES.map((c) => (
-                    <Link
-                      key={c}
-                      href={`/shop?category=${encodeURIComponent(c)}`}
-                      style={{ ...menuItem, borderRadius: 9, fontSize: 13 }}
-                    >
-                      {c}
-                    </Link>
-                  ))}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    {NAV_ORIGINS.map((o) => (
+                      <Link
+                        key={o.code}
+                        href="/founding"
+                        style={{ ...menuItem, borderRadius: 9, fontSize: 13, display: 'flex', alignItems: 'center', gap: 9 }}
+                      >
+                        <span style={{ fontSize: 15 }}>{navFlag(o.code)}</span>
+                        <span>
+                          {o.name}
+                          <span style={{ display: 'block', fontSize: 10.5, color: '#8b8b95', marginTop: 1 }}>
+                            {cultureHints(o.code).slice(0, 2).join(' · ')}
+                          </span>
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                  <Link
+                    href="/founding"
+                    style={{ ...menuItem, borderRadius: 9, fontSize: 12.5, marginTop: 6, display: 'block', textAlign: 'center', color: 'var(--accent)', borderTop: '1px solid var(--border)', paddingTop: 12 }}
+                  >
+                    All 190 countries &rarr;
+                  </Link>
                 </div>
               )}
             </div>
