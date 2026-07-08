@@ -447,3 +447,5 @@ opener language. Catalogue PURGED to zero: 74 seeded dropshipping products delet
 (test order attached), both internal sellers deactivated, shop live-verified empty. China contradiction
 resolved: products were seeded, William ordered full removal; real Chinese sellers to come via Payoneer
 rail. Next: port the design, then Payoneer._
+
+Scheduled check-in 2026-07-08 20:12 UTC. Since the 19:46 check-in, William landed 7e80b16, a full rewrite of this file: design phase logged complete (seven pages), vocabulary v2 signed off, catalogue purge to zero recorded as executed (74 products deleted, both internal sellers deactivated), China contradiction resolved, NEXT STEPS reordered to put the design port first, and gap 8 added for stripping the remaining CJ machinery. No code commits after 269811a; repo tip is 7e80b16. Nothing further to log this cycle; next steps are as set out in NEXT STEPS above.
