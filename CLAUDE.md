@@ -406,3 +406,6 @@ Scheduled check-in 2026-07-08 18:46 UTC. No new work since the 18:06 check-in: t
 
 
 Scheduled check-in 2026-07-08 19:06 UTC. No new work since the 18:46 check-in: the repo tip is 6c7a490, that check-in's own CLAUDE.md commit, and no code commits have landed after b78ff0c. The homepage redesign remains design-only in the Downloads folder. Nothing to log this cycle; next steps remain as listed in the design section and NEXT STEPS above.
+
+
+Scheduled check-in 2026-07-08 19:46 UTC. Since the 19:06 check-in, one code commit landed: 269811a added app/api/admin/cj-purge-seeded/route.ts, a one-off admin cleanup endpoint with a GET that lists cjSourced products and a POST that deletes products with no orders and deactivates internal sellers. This is the first code commit since b78ff0c and targets the seeded China-origin catalogue flagged in the design section. Whether the endpoint has been run is unconfirmed; the live catalogue state was not re-verified this cycle. Next steps remain as listed in the design section and NEXT STEPS above.
