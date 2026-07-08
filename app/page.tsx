@@ -1,18 +1,17 @@
 'use client'
 
-// Homepage — ported 2026-07-08 from velor-homepage-BUILD.html (design phase,
-// see CLAUDE.md "HOMEPAGE REDESIGN"). Positioning is ORIGIN: everywhere makes
-// something better than everywhere else. Two-axis lattice (origin x
-// speciality) replaces the old category tiles.
+// Homepage v2 — rebuilt 2026-07-09 to William's buyer-first brief:
+// ~90% buyer, one slim seller band at the bottom. No hero manifesto — the
+// page opens on VELOR LIVE (the live-shopping rail) and then swipeable
+// culture reels: real cultural items, photographed, tagged with their
+// country. Editorial showcase tiles, NOT product cards — no prices, no
+// seller names, nothing that fakes a listing. Tiles swap to real product
+// cards as sellers list (the lattice API already feeds live counts).
 //
-// Honesty rules baked in:
-// - Zero-state honest: no fake products, no fake sellers, no fake counts.
-//   Live counts come from /api/lattice; until sellers list, every country
-//   card shows "Founding seat open" and every speciality tile is dashed.
-// - Showreel is labelled "Preview" — no fake LIVE badge, no viewer counts.
-// - First-seller copy uses opener language: "opens", never "owns"/"claims".
-// - Pexels clips are hotlinked for now; self-host + confirm licence before
-//   heavy traffic (tracked in CLAUDE.md).
+// Standing rules honoured: zero-state honest; Preview labels, never fake
+// LIVE badges; culture not raw materials; opener language; buyer pages
+// carry no payout detail. Pexels imagery hotlinked for now — self-host and
+// confirm licence before heavy traffic (tracked in CLAUDE.md).
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -27,64 +26,166 @@ type LatticeSummary = {
   specialities: Record<string, { countries: number; products: number }>
 }
 
+type LiveStream = {
+  id: string
+  title: string
+  roomName: string
+  status: string
+  sellerName: string
+  products: { id: string; title: string; price: number; images: string[] }[]
+}
+
+const px = (id: number, slug?: string) =>
+  slug
+    ? `https://images.pexels.com/photos/${id}/pexels-photo-${id}/${slug}.jpeg?auto=compress&cs=tinysrgb&w=800`
+    : `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`
+
+// The culture reels — each tile is a real cultural item with its country.
+// Stock photography stands in until real listings replace it, tile by tile.
+const CULTURE_REELS: {
+  title: string
+  line: string
+  tiles: { name: string; code: string; img: string }[]
+}[] = [
+  {
+    title: 'Ceramics & porcelain',
+    line: 'Fired in the cities that invented firing.',
+    tiles: [
+      { name: 'Talavera pottery', code: 'MX', img: px(36103768, 'free-photo-of-colorful-mexican-talavera-pottery-display') },
+      { name: 'Porcelain tea sets', code: 'CN', img: px(36253267, 'free-photo-of-elegant-tea-set-on-traditional-chinese-table') },
+      { name: 'Souk ceramics', code: 'MA', img: px(37484909, 'free-photo-of-colorful-market-display-of-moroccan-ceramics') },
+      { name: 'Tea bowls', code: 'JP', img: px(14705063) },
+      { name: 'Azulejo tiles', code: 'PT', img: px(34930529, 'free-photo-of-azulejos-tile-mural-in-lisbon-portugal') },
+      { name: 'Iznik blues', code: 'TR', img: px(27729719, 'free-photo-of-a-room-with-many-blue-and-white-plates-on-display') },
+    ],
+  },
+  {
+    title: 'Rugs, cloth & thread',
+    line: 'Patterns you can read like a language.',
+    tiles: [
+      { name: 'Kilim rugs', code: 'TR', img: px(33653647, 'free-photo-of-colorful-traditional-turkish-kilim-pattern') },
+      { name: 'Kente cloth', code: 'GH', img: px(30929475, 'free-photo-of-portrait-of-a-man-in-traditional-ghanaian-kente-cloth') },
+      { name: 'Andean weaving', code: 'PE', img: px(24645287, 'free-photo-of-elderly-person-holding-embroidered-blankets') },
+      { name: 'Batik', code: 'ID', img: px(34465333, 'free-photo-of-intricate-batik-cloth-with-traditional-patterns') },
+      { name: 'Block printing', code: 'IN', img: px(37619027, 'free-photo-of-hand-block-printing-on-yellow-fabric') },
+      { name: 'Berber rugs', code: 'MA', img: px(33282224, 'free-photo-of-traditional-moroccan-rugs-in-marrakesh-market') },
+    ],
+  },
+  {
+    title: "The world's kitchen",
+    line: 'Tools that have cooked a thousand years of dinners.',
+    tiles: [
+      { name: 'Hand-forged knives', code: 'JP', img: px(23436813, 'free-photo-of-man-holding-a-japanese-knife') },
+      { name: 'Copper cezves', code: 'TR', img: px(31330206, 'free-photo-of-traditional-turkish-coffee-prepared-outdoors') },
+      { name: 'Cast-iron teapots', code: 'JP', img: px(14563207) },
+      { name: 'Molcajetes', code: 'MX', img: px(37215000, 'free-photo-of-gourmet-seafood-and-avocado-molcajete-feast') },
+      { name: 'Paella pans', code: 'ES', img: px(26587044, 'free-photo-of-seafood-with-lime-on-pan') },
+      { name: 'Mate gourds', code: 'AR', img: px(25436250, 'free-photo-of-yerba-mate-in-bombilla') },
+    ],
+  },
+  {
+    title: 'Adornment',
+    line: "Amber, jade, beadwork — worn the way it's always been worn.",
+    tiles: [
+      { name: 'Amber rings', code: 'PL', img: px(28856507) },
+      { name: 'Jade & stone', code: 'CN', img: px(10961447) },
+      { name: 'Maasai beadwork', code: 'KE', img: px(29828564) },
+      { name: 'Evil-eye charms', code: 'TR', img: px(36919208) },
+      { name: 'Baltic amber beads', code: 'LT', img: px(18730034) },
+    ],
+  },
+  {
+    title: 'Tea, coffee & pantry',
+    line: "The world's larder, from where it actually grows.",
+    tiles: [
+      { name: 'Matcha', code: 'JP', img: px(8330375) },
+      { name: 'The coffee ceremony', code: 'ET', img: px(30937097) },
+      { name: 'Turkish delight', code: 'TR', img: px(36207188) },
+      { name: 'Spice markets', code: 'IN', img: px(17870116) },
+      { name: 'Olive oil', code: 'GR', img: px(25745504) },
+      { name: 'Gongfu tea ware', code: 'CN', img: px(30767475, 'free-photo-of-red-chinese-teapot-set-on-dark-wooden-table') },
+    ],
+  },
+  {
+    title: 'Light, scent & self',
+    line: 'Lanterns, incense, and ten-step skincare.',
+    tiles: [
+      { name: 'Moroccan lanterns', code: 'MA', img: px(30208535) },
+      { name: 'Temple incense', code: 'IN', img: px(20599556) },
+      { name: 'Paper lanterns', code: 'CN', img: px(2161693) },
+      { name: 'Hammam textiles', code: 'TR', img: px(15528975) },
+      { name: 'Woven baskets', code: 'RW', img: px(29604314) },
+      { name: 'K-beauty', code: 'KR', img: px(34833637) },
+    ],
+  },
+]
+
+// Film previews for the VELOR LIVE rail — replaced by real streams the
+// moment /api/live returns them.
+const LIVE_PREVIEWS = [
+  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Ceramics, live from the wheel' },
+  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Shop the stalls as they open' },
+  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'From the Andes, as it is woven' },
+  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'Coffee, brewed on sand', s: 'Watch it made, buy the set' },
+  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'From the kiln to your basket' },
+  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'The stalls of old Delhi' },
+]
+
+const REEL_FIRST = ['CN', 'JP', 'MA', 'TR', 'IN', 'PE', 'MX', 'IT', 'KR', 'GH', 'ET', 'UZ', 'NP', 'EC', 'PT', 'VN', 'GR', 'AR', 'TH', 'NG']
+
+const KIND_LINES: Record<string, string> = {
+  'Materials': 'The stuff itself — dug, grown, tanned and fired.',
+  'Techniques': 'Ways of making that took centuries to learn.',
+  'Consumables': 'Eaten, drunk, used up — from where it is actually from.',
+  'Forms': 'The objects a place is famous for.',
+  'Rituals': 'Bought for meaning, not function.',
+  'Modern industry': 'Culture is not only old.',
+}
+
+function flagOf(code: string): string {
+  if (!code || code.length !== 2) return ''
+  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
+
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
 .vh a{color:inherit;text-decoration:none}
 .vh-wrap{max-width:1240px;margin:0 auto;padding:0 32px}
 .vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
-.vh section{padding:62px 0}
-.vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;gap:24px}
-.vh-shead h2{font-size:29px}
-.vh-shead p{font-size:14.5px;color:var(--muted);margin:8px 0 0;max-width:66ch;line-height:1.6}
+.vh section{padding:52px 0}
+.vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;gap:24px}
+.vh-shead h2{font-size:27px}
+.vh-shead .sub{font-size:14px;color:var(--muted);margin:7px 0 0;max-width:66ch;line-height:1.6}
 .vh-slink{font-size:14px;color:var(--accent) !important;flex:0 0 auto;white-space:nowrap}
-.vh-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:58px 0 50px}
-.vh-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
-.vh-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
-.vh-hero h1{font-size:50px;line-height:1.08;margin-bottom:18px;max-width:16ch}
-.vh-lede{font-size:17.5px;line-height:1.6;color:var(--muted);max-width:47ch;margin:0 0 28px}
-.vh-ctas{display:flex;gap:12px;margin-bottom:30px;flex-wrap:wrap}
-.vh-btn{border-radius:10px;padding:14px 26px;font-size:15px;font-weight:600;display:inline-block}
-.vh-btn-p{background:var(--accent);color:#160a00 !important}
-.vh-btn-s{border:1px solid var(--border)}
-.vh-microtrust{display:flex;gap:22px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.vh-microtrust i{color:var(--green);font-style:normal;margin-right:6px}
-.vh-proof{position:relative}
-.vh-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.vh-card .img{aspect-ratio:4/3;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:#3c3c45;font-size:11.5px;letter-spacing:.1em;position:relative;overflow:hidden}
-.vh-card .img video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.vh-card .img .lbl{position:absolute;top:12px;left:12px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:4px 8px;color:#fff}
-.vh-card .body{padding:16px 18px}
-.vh-origin{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
-.vh-flagchip{font-size:10px;font-weight:700;letter-spacing:.08em;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--text)}
-.vh-pname{font-size:15.5px;font-weight:500;margin-bottom:6px;line-height:1.35}
-.vh-price{font-family:var(--font-display);font-size:21px;font-weight:700}
-.vh-maker{font-size:12.5px;color:var(--muted);margin-top:2px}
-.vh-escrow-badge{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;gap:11px;align-items:center;margin-top:14px}
-.vh-escrow-badge .tick{width:26px;height:26px;border-radius:50%;background:rgba(46,204,113,.14);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
-.vh-escrow-badge strong{display:block;font-size:12.5px;font-weight:600}
-.vh-escrow-badge span{color:var(--muted);font-size:12.5px;line-height:1.4}
-.vh-reelsec{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.vh-reel{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:4px}
-.vh-reel::-webkit-scrollbar{display:none}
-.vh-reel.dragging{cursor:grabbing}
-.vh-reel.dragging *{pointer-events:none}
+.vh-drag{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:6px}
+.vh-drag::-webkit-scrollbar{display:none}
+.vh-drag.dragging{cursor:grabbing}
+.vh-drag.dragging *{pointer-events:none}
+.vh-livesec{background:var(--surface);border-bottom:1px solid var(--border);padding:44px 0 40px}
+.vh-livehead{display:flex;align-items:baseline;gap:18px;margin-bottom:8px;flex-wrap:wrap}
+.vh-livehead h1{font-size:44px;font-weight:700;letter-spacing:.04em}
+.vh-livehead h1 .o{color:var(--accent)}
+.vh-livedot{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent);border:1px solid rgba(255,107,0,.4);border-radius:999px;padding:6px 12px}
+.vh-livedot .d{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:vhpulse 1.6s infinite}
+@keyframes vhpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.vh-livestrap{font-size:14.5px;color:var(--muted);margin:0 0 26px;max-width:64ch;line-height:1.6}
 .vh-tile{position:relative;flex:0 0 218px;aspect-ratio:9/16;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
 .vh-tile video{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
 .vh-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 36%,rgba(0,0,0,.78) 100%)}
 .vh-chip{position:absolute;top:12px;left:12px;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:4px 8px;color:#fff}
+.vh-chip.islive{background:var(--accent);color:#160a00;border-color:var(--accent)}
 .vh-flagtag{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;letter-spacing:.08em;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:3px 7px;color:#fff}
 .vh-tile .meta{position:absolute;left:14px;right:14px;bottom:14px}
 .vh-tile .meta .t{font-size:13.5px;font-weight:500;line-height:1.3;margin-bottom:5px}
-.vh-tile .meta .s{font-size:11.5px;color:#b9b9c2}
-.vh-tile.claim{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;border-style:dashed;background:var(--bg)}
-.vh-tile.claim .plus{width:42px;height:42px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px}
-.vh-tile.claim .t{font-size:14px;font-weight:500;padding:0 16px}
-.vh-tile.claim .s{font-size:11.5px;color:var(--muted);padding:0 18px;line-height:1.5}
-.vh-swipehint{font-size:12px;color:var(--muted);margin-top:14px}
-.vh-creel{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:6px}
-.vh-creel::-webkit-scrollbar{display:none}
-.vh-creel.dragging{cursor:grabbing}
-.vh-creel.dragging *{pointer-events:none}
+.vh-tile .meta .s{font-size:11.5px;color:#c6c6cf}
+.vh-swipehint{font-size:12px;color:var(--muted);margin-top:12px}
+.vh-ct{position:relative;flex:0 0 216px;aspect-ratio:3/4;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2);transition:transform .18s,border-color .18s}
+.vh-ct:hover{transform:translateY(-3px);border-color:rgba(255,107,0,.5)}
+.vh-ct img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.vh-ct:hover img{transform:scale(1.045)}
+.vh-ct .meta{position:absolute;left:14px;right:14px;bottom:13px}
+.vh-ct .meta .t{font-size:14.5px;font-weight:500;line-height:1.3;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.vh-ct .meta .c{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#d9d9df;margin-top:4px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .vh-ccard{flex:0 0 272px;border:1px solid rgba(255,107,0,.32);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
 .vh-ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
 .vh-ccard.live{border-color:rgba(46,204,113,.32)}
@@ -95,10 +196,7 @@ const css = `
 .vh-spec{font-size:11.5px;color:#c6c6cf;border:1px solid #3a3a44;border-radius:999px;padding:4px 10px}
 .vh-ccard .foot{margin-top:15px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
 .vh-foot-on{color:var(--green)}.vh-foot-off{color:var(--muted)}
-.vh-ccard.invite{border-style:dashed;background:var(--bg)}
-.vh-ccard.invite h3{color:var(--accent);line-height:1.25}
-.vh-ccard.invite .known{font-size:12.5px;color:#c6c6cf;line-height:1.55;margin-top:10px;flex:1}
-.vh-kind{margin-bottom:38px}
+.vh-kind{margin-bottom:34px}
 .vh-kind:last-child{margin-bottom:0}
 .vh-kindhead{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap}
 .vh-kindlbl{font-family:var(--font-display);font-size:17px;font-weight:500;letter-spacing:-0.01em}
@@ -111,7 +209,7 @@ const css = `
 .vh-sp.hot .dotst{background:var(--green);opacity:1}
 .vh-sp .n{font-size:11px;color:var(--muted);margin-left:auto;font-weight:400;white-space:nowrap}
 .vh-sp.hot{border-color:rgba(46,204,113,.4)}
-.vh-walllegend{display:flex;gap:20px;font-size:12px;color:var(--muted);margin-bottom:26px}
+.vh-walllegend{display:flex;gap:20px;font-size:12px;color:var(--muted);margin-bottom:24px}
 .vh-walllegend i{font-style:normal;margin-right:6px}
 .vh-escrow{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .vh-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
@@ -120,74 +218,34 @@ const css = `
 .vh-step .num{font-family:var(--font-display);font-size:12px;letter-spacing:.14em;color:var(--muted);margin-bottom:10px}
 .vh-step h3{font-size:17px;margin-bottom:8px}
 .vh-step p{font-size:14px;color:var(--muted);line-height:1.65;margin:0}
-.vh-founding{border:1px solid rgba(255,107,0,.32);border-radius:18px;padding:44px 48px;display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center;background:var(--surface)}
-.vh-founding h2{font-size:30px;line-height:1.15;margin-bottom:14px;max-width:20ch}
-.vh-founding p{font-size:15.5px;color:var(--muted);line-height:1.65;max-width:52ch;margin:0}
-.vh-fpoints{list-style:none;display:grid;gap:13px;margin:0;padding:0}
-.vh-fpoints li{display:flex;gap:11px;font-size:14.5px;line-height:1.5}
-.vh-fpoints i{color:var(--green);font-style:normal}
-.vh-fcta{margin-top:26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.vh-fnote{font-size:12.5px;color:var(--muted)}
+.vh-sellband{border:1px solid rgba(255,107,0,.32);border-radius:16px;padding:26px 30px;display:flex;align-items:center;justify-content:space-between;gap:26px;background:var(--surface);flex-wrap:wrap;margin:14px 0 56px}
+.vh-sellband h2{font-size:20px;margin:0 0 6px}
+.vh-sellband p{font-size:13.5px;color:var(--muted);line-height:1.55;margin:0;max-width:56ch}
+.vh-btn{border-radius:10px;padding:13px 24px;font-size:14px;font-weight:600;display:inline-block;background:var(--accent);color:#160a00 !important;white-space:nowrap}
 @media(max-width:960px){
-.vh-hero{grid-template-columns:1fr;gap:36px;padding:38px 0}
-.vh-hero h1{font-size:34px}
-.vh-countries{grid-template-columns:repeat(2,1fr)}
-.vh-steps,.vh-founding{grid-template-columns:1fr}
-.vh-founding{padding:32px 26px}
+.vh-livehead h1{font-size:32px}
 .vh-tile{flex:0 0 168px}
+.vh-ct{flex:0 0 172px}
+.vh-steps{grid-template-columns:1fr}
 }
 `
 
-// Showreel: speciality footage from Pexels (see velor-media-manifest.html).
-// Honest labelling — clips show the craft, not a specific seller.
-const REEL = [
-  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Clay' },
-  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Spice' },
-  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'Wool' },
-  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'The coffee table', s: 'Coffee' },
-  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'Clay' },
-  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'Spice' },
-]
-
-const KIND_LINES: Record<string, string> = {
-  'Materials': 'The stuff itself — dug, grown, tanned and fired.',
-  'Techniques': 'Ways of making that took centuries to learn.',
-  'Consumables': 'Eaten, drunk, used up — from where it is actually from.',
-  'Forms': 'The objects a place is famous for.',
-  'Rituals': 'Bought for meaning, not function.',
-  'Modern industry': 'Culture is not only old.',
-}
-
-// Curated front of the country reel — a deliberate regional spread with
-// strong cultural-product identities. Hints come from lib/cultureHints.ts:
-// finished cultural products, never raw materials (William, 2026-07-08 —
-// "real culture is the selling point"). After these come every other
-// country, hinted ones first, then the rest.
-const REEL_FIRST = ['CN', 'JP', 'MA', 'TR', 'IN', 'PE', 'MX', 'IT', 'KR', 'GH', 'ET', 'UZ', 'NP', 'EC', 'PT', 'VN', 'GR', 'AR', 'TH', 'NG']
-
-function flagOf(code: string): string {
-  if (!code || code.length !== 2) return ''
-  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
-}
-
 export default function HomePage() {
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
-  const reelRef = useRef<HTMLDivElement>(null)
-  const creelRef = useRef<HTMLDivElement>(null)
+  const [streams, setStreams] = useState<LiveStream[]>([])
+  const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetch('/api/lattice')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setLattice(d) })
-      .catch(() => {})
+    fetch('/api/lattice').then(r => (r.ok ? r.json() : null)).then(d => { if (d) setLattice(d) }).catch(() => {})
+    fetch('/api/live').then(r => (r.ok ? r.json() : null)).then(d => { if (d?.streams) setStreams(d.streams) }).catch(() => {})
   }, [])
 
-  // Pointer-capture drag scroll — shared by the showreel and the country reel.
+  // Pointer-drag scroll for every rail on the page.
   useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
     const cleanups: (() => void)[] = []
-    for (const ref of [reelRef, creelRef]) {
-      const reel = ref.current
-      if (!reel) continue
+    root.querySelectorAll<HTMLElement>('.vh-drag').forEach(reel => {
       let down = false, startX = 0, startScroll = 0, moved = 0
       const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft; reel.setPointerCapture(e.pointerId) }
       const onMove = (e: PointerEvent) => {
@@ -210,11 +268,11 @@ export default function HomePage() {
         reel.removeEventListener('pointercancel', onUp)
         reel.removeEventListener('click', onClick, true)
       })
-    }
+    })
     return () => cleanups.forEach(fn => fn())
-  }, [])
+  }, [streams.length])
 
-  // Pause off-screen showreel video — phones matter.
+  // Pause off-screen video.
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return
     const io = new IntersectionObserver(entries => {
@@ -227,12 +285,11 @@ export default function HomePage() {
     }, { rootMargin: '120px' })
     document.querySelectorAll('.vh-tile').forEach(el => io.observe(el))
     return () => io.disconnect()
-  }, [])
+  }, [streams.length])
 
   const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
+  const specStats = lattice?.specialities ?? {}
 
-  // Reel order: trading countries first, then the curated spread, then every
-  // other hinted country, then the rest of the world alphabetically.
   const orderedCountries = (() => {
     const seen = new Set<string>()
     const out: { code: string; name: string }[] = []
@@ -249,94 +306,95 @@ export default function HomePage() {
     WORLD_COUNTRIES.forEach(c => push(c.code))
     return out
   })()
-  const trading = lattice?.trading ?? 0
-  const specStats = lattice?.specialities ?? {}
+
+  const liveOnAir = streams.filter(s => s.status === 'LIVE')
 
   return (
-    <div className="vh">
+    <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      <div className="vh-wrap">
-        <div className="vh-hero">
-          <div>
-            <div className="vh-eyebrow"><span className="vh-dot" /> 190 countries &middot; one checkout</div>
-            <h1>The world has more to sell than you&apos;ve been shown.</h1>
-            <p className="vh-lede">
-              Everywhere makes something better than everywhere else. Velor brings those things
-              to one place — with the country and the maker on every listing, so you always know
-              where it came from.
-            </p>
-            <div className="vh-ctas">
-              <Link className="vh-btn vh-btn-p" href="#origins">Start with a country</Link>
-              <Link className="vh-btn vh-btn-s" href="#protect">How protection works</Link>
-            </div>
-            <div className="vh-microtrust">
-              <span><i>&#10003;</i>Identity-verified sellers</span>
-              <span><i>&#10003;</i>Escrow on every order</span>
-              <span><i>&#10003;</i>Prices in your currency</span>
-            </div>
-          </div>
-          <div className="vh-proof">
-            <div className="vh-card">
-              <div className="img">
-                <video src="https://videos.pexels.com/video-files/12690263/12690263-sd_640_360_24fps.mp4" autoPlay muted loop playsInline preload="metadata" />
-                <span className="lbl">What a Velor listing looks like</span>
-              </div>
-              <div className="body">
-                <div className="vh-origin"><span className="vh-flagchip">CN</span> Jingdezhen, China</div>
-                <div className="vh-pname">Celadon porcelain tea set, fired in the city that invented it</div>
-                <div className="vh-price">&pound;42.00</div>
-                <div className="vh-maker">Example listing &mdash; your store, your city, your name here</div>
-              </div>
-            </div>
-            <div className="vh-escrow-badge">
-              <div className="tick">&#10003;</div>
-              <div><strong>Held in escrow</strong><span>Your money is held until delivery is confirmed.</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <section className="vh-reelsec">
+      {/* ============ VELOR LIVE — the top of the page ============ */}
+      <div className="vh-livesec">
         <div className="vh-wrap">
-          <div className="vh-shead">
-            <div>
-              <h2>Shopping the world</h2>
-              <p>Short film from the places your things will come from — the souk, the kiln, the
-              loom, the coffee house. Live shopping opens with our founding sellers.</p>
-            </div>
+          <div className="vh-livehead">
+            <h1>VEL<span className="o">O</span>R LIVE</h1>
+            <span className="vh-livedot"><span className="d" />{liveOnAir.length > 0 ? `${liveOnAir.length} on air now` : 'Channels open with our founding sellers'}</span>
           </div>
-          <div className="vh-reel" ref={reelRef}>
-            {REEL.map(r => (
-              <div className="vh-tile" key={r.src}>
+          <p className="vh-livestrap">
+            Sellers go live from the workshop, the market stall, the kitchen — you watch it made,
+            ask anything, and buy without leaving the stream.
+          </p>
+          <div className="vh-drag">
+            {liveOnAir.map(s => (
+              <Link key={s.id} className="vh-tile" href={`/live/${s.roomName}`}>
+                {s.products[0]?.images?.[0] && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.products[0].images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                )}
+                <div className="vh-scrim" />
+                <div className="vh-chip islive">LIVE</div>
+                <div className="meta"><div className="t">{s.title}</div><div className="s">{s.sellerName}</div></div>
+              </Link>
+            ))}
+            {LIVE_PREVIEWS.map(r => (
+              <Link className="vh-tile" href="/live" key={r.src}>
                 <video src={r.src} autoPlay muted loop playsInline preload="metadata" />
                 <div className="vh-scrim" />
                 <div className="vh-chip">Preview</div>
                 <div className="vh-flagtag">{r.flag}</div>
                 <div className="meta"><div className="t">{r.t}</div><div className="s">{r.s}</div></div>
-              </div>
+              </Link>
             ))}
-            <Link className="vh-tile claim" href="/apply">
-              <div className="plus">+</div>
-              <div className="t">Your slot is open</div>
-              <div className="s">Founding sellers keep a permanent place on this rail.</div>
-            </Link>
           </div>
-          <div className="vh-swipehint">Drag to browse</div>
+          <div className="vh-swipehint">Drag to browse &middot; <Link href="/live" style={{ color: 'var(--accent)' }}>Open Velor Live &rarr;</Link></div>
         </div>
-      </section>
+      </div>
 
+      {/* ============ CULTURE REELS — the shop windows ============ */}
+      {CULTURE_REELS.map(reel => (
+        <section key={reel.title} style={{ paddingBottom: 26 }}>
+          <div className="vh-wrap">
+            <div className="vh-shead">
+              <div>
+                <h2>{reel.title}</h2>
+                <p className="sub">{reel.line}</p>
+              </div>
+              <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
+            </div>
+            <div className="vh-drag">
+              {reel.tiles.map(t => (
+                <Link className="vh-ct" href="/founding" key={t.name + t.code}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={t.img}
+                    alt={t.name}
+                    loading="lazy"
+                    onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                  />
+                  <div className="vh-scrim" />
+                  <div className="meta">
+                    <div className="t">{t.name}</div>
+                    <div className="c">{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {/* ============ COUNTRIES ============ */}
       <section id="origins">
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
               <h2>Start with a country</h2>
-              <p>Every country on earth, and the things it makes better than anywhere else. This is
-              what you&apos;ll be shopping — country by country, maker by maker.</p>
+              <p className="sub">Every country on earth, and the things it makes better than anywhere
+              else. This is what you&apos;ll be shopping — country by country, maker by maker.</p>
             </div>
             <Link className="vh-slink" href="/founding">All 190 &rarr;</Link>
           </div>
-          <div className="vh-creel" ref={creelRef}>
+          <div className="vh-drag">
             {orderedCountries.map(c => {
               const live = byCode.get(c.code)
               const isLive = !!live && live.products > 0
@@ -344,31 +402,26 @@ export default function HomePage() {
               return (
                 <Link key={c.code} className={'vh-ccard' + (isLive ? ' live' : '')} href={isLive ? `/shop?origin=${c.code}` : '/founding'}>
                   <div className="top"><h3>{c.name}</h3><span className="vh-cflag">{flagOf(c.code)}</span></div>
-                  <div className="vh-specs">{hints.map(h => <span className="vh-spec" key={h}>{h}</span>)}</div>
+                  <div className="vh-specs">{hints.slice(0, 6).map(h => <span className="vh-spec" key={h}>{h}</span>)}</div>
                   <div className={'foot ' + (isLive ? 'vh-foot-on' : 'vh-foot-off')}>
                     {isLive ? `${live!.products} product${live!.products === 1 ? '' : 's'} · shop now` : 'Opening soon'}
                   </div>
                 </Link>
               )
             })}
-            <Link className="vh-ccard invite" href="/apply">
-              <div className="top"><h3>Your country,<br />your culture.</h3></div>
-              <div className="known">Be the first seller from your country and you keep the founding
-              badge and Pro free for life &mdash; and your store opens the country page.</div>
-              <div className="foot" style={{ color: 'var(--accent)' }}>Open it &rarr;</div>
-            </Link>
           </div>
           <div className="vh-swipehint">Drag to browse all 190 countries</div>
         </div>
       </section>
 
+      {/* ============ SPECIALITIES ============ */}
       <section id="specialities" style={{ paddingTop: 0 }}>
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
               <h2>Or start with a speciality</h2>
-              <p>Not departments. The things a place has spent centuries getting right — and the
-              things it is good at now. Dashed means no seller has listed in it yet.</p>
+              <p className="sub">Not departments. The things a place has spent centuries getting right —
+              and the things it is good at now.</p>
             </div>
           </div>
           <div className="vh-walllegend">
@@ -377,7 +430,6 @@ export default function HomePage() {
           </div>
           {SPECIALITY_KINDS.map(kind => {
             const terms = SPECIALITIES.filter(s => s.kind === kind)
-            // Claimed terms first within each family (Q5 decision).
             const sorted = [...terms].sort((a, b) => (specStats[b.term]?.products ?? 0) - (specStats[a.term]?.products ?? 0))
             return (
               <div className="vh-kind" key={kind}>
@@ -405,13 +457,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ============ TRUST ============ */}
       <section className="vh-escrow" id="protect">
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
               <h2>How Velor protects your money</h2>
-              <p>Buying from a country you have never bought from before only works if the money
-              is safe. So it is.</p>
+              <p className="sub">Buying from a country you have never bought from before only works if
+              the money is safe. So it is.</p>
             </div>
           </div>
           <div className="vh-steps">
@@ -422,29 +475,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="founding">
+      {/* ============ THE 10% — one seller band ============ */}
+      <section style={{ paddingBottom: 0 }}>
         <div className="vh-wrap">
-          <div className="vh-founding">
+          <div className="vh-sellband">
             <div>
-              <div className="vh-eyebrow"><span className="vh-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
-              <h2>Be the first from your country.</h2>
-              <p>
-                {trading > 0
-                  ? `${trading} ${trading === 1 ? 'country is' : 'countries are'} trading on Velor. ${190 - trading} are not.`
-                  : 'A hundred and ninety countries. Not one founding seat taken yet.'}{' '}
-                Whoever arrives first from each of them keeps something no seller after them can ever earn.
-              </p>
-              <div className="vh-fcta">
-                <Link className="vh-btn vh-btn-p" href="/apply">Apply to sell</Link>
-                <span className="vh-fnote">Decision within 24 hours of your verification completing.</span>
-              </div>
+              <h2>Make something your country is known for?</h2>
+              <p>The first verified seller from each country opens it on Velor &mdash; and keeps the
+              founding badge and Pro free for life. Decision within 24 hours of your verification.</p>
             </div>
-            <ul className="vh-fpoints">
-              <li><i>&#10003;</i><span><b>Pro, free for life</b> &mdash; never charged, while the subscription runs unbroken.</span></li>
-              <li><i>&#10003;</i><span>The founding badge, permanently, on your store and every listing.</span></li>
-              <li><i>&#10003;</i><span>Your store opens your country&apos;s page &mdash; and every speciality you list credits you as its founding seller.</span></li>
-              <li><i>&#10003;</i><span>Identity-verified through Stripe. No document ever touches Velor.</span></li>
-            </ul>
+            <Link className="vh-btn" href="/apply">Apply to sell</Link>
           </div>
         </div>
       </section>
