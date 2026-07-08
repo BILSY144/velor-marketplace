@@ -268,7 +268,7 @@ export default function ApplyPage() {
             <div style={styles.successTitle}>Application received</div>
             <p style={styles.successText}>
               Thank you for applying to sell on Velor Commerce. Our team will review your
-              application and get back to you within 3-5 business days.
+              application and get back to you within 24 hours.
             </p>
             <div style={styles.refNum}>Reference: {applicationId}</div>
           </div>
