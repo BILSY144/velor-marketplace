@@ -2,12 +2,12 @@ import Link from 'next/link'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
-    title: 'Shop',
+    title: 'Watch & shop',
     links: [
-      { label: 'Browse all', href: '/shop' },
-      { label: 'Electronics', href: '/shop?category=Electronics' },
-      { label: 'Fashion', href: '/shop?category=Fashion' },
-      { label: 'Home & Garden', href: '/shop?category=Home%20%26%20Garden' },
+      { label: 'Velor Live', href: '/live' },
+      { label: 'Browse the shop', href: '/shop' },
+      { label: 'Shop by country', href: '/founding' },
+      { label: 'Specialities', href: '/#specialities' },
       { label: 'Search', href: '/search' },
     ],
   },
@@ -16,8 +16,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: 'Sell on Velor', href: '/sell' },
       { label: 'Apply to sell', href: '/apply' },
+      { label: 'Founding sellers', href: '/founding' },
       { label: 'Seller dashboard', href: '/dashboard' },
-      { label: 'Pricing & tiers', href: '/sell#pricing' },
       { label: 'Seller agreement', href: '/legal/seller-agreement' },
     ],
   },
@@ -113,8 +113,9 @@ export default function GlobalFooter() {
             <img src="/velor-logo.png" alt="Velor" style={{ height: 20, width: 'auto' }} />
           </div>
           <p style={{ color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.6, maxWidth: 300 }}>
-            The first fully AI-run marketplace. Independent sellers, protected buyers,
-            and a platform that operates itself — 24/7.
+            The world&apos;s shopping channel. Real makers broadcasting and listing from 190
+            countries — with the origin on every listing and your money held until delivery
+            is confirmed.
           </p>
           <Link
             href="/sell"
