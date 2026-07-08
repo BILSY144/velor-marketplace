@@ -4,9 +4,14 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
+import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
 import { useCart } from '@/lib/cart'
 import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
+
+// Mobile behaviour lives in the responsive layer of app/globals.css, keyed on
+// the velor-* class names used below. Do not target inline styles from CSS --
+// React serialises them with spaces and normalised units, so attribute
+// substring selectors silently never match.
 
 export default function GlobalHeader() {
   const { data: session } = useSession()
@@ -49,8 +54,6 @@ export default function GlobalHeader() {
   const catsRef = useRef<HTMLDivElement>(null)
   const acctRef = useRef<HTMLDivElement>(null)
 
-  
-
   useEffect(() => {
     setCatsOpen(false)
     setAcctOpen(false)
@@ -70,6 +73,11 @@ export default function GlobalHeader() {
     e.preventDefault()
     const q = query.trim()
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/shop')
+  }
+
+  const changeCurrency = (value: string) => {
+    setCurrency(value)
+    setStoredCurrency(value)
   }
 
   // The seller's own storefront lives at /seller/[sellerId] — this is the
@@ -111,8 +119,10 @@ export default function GlobalHeader() {
 
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 50, fontFamily: 'var(--font-body)' }}>
-      {/* Trust micro-bar */}
+      {/* Trust micro-bar. On phones this becomes a single scrollable line
+          rather than wrapping into five lines of dead space. */}
       <div
+        className="velor-trustbar"
         style={{
           background: '#000',
           color: 'var(--muted)',
@@ -148,6 +158,7 @@ export default function GlobalHeader() {
         }}
       >
         <div
+          className="velor-headerbar"
           style={{
             maxWidth: 1360,
             margin: '0 auto',
@@ -159,26 +170,12 @@ export default function GlobalHeader() {
           }}
         >
           {/* Logo */}
-          <Link
-            href="/"
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: 30,
-              letterSpacing: '0.12em',
-              color: 'var(--accent)',
-              textDecoration: 'none',
-              flexShrink: 0,
-            }}
-          >
+          <Link href="/" style={{ display: 'block', flexShrink: 0 }} aria-label="Velor home">
             <img src="/velor-logo.png" alt="Velor" style={{ height: 28, width: 'auto' }} />
           </Link>
 
           {/* Primary nav (desktop) */}
-          <nav
-            className="velor-desktop-nav"
-            style={{ display: 'flex', alignItems: 'center', gap: 22 }}
-          >
+          <nav className="velor-desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
             <Link href="/shop" style={navLink}>Shop</Link>
             <Link href="/live" style={liveNavButton}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
@@ -223,8 +220,8 @@ export default function GlobalHeader() {
             <Link href="/about" style={navLink}>How it works</Link>
           </nav>
 
-          {/* Search */}
-          <form onSubmit={submitSearch} style={{ flex: 1, maxWidth: 460, marginLeft: 'auto' }}>
+          {/* Search. On phones this wraps onto its own full-width row. */}
+          <form onSubmit={submitSearch} className="velor-searchform" style={{ flex: 1, maxWidth: 460, marginLeft: 'auto' }}>
             <div
               style={{
                 display: 'flex',
@@ -241,13 +238,16 @@ export default function GlobalHeader() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search products, brands and sellers"
+                aria-label="Search products, brands and sellers"
                 style={{
                   flex: 1,
+                  minWidth: 0,
                   background: 'none',
                   border: 'none',
                   outline: 'none',
                   color: 'var(--text)',
-                  fontSize: 14,
+                  /* 16px stops iOS Safari zooming the page on focus. */
+                  fontSize: 16,
                   fontFamily: 'var(--font-body)',
                 }}
               />
@@ -255,7 +255,7 @@ export default function GlobalHeader() {
           </form>
 
           {/* Right cluster */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+          <div className="velor-right" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
             {isSeller && (
               <Link href={`/seller/${sellerId}`} className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="View my store">
                 My Store
@@ -289,26 +289,26 @@ export default function GlobalHeader() {
                 </span>
               )}
             </Link>
-            {/* Currency switcher */}
-            <div style={{ ...navLink, display: 'flex', alignItems: 'center' }}>
+
+            {/* Currency switcher (moves into the mobile panel on phones) */}
+            <div className="velor-currency" style={{ ...navLink, display: 'flex', alignItems: 'center' }}>
               <select
                 title="Velor is a global marketplace. Prices are converted live using current exchange rates and reconfirmed at checkout, so you never see a surprise charge."
+                aria-label="Display currency"
                 value={currency}
-                onChange={(e) => {
-                  setCurrency(e.target.value)
-                  setStoredCurrency(e.target.value)
-                }}
+                onChange={(e) => changeCurrency(e.target.value)}
                 style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
-                >
+              >
                 {SUPPORTED_CURRENCIES.map((c) => (
                   <option key={c} value={c} style={{ color: '#000' }}>
                     {c}
                   </option>
-                  ))}
+                ))}
               </select>
             </div>
-            {/* Account */}
-            <div ref={acctRef} style={{ position: 'relative' }}>
+
+            {/* Account (moves into the mobile panel on phones) */}
+            <div ref={acctRef} className="velor-account-btn" style={{ position: 'relative' }}>
               <button
                 onClick={() => setAcctOpen((v) => !v)}
                 style={{ ...navLink, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}
@@ -395,70 +395,100 @@ export default function GlobalHeader() {
             <button
               className="velor-mobile-toggle"
               onClick={() => setMobileOpen((v) => !v)}
-              style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text)', fontSize: 22, cursor: 'pointer' }}
-              aria-label="Menu"
+              style={{
+                display: 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 44,
+                height: 44,
+                background: 'none',
+                border: 'none',
+                color: 'var(--text)',
+                fontSize: 22,
+                cursor: 'pointer',
+              }}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
             >
-              ☰
+              {mobileOpen ? '✕' : '☰'}
             </button>
           </div>
         </div>
-
-        {/* Mobile panel */}
-        {mobileOpen && (
-          <div style={{ borderTop: '1px solid var(--border)', padding: '10px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Link href="/shop" style={menuItem}>Shop</Link>
-            <div style={{ padding: '11px 16px' }}>
-              <Link
-                href="/live"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'var(--accent)',
-                  color: '#000',
-                  textDecoration: 'none',
-                  fontSize: 13,
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-body)',
-                  padding: '6px 14px',
-                  borderRadius: 999,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
-                Live
-              </Link>
-            </div>
-            <Link href="/sell" style={menuItem}>Sell on Velor</Link>
-            <Link href="/about" style={menuItem}>How it works</Link>
-            <Link href="/orders" style={menuItem}>My orders</Link>
-            <Link href="/track" style={menuItem}>Track an order</Link>
-            <Link href="/messages" style={menuItem}>Messages</Link>
-            {session ? (
-              isSeller
-                ? (
-                  <>
-                    <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Seller dashboard</Link>
-                    <Link href={`/seller/${sellerId}`} style={menuItem}>View my store</Link>
-                  </>
-                )
-                : <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Start selling</Link>
-            ) : (
-              <>
-                <Link href="/auth/sign-in" style={menuItem}>Sign in</Link>
-                <Link href="/auth/sign-up" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Create account</Link>
-              </>
-            )}
-          </div>
-        )}
       </div>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .velor-desktop-nav { display: none !important; }
-          .velor-mobile-toggle { display: block !important; }
-        }
-      `}</style>
+      {/* Mobile panel */}
+      {mobileOpen && (
+        <div
+          className="velor-mobile-panel"
+          style={{ borderTop: '1px solid var(--border)', padding: '10px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4 }}
+        >
+          <Link href="/shop" style={menuItem}>Shop</Link>
+          <div style={{ padding: '11px 16px' }}>
+            <Link href="/live" style={liveNavButton}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
+              Live
+            </Link>
+          </div>
+          <Link href="/sell" style={menuItem}>Sell on Velor</Link>
+          <Link href="/about" style={menuItem}>How it works</Link>
+          <Link href="/orders" style={menuItem}>My orders</Link>
+          <Link href="/track" style={menuItem}>Track an order</Link>
+          <Link href="/messages" style={menuItem}>Messages</Link>
+          <Link href="/account/wishlist" style={menuItem}>Wishlist</Link>
+
+          {/* Currency lives here on phones, where the header row has no space. */}
+          <div style={{ ...menuItem, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ color: 'var(--muted)' }}>Currency</span>
+            <select
+              aria-label="Display currency"
+              value={currency}
+              onChange={(e) => changeCurrency(e.target.value)}
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                color: 'var(--text)',
+                font: 'inherit',
+                padding: '8px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c} value={c} style={{ color: '#000' }}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
+
+          {session ? (
+            <>
+              <Link href="/account" style={menuItem}>My account</Link>
+              {isSeller ? (
+                <>
+                  <Link href="/dashboard" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Seller dashboard</Link>
+                  <Link href={`/seller/${sellerId}`} style={menuItem}>View my store</Link>
+                </>
+              ) : (
+                <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Start selling</Link>
+              )}
+              <button
+                onClick={() => signOut()}
+                style={{ ...menuItem, width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/sign-in" style={menuItem}>Sign in</Link>
+              <Link href="/auth/sign-up" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Create account</Link>
+            </>
+          )}
+        </div>
+      )}
     </header>
   )
 }
