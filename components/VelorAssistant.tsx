@@ -5,6 +5,9 @@
     type ChatMessage = { role: 'user' | 'assistant'; content: string }
     type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE'
 
+    // Velor's AI assistant persona image (circular, transparent background).
+    const AVATAR = '/velor-assistant.png'
+
     const GREETINGS: Record<Tier, string> = {
       STARTER: "Hi, I'm Velor's AI Assistant. Ask me about fees, payouts, escrow timing, listing tips, or Velor policies.",
       PRO: "Hi, I'm your Velor AI Assistant. I can see your own account data now, so ask me about your recent orders, your next payout, or your seller standing, as well as fees and listing tips.",
@@ -86,21 +89,35 @@
 {isOpen && (
         <div style={{ width: '360px', height: '480px', background: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', display: 'flex', flexDirection: 'column', marginBottom: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 16px', borderBottom: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ margin: 0, fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '14px', color: '#FFFFFF' }}>{labels.title}</p>
-              <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#999999' }}>{labels.subtitle}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}>
+                <img src={AVATAR} alt="Velor AI Assistant" width={38} height={38} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(212,175,90,0.5)' }} />
+                <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '9px', height: '9px', borderRadius: '50%', background: '#00E676', border: '2px solid #111111' }} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '14px', color: '#FFFFFF' }}>{labels.title}</p>
+                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#999999' }}>{labels.subtitle}</p>
+              </div>
             </div>
             <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#999999', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>x</button>
           </div>
 
-          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 {messages.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.role === 'user' ? '#FF6B00' : '#1C1C1C', color: m.role === 'user' ? '#FFFFFF' : '#E5E5E5', padding: '8px 12px', borderRadius: '10px', fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-{m.content}
-              </div>
+              m.role === 'assistant' ? (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', alignSelf: 'flex-start', maxWidth: '90%' }}>
+                  <img src={AVATAR} alt="" width={24} height={24} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <div style={{ background: '#1C1C1C', color: '#E5E5E5', padding: '8px 12px', borderRadius: '10px', fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.content}</div>
+                </div>
+              ) : (
+                <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '85%', background: '#FF6B00', color: '#FFFFFF', padding: '8px 12px', borderRadius: '10px', fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.content}</div>
+              )
             ))}
 {loading && (
-              <div style={{ alignSelf: 'flex-start', color: '#999999', fontSize: '12px' }}>Thinking...</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', alignSelf: 'flex-start', color: '#999999', fontSize: '12px' }}>
+                <img src={AVATAR} alt="" width={24} height={24} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', opacity: 0.7 }} />
+                Thinking...
+              </div>
             )}
 {error && (
               <div style={{ alignSelf: 'flex-start', color: '#FF1744', fontSize: '12px' }}>{error}</div>
@@ -129,9 +146,14 @@
 
       <button
         onClick={() => setIsOpen(o => !o)}
-        style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FF6B00', border: 'none', color: '#FFFFFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(255,107,0,0.4)' }}
+        aria-label={isOpen ? 'Close Velor AI Assistant' : 'Open Velor AI Assistant'}
+        style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '50%', background: '#0D0D0D', border: '2px solid #FF6B00', padding: 0, cursor: 'pointer', boxShadow: '0 4px 16px rgba(255,107,0,0.4)', overflow: 'hidden' }}
       >
-{isOpen ? 'Close' : 'AI'}
+        <img src={AVATAR} alt="Velor AI Assistant" width={60} height={60} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+{isOpen && (
+          <span style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '13px', fontWeight: 700 }}>Close</span>
+        )}
+        <span style={{ position: 'absolute', bottom: '3px', right: '3px', width: '12px', height: '12px', borderRadius: '50%', background: '#00E676', border: '2px solid #0D0D0D' }} />
       </button>
     </div>
   )
