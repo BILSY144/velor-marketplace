@@ -30,6 +30,33 @@ HONESTY RULES, never break these:
 - Never invent a policy, fee, or feature that is not listed above. If you do not know something specific to Velor, say so plainly and suggest the seller check their dashboard or contact support instead of guessing.
 - Keep answers concise, practical, and specific to running a business on Velor.`
 
+// Public / buyer-facing assistant. No login, no seller or account data. This
+// is the persona every visitor and shopper on the public site talks to.
+const BUYER_SYSTEM_PROMPT = `You are the Velor AI Assistant, the shopping helper on the public Velor Marketplace website at velorcommerce.store. You are a real AI, not a human. You help BUYERS and visitors - not sellers. You have no access to any private account data, so never claim to look anything up about a specific person's account or a specific order's live status.
+
+ABOUT VELOR (for buyers):
+Velor is a global online marketplace where independent sellers from around the world list products, and buyers check out securely. Prices are shown live in the buyer's own currency and reconfirmed at checkout.
+
+HOW BUYERS ARE PROTECTED (this is Velor's core promise - explain it clearly and warmly):
+- Payment is taken securely by Stripe. Velor never sees card details.
+- Your money is held safely by Velor in escrow - it is NOT sent to the seller straight away.
+- The seller only gets paid AFTER your order is delivered and a short protection window passes, and never while a return or dispute is open.
+- So you never "pay and hope" - if something goes wrong, your money is protected.
+
+WHAT YOU CAN HELP BUYERS WITH:
+- Explaining buyer protection and how escrow keeps their money safe
+- How ordering, shipping and delivery confirmation work
+- Returns and disputes: buyers can request a return, and can open a dispute from their order page if an item is faulty, damaged, or not as described; Velor mediates fairly
+- Currencies, and that Velor ships worldwide from independent sellers
+- Helping them understand categories and find the kind of product they are looking for (in general terms - you cannot browse live stock or check a specific item's availability)
+- Pointing sellers who ask about selling to the "Sell on Velor" / apply page
+
+HONESTY RULES, never break these:
+- Never claim to be human.
+- Never claim to see the buyer's orders, a specific order's live tracking, or any account data - you do not have it. If asked, tell them plainly they can track orders and open returns or disputes from their account's order page, or contact support at customerservice@velorcommerce.store.
+- Never invent a policy, price, product, discount, or delivery date. If you do not know something specific, say so plainly.
+- Keep answers concise, warm, and genuinely helpful. You are the friendly, trustworthy face of Velor for someone deciding whether to buy.`
+
 const TIER_ADDENDUM: Record<AssistantTier, string> = {
   STARTER: `
 
@@ -47,16 +74,27 @@ You have three extra capabilities Pro and Starter do not have:
 3. Escalation - if the seller clearly wants to escalate an issue to a human at Velor (not just ask a question), say so plainly in your reply, and end your entire reply with the exact marker [[ESCALATE]] on its own final line. Only use this marker when the seller genuinely wants a human to step in - never for routine questions you can already answer. The marker is stripped before the seller sees your reply and instead files a real priority support ticket for them.`,
 }
 
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const seller = await prisma.seller.findUnique({
-    where: { userId: session.user.id },
-    include: { user: { select: { email: true } } },
+async function callAnthropic(systemPrompt: string, messages: { role: string; content: string }[], apiKey: string) {
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-5',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: messages.map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content,
+      })),
+    }),
   })
-  if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
+}
 
+export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: 'The AI assistant is not configured yet. Please contact support.' }, { status: 503 })
@@ -67,6 +105,35 @@ export async function POST(req: NextRequest) {
   if (messages.length === 0) {
     return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
   }
+  const audience: 'buyer' | 'seller' = body?.audience === 'buyer' ? 'buyer' : 'seller'
+
+  // ---- Public / buyer path: no login required, no account data ----
+  if (audience === 'buyer') {
+    try {
+      const res = await callAnthropic(BUYER_SYSTEM_PROMPT, messages, apiKey)
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error('Anthropic API error (buyer):', res.status, errText)
+        return NextResponse.json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' }, { status: 502 })
+      }
+      const data = await res.json()
+      const reply: string = data?.content?.[0]?.text || 'Sorry, I was not able to generate a response.'
+      return NextResponse.json({ reply })
+    } catch (err) {
+      console.error('Assistant buyer route error:', err)
+      return NextResponse.json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' }, { status: 500 })
+    }
+  }
+
+  // ---- Seller path: requires login + seller account, tier-aware ----
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const seller = await prisma.seller.findUnique({
+    where: { userId: session.user.id },
+    include: { user: { select: { email: true } } },
+  })
+  if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
   const tier = (seller.tier as AssistantTier) ?? 'STARTER'
   const capabilities = capabilitiesForTier(tier)
@@ -82,23 +149,7 @@ export async function POST(req: NextRequest) {
   const systemPrompt = `${BASE_SYSTEM_PROMPT}${TIER_ADDENDUM[tier]}\n\n${contextNote}`
 
   try {
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-5',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages.map((m: { role: string; content: string }) => ({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content,
-        })),
-      }),
-    })
+    const anthropicRes = await callAnthropic(systemPrompt, messages, apiKey)
 
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text()
