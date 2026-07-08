@@ -494,3 +494,22 @@ manifesto calls Velor "the world's shopping channel". This is a STANDING RULE: c
 everywhere, both sell rails (live + listings) in every seller pitch. (2) Homepage is FULL-BLEED:
 .vh-wrap is width:100% with clamp padding, no max-width dead space. Commits 036fb8f (homepage)
 and ae6d29f (sell/apply/about)._
+
+_Checkpoint 2026-07-08 (later). All verified live in Chrome. (1) Culture reels EXPANDED: 61 new
+tiles, reels now 15-17 tiles each (96 total), every new Pexels ID pre-verified loading (2 dead
+IDs swapped before ship). Tiles remain editorial placeholders until real listings. (2) NEW
+FOUNDING PERK (William): live broadcasting on Velor Live FOR LIFE, founding-exclusive - no
+standard subscription includes it. Copy shipped on /founding perkbox, /apply perks+lede, /sell
+hero+LIVE stat card, homepage seller band, /help FAQ. STANDING RULE: never pitch live
+broadcasting as available to all sellers; it is the founding privilege. NOTE: backend gating
+of live access (founding flag on seller -> live stream permission) is NOT yet implemented -
+add before real sellers arrive. (3) /contact rebuilt (real form wired to existing /api/contact
+Resend route, idle/sending/sent/error), /help rebuilt (Velor Live FAQ section, no payout
+timing anywhere public, "held until delivery is confirmed" canonical), /search polished
+(honest zero-state -> /founding CTA), GlobalFooter rebuilt (Watch & shop column with Velor
+Live, banned Electronics/Fashion links REMOVED, channel-voice blurb). Commits 4a9a964,
+b3f7ca2. Footer link check + layout sweep done page by page. Chrome note: hidden tabs defer
+video+lazy-image loading - readyState 0 / empty flag boxes in screenshots are NOT bugs.
+Remaining: outreach rebuild (template + maker-only targeting) for sign-off, /origins country
+pages (15+ researched items each), PDP, listing form speciality picker, CJ code strip, live
+access gating, Payoneer._
