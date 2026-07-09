@@ -167,6 +167,7 @@ Nine agents; the binding constitution is `docs/AGENT_OPERATIONS.md`. Crons in
 | `*/5 * * * *` | `/api/admin/products/auto-moderate` |
 | `15 * * * *` | `/api/cron/review-applications` |
 | `30 * * * *` | `/api/cron/agent-watchdog` |
+| `0 */2 * * *` | `/api/cron/outreach-auto` |
 | `0 */4 * * *` | `/api/cron/release-payouts` |
 | `0 */6 * * *` | `/api/cron/scout-sellers`, `/api/cron/enrich-emails` |
 | `20 */6 * * *` | `/api/cron/qualify-prospects` |
@@ -175,14 +176,22 @@ Nine agents; the binding constitution is `docs/AGENT_OPERATIONS.md`. Crons in
 | `0 3 * * *` | `/api/cron/recompute-rankings` |
 | `0 8 * * 1` | `/api/cron/live-usage-check` |
 
-`/api/cron/outreach-auto` is **NOT in this table on purpose** — it is written,
-tested against the preview script, and gated on `qualified: true`, but not
-scheduled. It has been paused since commit aa56838 (2026-07-08) pending
-William's sign-off on the email design; that sign-off landed 2026-07-09
-(commits 945f318 through 5a9d271). Verify the current `vercel.json` before
-assuming this is still true — do not re-add the cron entry or set
-`OUTREACH_ENABLED=true` without asking William first (explicit-permission
-rule: this sends real email to real people).
+**`outreach-auto` is LIVE again as of 2026-07-09** (commit — check git log
+for the exact SHA of the vercel.json change right after 8d478f6). It was
+paused since commit aa56838 (2026-07-08) pending William's sign-off on the
+email design and the qualification gate; both landed this session (commits
+579ee0b through 906c2cc), William reviewed the final preview, and gave
+explicit go-ahead in chat on 2026-07-09 to turn it on. **Do not turn it back
+off, and do not re-pause or re-scope this without asking William** — same
+explicit-permission rule as before applies to any *further* change to
+outreach, not to leaving it running as approved.
+
+One thing this session could NOT verify (no live DB or Vercel dashboard
+access from this sandbox): whether `OUTREACH_ENABLED` is set to `'false'`
+in Vercel's environment variables from the original pause. The route only
+skips sending when that var is exactly `'false'` — unset or `'true'` both
+allow sending. If a future check-in finds no outreach has actually gone out
+despite the cron being scheduled, check that env var first.
 
 The watchdog checks outcomes in the database, never an agent's self-reported
 status, and emails breaches immediately.
@@ -289,13 +298,11 @@ supply (sellers), not further design work. See SELLER ACQUISITION PLAN below
 for the full plan and the research it is based on; this list is the
 condensed action order.
 
-1. **Ask William to switch on `outreach-auto`.** Everything it needs exists
-   and is deployed: scout-sellers finds prospects, qualify-prospects screens
-   them, outreach-auto sends a 3-touch sequence to `qualified: true`
-   prospects only, in 19 languages, honest about being pre-launch. It is
-   the single highest-leverage action available and is currently OFF. Do
-   not turn it on without William's explicit go-ahead (real emails to real
-   people) — see SELLER ACQUISITION PLAN, step 1.
+1. ~~Ask William to switch on `outreach-auto`.~~ DONE 2026-07-09 — William
+   gave explicit go-ahead in chat, cron re-added to `vercel.json`. Watch for
+   it actually firing and sending (check `OutreachLog` row counts / the
+   daily briefing) — see the "one thing this session could NOT verify" note
+   in AGENTS AND CRONS above about `OUTREACH_ENABLED`.
 2. **Build the lightweight referral flow William floated** ("ask founders
    to tell their friends"): not yet built. See SELLER ACQUISITION PLAN,
    step 4, for the minimal version proposed.
@@ -356,10 +363,10 @@ AI-qualified before first contact) already matches this instinct — the job
 now is to point real volume and real founder time at it before 6 August,
 not to change the model.
 
-### Step 1 — Turn on the automated cold-outreach pipeline (today, if William agrees)
+### Step 1 — Turn on the automated cold-outreach pipeline — DONE 2026-07-09
 
-This is the single highest-leverage action and it is currently OFF. The full
-pipeline is built and deployed:
+William gave explicit go-ahead in chat this session; the cron was re-added
+to `vercel.json` and pushed. The full pipeline is built and deployed:
 
 - `scout-sellers` (every 6h) finds candidate sellers on Etsy/eBay/etc. by
   craft+country search, now retargeted globally (gap 7, resolved 2026-07-09).
@@ -372,15 +379,15 @@ pipeline is built and deployed:
   and inviting one founding seller per country, with the real founding perks
   (Pro free for life, 8% commission, first claim on that country's page).
 
-To turn it on: add `{"path": "/api/cron/outreach-auto", "schedule": "0 */2
-* * *"}` back to `vercel.json`, and set `OUTREACH_ENABLED=true` in Vercel
-(William does this himself, per the standing "never enter secrets" rule —
-this one is a plain env var, not a secret, but the account access is his).
-**This is a real send to real people and needs William's explicit go-ahead
-in chat before any future session flips it on** — do not infer consent from
-this plan existing.
+Turned on by re-adding `{"path": "/api/cron/outreach-auto", "schedule": "0
+*/2 * * *"}` to `vercel.json`. One thing NOT verified this session (no live
+Vercel dashboard access from this sandbox): whether `OUTREACH_ENABLED` is
+still set to `'false'` in Vercel from the original pause — the route only
+skips when that var is exactly `'false'`, so if it was set that way, William
+needs to clear it in Vercel himself for sends to actually start despite the
+cron now being scheduled.
 
-Before flipping it on, worth five minutes: check how many prospects
+Also worth five minutes for a returning session: check how many prospects
 `scout-sellers` has actually found and how many `qualify-prospects` has
 marked `qualified: true` so far (`SellerProspect` table). If the number is
 near zero, scout-sellers may need its query list widened before outreach-auto

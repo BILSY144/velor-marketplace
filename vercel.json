@@ -25,6 +25,10 @@
       "schedule": "20 */6 * * *"
     },
     {
+      "path": "/api/cron/outreach-auto",
+      "schedule": "0 */2 * * *"
+    },
+    {
       "path": "/api/cron/traffic-check",
       "schedule": "0 8 * * *"
     },
