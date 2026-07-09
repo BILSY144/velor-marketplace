@@ -165,7 +165,7 @@ export default function GlobalFooter() {
           }}
         >
           <span>© {new Date().getFullYear()} Velor Commerce Ltd. All rights reserved.</span>
-          <span>Payments secured by Stripe · Built and operated by AI</span>
+          <span>Payments secured by Stripe</span>
         </div>
       </div>
 
