@@ -100,12 +100,12 @@ function outreachFooter(name: string, platform: string, unsubUrl: string) {
   return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background:#0D0D0D;padding:20px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
 }
 
+// No icon column -- William's approved reference (saved 2026-07-09,
+// C:\Users\wills\Downloads\velor-outreach-email-initial.html) renders each
+// benefit as plain title+body under its own border-top rule. Match it
+// exactly rather than the icon-box variant that had crept in.
 function benefitRow(title: string, body: string) {
-  const iconBox = `<table role='presentation' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#2A1A0A' width='26' height='26' style='background:#2A1A0A;border-radius:6px;color:#FF6B00;font-weight:800;font-size:14px;text-align:center;line-height:26px;'>&#10003;</td></tr></table>`
-  return `<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='margin-bottom:14px;'><tr>
-    <td width='36' valign='top' style='padding-top:2px;'>${iconBox}</td>
-    <td valign='top'><div style='color:#FFFFFF;font-size:14px;font-weight:700;margin-bottom:2px;'>${title}</div><div style='color:#A9A9A9;font-size:13px;line-height:1.6;'>${body}</div></td>
-  </tr></table>`
+  return `<div style='border-top:1px solid #2A2A2A;padding:16px 0;'><div style='color:#FFFFFF;font-size:14px;font-weight:700;margin-bottom:2px;'>${title}</div><div style='color:#A9A9A9;font-size:13px;line-height:1.6;'>${body}</div></div>`
 }
 
 // Pro-plan value card, placed right before the CTA. Mirrors the actual
@@ -223,7 +223,7 @@ ${OUTREACH_HEADER}`
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
         <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>${c.greeting(h(p.name))}</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${intro}</p>
-        <div style='border-top:1px solid #2A2A2A;padding-top:20px;margin-bottom:8px;'>
+        <div style='margin-bottom:8px;'>
           ${benefitRow(c.b1t, c.b1b)}
           ${benefitRow(c.b4t, c.b4b)}
         </div>
@@ -269,7 +269,7 @@ ${OUTREACH_HEADER}`
         <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:0 0 16px;'>${c.f2Line1}</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:0 0 24px;'>${closing}</p>
         ${cta(c.cta)}
-        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.f2Note}</p>
+        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:22px 0 0;'>${c.signoff}</p>
       </div>`
   }
