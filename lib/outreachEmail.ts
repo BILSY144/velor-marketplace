@@ -78,9 +78,12 @@ function benefitRow(title: string, body: string) {
 // price (£49/mo, struck through) -- so the email promises exactly what
 // the website delivers, not a made-up summary. Falls back to English
 // copy for any language not yet translated (see OutreachCopy.proTitle).
-function proPlanCard(c: { proTitle?: string; proFeatures?: string[] }): string {
+function proPlanCard(c: { proTitle?: string; proFeatures?: string[]; proCommissionNote?: string }): string {
   const title = c.proTitle || OUTREACH_COPY.en.proTitle
   const features = c.proFeatures && c.proFeatures.length ? c.proFeatures : OUTREACH_COPY.en.proFeatures!
+  // "FREE" describes the monthly fee only -- without this line it reads as
+  // if commission is free too, which it is not (William caught this).
+  const commissionNote = c.proCommissionNote || OUTREACH_COPY.en.proCommissionNote
   const featureRows = features
     .map(
       (f) =>
@@ -90,10 +93,11 @@ function proPlanCard(c: { proTitle?: string; proFeatures?: string[] }): string {
   return `<div style='background:linear-gradient(160deg,#7c3aed 0%,#3b1177 100%);border-radius:12px;padding:22px 24px;margin:8px 0 22px;'>
     <div style='display:inline-block;background:rgba(255,255,255,0.18);color:#FFFFFF;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:5px 12px;border-radius:100px;margin-bottom:14px;'>MOST POPULAR</div>
     <div style='color:#FFFFFF;font-size:16px;font-weight:800;margin-bottom:10px;'>${title}</div>
-    <div style='margin-bottom:14px;'>
+    <div style='margin-bottom:6px;'>
       <span style='color:rgba(255,255,255,0.55);font-size:14px;text-decoration:line-through;'>&pound;49/mo</span>
       <span style='color:#FFFFFF;font-size:14px;font-weight:800;margin-left:10px;'>FREE</span>
     </div>
+    <div style='color:rgba(255,255,255,0.65);font-size:11.5px;line-height:1.5;margin-bottom:14px;'>${commissionNote}</div>
     <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>${featureRows}</table>
   </div>`
 }

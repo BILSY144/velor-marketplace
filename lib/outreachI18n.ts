@@ -94,6 +94,10 @@ export interface OutreachCopy {
   // the card never renders blank.
   proTitle?: string
   proFeatures?: [string, string, string, string, string, string]
+  // Clarifies FREE means no monthly fee -- commission still applies. Without
+  // this, "FREE" beside the struck-through price reads as if selling itself
+  // is free too.
+  proCommissionNote?: string
   // Followup 1 (trust / payments)
   f1Headline: string
   f1Intro: string
@@ -133,6 +137,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
       'Advanced sales analytics',
       'Dedicated seller support',
     ],
+    proCommissionNote: 'FREE means no monthly fee. You still pay 8% commission — only on what you actually sell.',
     f1Headline: 'The part most marketplaces get wrong: getting you paid.',
     f1Intro: 'Following up on our invitation. Before you decide, here is exactly how selling on Velor will work once we launch — because trust should run both ways:',
     f1s1: 'A buyer anywhere in the world will order — checkout handled by Stripe, in their currency.',
