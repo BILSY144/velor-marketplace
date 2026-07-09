@@ -48,6 +48,14 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
     include: { seller: true },
   })
 
+  // Founding-seller eligibility: the first approved seller from a given
+  // country, decided once, here, at approval. This only makes the seller
+  // ELIGIBLE -- the perks themselves do not activate until they list their
+  // first product (lib/founding.ts).
+  const foundingEligible = application.country
+    ? !(await prisma.seller.findFirst({ where: { country: application.country, foundingEligible: true } }))
+    : false
+
   let activationLink: string | undefined
   let alertTier = 'STARTER'
   let alertStoreName = application.businessName
@@ -74,6 +82,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         description: application.storeDescription ?? undefined,
         country: application.country ?? undefined,
         approved: true,
+        foundingEligible,
       },
     })
     alertTier = seller.tier
@@ -96,6 +105,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
             description: application.storeDescription ?? undefined,
             country: application.country ?? undefined,
             approved: true,
+            foundingEligible,
           },
         },
       },

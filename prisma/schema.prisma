@@ -143,6 +143,17 @@ model Seller {
   isInternal                     Boolean   @default(false)
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
+  // Founding-seller programme. foundingEligible is decided once, at approval
+  // (lib/provisionSeller.ts): true only for the first approved seller from
+  // a given country. It does NOT grant the perks by itself -- perks
+  // (Pro tier at no charge, the founding badge) activate only once the
+  // seller lists their first product; see lib/founding.ts. foundingBadge is
+  // a separate flag from sellerBadge on purpose: sellerBadge is the
+  // buyer-facing merit badge recalculated by the scoring cron and would
+  // overwrite a value stored there.
+  foundingEligible               Boolean   @default(false)
+  foundingPerksGrantedAt         DateTime?
+  foundingBadge                  Boolean   @default(false)
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 }

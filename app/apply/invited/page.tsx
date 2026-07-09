@@ -47,8 +47,8 @@ function InvitedContent() {
         </h1>
         <p className="iv-lede">
           We looked at what you make and chose to invite you directly &mdash; this page is only
-          for sellers we reach out to, not the general application. Continue below and these
-          perks lock in the moment your store opens.
+          for sellers we reach out to, not the general application. Continue below, get approved,
+          and list your first product to lock these perks in.
         </p>
 
         <div className="iv-perkbox">
@@ -60,6 +60,10 @@ function InvitedContent() {
             <li><i>&#10003;</i><span><b>Live broadcasting, for life.</b> Go on air on Velor Live and sell in the stream &mdash; access no standard subscription includes.</span></li>
           </ul>
         </div>
+
+        <p className="iv-note" style={{ marginTop: 0, marginBottom: 22 }}>
+          These perks unlock once you list your first product &mdash; being approved isn&apos;t enough on its own.
+        </p>
 
         <Link href={applyHref} className="iv-cta">Continue to your application &rarr;</Link>
         <p className="iv-note">Takes about 3 minutes. Free to list, no fees until you sell.</p>

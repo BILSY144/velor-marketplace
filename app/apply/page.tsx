@@ -185,6 +185,9 @@ export default function ApplyPage() {
               <li><i>&#10003;</i><span><b>The first store on your country&apos;s page.</b> Front and centre until others arrive &mdash; credited as the seller who opened it, always.</span></li>
               <li><i>&#10003;</i><span><b>Live broadcasting, for life.</b> Go on air on Velor Live and sell in the stream &mdash; access no standard subscription includes. Plus the showreel slot: your film, on the homepage.</span></li>
             </ul>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '16px 0 0', lineHeight: 1.5 }}>
+              Perks unlock once your first product is listed and live.
+            </p>
           </div>
         </div>
 

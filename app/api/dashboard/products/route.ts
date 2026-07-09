@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
+import { maybeGrantFoundingPerks } from '@/lib/founding'
 
 export async function GET() {
   const session = await auth()
@@ -154,6 +155,11 @@ export async function POST(req: NextRequest) {
       requiresCertificate: !!containsRegulatedMaterial,
     },
   })
+
+  // Founding-seller perks only activate once a seller lists their first
+  // product -- being approved and eligible is not enough on its own. No-ops
+  // for anyone not founding-eligible or already granted.
+  await maybeGrantFoundingPerks(seller.id)
 
   return NextResponse.json({ product }, { status: 201 })
 }
