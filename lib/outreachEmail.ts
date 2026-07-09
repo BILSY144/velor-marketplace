@@ -106,8 +106,16 @@ export function buildOutreachEmail(d: {
         ? c.subjectFollowup1
         : c.subjectFollowup2
 
+  // Outreach recipients land on the congratulations page (/apply/invited),
+  // not the general /apply form -- that page is only reachable via this
+  // link, and carries the country through so /apply's country field arrives
+  // pre-filled once they continue.
+  const inviteUrl = p.country
+    ? `https://velorcommerce.store/apply/invited?country=${encodeURIComponent(p.country)}`
+    : 'https://velorcommerce.store/apply/invited'
+
   const cta = (label: string) =>
-    `<a href='https://velorcommerce.store/apply' style='display:inline-block;background:#FF6B00;color:#0D0D0D;font-size:15px;font-weight:800;text-decoration:none;padding:14px 34px;border-radius:8px;'>${label}</a>`
+    `<a href='${inviteUrl}' style='display:inline-block;background:#FF6B00;color:#0D0D0D;font-size:15px;font-weight:800;text-decoration:none;padding:14px 34px;border-radius:8px;'>${label}</a>`
 
   const wrapOpen = `<div style='background:#0D0D0D;padding:24px 0;font-family:Arial,Helvetica,sans-serif;'><div dir='${dir}' style='max-width:600px;margin:0 auto;background:#141414;border:1px solid #2A2A2A;border-radius:12px;overflow:hidden;text-align:${align};'>${OUTREACH_HEADER}`
   const wrapClose = `${outreachFooter(p.name, p.platform, unsub)}</div></div>`

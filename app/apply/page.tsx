@@ -1,15 +1,20 @@
 'use client';
 
-// Seller application — the landing page for every outreach email
-// (lib/outreachEmail.ts links here). Redesigned 2026-07-08 to the founding-
-// seller design (velor-founding-seats-v3.html / velor-DESIGN-HANDOVER.md).
+// Seller application — the general application form. Outreach emails no
+// longer link straight here: they go to /apply/invited first (a
+// congratulations page naming the founding perks), which then sends the
+// seller on to this form with ?country=XX&invited=1 so the country field
+// below arrives pre-filled. Read via window.location.search (not
+// useSearchParams) so this stays a plain client component with no Suspense
+// boundary required.
+//
 // The form logic, fields and POST /api/seller/apply submission are unchanged
 // from the previous version — only the presentation moved.
 //
 // Language rule (standing): the first seller "opens" a country and is
 // "credited as the seller who opened it" — never "claims", "owns", "is yours".
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories';
 import { WORLD_COUNTRIES } from '@/lib/worldCountries';
@@ -88,6 +93,15 @@ export default function ApplyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
+
+  // Prefill country when arriving from /apply/invited?country=XX.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = (params.get('country') || '').toUpperCase();
+    if (code && WORLD_COUNTRIES.some(c => c.code === code)) {
+      setForm(prev => ({ ...prev, country: code }));
+    }
+  }, []);
 
   function setField(field: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
