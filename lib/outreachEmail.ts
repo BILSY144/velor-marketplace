@@ -79,7 +79,7 @@ function colorBlock(bg: string, extra: string, inner: string): string {
 // align='right' as an HTML attribute (not just CSS) is what actually shifts
 // a block-level table to the right in Outlook -- text-align on the parent
 // only ever reliably aligns inline content, not a nested table.
-const GLOBAL_MARKET_BADGE = `<table role='presentation' align='right' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#1FAE7A' style='background-color:#1FAE7A;background:linear-gradient(135deg,#3DDC97,#1FAE7A);color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;'>GLOBAL MARKET</td></tr></table>`
+const GLOBAL_MARKET_BADGE = `<table role='presentation' align='right' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#1FAE7A' style='background-color:#1FAE7A;background-image:url('https://velorcommerce.store/email-assets/badge-bg.png');background-size:100% 100%;background-repeat:no-repeat;color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;'>GLOBAL MARKET</td></tr></table>`
 
 const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
   <tr><td bgcolor='#141414' align='right' style='background-color:#141414;background:#141414;padding:14px 14px 0;text-align:right;'>
@@ -111,7 +111,7 @@ function benefitRow(title: string, body: string) {
 // Pro-plan value card, placed right before the CTA. Mirrors the actual
 // "Pro" tier card in components/dashboard/TierUpgradeView.tsx -- same
 // purple gradient, same "Most popular" kicker, same 6 features and real
-// price (Â£49/mo, struck through) -- so the email promises exactly what
+// price (ÃÂ£49/mo, struck through) -- so the email promises exactly what
 // the website delivers, not a made-up summary. Falls back to English
 // copy for any language not yet translated (see OutreachCopy.proTitle).
 // The purple gradient keeps a solid #5B21B6 bgcolor fallback for Outlook.
@@ -135,7 +135,7 @@ function proPlanCard(c: { proTitle?: string; proFeatures?: string[]; proCommissi
     </div>
     <div style='color:rgba(255,255,255,0.65);font-size:11.5px;line-height:1.5;margin-bottom:14px;'>${commissionNote}</div>
     <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>${featureRows}</table>`
-  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:8px 0 22px;'><tr><td bgcolor='#5B21B6' style='background-color:#5B21B6;background:linear-gradient(160deg,#7c3aed 0%,#3b1177 100%);border-radius:12px;padding:22px 24px;'>${inner}</td></tr></table>`
+  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:8px 0 22px;'><tr><td bgcolor='#5B21B6' style='background-color:#5B21B6;background-image:url('https://velorcommerce.store/email-assets/pro-card-bg.png');background-size:100% 100%;background-repeat:no-repeat;border-radius:12px;padding:22px 24px;'>${inner}</td></tr></table>`
 }
 
 // The language promise -- rendered as a distinct panel so it reads as a
@@ -179,7 +179,7 @@ export function buildOutreachEmail(d: {
       ? lang === 'en' && isBrand
         ? `Founding seller invitation: ${p.category} on Velor before buyers arrive 6 August`
         : lang === 'en'
-          ? `${p.name}, a founding seller spot on Velor â free before buyers arrive 6 August`
+          ? `${p.name}, a founding seller spot on Velor Ã¢ÂÂ free before buyers arrive 6 August`
           : c.subjectInitial
       : emailType === 'followup1'
         ? c.subjectFollowup1
