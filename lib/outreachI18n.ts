@@ -84,6 +84,16 @@ export interface OutreachCopy {
   // Intro paragraph, initial email
   introBrand: string
   introMaker: string
+  // Pro-plan value card (initial email) -- mirrors components/dashboard/
+  // TierUpgradeView.tsx PRO tier exactly, so the email promises precisely
+  // what the website delivers. Kicker ("MOST POPULAR") and price/FREE are
+  // hardcoded in English in outreachEmail.ts, same convention as VELOR and
+  // GLOBAL MARKET -- only the title and feature list need translation.
+  // Optional while translation is in progress: outreachEmail.ts falls back
+  // to English (OUTREACH_COPY.en) for any language missing these yet, so
+  // the card never renders blank.
+  proTitle?: string
+  proFeatures?: [string, string, string, string, string, string]
   // Followup 1 (trust / payments)
   f1Headline: string
   f1Intro: string
@@ -102,7 +112,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     subjectFollowup1: 'How Velor protects your sales — and pays you anywhere in the world',
     subjectFollowup2: 'Last note from Velor — buyers arrive 6 August',
     badge: 'FOUNDING SELLER INVITATION',
-    headline: 'Your country’s shopping channel.<br/>Free to open.',
+    headline: 'We’re a brand-new team,<br/>looking for our founding sellers.',
     greeting: (n) => `Hi ${n},`,
     cta: 'Claim your founding seller spot',
     ctaNote: 'The application takes about five minutes. No card required.',
@@ -114,10 +124,19 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     b4t: 'The founding seller advantage', b4b: 'List before 6 August and you get the founding badge, Pro free for life, and live broadcasting on Velor Live for life — a founding-only perk no standard plan includes.',
     introBrand: 'Velor is brand new — not an established marketplace yet. We open to buyers on <strong style="color:#FFFFFF;">6 August</strong>, and before then we are personally inviting just one founding seller per country to represent it from day one. Every listing carries its country and its maker, and we chose you because your work looks genuinely rooted in yours.',
     introMaker: 'Velor is brand new — we have not opened to buyers yet. We launch on <strong style="color:#FFFFFF;">6 August</strong>, and before then we are inviting one founding maker per country, whose craft carries real origin, to be the first live on day one. We think that could be you.',
+    proTitle: 'Pro plan — free as a founding seller',
+    proFeatures: [
+      '200 active product listings',
+      'Free custom storefront',
+      'Priority placement in search',
+      'AI-powered listing optimisation',
+      'Advanced sales analytics',
+      'Dedicated seller support',
+    ],
     f1Headline: 'The part most marketplaces get wrong: getting you paid.',
-    f1Intro: 'Following up on our invitation. Before you decide, here is exactly how selling on Velor works — because trust should run both ways:',
-    f1s1: 'A buyer anywhere in the world orders — checkout is handled by Stripe, in their currency.',
-    f1s2: 'The money is held safely in escrow while you ship — no chargeback roulette.',
+    f1Intro: 'Following up on our invitation. Before you decide, here is exactly how selling on Velor will work once we launch — because trust should run both ways:',
+    f1s1: 'A buyer anywhere in the world will order — checkout handled by Stripe, in their currency.',
+    f1s2: 'Their money will be held safely in escrow while you ship — no chargeback roulette.',
     f1s3: 'Delivery confirmed → your share is released to your bank, via Stripe or Payoneer, wherever you are.',
     f1s4: 'You keep 85% on the free plan — more on paid tiers. No sale, no fee. Ever.',
     f2Line1: 'Last note from us, as promised. Velor opens to buyers on <strong style="color:#FFFFFF;">6 August</strong>, and listing stays free — no fees unless you sell.',

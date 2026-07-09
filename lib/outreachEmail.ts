@@ -46,7 +46,12 @@ function h(text: string) {
     .replace(/"/g, '&quot;')
 }
 
-const OUTREACH_HEADER = `<div style='background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
+// Badge sits in its own row above the ident bar so it never collides with
+// the "VELOR / SHOPPING CHANNEL" text underneath it.
+const OUTREACH_HEADER = `<div style='background:#141414;padding:14px 14px 0;text-align:right;'>
+  <span style='display:inline-block;background:linear-gradient(135deg,#3DDC97,#1FAE7A);color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;box-shadow:0 2px 8px rgba(0,0,0,0.35);'>GLOBAL MARKET</span>
+</div>
+<div style='background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;margin-top:10px;'>
   <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
   <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>SHOPPING CHANNEL</span>
 </div>`
@@ -65,6 +70,32 @@ function benefitRow(title: string, body: string) {
     <td width='36' valign='top' style='padding-top:2px;'><div style='width:26px;height:26px;border-radius:6px;background:#2A1A0A;color:#FF6B00;font-weight:800;font-size:14px;text-align:center;line-height:26px;'>&#10003;</div></td>
     <td valign='top'><div style='color:#FFFFFF;font-size:14px;font-weight:700;margin-bottom:2px;'>${title}</div><div style='color:#A9A9A9;font-size:13px;line-height:1.6;'>${body}</div></td>
   </tr></table>`
+}
+
+// Pro-plan value card, placed right before the CTA. Mirrors the actual
+// "Pro" tier card in components/dashboard/TierUpgradeView.tsx -- same
+// purple gradient, same "Most popular" kicker, same 6 features and real
+// price (£49/mo, struck through) -- so the email promises exactly what
+// the website delivers, not a made-up summary. Falls back to English
+// copy for any language not yet translated (see OutreachCopy.proTitle).
+function proPlanCard(c: { proTitle?: string; proFeatures?: string[] }): string {
+  const title = c.proTitle || OUTREACH_COPY.en.proTitle
+  const features = c.proFeatures && c.proFeatures.length ? c.proFeatures : OUTREACH_COPY.en.proFeatures!
+  const featureRows = features
+    .map(
+      (f) =>
+        `<tr><td style='color:#EDE9FE;font-size:13px;line-height:1.9;padding:2px 0;'><span style='color:#C4B5FD;'>&#10003;</span>&nbsp; ${f}</td></tr>`
+    )
+    .join('')
+  return `<div style='background:linear-gradient(160deg,#7c3aed 0%,#3b1177 100%);border-radius:12px;padding:22px 24px;margin:8px 0 22px;'>
+    <div style='display:inline-block;background:rgba(255,255,255,0.18);color:#FFFFFF;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:5px 12px;border-radius:100px;margin-bottom:14px;'>MOST POPULAR</div>
+    <div style='color:#FFFFFF;font-size:16px;font-weight:800;margin-bottom:10px;'>${title}</div>
+    <div style='margin-bottom:14px;'>
+      <span style='color:rgba(255,255,255,0.55);font-size:14px;text-decoration:line-through;'>&pound;49/mo</span>
+      <span style='color:#FFFFFF;font-size:14px;font-weight:800;margin-left:10px;'>FREE</span>
+    </div>
+    <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>${featureRows}</table>
+  </div>`
 }
 
 // The language promise -- rendered as a distinct panel so it reads as a
@@ -124,8 +155,11 @@ export function buildOutreachEmail(d: {
 
   if (emailType === 'initial') {
     const intro = isBrand ? c.introBrand : c.introMaker
+    // No hotlinked stock photo -- a plain gradient strip instead. A hotlinked
+    // image can render as a broken-image icon in some viewers/clients, which
+    // is confusing next to the logo; a CSS gradient always renders.
     body = `
-      <img src='https://images.pexels.com/photos/35509025/pexels-photo-35509025.jpeg?auto=compress&cs=tinysrgb&w=1200' width='600' alt='A market of real makers, the kind of place Velor sellers come from' style='display:block;width:100%;max-width:600px;height:auto;border:0;' />
+      <div style='height:64px;background:linear-gradient(100deg,#2A1505 0%,#0D0D0D 70%);'></div>
       <div style='padding:32px;'>
         <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
@@ -133,10 +167,15 @@ export function buildOutreachEmail(d: {
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${intro}</p>
         <div style='border-top:1px solid #2A2A2A;padding-top:20px;margin-bottom:8px;'>
           ${benefitRow(c.b1t, c.b1b)}
-          ${benefitRow(c.b2t, c.b2b)}
-          ${benefitRow(c.b3t, c.b3b)}
           ${benefitRow(c.b4t, c.b4b)}
         </div>
+        <!-- b2 (commission/free plan) and b3 (escrow payout) are deliberately
+             not shown here: William flagged them as wrong or irrelevant for a
+             founding-tier invitation -- b2's 12% is the Starter rate, not the
+             founding Pro rate, and b3 describes live payout mechanics that
+             don't apply before launch. Fields stay in outreachI18n.ts for any
+             non-founding context that may use them later. -->
+        ${proPlanCard(c)}
         ${cta(c.cta)}
         <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
         ${languagePanel(c.languagePromise)}
