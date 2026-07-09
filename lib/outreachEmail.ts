@@ -82,11 +82,11 @@ function colorBlock(bg: string, extra: string, inner: string): string {
 const GLOBAL_MARKET_BADGE = `<table role='presentation' align='right' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#1FAE7A' style='background-color:#1FAE7A;background:linear-gradient(135deg,#3DDC97,#1FAE7A);color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;'>GLOBAL MARKET</td></tr></table>`
 
 const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
-  <tr><td bgcolor='#141414' align='right' style='background:#141414;padding:14px 14px 0;text-align:right;'>
+  <tr><td bgcolor='#141414' align='right' style='background-color:#141414;background:#141414;padding:14px 14px 0;text-align:right;'>
     ${GLOBAL_MARKET_BADGE}
   </td></tr>
-  <tr><td bgcolor='#141414' style='background:#141414;height:10px;line-height:10px;font-size:0;'>&nbsp;</td></tr>
-  <tr><td bgcolor='#0D0D0D' style='background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
+  <tr><td bgcolor='#141414' style='background-color:#141414;background:#141414;height:10px;line-height:10px;font-size:0;'>&nbsp;</td></tr>
+  <tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
     <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
     <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>SHOPPING CHANNEL</span>
   </td></tr>
@@ -97,7 +97,7 @@ const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cell
 function outreachFooter(name: string, platform: string, unsubUrl: string) {
   const inner = `<p style='color:#666666;font-size:12px;line-height:1.6;margin:0 0 8px;'>Velor Commerce Ltd &middot; a global online marketplace &middot; velorcommerce.store</p>
     <p style='color:#666666;font-size:12px;line-height:1.6;margin:0;'>You received this because ${h(name)} appeared on a public ${h(platform)} listing. Not interested? <a href='${unsubUrl}' style='color:#FF6B00;text-decoration:underline;'>Unsubscribe</a> &mdash; one click and we will not contact you again.</p>`
-  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background:#0D0D0D;padding:20px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
+  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;padding:20px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
 }
 
 // No icon column -- William's approved reference (saved 2026-07-09,
@@ -141,7 +141,7 @@ function proPlanCard(c: { proTitle?: string; proFeatures?: string[]; proCommissi
 // The language promise -- rendered as a distinct panel so it reads as a
 // commitment rather than a footnote. This is the selling point.
 function languagePanel(text: string) {
-  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:22px 0 0;'><tr><td bgcolor='#0D0D0D' style='background:#0D0D0D;border:1px solid #2A2A2A;border-left:3px solid #FF6B00;border-radius:0 8px 8px 0;padding:14px 16px;'>
+  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:22px 0 0;'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;border:1px solid #2A2A2A;border-left:3px solid #FF6B00;border-radius:0 8px 8px 0;padding:14px 16px;'>
     <div style='color:#EAEAEA;font-size:13px;line-height:1.6;'>${text}</div>
   </td></tr></table>`
 }
@@ -149,8 +149,8 @@ function languagePanel(text: string) {
 // Bulletproof button: bgcolor on the <td> guarantees the orange fill in
 // Outlook even if the <a>'s own CSS background is ignored.
 function ctaButton(url: string, label: string): string {
-  return `<table role='presentation' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#FF6B00' style='background:#FF6B00;border-radius:8px;'>
-    <a href='${url}' style='display:inline-block;background:#FF6B00;color:#0D0D0D;font-size:15px;font-weight:800;text-decoration:none;padding:14px 34px;border-radius:8px;font-family:Arial,Helvetica,sans-serif;'>${label}</a>
+  return `<table role='presentation' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#FF6B00' style='background-color:#FF6B00;background:#FF6B00;border-radius:8px;'>
+    <a href='${url}' style='display:inline-block;background-color:#FF6B00;background:#FF6B00;color:#0D0D0D;font-size:15px;font-weight:800;text-decoration:none;padding:14px 34px;border-radius:8px;font-family:Arial,Helvetica,sans-serif;'>${label}</a>
   </td></tr></table>`
 }
 
@@ -199,9 +199,9 @@ export function buildOutreachEmail(d: {
   // Gmail/Apple Mail's automatic dark-mode colour inversion from fighting a
   // design that is intentionally, permanently dark rather than adapting to
   // the recipient's light/dark preference.
-  const wrapOpen = `<!DOCTYPE html><html dir='${dir}' lang='${lang}'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><meta name='color-scheme' content='dark'><meta name='supported-color-schemes' content='dark'><title></title></head><body style='margin:0;padding:0;background:#0D0D0D;' bgcolor='#0D0D0D'>
-<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='background:#0D0D0D;'><tr><td bgcolor='#0D0D0D' align='center' style='background:#0D0D0D;padding:24px 0;font-family:Arial,Helvetica,sans-serif;'>
-<table role='presentation' width='600' border='0' cellpadding='0' cellspacing='0' style='width:600px;max-width:600px;'><tr><td bgcolor='#141414' style='background:#141414;border:1px solid #2A2A2A;border-radius:12px;overflow:hidden;text-align:${align};' dir='${dir}'>
+  const wrapOpen = `<!DOCTYPE html><html dir='${dir}' lang='${lang}'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><meta name='color-scheme' content='dark'><meta name='supported-color-schemes' content='dark'><title></title></head><body style='margin:0;padding:0;background-color:#0D0D0D;background:#0D0D0D;' bgcolor='#0D0D0D'>
+<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='background-color:#0D0D0D;background:#0D0D0D;'><tr><td bgcolor='#0D0D0D' align='center' style='background-color:#0D0D0D;background:#0D0D0D;padding:24px 0;font-family:Arial,Helvetica,sans-serif;'>
+<table role='presentation' width='600' border='0' cellpadding='0' cellspacing='0' style='width:600px;max-width:600px;'><tr><td bgcolor='#141414' style='background-color:#141414;background:#141414;border:1px solid #2A2A2A;border-radius:12px;overflow:hidden;text-align:${align};' dir='${dir}'>
 ${OUTREACH_HEADER}`
   const wrapClose = `${outreachFooter(p.name, p.platform, unsub)}
 </td></tr></table>
@@ -219,7 +219,7 @@ ${OUTREACH_HEADER}`
     body = `
       <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' height='64' style='background-color:#0D0D0D;background:linear-gradient(100deg,#2A1505 0%,#0D0D0D 70%);line-height:64px;font-size:0;'>&nbsp;</td></tr></table>
       <div style='padding:32px;'>
-        <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
+        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
         <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>${c.greeting(h(p.name))}</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${intro}</p>
@@ -244,11 +244,11 @@ ${OUTREACH_HEADER}`
       `<div style='${last ? '' : 'margin-bottom:10px;'}'><span style='color:#FF6B00;font-weight:800;'>${n}.</span>&nbsp; ${text}</div>`
     body = `
       <div style='padding:32px;'>
-        <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
+        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
         <div style='color:#FFFFFF;font-size:24px;font-weight:800;line-height:1.2;margin-bottom:18px;'>${c.f1Headline}</div>
         <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>${c.greeting(h(p.name))}</p>
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 20px;'>${c.f1Intro}</p>
-        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom:22px;'><tr><td bgcolor='#0D0D0D' style='background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:20px 22px;'>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom:22px;'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:20px 22px;'>
           <div style='color:#EAEAEA;font-size:14px;line-height:1.8;'>
             ${step(1, c.f1s1)}
             ${step(2, c.f1s2)}
