@@ -67,7 +67,7 @@ export default function Footer() {
               marginBottom: 24,
               maxWidth: 280,
             }}>
-              The AI-powered global marketplace connecting independent sellers with buyers in 180+ countries.
+              The global marketplace connecting independent sellers with buyers in 180+ countries.
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
               {['Twitter', 'Instagram', 'LinkedIn'].map(s => (
