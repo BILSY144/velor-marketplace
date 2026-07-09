@@ -80,8 +80,23 @@ export async function POST(request: Request): Promise<NextResponse> {
         where: { stripeCustomerId: sub.customer as string },
         select: { id: true },
       });
+      // A founding seller's "Pro, free for life" is a floor, not a
+      // subscription -- it was granted directly (lib/founding.ts), with no
+      // Stripe subscription behind it, specifically so nothing here can ever
+      // charge or downgrade it. This only matters if a founding seller took
+      // out a REAL paid subscription on top (e.g. Enterprise) and that gets
+      // cancelled: they must land back on Pro, never Starter.
       await prisma.seller.updateMany({
-        where: { stripeCustomerId: sub.customer as string },
+        where: { stripeCustomerId: sub.customer as string, foundingBadge: true },
+        data: {
+          tier: 'PRO',
+          stripeSubscriptionId: null,
+          subscriptionStatus: 'cancelled',
+          subscriptionCurrentPeriodEnd: null,
+        },
+      });
+      await prisma.seller.updateMany({
+        where: { stripeCustomerId: sub.customer as string, foundingBadge: false },
         data: {
           tier: 'STARTER',
           stripeSubscriptionId: null,

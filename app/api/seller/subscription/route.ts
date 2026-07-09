@@ -36,7 +36,11 @@ export async function GET() {
   return NextResponse.json({
     tier,
     commissionRate: config.commission,
-    monthlyFee: config.monthlyFee,
+    // A founding seller's Pro tier was granted free (lib/founding.ts) and
+    // has no Stripe subscription behind it -- monthlyFee must read as 0 for
+    // them regardless of what the Pro tier normally costs everyone else.
+    monthlyFee: (seller as any).foundingBadge && tier === 'PRO' ? 0 : config.monthlyFee,
+    foundingBadge: (seller as any).foundingBadge ?? false,
     listingLimit,
     currentListings,
     listingsRemaining,
@@ -61,6 +65,18 @@ export async function POST(req: NextRequest) {
   }
 
   const { action } = await req.json()
+
+  // Defense in depth: the dashboard UI already hides the "Upgrade to Pro"
+  // button once a founding seller is on the Pro tier (isCurrent === true in
+  // TierUpgradeView), but this endpoint must refuse it too -- a founding
+  // seller must never be able to create a real, chargeable Stripe
+  // subscription for a tier they already have free.
+  if (action === 'upgrade_to_pro' && (seller as any).foundingBadge && (seller as any).tier === 'PRO') {
+    return NextResponse.json(
+      { error: 'You already have Pro free as a founding seller — nothing to pay for.' },
+      { status: 400 }
+    )
+  }
 
   if (action === 'upgrade_to_pro' || action === 'upgrade_to_enterprise') {
     const priceId = action === 'upgrade_to_enterprise' ? process.env.STRIPE_ENTERPRISE_PRICE_ID : process.env.STRIPE_PRO_PRICE_ID

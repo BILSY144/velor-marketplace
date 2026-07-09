@@ -7,6 +7,7 @@ interface SubscriptionStatus {
   tier: 'STARTER' | 'PRO' | 'ENTERPRISE'
   commissionRate: number
   monthlyFee: number | null
+  foundingBadge: boolean
   listingLimit: number | null
   currentListings: number
   listingsRemaining: number | null
@@ -40,7 +41,7 @@ const TIERS: Record<TierId, TierDef> = {
     kicker: 'Free forever',
     pitch: '"The easy way to test the water before you dive in."',
     price: 0,
-    commission: 15,
+    commission: 12,
     listingLabel: 'Up to 20 active listings',
     gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)',
     glow: 'rgba(180,180,190,0.18)',
@@ -89,7 +90,7 @@ const TIERS: Record<TierId, TierDef> = {
     name: 'Enterprise',
     kicker: 'High-volume sellers',
     pitch: '"For established brands ready to scale without limits."',
-    price: 199,
+    price: 99,
     commission: 5,
     listingLabel: 'Unlimited active listings',
     gradient: 'linear-gradient(160deg, #f59e0b 0%, #7c2d12 100%)',
@@ -113,15 +114,15 @@ const TIERS: Record<TierId, TierDef> = {
 }
 
 function breakEvenVsStarter(price: number, commission: number): number | null {
-  const delta = (15 - commission) / 100
+  const delta = (12 - commission) / 100
   if (delta <= 0) return null
   return Math.ceil(price / delta)
 }
 
 function CompareModal({ onClose }: { onClose: () => void }) {
   const rows: [string, string, string, string][] = [
-    ['Commission', '15%', '8%', '5%'],
-    ['Monthly fee', 'Free', '£49/mo', '£199/mo'],
+    ['Commission', '12%', '8%', '5%'],
+    ['Monthly fee', 'Free', '£49/mo', '£99/mo'],
     ['Listings', '20', '200', 'Unlimited'],
     ['Custom storefront', '—', 'Free', 'Free'],
     ['Search placement', 'Standard', 'Priority', 'Priority'],
@@ -432,8 +433,13 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
             {isCurrent ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 auto', padding: '13px 20px', borderRadius: '10px', textAlign: 'center', fontWeight: 600, fontSize: '14px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}>
-                  ✔ Your current plan
-                  {status?.currentPeriodEnd && (
+                  {tier.id === 'PRO' && status?.foundingBadge ? '✔ Free for life — your founding-seller perk' : '✔ Your current plan'}
+                  {tier.id === 'PRO' && status?.foundingBadge && (
+                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', fontWeight: 400, marginTop: '2px' }}>
+                      No card, no charge, nothing to cancel
+                    </span>
+                  )}
+                  {!(tier.id === 'PRO' && status?.foundingBadge) && status?.currentPeriodEnd && (
                     <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', fontWeight: 400, marginTop: '2px' }}>
                       {status.subscriptionStatus === 'cancelling' ? 'Moves to Starter on ' : 'Renews '}
                       {new Date(status.currentPeriodEnd).toLocaleDateString()}
@@ -470,7 +476,7 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
                   background: upgrading ? 'var(--border)' : 'var(--accent)', color: '#fff', cursor: upgrading ? 'not-allowed' : 'pointer',
                 }}
               >
-                {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Enterprise — £199/mo`}
+                {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Enterprise — £99/mo`}
               </button>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
