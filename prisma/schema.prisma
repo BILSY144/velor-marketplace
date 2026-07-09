@@ -419,6 +419,14 @@ model SellerProspect {
   sellerType   String
   notes        String?
   status       String        @default("prospected")
+  // AI qualification gate (lib/prospectQualify.ts, app/api/cron/
+  // qualify-prospects). null = not yet screened. Stage 1 of outreach-auto
+  // will only send to qualified === true -- a scout hit is a search-engine
+  // guess, not a verified match, and William's standing rule is that
+  // factory/wholesale/service businesses must never receive outreach.
+  qualified          Boolean?
+  qualificationNotes String?   @db.Text
+  qualifiedAt        DateTime?
   outreachLogs OutreachLog[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

@@ -67,8 +67,12 @@ export async function GET(req: NextRequest) {
   }
 
   // Stage 1: Initial outreach
+  // qualified: true is the AI screening gate (lib/prospectQualify.ts, run by
+  // /api/cron/qualify-prospects) -- a prospect must pass that check before it
+  // is ever allowed to receive the first email. Unscreened (qualified: null)
+  // and rejected (qualified: false) prospects are excluded, never guessed in.
   const newProspects = await prisma.sellerProspect.findMany({
-    where: { email: { not: null }, status: 'prospected', outreachLogs: { none: {} } },
+    where: { email: { not: null }, status: 'prospected', outreachLogs: { none: {} }, qualified: true },
     orderBy: { score: 'desc' },
     take: MAX_PER_RUN,
   });
