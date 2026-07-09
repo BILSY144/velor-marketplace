@@ -75,7 +75,7 @@ const TIERS: Record<TierId, TierDef> = {
       '200 active product listings',
       'Free custom storefront',
       'Priority placement in search',
-      'AI-powered listing optimisation',
+      'Smart listing optimisation',
       'Advanced sales analytics',
       'Dedicated seller support',
     ],
