@@ -109,7 +109,10 @@ Dropping a column drops its data — be careful.
 - Rail is resolved per seller country by `lib/payoutRail.ts`: Stripe Connect
   where supported, Payoneer everywhere else. **The rules are identical on both
   rails** — same delivery requirement, same holds, same dispute freeze.
-- Seller tiers: Starter free / 15% commission, Pro £49 / 8%, Enterprise £199 / 5%.
+- Seller tiers: Starter free / 12% commission, Pro £49 / 8%, Enterprise £99 / 5%
+  (changed from 15% and £199, commit ee7683e, 2026-07-09 — verify against
+  `TIER_CONFIG` in `app/api/seller/subscription/route.ts` before quoting a
+  figure, do not trust this line alone).
 
 ---
 
@@ -164,13 +167,22 @@ Nine agents; the binding constitution is `docs/AGENT_OPERATIONS.md`. Crons in
 | `*/5 * * * *` | `/api/admin/products/auto-moderate` |
 | `15 * * * *` | `/api/cron/review-applications` |
 | `30 * * * *` | `/api/cron/agent-watchdog` |
-| `0 */2 * * *` | `/api/cron/outreach-auto` |
 | `0 */4 * * *` | `/api/cron/release-payouts` |
 | `0 */6 * * *` | `/api/cron/scout-sellers`, `/api/cron/enrich-emails` |
+| `20 */6 * * *` | `/api/cron/qualify-prospects` |
 | `0 6-9 * * *` | `/api/reports/daily` |
 | `0 8 * * *` | `/api/cron/traffic-check` |
 | `0 3 * * *` | `/api/cron/recompute-rankings` |
 | `0 8 * * 1` | `/api/cron/live-usage-check` |
+
+`/api/cron/outreach-auto` is **NOT in this table on purpose** — it is written,
+tested against the preview script, and gated on `qualified: true`, but not
+scheduled. It has been paused since commit aa56838 (2026-07-08) pending
+William's sign-off on the email design; that sign-off landed 2026-07-09
+(commits 945f318 through 5a9d271). Verify the current `vercel.json` before
+assuming this is still true — do not re-add the cron entry or set
+`OUTREACH_ENABLED=true` without asking William first (explicit-permission
+rule: this sends real email to real people).
 
 The watchdog checks outcomes in the database, never an agent's self-reported
 status, and emails breaches immediately.
@@ -181,6 +193,34 @@ unsubscribe honoured immediately. Copy is localised into 19 languages by
 The emails promise the seller can write to Velor in their own language — that
 promise is kept by `LANG_RULE` in `app/api/assistant/chat/route.ts`. Do not
 weaken it.
+
+**AI qualification gate (added 2026-07-09, commit 906c2cc):** `/api/cron/
+qualify-prospects` screens every `SellerProspect` with `qualifyProspect()`
+(`lib/prospectQualify.ts`, a direct Anthropic API call) before it can ever
+receive an email. Verdict and reason are stored on the prospect
+(`qualified`, `qualificationNotes`). `outreach-auto` Stage 1 only sends to
+`qualified: true`. On API/parse failure the prospect is left unscreened
+(`qualified: null`) and retried next run — it never defaults to qualified
+to hit a volume target. This exists because a scout hit is a keyword-search
+guess, not a verified match, and William's standing rule is that factory/
+wholesale/service businesses must never receive outreach.
+
+**Founding-seller enforcement (added 2026-07-09, commits c5840f2/1df089f):**
+perks were pure marketing copy with no backend until this session. Now:
+`Seller.foundingEligible` is set at provisioning time by
+`lib/provisionSeller.ts` (true only if no other founding seller exists yet
+for that country). Perks (`foundingBadge`, Pro tier, `foundingPerksGrantedAt`)
+are granted by `lib/founding.ts`'s `maybeGrantFoundingPerks()`, called from
+`app/api/dashboard/products/route.ts` right after a product is created — so
+being approved is never enough on its own, the seller must list at least one
+product. A founding seller with `foundingBadge: true` and `tier: 'PRO'` is
+charged £0/mo everywhere: `GET /api/seller/subscription` reports
+`monthlyFee: 0` for them, `POST` rejects `upgrade_to_pro` with a 400 if they
+already have it free, and the Stripe `customer.subscription.deleted` webhook
+downgrades non-founding cancellations to STARTER but founding ones stay on
+PRO. `components/dashboard/TierUpgradeView.tsx` labels this state
+"Free for life — your founding-seller perk" so it never looks like a normal
+paid plan a card could be charged against.
 
 ---
 
@@ -223,9 +263,15 @@ Written plainly, per LAW #1.
    viewport and velorcommerce.store blocks iframing.
 6. Shop pagination bug (#239/#280) could not be reproduced on unfiltered pages
    1-3; needs a category spanning multiple pages.
-7. `scout-sellers` queries are still Western-weighted. William wants Eastern
-   and global markets: India, Indonesia, Vietnam, Thailand, Turkey, the
-   Philippines, Eastern Europe, LATAM.
+7. ~~`scout-sellers` queries are still Western-weighted.~~ RETARGETED
+   2026-07-09 (commit 5147259): 30 new craft+country `BRAVE_TARGETS`, an
+   extended blocklist (dhgate, made-in-china, indiamart, globalsources,
+   tradeindia, exportersindia, plus hospitality domains), and country-domain
+   mappings added for MA/JP/PT/MX/PE/GT/IN/GH/UZ/ET/LK/KE/TR/PL. Not
+   independently re-verified this session that it is actually surfacing good
+   prospects in production — the qualification gate (see AGENTS AND CRONS)
+   is the real check on that, once outreach-auto is live and its
+   `qualified`/`qualificationNotes` fields can be read back.
 8. **CJ machinery still in the codebase.** The catalogue was purged on
    2026-07-08 (see checkpoint below) but the nine `app/api/admin/cj-*` routes,
    `lib/cj.ts`, the `cjSourced`/`cjProductId` Product fields, and the one-off
@@ -235,32 +281,179 @@ Written plainly, per LAW #1.
 
 ---
 
-## NEXT STEPS (William's priority order, set 2026-07-08 evening)
+## NEXT STEPS (reprioritized 2026-07-09 — William: "less than a month to pack
+our website with sellers")
 
-1. **Port the new design to the repo.** All seven pages are designed and
+Buyers arrive 6 August 2026. William's stated priority as of this session is
+supply (sellers), not further design work. See SELLER ACQUISITION PLAN below
+for the full plan and the research it is based on; this list is the
+condensed action order.
+
+1. **Ask William to switch on `outreach-auto`.** Everything it needs exists
+   and is deployed: scout-sellers finds prospects, qualify-prospects screens
+   them, outreach-auto sends a 3-touch sequence to `qualified: true`
+   prospects only, in 19 languages, honest about being pre-launch. It is
+   the single highest-leverage action available and is currently OFF. Do
+   not turn it on without William's explicit go-ahead (real emails to real
+   people) — see SELLER ACQUISITION PLAN, step 1.
+2. **Build the lightweight referral flow William floated** ("ask founders
+   to tell their friends"): not yet built. See SELLER ACQUISITION PLAN,
+   step 4, for the minimal version proposed.
+3. **Port the homepage/lattice design to the repo** (carried over from
+   2026-07-08 evening, still not done). All seven pages are designed and
    approved (files in William's Downloads, listed in the design section
    below). Additive Prisma: `Speciality` table with a `kind` field,
    `Product.specialities` array — safe under `prisma db push`, and with the
-   catalogue now at zero there is nothing to backfill. While porting: strip
-   ALL CJ machinery (gap 8), remove the spent `cj-purge-seeded` route, and
-   fix the three hardcoded category lists (homepage tiles, /categories,
-   /apply picker) replaced by the origin x speciality lattice.
-2. **Finish the Payoneer system** (after the design build — William's
-   explicit sequencing). When credentials arrive, William adds
+   catalogue at zero there is nothing to backfill. While porting: strip ALL
+   CJ machinery (gap 8), remove the spent `cj-purge-seeded` route, fix the
+   three hardcoded category lists (homepage tiles, /categories, /apply
+   picker). Lower priority than 1-2 while the clock to 6 August is short —
+   an honest zero-state page converts a real seller; a beautiful page does
+   not recruit one on its own.
+4. **Finish the Payoneer system.** When credentials arrive, William adds
    `PAYONEER_CLIENT_ID`, `PAYONEER_CLIENT_SECRET`, `PAYONEER_PROGRAM_ID`,
    `PAYONEER_API_BASE` to Vercel himself, then sandbox-verify `lib/payoneer.ts`
    before any live payout. Payouts to Monzo. Unlocks the second identity rail
-   for RESTRICTED-jurisdiction sellers — now the only route for real Chinese
-   sellers, which William wants recruited properly.
-3. **Delete Velor's own ID-document storage** (gap 2). Highest standing GDPR
+   for RESTRICTED-jurisdiction sellers — the only route for real Chinese
+   sellers, and for any Starter/Pro-tier country where Stripe Connect does
+   not reach, so it is also a supply-side blocker, not just a payments
+   nice-to-have.
+5. **Delete Velor's own ID-document storage** (gap 2). Highest standing GDPR
    risk; not blocked on anyone.
-4. William to eyeball the 11 amber "Verify clip" mastheads in
+6. Verify the first real Stripe Identity round trip once a seller completes
+   one — will happen naturally once outreach converts anyone.
+7. William to eyeball the 11 amber "Verify clip" mastheads in
    velor-media-manifest.html (two-minute job, all on one page).
-5. Verify the first real Stripe Identity round trip once a seller completes one.
-6. Tune `scout-sellers` for Eastern and global markets.
-7. Look at the site on a real phone.
-8. Optional cleanup: cancel/delete the test order against the REJECTED
+8. Look at the site on a real phone.
+9. Optional cleanup: cancel/delete the test order against the REJECTED
    bracelet product, then hard-delete that last product row.
+
+---
+
+## SELLER ACQUISITION PLAN (2026-07-09 — under 4 weeks to 6 August launch)
+
+William's brief: "less than a month to pack our website with sellers." This
+plan is built on what Velor already has (a lot — most of the hard
+infrastructure exists and is currently sitting switched off) plus outside
+research on how new marketplaces solved the exact same cold-start problem.
+Sources: [Reforge — Beat the Cold Start Problem](https://www.reforge.com/guides/beat-the-cold-start-problem-in-a-marketplace),
+[Andrew Chen on marketplaces (Stripe)](https://stripe.com/guides/atlas/andrew-chen-marketplaces),
+[Sharetribe — e-commerce marketplace guide](https://www.sharetribe.com/how-to-build/e-commerce-marketplace/),
+[CS-Cart — attracting vendors](https://www.cs-cart.com/blog/how-to-attract-sellers-on-your-virtual-multi-vendor-marketplace/),
+[FORKOFF — two-sided marketplace cold start 2026](https://forkoff.xyz/blog/founder-growth/two-sided-marketplace-cold-start-2026).
+
+### The core lesson from the research
+
+Every source agrees on one thing: **supply comes before demand, and it comes
+from manual, personal, founder-level effort at first — not from a bigger ad
+budget.** Andrew Chen: "start with supply, and then demand. Then double down
+to focus on supply, supply, supply." Airbnb's founders personally messaged
+and met Craigslist hosts one at a time before any automation existed.
+Sharetribe's guide puts it plainly: "ten active sellers with full catalogs
+of high-quality items beat 100 ghost sellers with one mediocre product each."
+Velor's founding-seller model (one real seller per country, hand-verified,
+AI-qualified before first contact) already matches this instinct — the job
+now is to point real volume and real founder time at it before 6 August,
+not to change the model.
+
+### Step 1 — Turn on the automated cold-outreach pipeline (today, if William agrees)
+
+This is the single highest-leverage action and it is currently OFF. The full
+pipeline is built and deployed:
+
+- `scout-sellers` (every 6h) finds candidate sellers on Etsy/eBay/etc. by
+  craft+country search, now retargeted globally (gap 7, resolved 2026-07-09).
+- `qualify-prospects` (every 6h, 20 min after scout) screens every candidate
+  with an AI check before it can ever be contacted — rejects factories,
+  wholesalers, service businesses, anything not a genuine independent maker.
+- `outreach-auto` (built, NOT scheduled) sends a 3-touch sequence, max 3
+  emails per prospect, only to `qualified: true` prospects, in the
+  prospect's own language (19 languages), honest that Velor is pre-launch
+  and inviting one founding seller per country, with the real founding perks
+  (Pro free for life, 8% commission, first claim on that country's page).
+
+To turn it on: add `{"path": "/api/cron/outreach-auto", "schedule": "0 */2
+* * *"}` back to `vercel.json`, and set `OUTREACH_ENABLED=true` in Vercel
+(William does this himself, per the standing "never enter secrets" rule —
+this one is a plain env var, not a secret, but the account access is his).
+**This is a real send to real people and needs William's explicit go-ahead
+in chat before any future session flips it on** — do not infer consent from
+this plan existing.
+
+Before flipping it on, worth five minutes: check how many prospects
+`scout-sellers` has actually found and how many `qualify-prospects` has
+marked `qualified: true` so far (`SellerProspect` table). If the number is
+near zero, scout-sellers may need its query list widened before outreach-auto
+has anything to send — this was NOT verified in this session (no live DB
+access from this sandbox).
+
+### Step 2 — Manual, founder-led recruiting in the countries that matter most
+
+The research is unanimous that automation alone does not seed a marketplace
+— Lyft "launched with a few founder-recruited drivers" in every market, and
+Airbnb's founders travelled to meet hosts in person. Velor cannot do
+in-person, but William doing the equivalent — personally DMing 5-10 strong
+Etsy/Instagram sellers per priority country, especially countries with no
+founding seller yet — will convert at a much higher rate than any automated
+email, and costs nothing but time. Pick 10-15 priority countries (mix of
+strong craft traditions and currently-empty founding slots), have William or
+someone on the team personally reach out on Instagram/Etsy messaging using
+the same honest "brand new, one founding seller per country" pitch. This
+should run in parallel with Step 1, not instead of it.
+
+### Step 3 — Community sourcing, not just cold search
+
+`scout-sellers` searches for individual listings. The research also flags a
+channel it does not cover: niche Facebook groups, subreddits, and maker
+directories for handmade/artisan goods, where many real sellers already
+congregate and self-identify as serious about their craft (CS-Cart, Sharetribe).
+This is a manual/semi-manual channel: find 5-10 of the most active
+English-language and non-English-language artisan communities relevant to
+Velor's speciality vocabulary, and post (or have William post) an honest,
+non-spammy founding-seller callout, linking to `/apply/invited` with no
+country param for open discovery. Low engineering cost, needs someone's time
+to actually go find and post in the right groups.
+
+### Step 4 — Referral: build the lightweight version now, not the full dashboard
+
+William floated this on 2026-07-08/09 ("ask founders to tell their friends
+with businesses about us") and it was never built. Given the timeline, build
+the minimal version, not a full referral dashboard:
+
+- Add a `referredBy` field to `Seller` (nullable, self-relation) and a
+  `?ref=<sellerId>` param on `/apply` and `/apply/invited` that sets it on
+  submission.
+- Mention it once, plainly, in the founding-seller perk emails/pages
+  ("know another maker who should see this? forward this email" plus their
+  personal invite link) — no new UI surface needed beyond that.
+- No payout/reward mechanic yet (that is a bigger, riskier build — commission
+  splits, fraud considerations) — the ask right now is awareness, not an
+  incentive program. Revisit a paid referral mechanic after launch if this
+  channel produces real signups.
+
+### Step 5 — Track conversion honestly, not vanity metrics
+
+Per LAW #1, whatever gets reported to William should be the real number of
+sellers who listed at least one product (the actual founding-perk gate,
+`maybeGrantFoundingPerks`), not emails sent or applications started. The
+daily briefing (`/api/reports/daily`) already exists — confirm it reports
+sellers-with-first-listing, not just approved applications, before leaning
+on it as the acquisition dashboard for this push.
+
+### What NOT to do, per standing rules
+
+- Do not lower the qualification bar to hit a volume number — LAW #1 in
+  `lib/prospectQualify.ts` and `lib/sellerApplicationReview.ts` both say
+  reject/hold on doubt, never guess in favour of approval.
+  "Sellers packed onto the site" that are factories or the wrong fit
+  undermines the entire origin/authenticity positioning the redesign spent a
+  full session establishing (see HOMEPAGE REDESIGN section below).
+- Do not increase the 3-email cap or turn off unsubscribe honouring to push
+  more volume — both are standing rules in AGENTS AND CRONS above.
+- Do not promise anything on outreach copy that is not true yet (established
+  platform, existing buyers, free commission) — this session fixed three
+  separate instances of exactly that mistake; see the 2026-07-09 checkpoint
+  below for what they were and why they mattered.
 
 ## TOOLING TRAPS (each of these cost real time)
 
@@ -518,3 +711,67 @@ access gating, Payoneer._
 ## SESSION UPDATE — 2026-07-08 23:19 UTC
 
 Scheduled check-in. No new work since the final 2026-07-08 checkpoint: the repo tip is 36bbfa5, that checkpoint's own CLAUDE.md commit, and no code commits have landed after b3f7ca2 (contact, help, search and footer rebuilt to the channel design standard). Nothing to log this cycle. The remaining work is unchanged: outreach rebuild (template plus maker-only targeting) for sign-off, /origins country pages with researched cultural profiles, PDP, listing form speciality picker, CJ code strip, live access gating for the founding perk, and Payoneer.
+
+---
+
+## CHECKPOINT — 2026-07-09 (pricing, founding-seller enforcement, outreach rebuild)
+
+Long working session, twelve commits (ee7683e through 5a9d271), all pushed and
+live on `main`. In priority order for a returning session:
+
+**Pricing corrected everywhere.** Starter 15%→12% commission, Enterprise
+£199→£99/mo (commit ee7683e). Seven separate files had their own duplicate
+copy of these figures with no single source of truth — all seven were found
+and fixed, including one (`components/dashboard/TierUpgradeView.tsx`) missed
+on the first sweep and only caught while doing unrelated founding-seller
+work. **This duplication is a real maintainability risk that was not fixed,
+only patched** — worth a refactor to a single shared constants file if
+pricing changes again. Do not assume a pricing change is complete after
+editing `TIER_CONFIG` alone; grep for the old figures across the whole repo.
+
+**Founding-seller perks now have real backend enforcement** (previously pure
+marketing copy). Full detail in the AGENTS AND CRONS section above under
+"Founding-seller enforcement" — schema fields, `lib/founding.ts`, and
+un-chargeable-Pro safety checks in the subscription API, the Stripe webhook,
+and the tier-upgrade UI (commits c5840f2, 1df089f).
+
+**Outreach email rebuilt and corrected, all 19 languages.** Three real bugs
+William caught by reading the actual email, each fixed and translated to all
+19 languages the same session:
+
+1. Copy implied Velor was an established platform with existing buyers
+   ("buyers come to Velor specifically looking for..."). Fixed to be upfront
+   that Velor is brand new, pre-launch, inviting exactly one founding seller
+   per country (commit 579ee0b).
+2. The Pro-plan value card promised generic "free" without saying what was
+   free. Rebuilt to mirror the real website Pro card exactly — same 6
+   features, same £49/mo struck through — then a follow-up bug (`FREE` read
+   as if commission were free too) fixed with an explicit "8% commission
+   still applies" line (commits 945f318, 6876e66, plus two translation
+   commits: 121ff5b, 5a9d271).
+3. Two benefit lines were factually wrong for a founding-tier invite (quoted
+   the Starter commission rate, and described live escrow payout mechanics
+   before any buyers exist) — removed rather than patched.
+
+Also this session: `scout-sellers` retargeted for global/craft-specific
+search (gap 7, commit 5147259, not independently re-verified as producing
+good prospects in production); an AI qualification gate added
+(`qualify-prospects` cron + `lib/prospectQualify.ts`, commit 906c2cc) so no
+prospect reaches outreach without being screened as a genuine independent
+maker first; `/apply/invited` built as a dedicated landing page so outreach
+recipients see a personalized congratulations page instead of the general
+apply form (commit 9a6d9ad).
+
+**State at end of session:** `outreach-auto` is fully built, wired to the
+qualification gate, and localized — but still NOT scheduled in
+`vercel.json`. It needs William's explicit go-ahead before any future
+session turns it on, because that is a real send to real people. See
+SELLER ACQUISITION PLAN above — William set a hard deadline this session
+("less than a month to pack our website with sellers" before 6 August) and
+turning this on is the plan's first, highest-leverage step.
+
+Not done this session, still open: the homepage/lattice design port (design
+files complete since 2026-07-08, still not in the repo), Payoneer sandbox
+verification, deleting Velor's own ID-document storage, the referral flow
+William floated (proposed as a small addition in the acquisition plan, not
+built), and everything else still listed in NEXT STEPS above.
