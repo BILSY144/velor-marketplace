@@ -15,7 +15,7 @@
 // No translation API is called; all copy is hand-written in lib/outreachI18n.ts.
 //
 // Every claim remains verifiably true of the live platform: free listing on the
-// Starter plan, 15% commission only on completed sales, 190+ shipping
+// Starter plan, 12% commission only on completed sales, 190+ shipping
 // destinations, live prices in 20 currencies, escrow-protected payments,
 // payouts via Stripe or Payoneer, buyers arrive 6 August 2026. The unsubscribe
 // link is mandatory in every email.
@@ -48,7 +48,7 @@ function h(text: string) {
 
 const OUTREACH_HEADER = `<div style='background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
   <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
-  <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>GLOBAL MARKETPLACE</span>
+  <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>SHOPPING CHANNEL</span>
 </div>`
 
 // The footer stays in English on purpose: it is the compliance/identification
@@ -117,7 +117,7 @@ export function buildOutreachEmail(d: {
   if (emailType === 'initial') {
     const intro = isBrand ? c.introBrand : c.introMaker
     body = `
-      <img src='https://velorcommerce.store/velor-email-hero.jpg' width='600' alt='Velor Global Marketplace' style='display:block;width:100%;max-width:600px;height:auto;border:0;' />
+      <img src='https://images.pexels.com/photos/35509025/pexels-photo-35509025.jpeg?auto=compress&cs=tinysrgb&w=1200' width='600' alt='A market of real makers, the kind of place Velor sellers come from' style='display:block;width:100%;max-width:600px;height:auto;border:0;' />
       <div style='padding:32px;'>
         <div style='display:inline-block;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
         <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>

@@ -4,8 +4,8 @@
 // Every figure on this page must be true of the live platform:
 //   190       = WORLD_COUNTRIES length (same list as /apply and the flag strip)
 //   24h       = APPLICATION_SLA_HOURS, enforced by /api/cron/review-applications
-//   15/8/5%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
-//   GBP 49/199 = Pro/Enterprise subscriptions (CLAUDE.md money rules)
+//   12/8/5%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
+//   GBP 49/99 = Pro/Enterprise subscriptions (CLAUDE.md money rules)
 // The old copy rule stands: do not write a number here that no code backs up.
 //
 // Payout detail policy (William, 2026-07-08): public pages do not state hold
@@ -17,9 +17,9 @@ import Link from 'next/link'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
 const TIERS = [
-  { name: 'Starter', sub: 0, com: 0.15, fee: 'Free · 15% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
+  { name: 'Starter', sub: 0, com: 0.12, fee: 'Free · 12% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
   { name: 'Pro', sub: 49, com: 0.08, fee: '£49 / month · 8% commission', meta: 'Pays for itself past £700 a month. Free for life for founding sellers.' },
-  { name: 'Enterprise', sub: 199, com: 0.05, fee: '£199 / month · 5% commission', meta: 'For brands and wholesalers moving serious volume. Pays for itself past £5,000 a month.' },
+  { name: 'Enterprise', sub: 99, com: 0.05, fee: '£99 / month · 5% commission', meta: 'For brands and wholesalers moving serious volume. Pays for itself past £5,000 a month.' },
 ]
 
 const css = `

@@ -14,7 +14,7 @@ interface PayoutRecord {
 
 const payoutHistory: PayoutRecord[] = [];
 
-const COMMISSION: Record<string, number> = { STARTER: 15, PRO: 8, ENTERPRISE: 5 };
+const COMMISSION: Record<string, number> = { STARTER: 12, PRO: 8, ENTERPRISE: 5 };
 
 function StatusBadge({ status }: { status: PayoutRecord['status'] }) {
   const map = {
@@ -112,7 +112,7 @@ function CommissionLadder({ tier, accentColor }: { tier: string; accentColor: st
 
 // Live, honest math — no fabricated sales figures. The seller enters a
 // hypothetical monthly sales volume and instantly sees what they'd pay in
-// commission at their tier vs. what Starter sellers pay at 15%.
+// commission at their tier vs. what Starter sellers pay at 12%.
 function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentColor: string; theme: Parameters<typeof tierCardStyle>[0] }) {
   const [sales, setSales] = useState('1000');
   const parsed = Math.max(0, parseFloat(sales) || 0);
@@ -131,7 +131,7 @@ function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentC
         </h2>
       </div>
       <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4, marginBottom: 18 }}>
-        See what your {COMMISSION[tier]}% rate saves you compared to the Starter 15% rate.
+        See what your {COMMISSION[tier]}% rate saves you compared to the Starter 12% rate.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, alignItems: 'end', flexWrap: 'wrap' }}>
         <div>

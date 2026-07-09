@@ -7,8 +7,8 @@ import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
 
 export const dynamic = 'force-dynamic'
 
-const PLATFORM_COMMISSION_RATE = 0.15
-const TIER_COMMISSION: Record<string, number> = { STARTER: 0.15, PRO: 0.08, ENTERPRISE: 0.05 }
+const PLATFORM_COMMISSION_RATE = 0.12
+const TIER_COMMISSION: Record<string, number> = { STARTER: 0.12, PRO: 0.08, ENTERPRISE: 0.05 }
 
 export async function POST(request: NextRequest) {
   const session = await auth()

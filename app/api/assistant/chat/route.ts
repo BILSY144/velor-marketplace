@@ -9,7 +9,7 @@ ABOUT VELOR:
 Velor is a UK-based online marketplace connecting independent sellers with buyers. Sellers list products, buyers check out through Stripe, and Velor holds funds in escrow until delivery is confirmed before releasing payout to the seller.
 
 SELLER TIERS AND COMMISSION (flat and transparent, no hidden or stacked fees):
-- Starter: free, 15% commission per sale.
+- Starter: free, 12% commission per sale.
 - Pro: 49 GBP per month, 8% commission per sale, plus listing quality suggestions, deeper analytics, and this assistant grounded in the seller's own account data.
 - Enterprise: 199 GBP per month, 5% commission per sale, plus Go Live live-shopping, and this assistant acting as a full dedicated AI account manager with order lookups, drafting, and escalation.
 

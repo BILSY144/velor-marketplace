@@ -1,9 +1,9 @@
 import Link from 'next/link'
 
 const TILES: { id: string; name: string; price: string; blurb: string; gradient: string }[] = [
-  { id: 'starter', name: 'Starter', price: 'Free', blurb: 'Up to 20 listings · 15% commission', gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)' },
+  { id: 'starter', name: 'Starter', price: 'Free', blurb: 'Up to 20 listings · 12% commission', gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)' },
   { id: 'pro', name: 'Pro', price: '£49/mo', blurb: 'Up to 200 listings · 8% commission', gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)' },
-  { id: 'enterprise', name: 'Enterprise', price: '£199/mo', blurb: 'Unlimited listings · 5% commission', gradient: 'linear-gradient(160deg, #f59e0b 0%, #7c2d12 100%)' },
+  { id: 'enterprise', name: 'Enterprise', price: '£99/mo', blurb: 'Unlimited listings · 5% commission', gradient: 'linear-gradient(160deg, #f59e0b 0%, #7c2d12 100%)' },
 ]
 
 export default function UpgradeIndexPage() {

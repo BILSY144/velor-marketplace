@@ -6,7 +6,7 @@ export type AssistantTier = 'STARTER' | 'PRO' | 'ENTERPRISE'
 // place here so the assistant never states a number that could drift from
 // what payouts actually charge.
 export const TIER_COMMISSION: Record<AssistantTier, number> = {
-  STARTER: 0.15,
+  STARTER: 0.12,
   PRO: 0.08,
   ENTERPRISE: 0.05,
 }

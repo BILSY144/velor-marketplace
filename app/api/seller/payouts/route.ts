@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 const TIER_COMMISSION: Record<string, number> = {
-  STARTER:    0.15,
+  STARTER:    0.12,
   PRO:        0.08,
   ENTERPRISE: 0.05,
 }

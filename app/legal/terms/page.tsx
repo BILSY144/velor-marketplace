@@ -22,7 +22,7 @@ export default function TermsPage() {
     },
     {
       title: "6. Platform Fees",
-      body: "Velor charges a platform fee of 15% on each completed sale. This fee is deducted automatically at the time of payment via Stripe Connect. All fees are inclusive of any applicable taxes.",
+      body: "Velor charges a platform fee of 12% on each completed sale. This fee is deducted automatically at the time of payment via Stripe Connect. All fees are inclusive of any applicable taxes.",
     },
     {
       title: "7. Prohibited Items",
