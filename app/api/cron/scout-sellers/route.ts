@@ -2,10 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // ---------------------------------------------------------------------------
-// Global Seller Scout Agent â runs every 6 hours via Vercel Cron
-// Sources: Etsy Â· eBay (multi-market) Â· Google Custom Search Â· Bing Web Search
-// Scouts ALL sellers â individual makers, small businesses, and large brands â
-// across every major market worldwide. NEVER fabricates data.
+// Global Seller Scout Agent -- runs every 6 hours via Vercel Cron
+// Sources: Etsy, eBay (multi-market), Google Custom Search, Bing Web Search,
+//          Brave Search
+//
+// REBUILT 2026-07-08 (William): Velor recruits real makers of authentic
+// CULTURAL goods -- country + maker on every listing -- never factory /
+// dropship product lines and never service businesses (hotels, restaurants,
+// agencies, tours, clinics...). Every target below is a craft + country
+// query tied to the six culture-reel categories on the homepage (Ceramics &
+// porcelain, Rugs/cloth & thread, The world's kitchen, Adornment, Tea/
+// coffee & pantry, Light/scent & self) and to lib/specialities.ts. Coverage
+// is weighted toward the Global South and East per standing instruction --
+// Morocco, Turkey, India, Peru, Mexico, Vietnam, Thailand, Indonesia, Ghana,
+// Ethiopia, Uzbekistan, Nepal, Ecuador, Sri Lanka, Kenya -- alongside a few
+// Western craft traditions that are equally origin-specific (Japan, Italy,
+// Portugal, Poland, Greece). Every Google/Bing query gets a shared negative
+// suffix (see NEGATIVE_SUFFIX below) that excludes marketplaces, B2B
+// wholesale directories, AND service/hospitality businesses. NEVER fabricates
+// data.
 // ---------------------------------------------------------------------------
 
 interface ProspectCandidate {
@@ -47,42 +62,79 @@ interface BingSearchResponse { webPages?: { value?: BingWebPage[] }; }
 
 // ââ Etsy search targets (global â all niches, all sizes) âââââââââââââââââââââ
 const ETSY_TARGETS = [
-  { keywords: 'handmade jewellery silver gold artisan', category: 'Jewellery' },
-  { keywords: 'luxury jewellery brand fine jewelry', category: 'Jewellery' },
-  { keywords: 'crystal gemstone healing jewellery', category: 'Jewellery' },
-  { keywords: 'resin jewellery handmade art', category: 'Jewellery' },
-  { keywords: 'handmade home decor ceramics pottery', category: 'Home & Living' },
-  { keywords: 'luxury candles wax melt scented gift', category: 'Home & Living' },
-  { keywords: 'handmade wooden accessories homeware', category: 'Home & Living' },
-  { keywords: 'macrame wall art textile decor', category: 'Home & Living' },
-  { keywords: 'stained glass art window panel', category: 'Art & Prints' },
-  { keywords: 'art prints illustration watercolour', category: 'Art & Prints' },
-  { keywords: 'hand painted original artwork', category: 'Art & Prints' },
-  { keywords: 'pressed flower botanical art', category: 'Art & Prints' },
-  { keywords: 'leather accessories handmade bag wallet', category: 'Accessories' },
-  { keywords: 'enamel pin badge art accessory', category: 'Accessories' },
-  { keywords: 'personalised gifts engraved custom name', category: 'Gifts' },
-  { keywords: 'natural skincare organic handmade soap', category: 'Beauty' },
-  { keywords: 'handmade bath beauty gift set luxury', category: 'Beauty' },
-  { keywords: 'vintage accessories antique jewellery', category: 'Vintage' },
-  { keywords: 'hand embroidery textile hoop art', category: 'Art & Prints' },
-  { keywords: 'glass bead jewellery handmade lampwork', category: 'Jewellery' },
+  // Ceramics & porcelain
+  { keywords: 'moroccan tagine pottery handmade ceramic', category: 'Ceramics & porcelain' },
+  { keywords: 'talavera pottery mexican handmade ceramic', category: 'Ceramics & porcelain' },
+  { keywords: 'japanese kintsugi ceramic pottery handmade', category: 'Ceramics & porcelain' },
+  { keywords: 'turkish iznik ceramic tile handmade', category: 'Ceramics & porcelain' },
+  { keywords: 'polish boleslawiec pottery stoneware handmade', category: 'Ceramics & porcelain' },
+  { keywords: 'vietnamese lacquerware handmade bowl tray', category: 'Ceramics & porcelain' },
+  { keywords: 'portuguese azulejo tile handmade ceramic', category: 'Ceramics & porcelain' },
+  // Rugs, cloth & thread
+  { keywords: 'turkish kilim rug handwoven vintage wool', category: 'Rugs, cloth & thread' },
+  { keywords: 'moroccan berber rug handwoven wool authentic', category: 'Rugs, cloth & thread' },
+  { keywords: 'peruvian alpaca poncho scarf handwoven', category: 'Rugs, cloth & thread' },
+  { keywords: 'ghana kente cloth handwoven authentic', category: 'Rugs, cloth & thread' },
+  { keywords: 'uzbek ikat silk fabric handwoven suzani', category: 'Rugs, cloth & thread' },
+  { keywords: 'indonesian batik handmade fabric authentic', category: 'Rugs, cloth & thread' },
+  { keywords: 'indian block print handmade textile natural dye', category: 'Rugs, cloth & thread' },
+  { keywords: 'japanese furoshiki fabric handmade cotton', category: 'Rugs, cloth & thread' },
+  { keywords: 'guatemalan huipil textile handwoven maya', category: 'Rugs, cloth & thread' },
+  // The world's kitchen
+  { keywords: 'japanese hand forged kitchen knife artisan', category: "The world's kitchen" },
+  { keywords: 'turkish copper cookware handmade artisan', category: "The world's kitchen" },
+  { keywords: 'mexican molcajete stone handmade', category: "The world's kitchen" },
+  { keywords: 'moroccan tagine cooking pot ceramic handmade', category: "The world's kitchen" },
+  { keywords: 'ethiopian jebena coffee pot handmade clay', category: "The world's kitchen" },
+  // Adornment
+  { keywords: 'indian brass jewellery handmade artisan', category: 'Adornment' },
+  { keywords: 'moroccan berber silver jewellery handmade', category: 'Adornment' },
+  { keywords: 'peruvian silver filigree jewellery handmade', category: 'Adornment' },
+  { keywords: 'turkish evil eye nazar jewellery handmade', category: 'Adornment' },
+  { keywords: 'baltic amber jewellery handmade poland', category: 'Adornment' },
+  { keywords: 'maasai beaded jewellery handmade kenya', category: 'Adornment' },
+  { keywords: 'indian kundan jewellery handmade traditional', category: 'Adornment' },
+  // Tea, coffee & pantry
+  { keywords: 'japanese matcha tea ceremony handmade set', category: 'Tea, coffee & pantry' },
+  { keywords: 'turkish tea glass handmade copper set', category: 'Tea, coffee & pantry' },
+  { keywords: 'ethiopian coffee ceremony set handmade', category: 'Tea, coffee & pantry' },
+  { keywords: 'moroccan mint tea set handmade silver', category: 'Tea, coffee & pantry' },
+  { keywords: 'sri lanka ceylon tea handmade artisan', category: 'Tea, coffee & pantry' },
+  // Light, scent & self
+  { keywords: 'moroccan argan oil handmade cosmetic natural', category: 'Light, scent & self' },
+  { keywords: 'moroccan mosaic lamp handmade lantern brass', category: 'Light, scent & self' },
+  { keywords: 'handmade incense india natural artisan', category: 'Light, scent & self' },
+  { keywords: 'ghana shea butter handmade natural artisan', category: 'Light, scent & self' },
 ];
 
 // ââ eBay search targets âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const EBAY_TARGETS = [
-  { query: 'handmade jewellery silver artisan gold', categoryId: '10968', category: 'Jewellery' },
-  { query: 'luxury jewellery brand fine necklace bracelet', categoryId: '10968', category: 'Jewellery' },
-  { query: 'handmade ceramic pottery vase homeware', categoryId: '870', category: 'Home & Living' },
-  { query: 'luxury scented candle gift set premium', categoryId: '116722', category: 'Home & Living' },
-  { query: 'vintage leather bag handbag designer', categoryId: '169291', category: 'Accessories' },
-  { query: 'original art print illustration painting', categoryId: '550', category: 'Art & Prints' },
-  { query: 'natural organic skincare handmade beauty', categoryId: '26395', category: 'Beauty' },
-  { query: 'personalised engraved custom gift premium', categoryId: '16', category: 'Gifts' },
-  { query: 'vintage antique jewellery brooch pin collectible', categoryId: '48579', category: 'Vintage' },
-  { query: 'handmade textile knitwear accessories luxury', categoryId: '15724', category: 'Accessories' },
-  { query: 'crystal gemstone jewellery healing stone', categoryId: '10968', category: 'Jewellery' },
-  { query: 'woodwork handmade home decor gift artisan', categoryId: '183446', category: 'Home & Living' },
+  // NOTE: category IDs are best-effort (Pottery & Glass 870, Jewelry &
+  // Watches 10968, Home & Garden 11700, Kitchen Dining & Bar 20625, Health &
+  // Beauty 26395) -- verify against eBay's Taxonomy API before this cron
+  // runs against production credentials.
+  { query: 'moroccan tagine handmade ceramic pottery', categoryId: '870', category: 'Ceramics & porcelain' },
+  { query: 'talavera pottery mexican handmade', categoryId: '870', category: 'Ceramics & porcelain' },
+  { query: 'japanese kintsugi pottery handmade', categoryId: '870', category: 'Ceramics & porcelain' },
+  { query: 'turkish iznik ceramic tile handmade', categoryId: '870', category: 'Ceramics & porcelain' },
+  { query: 'polish boleslawiec pottery stoneware handmade', categoryId: '870', category: 'Ceramics & porcelain' },
+  { query: 'turkish kilim rug handwoven vintage wool', categoryId: '11700', category: 'Rugs, cloth & thread' },
+  { query: 'moroccan berber rug handwoven wool', categoryId: '11700', category: 'Rugs, cloth & thread' },
+  { query: 'peruvian alpaca poncho scarf handwoven', categoryId: '11700', category: 'Rugs, cloth & thread' },
+  { query: 'ghana kente cloth authentic handwoven', categoryId: '11700', category: 'Rugs, cloth & thread' },
+  { query: 'indonesian batik handmade fabric authentic', categoryId: '11700', category: 'Rugs, cloth & thread' },
+  { query: 'japanese hand forged kitchen knife artisan', categoryId: '20625', category: "The world's kitchen" },
+  { query: 'turkish copper cookware handmade artisan', categoryId: '20625', category: "The world's kitchen" },
+  { query: 'mexican molcajete stone handmade', categoryId: '20625', category: "The world's kitchen" },
+  { query: 'moroccan tagine cooking pot ceramic', categoryId: '20625', category: "The world's kitchen" },
+  { query: 'indian brass jewelry handmade artisan', categoryId: '10968', category: 'Adornment' },
+  { query: 'moroccan berber silver jewelry handmade', categoryId: '10968', category: 'Adornment' },
+  { query: 'peruvian silver filigree jewelry handmade', categoryId: '10968', category: 'Adornment' },
+  { query: 'turkish evil eye nazar jewelry handmade', categoryId: '10968', category: 'Adornment' },
+  { query: 'baltic amber jewelry handmade poland', categoryId: '10968', category: 'Adornment' },
+  { query: 'ethiopian jebena coffee pot handmade', categoryId: '20625', category: 'Tea, coffee & pantry' },
+  { query: 'moroccan argan oil skincare handmade', categoryId: '26395', category: 'Light, scent & self' },
+  { query: 'moroccan mosaic lantern lamp handmade', categoryId: '11700', category: 'Light, scent & self' },
 ];
 
 // eBay marketplaces to search â global coverage
@@ -97,92 +149,86 @@ const EBAY_MARKETS = [
   { id: 'EBAY_ES', label: 'ES' },
   { id: 'EBAY_NL', label: 'NL' },
   { id: 'EBAY_IE', label: 'IE' },
-  { id: 'EBAY_AT', label: 'AT' },
-  { id: 'EBAY_CH', label: 'CH' },
+  { id: 'EBAY_PL', label: 'PL' },
+  // Weighted East / Global South additions (William, 2026-07-08) -- verify
+  // these marketplace IDs are still current in eBay's Buy API docs.
+  { id: 'EBAY_HK', label: 'HK' },
+  { id: 'EBAY_SG', label: 'SG' },
+  { id: 'EBAY_MY', label: 'MY' },
+  { id: 'EBAY_PH', label: 'PH' },
+  { id: 'EBAY_TH', label: 'TH' },
 ];
 
 // ââ Google search targets âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const GOOGLE_TARGETS = [
-  // UK
-  { query: 'independent handmade jewellery brand uk shop buy', category: 'Jewellery', market: 'uk' },
-  { query: 'luxury handmade candle brand independent uk shop', category: 'Home & Living', market: 'uk' },
-  { query: 'independent natural skincare organic brand uk', category: 'Beauty', market: 'uk' },
-  { query: 'handmade leather goods accessories independent uk brand', category: 'Accessories', market: 'uk' },
-  { query: 'independent art prints illustration studio uk shop', category: 'Art & Prints', market: 'uk' },
-  { query: 'independent personalised gifts brand uk shop online', category: 'Gifts', market: 'uk' },
-  // US
-  { query: 'independent handmade jewelry brand us shop buy online', category: 'Jewellery', market: 'us' },
-  { query: 'small batch luxury candle brand us independent shop', category: 'Home & Living', market: 'us' },
-  { query: 'independent skincare beauty brand us handmade organic', category: 'Beauty', market: 'us' },
-  { query: 'independent art print studio shop us buy', category: 'Art & Prints', market: 'us' },
-  { query: 'handmade accessories leather goods brand shop us', category: 'Accessories', market: 'us' },
-  // Australia
-  { query: 'independent handmade jewellery brand australia shop', category: 'Jewellery', market: 'au' },
-  { query: 'independent artisan brand australia gifts shop buy', category: 'Gifts', market: 'au' },
-  // Europe
-  { query: 'independent handmade jewellery brand europe shop english', category: 'Jewellery', market: 'eu' },
-  { query: 'luxury artisan home decor brand europe independent shop', category: 'Home & Living', market: 'eu' },
-  // Canada
-  { query: 'independent handmade brand canada shop buy online artisan', category: 'Accessories', market: 'ca' },
-  // Shopify stores specifically
-  { query: 'handmade jewellery luxury brand site:myshopify.com OR shopify', category: 'Jewellery', market: 'global' },
-  { query: 'luxury candles accessories brand site:myshopify.com OR shopify', category: 'Home & Living', market: 'global' },
-  { query: 'independent beauty skincare brand site:myshopify.com OR shopify', category: 'Beauty', market: 'global' },
-  // Large brands looking for distribution
-  { query: 'luxury lifestyle brand wholesale stockist independent retailer', category: 'Accessories', market: 'global' },
-  { query: 'artisan food drink gift brand independent online shop', category: 'Gifts', market: 'global' },
-  { query: 'independent vintage accessories shop online buy', category: 'Vintage', market: 'global' },
-  { query: 'ceramic pottery studio independent shop handmade global', category: 'Home & Living', market: 'global' },
-  { query: 'independent illustration art studio print shop buy', category: 'Art & Prints', market: 'global' },
-  { query: 'premium wellness beauty brand independent online shop', category: 'Beauty', market: 'global' },
-  // Middle East
-  { query: 'independent luxury jewellery brand dubai uae shop buy online', category: 'Jewellery', market: 'ae' },
-  { query: 'artisan home decor luxury brand middle east dubai shop buy', category: 'Home & Living', market: 'ae' },
-  // Asia-Pacific
-  { query: 'independent handmade jewellery brand singapore shop buy online', category: 'Jewellery', market: 'sg' },
-  { query: 'independent luxury accessories brand japan shop buy english', category: 'Accessories', market: 'jp' },
-  { query: 'independent artisan gift brand south korea shop buy online', category: 'Gifts', market: 'kr' },
-  { query: 'independent handmade jewellery brand india shop buy online', category: 'Jewellery', market: 'in' },
-  { query: 'independent artisan brand new zealand shop buy online', category: 'Gifts', market: 'nz' },
-  { query: 'independent luxury accessories brand hong kong shop buy', category: 'Accessories', market: 'hk' },
-  // Latin America
-  { query: 'independent handmade jewellery brand brazil shop buy online', category: 'Jewellery', market: 'br' },
-  { query: 'independent artisan accessories brand mexico shop buy online', category: 'Accessories', market: 'mx' },
-  // Africa
-  { query: 'independent handmade jewellery brand south africa shop buy', category: 'Jewellery', market: 'za' },
-  // Named EU markets (more precise targeting than generic 'europe')
-  { query: 'unabhaengige Schmuckmarke handgefertigt shop online kaufen', category: 'Jewellery', market: 'de' },
-  { query: 'marque bijoux artisanale independante boutique en ligne', category: 'Jewellery', market: 'fr' },
-  { query: 'independent luxury home decor brand netherlands shop buy', category: 'Home & Living', market: 'nl' },
-  { query: 'independent artisan jewellery brand italy shop buy online', category: 'Jewellery', market: 'it' },
+  // Ceramics & porcelain
+  { query: 'handmade moroccan tagine artisan ceramic shop buy', category: 'Ceramics & porcelain', market: 'ma' },
+  { query: 'talavera pottery artisan workshop mexico shop buy', category: 'Ceramics & porcelain', market: 'mx' },
+  { query: 'independent turkish iznik ceramic tile artisan shop', category: 'Ceramics & porcelain', market: 'tr' },
+  { query: 'japanese pottery kintsugi artisan studio shop buy', category: 'Ceramics & porcelain', market: 'jp' },
+  { query: 'polish boleslawiec pottery artisan shop buy online', category: 'Ceramics & porcelain', market: 'pl' },
+  { query: 'vietnamese lacquerware artisan workshop shop buy', category: 'Ceramics & porcelain', market: 'vn' },
+  // Rugs, cloth & thread
+  { query: 'turkish kilim rug weaver artisan shop buy online', category: 'Rugs, cloth & thread', market: 'tr' },
+  { query: 'moroccan berber rug weaver cooperative shop buy', category: 'Rugs, cloth & thread', market: 'ma' },
+  { query: 'peruvian alpaca weaver artisan cooperative shop buy', category: 'Rugs, cloth & thread', market: 'pe' },
+  { query: 'ghana kente cloth weaver artisan shop buy authentic', category: 'Rugs, cloth & thread', market: 'gh' },
+  { query: 'uzbek ikat suzani textile artisan shop buy', category: 'Rugs, cloth & thread', market: 'uz' },
+  { query: 'indonesian batik artisan workshop shop buy authentic', category: 'Rugs, cloth & thread', market: 'id' },
+  { query: 'indian block print textile artisan shop buy natural dye', category: 'Rugs, cloth & thread', market: 'in' },
+  // The world's kitchen
+  { query: 'japanese hand forged knife blacksmith shop buy', category: "The world's kitchen", market: 'jp' },
+  { query: 'turkish copper cookware artisan workshop shop buy', category: "The world's kitchen", market: 'tr' },
+  { query: 'mexican molcajete stone carver artisan shop buy', category: "The world's kitchen", market: 'mx' },
+  // Adornment
+  { query: 'indian brass jewellery artisan workshop shop buy', category: 'Adornment', market: 'in' },
+  { query: 'moroccan berber silver jewellery artisan shop buy', category: 'Adornment', market: 'ma' },
+  { query: 'peruvian silver filigree jewellery artisan shop buy', category: 'Adornment', market: 'pe' },
+  { query: 'turkish evil eye jewellery artisan shop buy handmade', category: 'Adornment', market: 'tr' },
+  { query: 'baltic amber jewellery artisan shop buy poland', category: 'Adornment', market: 'pl' },
+  { query: 'maasai beadwork jewellery artisan shop buy kenya', category: 'Adornment', market: 'ke' },
+  // Tea, coffee & pantry
+  { query: 'ethiopian coffee ceremony jebena artisan shop buy', category: 'Tea, coffee & pantry', market: 'et' },
+  { query: 'japanese matcha tea artisan producer shop buy', category: 'Tea, coffee & pantry', market: 'jp' },
+  { query: 'sri lanka ceylon tea estate small batch shop buy', category: 'Tea, coffee & pantry', market: 'lk' },
+  { query: 'turkish delight artisan producer shop buy authentic', category: 'Tea, coffee & pantry', market: 'tr' },
+  // Light, scent & self
+  { query: 'moroccan argan oil cooperative artisan shop buy', category: 'Light, scent & self', market: 'ma' },
+  { query: 'moroccan mosaic lantern artisan workshop shop buy', category: 'Light, scent & self', market: 'ma' },
+  { query: 'ghana shea butter cooperative artisan shop buy', category: 'Light, scent & self', market: 'gh' },
+  // Broader craft-cooperative / global searches
+  { query: 'artisan cooperative handmade export shop buy fair trade', category: 'Adornment', market: 'global' },
+  { query: 'independent ceramic studio artisan potter shop buy', category: 'Ceramics & porcelain', market: 'global' },
+  { query: 'handwoven textile artisan cooperative shop buy global', category: 'Rugs, cloth & thread', market: 'global' },
 ];
 
 // ââ Bing search targets (complementary â different phrasing to surface new sellers) ââ
 const BING_TARGETS = [
-  // Wholesale and B2B brands
-  { query: 'handmade jewellery brand wholesale trade stockist wanted', category: 'Jewellery' },
-  { query: 'luxury candle brand uk wholesale trade stockist', category: 'Home & Living' },
-  { query: 'artisan skincare beauty brand wholesale uk trade', category: 'Beauty' },
-  { query: 'handmade accessories leather brand wholesale trade', category: 'Accessories' },
-  // Social commerce
-  { query: 'handmade jewellery brand instagram shop link bio buy', category: 'Jewellery' },
-  { query: 'small business handmade gifts uk buy instagram shop', category: 'Gifts' },
-  { query: 'independent art prints shop buy online artist', category: 'Art & Prints' },
-  // Global markets
-  { query: 'handmade jewellery artisan brand online store worldwide shipping', category: 'Jewellery' },
-  { query: 'independent homeware decor brand global shipping buy', category: 'Home & Living' },
-  { query: 'artisan food gift brand luxury uk online buy', category: 'Gifts' },
-  // More niches
-  { query: 'handmade glass art studio shop buy online', category: 'Art & Prints' },
-  { query: 'independent luxury home fragrance brand online shop', category: 'Home & Living' },
-  { query: 'crystal mineral gemstone shop independent brand buy', category: 'Jewellery' },
-  { query: 'vintage antique shop online buy independent', category: 'Vintage' },
-  { query: 'sustainable eco brand accessories gifts handmade shop', category: 'Gifts' },
-  { query: 'handmade ceramic tableware pottery brand shop buy', category: 'Home & Living' },
-  { query: 'independent wellbeing wellness brand uk shop buy', category: 'Beauty' },
-  { query: 'luxury stationery paper goods independent brand shop', category: 'Gifts' },
-  { query: 'handmade resin art jewellery home decor shop', category: 'Art & Prints' },
-  { query: 'artisan woodwork furniture accessories brand buy online', category: 'Home & Living' },
+  // Craft cooperatives seeking export / global buyers -- a genuine positive
+  // signal for makers who ship internationally, distinct from western
+  // wholesale-brand searches.
+  { query: 'moroccan artisan cooperative handmade export wholesale', category: 'Light, scent & self' },
+  { query: 'peruvian alpaca weaver cooperative export wholesale handmade', category: 'Rugs, cloth & thread' },
+  { query: 'turkish kilim rug weaver export wholesale handmade', category: 'Rugs, cloth & thread' },
+  { query: 'indian block print textile artisan export wholesale', category: 'Rugs, cloth & thread' },
+  { query: 'ghana kente cloth weaver export wholesale handmade', category: 'Rugs, cloth & thread' },
+  // Social-commerce discovery (same craft/country pairing)
+  { query: 'moroccan tagine ceramic artisan instagram shop buy', category: 'Ceramics & porcelain' },
+  { query: 'turkish evil eye jewellery artisan instagram shop buy', category: 'Adornment' },
+  { query: 'peruvian silver filigree jewellery artisan instagram shop', category: 'Adornment' },
+  { query: 'japanese pottery kintsugi artisan instagram shop buy', category: 'Ceramics & porcelain' },
+  { query: 'ethiopian coffee ceremony jebena artisan shop buy online', category: 'Tea, coffee & pantry' },
+  // Global-shipping independent craft shops
+  { query: 'handmade ceramic pottery artisan online store worldwide shipping', category: 'Ceramics & porcelain' },
+  { query: 'handwoven rug textile artisan online store worldwide shipping', category: 'Rugs, cloth & thread' },
+  { query: 'artisan jewellery handmade online store worldwide shipping origin', category: 'Adornment' },
+  { query: 'vietnamese lacquerware artisan shop buy online', category: 'Ceramics & porcelain' },
+  { query: 'indonesian batik artisan shop buy online authentic', category: 'Rugs, cloth & thread' },
+  { query: 'uzbek ikat suzani textile artisan shop buy online', category: 'Rugs, cloth & thread' },
+  { query: 'nepali copper singing bowl artisan shop buy online', category: "The world's kitchen" },
+  { query: 'ecuadorian panama hat weaver artisan shop buy online', category: 'Adornment' },
+  { query: 'georgian felt wool artisan shop buy online handmade', category: 'Rugs, cloth & thread' },
+  { query: 'moroccan zellige tile artisan workshop shop buy online', category: 'Ceramics & porcelain' },
 ];
 // ââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -209,7 +255,24 @@ const WEB_EXCLUDED_DOMAINS = [
   'youtube.com', 'twitter.com', 'x.com', 'wikipedia.org', 'trustpilot.com',
   'notonthehighstreet.com', 'folksy.com', 'depop.com', 'vinted.co.uk',
   'bing.com', 'google.com', 'gov.uk', 'bbc.co.uk', 'theguardian.com',
+  // B2B wholesale / factory directories -- not real single-maker storefronts
+  'alibaba.com', 'aliexpress.com', 'dhgate.com', 'made-in-china.com',
+  'indiamart.com', 'globalsources.com', 'tradeindia.com', 'exportersindia.com',
+  // Hospitality / service businesses -- outreach must never hit these
+  'booking.com', 'tripadvisor.com', 'expedia.com', 'airbnb.com', 'opentable.com',
+  'yelp.com',
 ];
+
+// Appended to every Google/Bing query on top of any per-target exclusions.
+// William, 2026-07-08: outreach was hitting "a lot of service based
+// companies" -- this excludes hospitality/service businesses and B2B
+// wholesale/factory directories at the query level, not just post-hoc via
+// WEB_EXCLUDED_DOMAINS, so those results never get fetched in the first place.
+const NEGATIVE_SUFFIX =
+  ' -wholesale -factory -manufacturer -supplier -"trade only" -hotel -restaurant' +
+  ' -tour -booking -consulting -agency -salon -clinic -rental -tripadvisor' +
+  ' -site:etsy.com -site:ebay.com -site:amazon.com -site:pinterest.com' +
+  ' -site:alibaba.com -site:dhgate.com';
 
 function isExcluded(displayLink: string): boolean {
   const domain = displayLink.replace(/^www\./, '');
@@ -329,6 +392,11 @@ async function scoutEbay(
             : market.id === 'EBAY_IT' ? 'ebay.it'
             : market.id === 'EBAY_ES' ? 'ebay.es'
             : market.id === 'EBAY_CA' ? 'ebay.ca'
+            : market.id === 'EBAY_PL' ? 'ebay.pl'
+            : market.id === 'EBAY_HK' ? 'ebay.com.hk'
+            : market.id === 'EBAY_MY' ? 'ebay.com.my'
+            : market.id === 'EBAY_PH' ? 'ebay.ph'
+            : market.id === 'EBAY_TH' ? 'ebay.co.th'
             : 'ebay.com';
           candidates.push({
             name: seller.username,
@@ -364,7 +432,7 @@ async function scoutGoogle(
       const url = new URL('https://www.googleapis.com/customsearch/v1');
       url.searchParams.set('key', apiKey);
       url.searchParams.set('cx', cx);
-      url.searchParams.set('q', target.query + ' -site:etsy.com -site:ebay.com -site:amazon.com -site:pinterest.com');
+      url.searchParams.set('q', target.query + NEGATIVE_SUFFIX);
       url.searchParams.set('num', '10');
       const res = await fetch(url.toString(), { next: { revalidate: 0 } });
       if (!res.ok) { errors.push(`Google "${target.query}": HTTP ${res.status}`); continue; }
@@ -405,7 +473,7 @@ async function scoutBing(
   for (const target of BING_TARGETS) {
     try {
       const url = new URL('https://api.bing.microsoft.com/v7.0/search');
-      url.searchParams.set('q', target.query + ' -site:etsy.com -site:ebay.com -site:amazon.com');
+      url.searchParams.set('q', target.query + NEGATIVE_SUFFIX);
       url.searchParams.set('count', '20');
       url.searchParams.set('responseFilter', 'Webpages');
       const res = await fetch(url.toString(), {
@@ -442,51 +510,36 @@ async function scoutBing(
 
 // -- Brave Search: compliant independent-seller discovery (Shopify / DTC stores) --
 const BRAVE_TARGETS: Array<{ query: string; category: string }> = [
-  { query: '"powered by Shopify" fitness equipment store', category: 'Fitness & Gym' },
-  { query: 'independent home gym equipment online store', category: 'Fitness & Gym' },
-  { query: '"proudly powered by WooCommerce" fitness gear', category: 'Fitness & Gym' },
-  { query: '"powered by Shopify" electronics gadgets store', category: 'Electronics' },
-  { query: 'independent tech accessories brand online shop', category: 'Electronics' },
-  { query: '"proudly powered by WooCommerce" electronics store', category: 'Electronics' },
-  { query: '"powered by Shopify" home decor store', category: 'Home & Garden' },
-  { query: 'independent garden outdoor living brand shop', category: 'Home & Garden' },
-  { query: '"proudly powered by WooCommerce" homeware store', category: 'Home & Garden' },
-  { query: '"powered by Shopify" outdoor gear store', category: 'Sports & Outdoors' },
-  { query: 'independent camping hiking equipment brand shop', category: 'Sports & Outdoors' },
-  { query: 'sports equipment online store independent', category: 'Sports & Outdoors' },
-  { query: 'independent skincare brand online shop', category: 'Beauty & Health' },
-  { query: '"powered by Shopify" natural beauty cosmetics store', category: 'Beauty & Health' },
-  { query: 'independent wellness supplements online store', category: 'Beauty & Health' },
-  { query: '"powered by Shopify" toys and games store', category: 'Toys & Games' },
-  { query: 'independent board games brand online shop', category: 'Toys & Games' },
-  { query: 'educational toys online store independent', category: 'Toys & Games' },
-  { query: '"powered by Shopify" car accessories store', category: 'Automotive' },
-  { query: 'independent auto parts online shop', category: 'Automotive' },
-  { query: 'motorbike accessories online store independent', category: 'Automotive' },
-  { query: '"powered by Shopify" handmade jewellery store', category: 'Jewellery & Watches' },
-  { query: 'independent watch brand online shop', category: 'Jewellery & Watches' },
-  { query: 'artisan jewellery online store independent', category: 'Jewellery & Watches' },
-  { query: '"powered by Shopify" baby products store', category: 'Baby & Kids' },
-  { query: 'independent kids nursery brand online shop', category: 'Baby & Kids' },
-  { query: 'baby accessories online store independent', category: 'Baby & Kids' },
-  { query: 'independent pet supplies online store', category: 'Pet Supplies' },
-  { query: '"powered by Shopify" pet accessories store', category: 'Pet Supplies' },
-  { query: 'dog cat products online shop independent', category: 'Pet Supplies' },
-  { query: '"powered by Shopify" independent bookshop store', category: 'Books & Education' },
-  { query: 'independent educational resources online shop', category: 'Books & Education' },
-  { query: 'specialist books online store independent', category: 'Books & Education' },
-  { query: '"powered by Shopify" art supplies store', category: 'Art & Crafts' },
-  { query: 'independent handmade crafts brand shop', category: 'Art & Crafts' },
-  { query: 'craft materials online store independent', category: 'Art & Crafts' },
-  { query: '"powered by Shopify" stationery store', category: 'Office & Stationery' },
-  { query: 'independent office supplies online shop', category: 'Office & Stationery' },
-  { query: 'desk accessories online store independent', category: 'Office & Stationery' },
-  { query: '"powered by Shopify" luggage travel store', category: 'Travel & Luggage' },
-  { query: 'independent travel accessories brand shop', category: 'Travel & Luggage' },
-  { query: 'backpacks bags online store independent', category: 'Travel & Luggage' },
-  { query: '"powered by Shopify" gourmet food store', category: 'Food & Grocery' },
-  { query: 'independent artisan food online shop', category: 'Food & Grocery' },
-  { query: 'specialty grocery online store independent', category: 'Food & Grocery' },
+  { query: '"powered by Shopify" moroccan ceramic tagine artisan store', category: 'Ceramics & porcelain' },
+  { query: '"proudly powered by WooCommerce" japanese pottery artisan shop', category: 'Ceramics & porcelain' },
+  { query: '"powered by Shopify" portuguese hand painted ceramics shop', category: 'Ceramics & porcelain' },
+  { query: '"powered by Shopify" turkish iznik tile ceramics store', category: 'Ceramics & porcelain' },
+  { query: '"powered by Shopify" mexican talavera pottery shop', category: 'Ceramics & porcelain' },
+  { query: '"powered by Shopify" turkish handwoven kilim rug store', category: 'Rugs, cloth & thread' },
+  { query: '"proudly powered by WooCommerce" peruvian alpaca textile shop', category: 'Rugs, cloth & thread' },
+  { query: '"powered by Shopify" moroccan berber rug artisan store', category: 'Rugs, cloth & thread' },
+  { query: '"powered by Shopify" guatemalan handwoven textile shop', category: 'Rugs, cloth & thread' },
+  { query: '"proudly powered by WooCommerce" indian block print textile store', category: 'Rugs, cloth & thread' },
+  { query: '"powered by Shopify" ghanaian kente cloth store', category: 'Rugs, cloth & thread' },
+  { query: '"powered by Shopify" uzbek suzani embroidery shop', category: 'Rugs, cloth & thread' },
+  { query: '"powered by Shopify" japanese matcha tea artisan store', category: "The world's kitchen" },
+  { query: '"proudly powered by WooCommerce" moroccan spice souk shop', category: "The world's kitchen" },
+  { query: '"powered by Shopify" turkish delight artisan food store', category: "The world's kitchen" },
+  { query: '"powered by Shopify" ethiopian coffee roastery shop', category: "The world's kitchen" },
+  { query: '"powered by Shopify" indian handmade jewellery artisan store', category: 'Adornment' },
+  { query: '"proudly powered by WooCommerce" moroccan silver jewellery shop', category: 'Adornment' },
+  { query: '"powered by Shopify" peruvian silver jewellery artisan store', category: 'Adornment' },
+  { query: '"powered by Shopify" kenyan beaded jewellery shop', category: 'Adornment' },
+  { query: '"powered by Shopify" turkish evil eye jewellery store', category: 'Adornment' },
+  { query: '"powered by Shopify" polish amber jewellery artisan shop', category: 'Adornment' },
+  { query: '"powered by Shopify" japanese green tea artisan store', category: 'Tea, coffee & pantry' },
+  { query: '"proudly powered by WooCommerce" sri lankan ceylon tea shop', category: 'Tea, coffee & pantry' },
+  { query: '"powered by Shopify" turkish coffee artisan store', category: 'Tea, coffee & pantry' },
+  { query: '"powered by Shopify" ethiopian single origin coffee shop', category: 'Tea, coffee & pantry' },
+  { query: '"powered by Shopify" moroccan argan oil artisan store', category: 'Light, scent & self' },
+  { query: '"proudly powered by WooCommerce" indian ayurvedic skincare shop', category: 'Light, scent & self' },
+  { query: '"powered by Shopify" ghanaian shea butter artisan store', category: 'Light, scent & self' },
+  { query: '"powered by Shopify" moroccan rose water perfume shop', category: 'Light, scent & self' },
 ];
 
 const BRAVE_BLOCKLIST = [
@@ -494,6 +547,9 @@ const BRAVE_BLOCKLIST = [
   'temu.', 'target.com', 'bestbuy.', 'facebook.', 'instagram.', 'pinterest.',
   'tiktok.', 'youtube.', 'reddit.', 'wikipedia.', 'google.', 'bing.', 'yelp.',
   'trustpilot.', 'www.shopify.com', 'shopify.dev', 'apps.shopify.com',
+  'dhgate.', 'made-in-china.', 'indiamart.', 'globalsources.', 'tradeindia.',
+  'exportersindia.', 'booking.com', 'tripadvisor.', 'expedia.', 'airbnb.',
+  'opentable.',
 ];
 
 function braveCountry(host: string): string | null {
@@ -503,6 +559,20 @@ function braveCountry(host: string): string | null {
   if (host.endsWith('.de')) return 'DE';
   if (host.endsWith('.fr')) return 'FR';
   if (host.endsWith('.ie')) return 'IE';
+  if (host.endsWith('.ma')) return 'MA';
+  if (host.endsWith('.jp')) return 'JP';
+  if (host.endsWith('.pt')) return 'PT';
+  if (host.endsWith('.mx')) return 'MX';
+  if (host.endsWith('.pe')) return 'PE';
+  if (host.endsWith('.gt')) return 'GT';
+  if (host.endsWith('.in')) return 'IN';
+  if (host.endsWith('.gh')) return 'GH';
+  if (host.endsWith('.uz')) return 'UZ';
+  if (host.endsWith('.et')) return 'ET';
+  if (host.endsWith('.lk')) return 'LK';
+  if (host.endsWith('.ke')) return 'KE';
+  if (host.endsWith('.tr')) return 'TR';
+  if (host.endsWith('.pl')) return 'PL';
   return null;
 }
 
@@ -515,7 +585,7 @@ async function scoutBrave(
   for (const target of BRAVE_TARGETS) {
     try {
       const url = new URL('https://api.search.brave.com/res/v1/web/search');
-      url.searchParams.set('q', target.query);
+      url.searchParams.set('q', target.query + NEGATIVE_SUFFIX);
       url.searchParams.set('count', '20');
       const res = await fetch(url.toString(), {
         headers: { 'X-Subscription-Token': apiKey, Accept: 'application/json' },
