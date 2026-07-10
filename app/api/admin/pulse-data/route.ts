@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
         totalSellers,
         pendingSellers,
         pendingApplicationRows,
+        applicationCountryRows,
         newProductsToday,
         newProducts7d,
         newProducts30d,
@@ -122,17 +123,25 @@ export async function GET(request: NextRequest) {
         prisma.seller.count(),
         prisma.seller.count({ where: { approved: false } }),
         prisma.sellerApplication.findMany({
-                where: { status: 'PENDING' },
                 select: {
                           id: true,
                           businessName: true,
                           contactName: true,
                           contactEmail: true,
                           country: true,
+                          status: true,
                           verificationStatus: true,
                           createdAt: true,
+                          reviewedAt: true,
                 },
-                orderBy: { createdAt: 'asc' },
+                orderBy: { createdAt: 'desc' },
+                take: 100,
+        }),
+        prisma.sellerApplication.groupBy({
+                by: ['country'],
+                _count: { country: true },
+                orderBy: { _count: { country: 'desc' } },
+                take: 20,
         }),
         prisma.product.count({ where: { createdAt: { gte: midnightUTC } } }),
         prisma.product.count({ where: { createdAt: { gte: day7 } } }),
@@ -215,16 +224,19 @@ export async function GET(request: NextRequest) {
   }))
   const agentStatusBreakdown24h = agentLogByStatus24h.map((row) => ({ status: row.status, count: row._count.status }))
 
-  const pendingApplications = pendingApplicationRows.map((a) => ({
+  const applications = pendingApplicationRows.map((a) => ({
         id: a.id,
         businessName: a.businessName,
         contactName: a.contactName,
         contactEmail: a.contactEmail,
         country: a.country || 'Not provided',
+        status: a.status,
         verificationStatus: a.verificationStatus,
         createdAt: a.createdAt.toISOString(),
+        reviewedAt: a.reviewedAt ? a.reviewedAt.toISOString() : null,
         daysPending: Math.floor((now.getTime() - a.createdAt.getTime()) / (24 * 60 * 60 * 1000)),
   }))
+  const applicationsByCountry = applicationCountryRows.map((row) => ({ country: row.country || 'Not provided', count: row._count.country }))
 
   const body = {
         generatedAt: now.toISOString(),
@@ -244,7 +256,8 @@ export async function GET(request: NextRequest) {
                           last30d: newSellers30d,
                           totalSellers: totalSellers,
                                                           pendingApproval: pendingSellers,
-                          applications: pendingApplications,
+                          applications: applications,
+                                                          applicationsByCountry: applicationsByCountry,
                 },
         },
         listings: {

@@ -26,10 +26,13 @@ type PulseData = {
         contactName: string
         contactEmail: string
         country: string
+        status: string
         verificationStatus: string
         createdAt: string
+        reviewedAt: string | null
         daysPending: number
       }[]
+      applicationsByCountry: { country: string; count: number }[]
     }
   }
   listings: {
@@ -222,34 +225,51 @@ export default function PulsePage() {
         <StatRow label="Pending approval" value={data.signups.sellers.pendingApproval} highlight />
       </Section>
 
-      <Section title="PENDING SELLER APPLICATIONS">
+      <Section title="SELLER APPLICATIONS">
+        <div style={styles.subheading}>Applicants by country (all time)</div>
+        {data.signups.sellers.applicationsByCountry.length === 0 ? (
+          <div style={styles.smallMuted}>No applications yet.</div>
+        ) : (
+          data.signups.sellers.applicationsByCountry.map((c) => (
+            <StatRow key={c.country} label={c.country} value={c.count} small />
+          ))
+        )}
+        <div style={styles.subheading}>Most recent applications</div>
         {data.signups.sellers.applications.length === 0 ? (
-          <div style={styles.smallMuted}>No applications waiting on a decision.</div>
+          <div style={styles.smallMuted}>No applications yet.</div>
         ) : (
           data.signups.sellers.applications.map((a) => {
             const createdMs = new Date(a.createdAt).getTime()
-            const hoursPending = (Date.now() - createdMs) / (1000 * 60 * 60)
-            const deadline = new Date(createdMs + 24 * 60 * 60 * 1000)
-            const overdue = Date.now() > deadline.getTime()
-            const escalated = !overdue && hoursPending > 12
-            const pendingLabel =
-              hoursPending < 24
-                ? hoursPending.toFixed(1) + 'h pending'
-                : Math.floor(hoursPending / 24) + 'd ' + Math.round(hoursPending % 24) + 'h pending'
             const fmt = (d: Date) =>
               d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            const fmtSpan = (hrs: number) =>
+              hrs < 24 ? hrs.toFixed(1) + 'h' : Math.floor(hrs / 24) + 'd ' + Math.round(hrs % 24) + 'h'
+            let badgeLabel = ''
+            let badgeColor = '#4dd88a'
+            let timescaleLabel = ''
+            if (a.status === 'APPROVED') {
+              badgeLabel = 'SUCCESS'
+              badgeColor = '#4dd88a'
+              const decidedMs = a.reviewedAt ? new Date(a.reviewedAt).getTime() : null
+              timescaleLabel = decidedMs ? 'Approved in ' + fmtSpan((decidedMs - createdMs) / (1000 * 60 * 60)) : 'Approved'
+            } else if (a.status === 'REJECTED') {
+              badgeLabel = 'REJECTED'
+              badgeColor = '#ff4d4d'
+              const decidedMs = a.reviewedAt ? new Date(a.reviewedAt).getTime() : null
+              timescaleLabel = decidedMs ? 'Decided in ' + fmtSpan((decidedMs - createdMs) / (1000 * 60 * 60)) : 'Rejected'
+            } else {
+              const hoursPending = (Date.now() - createdMs) / (1000 * 60 * 60)
+              const overdue = hoursPending > 24
+              const escalated = !overdue && hoursPending > 12
+              badgeLabel = overdue ? 'OVERDUE' : escalated ? 'ESCALATED' : 'PENDING'
+              badgeColor = overdue ? '#ff4d4d' : escalated ? '#ff7a1a' : '#f2c94c'
+              timescaleLabel = fmtSpan(hoursPending) + ' pending (24h SLA)'
+            }
             return (
               <div key={a.id} style={styles.appCard}>
                 <div style={styles.appCardTop}>
                   <span style={styles.appName}>{a.businessName}</span>
-                  <span
-                    style={{
-                      ...styles.appBadge,
-                      color: overdue ? '#ff4d4d' : escalated ? '#ff7a1a' : '#4dd88a',
-                    }}
-                  >
-                    {overdue ? 'OVERDUE' : escalated ? 'ESCALATED' : 'ON TRACK'}
-                  </span>
+                  <span style={{ ...styles.appBadge, color: badgeColor }}>{badgeLabel}</span>
                 </div>
                 <div style={styles.appMeta}>
                   {a.country} &middot; {a.verificationStatus.replace(/_/g, ' ')}
@@ -258,7 +278,7 @@ export default function PulsePage() {
                   {a.contactName} &middot; {a.contactEmail}
                 </div>
                 <div style={styles.smallMuted}>
-                  Submitted {fmt(new Date(a.createdAt))} &middot; {pendingLabel} &middot; decision due {fmt(deadline)}
+                  Submitted {fmt(new Date(a.createdAt))} &middot; {timescaleLabel}
                 </div>
               </div>
             )
