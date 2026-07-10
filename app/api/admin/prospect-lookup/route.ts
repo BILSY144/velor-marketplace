@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   const prospects = await prisma.sellerProspect.findMany({
     where: { email: { in: emails } },
-    include: { outreachLogs: { orderBy: { createdAt: 'asc' } } },
+    include: { outreachLogs: { orderBy: { sentAt: 'asc' } } },
   })
 
   const foundEmails = new Set(prospects.map((p) => p.email))
