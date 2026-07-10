@@ -16,7 +16,12 @@ export async function GET() {
     take: 50,
   })
 
-  return NextResponse.json({ tier: seller.tier, liveKitReady: liveKitConfigured(), streams })
+  return NextResponse.json({
+    tier: seller.tier,
+    canGoLive: seller.tier === 'ENTERPRISE' || seller.foundingBadge,
+    liveKitReady: liveKitConfigured(),
+    streams,
+  })
 }
 
 export async function POST(req: Request) {
@@ -26,8 +31,12 @@ export async function POST(req: Request) {
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
-  if (seller.tier !== 'ENTERPRISE') {
-    return NextResponse.json({ error: 'Live Shopping is an Enterprise-tier feature. Upgrade to Enterprise to go live.' }, { status: 403 })
+  // Enterprise sellers get Live Shopping by tier. Founding sellers get it as
+  // part of the founding-perk bundle (William's decision, 2026-07-10) even
+  // though founding.ts only ever moves them onto the Pro tier -- foundingBadge
+  // is the flag to check here, not tier.
+  if (seller.tier !== 'ENTERPRISE' && !seller.foundingBadge) {
+    return NextResponse.json({ error: 'Live Shopping is an Enterprise-tier feature. Upgrade to Enterprise to go live -- or unlock it free as a Founding Seller.' }, { status: 403 })
   }
 
   if (!liveKitConfigured()) {

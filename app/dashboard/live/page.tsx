@@ -18,6 +18,7 @@ type Stream = {
 export default function GoLivePage() {
   const [loading, setLoading] = useState(true)
   const [tier, setTier] = useState<string | null>(null)
+  const [canGoLive, setCanGoLive] = useState(false)
   const [liveKitReady, setLiveKitReady] = useState(true)
   const [streams, setStreams] = useState<Stream[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -41,6 +42,7 @@ export default function GoLivePage() {
         const prodData = await prodRes.json()
         if (liveRes.ok) {
           setTier(liveData.tier)
+          setCanGoLive(!!liveData.canGoLive)
           setLiveKitReady(liveData.liveKitReady)
           setStreams(liveData.streams || [])
           const active = (liveData.streams || []).find((s: Stream) => s.status === 'LIVE' || s.status === 'SCHEDULED')
@@ -117,7 +119,7 @@ export default function GoLivePage() {
     return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: dark }}>Loading Live Shopping...</div>
   }
 
-  if (tier !== 'ENTERPRISE') {
+  if (!canGoLive) {
     return (
       <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: '48px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 520, textAlign: 'center', background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 40 }}>
