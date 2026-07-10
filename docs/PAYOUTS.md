@@ -1,6 +1,16 @@
 # Velor Marketplace — Payout Escrow (LOCKED SPEC)
 
-Status: FINAL and DEPLOYED 2026-07-03, amended 2026-07-06 (see below). Commit 1e72cec + shipping-model amendment. Do not re-litigate; changes require an explicit new decision from William.
+Status: FINAL and DEPLOYED 2026-07-03, amended 2026-07-06 and 2026-07-10 (see below). Commit 1e72cec + shipping-model amendment + trusted-graduation amendment. Do not re-litigate; changes require an explicit new decision from William.
+
+## AMENDMENT — 2026-07-10 (Faster graduation to trusted: 5 orders / 14 days, was 10 / 30)
+
+**Decision:** William asked whether the 15-day probation hold was normal (benchmarked against eBay 30 days, Etsy 14-20 days, Depop up to 10 days for new sellers — Velor's 15 days sits inside that range, not an outlier) and wanted a fairer solution for sellers without reopening risk. Probation hold (15 days) and trusted hold (72 hours) are UNCHANGED — the 15-day probation hold still exactly matches the fixed 15-day buyer return window, which is the whole point of that number and must not be shortened on its own (would create a window where a new, unproven seller is paid before a legitimate return can still be filed).
+
+**What changed:** the bar to graduate off probation into the 72-hour trusted tier is now 5+ delivered orders and a 14+ day old account (was 10 orders / 30 days), still requiring zero unresolved disputes or returns. This shortens the typical time to fast payouts for legitimately good sellers from roughly a month to about two weeks, while leaving the return-window-aligned protection for day-one sellers exactly as it was.
+
+**Files touched by this amendment:** `lib/payouts.ts` (`TRUSTED_MIN_DELIVERED` 10 to 5, `TRUSTED_MIN_AGE_MS` 30 days to 14 days).
+
+---
 
 ## AMENDMENT — 2026-07-06 (Velor never buys shipping labels — zero platform capital)
 
@@ -33,7 +43,7 @@ Protect the platform from being out of pocket for refunds/chargebacks **or for s
 
 ## Graduation to trusted (automatic)
 
-ALL of: 10+ delivered orders, account age 30+ days, and zero unresolved disputes or returns across their orders.
+ALL of: 5+ delivered orders, account age 14+ days, and zero unresolved disputes or returns across their orders. (Lowered from 10 orders / 30 days on 2026-07-10 — see amendment above.)
 
 ## Freeze on issues
 
