@@ -7,14 +7,14 @@ export const PROBATION_HOLD_MS = 15 * 24 * 60 * 60 * 1000 // 15 days
 export const TRUSTED_HOLD_MS = 72 * 60 * 60 * 1000 // 72 hours
 
 // Graduation to "trusted": clean track record.
-export const TRUSTED_MIN_DELIVERED = 10
-export const TRUSTED_MIN_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+export const TRUSTED_MIN_DELIVERED = 5
+export const TRUSTED_MIN_AGE_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
 
 // A return/dispute counts as OPEN (blocks payout) unless it is in a resolved state.
 export const RESOLVED_RETURN = ['RESOLVED', 'REJECTED', 'CLOSED', 'COMPLETED', 'REFUNDED', 'DENIED', 'APPROVED']
 export const RESOLVED_DISPUTE = ['RESOLVED', 'CLOSED', 'WON', 'LOST']
 
-// A seller graduates off probation with 10+ delivered orders, a 30+ day old
+// A seller graduates off probation with 5+ delivered orders, a 14+ day old
 // account, and zero unresolved disputes/returns across their orders.
 export async function isSellerTrusted(sellerId: string): Promise<boolean> {
   const seller = await prisma.seller.findUnique({
