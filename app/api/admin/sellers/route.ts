@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
       user: {
         select: { id: true, name: true, email: true, createdAt: true },
       },
+      products: { select: { id: true, title: true, category: true, status: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
