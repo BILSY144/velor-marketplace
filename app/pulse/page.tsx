@@ -109,7 +109,7 @@ export default function PulsePage() {
           <p style={styles.unlockText}>Enter your admin token to unlock the dashboard.</p>
           <input
             id="pulse-token-input"
-            type="password"
+            type="text" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true"
             style={styles.input}
             placeholder="Admin token"
             onKeyDown={(e) => {
