@@ -4,19 +4,12 @@ import {
   createShippoShipment, buildParcelFromItems, sortRatesGlobal,
   ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
-import { checkFreight } from '@/lib/cj'
 
 export const dynamic = 'force-dynamic'
 
 // No DEFAULT_ORIGIN. Every seller must have a ShippingProfile with their real dispatch address.
 // A seller without a shipping profile is skipped with a warning -- we never invent an origin.
 //
-// CJ-sourced items are a separate case: CJ dropships directly from China (or
-// their nearest warehouse) to the buyer, so there is no Velor/seller
-// ShippingProfile involved at all. Real cost and delivery time for those
-// items come from CJ's own freightCalculate API (checkFreight in lib/cj.ts),
-// keyed by the buyer's real destination country and the specific variant
-// (vid) they picked -- never hardcoded.
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,16 +73,6 @@ export async function POST(request: NextRequest) {
       isFallback: boolean
     }> | null = null
 
-    // Parses CJ's 'logisticAging' string (e.g. '7-12 days', '10 days') into
-    // a single worst-case day count. Never guess a number if CJ gave us a
-    // real range -- take the upper bound so we never under-promise.
-    function parseAgingDays(aging: string | undefined): number {
-      if (!aging) return 15
-      const nums = aging.match(/\d+/g)
-      if (!nums || nums.length === 0) return 15
-      return Math.max(...nums.map(Number))
-    }
-
     for (const [sellerId, items] of sellerGroups) {
       try {
         if (sellerId === '__unknown__') {
@@ -107,79 +90,18 @@ export async function POST(request: NextRequest) {
         }
 
         const itemProductIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
-        const cjProducts = itemProductIds.length
+        const productDims = itemProductIds.length
           ? await prisma.product.findMany({
               where: { id: { in: itemProductIds } },
               select: {
-                id: true, cjSourced: true, cjVid: true,
-                weightGrams: true, lengthCm: true, widthCm: true,
+                id: true,                 weightGrams: true, lengthCm: true, widthCm: true,
                 heightCm: true, price: true, originCountry: true,
               },
             })
           : []
-        const productMap = new Map(cjProducts.map((pr) => [pr.id, pr]))
-        const allCjSourced = cjProducts.length > 0 && cjProducts.every((pr) => pr.cjSourced)
+        const productMap = new Map(productDims.map((pr) => [pr.id, pr]))
 
-        // -------------------------------------------------------------
-        // CJ-sourced items: real per-destination freight from CJ's own
-        // freightCalculate API. Cost and delivery time genuinely differ
-        // by destination country and by which variant (vid) was chosen --
-        // never a flat 'free' or a flat day count.
-        // -------------------------------------------------------------
-        if (allCjSourced) {
-          const lines: Array<{ amount: number; days: number; carrier: string }> = []
-          const missingFor: string[] = []
-
-          for (const item of items as Array<{ productId: string; quantity?: number; vid?: string }>) {
-            const pr = productMap.get(item.productId)
-            const vid = item.vid || pr?.cjVid
-            if (!vid) { missingFor.push(item.productId); continue }
-            try {
-              const options = await checkFreight(vid, item.quantity || 1, shippingAddress.country, 'CN')
-              if (!options || options.length === 0) { missingFor.push(item.productId); continue }
-              // CJ returns several logistics channels per variant -- take
-              // the cheapest real option, not just the first in the array.
-              const cheapest = [...options].sort((a, b) => a.logisticPrice - b.logisticPrice)[0]
-              lines.push({
-                amount: cheapest.logisticPrice,
-                days: parseAgingDays(cheapest.logisticAging),
-                carrier: cheapest.logisticName || 'CJ Logistics',
-              })
-            } catch (freightErr) {
-              console.warn('[shipping/rates] checkFreight failed for vid', vid, freightErr)
-              missingFor.push(item.productId)
-            }
-          }
-
-          if (lines.length > 0 && missingFor.length === 0) {
-            const totalAmount = lines.reduce((s, l) => s + l.amount, 0)
-            const maxDays = Math.max(...lines.map((l) => l.days))
-            const carrierNames = Array.from(new Set(lines.map((l) => l.carrier)))
-            const cjRate = {
-              rateId: 'cj-real-' + sellerId,
-              carrier: carrierNames.length === 1 ? carrierNames[0] : 'CJ Dropshipping',
-              service: 'International Delivery',
-              amount: totalAmount.toFixed(2),
-              currency: 'USD',
-              estimatedDays: maxDays,
-              isDDP: true,
-              isFallback: false,
-            }
-            combinedRates = combinedRates ? [...combinedRates, cjRate] : [cjRate]
-          } else {
-            // CJ's freight API didn't have a rate for this destination/
-            // variant combination. Be honest about it rather than
-            // guessing -- this should be rare once real vids are wired
-            // through, but destinations CJ genuinely doesn't serve exist.
-            console.warn('[shipping/rates] No CJ freight rate available for seller', sellerId, 'to', shippingAddress.country, 'missing:', missingFor)
-          }
-          continue
-        }
-        // -------------------------------------------------------------
-        // Non-CJ sellers: real Shippo rate from their registered dispatch
-        // address. Unchanged from before, other than the sellerId-based
-        // lookup above.
-        // -------------------------------------------------------------
+        // Real Shippo rate from the seller's registered dispatch address.
         if (!seller.shippingProfile) {
           console.warn('[shipping/rates] Seller has no ShippingProfile, cannot calculate rates:', sellerId)
           continue
