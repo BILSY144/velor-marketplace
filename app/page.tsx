@@ -216,6 +216,10 @@ function flagOf(code: string): string {
 
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
+.vh-annbar{background:var(--accent);color:#0b0b0b;text-align:center;padding:10px 16px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.01em}
+.vh-annbar b{font-weight:700}
+.vh-sellerbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.35);border-radius:12px;padding:16px 20px;margin:0 0 22px;font-size:14px;color:var(--text)}
+.vh-sellerbar span{max-width:60ch;line-height:1.5}
 .vh a{color:inherit;text-decoration:none}
 .vh-wrap{width:100%;margin:0;padding:0 clamp(22px,2.6vw,48px)}
 .vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
@@ -381,6 +385,8 @@ export default function HomePage() {
   return (
     <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      <div className="vh-annbar">Velor opens to buyers on <b>6th August</b> — get ready.</div>
 
       {/* ============ VELOR LIVE — the top of the page ============ */}
       <div className="vh-livesec">
@@ -549,6 +555,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="vh-wrap"><div className="vh-sellerbar"><span>Sellers, join us — apply to list on Velor before we open.</span><Link className="vh-btn" href="/apply">Apply to sell</Link></div></div>
 
       {/* ============ THE 10% — one seller band ============ */}
       <section style={{ paddingBottom: 0 }}>
