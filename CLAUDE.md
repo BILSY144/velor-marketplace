@@ -844,3 +844,19 @@ re-applies the same checkpoint note correctly, with a verified round-trip
 characters). If any future session finds mojibake anywhere in this repo's
 markdown/docs, suspect this same bug class and verify with a proper UTF-8
 decode before trusting what a naive atob() shows.
+
+
+## SELLER PROSPECTING/OUTREACH -- VERIFIED ALREADY CULTURAL-FOCUSED (2026-07-10)
+
+William asked to retool the Prospecting and Outreach agents for cultural/heritage
+sellers (open tasks #250/#251). Read the live code before touching anything -- both
+were already done, from the 2026-07-08/07-09 session:
+
+- Prospecting: app/api/cron/scout-sellers/route.ts was rebuilt 2026-07-08. 30 craft+country BRAVE_TARGETS tied to the six culture-reel homepage categories and lib/specialities.ts, a blocklist for factory/wholesale/dropship domains (dhgate, made-in-china, indiamart, tradeindia, exportersindia, etc), coverage weighted toward the Global South/East. app/api/cron/qualify-prospects/route.ts (backed by lib/prospectQualify.ts) AI-screens every scouted prospect and rejects factory/wholesale/service/unrelated hits before they are ever eligible for outreach.
+- Outreach: lib/outreachEmail.ts plus lib/outreachI18n.ts (2026-07-09, William signed off in chat that day) is a 3-touch sequence localized into 19 languages, resolved from the prospect's country, zero translation-API cost. The copy leans on the real differentiator without needing literal craft/heritage keywords -- e.g. buyers will come to Velor specifically looking for real origin, not anonymous mass-produced goods, and your listing carries your country and your name. outreach-auto cron has been LIVE since 2026-07-09 -- this session did not touch it, per the standing rule above not to re-pause or re-scope outreach without asking William first.
+
+Marked #250 and #251 completed in the task tracker rather than duplicating this
+work. The real open gap is #170: nobody has independently verified in production
+that this pipeline is actually converting (prospected -> contacted -> replied ->
+applied). That needs live DB numbers via ADMIN_SECRET, which this session did not
+have access to.
