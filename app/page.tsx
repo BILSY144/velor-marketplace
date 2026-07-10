@@ -218,8 +218,11 @@ const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
 .vh-annbar{background:var(--accent);color:#0b0b0b;text-align:center;padding:10px 16px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.01em}
 .vh-annbar b{font-weight:700}
-.vh-sellerbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.35);border-radius:12px;padding:16px 20px;margin:0 0 22px;font-size:14px;color:var(--text)}
-.vh-sellerbar span{max-width:60ch;line-height:1.5}
+.vh-sellertop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#0b0b0b;border:2px solid var(--accent);padding:14px 22px;animation:vhPulseGlow 2.2s ease-in-out infinite}
+.vh-sellertop .txt{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;max-width:70ch;line-height:1.5}
+.vh-sellertop .txt b{color:var(--accent)}
+.vh-sellertop .cta{background:var(--accent);color:#0b0b0b;font-weight:700;padding:11px 22px;border-radius:8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;flex-shrink:0}
+@keyframes vhPulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,107,0,.45)}50%{box-shadow:0 0 26px 6px rgba(255,107,0,.6)}}
 .vh a{color:inherit;text-decoration:none}
 .vh-wrap{width:100%;margin:0;padding:0 clamp(22px,2.6vw,48px)}
 .vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
@@ -388,6 +391,8 @@ export default function HomePage() {
 
       <div className="vh-annbar">Velor opens to buyers on <b>6th August</b> — get ready.</div>
 
+      <div className="vh-wrap"><div className="vh-sellertop"><span className="txt">List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</span><Link className="cta" href="/apply">Apply to sell</Link></div></div>
+
       {/* ============ VELOR LIVE — the top of the page ============ */}
       <div className="vh-livesec">
         <div className="vh-wrap">
@@ -555,8 +560,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <div className="vh-wrap"><div className="vh-sellerbar"><span>Sellers, join us — apply to list on Velor before we open.</span><Link className="vh-btn" href="/apply">Apply to sell</Link></div></div>
 
       {/* ============ THE 10% — one seller band ============ */}
       <section style={{ paddingBottom: 0 }}>
