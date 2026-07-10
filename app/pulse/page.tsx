@@ -33,6 +33,17 @@ type PulseData = {
         daysPending: number
       }[]
       applicationsByCountry: { country: string; count: number }[]
+      pendingSignups: {
+        id: string
+        storeName: string
+        contactName: string
+        contactEmail: string
+        country: string
+        tier: string
+        createdAt: string
+        updatedAt: string
+      }[]
+      pendingSignupsByCountry: { country: string; count: number }[]
     }
   }
   listings: {
@@ -223,6 +234,51 @@ export default function PulsePage() {
         <StatRow label="Last 30 days" value={data.signups.sellers.last30d} />
         <StatRow label="Total sellers" value={data.signups.sellers.totalSellers} highlight />
         <StatRow label="Pending approval" value={data.signups.sellers.pendingApproval} highlight />
+      </Section>
+
+      <Section title="PENDING SELLER SIGN-UPS">
+        <div style={styles.smallMuted}>
+          Sellers with approved:false right now &mdash; includes brand-new signups awaiting approval AND any
+          previously-approved seller later suspended or rejected, since Velor doesn't store those as separate states.
+        </div>
+        <div style={styles.subheading}>By country</div>
+        {data.signups.sellers.pendingSignupsByCountry.length === 0 ? (
+          <div style={styles.smallMuted}>None right now.</div>
+        ) : (
+          data.signups.sellers.pendingSignupsByCountry.map((c) => (
+            <StatRow key={c.country} label={c.country} value={c.count} small />
+          ))
+        )}
+        <div style={styles.subheading}>Each seller</div>
+        {data.signups.sellers.pendingSignups.length === 0 ? (
+          <div style={styles.smallMuted}>No pending seller sign-ups.</div>
+        ) : (
+          data.signups.sellers.pendingSignups.map((s) => {
+            const createdMs = new Date(s.createdAt).getTime()
+            const updatedMs = new Date(s.updatedAt).getTime()
+            const fmt = (d: Date) =>
+              d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            const fmtSpan = (hrs: number) =>
+              hrs < 24 ? hrs.toFixed(1) + 'h' : Math.floor(hrs / 24) + 'd ' + Math.round(hrs % 24) + 'h'
+            const waitingHrs = (Date.now() - createdMs) / (1000 * 60 * 60)
+            return (
+              <div key={s.id} style={styles.appCard}>
+                <div style={styles.appCardTop}>
+                  <span style={styles.appName}>{s.storeName}</span>
+                  <span style={{ ...styles.appBadge, color: '#f2c94c' }}>{s.tier}</span>
+                </div>
+                <div style={styles.appMeta}>{s.country}</div>
+                <div style={styles.appMeta}>
+                  {s.contactName} &middot; {s.contactEmail}
+                </div>
+                <div style={styles.smallMuted}>
+                  Signed up {fmt(new Date(s.createdAt))} &middot; waiting {fmtSpan(waitingHrs)}
+                  {updatedMs !== createdMs && <> &middot; last updated {fmt(new Date(s.updatedAt))}</>}
+                </div>
+              </div>
+            )
+          })
+        )}
       </Section>
 
       <Section title="SELLER APPLICATIONS">

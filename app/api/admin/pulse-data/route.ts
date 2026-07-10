@@ -9,11 +9,15 @@ import { convert } from '@/lib/fx'
 // currency the buyer actually paid in.
 //
 // NOTE (added when applications were added below): "pendingApproval" (the
-// Seller table's approved:false count) is structurally always 0 -- Seller
-// rows are only ever created at approval time (lib/provisionSeller.ts), never
-// before. The real pending queue is SellerApplication rows with status
-// 'PENDING'. Both are reported below; do not delete pendingApproval, it is
-// still a valid (if permanently zero) sanity check.
+// Seller table's approved:false count) was once always 0 because Seller rows
+// were only ever created at approval time (lib/provisionSeller.ts). That is
+// no longer true: app/api/admin/sellers/route.ts's PATCH handler sets
+// approved:false for BOTH 'reject' and 'suspend' actions on an existing
+// Seller row, so this count (and pendingSignups below) can include sellers
+// that were previously approved and later suspended/rejected, not just
+// brand-new signups. There is no separate field to tell the two apart --
+// only createdAt/updatedAt are available. The real *application* pending
+// queue is SellerApplication rows with status 'PENDING', reported separately.
 
 function cors() {
     return {
@@ -64,6 +68,8 @@ export async function GET(request: NextRequest) {
         newSellers30d,
         totalSellers,
         pendingSellers,
+        pendingSellerRows,
+        pendingSellerCountryRows,
         pendingApplicationRows,
         applicationCountryRows,
         newProductsToday,
@@ -122,6 +128,26 @@ export async function GET(request: NextRequest) {
         prisma.seller.count({ where: { createdAt: { gte: day30 } } }),
         prisma.seller.count(),
         prisma.seller.count({ where: { approved: false } }),
+        prisma.seller.findMany({
+                where: { approved: false },
+                select: {
+                          id: true,
+                          storeName: true,
+                          country: true,
+                          tier: true,
+                          createdAt: true,
+                          updatedAt: true,
+                          user: { select: { name: true, email: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+        }),
+        prisma.seller.groupBy({
+                by: ['country'],
+                _count: { country: true },
+                where: { approved: false },
+                orderBy: { _count: { country: 'desc' } },
+                take: 20,
+        }),
         prisma.sellerApplication.findMany({
                 select: {
                           id: true,
@@ -238,6 +264,18 @@ export async function GET(request: NextRequest) {
   }))
   const applicationsByCountry = applicationCountryRows.map((row) => ({ country: row.country || 'Not provided', count: row._count.country }))
 
+  const pendingSellerSignups = pendingSellerRows.map((s) => ({
+    id: s.id,
+    storeName: s.storeName,
+    contactName: s.user?.name || 'Not provided',
+    contactEmail: s.user?.email || 'Not provided',
+    country: s.country || 'Not provided',
+    tier: s.tier,
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+  }))
+  const pendingSellerSignupsByCountry = pendingSellerCountryRows.map((row) => ({ country: row.country || 'Not provided', count: row._count.country }))
+
   const body = {
         generatedAt: now.toISOString(),
         traffic: {
@@ -256,6 +294,8 @@ export async function GET(request: NextRequest) {
                           last30d: newSellers30d,
                           totalSellers: totalSellers,
                                                           pendingApproval: pendingSellers,
+                                                          pendingSignups: pendingSellerSignups,
+                                                          pendingSignupsByCountry: pendingSellerSignupsByCountry,
                           applications: applications,
                                                           applicationsByCountry: applicationsByCountry,
                 },
