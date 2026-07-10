@@ -281,12 +281,15 @@ Written plainly, per LAW #1.
    prospects in production — the qualification gate (see AGENTS AND CRONS)
    is the real check on that, once outreach-auto is live and its
    `qualified`/`qualificationNotes` fields can be read back.
-8. **CJ machinery still in the codebase.** The catalogue was purged on
-   2026-07-08 (see checkpoint below) but the nine `app/api/admin/cj-*` routes,
-   `lib/cj.ts`, the `cjSourced`/`cjProductId` Product fields, and the one-off
-   `app/api/admin/cj-purge-seeded` route (its job is done) all remain. Strip
-   them during the design port. CJ Dropshipping has NOTHING to do with this
-   marketplace — William's standing order, 2026-07-08.
+8. **RESOLVED 2026-07-10.** CJ machinery fully removed from the codebase --
+   see the CJ DROPSHIPPING MACHINERY PERMANENTLY REMOVED session log at the
+   bottom of this file. All nine `app/api/admin/cj-*` routes, `lib/cj.ts`,
+   the CJ fulfillment path in `app/api/orders/route.ts`, the CJ freight branch
+   in `app/api/shipping/rates/route.ts`, the `cjSourced` UI in
+   `ProductDetail.tsx`, and every CJ-related Prisma field/model are gone.
+   CJ Dropshipping has NOTHING to do with this marketplace -- confirmed by a
+   repo-wide code search showing zero remaining `cj`-prefixed identifiers or
+   `lib/cj` imports outside this file's own history notes.
 
 ---
 
@@ -941,3 +944,63 @@ OUTREACH_ENABLED is back to true as of this session. The structural fix
 the reason it was safe to re-enable -- this class of bug cannot recur even if
 more legacy/unscreened prospects are discovered later, since every stage now
 independently requires qualified: true.
+
+
+## SESSION LOG -- CJ DROPSHIPPING MACHINERY PERMANENTLY REMOVED (2026-07-10)
+
+William's standing order: CJ Dropshipping has nothing to do with this
+marketplace and must be permanently removed. Executed in full this session.
+
+### What was removed
+
+- 11 files deleted outright: the nine `app/api/admin/cj-*` routes
+  (cj-candidates, cj-import, cj-internal-seller, cj-origin-backfill,
+  cj-purge-seeded, cj-remove-multivariant, cj-resupplier, cj-retry-order,
+  cj-test), `app/api/admin/cj-backfill-variants/route.ts`, and `lib/cj.ts`.
+- `app/api/orders/route.ts`: removed the `fulfillViaCjIfInternal` function,
+  its call site, and the now-unused `@/lib/cj` and `@/lib/email` imports.
+- `app/marketplace/[id]/ProductDetail.tsx`: removed `cjSourced`/
+  `cjSupplierName` from the Product type and the "Manufactured by CJ" vs
+  "Sold by" branching -- every product now just shows "Sold by {seller}".
+- `app/api/shipping/rates/route.ts`: this file was NOT caught by the initial
+  audit and still imported `checkFreight` from the deleted `lib/cj.ts`,
+  which broke the Vercel build for three consecutive deployments (William
+  reported "2 build errors" then "3" -- all one root cause: a single
+  `Module not found: Can't resolve '@/lib/cj'` surfaced as multiple
+  error-tagged log lines). Fixed by removing the entire CJ-sourced freight
+  branch (the `allCjSourced` gate, the `checkFreight` call, the synthetic
+  `cjRate` object, and the dead `parseAgingDays` helper), renaming the now-
+  generic `cjProducts` variable to `productDims`, and leaving the real
+  Shippo-based rate calculation as the only code path. Fixed in commit
+  `392523d`.
+- `prisma/schema.prisma` (commit `66b456c`): removed `Product.cjSourced`,
+  `Product.cjProductId`, `Product.cjVid`, `Product.cjSupplierName`,
+  `Product.variants` (the relation to ProductVariant), `OrderItem.cjVid`,
+  `Shipment.cjOrderId`, `Seller.isInternal`, and the entire
+  `ProductVariant` and `CjAuthToken` models. Kept `OrderItem.variantId` and
+  `OrderItem.color` -- generic fields, not CJ-specific.
+
+### Bug caught during this work (worth remembering)
+
+While removing the dead `parseAgingDays` helper from
+`app/api/shipping/rates/route.ts`, a first-pass regex
+(`/function parseAgingDays[\s\S]*?\n}\n\n?/`) assumed the closing brace sat
+at column 0. It didn't -- the function was indented 4 spaces (`    }`) -- so
+the non-greedy match skipped past it and ate the entire next `try` block
+(the real Shippo rate logic), silently deleting ~5.5KB of live code. Caught
+before committing by comparing the transformed length/line-count against an
+independently computed expected value and finding a large mismatch. Fixed by
+switching to exact `indexOf`-based slicing instead of a regex that assumed
+formatting. General lesson: never trust a regex assumption about indentation
+in generated code -- verify structurally (brace balance, line count against
+an independent calculation) before ever pasting a large transformation back
+into an editor.
+
+### Verification
+
+- Repo-wide GitHub code search for `"lib/cj"`, `"cjSourced"`, `"cjProductId"`,
+  `"ProductVariant"`, `"isInternal"`, and `"cjOrderId"` confirms zero hits
+  anywhere in the codebase except this file's own history notes.
+- Both fix commits (`392523d` shipping/rates, `66b456c` schema) show
+  **Ready** on the Vercel deployments page, confirmed after each commit --
+  not assumed.
