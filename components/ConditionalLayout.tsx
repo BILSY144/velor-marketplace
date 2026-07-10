@@ -7,7 +7,7 @@ import VelorAssistant from './VelorAssistant'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isPublic = !pathname.startsWith('/dashboard') && !pathname.startsWith('/auth') && !pathname.startsWith('/admin')
+  const isPublic = !pathname.startsWith('/dashboard') && !pathname.startsWith('/auth') && !pathname.startsWith('/admin') && !pathname.startsWith('/pulse')
   return (
     <>
       {isPublic && <GlobalHeader />}
