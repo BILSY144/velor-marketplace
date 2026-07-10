@@ -140,7 +140,6 @@ model Seller {
   storeTheme                    String    @default("classic")
   storefrontUnlocked            Boolean   @default(false)
   storeLogo                     String?
-  isInternal                     Boolean   @default(false)
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
   // Founding-seller programme. foundingEligible is decided once, at approval
@@ -219,19 +218,14 @@ model Product {
   heightCm      Float?
   hsCode        String?
   originCountry String?
-  cjSourced     Boolean       @default(false)
   // Closed vocabulary terms (max 2) from lib/specialities.ts - the origin x
   // speciality lattice. Validated server-side via validateSpecialitySelection.
   specialities  String[]      @default([])
-  cjProductId   String?
-  cjVid         String?
-  cjSupplierName String?
   isHandmade    Boolean       @default(false)
   makerStory    String?       @db.Text
   materials     String?
   requiresCertificate Boolean @default(false)
   certificates  ProductCertificate[]
-  variants      ProductVariant[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
   messages      Message[]
@@ -273,24 +267,9 @@ model OrderItem {
   price      Float
   commission Float?
   variantId  String?
-  cjVid      String?
   color      String?
 }
 
-model ProductVariant {
-  id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  cjVid      String
-  color      String?
-  sku        String?
-  image      String?
-  sellPrice  Float?
-  createdAt  DateTime @default(now())
-
-  @@index([productId])
-  @@unique([productId, cjVid])
-}
 
 model Shipment {
   id                String          @id @default(cuid())
@@ -301,7 +280,6 @@ model Shipment {
   shippoShipmentId  String?
   shippoRateId      String?
   shippoLabelId     String?
-  cjOrderId         String?
   trackingNumber    String?
   trackingUrl       String?
   carrier           String?
@@ -506,19 +484,6 @@ model FxRate {
   @@unique([base, quote])
 }
 
-// Single-row cache for CJ Dropshipping's access/refresh token. Serverless
-// functions don't share memory between invocations, so the token has to be
-// persisted here rather than kept in a module-level variable. lib/cj.ts reads
-// this first, and only calls CJ's getAccessToken endpoint again if missing or
-// past accessTokenExpiry.
-model CjAuthToken {
-  id                    String   @id @default(cuid())
-  accessToken           String
-  accessTokenExpiry     DateTime
-  refreshToken          String
-  refreshTokenExpiry    DateTime
-  updatedAt             DateTime @updatedAt
-}
 
 enum SupportPriority {
   STANDARD
