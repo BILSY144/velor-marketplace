@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 interface Seller {
   id: string
   storeName: string
-  status: string
+  status: string; description?: string | null; country?: string | null;
   createdAt: string
   user: {
     id: string
@@ -57,7 +57,7 @@ export default function AdminSellersPage() {
     setLoadError(null)
     try {
       const q = activeTab === 'ALL' ? '' : `?status=${activeTab}`
-      const res = await fetch(`/api/admin/sellers${q}`)
+      const res = await fetch(`/api/admin/sellers${q}`, { headers: { Authorization: 'Bearer ' + (typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : '') } })
       const data = await res.json()
       if (!res.ok) {
         setLoadError(data.error || `Request failed (${res.status})`)
@@ -84,7 +84,7 @@ export default function AdminSellersPage() {
     try {
       const res = await fetch('/api/admin/sellers', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : '') },
         body: JSON.stringify({ sellerId, action }),
       })
       const data = await res.json()
@@ -233,7 +233,7 @@ export default function AdminSellersPage() {
                 borderBottom: i < sellers.length - 1 ? '1px solid #2A2A2A' : 'none',
               }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, fontSize: 14 }}>
-                  {seller.storeName}
+                  {seller.storeName}{seller.country ? <span style={{ fontSize: 11, color: '#FF6B00', marginLeft: 6 }}>({seller.country})</span> : null}{seller.description ? <div style={{ fontSize: 11, color: '#777', marginTop: 4, maxWidth: 260 }}>{seller.description}</div> : null}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 14, color: '#CCCCCC' }}>
                   {seller.user.name || 'ÃÂ¢ÃÂÃÂ'}
