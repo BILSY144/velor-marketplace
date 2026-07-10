@@ -61,7 +61,7 @@ export default function PulsePage() {
     if (!token) return
     let active = true
     const load = () => {
-      fetch('/api/admin/pulse-data?token=' + encodeURIComponent(token))
+      fetch('/api/admin/pulse-data', { headers: { Authorization: 'Bearer ' + token } })
         .then((r) => {
           if (r.status === 401) {
             localStorage.removeItem('velor_admin_secret')
