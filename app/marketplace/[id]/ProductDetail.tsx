@@ -22,8 +22,6 @@ interface Product {
   }
   discountedPrice: number | null
   percentOff: number | null
-  cjSourced?: boolean
-  cjSupplierName?: string | null
   isHandmade: boolean
   makerStory: string | null
 }
@@ -198,12 +196,8 @@ export default function ProductDetail({ id }: { id: string }) {
               <h1 className="pd-name">{product.title}</h1>
 
               <div className="pd-seller-box">
-                <div className="pd-seller-label">{product.cjSourced ? 'Manufactured by' : 'Sold by'}</div>
-                <div className="pd-seller-name">
-                  {product.cjSourced
-                    ? (product.cjSupplierName || 'CJ Dropshipping')
-                    : product.seller.storeName}
-                </div>
+                <div className="pd-seller-label">Sold by</div>
+                <div className="pd-seller-name">{product.seller.storeName}</div>
               </div>
 
               {product.isHandmade && (
