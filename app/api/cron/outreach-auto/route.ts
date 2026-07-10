@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   const budget1 = MAX_PER_RUN - initialSent;
   if (budget1 > 0) {
     const followup1Due = await prisma.sellerProspect.findMany({
-      where: { email: { not: null }, status: 'prospected',
+      where: { email: { not: null }, status: 'prospected', qualified: true,
         outreachLogs: {
           some: { emailType: 'initial', sentAt: { lte: new Date(Date.now() - FOLLOWUP1_DELAY_MS) } },
           none: { emailType: 'followup1' },
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
   const budget2 = MAX_PER_RUN - initialSent - followup1Sent;
   if (budget2 > 0) {
     const followup2Due = await prisma.sellerProspect.findMany({
-      where: { email: { not: null }, status: 'prospected',
+      where: { email: { not: null }, status: 'prospected', qualified: true,
         outreachLogs: {
           some: { emailType: 'followup1', sentAt: { lte: new Date(Date.now() - FOLLOWUP2_DELAY_MS) } },
           none: { emailType: 'followup2' },
