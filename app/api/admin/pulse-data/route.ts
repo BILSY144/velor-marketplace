@@ -24,9 +24,9 @@ function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.ADMIN_SECRET
   if (!secret) return false
   const authHeader = request.headers.get('authorization')
-  if (authHeader === 'Bearer ' + secret) return true
+  if (authHeader && authHeader.trim() === 'Bearer ' + secret.trim()) return true
   const tokenParam = request.nextUrl.searchParams.get('token')
-  if (tokenParam === secret) return true
+  if (tokenParam && tokenParam.trim() === secret.trim()) return true
   return false
 }
 
