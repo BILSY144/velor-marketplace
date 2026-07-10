@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 interface Seller {
   id: string
   storeName: string
-  status: string; description?: string | null; country?: string | null;
+  status: string; description?: string | null; country?: string | null; products?: { id: string; title: string; category: string; status: string }[];
   createdAt: string
   user: {
     id: string
@@ -233,7 +233,7 @@ export default function AdminSellersPage() {
                 borderBottom: i < sellers.length - 1 ? '1px solid #2A2A2A' : 'none',
               }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, fontSize: 14 }}>
-                  {seller.storeName}{seller.country ? <span style={{ fontSize: 11, color: '#FF6B00', marginLeft: 6 }}>({seller.country})</span> : null}{seller.description ? <div style={{ fontSize: 11, color: '#777', marginTop: 4, maxWidth: 260 }}>{seller.description}</div> : null}
+                  {seller.storeName}{seller.country ? <span style={{ fontSize: 11, color: '#FF6B00', marginLeft: 6 }}>({seller.country})</span> : null}{seller.description ? <div style={{ fontSize: 11, color: '#777', marginTop: 4, maxWidth: 260 }}>{seller.description}</div> : null}{seller.products && seller.products.length > 0 ? <div style={{ fontSize: 11, color: '#00C2FF', marginTop: 4 }}>{Array.from(new Set(seller.products.map(p => p.category))).join(', ')} - {seller.products.filter(p => p.status === 'PENDING_REVIEW').length} pending review</div> : null}
                 </td>
                 <td style={{ padding: '14px 16px', fontSize: 14, color: '#CCCCCC' }}>
                   {seller.user.name || 'ÃÂ¢ÃÂÃÂ'}
