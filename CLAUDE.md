@@ -860,3 +860,84 @@ work. The real open gap is #170: nobody has independently verified in production
 that this pipeline is actually converting (prospected -> contacted -> replied ->
 applied). That needs live DB numbers via ADMIN_SECRET, which this session did not
 have access to.
+
+
+---
+
+## SESSION LOG -- BAD OUTREACH RECIPIENTS FIXED (2026-07-10)
+
+William reported that seller outreach emails were reaching wrong/placeholder
+inboxes (service-sector addresses, large-brand generic addresses, and even
+user@domain.com). Investigated and fixed end to end.
+
+### Root cause
+
+The outreach-auto cron (app/api/cron/outreach-auto/route.ts) runs in three
+stages: initial, followup1, followup2. Stage 1 (initial) correctly required
+qualified: true before emailing a SellerProspect. Stages 2 and 3 (the two
+follow-up emails) did NOT check qualified status at all -- they only checked
+status: 'prospected' and timing since the previous email. So any prospect
+that had ever received an initial email (including ~200 legacy prospects
+scraped before the AI qualification gate existed) kept receiving follow-ups
+forever, regardless of whether the AI screen had rejected them or never
+screened them.
+
+### Diagnosis tools built (temporary, admin-gated)
+
+- app/api/admin/prospect-lookup/route.ts -- read-only. ?emails=a@b.com,c@d.com
+  looks up specific prospects; ?all=1 returns every prospect with at least one
+  OutreachLog plus a qualified/status breakdown, for full-scope audits.
+- app/api/admin/prospect-cleanup/route.ts -- POST, one-time remediation. Sets
+  status: 'dropped' on every SellerProspect where status is 'prospected' and
+  qualified is not true (matches both false and null explicitly via an OR
+  clause -- see note below on why "not: true" alone is not safe for this).
+  Both routes are gated by isAuthorizedAdmin (ADMIN_SECRET bearer token) and
+  are safe to delete once William confirms the cleanup looks right; they are
+  not part of the permanent agent infrastructure.
+
+### Important Prisma/SQL gotcha discovered
+
+qualified: { not: true } does NOT match rows where qualified is NULL. SQL
+tri-valued logic means NOT (qualified = true) evaluates to NULL (not TRUE)
+for NULL rows, so they get excluded, not included. The first cleanup run only
+caught the qualified: false rows and silently missed all the qualified: null
+ones. Fixed by using an explicit filter: OR: [{ qualified: false }, { qualified: null }].
+Any future admin route that needs "not affirmatively true" on a nullable
+Boolean field must use this explicit OR form, not { not: true }.
+
+### Fixes shipped (commit hashes on main)
+
+1. 68f31db -- outreach-auto followup1 and followup2 queries now also require
+   qualified: true directly (previously only initial did). This closes the
+   structural loophole so it cannot recur regardless of backlog state.
+2. ad0dde9 -- prospect-cleanup route corrected to use the OR-based null-safe
+   filter described above.
+
+### Backlog cleanup result (verified live via ?all=1)
+
+Of 203 prospects that had ever been emailed: only 4 were ever qualified: true.
+121 were explicitly disqualified by the AI screen (qualified: false) and 78
+were never screened at all (qualified: null, pre-dating the AI gate). All 199
+non-qualified prospects are now status: 'dropped' (a small number were already
+'unsubscribed'). Only the 4 legitimately qualified prospects remain
+status: 'prospected' and eligible for any outreach stage. Re-verified after
+the fix with 0 remaining non-qualified prospects at status 'prospected'.
+
+### Timeline of this incident
+
+1. OUTREACH_ENABLED set to false to stop sends immediately on report.
+2. Diagnosed root cause and full scope via the two admin routes above.
+3. Shipped the followup-stage qualified gate fix (68f31db).
+4. Ran prospect-cleanup -- first pass only caught 121/199 (the null-matching
+   bug above), caught it via a second full audit, fixed the route (ad0dde9),
+   re-ran cleanup -- confirmed 0 non-qualified prospects remain active.
+5. William confirmed to turn outreach back on. Set OUTREACH_ENABLED back to
+   true in Vercel env vars (Production and Preview) and triggered a redeploy
+   so the new value took effect. Re-verified post-redeploy: still 4 active
+   prospects, all qualified: true.
+
+OUTREACH_ENABLED is back to true as of this session. The structural fix
+(qualified: true gate on all three stages) and the backlog cleanup are both
+the reason it was safe to re-enable -- this class of bug cannot recur even if
+more legacy/unscreened prospects are discovered later, since every stage now
+independently requires qualified: true.
