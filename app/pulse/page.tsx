@@ -20,6 +20,16 @@ type PulseData = {
       last30d: number
       totalSellers: number
       pendingApproval: number
+      applications: {
+        id: string
+        businessName: string
+        contactName: string
+        contactEmail: string
+        country: string
+        verificationStatus: string
+        createdAt: string
+        daysPending: number
+      }[]
     }
   }
   listings: {
@@ -37,6 +47,39 @@ type PulseData = {
     byStatus: { status: string; count: number }[]
     gmv30dGBP: number
     gmvNote: string
+  }
+  pipeline: {
+    prospectsTotal: number
+    byStatus: { status: string; count: number }[]
+    qualified: number
+    disqualified: number
+    unscreened: number
+    outreachSent7d: number
+    outreachSent30d: number
+  }
+  sellerBreakdown: {
+    byCountry: { country: string; count: number }[]
+    byTier: { tier: string; count: number }[]
+  }
+  agents: {
+    recent: { agentName: string; action: string; status: string; createdAt: string }[]
+    last24hByStatus: { status: string; count: number }[]
+  }
+  support: {
+    openTickets: number
+    openPriorityTickets: number
+    openDisputes: number
+    pendingReturns: number
+  }
+  reviews: {
+    averageRating: number | null
+    totalReviews: number
+    last7d: number
+  }
+  payouts: {
+    pendingCount: number
+    pendingGBP: number
+    fxNote: string
   }
 }
 
@@ -179,6 +222,50 @@ export default function PulsePage() {
         <StatRow label="Pending approval" value={data.signups.sellers.pendingApproval} highlight />
       </Section>
 
+      <Section title="PENDING SELLER APPLICATIONS">
+        {data.signups.sellers.applications.length === 0 ? (
+          <div style={styles.smallMuted}>No applications waiting on a decision.</div>
+        ) : (
+          data.signups.sellers.applications.map((a) => {
+            const createdMs = new Date(a.createdAt).getTime()
+            const hoursPending = (Date.now() - createdMs) / (1000 * 60 * 60)
+            const deadline = new Date(createdMs + 24 * 60 * 60 * 1000)
+            const overdue = Date.now() > deadline.getTime()
+            const escalated = !overdue && hoursPending > 12
+            const pendingLabel =
+              hoursPending < 24
+                ? hoursPending.toFixed(1) + 'h pending'
+                : Math.floor(hoursPending / 24) + 'd ' + Math.round(hoursPending % 24) + 'h pending'
+            const fmt = (d: Date) =>
+              d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            return (
+              <div key={a.id} style={styles.appCard}>
+                <div style={styles.appCardTop}>
+                  <span style={styles.appName}>{a.businessName}</span>
+                  <span
+                    style={{
+                      ...styles.appBadge,
+                      color: overdue ? '#ff4d4d' : escalated ? '#ff7a1a' : '#4dd88a',
+                    }}
+                  >
+                    {overdue ? 'OVERDUE' : escalated ? 'ESCALATED' : 'ON TRACK'}
+                  </span>
+                </div>
+                <div style={styles.appMeta}>
+                  {a.country} &middot; {a.verificationStatus.replace(/_/g, ' ')}
+                </div>
+                <div style={styles.appMeta}>
+                  {a.contactName} &middot; {a.contactEmail}
+                </div>
+                <div style={styles.smallMuted}>
+                  Submitted {fmt(new Date(a.createdAt))} &middot; {pendingLabel} &middot; decision due {fmt(deadline)}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </Section>
+
       <Section title="LISTINGS">
         <StatRow label="New today" value={data.listings.today} />
         <StatRow label="New last 7 days" value={data.listings.last7d} />
@@ -198,6 +285,63 @@ export default function PulsePage() {
         {data.orders.byStatus.map((s) => (
           <StatRow key={s.status} label={s.status} value={s.count} small />
         ))}
+      </Section>
+
+      <Section title="SELLER PIPELINE">
+        <StatRow label="Total prospects" value={data.pipeline.prospectsTotal} highlight />
+        <StatRow label="Qualified" value={data.pipeline.qualified} />
+        <StatRow label="Disqualified" value={data.pipeline.disqualified} />
+        <StatRow label="Not yet screened" value={data.pipeline.unscreened} />
+        <StatRow label="Outreach sent (7d)" value={data.pipeline.outreachSent7d} />
+        <StatRow label="Outreach sent (30d)" value={data.pipeline.outreachSent30d} />
+        <div style={styles.subheading}>By status</div>
+        {data.pipeline.byStatus.map((s) => (
+          <StatRow key={s.status} label={s.status} value={s.count} small />
+        ))}
+      </Section>
+
+      <Section title="SELLERS BY COUNTRY & TIER">
+        <div style={styles.subheading}>Top countries</div>
+        {data.sellerBreakdown.byCountry.map((c) => (
+          <StatRow key={c.country} label={c.country} value={c.count} small />
+        ))}
+        <div style={styles.subheading}>By tier</div>
+        {data.sellerBreakdown.byTier.map((t) => (
+          <StatRow key={t.tier} label={t.tier} value={t.count} small />
+        ))}
+      </Section>
+
+      <Section title="AGENT ACTIVITY">
+        <div style={styles.subheading}>Last 24h by status</div>
+        {data.agents.last24hByStatus.map((s) => (
+          <StatRow key={s.status} label={s.status} value={s.count} small />
+        ))}
+        <div style={styles.subheading}>Most recent</div>
+        {data.agents.recent.map((a, i) => (
+          <div key={i} style={styles.appMeta}>
+            {a.agentName} &mdash; {a.action} ({a.status}) &middot;{' '}
+            {new Date(a.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          </div>
+        ))}
+      </Section>
+
+      <Section title="SUPPORT & TRUST">
+        <StatRow label="Open support tickets" value={data.support.openTickets} highlight />
+        <StatRow label="Priority open tickets" value={data.support.openPriorityTickets} />
+        <StatRow label="Open disputes" value={data.support.openDisputes} />
+        <StatRow label="Pending returns" value={data.support.pendingReturns} />
+      </Section>
+
+      <Section title="REVIEWS">
+        <StatRow label="Average rating" value={data.reviews.averageRating ?? 'No reviews yet'} highlight />
+        <StatRow label="Total reviews" value={data.reviews.totalReviews} />
+        <StatRow label="New last 7 days" value={data.reviews.last7d} />
+      </Section>
+
+      <Section title="PAYOUTS">
+        <StatRow label="Pending payouts" value={data.payouts.pendingCount} highlight />
+        <StatRow label="Pending amount" value={data.payouts.pendingGBP.toFixed(2) + ' GBP'} highlight />
+        <div style={styles.smallMuted}>{data.payouts.fxNote}</div>
       </Section>
 
       <div style={styles.footer}>Auto-refreshes every 30 seconds. Private dashboard, not linked from the public site.</div>
@@ -306,6 +450,33 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: 11,
     color: '#666',
     marginTop: 4,
+  },
+  appCard: {
+    background: '#1e1e1e',
+    borderRadius: 8,
+    padding: '10px 12px',
+    marginBottom: 8,
+  },
+  appCardTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  appName: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#f2f2f2',
+  },
+  appBadge: {
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: 0.5,
+  },
+  appMeta: {
+    fontSize: 12,
+    color: '#aaa',
+    marginBottom: 2,
   },
   unlockBox: {
     maxWidth: 340,

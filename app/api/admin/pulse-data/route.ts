@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     const midnightUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
     const day7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const day30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const day1 = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
   const [
         viewsLastHour,
@@ -75,6 +76,24 @@ export async function GET(request: NextRequest) {
           totalOrders,
           ordersByStatus,
                 revenueRows30d,
+        prospectTotal,
+        prospectByStatus,
+        prospectQualified,
+        prospectUnqualified,
+        prospectUnscreened,
+        outreachSent7d,
+        outreachSent30d,
+        sellersByCountryRows,
+        sellersByTierRows,
+        agentLogRecent,
+        agentLogByStatus24h,
+        openSupportTickets,
+        priorityOpenSupportTickets,
+        openDisputes,
+        pendingReturns,
+        reviewAgg,
+        reviews7d,
+        pendingPayoutRows,
   ] = await Promise.all([
           prisma.pageView.count({ where: { createdAt: { gte: hourAgo } } }),
       prisma.pageView.count({ where: { createdAt: { gte: midnightUTC } } }),
@@ -129,6 +148,40 @@ export async function GET(request: NextRequest) {
                 where: { createdAt: { gte: day30 }, status: { not: 'CANCELLED' } },
                 select: { subtotal: true, currency: true },
         }),
+        prisma.sellerProspect.count(),
+        prisma.sellerProspect.groupBy({ by: ['status'], _count: { status: true } }),
+        prisma.sellerProspect.count({ where: { qualified: true } }),
+        prisma.sellerProspect.count({ where: { qualified: false } }),
+        prisma.sellerProspect.count({ where: { qualified: null } }),
+        prisma.outreachLog.count({ where: { sentAt: { gte: day7 } } }),
+        prisma.outreachLog.count({ where: { sentAt: { gte: day30 } } }),
+        prisma.seller.groupBy({
+                by: ['country'],
+                _count: { country: true },
+                orderBy: { _count: { country: 'desc' } },
+                take: 10,
+        }),
+        prisma.seller.groupBy({ by: ['tier'], _count: { tier: true } }),
+        prisma.agentLog.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 15,
+                select: { agentName: true, action: true, status: true, createdAt: true },
+        }),
+        prisma.agentLog.groupBy({
+                by: ['status'],
+                _count: { status: true },
+                where: { createdAt: { gte: day1 } },
+        }),
+        prisma.supportTicket.count({ where: { status: 'OPEN' } }),
+        prisma.supportTicket.count({ where: { status: 'OPEN', priority: 'PRIORITY' } }),
+        prisma.dispute.count({ where: { status: 'OPEN' } }),
+        prisma.returnRequest.count({ where: { status: 'PENDING' } }),
+        prisma.review.aggregate({ _avg: { rating: true }, _count: true }),
+        prisma.review.count({ where: { createdAt: { gte: day7 } } }),
+        prisma.payout.findMany({
+                where: { status: 'pending' },
+                select: { amount: true, currency: true },
+        }),
       ])
 
   let gmv30dGBP = 0
@@ -140,6 +193,27 @@ export async function GET(request: NextRequest) {
                   fxError = true
           }
     }
+
+  let pendingPayoutsGBP = 0
+    let payoutFxError = false
+    for (const row of pendingPayoutRows) {
+          try {
+                  pendingPayoutsGBP += await convert(row.amount, row.currency, 'GBP')
+          } catch {
+                  payoutFxError = true
+          }
+    }
+
+  const prospectStatusBreakdown = prospectByStatus.map((row) => ({ status: row.status, count: row._count.status }))
+  const sellersByCountry = sellersByCountryRows.map((row) => ({ country: row.country || 'Not provided', count: row._count.country }))
+  const sellersByTier = sellersByTierRows.map((row) => ({ tier: row.tier, count: row._count.tier }))
+  const agentActivity = agentLogRecent.map((row) => ({
+    agentName: row.agentName,
+    action: row.action,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+  }))
+  const agentStatusBreakdown24h = agentLogByStatus24h.map((row) => ({ status: row.status, count: row._count.status }))
 
   const pendingApplications = pendingApplicationRows.map((a) => ({
         id: a.id,
@@ -190,6 +264,41 @@ export async function GET(request: NextRequest) {
                 gmvNote: fxError
                   ? 'Some orders could not be converted to GBP and are excluded from this total.'
                           : 'Converted to GBP at live exchange rates; excludes cancelled orders.',
+        },
+        pipeline: {
+                prospectsTotal: prospectTotal,
+                byStatus: prospectStatusBreakdown,
+                qualified: prospectQualified,
+                disqualified: prospectUnqualified,
+                unscreened: prospectUnscreened,
+                outreachSent7d: outreachSent7d,
+                outreachSent30d: outreachSent30d,
+        },
+        sellerBreakdown: {
+                byCountry: sellersByCountry,
+                byTier: sellersByTier,
+        },
+        agents: {
+                recent: agentActivity,
+                last24hByStatus: agentStatusBreakdown24h,
+        },
+        support: {
+                openTickets: openSupportTickets,
+                openPriorityTickets: priorityOpenSupportTickets,
+                openDisputes: openDisputes,
+                pendingReturns: pendingReturns,
+        },
+        reviews: {
+                averageRating: reviewAgg._avg.rating ? Math.round(reviewAgg._avg.rating * 100) / 100 : null,
+                totalReviews: reviewAgg._count,
+                last7d: reviews7d,
+        },
+        payouts: {
+                pendingCount: pendingPayoutRows.length,
+                pendingGBP: Math.round(pendingPayoutsGBP * 100) / 100,
+                fxNote: payoutFxError
+                  ? 'Some payouts could not be converted to GBP and are excluded from this total.'
+                          : 'Converted to GBP at live exchange rates.',
         },
   }
 
