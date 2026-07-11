@@ -5,8 +5,21 @@ import ConditionalLayout from '@/components/ConditionalLayout'
 import AnalyticsTracker from '@/components/AnalyticsTracker'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://velorcommerce.store'),
   title: 'Velor - Global Marketplace',
   description: 'Discover unique products from sellers around the world.',
+  openGraph: {
+    title: 'Velor - Global Marketplace',
+    description: 'Discover unique products from sellers around the world.',
+    url: 'https://velorcommerce.store',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Velor - Global Marketplace',
+    description: 'Discover unique products from sellers around the world.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
