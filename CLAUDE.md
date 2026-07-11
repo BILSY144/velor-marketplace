@@ -73,6 +73,7 @@ mass-market sellers remain welcome and profitable.
 7. Update this file at meaningful checkpoints. Keep it short. Do not append a
    new "SESSION UPDATE" section for every small change — edit the relevant
    section instead.
+   8. Velor is a GLOBAL marketplace. Seller recruitment (organic posting, outreach copy, group targeting) must stay globally diverse across countries — do not default to UK-centric groups or audiences. UK sellers are welcome but must never dominate the target list. (William, 2026-07-11, after group candidates drifted toward UK business groups mid-session.)
 
 ---
 
