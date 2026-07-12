@@ -1,4 +1,4 @@
-export const metadata = { title: 'Returns and Refunds - Velor Commerce' }
+export const metadata = { title: 'Returns and Refunds - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/returns' } }
 
 export default function Page() {
   return (

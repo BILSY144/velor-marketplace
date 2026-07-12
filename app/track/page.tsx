@@ -1,4 +1,4 @@
-export const metadata = { title: 'Track Your Order - Velor Commerce' }
+export const metadata = { title: 'Track Your Order - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/track' } }
 
 export default function Page() {
   return (

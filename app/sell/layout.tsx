@@ -14,6 +14,7 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
+  alternates: { canonical: 'https://velorcommerce.store/sell' },
   openGraph: {
     title,
     description,

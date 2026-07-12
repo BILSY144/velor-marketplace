@@ -1,4 +1,4 @@
-export const metadata = { title: 'Cookie Policy - Velor Commerce' }
+export const metadata = { title: 'Cookie Policy - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/cookies' } }
 
 export default function Page() {
   return (

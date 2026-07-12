@@ -10,6 +10,7 @@ export const metadata = {
   title: 'How Velor works — Velor Marketplace',
   description:
     'Every listing carries its country and its maker. Money is held in escrow until delivery is confirmed. Every seller is identity-verified.',
+  alternates: { canonical: 'https://velorcommerce.store/about' },
 }
 
 const steps = [

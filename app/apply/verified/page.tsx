@@ -4,6 +4,7 @@ import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview';
 export const metadata = {
   title: 'Verification submitted — Velor',
   description: 'Your identity verification has been submitted to Velor.',
+  alternates: { canonical: 'https://velorcommerce.store/apply/verified' },
 };
 
 // Where Stripe Identity sends a seller after they finish (or abandon) the

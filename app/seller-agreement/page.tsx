@@ -3,6 +3,7 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Seller Agreement — Velor Marketplace',
   description: 'Velor Seller Terms of Service. Read before registering as a seller.',
+  alternates: { canonical: 'https://velorcommerce.store/seller-agreement' },
 };
 
 export default function SellerAgreementPage() {
