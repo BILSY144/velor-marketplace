@@ -119,7 +119,7 @@ export default function GlobalHeader() {
       <div
         className="velor-trustbar"
         style={{
-          background: '#000',
+          background: 'var(--bg)',
           color: 'var(--muted)',
           fontSize: 12,
           letterSpacing: '0.02em',
@@ -140,7 +140,7 @@ export default function GlobalHeader() {
       {/* Main bar */}
       <div
         style={{
-          background: 'rgba(13,13,13,0.92)',
+          background: 'rgba(var(--bg-rgb), 0.92)',
           backdropFilter: 'saturate(140%) blur(10px)',
           borderBottom: '1px solid var(--border)',
         }}
