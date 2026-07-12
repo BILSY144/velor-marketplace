@@ -540,8 +540,16 @@ standing no-emoji rule intact.
 
 ### Decisions locked with William
 
-1. Positioning is NOT handmade or artisan. It is ORIGIN. Everywhere makes something better than
-   everywhere else. Culture is the reason, not the headline.
+1. REVISED 2026-07-12 per William: positioning is ORIGIN AND AUTHENTICITY, not
+   a ban on "handmade"/"crafted" vocabulary. Cultural products in scope include
+   origin goods, crafted goods, and handmade goods -- all of it, as long as it
+   is authentic. The only thing excluded is generic factory-made / mass-produced
+   goods with no real maker or cultural story behind them. Culture is the
+   reason, not the only headline -- modern industry (Korean skincare, German
+   optics, Swiss watchmaking) stays in the mix so Velor isn't just a craft fair.
+   (Original 2026-07-08 note read as barring "handmade" language outright; that
+   was a marketing-copy stance, not a product-scope rule, and William asked for
+   it broadened.)
 2. Hero line: "The world has more to sell than you have been shown."
 3. Categories are the wrong front door. Replaced by a two-axis lattice:
    - Axis 1: ORIGIN (country). Axis 2: SPECIALITY (48 terms, six families).
