@@ -515,7 +515,7 @@ export default function HomePage() {
     <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      <div className="vh-annbar">List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</div>
+      <Link href="/sell" className="vh-annbar" style={{ display: 'block' }}>List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</Link>
 
       
 
