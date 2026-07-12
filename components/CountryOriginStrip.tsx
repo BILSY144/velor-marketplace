@@ -188,8 +188,8 @@ export default function CountryOriginStrip() {
             onClick={() => handleFlagClick(c.code)}
             style={{
               flexShrink: 0,
-              width: '28px',
-              height: '20px',
+              width: '37px',
+              height: '27px',
               padding: 0,
               borderRadius: '3px',
               overflow: 'hidden',
