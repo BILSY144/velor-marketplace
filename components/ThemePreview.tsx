@@ -2,34 +2,44 @@
 
 import { useEffect, useState } from 'react'
 
+const STORAGE_KEY = 'velor-theme'
+
 export default function ThemePreview() {
-  const [enabled, setEnabled] = useState(false)
   const [theme, setTheme] = useState('dark')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const t = params.get('theme')
-    if (t === 'light' || t === 'dark') {
-      setEnabled(true)
-      setTheme(t)
-      document.documentElement.setAttribute('data-theme', t)
-    }
+    let initial = 'dark'
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY)
+      if (stored === 'light' || stored === 'dark') {
+        initial = stored
+      } else {
+        const params = new URLSearchParams(window.location.search)
+        const t = params.get('theme')
+        if (t === 'light' || t === 'dark') initial = t
+      }
+    } catch (e) {}
+    setTheme(initial)
+    document.documentElement.setAttribute('data-theme', initial)
+    setMounted(true)
   }, [])
 
-  if (!enabled) return null
+  if (!mounted) return null
 
   const toggle = () => {
     const next = theme === 'light' ? 'dark' : 'light'
     setTheme(next)
     document.documentElement.setAttribute('data-theme', next)
-    const url = new URL(window.location.href)
-    url.searchParams.set('theme', next)
-    window.history.replaceState({}, '', url.toString())
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next)
+    } catch (e) {}
   }
 
   return (
     <button
       onClick={toggle}
+      aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
       style={{
         position: 'fixed',
         bottom: 20,
@@ -46,7 +56,7 @@ export default function ThemePreview() {
         boxShadow: '0 6px 20px rgba(0,0,0,.35)',
       }}
     >
-      {theme === 'light' ? 'Preview: Light (tap for Dark)' : 'Preview: Dark (tap for Light)'}
+      {theme === 'light' ? 'Light mode' : 'Dark mode'}
     </button>
   )
 }
