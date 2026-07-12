@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>('STARTER');
-  const [payoutReady, setPayoutReady] = useState<boolean | null>(null); useEffect(() => { const prev = document.documentElement.getAttribute('data-theme'); document.documentElement.setAttribute('data-theme', 'dark'); return () => { if (prev) { document.documentElement.setAttribute('data-theme', prev) } else { document.documentElement.removeAttribute('data-theme') } } }, [])
+  const [payoutReady, setPayoutReady] = useState<boolean | null>(null); useEffect(() => { const prev = document.documentElement.getAttribute('data-theme'); const force = () => { if (document.documentElement.getAttribute('data-theme') !== 'dark') { document.documentElement.setAttribute('data-theme', 'dark') } }; force(); const observer = new MutationObserver(force); observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); return () => { observer.disconnect(); if (prev) { document.documentElement.setAttribute('data-theme', prev) } else { document.documentElement.removeAttribute('data-theme') } } }, [])
 
   useEffect(() => {
     fetch('/api/seller/me')
