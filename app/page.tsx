@@ -275,9 +275,7 @@ const css = `
 .vh-wrap{width:100%;margin:0;padding:0 clamp(22px,2.6vw,48px)}
 .vh h1,.vh h2,.vh h3{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;margin:0}
 .vh section{padding:52px 0}
-.vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;gap:24px}
-.vh-chtag{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-size:10.5px;letter-spacing:.18em;font-weight:700;color:var(--accent);border:1px solid rgba(255,107,0,.4);border-radius:6px;padding:4px 10px;margin-bottom:11px;text-transform:uppercase}
-.vh-chtag .cd{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.8}
+.vh-shead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px;gap:24px}
 .vh-shead h2{font-size:27px}
 .vh-shead .sub{font-size:14px;color:var(--muted);margin:7px 0 0;max-width:66ch;line-height:1.6}
 .vh-slink{font-size:14px;color:var(--accent) !important;flex:0 0 auto;white-space:nowrap}
@@ -482,11 +480,10 @@ export default function HomePage() {
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
       {CULTURE_REELS.map((reel, ri) => (
-        <section key={reel.title} style={{ paddingTop: 28, paddingBottom: 12 }}>
+        <section key={reel.title} style={{ paddingTop: 6, paddingBottom: 0 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
               <div>
-                <span className="vh-chtag"><span className="cd" />CH {String(ri + 2).padStart(2, '0')}</span>
                 <h2>{reel.title}</h2>
                 <p className="sub">{reel.line}</p>
               </div>
@@ -519,7 +516,6 @@ export default function HomePage() {
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
-              <span className="vh-chtag"><span className="cd" />190 channels</span>
               <h2>Start with a country</h2>
               <p className="sub">Every country on earth is a channel of its own — the things it makes
               better than anywhere else, sold live and by listing. Each one switches on the moment its
@@ -552,7 +548,6 @@ export default function HomePage() {
         <div className="vh-wrap">
           <div className="vh-shead">
             <div>
-              <span className="vh-chtag"><span className="cd" />Channel guide</span>
               <h2>Or start with a speciality</h2>
               <p className="sub">Not departments. The things a place has spent centuries getting right —
               and the things it is good at now.</p>
