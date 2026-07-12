@@ -25,11 +25,19 @@ type PulseData = {
         businessName: string
         contactName: string
         contactEmail: string
+        website: string | null
+        storeDescription: string | null
+        productCategories: string[]
         country: string
         status: string
         verificationStatus: string
+        rejectionReason: string | null
+        reviewedBy: string | null
+        verifiedAt: string | null
+        verificationNotes: string | null
         createdAt: string
         reviewedAt: string | null
+        updatedAt: string
         daysPending: number
       }[]
       applicationsByCountry: { country: string; count: number }[]
@@ -336,6 +344,12 @@ export default function PulsePage() {
                 <div style={styles.smallMuted}>
                   Submitted {fmt(new Date(a.createdAt))} &middot; {timescaleLabel}
                 </div>
+                {a.website && <div style={styles.appMeta}>{a.website}</div>}
+                {a.productCategories && a.productCategories.length > 0 && (
+                  <div style={styles.smallMuted}>{a.productCategories.join(', ')}</div>
+                )}
+                {a.storeDescription && <div style={styles.smallMuted}>{a.storeDescription}</div>}
+                {a.rejectionReason && <div style={styles.rejectionBox}>{a.rejectionReason}</div>}
               </div>
             )
           })
@@ -553,6 +567,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: 12,
     color: '#aaa',
     marginBottom: 2,
+  },
+  rejectionBox: {
+    fontSize: 12,
+    color: '#ffb27a',
+    background: '#3a1a00',
+    borderRadius: 6,
+    padding: '6px 8px',
+    marginTop: 4,
   },
   unlockBox: {
     maxWidth: 340,
