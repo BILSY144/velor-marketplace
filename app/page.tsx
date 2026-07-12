@@ -515,9 +515,9 @@ export default function HomePage() {
     <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      <div className="vh-annbar">Velor opens to buyers on <b>6th August</b> — get ready.</div>
+      <div className="vh-annbar">List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</div>
 
-      <div className="vh-wrap"><div className="vh-sellertop"><span className="txt">List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</span><Link className="cta" href="/apply">Apply to sell</Link></div></div>
+      
 
       {/* ============ VELOR LIVE — the top of the page ============ */}
       <div className="vh-livesec">
