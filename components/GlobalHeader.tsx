@@ -46,6 +46,13 @@ export default function GlobalHeader() {
     return () => window.removeEventListener('velor-currency-changed', onCurrencyChange)
   }, [])
 
+  const [themeMode, setThemeMode] = useState('dark')
+
+  useEffect(() => {
+    const current = document.documentElement.getAttribute('data-theme')
+    if (current === 'light' || current === 'dark') setThemeMode(current)
+  }, [])
+
   const catsRef = useRef<HTMLDivElement>(null)
   const acctRef = useRef<HTMLDivElement>(null)
 
@@ -158,7 +165,7 @@ export default function GlobalHeader() {
           }}
         >
           {/* Logo */}
-          <Link href="/" style={{ display: 'block', flexShrink: 0, marginLeft: -10 }} aria-label="Velor home">
+          <Link href="/" style={{ display: 'block', flexShrink: 0, marginLeft: -20 }} aria-label="Velor home">
             <img src="/velor-logo-globe-v2.png" alt="Velor" style={{ height: 34, width: 'auto' }} />
           </Link>
 
@@ -389,6 +396,32 @@ export default function GlobalHeader() {
             >
               Start selling
             </Link>
+
+            {/* Theme toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = themeMode === 'light' ? 'dark' : 'light'
+                document.documentElement.setAttribute('data-theme', next)
+                try { window.localStorage.setItem('velor-theme', next) } catch (e) {}
+                setThemeMode(next)
+              }}
+              className="velor-desktop-nav"
+              style={{
+                background: 'transparent',
+                color: 'var(--accent)',
+                fontWeight: 700,
+                fontSize: 13,
+                border: '1.5px solid var(--accent)',
+                padding: '9px 16px',
+                borderRadius: 999,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+              }}
+              aria-label="Toggle light and dark theme"
+            >
+              {themeMode === 'light' ? 'Dark mode' : 'Light mode'}
+            </button>
 
             {/* Mobile toggle */}
             <button
