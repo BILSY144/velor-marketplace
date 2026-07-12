@@ -1025,3 +1025,7 @@ into an editor.
 - Both fix commits (`392523d` shipping/rates, `66b456c` schema) show
   **Ready** on the Vercel deployments page, confirmed after each commit --
   not assumed.
+
+SESSION UPDATE — 2026-07-12 02:19 UTC
+
+New session started. Read this file, then cross-checked against live Vercel deployments and GitHub commit history to get up to speed before William pasted the previous session's chat. All recent deployments through a161245 (14 minutes old at check time) show Ready in Production on velor1/velor-marketplace -- nothing currently broken. Two commits are not yet reflected anywhere in this file's narrative: 14697ff "Add temporary read-only application-lookup diagnostic route" and a161245 "Add temporary application reinvite email route", both landed today, 2026-07-12. Unconfirmed what these routes do or whether they are meant to stay temporary -- flagging per LAW #1 rather than guessing. They are likely tied to work on seller application diagnostics or reinvite emails that predates this file's last logged entry. Awaiting William's session chat paste to confirm and fill in the detail.
