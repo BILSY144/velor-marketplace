@@ -105,8 +105,8 @@ function gbp(n: number) {
 
 export default function SellPage() {
   const [sales, setSales] = useState(1000); const LAUNCH_AT = new Date('2026-08-06T00:00:00+01:00').getTime(); const [now, setNow] = useState<number | null>(null); useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id) }, []); const msLeft = now !== null ? Math.max(0, LAUNCH_AT - now) : null; const dLeft = msLeft !== null ? Math.floor(msLeft / 86400000) : null; const hLeft = msLeft !== null ? Math.floor((msLeft % 86400000) / 3600000) : null; const mLeft = msLeft !== null ? Math.floor((msLeft % 3600000) / 60000) : null; const sLeft = msLeft !== null ? Math.floor((msLeft % 60000) / 1000) : null
-TESTLINE_A
-TESTLINE_B
+
+
 
   const keeps = TIERS.map(t => Math.max(0, sales * (1 - t.com) - t.sub))
   const best = keeps.indexOf(Math.max(...keeps))
