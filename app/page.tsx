@@ -395,7 +395,7 @@ const css = `
 .vh-ccard h3{font-size:18px;line-height:1.2}
 .vh-cflag{font-size:19px;line-height:1;flex:0 0 auto}
 .vh-specs{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start}
-.vh-spec{font-size:11.5px;color:#c6c6cf;border:1px solid #3a3a44;border-radius:999px;padding:4px 10px}
+.vh-spec{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:4px 10px}
 .vh-ccard .foot{margin-top:15px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
 .vh-foot-on{color:var(--green)}.vh-foot-off{color:var(--muted)}
 .vh-kind{margin-bottom:34px}
