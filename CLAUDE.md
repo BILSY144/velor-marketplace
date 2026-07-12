@@ -1065,3 +1065,33 @@ SESSION UPDATE — 2026-07-12 02:45 UTC
 William pasted the prior session's transcript to resume it. That session had found the Indonesian applicant "Wasizo deco" (Santoz nugroz) was rejected by the automated review cron for 0 product photos against the published MIN_SAMPLE_IMAGES = 3 rule -- a justified, objective rejection, not a policy overreach -- and had built two temporary admin routes to investigate: app/api/admin/application-lookup (read-only lookup) and app/api/admin/reinvite-application (sends a reapply email). Both were already committed and deployed before this continuation started. This session completed the two things William asked for next. First, sent the reinvite email via POST /api/admin/reinvite-application for application cmrh3jw5t0001dmkse6q035ux -- confirmed sent to nugrahamedia@gmail.com. Second, built the mobile dashboard detail William wanted: extended prisma.sellerApplication.findMany in app/api/admin/pulse-data/route.ts to also select website, storeDescription, productCategories, rejectionReason, reviewedBy, verifiedAt, verificationNotes and updatedAt, and extended the SELLER APPLICATIONS card in app/pulse/page.tsx to render all of it, with rejectionReason shown in a highlighted box. Both commits (32d4678, 05af998) deployed Ready and the live /pulse page was verified in Chrome showing the full Wasizo deco application with the rejection reason visible.
 
 Open question carried over, not yet answered by William: whether to delete the two temporary diagnostic routes (application-lookup, reinvite-application) now that the dashboard covers the same ground, or leave them in place the way the 2026-07-10 prospect-lookup/prospect-cleanup routes were left -- per standing rule, not deleted without his explicit say-so.
+
+
+---
+
+## SESSION UPDATE — 2026-07-12 (Facebook Group Outreach)
+
+Today's session set up ongoing Facebook group outreach for Velor Marketplace, per William's explicit instruction to take control of posting since he doesn't have time to write posts himself. Posting is done from the "VELOR" Facebook Page identity (facebook.com/Velorcommerce), not a personal profile.
+
+Positioning correction (see the cultural-marketplace block above — this is now a standing, permanent rule): all outreach targets cultural-heritage and traditional-artisan communities globally, never generic "UK small business" or "advertise your business" groups. The velor-advertising skill must NOT be used for this business — it describes the separate velorcommerce.co.uk UK dropship store, a different business.
+
+Groups posted to this session (founding-seller-spot message + velorcommerce.store apply link):
+- Mercado de Artesanias GT (Guatemala) — posted, live
+- Sell and buy Handcraft Egypt — posted, pending group-admin approval
+- ETSY buyers and sellers worldwide — posted, live
+- Support Small Business — posted, live
+
+Groups already covered by an earlier, undocumented manual session (roughly 4-6 hours prior) — not re-posted, to avoid duplicates:
+- ARTESANIAS DE TODO TIPO (Mexico)
+- Artisanat Marocain (Morocco)
+- JUAL - BELI KERAJINAN NUSANTARA (Indonesia)
+- Cong dong Handmade Viet Nam (Vietnam)
+
+Skipped:
+- Artisans of the World Sell on Etsy — group rule required an active Etsy shop link in every post; Velor links to a competing marketplace, not an Etsy shop, so this was genuinely non-compliant. Declined to agree to the group rules and closed the review modal without submitting. A post was nonetheless auto-created in "pending admin approval" state — it was deleted via Delete post, confirmed. No live exposure occurred.
+- VENTAS EMPRESARIOS Y EMPRENDEDORES COLOMBIANOS — no post composer was available on the group page.
+- Two of the originally-drafted 7 posts ("Etsy Makers"; "Etsy Sellers and Buyers | Etsy SEO | Etsy Promotion" / "Advertise Your Business, Page & YouTube Videos") were not posted this session — not re-locatable in the joined-groups list before time ran out. Still outstanding; may be superseded by the daily task working through the wider group pool.
+
+Daily scheduled task created: trig_01Cgi2PM3L1mjpS2dqkVCQhE, cron 0 15 * * * (15:00 UTC daily), via the proper create_trigger mechanism (each firing starts a fresh session with no memory of this one, so its prompt is fully self-contained — includes the cultural-marketplace positioning rules, the VELOR Page identity, the group-rule-compliance check learned from the Artisans-of-the-World incident above, and instructions to check each group's my_posted_content / my_pending_content before posting so it never duplicates a post). This task covers ongoing Facebook group outreach, working through the roughly 39 already-joined groups plus newly discovered relevant groups, targeting around 10 groups per day.
+
+Instagram — blocked, unresolved: William asked for a daily Instagram posting task alongside the Facebook one. No Instagram session or login is available in this environment (the Velorcommerce Page's Instagram settings show it is not connected), and per standing safety rules an account will not be created or credentials entered on William's behalf. This was NOT set up as a scheduled task. It needs William's direct input on how to proceed — e.g. logging in himself on his own device and linking the Page to an Instagram Business account — before any Instagram task can be built.
