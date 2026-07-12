@@ -185,6 +185,54 @@ const CULTURE_REELS: {
       { name: 'Rose oil', code: 'BG', img: px(18745781) },
     ],
   },
+  {
+    title: 'Leather goods',
+    line: 'Tanned, cut and stitched the way it always has been.',
+    tiles: [
+      { name: 'Fez tanneries', code: 'MA', img: px(38112321) },
+      { name: 'Leather bags of the souk', code: 'MA', img: px(21326994) },
+      { name: 'Babouche slippers', code: 'MA', img: px(18767555) },
+      { name: 'Chouara dye pits', code: 'MA', img: px(37357057) },
+      { name: 'Madrid ateliers', code: 'ES', img: px(37076986) },
+      { name: 'Italian loafers', code: 'IT', img: px(20763458) },
+      { name: 'Florence belts', code: 'IT', img: px(31367060) },
+      { name: 'Milan workshops', code: 'IT', img: px(33495913) },
+      { name: 'Gaucho leatherwork', code: 'AR', img: px(28806552) },
+      { name: 'Pampas saddlery', code: 'AR', img: px(29145580) },
+    ],
+  },
+  {
+    title: 'Glass & marble',
+    line: 'Blown, cut and carved by hand since before the wheel had spokes.',
+    tiles: [
+      { name: 'Murano glassworks', code: 'IT', img: px(12954040) },
+      { name: 'Murano ateliers', code: 'IT', img: px(29893067) },
+      { name: 'Bohemian crystal', code: 'CZ', img: px(30132508) },
+      { name: 'Crystal stemware', code: 'CZ', img: px(37304105) },
+      { name: 'Carrara marble', code: 'IT', img: px(36499164) },
+      { name: 'Marble ateliers', code: 'IT', img: px(6714322) },
+      { name: 'Istanbul marble', code: 'TR', img: px(12130992) },
+      { name: 'Grand Bazaar lamps', code: 'TR', img: px(37497154) },
+      { name: 'Cairo glass lanterns', code: 'EG', img: px(11350804) },
+      { name: 'Athens marble', code: 'GR', img: px(17311595) },
+    ],
+  },
+  {
+    title: 'Furniture & woodcraft',
+    line: 'No nails, no glue, no gap.',
+    tiles: [
+      { name: 'Kyoto joinery', code: 'JP', img: px(18848781) },
+      { name: 'Japanese hand planes', code: 'JP', img: px(30907889) },
+      { name: 'Danish design', code: 'DK', img: px(32392318) },
+      { name: 'Copenhagen interiors', code: 'DK', img: px(12277129) },
+      { name: 'Javanese teak carving', code: 'ID', img: px(34167389) },
+      { name: 'Bali woodcraft', code: 'ID', img: px(13268976) },
+      { name: 'Damascus marquetry', code: 'SY', img: px(38132596) },
+      { name: 'Aleppo inlay boxes', code: 'SY', img: px(37178485) },
+      { name: 'Versailles marquetry', code: 'FR', img: px(7873602) },
+      { name: 'German joinery', code: 'DE', img: px(5974413) },
+    ],
+  },
 ]
 
 // Film previews for the VELOR LIVE rail — replaced by real streams the
@@ -434,7 +482,7 @@ export default function HomePage() {
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
       {CULTURE_REELS.map((reel, ri) => (
-        <section key={reel.title} style={{ paddingBottom: 26 }}>
+        <section key={reel.title} style={{ paddingTop: 28, paddingBottom: 12 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
               <div>
