@@ -6,7 +6,7 @@ const STORAGE_KEY = 'velor-theme'
 
 export default function ThemePreview() {
   useEffect(() => {
-    let initial = 'dark'
+    let initial = 'light'
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY)
       if (stored === 'light' || stored === 'dark') {
