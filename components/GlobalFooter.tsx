@@ -55,7 +55,7 @@ export default function GlobalFooter() {
   return (
     <footer
       style={{
-        background: '#0A0A0A',
+        background: 'var(--bg)',
         borderTop: '1px solid var(--border)',
         fontFamily: 'var(--font-body)',
         color: 'var(--text)',
