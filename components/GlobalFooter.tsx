@@ -110,7 +110,7 @@ export default function GlobalFooter() {
               marginBottom: 12,
             }}
           >
-            <img src="/velor-logo-globe.png" alt="Velor" style={{ height: 28, width: 'auto' }} />
+            <img src="/velor-logo-globe-v2.png" alt="Velor" style={{ height: 28, width: 'auto' }} />
           </div>
           <p style={{ color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.6, maxWidth: 300 }}>
             The world&apos;s shopping channel. Real makers broadcasting and listing from 190
