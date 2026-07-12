@@ -90,6 +90,8 @@ export default function ApplicationsPage() {
 
   useEffect(() => {
     load()
+    const interval = setInterval(load, 30000)
+    return () => clearInterval(interval)
   }, [load])
 
   function handleUnlock() {
@@ -239,7 +241,7 @@ export default function ApplicationsPage() {
         </div>
       )}
 
-      <div style={styles.footer}>Private dashboard, not linked from the public site.</div>
+      <div style={styles.footer}>Auto-refreshes every 30 seconds. Private dashboard, not linked from the public site.</div>
     </div>
   )
 }
