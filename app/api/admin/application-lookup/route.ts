@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     take: 20,
   })
 
-  const prospectIds = applications.map((a) => a.prospectId).filter((id) => !!id)
+  const prospectIds = applications.map((a) => a.prospectId).filter((id): id is string => !!id)
   const prospects = prospectIds.length
     ? await prisma.sellerProspect.findMany({
         where: { id: { in: prospectIds } },
