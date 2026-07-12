@@ -12,7 +12,7 @@
 // windows or release timing — the full payout schedule lives in the seller
 // agreement shown at signup. This page says payouts follow the agreement.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
@@ -89,7 +89,7 @@ const css = `
 .vs-jtag{display:inline-block;margin-top:14px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--green)}
 .vs-founding{border:1px solid rgba(255,107,0,.32);border-radius:18px;padding:42px 46px;display:flex;align-items:center;justify-content:space-between;gap:38px;background:linear-gradient(120deg,rgba(255,107,0,.06) 0%,rgba(255,107,0,0) 55%),var(--surface);flex-wrap:wrap}
 .vs-founding h2{font-size:27px;margin-bottom:11px;max-width:22ch}
-.vs-founding p{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:54ch;margin:0}
+.vs-founding p{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:54ch;margin:0}.vs-launch{border:1px solid rgba(255,107,0,.32);border-radius:20px;background:linear-gradient(135deg,rgba(255,107,0,.08) 0%,rgba(255,107,0,0) 60%),var(--surface);padding:46px 48px;box-shadow:0 30px 80px rgba(0,0,0,.35);margin-bottom:8px}.vs-launch .toplbl{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:12px}.vs-launch h2{font-size:28px;margin-bottom:12px;max-width:26ch}.vs-launch .sub{font-size:15px;color:var(--muted);margin:0 0 34px;max-width:66ch;line-height:1.7}.vs-count{display:flex;gap:14px;margin-bottom:38px;flex-wrap:wrap;align-items:center}.vs-countbox{border:1px solid var(--border);border-radius:14px;background:var(--bg);padding:16px 20px;min-width:84px;text-align:center;position:relative;overflow:hidden}.vs-countbox .v{font-family:var(--font-display);font-size:38px;font-weight:700;color:var(--accent);line-height:1;position:relative}.vs-countbox .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:8px;position:relative}.vs-countlabel{font-size:13px;color:var(--muted);margin-left:4px}.vs-launch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}.vs-launch-card{border:1px solid var(--border);border-radius:16px;background:var(--bg);padding:24px 24px 22px;transition:transform .15s,border-color .15s}.vs-launch-card:hover{transform:translateY(-3px);border-color:rgba(255,107,0,.5)}.vs-launch-card .ic{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.vs-launch-card h3{font-size:16.5px;margin-bottom:9px}.vs-launch-card p{font-size:13.5px;color:var(--muted);line-height:1.65;margin:0}.vs-launch-risk{border-top:1px solid var(--border);padding-top:22px;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:80ch}.vs-launch-risk b{color:var(--text)}@media(max-width:980px){.vs-launch{padding:30px 24px}.vs-launch-grid{grid-template-columns:1fr}.vs-count{gap:10px}.vs-countbox{min-width:70px;padding:12px 14px}.vs-countbox .v{font-size:28px}}
 @media(max-width:980px){
 .vs-hero{grid-template-columns:1fr;gap:36px;padding:44px 0 20px}
 .vs-hero h1{font-size:36px}
@@ -104,7 +104,9 @@ function gbp(n: number) {
 }
 
 export default function SellPage() {
-  const [sales, setSales] = useState(1000)
+  const [sales, setSales] = useState(1000); const LAUNCH_AT = new Date('2026-08-06T00:00:00+01:00').getTime(); const [now, setNow] = useState<number | null>(null); useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id) }, []); const msLeft = now !== null ? Math.max(0, LAUNCH_AT - now) : null; const dLeft = msLeft !== null ? Math.floor(msLeft / 86400000) : null; const hLeft = msLeft !== null ? Math.floor((msLeft % 86400000) / 3600000) : null; const mLeft = msLeft !== null ? Math.floor((msLeft % 3600000) / 60000) : null; const sLeft = msLeft !== null ? Math.floor((msLeft % 60000) / 1000) : null
+TESTLINE_A
+TESTLINE_B
 
   const keeps = TIERS.map(t => Math.max(0, sales * (1 - t.com) - t.sub))
   const best = keeps.indexOf(Math.max(...keeps))
@@ -145,7 +147,7 @@ export default function SellPage() {
         </div>
       </div>
 
-      <section id="calc">
+      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive 6 August. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-count"><div className="vs-countbox"><div className="v">{dLeft ?? '—'}</div><div className="l">Days</div></div><div className="vs-countbox"><div className="v">{hLeft ?? '—'}</div><div className="l">Hours</div></div><div className="vs-countbox"><div className="v">{mLeft ?? '—'}</div><div className="l">Minutes</div></div><div className="vs-countbox"><div className="v">{sLeft ?? '—'}</div><div className="l">Seconds</div></div><span className="vs-countlabel">until buyers arrive on Velor</span></div><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day between now and 6 August costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps Pro free for life and live broadcasting on Velor Live for life — access no standard subscription includes, and no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Between now and 6 August, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
         <div className="vs-wrap">
           <div className="vs-calc">
             <div className="toplbl">The honest maths</div>
