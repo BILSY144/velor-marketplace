@@ -159,7 +159,7 @@ export default function GlobalHeader() {
         >
           {/* Logo */}
           <Link href="/" style={{ display: 'block', flexShrink: 0, marginLeft: -10 }} aria-label="Velor home">
-            <img src="/velor-logo-globe.png" alt="Velor" style={{ height: 24, width: 'auto' }} />
+            <img src="/velor-logo-globe.png" alt="Velor" style={{ height: 34, width: 'auto' }} />
           </Link>
 
           {/* Primary nav (desktop) */}
