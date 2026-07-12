@@ -1095,3 +1095,34 @@ Skipped:
 Daily scheduled task created: trig_01Cgi2PM3L1mjpS2dqkVCQhE, cron 0 15 * * * (15:00 UTC daily), via the proper create_trigger mechanism (each firing starts a fresh session with no memory of this one, so its prompt is fully self-contained — includes the cultural-marketplace positioning rules, the VELOR Page identity, the group-rule-compliance check learned from the Artisans-of-the-World incident above, and instructions to check each group's my_posted_content / my_pending_content before posting so it never duplicates a post). This task covers ongoing Facebook group outreach, working through the roughly 39 already-joined groups plus newly discovered relevant groups, targeting around 10 groups per day.
 
 Instagram — blocked, unresolved: William asked for a daily Instagram posting task alongside the Facebook one. No Instagram session or login is available in this environment (the Velorcommerce Page's Instagram settings show it is not connected), and per standing safety rules an account will not be created or credentials entered on William's behalf. This was NOT set up as a scheduled task. It needs William's direct input on how to proceed — e.g. logging in himself on his own device and linking the Page to an Instagram Business account — before any Instagram task can be built.
+
+
+---
+
+## SESSION UPDATE — 2026-07-12 (part 2: new-group expansion)
+
+Follow-up to the outreach session logged above: William asked to find and join NEW Facebook groups worldwide (not just work the existing ~39/47-group pool) and post the founding-seller message there too.
+
+New groups found and joined this session (8 total, 7 new countries — searched using native-language terms, e.g. "artesanía peruana", "el sanatları", which surfaces genuinely local groups far better than English queries):
+- Artesanía Peruana para el mundo (Peru, 35.5K members)
+- Artesanías del Perú (Peru, 13K members)
+- HALI KİLİM HİCRET EL SANATLARI (Turkey, carpet/kilim trade, 12.3K members)
+- ARTESANATO & ARTE - Venda e partilha de trabalhos (Brazil, 13.3K members)
+- STROJE LUDOWE/REGIONALNE z PL i zagranicy (Poland, folk costumes, 42K members)
+- Artesanías y manualidades en La Habana (Cuba, 47.5K members)
+- ARTIGIANO, ARTIGIANATO ITALIANO, FATTO IN ITALIA COMPLETAMENTE (Italy, 6.2K members)
+- الحرف اليدوية الاردنية / Jordanian Handicrafts (Jordan, 5.7K members)
+
+Posted to (translated the founding-seller-spot message into the local language for each — Spanish/Italian):
+- Artesanía Peruana para el mundo — posted in Spanish, pending admin approval
+- ARTIGIANO ITALIANO — posted in Italian, pending admin approval
+
+Skipped, and why (important pattern for future sessions and the daily task — READ THIS):
+- الحرف اليدوية الاردنية (Jordan) — group's About text explicitly states posts must be handicraft photos only, "not any advertisement." Skipped per the rule-compliance check.
+- STROJE LUDOWE/REGIONALNE (Poland) — explicit rule: unrelated posts (i.e. not a specific folk-costume item for sale) get deleted.
+- ARTESANATO & ARTE (Brazil) — explicit rule 1: "no self-promotion, spam, or irrelevant links."
+- Artesanías del Perú (second Peru group) — same explicit "no self-promotion/spam/irrelevant links" rule.
+- HALI KİLİM HİCRET EL SANATLARI (Turkey) — on inspection this is effectively one artisan's personal contact/promo group (a single named seller + phone number), not an open community; posting an unrelated recruitment pitch there would look exactly like the scam solicitation their own rule warns members about. Skipped.
+- Artesanías y manualidades en La Habana (Cuba) — NOT skipped for a group-rule reason but a legal/practical one: Cuba is under a longstanding US trade embargo (OFAC sanctions), and Stripe (Velor's payout rail) cannot service Cuban sellers, nor can most Western payment processors including Payoneer. Recruiting a "Founding Seller" there would set someone up for a promise Velor cannot currently fulfill. Do not post Velor seller-recruitment content in Cuba-based groups, and do not onboard a Cuba-based seller, until/unless a compliant payout path exists. Flagged to William.
+
+KEY PATTERN FOR FUTURE SESSIONS: most well-run, high-quality craft-selling Facebook groups have an explicit "no self-promotion / no spam / no irrelevant links" rule precisely because they don't want outside marketplaces like Velor recruiting their members. This sharply limits how many groups a direct-post strategy can actually work in. When evaluating a new group going forward: read the About/rules section fully (click "See more") before posting, and treat any of these as an automatic skip: (a) explicit no-self-promotion/no-spam/no-outside-links rule, (b) posts restricted to a specific format (e.g. "photos only," "must include your own Etsy/shop link," "must be a specific named item for sale"), (c) the group is really a single seller's personal contact page rather than an open community, (d) the country has no viable payout path (sanctions/embargo) even if the group itself is fine. This check must run before every single post, every day, not just when something goes wrong.
