@@ -522,7 +522,6 @@ export default function HomePage() {
       {/* ============ VELOR LIVE — the top of the page ============ */}
       <div className="vh-livesec">
         <div className="vh-wrap">
-          <span className="vh-chtag" style={{ marginBottom: 14 }}><span className="cd" />CH 01 &middot; The network</span>
           <div className="vh-livehead">
             <h1>VEL<span className="o">O</span>R LIVE</h1>
             <span className="vh-livedot"><span className="d" />{liveOnAir.length > 0 ? `${liveOnAir.length} on air now` : 'Channels open with our founding sellers'}</span>
