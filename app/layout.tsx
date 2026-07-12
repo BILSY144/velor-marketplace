@@ -3,6 +3,7 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ConditionalLayout from '@/components/ConditionalLayout'
 import AnalyticsTracker from '@/components/AnalyticsTracker'
+import ThemePreview from '@/components/ThemePreview'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://velorcommerce.store'),
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
         <AnalyticsTracker />
           <ConditionalLayout>{children}</ConditionalLayout>
+          <ThemePreview />
         </Providers>
       </body>
     </html>
