@@ -290,6 +290,7 @@ export default function PulsePage() {
       </Section>
 
       <Section title="SELLER APPLICATIONS">
+        <a href="/pulse/applications" style={{ fontSize: 12, color: '#ff7a1a', textDecoration: 'none' }}>View all applications &rarr;</a>
         <div style={styles.subheading}>Applicants by country (all time)</div>
         {data.signups.sellers.applicationsByCountry.length === 0 ? (
           <div style={styles.smallMuted}>No applications yet.</div>
