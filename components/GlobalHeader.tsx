@@ -200,7 +200,7 @@ export default function GlobalHeader() {
                         <span style={{ fontSize: 15 }}>{navFlag(o.code)}</span>
                         <span>
                           {o.name}
-                          <span style={{ display: 'block', fontSize: 10.5, color: '#8b8b95', marginTop: 1 }}>
+                          <span style={{ display: 'block', fontSize: 10.5, color: 'var(--muted)', marginTop: 1 }}>
                             {cultureHints(o.code).slice(0, 2).join(' · ')}
                           </span>
                         </span>
