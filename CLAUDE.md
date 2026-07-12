@@ -54,6 +54,35 @@ Differentiator: authentic, culturally distinctive goods from real makers in
 their own countries — see the `velor-cultural-marketplace` skill. Generic
 mass-market sellers remain welcome and profitable.
 
+**William has corrected this point repeatedly (2026-07-12) — read this before
+any marketing, outreach, or seller-recruiting work:**
+
+- The core selling point is CULTURE AND COUNTRIES' TRADITIONS, not "handmade"
+  in general. A seller's product must be a real cultural item tied to their
+  country's heritage/tradition (traditional textiles, ceremonial crafts,
+  regional art forms, heritage food, indigenous techniques) made by someone
+  with a genuine connection to that tradition. "Someone who makes macrame at
+  home" is NOT automatically a fit just because it's handmade — it has to
+  connect to an actual cultural/traditional practice of their country.
+  Generic hobbyist-craft sellers with no cultural/heritage tie are not the
+  target, even though they remain welcome as general marketplace sellers.
+- Velor is a GLOBAL marketplace — never default to UK-only targeting,
+  language, or audience assumptions for outreach, ads, or seller recruiting.
+  "One Founding Seller per country" is the actual recruiting model.
+- The `velor-advertising` skill (colour palette, "Free UK delivery" copy,
+  UK-only Facebook targeting, gold/cream luxury branding) describes the
+  OTHER business, velorcommerce.co.uk — a UK-only luxury dropship store. Do
+  NOT apply its brand voice, targeting, or copy templates to Velor
+  Marketplace. If doing Facebook/social work for Velor Marketplace, use the
+  `velor-cultural-marketplace` skill's positioning instead, not
+  `velor-advertising`.
+- For Facebook/social outreach specifically: target cultural-heritage-craft
+  and traditional-artisan communities (by-country or by-craft-tradition
+  groups, cultural export/fair-trade communities, Etsy-adjacent artisan
+  groups with a genuine heritage angle) — not generic "advertise your
+  business" or generic "UK small business" groups. Those generic groups are
+  low-value for this specific positioning even though they're easy to find.
+
 ---
 
 ## STANDING DIRECTIVES
