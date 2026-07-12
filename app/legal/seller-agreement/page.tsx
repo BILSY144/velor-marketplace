@@ -1,3 +1,10 @@
+export const metadata = {
+  title: 'Seller Agreement — Legal Terms — Velor Marketplace',
+  description:
+    'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+  alternates: { canonical: 'https://velorcommerce.store/legal/seller-agreement' },
+}
+
 export default function SellerAgreementPage() {
   const sections = [
     {

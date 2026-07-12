@@ -1,3 +1,10 @@
+export const metadata = {
+  title: 'Privacy Policy — Velor Marketplace',
+  description:
+    'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+  alternates: { canonical: 'https://velorcommerce.store/legal/privacy' },
+}
+
 export default function PrivacyPage() {
   const sections = [
     {

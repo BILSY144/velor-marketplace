@@ -1,3 +1,10 @@
+export const metadata = {
+  title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
+  description:
+    'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+  alternates: { canonical: 'https://velorcommerce.store/legal/seller-rules' },
+}
+
 export default function SellerRulesPage() {
   const sections = [
     {

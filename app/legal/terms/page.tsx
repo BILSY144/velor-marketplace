@@ -1,3 +1,10 @@
+export const metadata = {
+  title: 'Terms of Service — Velor Marketplace',
+  description:
+    'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+  alternates: { canonical: 'https://velorcommerce.store/legal/terms' },
+}
+
 export default function TermsPage() {
   const sections = [
     {
