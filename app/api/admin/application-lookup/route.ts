@@ -48,10 +48,23 @@ export async function GET(request: NextRequest) {
       verificationNotes: true,
       createdAt: true,
       updatedAt: true,
+      prospectId: true,
     },
     orderBy: { createdAt: 'desc' },
     take: 20,
   })
 
-  return NextResponse.json({ count: applications.length, applications })
+  const prospectIds = applications.map((a) => a.prospectId).filter((id) => !!id)
+  const prospects = prospectIds.length
+    ? await prisma.sellerProspect.findMany({
+        where: { id: { in: prospectIds } },
+        select: { id: true, platform: true, storeUrl: true, sellerType: true },
+      })
+    : []
+  const prospectById = Object.fromEntries(prospects.map((p) => [p.id, p]))
+  const applicationsWithSource = applications.map((a) => ({
+    ...a,
+    sourceProspect: a.prospectId ? prospectById[a.prospectId] || null : null,
+  }))
+  return NextResponse.json({ count: applicationsWithSource.length, applications: applicationsWithSource })
 }
