@@ -46,7 +46,7 @@ export default function GlobalHeader() {
     return () => window.removeEventListener('velor-currency-changed', onCurrencyChange)
   }, [])
 
-  const [themeMode, setThemeMode] = useState('dark')
+  const [themeMode, setThemeMode] = useState('light')
 
   useEffect(() => {
     const current = document.documentElement.getAttribute('data-theme')
