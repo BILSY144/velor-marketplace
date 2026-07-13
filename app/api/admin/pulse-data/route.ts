@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     const hourAgo = new Date(now.getTime() - 60 * 60 * 1000)
     const midnightUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
     const day7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const day14 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
     const day30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     const day1 = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
@@ -101,6 +102,12 @@ export async function GET(request: NextRequest) {
         reviewAgg,
         reviews7d,
         pendingPayoutRows,
+        pageViewTimestamps24h,
+        ordersLast14d,
+        lowStockCount,
+        pendingCertificatesCount,
+        liveNowCount,
+        overdueApplicationsCount,
   ] = await Promise.all([
           prisma.pageView.count({ where: { createdAt: { gte: hourAgo } } }),
       prisma.pageView.count({ where: { createdAt: { gte: midnightUTC } } }),
@@ -225,6 +232,22 @@ export async function GET(request: NextRequest) {
                 where: { status: 'pending' },
                 select: { amount: true, currency: true },
         }),
+        // -- Additions for the Pulse hub redesign (2026-07-13): sparkline
+        // series and cross-cutting "attention needed" signals that were
+        // previously invisible from the dashboard (low stock, certificate
+        // backlog, whether anyone is live right now, overdue applications).
+        prisma.pageView.findMany({
+                where: { createdAt: { gte: day1 } },
+                select: { createdAt: true },
+        }),
+        prisma.order.findMany({
+                where: { createdAt: { gte: day14 }, status: { not: 'CANCELLED' } },
+                select: { subtotal: true, currency: true, createdAt: true },
+        }),
+        prisma.product.count({ where: { stock: { lt: 5 }, status: 'APPROVED' } }),
+        prisma.productCertificate.count({ where: { status: 'PENDING' } }),
+        prisma.liveStream.count({ where: { status: 'LIVE' } }),
+        prisma.sellerApplication.count({ where: { status: 'PENDING', createdAt: { lt: day1 } } }),
       ])
 
   let gmv30dGBP = 0
@@ -246,6 +269,46 @@ export async function GET(request: NextRequest) {
                   payoutFxError = true
           }
     }
+
+  // Hourly traffic sparkline: 24 buckets, oldest -> newest, bucket[23] is the
+  // current (partial) hour. Bucketed in JS from raw timestamps rather than a
+  // SQL date_trunc groupBy -- traffic volume pre-launch is low enough that
+  // this is simpler and avoids a raw query, and stays correct at any scale
+  // since it's just a count per bucket.
+  const trafficHourly = new Array(24).fill(0)
+  for (const row of pageViewTimestamps24h) {
+    const hoursAgo = Math.floor((now.getTime() - row.createdAt.getTime()) / (60 * 60 * 1000))
+    const idx = 23 - hoursAgo
+    if (idx >= 0 && idx < 24) trafficHourly[idx]++
+  }
+
+  // Daily GMV sparkline: 14 buckets, oldest -> newest, bucket[13] is today
+  // (UTC, partial). Same live-FX-conversion approach as gmv30dGBP above.
+  const gmvDaily = new Array(14).fill(0)
+  let gmvDailyFxError = false
+  for (const row of ordersLast14d) {
+    const daysAgo = Math.floor((midnightUTC.getTime() - Date.UTC(row.createdAt.getUTCFullYear(), row.createdAt.getUTCMonth(), row.createdAt.getUTCDate())) / (24 * 60 * 60 * 1000))
+    const idx = 13 - daysAgo
+    if (idx < 0 || idx >= 14) continue
+    try {
+      gmvDaily[idx] += await convert(row.subtotal, row.currency, 'GBP')
+    } catch {
+      gmvDailyFxError = true
+    }
+  }
+  const gmvDailyRounded = gmvDaily.map((v) => Math.round(v * 100) / 100)
+
+  // "Pulse Score" -- a composite 0-100 operational-health readout for the
+  // hub's headline gauge. Deliberately simple and fully transparent: it is
+  // the unweighted average of four named sub-scores, each a plain penalty
+  // formula off real counts already computed above (no hidden inputs, no
+  // machine-scored opacity). All four sub-scores are returned alongside the
+  // total so the UI can show exactly what it's made of, not just the number.
+  const ordersHealth = Math.max(0, Math.min(100, 100 - openDisputes * 15 - pendingReturns * 5))
+  const applicationsHealth = Math.max(0, Math.min(100, 100 - overdueApplicationsCount * 10))
+  const supportHealth = Math.max(0, Math.min(100, 100 - priorityOpenSupportTickets * 20 - Math.max(0, openSupportTickets - 5) * 3))
+  const catalogueHealth = Math.max(0, Math.min(100, 100 - lowStockCount * 4 - pendingCertificatesCount * 5))
+  const pulseScore = Math.round((ordersHealth + applicationsHealth + supportHealth + catalogueHealth) / 4)
 
   const prospectStatusBreakdown = prospectByStatus.map((row) => ({ status: row.status, count: row._count.status }))
   const sellersByCountry = sellersByCountryRows.map((row) => ({ country: row.country || 'Not provided', count: row._count.country }))
@@ -368,6 +431,34 @@ export async function GET(request: NextRequest) {
                 fxNote: payoutFxError
                   ? 'Some payouts could not be converted to GBP and are excluded from this total.'
                           : 'Converted to GBP at live exchange rates.',
+        },
+        // -- Additions for the Pulse hub redesign (2026-07-13) --
+        sparklines: {
+                trafficHourly24h: trafficHourly,
+                gmvDaily14dGBP: gmvDailyRounded,
+                gmvDailyFxNote: gmvDailyFxError
+                  ? 'Some orders in this window could not be converted to GBP and are excluded.'
+                          : null,
+        },
+        pulseScore: {
+                total: pulseScore,
+                breakdown: {
+                        orders: Math.round(ordersHealth),
+                        applications: Math.round(applicationsHealth),
+                        support: Math.round(supportHealth),
+                        catalogue: Math.round(catalogueHealth),
+                },
+        },
+        attention: {
+                overdueApplications: overdueApplicationsCount,
+                openDisputes: openDisputes,
+                priorityOpenTickets: priorityOpenSupportTickets,
+                pendingReturns: pendingReturns,
+                lowStockCount: lowStockCount,
+                pendingCertificates: pendingCertificatesCount,
+        },
+        liveNow: {
+                streamsLive: liveNowCount,
         },
   }
 
