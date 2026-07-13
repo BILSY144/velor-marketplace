@@ -17,9 +17,9 @@ import Link from 'next/link'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
 const TIERS = [
-  { name: 'Starter', sub: 0, com: 0.12, fee: 'Free · 12% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
-  { name: 'Pro', sub: 49, com: 0.08, fee: '£49 / month · 8% commission', meta: 'Pays for itself past £700 a month. Free for life for founding sellers.' },
-  { name: 'Enterprise', sub: 99, com: 0.05, fee: '£99 / month · 5% commission', meta: 'For brands and wholesalers moving serious volume. Pays for itself past £5,000 a month.' },
+  { name: 'Starter', sub: 0, com: 0.1, fee: 'Free · 10% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
+  { name: 'Pro', sub: 49, com: 0.04, fee: '£49 / month · 4% commission', meta: 'Pays for itself past £820 a month. Free for life for founding sellers.' },
+  { name: 'Enterprise', sub: 99, com: 0, fee: '£99 / month · 0% commission', meta: 'For brands and wholesalers moving serious volume. Pays for itself past £5,000 a month.' },
 ]
 
 const css = `
