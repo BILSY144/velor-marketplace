@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, buildOrderConfirmationEmail } from '@/lib/email'
 
 interface PricedItem {
   productId: string
@@ -59,8 +60,9 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
   const platformFee = Math.max(0, totalGBP - sellerEarnings)
   const customerEmail = (md.buyerEmail || '').toLowerCase().trim()
 
+  let order
   try {
-    const [order] = await prisma.$transaction([
+    const [created] = await prisma.$transaction([
       prisma.order.create({
         data: {
           sellerId: md.sellerDbId,
@@ -95,14 +97,53 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
         })
       ),
     ])
-    return order
+    order = created
   } catch (err: unknown) {
     // Someone else (webhook vs. the confirmation-page accelerator) won the
-    // race and created it first -- not an error, just return their row.
+    // race and created it first -- not an error, just return their row. No
+    // confirmation email here either: whichever call actually created the
+    // row is the one that sends it, below.
     if (err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'P2002') {
       const raced = await prisma.order.findUnique({ where: { stripePaymentId: pi.id } })
       if (raced) return raced
     }
     throw err
   }
+
+  // Order confirmation email -- best-effort. Reached exactly once, right
+  // after a genuinely NEW order is created (every earlier return above is
+  // either "already existed" or "someone else just created it"), so this
+  // can never double-send even though both the webhook and the
+  // checkout-confirmation accelerator call this same function for the same
+  // PaymentIntent. A failure here is logged but never thrown -- a broken
+  // email send must not roll back or fail an already-successful order.
+  if (customerEmail) {
+    try {
+      const products = await prisma.product.findMany({
+        where: { id: { in: items.map((i) => i.productId) } },
+        select: { id: true, title: true },
+      })
+      const titleById = new Map(products.map((p) => [p.id, p.title]))
+      const { subject, html } = buildOrderConfirmationEmail({
+        buyerName: md.buyerName || customerEmail,
+        orderId: order.id,
+        items: items.map((item) => ({
+          name: titleById.get(item.productId) || 'Item',
+          quantity: Math.round(Number(item.quantity)) || 0,
+          price: Number(item.priceGBP) || 0,
+        })),
+        total: totalGBP,
+        // buildOrderConfirmationEmail concatenates this directly before each
+        // amount (`${currency}${amount}`) -- it wants a display symbol, not
+        // an ISO code. Orders are always GBP-denominated (see currency:
+        // 'gbp' on the Order record above), so '£' is always correct here.
+        currency: '£',
+      })
+      await sendEmail({ to: customerEmail, subject, html })
+    } catch (emailErr) {
+      console.error('[createOrderFromPaymentIntent] order confirmation email failed for order', order.id, emailErr)
+    }
+  }
+
+  return order
 }
