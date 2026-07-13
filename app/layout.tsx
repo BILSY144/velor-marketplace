@@ -5,21 +5,40 @@ import ConditionalLayout from '@/components/ConditionalLayout'
 import AnalyticsTracker from '@/components/AnalyticsTracker'
 import ThemePreview from '@/components/ThemePreview'
 
+// Homepage title/description rewritten by the standing SEO agent,
+// 2026-07-13 -- see SEO_LOG.md backlog item 5. Every other public route
+// (apply/sell/founding/shop/help/about) already carries cultural-heritage
+// -forward copy of its own; the root layout -- which the homepage and every
+// route without its own metadata export inherits from -- was the one
+// remaining page still using the original generic "Global Marketplace" /
+// "unique products from sellers around the world" copy from before that
+// positioning existed. Wording below is drawn directly from language
+// already live elsewhere in the app, not invented: "authentic cultural and
+// heritage goods" (app/apply/layout.tsx), "independent sellers ... from 190
+// countries" and "its maker and its country of origin" (app/sell/layout.tsx,
+// near-verbatim), "190 countries" (app/founding/layout.tsx, app/page.tsx
+// swipe hint, app/live/page.tsx). No canonical/robots change here -- adding
+// a homepage canonical to this shared root layout would leak onto every
+// route that has no metadata export of its own (see backlog item 3).
+const title = 'Velor — Global Marketplace for Culture & Heritage'
+const description =
+  'Shop live or browse authentic cultural and heritage goods from independent sellers in 190 countries — each listing carries its maker and origin.'
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://velorcommerce.store'),
-  title: 'Velor - Global Marketplace',
-  description: 'Discover unique products from sellers around the world.',
+  title,
+  description,
   openGraph: {
-    title: 'Velor - Global Marketplace',
-    description: 'Discover unique products from sellers around the world.',
+    title,
+    description,
     url: 'https://velorcommerce.store',
     siteName: 'Velor',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Velor - Global Marketplace',
-    description: 'Discover unique products from sellers around the world.',
+    title,
+    description,
   },
 }
 
