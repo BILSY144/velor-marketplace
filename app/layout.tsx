@@ -48,6 +48,16 @@ const jsonLd = {
     {
       '@type': 'Organization',
       name: 'Velor',
+      // legalName added by the standing SEO agent, 2026-07-13 (second pass) --
+      // this marketplace's own Stripe account (acct_1TlcWCDB5eA3Wfmu) is
+      // registered to "VELOR COMMERCE LTD", per CLAUDE.md's own SCOPE section
+      // (line 28), which is scoped to Velor Marketplace only -- not a guess
+      // and not borrowed from the separate velorcommerce.co.uk business.
+      legalName: 'VELOR COMMERCE LTD',
+      // description reuses the exact, already-verified root-layout copy
+      // (the `description` const above) rather than a second hand-written
+      // string, so the two can never drift out of sync.
+      description,
       url: 'https://velorcommerce.store',
       logo: 'https://velorcommerce.store/velor-logo-globe-v2.png',
       sameAs: ['https://www.facebook.com/Velorcommerce'],
