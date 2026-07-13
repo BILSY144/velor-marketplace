@@ -238,7 +238,12 @@ model Order {
   id                String          @id @default(cuid())
   sellerId          String
   seller            Seller          @relation(fields: [sellerId], references: [id])
-  stripePaymentId   String?         @unique
+  // A single Stripe payment can now produce MULTIPLE Orders -- one per
+  // seller in the cart (see lib/orders.ts). stripePaymentId is therefore no
+  // longer unique on its own; the compound unique below is what keeps order
+  // creation idempotent -- at most one Order per (payment, seller) pair,
+  // exactly matching one parcel/shipment per seller per checkout.
+  stripePaymentId   String?
   status            OrderStatus     @default(PENDING)
   deliveredAt       DateTime?
   subtotal          Float
@@ -255,6 +260,8 @@ model Order {
   dispute           Dispute?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
+
+  @@unique([stripePaymentId, sellerId])
 }
 
 model OrderItem {

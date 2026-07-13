@@ -28,6 +28,24 @@ function sanitizeAddress(input: unknown) {
   }
 }
 
+function round2(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100
+}
+
+interface SellerShippingInput {
+  sellerId: string
+  shippingAmount: number
+  shippingCurrency: string
+  dutiesAmountGBP: number
+}
+
+interface SellerGroup {
+  sellerId: string
+  tier: string | null
+  items: { productId: string; quantity: number; priceGBP: number }[]
+  subtotalGBP: number
+}
+
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) {
@@ -42,9 +60,7 @@ export async function POST(request: NextRequest) {
     const {
       items,
       currency = 'GBP',
-      shippingAmount = 0,
-      shippingCurrency = 'GBP',
-      dutiesAmountGBP = 0,
+      sellerShipping,
       buyerName,
       shippingAddress,
     } = await request.json()
@@ -68,21 +84,27 @@ export async function POST(request: NextRequest) {
         price: true,
         stock: true,
         title: true,
-        seller: { select: { id: true, currency: true, stripeAccountId: true, tier: true } },
+        seller: { select: { id: true, currency: true, tier: true } },
       },
     })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    let subtotalGBP = 0
-    let sellerDbId = ''
-    let sellerAccountId = ''
-    let commissionRate = PLATFORM_COMMISSION_RATE
-    const discountCartItems: DiscountCartItem[] = []
+    // A cart can hold items from MULTIPLE sellers. Each seller ships their
+    // own parcel from their own address with their own carrier account (see
+    // app/api/shipping/rates/route.ts), gets their own commission rate
+    // (their own tier, not whichever seller happened to be first in the
+    // cart), and -- critically -- must end up with their own Order and their
+    // own payout. Everything below groups by the item's REAL seller,
+    // resolved server-side from the product, never trusted from the client.
+    const groups = new Map<string, SellerGroup>()
 
     for (const item of items) {
       const product = productMap.get(item.productId)
       if (!product) {
         return NextResponse.json({ error: 'Product not found: ' + item.productId }, { status: 400 })
+      }
+      if (!product.seller) {
+        return NextResponse.json({ error: 'Product has no seller: ' + item.productId }, { status: 400 })
       }
       const qty = Math.max(1, Number(item.quantity) || 1)
       if (product.stock < qty) {
@@ -98,57 +120,112 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
-      const sellerCurrency = product.seller?.currency ?? 'GBP'
+      const sellerCurrency = product.seller.currency ?? 'GBP'
       const unitGBP =
         sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
       const lineGBP = unitGBP * qty
-      subtotalGBP += lineGBP
-      discountCartItems.push({ productId: item.productId, quantity: qty, priceGBP: unitGBP })
 
-      if (!sellerDbId && product.seller) {
-        sellerDbId = product.seller.id
-        sellerAccountId = product.seller.stripeAccountId ?? ''
-        commissionRate = TIER_COMMISSION[product.seller.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
+      let group = groups.get(product.seller.id)
+      if (!group) {
+        group = { sellerId: product.seller.id, tier: (product.seller.tier as unknown as string) ?? null, items: [], subtotalGBP: 0 }
+        groups.set(product.seller.id, group)
       }
+      group.items.push({ productId: item.productId, quantity: qty, priceGBP: unitGBP })
+      group.subtotalGBP += lineGBP
     }
 
-    // Discounts are automatic and buyer-invisible-to-input: there is no
-    // discount code for the client to send. The exact same seller discount
-    // codes that were shown on the listing/detail pages and at checkout are
-    // re-looked-up here from scratch, so the buyer is always charged the
-    // number they were shown — never a client-supplied amount.
-    const { totalDiscountGBP, applied } = await findAutomaticDiscounts(sellerDbId, discountCartItems)
-    const discountAmountGBP = totalDiscountGBP
-    const discountIds = applied.map((a) => a.discountId)
-    const discountCodesApplied = applied.map((a) => a.code)
+    // Every seller present in the cart must have a chosen shipping option --
+    // see app/checkout/page.tsx, which requires one selected rate per seller
+    // group before "Continue to Payment" is even enabled. This is a
+    // presence check only (same trust model as the old single-seller
+    // shippingAmount/dutiesAmountGBP fields, which were always client-
+    // supplied without server recomputation) -- it just makes sure no
+    // seller's parcel silently gets charged 0 shipping because the client
+    // forgot to send an entry for them.
+    const shippingBySeller = new Map<string, SellerShippingInput>(
+      (Array.isArray(sellerShipping) ? sellerShipping : []).map((s: SellerShippingInput) => [s.sellerId, s])
+    )
+    const missingShipping = [...groups.keys()].filter((id) => !shippingBySeller.has(id))
+    if (missingShipping.length > 0) {
+      return NextResponse.json(
+        { error: 'Shipping has not been selected for every seller in this cart.' },
+        { status: 400 }
+      )
+    }
 
-    // Discounts only ever reduce the product subtotal — never shipping or
-    // duties/taxes. Those are computed independently below and added back
-    // in full, untouched by any discount.
-    const discountedSubtotalGBP = Math.max(0, subtotalGBP - discountAmountGBP)
+    let grandSubtotalGBP = 0
+    let grandDiscountedSubtotalGBP = 0
+    let grandDiscountGBP = 0
+    let grandShippingGBP = 0
+    let grandDutiesGBP = 0
+    let grandTotalGBP = 0
+    let grandApplicationFee = 0
+    const discountIds: string[] = []
+    const discountCodesApplied: string[] = []
+    // Compact per-seller breakdown -- short keys since this whole array is
+    // one Stripe metadata value, capped at 500 chars. i=sellerId,
+    // c=commissionRate, s=subtotalGBP (pre-discount), d=discountGBP,
+    // h=shippingGBP, u=dutiesGBP, o=thisSeller'sTotalGBP,
+    // e=sellerShareGBP (what this seller is ultimately owed). sellerAccountId
+    // is deliberately NOT stored here -- the payout cron now looks it up
+    // fresh from the database by the Order's own sellerId instead, which is
+    // both smaller and always current rather than a checkout-time snapshot.
+    const sellerBreakdown: Array<{ i: string; c: number; s: number; d: number; h: number; u: number; o: number; e: number }> = []
 
-    const shippingCurrencyCode = String(shippingCurrency).toUpperCase()
-    const shippingGBP = shippingCurrencyCode === 'GBP'
-      ? Number(shippingAmount) || 0
-      : await convert(Number(shippingAmount) || 0, shippingCurrencyCode, 'GBP')
+    for (const group of groups.values()) {
+      const discountCartItems: DiscountCartItem[] = group.items
+      const { totalDiscountGBP, applied } = await findAutomaticDiscounts(group.sellerId, discountCartItems)
+      const discountedSubtotalGBP = Math.max(0, group.subtotalGBP - totalDiscountGBP)
 
-    const dutiesGBP = Number(dutiesAmountGBP) || 0
+      const shipEntry = shippingBySeller.get(group.sellerId)!
+      const shipCurrency = String(shipEntry.shippingCurrency || 'GBP').toUpperCase()
+      const shippingGBP = shipCurrency === 'GBP'
+        ? Number(shipEntry.shippingAmount) || 0
+        : await convert(Number(shipEntry.shippingAmount) || 0, shipCurrency, 'GBP')
+      const dutiesGBP = Number(shipEntry.dutiesAmountGBP) || 0
 
-    const totalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP
+      const commissionRate = TIER_COMMISSION[group.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
+      const sellerTotalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP
+      const applicationFeeAmount = Math.round(discountedSubtotalGBP * commissionRate * 100)
+      const sellerShareGBP = sellerTotalGBP - discountedSubtotalGBP * commissionRate
 
-    let subtotalCharge = discountedSubtotalGBP
-    let shippingCharge = shippingGBP
-    let dutiesCharge = dutiesGBP
+      grandSubtotalGBP += group.subtotalGBP
+      grandDiscountedSubtotalGBP += discountedSubtotalGBP
+      grandDiscountGBP += totalDiscountGBP
+      grandShippingGBP += shippingGBP
+      grandDutiesGBP += dutiesGBP
+      grandTotalGBP += sellerTotalGBP
+      grandApplicationFee += applicationFeeAmount
+      discountIds.push(...applied.map((a) => a.discountId))
+      discountCodesApplied.push(...applied.map((a) => a.code))
+
+      sellerBreakdown.push({
+        i: group.sellerId,
+        c: commissionRate,
+        s: round2(group.subtotalGBP),
+        d: round2(totalDiscountGBP),
+        h: round2(shippingGBP),
+        u: round2(dutiesGBP),
+        o: round2(sellerTotalGBP),
+        e: round2(sellerShareGBP),
+      })
+    }
+
+    const totalGBP = grandTotalGBP
+
+    let subtotalCharge = grandDiscountedSubtotalGBP
+    let shippingCharge = grandShippingGBP
+    let dutiesCharge = grandDutiesGBP
     let totalCharge = totalGBP
-    let discountCharge = discountAmountGBP
+    let discountCharge = grandDiscountGBP
 
     if (buyerCurrency !== 'GBP') {
-      subtotalCharge = await convert(discountedSubtotalGBP, 'GBP', buyerCurrency)
-      shippingCharge = await convert(shippingGBP, 'GBP', buyerCurrency)
-      dutiesCharge = await convert(dutiesGBP, 'GBP', buyerCurrency)
+      subtotalCharge = await convert(grandDiscountedSubtotalGBP, 'GBP', buyerCurrency)
+      shippingCharge = await convert(grandShippingGBP, 'GBP', buyerCurrency)
+      dutiesCharge = await convert(grandDutiesGBP, 'GBP', buyerCurrency)
       totalCharge = await convert(totalGBP, 'GBP', buyerCurrency)
-      if (discountAmountGBP > 0) {
-        discountCharge = await convert(discountAmountGBP, 'GBP', buyerCurrency)
+      if (grandDiscountGBP > 0) {
+        discountCharge = await convert(grandDiscountGBP, 'GBP', buyerCurrency)
       }
     }
 
@@ -157,8 +234,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Total must be greater than zero' }, { status: 400 })
     }
 
-    const applicationFeeAmount = Math.round(discountedSubtotalGBP * commissionRate * 100)
-    const sellerShareGBP = totalGBP - discountedSubtotalGBP * commissionRate
+    const sellerBreakdownJson = JSON.stringify(sellerBreakdown)
+    // Stripe metadata values are capped at 500 chars. sellerBreakdown holds
+    // one compact entry per seller in the cart (comfortably fits 4 sellers
+    // in testing) -- fail loudly here with a clear error rather than let
+    // Stripe reject PaymentIntent creation with an opaque one, if a cart
+    // somehow has enough distinct sellers to overflow it.
+    if (sellerBreakdownJson.length > 500) {
+      return NextResponse.json(
+        { error: 'This cart has too many different sellers to check out in one payment. Please split it into smaller orders.' },
+        { status: 400 }
+      )
+    }
 
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: amountMinorUnits,
@@ -175,36 +262,37 @@ export async function POST(request: NextRequest) {
       automatic_payment_methods: { enabled: true },
       metadata: {
         // Server-computed {productId, quantity, priceGBP} per line item --
-        // NOT the raw client body. This is the trusted source the webhook
-        // (and the checkout-confirmation accelerator) use to actually build
-        // the Order + OrderItems once payment succeeds.
-        items: JSON.stringify(discountCartItems),
+        // NOT the raw client body. Built from `groups` (the server-resolved,
+        // server-priced item list), never the client's raw items. lib/orders.ts
+        // re-resolves each item's REAL seller fresh from the database (never
+        // from this JSON) and cross-references sellerBreakdown below to build
+        // one Order per seller.
+        items: JSON.stringify([...groups.values()].flatMap((g) => g.items)),
         buyerEmail,
         buyerName: String(buyerName ?? '').slice(0, 150).trim(),
         shippingAddress: JSON.stringify(sanitizeAddress(shippingAddress)),
-        subtotalGBP: subtotalGBP.toFixed(2),
-        discountedSubtotalGBP: discountedSubtotalGBP.toFixed(2),
-        discountAmountGBP: discountAmountGBP.toFixed(2),
+        subtotalGBP: grandSubtotalGBP.toFixed(2),
+        discountedSubtotalGBP: grandDiscountedSubtotalGBP.toFixed(2),
+        discountAmountGBP: grandDiscountGBP.toFixed(2),
         // Multiple automatic discounts can apply to one order (one per
         // product, each from a different code) — stored comma-joined since
         // Stripe metadata values are flat strings.
         discountIds: discountIds.join(','),
         discountCodes: discountCodesApplied.join(','),
-        shippingGBP: shippingGBP.toFixed(2),
-        dutiesGBP: dutiesGBP.toFixed(2),
+        shippingGBP: grandShippingGBP.toFixed(2),
+        dutiesGBP: grandDutiesGBP.toFixed(2),
         totalGBP: totalGBP.toFixed(2),
         chargeCurrency: buyerCurrency,
         chargeAmount: totalCharge.toFixed(2),
-        applicationFee: String(applicationFeeAmount),
-        commissionRate: String(commissionRate),
-        sellerShareGBP: sellerShareGBP.toFixed(2),
-        sellerDbId,
-        sellerAccountId,
+        applicationFee: String(grandApplicationFee),
+        // One entry per seller in the cart -- see SellerGroup/sellerBreakdown
+        // above for the compact field-name key.
+        sellerBreakdown: sellerBreakdownJson,
       },
     }
 
     // Funds are HELD on the platform (no transfer_data). The payout-release cron
-    // transfers the seller share after delivery plus the hold window.
+    // transfers each seller's own share after delivery plus the hold window.
 
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams)
 

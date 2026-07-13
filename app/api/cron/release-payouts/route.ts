@@ -67,14 +67,22 @@ export async function GET(req: NextRequest) {
 
       const pi = await stripe.paymentIntents.retrieve(o.stripePaymentId as string)
       const md = (pi.metadata || {}) as Record<string, string>
-      // app/api/stripe/payment-intent/route.ts has only ever written
-      // `sellerShareGBP` (a GBP decimal string, e.g. "45.99") -- `sellerShare`
-      // (plain, minor-units) was never a real metadata key, so parseInt on it
-      // always silently returned 0 here and every order was skipped forever.
-      // No seller payout has actually succeeded via this cron until this fix.
-      const sellerShareGBP = parseFloat(md.sellerShareGBP || '0')
+      // A single PaymentIntent can now cover MULTIPLE sellers (a mixed
+      // cart -- see lib/orders.ts), each with their own Order and their own
+      // share of the payment. sellerBreakdown holds one compact entry per
+      // seller (i=sellerId, e=sellerShareGBP -- see app/api/stripe/
+      // payment-intent/route.ts for the full key legend); this order's own
+      // share is whichever entry matches ITS sellerId, never the whole
+      // PaymentIntent's total.
+      let sellerBreakdown: Array<{ i: string; e: number }> = []
+      try {
+        sellerBreakdown = JSON.parse(md.sellerBreakdown || '[]')
+      } catch {
+        sellerBreakdown = []
+      }
+      const sellerEntry = sellerBreakdown.find((s) => s && s.i === o.sellerId)
+      const sellerShareGBP = Number(sellerEntry?.e) || 0
       const sellerShare = Math.round(sellerShareGBP * 100) // minor units (pence) for Stripe/Payoneer
-      const sellerAccountId = md.sellerAccountId || ''
       if (!sellerShare || sellerShare <= 0) {
         skipped++
         continue
@@ -82,7 +90,7 @@ export async function GET(req: NextRequest) {
       const chargeId = (pi as unknown as { latest_charge?: string }).latest_charge
       // sellerShareGBP is ALWAYS GBP-denominated, computed server-side in GBP
       // regardless of what currency the buyer actually paid in (payment-intent/
-      // route.ts converts everything to GBP before working out the seller's
+      // route.ts converts everything to GBP before working out each seller's
       // share). pi.currency reflects the buyer's charge currency instead, which
       // can be non-GBP -- pairing that with a GBP-denominated amount would
       // silently send the wrong amount in the wrong currency. Using 'gbp' here
@@ -92,6 +100,21 @@ export async function GET(req: NextRequest) {
       // failure (funds stay in escrow, retried next run), never a silently
       // wrong payout.
       const currency = 'gbp'
+
+      // This order's Stripe Connect account, looked up fresh from the
+      // database by the order's own sellerId -- not from PaymentIntent
+      // metadata (checkout no longer stores sellerAccountId there at all,
+      // both because a fresh DB read is always current rather than a
+      // checkout-time snapshot, and because dropping it kept sellerBreakdown
+      // small enough to fit Stripe's 500-char metadata-value cap for carts
+      // with several sellers). Also grabs payoutRail/payoneerPayeeId in the
+      // same query, replacing the second lookup that used to happen further
+      // down only for the Payoneer branch.
+      const sellerRow = await prisma.seller.findUnique({
+        where: { id: o.sellerId },
+        select: { stripeAccountId: true, payoutRail: true, payoneerPayeeId: true },
+      })
+      const sellerAccountId = sellerRow?.stripeAccountId || ''
 
       if (sellerAccountId) {
         // STRIPE rail. Idempotency key keyed on the order guarantees we never
@@ -122,18 +145,14 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // No Stripe account on the PaymentIntent: PAYONEER-rail seller (or a
-      // seller who has not finished payout onboarding). Same holds and
-      // dispute checks already passed above -- only the transfer differs.
-      const seller = await prisma.seller.findUnique({
-        where: { id: o.sellerId },
-        select: { payoutRail: true, payoneerPayeeId: true },
-      })
-      if (seller?.payoutRail === 'PAYONEER' && seller.payoneerPayeeId && isPayoneerConfigured()) {
+      // No Stripe account on file: PAYONEER-rail seller (or a seller who
+      // has not finished payout onboarding). Same holds and dispute checks
+      // already passed above -- only the transfer differs.
+      if (sellerRow?.payoutRail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
         // client_reference_id `payout_<orderId>` mirrors the Stripe
         // idempotency convention so a retried run can never double-pay.
         const { payoutId } = await createPayoneerPayout({
-          payeeId: seller.payoneerPayeeId,
+          payeeId: sellerRow.payoneerPayeeId,
           amount: sellerShare / 100,
           currency,
           clientReferenceId: `payout_${o.id}`,

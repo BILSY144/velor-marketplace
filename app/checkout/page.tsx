@@ -50,6 +50,16 @@ interface ShippingRate {
   amount: number; currency: string; estimatedDays: number | null;
   isDDP: boolean;
 }
+// A mixed-seller cart ships as one parcel PER SELLER -- each seller has
+// their own dispatch address, so /api/shipping/rates returns one rate
+// group per seller present in the cart, and the buyer must pick one rate
+// from EACH group (not one rate for the whole cart).
+interface SellerRateGroup {
+  sellerId: string
+  sellerName: string
+  originCountry: string | null
+  rates: ShippingRate[]
+}
 interface LandedCost {
   dutyAmountGBP: number; vatAmountGBP: number; totalTaxGBP: number;
   belowDeMinimis: boolean; deMinimisGBP: number; isDomestic: boolean;
@@ -159,9 +169,9 @@ export default function CheckoutPage() {
   }
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
   const [address, setAddress] = useState({ name: '', email: '', phone: '', phoneCountry: 'GB', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'GB' })
-  const [rates, setRates] = useState<ShippingRate[]>([])
-  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null)
-  const [landedCost, setLandedCost] = useState<LandedCost | null>(null)
+  const [sellerGroups, setSellerGroups] = useState<SellerRateGroup[]>([])
+  const [selectedRates, setSelectedRates] = useState<Record<string, ShippingRate>>({})
+  const [sellerDuties, setSellerDuties] = useState<Record<string, LandedCost>>({})
   const [loadingRates, setLoadingRates] = useState(false)
   const [rateError, setRateError] = useState('')
   const [clientSecret, setClientSecret] = useState('')
@@ -204,8 +214,13 @@ export default function CheckoutPage() {
 
   const productSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const productSubtotalConverted = items.reduce((s, i) => s + convert(i.price * i.quantity, itemCurrencies[i.productId] || 'GBP'), 0)
-  const shippingCost = Number(selectedRate?.amount) || 0
-  const dutiesAmount = landedCost?.totalTaxGBP ?? 0
+  // Sums across every seller in the cart -- each seller's own selected rate
+  // / own duties, not one rate for the whole order. Treated as GBP for this
+  // client-side estimate (same assumption the original single-seller code
+  // made), same as before; the server independently converts each seller's
+  // own shipping currency to GBP when the real charge is computed.
+  const shippingCost = Object.values(selectedRates).reduce((s, r) => s + (Number(r.amount) || 0), 0)
+  const dutiesAmount = Object.values(sellerDuties).reduce((s, d) => s + (d.totalTaxGBP || 0), 0)
   const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
   // NOTE: productSubtotal/total below are kept in each seller's native currency
   // (unconverted) intentionally -- they must never be passed to fmtRaw/fmtDisplay
@@ -215,23 +230,43 @@ export default function CheckoutPage() {
   // converted once via convert(x, 'GBP') -- never via fmtRaw, which assumes its
   // input is raw GBP and would double-convert or misread a non-GBP raw sum.
   const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
-  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, selectedRate?.currency || 'GBP') + convert(dutiesAmount, 'GBP')
+  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, 'GBP') + convert(dutiesAmount, 'GBP')
 
   useEffect(() => {
-    if (items.length === 0) return
-    const sellerId = items[0]?.sellerId
-    if (!sellerId) return
+    if (items.length === 0) { setAutoDiscount(null); return }
+    // A seller's discount codes only ever apply to that seller's own
+    // items -- a mixed-seller cart must look these up once PER seller
+    // (never one lookup keyed to whichever seller happened to be first),
+    // then sum the results for the combined preview shown here.
+    const bySeller = new Map<string, typeof items>()
+    for (const item of items) {
+      if (!item.sellerId) continue
+      const list = bySeller.get(item.sellerId) || []
+      list.push(item)
+      bySeller.set(item.sellerId, list)
+    }
+    if (bySeller.size === 0) { setAutoDiscount(null); return }
     setAutoDiscountLoading(true)
-    fetch('/api/discount/validate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sellerId,
-        items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
-      }),
-    })
-      .then(res => res.json())
-      .then(data => setAutoDiscount(data))
+    Promise.all(
+      [...bySeller.entries()].map(([sellerId, sellerItems]) =>
+        fetch('/api/discount/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sellerId,
+            items: sellerItems.map(i => ({ productId: i.productId, quantity: i.quantity })),
+          }),
+        })
+          .then(res => res.json())
+          .catch(() => ({ totalDiscountGBP: 0, applied: [] }))
+      )
+    )
+      .then((results: AutoDiscountResult[]) => {
+        setAutoDiscount({
+          totalDiscountGBP: results.reduce((s, r) => s + (r?.totalDiscountGBP || 0), 0),
+          applied: results.flatMap(r => r?.applied || []),
+        })
+      })
       .catch(() => setAutoDiscount(null))
       .finally(() => setAutoDiscountLoading(false))
   }, [items])
@@ -239,9 +274,9 @@ export default function CheckoutPage() {
   function setAddr(k: keyof typeof address, v: string) {
     setAddress(a => ({ ...a, [k]: v }))
     if (k === 'country') {
-      setRates([])
-      setSelectedRate(null)
-      setLandedCost(null)
+      setSellerGroups([])
+      setSelectedRates({})
+      setSellerDuties({})
     }
   }
 
@@ -249,29 +284,51 @@ export default function CheckoutPage() {
     setLoadingRates(true)
     setRateError('')
     try {
-      const [rateRes, dutyRes] = await Promise.all([
-        fetch('/api/shipping/rates', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cartItems: items.map(i => ({ productId: i.productId, sellerId: i.sellerId, quantity: i.quantity })),
-            shippingAddress: { street1: address.line1, city: address.city, zip: address.postalCode, country: address.country },
-          }),
+      const rateRes = await fetch('/api/shipping/rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems: items.map(i => ({ productId: i.productId, sellerId: i.sellerId, quantity: i.quantity })),
+          shippingAddress: { street1: address.line1, city: address.city, zip: address.postalCode, country: address.country },
         }),
-        fetch('/api/shipping/landed-cost', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cartItems: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
-            destinationCountry: address.country,
-            originCountry: 'GB',
-            shippingCostGBP: 0,
-          }),
-        }),
-      ])
-      const [rateData, dutyData] = await Promise.all([rateRes.json(), dutyRes.json()])
-      if (rateData.rates) { setRates(rateData.rates); if (rateData.rates[0]) setSelectedRate(rateData.rates[0]) }
-      if (dutyData.totalTaxGBP !== undefined) setLandedCost(dutyData)
+      })
+      const rateData = await rateRes.json()
+      const groups: SellerRateGroup[] = rateData.sellerGroups || []
+      setSellerGroups(groups)
+
+      const initialSelected: Record<string, ShippingRate> = {}
+      groups.forEach(g => { if (g.rates[0]) initialSelected[g.sellerId] = g.rates[0] })
+      setSelectedRates(initialSelected)
+
+      // Duties are computed PER SELLER -- each seller's own real dispatch
+      // country (from their shipping profile, via originCountry above --
+      // never a hardcoded 'GB') and their own items/declared value, exactly
+      // matching how their shipping rate above was calculated.
+      const dutyResults = await Promise.all(
+        groups.map(async (g) => {
+          const sellerItems = items.filter(i => i.sellerId === g.sellerId)
+          try {
+            const res = await fetch('/api/shipping/landed-cost', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cartItems: sellerItems.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+                destinationCountry: address.country,
+                originCountry: g.originCountry || 'GB',
+                shippingCostGBP: 0,
+              }),
+            })
+            return [g.sellerId, await res.json()] as const
+          } catch {
+            return [g.sellerId, null] as const
+          }
+        })
+      )
+      const dutiesMap: Record<string, LandedCost> = {}
+      dutyResults.forEach(([sellerId, data]) => {
+        if (data && data.totalTaxGBP !== undefined) dutiesMap[sellerId] = data
+      })
+      setSellerDuties(dutiesMap)
     } catch {
       setRateError('Could not fetch shipping rates. Please try again.')
     } finally {
@@ -284,20 +341,28 @@ export default function CheckoutPage() {
     await fetchRatesAndDuties()
   }
 
+  // Every seller present in the cart must have a chosen shipping option
+  // before payment can proceed -- one parcel, one rate, per seller.
+  const allSellersHaveRates = sellerGroups.length > 0 && sellerGroups.every(g => selectedRates[g.sellerId])
+
   async function proceedToPayment() {
-    if (!selectedRate) return
+    if (!allSellersHaveRates) return
     setCreatingIntent(true)
     setPaymentSetupError('')
     try {
+      const sellerShipping = sellerGroups.map(g => ({
+        sellerId: g.sellerId,
+        shippingAmount: Number(selectedRates[g.sellerId]?.amount) || 0,
+        shippingCurrency: selectedRates[g.sellerId]?.currency || 'GBP',
+        dutiesAmountGBP: sellerDuties[g.sellerId]?.totalTaxGBP ?? 0,
+      }))
       const res = await fetch('/api/stripe/payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
           currency,
-          shippingAmount: selectedRate?.amount ?? 0,
-          shippingCurrency: selectedRate?.currency ?? 'GBP',
-          dutiesAmountGBP: landedCost?.totalTaxGBP ?? 0,
+          sellerShipping,
           // Buyer contact/shipping details -- stored server-side in the
           // PaymentIntent's metadata so the webhook can create the order
           // from trusted data without ever depending on this browser tab
@@ -340,7 +405,7 @@ export default function CheckoutPage() {
             postcode: address.postalCode,
             country: address.country,
           },
-          shippingMethod: selectedRate?.service ?? '',
+          shippingMethod: Object.values(selectedRates).map(r => r.service).filter(Boolean).join(', '),
           shippingCost: data.breakdown ? data.breakdown.shippingCost : shippingCost,
           subtotal: data.breakdown ? data.breakdown.productSubtotal : productSubtotal,
           discountCodes: data.breakdown ? data.breakdown.discountCodes : (autoDiscount?.applied.map(a => a.code) ?? []),
@@ -349,7 +414,7 @@ export default function CheckoutPage() {
           currency: data.breakdown ? data.breakdown.currency : currency,
           placedAt: new Date().toISOString(),
           sellerId: items[0]?.sellerId ?? null,
-          rateId: selectedRate?.rateId ?? null,
+          rateId: null, // no longer a single rate -- see sellerShipping sent to payment-intent above
         }))
         setClientSecret(data.clientSecret)
         setStep('payment')
@@ -468,39 +533,59 @@ export default function CheckoutPage() {
                 </form>
               </div>
 
-              {rates.length > 0 && (
+              {sellerGroups.length > 0 && (
                 <div style={surface}>
                   <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>
                     Shipping Options
                   </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {rates.map(rate => (
-                      <label key={rate.rateId} style={{
-                        display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px',
-                        border: '1px solid ' + (selectedRate?.rateId === rate.rateId ? 'var(--accent)' : 'var(--border)'),
-                        borderRadius: '8px', cursor: 'pointer',
-                        background: selectedRate?.rateId === rate.rateId ? 'rgba(255,107,0,0.05)' : 'var(--bg)',
-                      }}>
-                        <input type="radio" name="rate" checked={selectedRate?.rateId === rate.rateId} onChange={() => setSelectedRate(rate)} style={{ accentColor: 'var(--accent)' }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
-                            {rate.carrier} — {rate.service}
-                            {rate.isDDP && (
-                              <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(0,230,118,0.15)', color: 'var(--green)', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
-                                DDP
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                            {rate.estimatedDays ? rate.estimatedDays + ' business days' : 'Estimated delivery varies'}
-                          </div>
+                  {sellerGroups.length > 1 && (
+                    <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '-8px', marginBottom: '16px', lineHeight: 1.5 }}>
+                      Your cart has items from {sellerGroups.length} different sellers — each ships as its own parcel, so choose shipping for every seller below.
+                    </p>
+                  )}
+                  {sellerGroups.map(group => (
+                    <div key={group.sellerId} style={{ marginBottom: '20px' }}>
+                      {sellerGroups.length > 1 && (
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '10px' }}>
+                          Shipping from {group.sellerName}
                         </div>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                          {fmtRaw(rate.amount, rate.currency || 'GBP')}
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {group.rates.map(rate => (
+                          <label key={rate.rateId} style={{
+                            display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px',
+                            border: '1px solid ' + (selectedRates[group.sellerId]?.rateId === rate.rateId ? 'var(--accent)' : 'var(--border)'),
+                            borderRadius: '8px', cursor: 'pointer',
+                            background: selectedRates[group.sellerId]?.rateId === rate.rateId ? 'rgba(255,107,0,0.05)' : 'var(--bg)',
+                          }}>
+                            <input
+                              type="radio"
+                              name={`rate-${group.sellerId}`}
+                              checked={selectedRates[group.sellerId]?.rateId === rate.rateId}
+                              onChange={() => setSelectedRates(prev => ({ ...prev, [group.sellerId]: rate }))}
+                              style={{ accentColor: 'var(--accent)' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
+                                {rate.carrier} — {rate.service}
+                                {rate.isDDP && (
+                                  <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(0,230,118,0.15)', color: 'var(--green)', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
+                                    DDP
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
+                                {rate.estimatedDays ? rate.estimatedDays + ' business days' : 'Estimated delivery varies'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
+                              {fmtRaw(rate.amount, rate.currency || 'GBP')}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
 
                   {paymentSetupError && (
                     <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
@@ -508,7 +593,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
-                  {selectedRate && (
+                  {allSellersHaveRates && (
                     <>
                       <button
                         onClick={proceedToPayment}
@@ -600,19 +685,19 @@ export default function CheckoutPage() {
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-              <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--text)' }}>{selectedRate ? (confirmed ? fmtConfirmed(confirmed.shippingCost) : fmtRaw(shippingCost, selectedRate?.currency || 'GBP')) : '—'}</span>
+              <span style={{ color: 'var(--muted)' }}>Shipping{sellerGroups.length > 1 ? ` (${sellerGroups.length} sellers)` : ''}</span>
+              <span style={{ color: 'var(--text)' }}>{Object.keys(selectedRates).length > 0 ? (confirmed ? fmtConfirmed(confirmed.shippingCost) : fmtRaw(shippingCost, 'GBP')) : '—'}</span>
             </div>
-            {landedCost && !landedCost.isDomestic && dutiesAmount > 0 && (
+            {dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                 <span style={{ color: 'var(--muted)' }}>
                   Duties and Taxes (DDP)
-                  {landedCost.belowDeMinimis && <span style={{ color: 'var(--green)', fontSize: '11px', marginLeft: '4px' }}>below threshold</span>}
+                  {Object.values(sellerDuties).some(d => d.belowDeMinimis) && <span style={{ color: 'var(--green)', fontSize: '11px', marginLeft: '4px' }}>below threshold</span>}
                 </span>
                 <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.dutiesAmount) : fmtRaw(dutiesAmount)}</span>
               </div>
             )}
-            {landedCost?.isDomestic && (
+            {Object.values(sellerDuties).length > 0 && Object.values(sellerDuties).every(d => d.isDomestic) && (
               <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic — no import duties</div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>

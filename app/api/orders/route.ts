@@ -14,9 +14,12 @@ import { createOrderFromPaymentIntent } from '@/lib/orders'
 //
 // The Stripe webhook (payment_intent.succeeded) is the real, reliable path --
 // it fires even if the buyer's tab closes before this ever runs. This route
-// exists purely so the confirmation page can get an orderId back immediately
+// exists purely so the confirmation page can get order IDs back immediately
 // instead of waiting on webhook delivery, and it's fully idempotent with the
-// webhook via Order.stripePaymentId's unique constraint.
+// webhook via Order's compound (stripePaymentId, sellerId) unique constraint
+// -- one PaymentIntent can now produce multiple orders, one per seller in
+// the cart, and each is created at most once regardless of which caller
+// (this route or the webhook) wins the race for that particular seller.
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) {
@@ -36,13 +39,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'paymentIntentId required' }, { status: 400 })
   }
 
-  // Fast path: the webhook (or a previous call to this route) already created it.
-  const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
-  if (existing) {
-    if (existing.customerEmail.toLowerCase().trim() !== sessionEmail) {
+  // Fast path: the webhook (or a previous call to this route) already
+  // created it. One PaymentIntent can now produce MULTIPLE orders -- one
+  // per seller in the cart -- so this is a findMany, not findUnique.
+  const existing = await prisma.order.findMany({ where: { stripePaymentId: paymentIntentId } })
+  if (existing.length > 0) {
+    if (!existing.every((o) => o.customerEmail.toLowerCase().trim() === sessionEmail)) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
-    return NextResponse.json({ orderId: existing.id }, { status: 200 })
+    return NextResponse.json({ orderIds: existing.map((o) => o.id) }, { status: 200 })
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' })
@@ -65,8 +70,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const order = await createOrderFromPaymentIntent(pi)
-    return NextResponse.json({ orderId: order.id }, { status: 201 })
+    // One PaymentIntent can produce multiple orders -- one per seller in
+    // the cart. See lib/orders.ts.
+    const orders = await createOrderFromPaymentIntent(pi)
+    return NextResponse.json({ orderIds: orders.map((o) => o.id) }, { status: 201 })
   } catch (err: unknown) {
     console.error('[POST /api/orders]', err)
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
