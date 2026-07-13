@@ -3,15 +3,17 @@
 Status: FINAL and DEPLOYED. Do not re-litigate. Any change requires an explicit new decision from William.
 Last locked: 2026-07-04.
 
-**2026-07-04 update (William's decision):** Starter listing cap lowered 50 → 20 (headline features now explicitly include seller dashboard and buyer protection). Pro listing cap changed from unlimited to a 200 hard cap, and Pro now includes a free custom storefront. Enterprise unchanged except it also now explicitly lists a free custom storefront. Commission rates unchanged (15% / 8% / 5%).
+**2026-07-04 update (William's decision):** Starter listing cap lowered 50 → 20 (headline features now explicitly include seller dashboard and buyer protection). Pro listing cap changed from unlimited to a 200 hard cap, and Pro now includes a free custom storefront. Enterprise unchanged except it also now explicitly lists a free custom storefront. Commission rates unchanged (15% / 8% / 5%). SUPERSEDED 2026-07-13 -- see the update note below; commission is now 10% / 4% / 0%.
+
+**2026-07-13 update (William's decision, via Claude session):** Commission rates changed to new permanent figures -- Starter 10% (was 12%), Pro 4% (was 8%), Enterprise 0% (was 5%). Monthly subscription fees unchanged (Pro £49/mo, Enterprise £99/mo per the app -- note this doc's own Stripe price-object reference for Enterprise below still shows £199/mo, a pre-existing discrepancy NOT resolved by this change and flagged for William to verify live in Stripe). Updated across roughly 30 files site-wide (API routes, dashboard/legal/help pages, public/llms.txt, this doc, docs/PAYOUTS.md, docs/GLOBAL_MARKETING_STRATEGY.md, and all 19 outreach email translations in lib/outreachI18n.ts). Two fields intentionally left as flat non-tier-aware rates rather than risk an unreviewed behavioural change: OrderItem.commission in app/api/orders/route.ts and PLATFORM_FEE_RATE in app/api/dashboard/orders/route.ts. See CLAUDE.md 2026-07-13 checkpoint for full detail.
 
 ## Tiers
 
 | Tier | Price | Commission | Listings | Extras |
 |------|-------|-----------|----------|--------|
-| Starter | Free | 15% | Up to 20 (hard cap) | Seller dashboard, analytics, order tools, buyer protection on every sale |
-| Pro | £49/mo | 8% | Up to 200 (hard cap) | Free custom storefront, professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
-| Enterprise | £199/mo (fixed, non-negotiable) | 5% | Unlimited | Everything in Pro + Go Live video shopping + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
+| Starter | Free | 10% | Up to 20 (hard cap) | Seller dashboard, analytics, order tools, buyer protection on every sale |
+| Pro | £49/mo | 4% | Up to 200 (hard cap) | Free custom storefront, professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
+| Enterprise | £199/mo (fixed, non-negotiable) | 0% | Unlimited | Everything in Pro + Go Live video shopping + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
 
 ## Stripe (LIVE mode, acct_1TlcWCDB5eA3Wfmu — VELOR COMMERCE LTD)
 
