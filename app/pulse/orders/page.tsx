@@ -211,6 +211,7 @@ export default function PulseOrdersPage() {
               <span style={styles.appName}>{fmt(o.subtotal, currency)}</span>
               <span style={{ ...styles.appBadge, color: STATUS_COLOR[o.status] || '#999' }}>{o.status}</span>
             </div>
+            <div style={{ ...styles.appMeta, fontFamily: 'monospace', color: '#ff9d4d' }}>#{o.id}</div>
             <div style={styles.appMeta}>{o.customerName || 'Not provided'} &middot; {o.customerEmail || 'No email on record'}</div>
             <div style={styles.appMeta}>Seller: {o.seller?.storeName || 'Unknown seller'}</div>
             <div style={styles.smallMuted}>
