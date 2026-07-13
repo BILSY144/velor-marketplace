@@ -366,6 +366,7 @@ export default function PulsePage() {
       </Section>
 
       <Section title="ORDERS & REVENUE">
+        <a href="/pulse/orders" style={{ fontSize: 12, color: '#ff7a1a', textDecoration: 'none' }}>View all orders &rarr;</a>
         <StatRow label="Orders today" value={data.orders.today} />
         <StatRow label="Orders last 7 days" value={data.orders.last7d} />
         <StatRow label="Orders last 30 days" value={data.orders.last30d} />
