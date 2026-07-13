@@ -138,7 +138,7 @@ export default function SellerAgreementPage() {
 
           <AgreementSection num="6" title="Commission, Fees & Payouts">
             <ul>
-              <li>Velor charges commission on the product subtotal of each completed sale based on your subscription tier: <strong style={{ color: '#FFFFFF' }}>Starter (free) 12%</strong>, <strong style={{ color: '#FFFFFF' }}>Pro (£49/month) 8%</strong>, <strong style={{ color: '#FFFFFF' }}>Enterprise (£99/month) 5%</strong>.</li>
+              <li>Velor charges commission on the product subtotal of each completed sale based on your subscription tier: <strong style={{ color: '#FFFFFF' }}>Starter (free) 10%</strong>, <strong style={{ color: '#FFFFFF' }}>Pro (£49/month) 4%</strong>, <strong style={{ color: '#FFFFFF' }}>Enterprise (£99/month) 0%</strong>.</li>
               <li>Payouts are made via <strong style={{ color: '#FFFFFF' }}>Stripe Connect</strong> where Stripe supports your country, or via <strong style={{ color: '#FFFFFF' }}>Payoneer</strong> where it does not.</li>
               <li>To protect buyers, funds are held until delivery is confirmed, then released automatically: within 15 days for new sellers, reducing to 72 hours once you build a trusted delivery record.</li>
               <li>Velor does not charge listing fees or setup fees. Paid tiers are optional monthly subscriptions.</li>
