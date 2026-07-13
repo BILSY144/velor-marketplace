@@ -2,7 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-const PLATFORM_FEE_RATE = 0.1 // NOTE: flat Starter-equivalent rate, not tier-aware -- see CLAUDE.md 2026-07-13 checkpoint
+const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0 }
 
 function maskName(name: string): string {
   if (!name) return 'Customer'
@@ -16,6 +16,7 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller profile not found' }, { status: 403 })
+  const commissionRate = TIER_COMMISSION[seller.tier as unknown as string] ?? 0.1
 
   const sellerProducts = await prisma.product.findMany({
     where: { sellerId: seller.id },
@@ -44,7 +45,7 @@ export async function GET() {
     }
     const o = ordersMap.get(oid)
     const lineTotal = item.price * item.quantity
-    const commission = lineTotal * PLATFORM_FEE_RATE
+    const commission = lineTotal * commissionRate
     const payout = lineTotal - commission
     o.items.push({
       id: item.id, productId: item.productId, productName: item.product.title,
