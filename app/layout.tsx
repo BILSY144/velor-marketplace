@@ -31,6 +31,7 @@ const jsonLd = {
       name: 'Velor',
       url: 'https://velorcommerce.store',
       logo: 'https://velorcommerce.store/velor-logo-globe-v2.png',
+      sameAs: ['https://www.facebook.com/Velorcommerce'],
     },
     {
       '@type': 'WebSite',
