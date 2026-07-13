@@ -4,7 +4,7 @@
 // Every figure on this page must be true of the live platform:
 //   190       = WORLD_COUNTRIES length (same list as /apply and the flag strip)
 //   24h       = APPLICATION_SLA_HOURS, enforced by /api/cron/review-applications
-//   12/8/5%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
+//   10/4/0%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
 //   GBP 49/99 = Pro/Enterprise subscriptions (CLAUDE.md money rules)
 // The old copy rule stands: do not write a number here that no code backs up.
 //
