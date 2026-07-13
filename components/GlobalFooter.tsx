@@ -164,8 +164,12 @@ export default function GlobalFooter() {
             fontSize: 12.5,
           }}
         >
-          <span>© {new Date().getFullYear()} Velor Commerce Ltd. All rights reserved.</span>
-          <span>Payments secured by Stripe</span>
+          <span>© {new Date().getFullYear()} Velor Commerce Ltd, 49 Station Road, Polegate, East Sussex, BN26 6EA · Company No. 17268133. All rights reserved.</span>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <a href="https://www.facebook.com/Velorcommerce" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Facebook</a>
+            <a href="https://www.instagram.com/velorcommerce" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Instagram</a>
+            <span>Payments secured by Stripe</span>
+          </div>
         </div>
       </div>
 
