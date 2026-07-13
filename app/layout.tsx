@@ -51,11 +51,26 @@ const jsonLd = {
       url: 'https://velorcommerce.store',
       logo: 'https://velorcommerce.store/velor-logo-globe-v2.png',
       sameAs: ['https://www.facebook.com/Velorcommerce'],
+      // Added by the standing SEO agent, 2026-07-13 -- contactPoint email is
+      // the real, live support address, verified directly against
+      // app/contact/page.tsx ("support@velorcommerce.store" reaches the
+      // team) and app/contact/layout.tsx's metadata description. Not
+      // invented; no phone number or hoursAvailable added since neither is
+      // published anywhere on the live site to verify against.
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: 'support@velorcommerce.store',
+        availableLanguage: ['English'],
+      },
     },
     {
       '@type': 'WebSite',
       name: 'Velor',
       url: 'https://velorcommerce.store',
+      // inLanguage added 2026-07-13 -- matches the real <html lang="en">
+      // attribute below; the site has no other live locale to verify.
+      inLanguage: 'en',
       potentialAction: {
         '@type': 'SearchAction',
         target: {
