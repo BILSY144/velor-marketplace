@@ -2,12 +2,13 @@ import { Resend } from 'resend';
 
 const getResendClient = () => new Resend(process.env.RESEND_API_KEY);
 const FROM = 'Velor Commerce <hello@velorcommerce.store>';
+const REPLY_TO = 'customerservice@velorcommerce.co.uk';
 
 const LOGO = `<div style="background:#FF6B00;padding:24px 32px"><h1 style="margin:0;font-size:22px;font-weight:800;color:#FFF;letter-spacing:0.1em">VELOR</h1></div>`;
 
 const FOOTER = `<div style="background:#111;padding:20px 32px;border-top:1px solid #1E1E1E">
   <p style="margin:0;font-size:12px;color:#666;line-height:1.6">
-    Velor Commerce Ltd &middot; customerservice@velorcommerce.store<br>
+    Velor Commerce Ltd &middot; customerservice@velorcommerce.co.uk<br>
     You are receiving this email because you have an account or pending application with Velor Commerce.
   </p>
 </div>`;
@@ -32,10 +33,11 @@ export interface EmailOptions {
   html: string;
   bcc?: string;
   from?: string;
+  replyTo?: string;
 }
 
-export async function sendEmail({ to, subject, html, bcc, from }: EmailOptions): Promise<void> {
-  const { error } = await getResendClient().emails.send({ from: from || FROM, to, subject, html, ...(bcc ? { bcc } : {}) });
+export async function sendEmail({ to, subject, html, bcc, from, replyTo }: EmailOptions): Promise<void> {
+  const { error } = await getResendClient().emails.send({ from: from || FROM, to, subject, html, replyTo: replyTo || REPLY_TO, ...(bcc ? { bcc } : {}) });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
   }
@@ -145,7 +147,7 @@ export function buildSellerRejectedEmail(d: {
       <p style="margin:0;color:#CC8080;font-size:14px;line-height:1.6">${h(d.reason)}</p>
     </div>
     <p style="color:#777;font-size:13px;line-height:1.6">
-      If you believe this decision was made in error, or if your circumstances have changed, please contact us at customerservice@velorcommerce.store.
+      If you believe this decision was made in error, or if your circumstances have changed, please contact us at customerservice@velorcommerce.co.uk.
     </p>
     ${WRAP_CLOSE}`;
 
