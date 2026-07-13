@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 interface PricedItem {
@@ -41,9 +42,13 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
     throw new Error(`PaymentIntent ${pi.id} has no valid items in metadata -- refusing to create order`)
   }
 
-  let shippingAddress: Record<string, unknown> = {}
+  // Prisma's Json field wants InputJsonValue, not a plain Record<string, unknown>
+  // (unknown values aren't assignable) -- JSON.parse's return is safe to treat
+  // as such here since md.shippingAddress was itself produced by JSON.stringify
+  // of a plain, JSON-safe object in payment-intent/route.ts.
+  let shippingAddress: Prisma.InputJsonValue = {}
   try {
-    shippingAddress = JSON.parse(md.shippingAddress || '{}')
+    shippingAddress = JSON.parse(md.shippingAddress || '{}') as Prisma.InputJsonValue
   } catch {
     shippingAddress = {}
   }
