@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ConditionalLayout from '@/components/ConditionalLayout'
@@ -40,6 +40,26 @@ export const metadata: Metadata = {
     title,
     description,
   },
+}
+
+// Added by the standing SEO agent, 2026-07-13 -- the root layout had no
+// `viewport` export at all, so mobile browsers fell back to Next.js's bare
+// default (width=device-width, initialScale=1 only, no theme-color). The
+// only other place in this codebase that sets `themeColor` is
+// app/pulse/layout.tsx (a private dashboard), which uses '#0d0d0d'. This
+// value instead comes directly from this app's own real default background:
+// app/globals.css's `:root` block sets `--bg: #0d0d0f` (dark, unqualified,
+// i.e. the actual default before any theme toggle -- `html[data-theme=
+// 'light']` is the override, applied by a JS-driven `data-theme` attribute,
+// not a `prefers-color-scheme` media query), so a single static color
+// matching that real default is accurate, not a `light`/`dark`
+// media-query split that could mismatch what a user manually toggled to.
+// Purely additive -- affects mobile browser chrome (address bar) color and
+// PWA/add-to-home-screen presentation only; no existing metadata touched.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0d0d0f',
 }
 
 const jsonLd = {
