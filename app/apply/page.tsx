@@ -27,6 +27,18 @@ type FormState = {
   country: string;
   storeDescription: string;
   productCategories: string[];
+  // Ship-from address. Captured here, not left to a later dashboard step,
+  // so every approved seller already has a working shipping profile before
+  // they list their first product -- see lib/provisionSeller.ts.
+  shippingName: string;
+  shippingCompany: string;
+  shippingStreet1: string;
+  shippingStreet2: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingZip: string;
+  shippingCountry: string;
+  shippingPhone: string;
 };
 
 const initialForm: FormState = {
@@ -37,6 +49,15 @@ const initialForm: FormState = {
   country: '',
   storeDescription: '',
   productCategories: [],
+  shippingName: '',
+  shippingCompany: '',
+  shippingStreet1: '',
+  shippingStreet2: '',
+  shippingCity: '',
+  shippingState: '',
+  shippingZip: '',
+  shippingCountry: '',
+  shippingPhone: '',
 };
 
 const css = `
@@ -107,6 +128,19 @@ export default function ApplyPage() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
+  // Picking a business/culture country auto-suggests the same country as
+  // the ship-from address (most sellers dispatch from where they are) --
+  // the seller can still change the ship-from country independently right
+  // below, e.g. a maker whose heritage is Peru but who currently ships from
+  // Spain. Never overwrites a ship-from country the seller already chose.
+  function setCountry(name: string) {
+    setForm(prev => {
+      if (prev.shippingCountry) return { ...prev, country: name };
+      const match = WORLD_COUNTRIES.find(c => c.name === name);
+      return { ...prev, country: name, shippingCountry: match ? match.code : prev.shippingCountry };
+    });
+  }
+
   function toggleCategory(cat: string) {
     setForm(prev => ({
       ...prev,
@@ -122,6 +156,17 @@ export default function ApplyPage() {
 
     if (!form.businessName.trim() || !form.contactName.trim() || !form.contactEmail.trim()) {
       setError('Business name, contact name, and email are required.');
+      return;
+    }
+
+    if (
+      !form.shippingName.trim() ||
+      !form.shippingStreet1.trim() ||
+      !form.shippingCity.trim() ||
+      !form.shippingZip.trim() ||
+      !form.shippingCountry
+    ) {
+      setError('Please complete your ship-from address (name, street, city, postcode/zip, and country).');
       return;
     }
 
@@ -240,7 +285,7 @@ export default function ApplyPage() {
                 <div className="ap-field">
                   <label className="ap-label">Country</label>
                   <select className="ap-select" value={form.country}
-                    onChange={e => setField('country', e.target.value)}>
+                    onChange={e => setCountry(e.target.value)}>
                     <option value="">Select country</option>
                     {WORLD_COUNTRIES.map(c => (
                       <option key={c.code} value={c.name}>{c.name}</option>
@@ -274,6 +319,88 @@ export default function ApplyPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="ap-sec">
+              <div className="ap-bignum">03</div>
+              <div className="ap-steplbl">Ship-from address</div>
+              <h2 className="ap-h2">Where do your parcels dispatch from?</h2>
+              <p className="ap-sub">
+                This sets up your account&apos;s shipping automatically, so real shipping rates are
+                ready the moment your first listing goes live &mdash; no separate setup step later.
+                It appears on shipping labels and customs declarations, so it must be a real address
+                where you can send and receive parcels.
+              </p>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">Full name <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="text" value={form.shippingName}
+                    onChange={e => setField('shippingName', e.target.value)}
+                    placeholder="Who parcels are collected from" required />
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">Company (optional)</label>
+                  <input className="ap-input" type="text" value={form.shippingCompany}
+                    onChange={e => setField('shippingCompany', e.target.value)}
+                    placeholder="If applicable" />
+                </div>
+              </div>
+
+              <div className="ap-field">
+                <label className="ap-label">Street address <span className="ap-req">*</span></label>
+                <input className="ap-input" type="text" value={form.shippingStreet1}
+                  onChange={e => setField('shippingStreet1', e.target.value)}
+                  placeholder="123 High Street" required />
+              </div>
+
+              <div className="ap-field">
+                <label className="ap-label">Address line 2</label>
+                <input className="ap-input" type="text" value={form.shippingStreet2}
+                  onChange={e => setField('shippingStreet2', e.target.value)}
+                  placeholder="Unit, floor, etc." />
+              </div>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">City <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="text" value={form.shippingCity}
+                    onChange={e => setField('shippingCity', e.target.value)}
+                    placeholder="City" required />
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">State / region</label>
+                  <input className="ap-input" type="text" value={form.shippingState}
+                    onChange={e => setField('shippingState', e.target.value)}
+                    placeholder="If applicable" />
+                </div>
+              </div>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">Postcode / ZIP <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="text" value={form.shippingZip}
+                    onChange={e => setField('shippingZip', e.target.value)}
+                    placeholder="Postcode" required />
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">Ship-from country <span className="ap-req">*</span></label>
+                  <select className="ap-select" value={form.shippingCountry}
+                    onChange={e => setField('shippingCountry', e.target.value)}>
+                    <option value="">Select country</option>
+                    {WORLD_COUNTRIES.map(c => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="ap-field">
+                <label className="ap-label">Phone</label>
+                <input className="ap-input" type="text" value={form.shippingPhone}
+                  onChange={e => setField('shippingPhone', e.target.value)}
+                  placeholder="For couriers, if collection is ever needed" />
               </div>
             </div>
 

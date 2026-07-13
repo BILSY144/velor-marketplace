@@ -25,6 +25,63 @@ interface ApplicationRow {
   storeDescription: string | null
   country: string | null
   status: string
+  // Ship-from address captured on the application form. Optional here only
+  // to tolerate PENDING applications submitted before this field existed --
+  // provisionSellerShippingProfile() below no-ops if the required pieces
+  // are missing rather than throwing, so an old application can still be
+  // approved (the seller just has to fill in Settings -> Shipping manually,
+  // same as before this change).
+  shippingName?: string | null
+  shippingCompany?: string | null
+  shippingStreet1?: string | null
+  shippingStreet2?: string | null
+  shippingCity?: string | null
+  shippingState?: string | null
+  shippingZip?: string | null
+  shippingCountry?: string | null
+  shippingPhone?: string | null
+}
+
+/**
+ * Create the seller's SellerShippingProfile from their application's
+ * ship-from address, if they gave one. Called once, right after a Seller
+ * row is created or attached during approval -- by the time an approved
+ * seller reaches their dashboard, real shipping rates already work for
+ * them; they never have to discover a "Settings -> Shipping" step on their
+ * own, and app/api/shipping/rates/route.ts never has to fall back to a
+ * placeholder quote for a founding seller's very first listing.
+ *
+ * Deliberately a plain upsert with no throw on missing data: an application
+ * submitted before the ship-from fields existed on the form has nothing to
+ * seed with, and that must not block approval. dashboard/products/route.ts
+ * has its own belt-and-suspenders check that requires a shipping profile
+ * before a product can be listed at all, which is what actually catches
+ * that legacy case.
+ */
+async function provisionSellerShippingProfile(sellerId: string, app: ApplicationRow) {
+  if (!app.shippingName || !app.shippingStreet1 || !app.shippingCity || !app.shippingZip || !app.shippingCountry) {
+    return
+  }
+  await prisma.sellerShippingProfile.upsert({
+    where: { sellerId },
+    create: {
+      sellerId,
+      name: app.shippingName,
+      company: app.shippingCompany || null,
+      street1: app.shippingStreet1,
+      street2: app.shippingStreet2 || null,
+      city: app.shippingCity,
+      state: app.shippingState || null,
+      zip: app.shippingZip,
+      country: app.shippingCountry,
+      phone: app.shippingPhone || null,
+    },
+    // If a profile somehow already exists (re-approval of an already-seller
+    // application, see the existingUser?.seller branch below), leave it
+    // alone rather than overwrite whatever the seller may have since edited
+    // themselves in Settings -> Shipping.
+    update: {},
+  })
 }
 
 /**
@@ -70,6 +127,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         data: { approved: true },
       })
     }
+    await provisionSellerShippingProfile(existingUser.seller.id, application)
     alertTier = existingUser.seller.tier
     alertStoreName = existingUser.seller.storeName
     alertSignedUpAt = existingUser.seller.createdAt
@@ -85,6 +143,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         foundingEligible,
       },
     })
+    await provisionSellerShippingProfile(seller.id, application)
     alertTier = seller.tier
     alertStoreName = seller.storeName
     alertSignedUpAt = seller.createdAt
@@ -111,6 +170,9 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
       },
       include: { seller: true },
     })
+    if (created.seller) {
+      await provisionSellerShippingProfile(created.seller.id, application)
+    }
     activationLink = `https://velorcommerce.store/activate?token=${setupToken}`
     alertTier = created.seller?.tier ?? 'STARTER'
     alertStoreName = created.seller?.storeName ?? application.businessName

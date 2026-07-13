@@ -374,6 +374,24 @@ model SellerApplication {
   sampleImages      String[]
   country           String?
   prospectId        String?
+  // Ship-from address, captured at application time so every approved
+  // seller already has a SellerShippingProfile the moment they're
+  // provisioned (see lib/provisionSeller.ts) -- no seller can reach
+  // checkout for their first product without one, closing the gap that
+  // caused shipping/rates to fall back to a placeholder quote for sellers
+  // who never got around to filling in Settings -> Shipping. Optional at
+  // the schema level only so existing PENDING applications submitted
+  // before this field existed don't break; the /apply form and API route
+  // both require these for every NEW submission.
+  shippingName      String?
+  shippingCompany   String?
+  shippingStreet1   String?
+  shippingStreet2   String?
+  shippingCity      String?
+  shippingState     String?
+  shippingZip       String?
+  shippingCountry   String?
+  shippingPhone     String?
   // Identity verification. No seller is approved without a VERIFIED document
   // check. Velor never receives or stores the document itself -- Stripe hosts
   // the capture and returns only a verdict. RESTRICTED means Stripe Identity is

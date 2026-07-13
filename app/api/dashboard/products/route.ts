@@ -76,10 +76,32 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
+  const seller = await prisma.seller.findUnique({
+    where: { userId: session.user.id },
+    include: { shippingProfile: true },
+  })
   if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
   if (!seller.approved) {
     return NextResponse.json({ error: 'Seller account pending approval' }, { status: 403 })
+  }
+
+  // Belt-and-suspenders: every seller approved via lib/provisionSeller.ts
+  // now gets a SellerShippingProfile automatically from their application's
+  // ship-from address, so this should never actually trigger for a new
+  // seller. It exists to catch anyone approved before that change (an
+  // application with no ship-from fields on file) before they can publish
+  // a listing that would silently fall back to a placeholder shipping
+  // quote at checkout -- see app/api/shipping/rates/route.ts's
+  // FALLBACK_QUOTE_RATE. Failing fast here, with a clear next step, beats
+  // a buyer discovering it weeks later at checkout.
+  if (!seller.shippingProfile) {
+    return NextResponse.json(
+      {
+        error: 'Add your ship-from address before listing a product.',
+        shippingProfileRequired: true,
+      },
+      { status: 400 }
+    )
   }
 
   // Starter: 20 listings. Pro: 200 listings. Enterprise: unlimited.

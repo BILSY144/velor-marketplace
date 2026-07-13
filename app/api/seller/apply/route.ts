@@ -16,6 +16,19 @@ export async function POST(request: NextRequest) {
       sampleImages,
       country,
       prospectId,
+      // Ship-from address -- required for every new application so
+      // provisionSeller.ts can create a real SellerShippingProfile at
+      // approval time, before the seller ever lists a product. See the
+      // schema comment on SellerApplication for why this exists.
+      shippingName,
+      shippingCompany,
+      shippingStreet1,
+      shippingStreet2,
+      shippingCity,
+      shippingState,
+      shippingZip,
+      shippingCountry,
+      shippingPhone,
     } = body;
 
     if (
@@ -31,6 +44,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!shippingName || !shippingStreet1 || !shippingCity || !shippingZip || !shippingCountry) {
+      return NextResponse.json(
+        {
+          error:
+            'Ship-from address is required: shippingName, shippingStreet1, shippingCity, shippingZip and shippingCountry.',
+        },
+        { status: 400 }
+      );
+    }
+
     const application = await prisma.sellerApplication.create({
       data: {
         businessName,
@@ -42,6 +65,15 @@ export async function POST(request: NextRequest) {
         sampleImages: Array.isArray(sampleImages) ? sampleImages : [],
         country: country ?? null,
         prospectId: prospectId ?? null,
+        shippingName,
+        shippingCompany: shippingCompany || null,
+        shippingStreet1,
+        shippingStreet2: shippingStreet2 || null,
+        shippingCity,
+        shippingState: shippingState || null,
+        shippingZip,
+        shippingCountry,
+        shippingPhone: shippingPhone || null,
       },
     });
 
