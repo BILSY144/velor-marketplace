@@ -40,13 +40,6 @@ enum SellerTier {
   ENTERPRISE
 }
 
-enum VerificationStatus {
-  NOT_SUBMITTED
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
   id                String    @id @default(cuid())
   name              String?
@@ -128,7 +121,6 @@ model Seller {
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
-  verification                  SellerVerification?
   supportTickets                SupportTicket[]
   apiKeys                       ApiKey[]
   liveStreams                   LiveStream[]
@@ -155,29 +147,6 @@ model Seller {
   foundingBadge                  Boolean   @default(false)
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
-}
-
-model SellerVerification {
-  id                String              @id @default(cuid())
-  sellerId          String              @unique
-  seller            Seller              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  status            VerificationStatus  @default(NOT_SUBMITTED)
-  fullLegalName     String?
-  dateOfBirth       String?
-  nationality       String?
-  idType            String?
-  idDocumentUrl     String?             @db.Text
-  businessName      String?
-  businessType      String?
-  businessRegNumber String?
-  businessCountry   String?
-  taxId             String?
-  businessDocUrl    String?             @db.Text
-  verificationNotes String?             @db.Text
-  submittedAt       DateTime?
-  reviewedAt        DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
 }
 
 model SellerShippingProfile {
