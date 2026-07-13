@@ -15,6 +15,7 @@ Buyer protection: payment is held by Velor in escrow and released to the seller 
 - [Apply to sell](https://velorcommerce.store/apply): Founding Seller programme application.
 - [Sell on Velor](https://velorcommerce.store/sell): Seller pricing, tiers, and payout policy.
 - [Founding Sellers](https://velorcommerce.store/founding): The 190-country founding-seat programme.
+- [Shop by Origin](https://velorcommerce.store/origins): Browse by country of origin across all 190 countries; each country page shows what it's known for and whether its founding seller seat is still open.
 - [Shop](https://velorcommerce.store/shop): Browse the catalogue by country or speciality.
 - [Marketplace](https://velorcommerce.store/marketplace): Browse listings from independent sellers.
 - [How Velor works](https://velorcommerce.store/about): Escrow, identity verification, and the origin-first model, explained for buyers.
