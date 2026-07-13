@@ -27,9 +27,9 @@ const COUNTRY_CURRENCY: Record<string, string> = {
 // Feature list shown in the new "Your Plan" card so sellers can see exactly
 // what their subscription buys them, and what upgrading would add.
 const PLAN_FEATURES: Record<string, string[]> = {
-  STARTER: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in', '12% commission'],
-  PRO: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics', '8% commission'],
-  ENTERPRISE: ['Unlimited listings', 'Dedicated account manager', 'Full API access', 'Live Shopping', 'Priority support', '5% commission'],
+  STARTER: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in', '10% commission'],
+  PRO: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics', '4% commission'],
+  ENTERPRISE: ['Unlimited listings', 'Dedicated account manager', 'Full API access', 'Live Shopping', 'Priority support', '0% commission'],
 }
 
 interface Settings {
