@@ -53,7 +53,7 @@ If a return or dispute is open on an order, that order payout is frozen until re
 - Transfers use an idempotency key (payout_orderId) so the cron can never double-pay.
 - One Payout row per order (orderId unique) is the ledger; orders with a payout are skipped.
 - Sellers must complete Stripe Connect onboarding; if not connected, release is skipped and funds stay safely on the platform until they connect.
-- Commission is applied by tier at sale time (Starter 15 percent, Pro 8 percent, Enterprise 5 percent) and kept by the platform.
+- Commission is applied by tier at sale time (Starter 10 percent, Pro 4 percent, Enterprise 0 percent) and kept by the platform.
 - Velor never spends its own money on shipping labels — see amendment above. The platform's only exposure is the buyer's own held funds, which is the intended escrow.
 
 ## Files
