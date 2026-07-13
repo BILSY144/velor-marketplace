@@ -132,7 +132,14 @@ export default function ContactPage() {
               <h2>Email, if you prefer</h2>
               <p>
                 <a href="mailto:support@velorcommerce.store">support@velorcommerce.store</a> reaches
-                the same team. Velor Commerce Ltd is registered in England and Wales.
+                the same team. Velor Commerce Ltd (company no. 17268133) is registered in England and Wales, registered office 49 Station Road, Polegate, East Sussex, BN26 6EA.
+              </p>
+            </div>
+            <div className="vc-card">
+              <h2>Follow us</h2>
+              <p>
+                Find Velor on <a href="https://www.facebook.com/Velorcommerce" target="_blank" rel="noopener noreferrer">Facebook</a> and{' '}
+                <a href="https://www.instagram.com/velorcommerce" target="_blank" rel="noopener noreferrer">Instagram</a>.
               </p>
             </div>
           </div>
