@@ -10,11 +10,17 @@ export const metadata = {
     url: 'https://velorcommerce.store/seller-agreement',
     siteName: 'Velor',
     type: 'website',
+    // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale (vercel/next.js#50353: an explicit openGraph
+    // object replaces the whole object, dropping the root file-convention
+    // image unless listed here).
+    images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Seller Agreement — Velor Marketplace',
     description: 'Velor Seller Terms of Service. Read before registering as a seller.',
+    images: ['https://velorcommerce.store/opengraph-image'],
   },
 };
 

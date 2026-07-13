@@ -10,12 +10,18 @@ export const metadata = {
     url: 'https://velorcommerce.store/legal/terms',
     siteName: 'Velor',
     type: 'website',
+    // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale (vercel/next.js#50353: an explicit openGraph
+    // object replaces the whole object, dropping the root file-convention
+    // image unless listed here).
+    images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Terms of Service — Velor Marketplace',
     description:
       'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+    images: ['https://velorcommerce.store/opengraph-image'],
   },
 }
 

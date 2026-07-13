@@ -34,11 +34,22 @@ export const metadata: Metadata = {
     url: 'https://velorcommerce.store',
     siteName: 'Velor',
     type: 'website',
+    // images added by the standing SEO agent, 2026-07-13 -- verified via
+    // Next.js's own docs (getting-started/metadata-and-og-images) plus a
+    // Next.js GitHub discussion (vercel/next.js#50353, confirmed live) that
+    // defining an explicit `openGraph` object on a route replaces the WHOLE
+    // object, so the sibling app/opengraph-image.tsx file in this very
+    // folder is NOT automatically merged back in for this or any child
+    // route -- it must be listed explicitly, the same fix app/sell/layout.tsx
+    // already carries. Same generated image URL reused, not duplicated, so
+    // it can never drift out of sync with the real file.
+    images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
+    images: ['https://velorcommerce.store/opengraph-image'],
   },
 }
 
