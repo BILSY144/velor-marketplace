@@ -1235,3 +1235,13 @@ Submitted the Mass Payouts partner application at https://www.payoneer.com/marke
 - Comments: marketplace description mentioning 6 Aug 2026 buyer launch and need to pay sellers outside Stripe Connect's coverage
 
 Confirmation screen displayed: "Thank you! We look forward to getting in touch with you. A member of our team will get back to you soon." This is a NEW, separate application from the one referenced earlier in this doc as submitted 8 Jul 2026 (that one may have gone through the wrong portal/account -- unverified, not corrected, just noted). Next step: wait for Payoneer's team to respond to william@velorcommerce.co.uk; no further action possible on our side until they reply with next steps (likely a BD conversation and/or sandbox credentials per docs/PAYONEER_SETUP.md Step 1).
+
+
+## 2026-07-13 checkpoint (continued 3) -- Site copy: surfaced Payoneer as coming soon (not yet claiming it's live)
+
+William asked to reference Payoneer payments on the site since it currently reads "mainly Stripe." Audited every Stripe/Payoneer mention (GitHub code search, 62 hits) and found most legal/help pages (app/help/page.tsx, app/legal/privacy/page.tsx, app/dashboard/terms/page.tsx, app/legal/seller-agreement/page.tsx, app/seller-agreement/page.tsx) already mention Payoneer carefully ("Payoneer where Stripe is unavailable" -- no claim it's live today). Two visible spots did NOT mention Payoneer at all, or overstated it:
+
+1. components/GlobalFooter.tsx -- site-wide trust badge said only "Payments secured by Stripe". Changed to "Payments secured by Stripe · Payoneer payouts coming soon" (commit 723db8c).
+2. app/sell/page.tsx -- STEP 04 "Paid, your way" card said "Weekly payouts by Stripe where supported, Payoneer everywhere else" -- this OVERSTATED Payoneer as already live everywhere else, which is inaccurate (partner application only just submitted, no credentials yet). Corrected to accurately say Payoneer is "on the way," while explicitly telling sellers outside Stripe's coverage to sign up anyway and that earnings are held safely until payouts go live -- per William's explicit instruction not to restrict seller applications while Payoneer is in progress (commit deba25d).
+
+Left untouched (correct as-is, do not change): the two "Secure Stripe checkout" / "Card details are handled by Stripe" buyer-checkout trust badges in components/GlobalFooter.tsx and components/GlobalHeader.tsx -- these are accurate as written because Payoneer Checkout (buyer-side payments) does not exist in this codebase at all; mentioning Payoneer there would be false. Buyer payment is Stripe-only until Checkout is built as new, separate work.
