@@ -99,6 +99,17 @@ const jsonLd = {
       // confirms Organization is a valid domain for areaServed.
       areaServed: 'Worldwide',
       sameAs: ['https://www.facebook.com/Velorcommerce', 'https://www.instagram.com/velorcommerce'],
+      // email added by the standing SEO agent, 2026-07-13 (fifth pass) --
+      // schema.org/email confirms Organization (alongside ContactPoint and
+      // Person) is a valid domain for a top-level `email` property, checked
+      // against schema.org's own docs before adding rather than assumed.
+      // Reuses the exact same already-verified live support address as
+      // `contactPoint.email` below (app/contact/page.tsx,
+      // app/contact/layout.tsx) rather than a second hand-typed copy, so the
+      // two can never drift apart. This is a duplicate of an already-live,
+      // already-verified fact in a second schema.org-recognized location,
+      // not a new claim.
+      email: 'support@velorcommerce.store',
       // Added by the standing SEO agent, 2026-07-13 -- contactPoint email is
       // the real, live support address, verified directly against
       // app/contact/page.tsx ("support@velorcommerce.store" reaches the
