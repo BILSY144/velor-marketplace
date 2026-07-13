@@ -112,7 +112,7 @@ function CommissionLadder({ tier, accentColor }: { tier: string; accentColor: st
 
 // Live, honest math — no fabricated sales figures. The seller enters a
 // hypothetical monthly sales volume and instantly sees what they'd pay in
-// commission at their tier vs. what Starter sellers pay at 12%.
+// commission at their tier vs. what Starter sellers pay at 10%.
 function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentColor: string; theme: Parameters<typeof tierCardStyle>[0] }) {
   const [sales, setSales] = useState('1000');
   const parsed = Math.max(0, parseFloat(sales) || 0);
