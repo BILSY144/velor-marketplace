@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
+import { createOrderFromPaymentIntent } from '@/lib/orders';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-02-24.acacia',
@@ -34,12 +35,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent;
-      const orderId = pi.metadata?.orderId;
-      if (orderId) {
-        await prisma.order.update({
-          where: { id: orderId },
-          data: { status: 'PAID', stripePaymentId: pi.id },
-        });
+
+      // This is the authoritative, trusted order-creation path -- it reads
+      // only server-set PaymentIntent metadata (see lib/orders.ts), never
+      // client-supplied data. app/api/orders POST is just a same-logic
+      // accelerator for the confirmation page so the buyer doesn't have to
+      // wait for this webhook to land before seeing their order number; if
+      // that accelerator already created the order, this is a no-op.
+      // Returning a non-2xx here makes Stripe retry automatically, so a
+      // transient DB blip can never silently lose an order.
+      try {
+        await createOrderFromPaymentIntent(pi);
+      } catch (err) {
+        console.error('[webhook] order creation failed for', pi.id, err);
+        return NextResponse.json({ error: 'Order creation failed' }, { status: 500 });
       }
 
       const discountIds = (pi.metadata?.discountIds ?? '')

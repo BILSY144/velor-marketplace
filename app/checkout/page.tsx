@@ -298,6 +298,23 @@ export default function CheckoutPage() {
           shippingAmount: selectedRate?.amount ?? 0,
           shippingCurrency: selectedRate?.currency ?? 'GBP',
           dutiesAmountGBP: landedCost?.totalTaxGBP ?? 0,
+          // Buyer contact/shipping details -- stored server-side in the
+          // PaymentIntent's metadata so the webhook can create the order
+          // from trusted data without ever depending on this browser tab
+          // still being open. The buyer's account email (not this form) is
+          // what actually gets used as the order's identity -- see
+          // app/api/stripe/payment-intent/route.ts.
+          buyerName: address.name,
+          shippingAddress: {
+            name: address.name,
+            phone: `${DIAL_CODES[address.phoneCountry] || ''} ${address.phone}`.trim(),
+            line1: address.line1,
+            line2: address.line2,
+            city: address.city,
+            state: address.state,
+            postcode: address.postalCode,
+            country: address.country,
+          },
         }),
       })
       const data = await res.json()

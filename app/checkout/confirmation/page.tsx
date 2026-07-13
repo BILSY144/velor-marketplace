@@ -71,39 +71,20 @@ function ConfirmationContent() {
     }
   }, [searchParams])
 
-  // Persist order to DB on mount — fire-and-forget, idempotent
+  // Nudge order creation on mount — fire-and-forget, idempotent, and safe:
+  // this no longer sends any price/total/item data. It only tells the server
+  // which PaymentIntent to look up; app/api/orders (and independently, the
+  // Stripe webhook) build the actual order from trusted, server-side
+  // PaymentIntent metadata. If this call never fires (closed tab, dropped
+  // connection) the webhook still creates the order on its own.
   useEffect(() => {
     if (!order || saved || !order.paymentIntentId) return
     setSaved(true)
 
-    const buyerName = `${order.shipping.firstName ?? ''} ${order.shipping.lastName ?? ''}`.trim()
-
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sellerId: order.items?.[0]?.sellerId,
-        paymentIntentId: order.paymentIntentId,
-        buyerEmail: order.shipping.email,
-        buyerName,
-        total: order.total,
-        currency: order.currency ?? 'GBP',
-        address: {
-          name: buyerName,
-          phone: order.shipping.phone ?? '',
-          line1: order.shipping.address ?? '',
-          city: order.shipping.city ?? '',
-          state: order.shipping.state ?? '',
-          postcode: order.shipping.postcode ?? '',
-          country: order.shipping.country ?? '',
-        },
-        items: (order.items ?? []).map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity,
-        })),
-      }),
+      body: JSON.stringify({ paymentIntentId: order.paymentIntentId }),
     }).catch(() => {}) // Non-blocking — confirmation UI never depends on this
   }, [order, saved])
 

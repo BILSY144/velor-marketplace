@@ -1,19 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 
 interface OrderItem {
   id: string
   quantity: number
   price: number
-  product: { id: string; name: string; images: string[]; category: string }
+  product: { id: string; title: string; images: string[]; category: string }
 }
 
 interface Order {
   id: string
-  buyerEmail: string
-  buyerName: string
-  total: number
+  customerEmail: string
+  customerName: string | null
+  subtotal: number
   currency: string
   status: string
   shippingAddress: Record<string, string>
@@ -38,39 +39,32 @@ function fmtDate(iso: string) {
 }
 
 export default function OrdersPage() {
-  const [email, setEmail] = useState('')
+  const { data: session, status: sessionStatus } = useSession()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState('')
 
+  // Orders are always scoped server-side to the signed-in account's own
+  // email (see /api/orders GET) -- there is no way to look up another
+  // buyer's orders by typing their email anymore, so this loads
+  // automatically for whoever is signed in rather than taking input.
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('velor-last-order')
-      if (stored) {
-        const o = JSON.parse(stored)
-        if (o?.shipping?.email) setEmail(o.shipping.email)
-      }
-    } catch {}
-  }, [])
-
-  const lookup = async () => {
-    const q = email.trim().toLowerCase()
-    if (!q) return
+    if (sessionStatus !== 'authenticated') return
     setLoading(true)
     setError('')
-    try {
-      const res = await fetch(`/api/orders?email=${encodeURIComponent(q)}`)
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      setOrders(data.orders ?? [])
-      setSearched(true)
-    } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+    fetch('/api/orders')
+      .then((res) => {
+        if (!res.ok) throw new Error()
+        return res.json()
+      })
+      .then((data) => {
+        setOrders(data.orders ?? [])
+        setSearched(true)
+      })
+      .catch(() => setError('Something went wrong. Please try again.'))
+      .finally(() => setLoading(false))
+  }, [sessionStatus])
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #0D0D0D)', fontFamily: 'Inter, sans-serif', color: 'var(--text, #FFFFFF)' }}>
@@ -88,49 +82,21 @@ export default function OrdersPage() {
           Your Orders
         </h1>
         <p style={{ color: '#999999', fontSize: 15, margin: '0 0 36px' }}>
-          Enter the email address used at checkout to view your order history.
+          Showing orders for the account you're signed in with{session?.user?.email ? ` (${session.user.email})` : ''}.
         </p>
 
-        {/* Email lookup */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && lookup()}
-            placeholder="your@email.com"
-            style={{
-              flex: '1 1 260px',
-              background: '#1A1A1A',
-              border: '1px solid #2A2A2A',
-              borderRadius: 8,
-              padding: '13px 16px',
-              color: '#FFFFFF',
-              fontSize: 14,
-              outline: 'none',
-              fontFamily: 'Inter, sans-serif',
-            }}
-          />
-          <button
-            onClick={lookup}
-            disabled={loading}
-            style={{
-              padding: '13px 28px',
-              background: loading ? '#222222' : '#FF6B00',
-              border: 'none',
-              borderRadius: 8,
-              color: '#FFFFFF',
-              fontSize: 14,
-              fontWeight: 700,
-              fontFamily: 'Space Grotesk, sans-serif',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'background 0.15s',
-            }}
-          >
-            {loading ? 'Searching...' : 'Find Orders'}
-          </button>
-        </div>
+        {sessionStatus === 'unauthenticated' && (
+          <div style={{ textAlign: 'center', padding: '64px 0' }}>
+            <p style={{ color: '#999999', fontSize: 15, marginBottom: 16 }}>Sign in to view your order history.</p>
+            <a href="/auth/sign-in" style={{ color: '#FF6B00', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+              Sign In
+            </a>
+          </div>
+        )}
+
+        {(sessionStatus === 'loading' || loading) && (
+          <p style={{ color: '#999999', fontSize: 14, textAlign: 'center', padding: '32px 0' }}>Loading...</p>
+        )}
 
         {error && (
           <div style={{ padding: '12px 16px', background: 'rgba(255,23,68,0.08)', border: '1px solid #FF1744', borderRadius: 8, color: '#FF1744', fontSize: 14, marginBottom: 24 }}>
@@ -138,9 +104,9 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {searched && orders.length === 0 && (
+        {searched && !loading && orders.length === 0 && (
           <div style={{ textAlign: 'center', padding: '64px 0' }}>
-            <p style={{ color: '#999999', fontSize: 15, marginBottom: 16 }}>No orders found for this email address.</p>
+            <p style={{ color: '#999999', fontSize: 15, marginBottom: 16 }}>You haven't placed any orders yet.</p>
             <a href="/shop" style={{ color: '#FF6B00', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
               Start Shopping
             </a>
@@ -183,7 +149,7 @@ export default function OrdersPage() {
                   </span>
                 </div>
                 <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 18, fontWeight: 800, color: '#FF6B00' }}>
-                  {fmt(order.total, order.currency)}
+                  {fmt(order.subtotal, order.currency)}
                 </span>
               </div>
 
@@ -194,7 +160,7 @@ export default function OrdersPage() {
                     {item.product.images?.[0] && (
                       <img
                         src={item.product.images[0]}
-                        alt={item.product.name}
+                        alt={item.product.title}
                         style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover' as const, background: '#111111', flexShrink: 0 }}
                       />
                     )}
@@ -203,7 +169,7 @@ export default function OrdersPage() {
                         href={`/shop/${item.product.id}`}
                         style={{ fontSize: 14, fontWeight: 600, color: '#FFFFFF', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}
                       >
-                        {item.product.name}
+                        {item.product.title}
                       </a>
                       <span style={{ fontSize: 12, color: '#999999' }}>
                         Qty {item.quantity} &middot; {fmt(item.price, order.currency)} each

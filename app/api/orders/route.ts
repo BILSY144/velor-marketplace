@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import { createOrderFromPaymentIntent } from '@/lib/orders'
 
-const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0 }
-
-// POST - create order after successful Stripe payment
-// Body: { sellerId, buyerEmail, buyerName, address, total, productSubtotal, shippingCost, items, paymentIntentId }
+// POST - authenticated accelerator for the checkout-confirmation page.
+//
+// This does NOT create an order from anything the client sends. The client
+// only tells us WHICH PaymentIntent to look up; everything used to build the
+// Order (seller, price, quantity, commission, shipping address) is read back
+// from Stripe itself via createOrderFromPaymentIntent(), which trusts only
+// the metadata app/api/stripe/payment-intent/route.ts set server-side.
+//
+// The Stripe webhook (payment_intent.succeeded) is the real, reliable path --
+// it fires even if the buyer's tab closes before this ever runs. This route
+// exists purely so the confirmation page can get an orderId back immediately
+// instead of waiting on webhook delivery, and it's fully idempotent with the
+// webhook via Order.stripePaymentId's unique constraint.
 export async function POST(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const sessionEmail = session.user.email.toLowerCase().trim()
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -14,101 +31,64 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const {
-    sellerId,
-    buyerEmail,
-    buyerName,
-    address,
-    total,
-    productSubtotal,
-    shippingCost,
-    items,
-    paymentIntentId,
-  } = body as {
-    sellerId?: string
-    buyerEmail?: string
-    buyerName?: string
-    address?: unknown
-    total?: number
-    productSubtotal?: number
-    shippingCost?: number
-    paymentIntentId?: string
-    items?: Array<{
-      productId?: string
-      id?: string
-      quantity?: number
-      price?: number
-    }>
+  const { paymentIntentId } = body as { paymentIntentId?: string }
+  if (!paymentIntentId || typeof paymentIntentId !== 'string') {
+    return NextResponse.json({ error: 'paymentIntentId required' }, { status: 400 })
   }
 
-  if (!sellerId || !buyerEmail || !buyerName || !address || !Array.isArray(items) || items.length === 0) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
-
-  const sellerForCommission = await prisma.seller.findUnique({ where: { id: sellerId }, select: { tier: true } })
-  const commissionRate = TIER_COMMISSION[sellerForCommission?.tier as unknown as string] ?? 0.1
-
-  // Idempotency: if order already exists for this PaymentIntent, return it
-  if (paymentIntentId) {
-    const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
-    if (existing) {
-      return NextResponse.json({ orderId: existing.id }, { status: 200 })
+  // Fast path: the webhook (or a previous call to this route) already created it.
+  const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
+  if (existing) {
+    if (existing.customerEmail.toLowerCase().trim() !== sessionEmail) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
+    return NextResponse.json({ orderId: existing.id }, { status: 200 })
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' })
+  let pi: Stripe.PaymentIntent
+  try {
+    pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+  } catch {
+    return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+  }
+
+  if (pi.status !== 'succeeded') {
+    return NextResponse.json({ error: 'Payment not completed yet' }, { status: 409 })
+  }
+
+  const metadataEmail = (pi.metadata?.buyerEmail || '').toLowerCase().trim()
+  if (!metadataEmail || metadataEmail !== sessionEmail) {
+    // The PaymentIntent belongs to someone else's account -- never let a
+    // logged-in buyer create or view an order for another buyer's payment.
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   try {
-    const [order] = await prisma.$transaction([
-      prisma.order.create({
-        data: {
-          sellerId,
-          customerEmail: String(buyerEmail).toLowerCase().trim(),
-          customerName: buyerName ?? String(buyerEmail),
-          shippingAddress: typeof address === 'string' ? address : JSON.stringify(address),
-          subtotal: Number(total),
-          status: 'PAID',
-          stripePaymentId: paymentIntentId ?? null,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId ?? item.id ?? '',
-              quantity: Number(item.quantity),
-              price: Number(item.price),
-              commission: Number(item.price) * Number(item.quantity) * commissionRate,
-            })),
-          },
-        },
-      }),
-      // Decrement stock atomically with order creation. The payment-intent
-      // route already blocked the charge if quantity exceeded stock, so this
-      // should always have enough -- the stock:{gte} guard here is just
-      // defense against a race between two near-simultaneous checkouts, so
-      // stock can never go negative even in that edge case.
-      ...items.map((item) =>
-        prisma.product.updateMany({
-          where: { id: item.productId ?? item.id ?? '', stock: { gte: Number(item.quantity) || 0 } },
-          data: { stock: { decrement: Number(item.quantity) || 0 } },
-        })
-      ),
-    ])
-
-return NextResponse.json({ orderId: order.id }, { status: 201 })
+    const order = await createOrderFromPaymentIntent(pi)
+    return NextResponse.json({ orderId: order.id }, { status: 201 })
   } catch (err: unknown) {
     console.error('[POST /api/orders]', err)
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
   }
 }
 
-// GET /api/orders?email=... - list buyer orders (requires auth)
+// GET /api/orders - list the signed-in buyer's own orders. Always scoped to
+// the authenticated session's email -- a client-supplied email is never
+// trusted here, so one buyer can never enumerate another buyer's order
+// history.
 export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const email = req.nextUrl.searchParams.get('email')
-  if (!email) return NextResponse.json({ error: 'email param required' }, { status: 400 })
 
   const orders = await prisma.order.findMany({
-    where: { customerEmail: email.toLowerCase().trim() },
-    include: { items: true, shipment: true },
+    where: { customerEmail: session.user.email.toLowerCase().trim() },
+    include: {
+      items: { include: { product: { select: { id: true, title: true, images: true, category: true } } } },
+      shipment: true,
+    },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json({ orders })

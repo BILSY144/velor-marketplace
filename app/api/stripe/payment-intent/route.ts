@@ -10,6 +10,24 @@ export const dynamic = 'force-dynamic'
 const PLATFORM_COMMISSION_RATE = 0.1
 const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0 }
 
+// Stripe metadata values are capped at 500 chars each. These caps keep the
+// JSON-encoded shippingAddress well under that limit even with every field
+// filled in, so a long address can never silently break checkout.
+function sanitizeAddress(input: unknown) {
+  const a = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
+  const pick = (k: string, max: number) => String(a[k] ?? '').slice(0, max).trim()
+  return {
+    name: pick('name', 80),
+    phone: pick('phone', 30),
+    line1: pick('line1', 90),
+    line2: pick('line2', 60),
+    city: pick('city', 50),
+    state: pick('state', 40),
+    postcode: pick('postcode', 15),
+    country: pick('country', 40),
+  }
+}
+
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) {
@@ -27,7 +45,14 @@ export async function POST(request: NextRequest) {
       shippingAmount = 0,
       shippingCurrency = 'GBP',
       dutiesAmountGBP = 0,
+      buyerName,
+      shippingAddress,
     } = await request.json()
+
+    // The buyer's account email is the one and only trusted identity tied to
+    // this order -- never whatever a client form field says. This is what
+    // later lets /api/orders scope "my orders" safely without an IDOR.
+    const buyerEmail = session.user.email.toLowerCase().trim()
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'items required' }, { status: 400 })
@@ -149,7 +174,14 @@ export async function POST(request: NextRequest) {
       // card, Link, Klarna, Revolut Pay, and Amazon Pay where eligible.
       automatic_payment_methods: { enabled: true },
       metadata: {
-        items: JSON.stringify(items ?? []),
+        // Server-computed {productId, quantity, priceGBP} per line item --
+        // NOT the raw client body. This is the trusted source the webhook
+        // (and the checkout-confirmation accelerator) use to actually build
+        // the Order + OrderItems once payment succeeds.
+        items: JSON.stringify(discountCartItems),
+        buyerEmail,
+        buyerName: String(buyerName ?? '').slice(0, 150).trim(),
+        shippingAddress: JSON.stringify(sanitizeAddress(shippingAddress)),
         subtotalGBP: subtotalGBP.toFixed(2),
         discountedSubtotalGBP: discountedSubtotalGBP.toFixed(2),
         discountAmountGBP: discountAmountGBP.toFixed(2),
