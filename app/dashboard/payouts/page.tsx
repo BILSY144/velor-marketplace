@@ -14,7 +14,7 @@ interface PayoutRecord {
 
 const payoutHistory: PayoutRecord[] = [];
 
-const COMMISSION: Record<string, number> = { STARTER: 12, PRO: 8, ENTERPRISE: 5 };
+const COMMISSION: Record<string, number> = { STARTER: 10, PRO: 4, ENTERPRISE: 0 };
 
 function StatusBadge({ status }: { status: PayoutRecord['status'] }) {
   const map = {
@@ -131,7 +131,7 @@ function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentC
         </h2>
       </div>
       <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4, marginBottom: 18 }}>
-        See what your {COMMISSION[tier]}% rate saves you compared to the Starter 12% rate.
+        See what your {COMMISSION[tier]}% rate saves you compared to the Starter 10% rate.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, alignItems: 'end', flexWrap: 'wrap' }}>
         <div>
