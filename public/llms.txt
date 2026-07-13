@@ -4,9 +4,9 @@
 
 Velor's core differentiator is origin and authenticity: listings are traditional textiles, ceremonial crafts, regional art forms, heritage food, indigenous techniques, and other goods with a genuine connection to a seller's own country or culture, alongside general marketplace goods. Every listing shows its maker and country of origin.
 
-Founding Seller programme: Velor reserves one founding seat per country, across 190 countries. The first identity-verified seller from each country keeps a permanent founding badge, the Pro tier free for life (normally £49/month), 8% commission, and is credited as the seller who opened that country. Sellers who join after the founding seat is taken list on equal footing. Applications receive a decision within 24 hours of identity verification completing (verification itself is user-paced).
+Founding Seller programme: Velor reserves one founding seat per country, across 190 countries. The first identity-verified seller from each country keeps a permanent founding badge, the Pro tier free for life (normally £49/month), 4% commission, and is credited as the seller who opened that country. Sellers who join after the founding seat is taken list on equal footing. Applications receive a decision within 24 hours of identity verification completing (verification itself is user-paced).
 
-Selling tiers: Starter is free to list at 12% commission; Pro is £49/month at 8% commission; Enterprise is £99/month at 5% commission. Every seller must pass Stripe Identity verification before approval.
+Selling tiers: Starter is free to list at 10% commission; Pro is £49/month at 4% commission; Enterprise is £99/month at 0% commission. Every seller must pass Stripe Identity verification before approval.
 
 Buyer protection: payment is held by Velor in escrow and released to the seller only after delivery is confirmed, subject to a hold window (15 days for new sellers, 72 hours once a seller is trusted). An open return or dispute freezes the funds.
 
