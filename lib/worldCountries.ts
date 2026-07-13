@@ -202,3 +202,30 @@ export const WORLD_COUNTRIES: WorldCountry[] = [
   { code: 'ZM', name: 'Zambia' },
   { code: 'ZW', name: 'Zimbabwe' },
 ]
+
+// Lowercase, hyphenated slug for a country name -- used by /origins/[slug]
+// (e.g. "Japan" -> "japan", "United Arab Emirates" -> "united-arab-emirates",
+// "Congo (DRC)" -> "congo-drc"). Deterministic and collision-free across the
+// current WORLD_COUNTRIES list -- verified no two entries slugify to the
+// same string.
+export function slugifyCountryName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/'/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// Resolves a URL slug back to its WorldCountry. Accepts either a name slug
+// ("japan") or a raw ISO-2 code in any case ("JP" / "jp") so links built
+// from either convention both work.
+export function findCountryBySlug(slug: string): WorldCountry | undefined {
+  const s = slug.toLowerCase()
+  return WORLD_COUNTRIES.find(
+    (c) => slugifyCountryName(c.name) === s || c.code.toLowerCase() === s
+  )
+}
+
+export function countrySlug(c: WorldCountry): string {
+  return slugifyCountryName(c.name)
+}
