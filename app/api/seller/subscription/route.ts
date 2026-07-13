@@ -8,9 +8,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const TIER_CONFIG = {
-  STARTER: { commission: 12, listingLimit: 20, monthlyFee: 0 },
-  PRO: { commission: 8, listingLimit: 200, monthlyFee: 49 },
-  ENTERPRISE: { commission: 5, listingLimit: null, monthlyFee: 99 },
+  STARTER: { commission: 10, listingLimit: 20, monthlyFee: 0 },
+  PRO: { commission: 4, listingLimit: 200, monthlyFee: 49 },
+  ENTERPRISE: { commission: 0, listingLimit: null, monthlyFee: 99 },
 } as const
 
 export async function GET() {
