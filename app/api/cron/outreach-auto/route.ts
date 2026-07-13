@@ -6,7 +6,7 @@ import { langForCountry } from '@/lib/outreachI18n';
 
 const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 30;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
-const SELLER_FROM = 'Velor Seller Team <sellers@velorcommerce.store>';
+const SELLER_FROM = 'Velor Seller Team <noreply@velorcommerce.store>';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
 
