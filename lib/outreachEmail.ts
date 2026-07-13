@@ -15,7 +15,7 @@
 // No translation API is called; all copy is hand-written in lib/outreachI18n.ts.
 //
 // Every claim remains verifiably true of the live platform: free listing on the
-// Starter plan, 12% commission only on completed sales, 190+ shipping
+// Starter plan, 10% commission only on completed sales, 190+ shipping
 // destinations, live prices in 20 currencies, escrow-protected payments,
 // payouts via Stripe or Payoneer, buyers arrive 6 August 2026. The unsubscribe
 // link is mandatory in every email.
@@ -229,7 +229,7 @@ ${OUTREACH_HEADER}`
         </div>
         <!-- b2 (commission/free plan) and b3 (escrow payout) are deliberately
              not shown here: William flagged them as wrong or irrelevant for a
-             founding-tier invitation -- b2's 12% is the Starter rate, not the
+             founding-tier invitation -- b2's 10% is the Starter rate, not the
              founding Pro rate, and b3 describes live payout mechanics that
              don't apply before launch. Fields stay in outreachI18n.ts for any
              non-founding context that may use them later. -->
