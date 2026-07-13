@@ -282,13 +282,25 @@ Written plainly, per LAW #1.
 1. **No seller has ever completed a real identity verification.** Stripe's
    Verification Sessions list was empty as of 2026-07-08 14:53 UTC. The full
    round trip is untested against a real human.
-2. **Velor still stores ID document scans on its own infrastructure.**
-   `app/api/seller/verify/route.ts`, `app/dashboard/verify/page.tsx`,
-   `app/api/admin/verify/[id]/route.ts` and `SellerVerification.idDocumentUrl`
-   remain. That flow verifies nothing (a human eyeballs a photo) and gates
-   nothing (no route checks its result). It is redundant and is a live UK GDPR
-   liability. Deleting it requires touching `app/seller/[sellerId]/page.tsx`
-   and `app/api/briefing/route.ts`, which reference `SellerVerification`.
+2. **RESOLVED 2026-07-13.** The old manual ID-document-storage flow is gone.
+   The three routes/pages this note used to name
+   (`app/api/seller/verify/route.ts`, `app/dashboard/verify/page.tsx`,
+   `app/api/admin/verify/[id]/route.ts`) had actually already been deleted by
+   William on 2026-07-09 (commits f833130, a29eca3, 114611c) -- this note just
+   never got updated, a stale-checkpoint trap of exactly the kind LAW #1 warns
+   about. A full repo grep before touching anything found zero remaining
+   references anywhere in application code, including the two files this note
+   claimed still depended on it (`app/seller/[sellerId]/page.tsx`,
+   `app/api/briefing/route.ts`) -- neither actually did. What was left was
+   pure dead schema: the `SellerVerification` model (with its
+   `idDocumentUrl`/`businessDocUrl` text fields), the unused
+   `VerificationStatus` enum, and `Seller.verification`'s relation field.
+   Removed in commit **8439b54**, confirmed **Ready** in Production. On that
+   deploy, `prisma db push --accept-data-loss` dropped the
+   `SellerVerification` table from the live database -- the actual point of
+   the fix, not a side effect: any ID document URLs a seller uploaded through
+   the old flow before it was replaced are now permanently gone from the
+   database, not just unreachable by code.
 3. **The daily briefing cron is `0 6-9 * * *`**, which fires at 06:00, 07:00,
    08:00 and 09:00 UTC â four briefings a morning. The `velor-daily-report`
    skill states it should be `0 7 * * *`, once. Unconfirmed whether the route
