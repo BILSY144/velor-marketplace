@@ -9,6 +9,10 @@ export const metadata = {
     description: 'Velor Seller Terms of Service. Read before registering as a seller.',
     url: 'https://velorcommerce.store/seller-agreement',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale ('en_GB', verified against lib/currency.ts's
+    // real GBP default, not invented).
+    locale: 'en_GB',
     type: 'website',
     // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
     // for the full rationale (vercel/next.js#50353: an explicit openGraph

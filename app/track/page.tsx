@@ -5,6 +5,10 @@ export const metadata = {
     title: 'Track Your Order - Velor Commerce',
     url: 'https://velorcommerce.store/track',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale ('en_GB', verified against lib/currency.ts's
+    // real GBP default, not invented).
+    locale: 'en_GB',
     type: 'website',
     // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
     // for the full rationale (vercel/next.js#50353: an explicit openGraph

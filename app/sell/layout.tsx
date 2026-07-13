@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     description,
     url: 'https://velorcommerce.store/sell',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale ('en_GB', verified against lib/currency.ts's
+    // real GBP default, not invented).
+    locale: 'en_GB',
     type: 'website', images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
   },
   twitter: {

@@ -9,6 +9,10 @@ export const metadata = {
       'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
     url: 'https://velorcommerce.store/legal/seller-agreement',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale ('en_GB', verified against lib/currency.ts's
+    // real GBP default, not invented).
+    locale: 'en_GB',
     type: 'website',
     // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
     // for the full rationale (vercel/next.js#50353: an explicit openGraph

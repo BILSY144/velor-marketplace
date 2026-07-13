@@ -27,6 +27,10 @@ export const metadata = {
               'Every listing carries its country and its maker. Money is held in escrow until delivery is confirmed. Every seller is identity-verified.',
         url: 'https://velorcommerce.store/about',
         siteName: 'Velor',
+        // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+        // for the full rationale ('en_GB', verified against lib/currency.ts's
+        // real GBP default, not invented).
+        locale: 'en_GB',
         type: 'website',
         // images added by the standing SEO agent, 2026-07-13 -- see
         // app/layout.tsx for the full rationale (vercel/next.js#50353: an

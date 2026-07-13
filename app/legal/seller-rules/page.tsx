@@ -9,6 +9,10 @@ export const metadata = {
       'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
     url: 'https://velorcommerce.store/legal/seller-rules',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
+    // for the full rationale ('en_GB', verified against lib/currency.ts's
+    // real GBP default, not invented).
+    locale: 'en_GB',
     type: 'website',
     // images added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
     // for the full rationale (vercel/next.js#50353: an explicit openGraph

@@ -33,6 +33,18 @@ export const metadata: Metadata = {
     description,
     url: 'https://velorcommerce.store',
     siteName: 'Velor',
+    // locale added by the standing SEO agent, 2026-07-13 -- og:locale was
+    // missing from every openGraph object in the codebase (21 files, this
+    // one included). 'en_GB' is not invented: lib/currency.ts's own
+    // getCurrency() falls back to 'GBP' as the site's real default/base
+    // currency (confirmed live in that file, both in its no-navigator
+    // fallback and its final return), and app/api/briefing/route.ts already
+    // formats those same GBP figures with the 'en-GB' Intl locale elsewhere
+    // in this codebase -- both consistent with this UK-registered company's
+    // real default, not a second, disconnected locale guess. Applied to all
+    // 21 openGraph-defining files the same way the 2026-07-13 15:xx UTC
+    // og:image fix was (see SEO_LOG.md), each with a short pointer back here.
+    locale: 'en_GB',
     type: 'website',
     // images added by the standing SEO agent, 2026-07-13 -- verified via
     // Next.js's own docs (getting-started/metadata-and-og-images) plus a
