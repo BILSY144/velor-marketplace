@@ -385,7 +385,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     introMaker: 'Velor tamamen yeni — henüz alıcılara açılmadık. <strong style="color:#FFFFFF;">6 Ağustos</strong>\'ta açılıyoruz ve bundan önce, zanaatı gerçek köken taşıyan her ülkeden bir kurucu üreticiyi, ilk günden itibaren canlı olan ilk kişi olmaya davet ediyoruz. Bunun siz olabileceğinizi düşünüyoruz.',
     proTitle: 'Pro plan — kurucu satıcı olarak ücretsiz',
     proFeatures: ['200 aktif ürün listesi', 'Ücretsiz özel mağaza vitrini', 'Arama sonuçlarında öncelik', 'Akıllı listeleme optimizasyonu', 'Gelişmiş satış analitiği', 'Özel satıcı desteği'],
-    proCommissionNote: 'FREE, aylık ücret olmadığı anlamına gelir. Yine de %8 komisyon ödersiniz — yalnızca gerçekten sattıklarınız üzerinden.',
+    proCommissionNote: 'FREE, aylık ücret olmadığı anlamına gelir. Yine de %4 komisyon ödersiniz — yalnızca gerçekten sattıklarınız üzerinden.',
     f1Headline: 'Çoğu pazar yerinin yanlış yaptığı kısım: size ödeme yapmak.',
     f1Intro: 'Davetimizin devamı. Karar vermeden önce, Velor’da satışın tam olarak nasıl işlediği — çünkü güven çift yönlü olmalı:',
     f1s1: 'Dünyanın herhangi bir yerindeki bir alıcı sipariş verir — ödeme, kendi para biriminde Stripe tarafından işlenir.',
