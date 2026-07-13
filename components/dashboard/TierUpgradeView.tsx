@@ -41,7 +41,7 @@ const TIERS: Record<TierId, TierDef> = {
     kicker: 'Free forever',
     pitch: '"The easy way to test the water before you dive in."',
     price: 0,
-    commission: 12,
+    commission: 10,
     listingLabel: 'Up to 20 active listings',
     gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)',
     glow: 'rgba(180,180,190,0.18)',
@@ -66,7 +66,7 @@ const TIERS: Record<TierId, TierDef> = {
     kicker: 'Most popular',
     pitch: '"Built for sellers ready to grow — cheaper fees, better visibility."',
     price: 49,
-    commission: 8,
+    commission: 4,
     listingLabel: 'Up to 200 active listings',
     gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)',
     glow: 'rgba(139,92,246,0.35)',
@@ -91,7 +91,7 @@ const TIERS: Record<TierId, TierDef> = {
     kicker: 'High-volume sellers',
     pitch: '"For established brands ready to scale without limits."',
     price: 99,
-    commission: 5,
+    commission: 0,
     listingLabel: 'Unlimited active listings',
     gradient: 'linear-gradient(160deg, #f59e0b 0%, #7c2d12 100%)',
     glow: 'rgba(245,158,11,0.35)',
@@ -114,14 +114,14 @@ const TIERS: Record<TierId, TierDef> = {
 }
 
 function breakEvenVsStarter(price: number, commission: number): number | null {
-  const delta = (12 - commission) / 100
+  const delta = (10 - commission) / 100
   if (delta <= 0) return null
   return Math.ceil(price / delta)
 }
 
 function CompareModal({ onClose }: { onClose: () => void }) {
   const rows: [string, string, string, string][] = [
-    ['Commission', '12%', '8%', '5%'],
+    ['Commission', '10%', '4%', '0%'],
     ['Monthly fee', 'Free', '£49/mo', '£99/mo'],
     ['Listings', '20', '200', 'Unlimited'],
     ['Custom storefront', '—', 'Free', 'Free'],
