@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { qualifyProspect } from '@/lib/prospectQualify';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 // AI screening gate. Runs after scout-sellers, before outreach-auto.
 //
@@ -17,10 +18,8 @@ import { qualifyProspect } from '@/lib/prospectQualify';
 const MAX_PER_RUN = Number(process.env.QUALIFY_MAX_PER_RUN) || 40;
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
 
   const prospects = await prisma.sellerProspect.findMany({
     where: { status: 'prospected', qualified: null, email: { not: null } },

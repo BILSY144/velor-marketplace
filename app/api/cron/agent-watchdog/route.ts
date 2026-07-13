@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { PROBATION_HOLD_MS, TRUSTED_HOLD_MS, isSellerTrusted, orderHasOpenIssue } from '@/lib/payouts'
+import { requireCronSecret } from '@/lib/cronAuth'
 
 export const maxDuration = 60
 export const dynamic = 'force-dynamic'
@@ -32,10 +33,8 @@ async function sendAlert(subject: string, lines: string[]) {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = requireCronSecret(req)
+  if (authError) return authError
 
   const now = Date.now()
   const breaches: string[] = []

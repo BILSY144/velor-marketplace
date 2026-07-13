@@ -91,7 +91,15 @@ export default function LiveViewerPage() {
   async function reportStream() {
     if (reported) return
     setReported(true)
-    try { await fetch(`/api/live/${room}/report`, { method: 'POST' }) } catch {}
+    // Reporting now requires a signed-in session (see the route) -- reset
+    // the button rather than showing a false "Reported - thank you" if the
+    // request actually failed (not signed in, network error, etc.).
+    try {
+      const res = await fetch(`/api/live/${room}/report`, { method: 'POST' })
+      if (!res.ok) setReported(false)
+    } catch {
+      setReported(false)
+    }
   }
 
   const dark = '#111111'

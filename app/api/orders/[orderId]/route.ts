@@ -12,8 +12,14 @@ export async function GET(
   }
   const { orderId } = await params
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
+  // IDOR fix: this used to be a plain findUnique by id, so ANY signed-in
+  // buyer could view ANY other buyer's order (items, prices, shipping
+  // address) just by knowing or guessing an order id -- being logged in was
+  // enough, ownership was never checked. Always scope to the session's own
+  // email, same convention as GET /api/orders.
+  const sessionEmail = session.user.email.toLowerCase().trim();
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, customerEmail: sessionEmail },
     include: {
       items: true,
     },

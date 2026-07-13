@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email'; import { buildOutreachEmail } from '@/lib/outreachEmail';
 
-const TEST_KEY = 'velor-test-9f3k2p7q8w1z4x6m0b5n';
+export const dynamic = 'force-dynamic';
 
+// Internal QA tool only -- lets an admin preview a real outreach email by
+// sending it to an address of their choosing. Used to be gated by a secret
+// hardcoded directly in this file: readable by anyone with repo access (a
+// plain violation of CLAUDE.md's own "never hardcode a PAT, API key or
+// secret" rule), and with no rate limit or allowlist on `to`, effectively an
+// open relay that could send a real, Velor-branded email to any address on
+// request. Now gated the same way /api/admin/set-tier is: a fail-closed
+// ADMIN_SECRET query-param check done in the route itself, since this needs
+// to work from a plain browser URL for quick previewing and can't rely on a
+// custom Authorization header the way /api/admin/* routes do via
+// middleware.ts. This route lives under /api/agents, not /api/admin, so
+// middleware.ts's blanket ADMIN_SECRET check never covered it -- the check
+// below is the only thing protecting it.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  if (searchParams.get('key') !== TEST_KEY) {
+  const secret = searchParams.get('secret');
+  const envSecret = process.env.ADMIN_SECRET;
+  if (!envSecret || secret !== envSecret) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
   const to = searchParams.get('to');

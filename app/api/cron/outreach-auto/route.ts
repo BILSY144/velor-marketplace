@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 import { buildOutreachEmail } from '@/lib/outreachEmail';
 import { langForCountry } from '@/lib/outreachI18n';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 30;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
@@ -33,10 +34,8 @@ interface ProspectRow {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
 
   if (process.env.OUTREACH_ENABLED === 'false') {
     return NextResponse.json({ ok: true, skipped: 'outreach disabled' });

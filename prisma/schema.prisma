@@ -540,6 +540,7 @@ model LiveStream {
   createdAt     DateTime                   @default(now())
   updatedAt     DateTime                   @updatedAt
   viewerSessions LiveStreamViewerSession[]
+  reports        LiveStreamReport[]
 
   @@index([sellerId])
   @@index([status])
@@ -555,6 +556,25 @@ model LiveStreamViewerSession {
 
   @@index([streamId])
   @@index([joinedAt])
+}
+
+// One row per (stream, reporter) so a single account can never report the
+// same stream more than once -- app/api/live/[room]/report/route.ts used to
+// take an unauthenticated POST and blindly increment LiveStream.reportCount,
+// so anyone (no session required) could script 3 requests and force ANY
+// seller's live stream to auto-end. The route now requires a signed-in
+// session and creates a row here per genuinely distinct reporter; the
+// @@unique makes a repeat report from the same account a no-op instead of
+// counting again.
+model LiveStreamReport {
+  id            String     @id @default(cuid())
+  streamId      String
+  liveStream    LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  reporterEmail String
+  createdAt     DateTime   @default(now())
+
+  @@unique([streamId, reporterEmail])
+  @@index([streamId])
 }
 
 enum CertificateType {

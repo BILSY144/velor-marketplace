@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 const REPORT_RECIPIENT = 'willsinclair144@gmail.com';
 
@@ -285,10 +286,8 @@ function buildDailyReportHtml(d: {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
 
   // DST-safe gate: only actually generate + send once it is truly 08:00 in the UK.
   // Vercel Cron runs in UTC and does not shift for BST/GMT, so this route is

@@ -8,6 +8,7 @@ import {
   isSellerTrusted,
   orderHasOpenIssue,
 } from '@/lib/payouts'
+import { requireCronSecret } from '@/lib/cronAuth'
 
 export const maxDuration = 60
 
@@ -18,10 +19,8 @@ export const maxDuration = 60
 // the RULES are identical on both rails by explicit decision: same delivery
 // confirmation requirement, same 15-day/72-hour holds, same dispute freeze.
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = requireCronSecret(req)
+  if (authError) return authError
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-02-24.acacia',

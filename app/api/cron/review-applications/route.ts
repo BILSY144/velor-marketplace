@@ -13,6 +13,7 @@ import {
   isIdentityConfigured,
   isRestrictedForIdentity,
 } from '@/lib/identity';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,10 +45,8 @@ const AGENT = 'seller-onboarding';
 // application stays PENDING, a human is told, and an SLA breach is reported
 // loudly rather than hidden.
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
 
   const now = new Date();
   const pending = await prisma.sellerApplication.findMany({

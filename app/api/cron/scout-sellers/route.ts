@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 // ---------------------------------------------------------------------------
 // Global Seller Scout Agent -- runs every 6 hours via Vercel Cron
@@ -622,11 +623,9 @@ async function scoutBrave(
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
+
   const sources: Array<{ name: string; result: { candidates: ProspectCandidate[]; errors: string[] } }> = [];
 
   // Brave Search - compliant independent-seller discovery

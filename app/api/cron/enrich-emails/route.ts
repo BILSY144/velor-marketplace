@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -46,11 +47,9 @@ async function fetchText(url: string, ms: number): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
+  const authError = requireCronSecret(req);
+  if (authError) return authError;
+
   const prospects = await prisma.sellerProspect.findMany({
     where: { email: null, status: 'prospected' },
     orderBy: { score: 'desc' },

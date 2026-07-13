@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email'
+import { requireCronSecret } from '@/lib/cronAuth'
 
 const FREE_TIER_MINUTES = 5000
 const FREE_TIER_GB = 50
@@ -19,10 +20,8 @@ function tierStatus(minutesPct: number, gbPct: number) {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization') || ''
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = requireCronSecret(req)
+  if (authError) return authError
 
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
