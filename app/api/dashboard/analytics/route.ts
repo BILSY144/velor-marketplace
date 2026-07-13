@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 const COMMISSION_RATE: Record<string, number> = {
-    STARTER: 0.15,
-    PRO: 0.08,
-    ENTERPRISE: 0.05,
+    STARTER: 0.1,
+    PRO: 0.04,
+    ENTERPRISE: 0,
 }
 
 function netEarnings(items: { price: number; quantity: number }[], rate: number): number {
