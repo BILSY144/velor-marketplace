@@ -60,6 +60,17 @@ const jsonLd = {
       description,
       url: 'https://velorcommerce.store',
       logo: 'https://velorcommerce.store/velor-logo-globe-v2.png',
+      // areaServed added by the standing SEO agent, 2026-07-13 (third pass) --
+      // "Worldwide"/"global marketplace" is an already-established, verified
+      // live claim repeated across the codebase, not a new assertion:
+      // app/seller-agreement/page.tsx ("Velor is a global marketplace, open
+      // to sellers worldwide"), app/sell/layout.tsx ("Velor connects buyers
+      // worldwide with independent sellers from 190 countries"),
+      // app/shop/layout.tsx title ("Authentic Goods from Sellers
+      // Worldwide"), and components/GlobalFooter.tsx ("A global
+      // marketplace... buy from independent sellers worldwide"). schema.org
+      // confirms Organization is a valid domain for areaServed.
+      areaServed: 'Worldwide',
       sameAs: ['https://www.facebook.com/Velorcommerce'],
       // Added by the standing SEO agent, 2026-07-13 -- contactPoint email is
       // the real, live support address, verified directly against
