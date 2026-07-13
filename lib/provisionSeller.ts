@@ -13,6 +13,7 @@ import {
   buildSellerRejectedEmail,
   buildNewSellerAlertEmail,
 } from '@/lib/email'
+import { getPayoutRail } from '@/lib/payoutRail'
 
 const DIRECTOR_EMAIL = 'willsinclair144@gmail.com'
 const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
@@ -141,6 +142,15 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         country: application.country ?? undefined,
         approved: true,
         foundingEligible,
+        // Resolve the real payout rail at creation time instead of leaving
+        // the schema default ("STRIPE") in place until the seller's first
+        // dashboard visit lazily recomputes it (GET /api/payoneer/onboard).
+        // No payout was ever at risk either way -- release-payouts holds
+        // funds safely in escrow whenever the rail doesn't resolve to a
+        // real payee -- but a Payoneer-country seller sitting on a wrong
+        // "STRIPE" label before their first visit was invisible to the
+        // admin activation route and could trip a false watchdog alert.
+        payoutRail: getPayoutRail(application.country),
       },
     })
     await provisionSellerShippingProfile(seller.id, application)
@@ -165,6 +175,9 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
             country: application.country ?? undefined,
             approved: true,
             foundingEligible,
+            // Same reasoning as the branch above: resolve the real rail now
+            // rather than relying on a later dashboard visit.
+            payoutRail: getPayoutRail(application.country),
           },
         },
       },
