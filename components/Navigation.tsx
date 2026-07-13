@@ -96,7 +96,7 @@ export default function Navigation() {
 
         {/* Right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <Link href="/login" style={{
+          <Link href="/auth/sign-in" style={{
             color: 'var(--muted)',
             fontSize: 14,
             fontWeight: 500,
