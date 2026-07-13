@@ -1,28 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
 
 interface PayoutRecord {
   id: string;
   amount: number;
-  status: 'paid' | 'pending' | 'processing';
+  currency: string;
+  status: string;
   date: string;
   method: string;
 }
 
-const payoutHistory: PayoutRecord[] = [];
+interface PayoutsSummary {
+  payoutRail: 'STRIPE' | 'PAYONEER';
+  stripeOnboarded: boolean;
+  payoneerConfigured: boolean;
+  payoneerLinked: boolean;
+  pendingEscrow: number;
+  pendingOrderCount: number;
+  lifetimePaidOut: number;
+  isTrusted: boolean;
+  holdLabel: string;
+  history: PayoutRecord[];
+}
 
 const COMMISSION: Record<string, number> = { STARTER: 10, PRO: 4, ENTERPRISE: 0 };
 
-function StatusBadge({ status }: { status: PayoutRecord['status'] }) {
-  const map = {
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; color: string }> = {
     paid: { label: 'Paid', color: 'var(--green)' },
     pending: { label: 'Pending', color: 'var(--accent)' },
     processing: { label: 'Processing', color: 'var(--muted)' },
   };
-  const { label, color } = map[status];
+  // Payout.status is a free-form string in the schema (no fixed enum -- see
+  // app/pulse/payouts/route.ts, which groups by whatever values actually
+  // exist), so an unrecognised value falls back to a plain badge instead of
+  // crashing on a missing map entry.
+  const { label, color } = map[status] || { label: status || 'Unknown', color: 'var(--muted)' };
   return (
     <span style={{
       display: 'inline-block', padding: '2px 10px', borderRadius: 4,
@@ -182,18 +198,68 @@ export default function PayoutsPage() {
   const isElevated = tier !== 'STARTER';
   const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
 
-  const [showWithdraw, setShowWithdraw] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [data, setData] = useState<PayoutsSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const availableBalance = 0;
-  const pendingBalance = 0;
-  const lifetimeEarnings = 0;
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/dashboard/payouts')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d) setData(d);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  function handleWithdraw(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => { setShowWithdraw(false); setSubmitted(false); setAmount(''); }, 2000);
+  const pendingEscrow = data?.pendingEscrow ?? 0;
+  const pendingOrderCount = data?.pendingOrderCount ?? 0;
+  const lifetimePaidOut = data?.lifetimePaidOut ?? 0;
+  const holdLabel = data?.holdLabel ?? '15 days';
+  const payoutHistory = data?.history ?? [];
+
+  // Payout Method card copy — branches on the seller's REAL rail
+  // (lib/payoutRail.ts, resolved by country) instead of always assuming
+  // Stripe. A seller on the PAYONEER rail is never sent to
+  // /dashboard/stripe-connect, which would be the wrong destination for them.
+  let methodTitle = 'No payout method connected';
+  let methodSubtitle = 'Stripe Connect where supported, or Payoneer for other countries';
+  let methodLinkHref = '/dashboard/stripe-connect';
+  let methodLinkLabel = 'Connect Bank Account';
+  let methodConnected = false;
+
+  if (data?.payoutRail === 'STRIPE') {
+    if (data.stripeOnboarded) {
+      methodConnected = true;
+      methodTitle = 'Stripe Connect linked';
+      methodSubtitle = 'Your earnings release here automatically once each order clears its hold window.';
+      methodLinkHref = '/dashboard/stripe-connect';
+      methodLinkLabel = 'Manage';
+    } else {
+      methodLinkHref = '/dashboard/stripe-connect';
+      methodLinkLabel = 'Connect Bank Account';
+    }
+  } else if (data?.payoutRail === 'PAYONEER') {
+    methodLinkHref = '/dashboard/payoneer';
+    if (data.payoneerLinked) {
+      methodConnected = true;
+      methodTitle = 'Payoneer registration sent';
+      methodSubtitle = 'Complete verification on Payoneer’s site to start receiving payouts. Held earnings release automatically once you do.';
+      methodLinkLabel = 'Manage';
+    } else if (data.payoneerConfigured) {
+      methodTitle = 'No payout method connected';
+      methodSubtitle = 'Payoneer is available for your country.';
+      methodLinkLabel = 'Set up Payoneer';
+    } else {
+      methodTitle = 'Payoneer is being set up for your country';
+      methodSubtitle = 'Your earnings are held safely and released as soon as your Payoneer onboarding opens. We’ll email you the moment it’s ready.';
+      methodLinkLabel = 'View details';
+    }
   }
 
   return (
@@ -208,7 +274,7 @@ export default function PayoutsPage() {
             <PlanBadge tier={tier} />
           </div>
           <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
-            Track your earnings and withdraw funds
+            Track your earnings — payouts release automatically, there is no manual withdrawal step
           </p>
         </div>
       </div>
@@ -227,7 +293,10 @@ export default function PayoutsPage() {
 
       {isElevated && <SavingsCalculator tier={tier} accentColor={accentColor} theme={theme} />}
 
-      {/* Balance cards */}
+      {/* Balance cards — real numbers from /api/dashboard/payouts. There is
+          no seller-initiated "withdraw" in this platform: release-payouts
+          pays out automatically once an order clears its hold window, so
+          these are read-only: what's still held, and what's been paid. */}
       {isElevated ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginBottom: 24 }}>
           <div style={tierCardStyle(theme, { padding: '28px', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' })}>
@@ -237,24 +306,17 @@ export default function PayoutsPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <WalletIcon color={accentColor} />
               <span style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Available Balance
+                Held in Escrow
               </span>
             </div>
             <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 44, fontWeight: 800, color: 'var(--green)', lineHeight: 1 }}>
-              £{availableBalance.toFixed(2)}
+              {loading ? '—' : `£${pendingEscrow.toFixed(2)}`}
             </div>
-            <button
-              onClick={() => setShowWithdraw(true)}
-              disabled={availableBalance === 0}
-              style={{
-                marginTop: 18, alignSelf: 'flex-start', background: availableBalance > 0 ? accentColor : 'var(--border)',
-                color: availableBalance > 0 ? '#000' : 'var(--muted)',
-                border: 'none', borderRadius: 8, padding: '11px 22px',
-                fontSize: 13, fontWeight: 700, cursor: availableBalance > 0 ? 'pointer' : 'not-allowed',
-              }}
-            >
-              Withdraw Funds
-            </button>
+            <div style={{ marginTop: 14, color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.5 }}>
+              {pendingOrderCount > 0
+                ? `Across ${pendingOrderCount} delivered order${pendingOrderCount === 1 ? '' : 's'} — releases automatically, no action needed.`
+                : 'Releases automatically once orders are delivered — no action needed.'}
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -262,23 +324,25 @@ export default function PayoutsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                 <ClockIcon color="var(--accent)" />
                 <span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Pending
+                  Hold Window
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 26, fontWeight: 800, color: 'var(--accent)' }}>
-                £{pendingBalance.toFixed(2)}
+              <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>
+                {holdLabel}
               </div>
-              <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>Clears 7 days after delivery</div>
+              <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>
+                {data?.isTrusted ? 'After delivery — trusted seller rate' : 'After delivery — new seller rate'}
+              </div>
             </div>
             <div style={tierCardStyle(theme, { padding: '18px 22px', flex: 1 })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                 <TrendUpIcon color={accentColor} />
                 <span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Lifetime Earnings
+                  Paid Out (Lifetime)
                 </span>
               </div>
               <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 26, fontWeight: 800, color: 'var(--text)' }}>
-                £{lifetimeEarnings.toFixed(2)}
+                {loading ? '—' : `£${lifetimePaidOut.toFixed(2)}`}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>All time total</div>
             </div>
@@ -288,43 +352,34 @@ export default function PayoutsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
             <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Available Balance
+              Held in Escrow
             </div>
             <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 36, fontWeight: 800, color: 'var(--green)' }}>
-              £{availableBalance.toFixed(2)}
-            </div>
-            <button
-              onClick={() => setShowWithdraw(true)}
-              disabled={availableBalance === 0}
-              style={{
-                marginTop: 16, background: availableBalance > 0 ? 'var(--accent)' : 'var(--border)',
-                color: availableBalance > 0 ? '#000' : 'var(--muted)',
-                border: 'none', borderRadius: 8, padding: '10px 20px',
-                fontSize: 13, fontWeight: 700, cursor: availableBalance > 0 ? 'pointer' : 'not-allowed',
-              }}
-            >
-              Withdraw Funds
-            </button>
-          </div>
-
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
-            <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Pending Balance
-            </div>
-            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 36, fontWeight: 800, color: 'var(--accent)' }}>
-              £{pendingBalance.toFixed(2)}
+              {loading ? '—' : `£${pendingEscrow.toFixed(2)}`}
             </div>
             <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 16 }}>
-              Clears 7 days after order delivery
+              Releases automatically, no action needed
             </div>
           </div>
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
             <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Lifetime Earnings
+              Hold Window
+            </div>
+            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 36, fontWeight: 800, color: 'var(--accent)' }}>
+              {holdLabel}
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 16 }}>
+              {pendingOrderCount > 0 ? `${pendingOrderCount} order${pendingOrderCount === 1 ? '' : 's'} awaiting release` : 'After order delivery'}
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '24px' }}>
+            <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Paid Out (Lifetime)
             </div>
             <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 36, fontWeight: 800, color: 'var(--text)' }}>
-              £{lifetimeEarnings.toFixed(2)}
+              {loading ? '—' : `£${lifetimePaidOut.toFixed(2)}`}
             </div>
             <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 16 }}>
               All time total
@@ -333,7 +388,8 @@ export default function PayoutsPage() {
         </div>
       )}
 
-      {/* Payout method */}
+      {/* Payout method — reflects the seller's real rail (Stripe or
+          Payoneer), not a hardcoded assumption of Stripe. */}
       <div style={tierCardStyle(theme, { padding: 24, marginBottom: 24 })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -342,13 +398,24 @@ export default function PayoutsPage() {
               Payout Method
             </h2>
           </div>
-          <Link href="/dashboard/stripe-connect" style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', color: 'var(--muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
-            Connect Bank Account
+          <Link href={methodLinkHref} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', color: 'var(--muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
+            {methodLinkLabel}
           </Link>
         </div>
-        <div style={{ padding: '20px', background: 'var(--bg)', borderRadius: 8, border: '1px dashed var(--border)', textAlign: 'center' }}>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 4 }}>No payout method connected</div>
-          <div style={{ color: 'var(--muted)', fontSize: 12 }}>Connect a bank account via Stripe to receive payouts</div>
+        <div style={{
+          padding: '20px', background: 'var(--bg)', borderRadius: 8, textAlign: 'center',
+          border: methodConnected ? '1px solid var(--green)' : '1px dashed var(--border)',
+        }}>
+          {methodConnected && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)' }} />
+              <span style={{ color: 'var(--text)', fontSize: 14, fontWeight: 700 }}>{methodTitle}</span>
+            </div>
+          )}
+          {!methodConnected && (
+            <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 4 }}>{methodTitle}</div>
+          )}
+          <div style={{ color: 'var(--muted)', fontSize: 12 }}>{methodSubtitle}</div>
         </div>
       </div>
 
@@ -361,8 +428,10 @@ export default function PayoutsPage() {
         </div>
         {payoutHistory.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ color: 'var(--muted)', fontSize: 14 }}>No payouts yet</div>
-            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Payouts will appear here once you start earning</div>
+            <div style={{ color: 'var(--muted)', fontSize: 14 }}>{loading ? 'Loading…' : 'No payouts yet'}</div>
+            {!loading && (
+              <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Payouts will appear here once you start earning</div>
+            )}
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -382,66 +451,13 @@ export default function PayoutsPage() {
                   <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13, fontWeight: 700 }}>£{p.amount.toFixed(2)}</td>
                   <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{p.method}</td>
                   <td style={{ padding: '14px 24px' }}><StatusBadge status={p.status} /></td>
-                  <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{p.date}</td>
+                  <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{new Date(p.date).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      {/* Withdraw modal */}
-      {showWithdraw && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, width: 400, padding: 32 }}>
-            {submitted ? (
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ color: 'var(--green)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Withdrawal Initiated</div>
-                <div style={{ color: 'var(--muted)', fontSize: 14 }}>Funds will arrive in 1-3 business days.</div>
-              </div>
-            ) : (
-              <>
-                <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--text)', marginTop: 0, marginBottom: 24 }}>
-                  Withdraw Funds
-                </h2>
-                <form onSubmit={handleWithdraw} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                      Amount (GBP)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max={availableBalance}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={amount}
-                      onChange={e => setAmount(e.target.value)}
-                      required
-                      style={{
-                        width: '100%', background: 'var(--bg)', border: '1px solid var(--border)',
-                        borderRadius: 6, padding: '10px 14px', color: 'var(--text)', fontSize: 14,
-                        outline: 'none', boxSizing: 'border-box',
-                      }}
-                    />
-                    <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                      Available: £{availableBalance.toFixed(2)}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <button type="button" onClick={() => setShowWithdraw(false)} style={{ flex: 1, background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer' }}>
-                      Cancel
-                    </button>
-                    <button type="submit" style={{ flex: 1, background: 'var(--accent)', color: '#000', border: 'none', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                      Confirm
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
