@@ -98,7 +98,7 @@ const jsonLd = {
       // marketplace... buy from independent sellers worldwide"). schema.org
       // confirms Organization is a valid domain for areaServed.
       areaServed: 'Worldwide',
-      sameAs: ['https://www.facebook.com/Velorcommerce'],
+      sameAs: ['https://www.facebook.com/Velorcommerce', 'https://www.instagram.com/velorcommerce'],
       // Added by the standing SEO agent, 2026-07-13 -- contactPoint email is
       // the real, live support address, verified directly against
       // app/contact/page.tsx ("support@velorcommerce.store" reaches the
