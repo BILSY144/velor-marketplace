@@ -1219,3 +1219,19 @@ All six deliver to customerservice@velorcommerce.co.uk. Use william@velorcommerc
 3. **Payoneer Checkout** (buyer payments, inbound) -- entirely unbuilt in this codebase. Payoneer markets Checkout at $20k+/month merchants; worth deferring until Velor has real buyer volume post-launch (6 Aug 2026).
 
 Next step when resuming: submit the Mass Payouts partner application at the URL above using company name Velor Commerce Ltd, country United Kingdom, work email william@velorcommerce.co.uk (now live), and expected volume "Not Sure" or "$50,000 or less" given pre-launch status -- William to supply phone number, job title, and final sign-off on comments text before submitting.
+
+
+## 2026-07-13 checkpoint (continued 2) -- Payoneer Mass Payouts partner application submitted
+
+Confirmed the correct Payoneer account before applying: signed in to myaccount.payoneer.com as **VELOR COMMERCE LTD**, status "approved," with 2 connected bank accounts (CLEARBANK LIMITED GBP account ending 6975, Verified/Active; "Velor commerce ltd" GBP account ending 3647, Active). This is the correct account William set up himself, distinct from an earlier attempt on a different/wrong account by a prior session.
+
+Submitted the Mass Payouts partner application at https://www.payoneer.com/marketplace/mass-payouts-platform/ ("Apply Now" modal, Salesforce lead form) with:
+- Name: William Sinclair, Director/CEO
+- Phone: +44 07947181970
+- Country: United Kingdom
+- Work email: william@velorcommerce.co.uk (the new alias set up this session, delivers to customerservice@velorcommerce.co.uk inbox)
+- Company: Velor Commerce Ltd
+- Expected current monthly payout: Not Sure
+- Comments: marketplace description mentioning 6 Aug 2026 buyer launch and need to pay sellers outside Stripe Connect's coverage
+
+Confirmation screen displayed: "Thank you! We look forward to getting in touch with you. A member of our team will get back to you soon." This is a NEW, separate application from the one referenced earlier in this doc as submitted 8 Jul 2026 (that one may have gone through the wrong portal/account -- unverified, not corrected, just noted). Next step: wait for Payoneer's team to respond to william@velorcommerce.co.uk; no further action possible on our side until they reply with next steps (likely a BD conversation and/or sandbox credentials per docs/PAYONEER_SETUP.md Step 1).
