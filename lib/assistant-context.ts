@@ -6,9 +6,9 @@ export type AssistantTier = 'STARTER' | 'PRO' | 'ENTERPRISE'
 // place here so the assistant never states a number that could drift from
 // what payouts actually charge.
 export const TIER_COMMISSION: Record<AssistantTier, number> = {
-  STARTER: 0.12,
-  PRO: 0.08,
-  ENTERPRISE: 0.05,
+  STARTER: 0.1,
+  PRO: 0.04,
+  ENTERPRISE: 0,
 }
 
 // Matches docs/PAYOUTS.md "Freeze on issues" section exactly.
