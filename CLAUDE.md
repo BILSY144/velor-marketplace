@@ -1270,3 +1270,8 @@ William asked whether outreach emails link to the new customerservice@velorcomme
    Pro and Enterprise sellers will now see the correct commission figure in both their order list and their own dashboard view, matching what Stripe actually charges them (app/api/stripe/payment-intent/route.ts, which was already correct).
 
 Both items from William's punch list are now closed. Remaining open items, unchanged from earlier checkpoints: docs/SUBSCRIPTION_AND_TIERS.md's Enterprise price/Stripe price ID discrepancy (£199 vs £99, needs live Stripe verification), Payoneer awaiting partner response, Payoneer Checkout unbuilt, and the GitHub PAT used all session should be revoked once William is done for the day.
+
+
+## 2026-07-13 checkpoint (continued 6) -- noreply@ alias added
+
+William added a 7th free alias on the velorcommerce.co.uk mailbox: noreply@velorcommerce.co.uk (confirmed live in the GoDaddy Aliases panel, delivers to customerservice@velorcommerce.co.uk same as the other six). Current full list: hello@, legal@, noreply@, partnerships@, sales@, sellers@, william@ -- all @velorcommerce.co.uk, all landing in one inbox. Note this is separate from noreply@velorcommerce.store, which is the outreach sender address on the .store domain and still has no real inbox behind it (see checkpoint continued 4) -- the two "noreply@" addresses are on different domains and do not overlap.
