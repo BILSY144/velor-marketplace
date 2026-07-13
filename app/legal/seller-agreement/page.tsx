@@ -3,6 +3,20 @@ export const metadata = {
   description:
     'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
   alternates: { canonical: 'https://velorcommerce.store/legal/seller-agreement' },
+  openGraph: {
+    title: 'Seller Agreement — Legal Terms — Velor Marketplace',
+    description:
+      'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+    url: 'https://velorcommerce.store/legal/seller-agreement',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Seller Agreement — Legal Terms — Velor Marketplace',
+    description:
+      'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+  },
 }
 
 export default function SellerAgreementPage() {

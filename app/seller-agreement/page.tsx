@@ -4,6 +4,18 @@ export const metadata = {
   title: 'Seller Agreement — Velor Marketplace',
   description: 'Velor Seller Terms of Service. Read before registering as a seller.',
   alternates: { canonical: 'https://velorcommerce.store/seller-agreement' },
+  openGraph: {
+    title: 'Seller Agreement — Velor Marketplace',
+    description: 'Velor Seller Terms of Service. Read before registering as a seller.',
+    url: 'https://velorcommerce.store/seller-agreement',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Seller Agreement — Velor Marketplace',
+    description: 'Velor Seller Terms of Service. Read before registering as a seller.',
+  },
 };
 
 export default function SellerAgreementPage() {

@@ -3,6 +3,20 @@ export const metadata = {
   description:
     'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
   alternates: { canonical: 'https://velorcommerce.store/legal/terms' },
+  openGraph: {
+    title: 'Terms of Service — Velor Marketplace',
+    description:
+      'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+    url: 'https://velorcommerce.store/legal/terms',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service — Velor Marketplace',
+    description:
+      'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+  },
 }
 
 export default function TermsPage() {

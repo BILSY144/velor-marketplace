@@ -21,6 +21,20 @@ export const metadata = {
     description:
           'Every listing carries its country and its maker. Money is held in escrow until delivery is confirmed. Every seller is identity-verified.',
     alternates: { canonical: 'https://velorcommerce.store/about' },
+    openGraph: {
+        title: 'How Velor works — Velor Marketplace',
+        description:
+              'Every listing carries its country and its maker. Money is held in escrow until delivery is confirmed. Every seller is identity-verified.',
+        url: 'https://velorcommerce.store/about',
+        siteName: 'Velor',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'How Velor works — Velor Marketplace',
+        description:
+              'Every listing carries its country and its maker. Money is held in escrow until delivery is confirmed. Every seller is identity-verified.',
+    },
 }
 
 const journeySteps = [

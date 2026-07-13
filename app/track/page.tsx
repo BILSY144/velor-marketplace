@@ -1,4 +1,17 @@
-export const metadata = { title: 'Track Your Order - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/track' } }
+export const metadata = {
+  title: 'Track Your Order - Velor Commerce',
+  alternates: { canonical: 'https://velorcommerce.store/track' },
+  openGraph: {
+    title: 'Track Your Order - Velor Commerce',
+    url: 'https://velorcommerce.store/track',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Track Your Order - Velor Commerce',
+  },
+}
 
 export default function Page() {
   return (

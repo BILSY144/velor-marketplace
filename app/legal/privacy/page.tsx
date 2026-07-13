@@ -3,6 +3,20 @@ export const metadata = {
   description:
     'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
   alternates: { canonical: 'https://velorcommerce.store/legal/privacy' },
+  openGraph: {
+    title: 'Privacy Policy — Velor Marketplace',
+    description:
+      'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+    url: 'https://velorcommerce.store/legal/privacy',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy — Velor Marketplace',
+    description:
+      'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+  },
 }
 
 export default function PrivacyPage() {

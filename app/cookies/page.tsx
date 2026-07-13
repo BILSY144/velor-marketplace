@@ -1,4 +1,17 @@
-export const metadata = { title: 'Cookie Policy - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/cookies' } }
+export const metadata = {
+  title: 'Cookie Policy - Velor Commerce',
+  alternates: { canonical: 'https://velorcommerce.store/cookies' },
+  openGraph: {
+    title: 'Cookie Policy - Velor Commerce',
+    url: 'https://velorcommerce.store/cookies',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cookie Policy - Velor Commerce',
+  },
+}
 
 export default function Page() {
   return (

@@ -5,6 +5,18 @@ export const metadata = {
   title: 'Verification submitted — Velor',
   description: 'Your identity verification has been submitted to Velor.',
   alternates: { canonical: 'https://velorcommerce.store/apply/verified' },
+  openGraph: {
+    title: 'Verification submitted — Velor',
+    description: 'Your identity verification has been submitted to Velor.',
+    url: 'https://velorcommerce.store/apply/verified',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Verification submitted — Velor',
+    description: 'Your identity verification has been submitted to Velor.',
+  },
 };
 
 // Where Stripe Identity sends a seller after they finish (or abandon) the

@@ -3,6 +3,20 @@ export const metadata = {
   description:
     'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
   alternates: { canonical: 'https://velorcommerce.store/legal/seller-rules' },
+  openGraph: {
+    title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
+    description:
+      'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+    url: 'https://velorcommerce.store/legal/seller-rules',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
+    description:
+      'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+  },
 }
 
 export default function SellerRulesPage() {

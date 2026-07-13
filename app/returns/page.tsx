@@ -1,4 +1,17 @@
-export const metadata = { title: 'Returns and Refunds - Velor Commerce', alternates: { canonical: 'https://velorcommerce.store/returns' } }
+export const metadata = {
+  title: 'Returns and Refunds - Velor Commerce',
+  alternates: { canonical: 'https://velorcommerce.store/returns' },
+  openGraph: {
+    title: 'Returns and Refunds - Velor Commerce',
+    url: 'https://velorcommerce.store/returns',
+    siteName: 'Velor',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Returns and Refunds - Velor Commerce',
+  },
+}
 
 export default function Page() {
   return (
