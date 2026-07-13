@@ -91,7 +91,7 @@ export default function ApplicationsPage() {
       {data && data.applications.map((a) => {
         const createdMs = new Date(a.createdAt).getTime()
         let badgeLabel = ''
-        let badgeColor = PULSE.green
+        let badgeColor: string = PULSE.green
         let timescaleLabel = ''
         if (a.status === 'APPROVED') {
           badgeLabel = 'APPROVED'
