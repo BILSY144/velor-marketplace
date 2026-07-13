@@ -27,7 +27,7 @@ The seller pitch writes the buyer pitch: every seller recruited before 6 August 
 ### Seller segments and channels
 1. **Artisans, family workshops, cooperatives** (the differentiator): partner-first outreach through artisan cooperatives, fair-trade organisations and export-promotion bodies rather than one-by-one cold email; WhatsApp-friendly first contact where possible; do not assume high digital literacy or English.
 2. **Independent brands already selling online** (Etsy, Instagram, TikTok Shop sellers): direct outreach via the existing scout-sellers -> outreach-auto pipeline (SellerProspect scoring 7+, 3-email sequence day 0/3/7, hard cap 3 emails per seller, unsubscribe honoured).
-3. **Established SMB wholesalers/brands**: formal partnership-tone outreach; Enterprise tier pitch (5% commission, API access, account manager).
+3. **Established SMB wholesalers/brands**: formal partnership-tone outreach; Enterprise tier pitch (0% commission, API access, account manager).
 
 ### Email programme (seller side)
 - Sending identity: agent emails from customerservice@velorcommerce.co.uk (established Resend domain); seller support replies via sellers@velorcommerce.store. Verify SPF/DKIM/DMARC on both domains before any volume increase, and ramp send volume gradually (deliverability warm-up) rather than bursting.
