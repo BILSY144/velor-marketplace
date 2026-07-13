@@ -23,7 +23,7 @@ export default function TermsPage() {
   const sections = [
     {
       title: "1. Introduction",
-      body: "These Terms of Service govern your use of the Velor Commerce platform operated by Velor Commerce Ltd. By accessing or using Velor, you agree to be bound by these Terms.",
+      body: "These Terms of Service govern your use of the Velor Commerce platform operated by Velor Commerce Ltd (company number 17268133), registered office at 49 Station Road, Polegate, East Sussex, BN26 6EA. By accessing or using Velor, you agree to be bound by these Terms.",
     },
     {
       title: "2. The Velor Platform",
