@@ -55,9 +55,26 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  // Previously this only cleared the cookie. Seller.stripeAccountId stayed
+  // in the database, so GET's cookie-missing fallback (`if (!accountId &&
+  // seller?.stripeAccountId) accountId = seller.stripeAccountId`) resolved
+  // the SAME account again on the very next status check -- "Disconnect"
+  // appeared to work (the confirm() dialog fires, the button responds) but
+  // the dashboard flipped straight back to "Connected" once fetchStatus()
+  // re-ran, with nothing actually disconnected. Clearing both DB fields
+  // makes this real: stripeOnboarded: false stops release-payouts from
+  // attempting a transfer (funds simply stay held in escrow, matching the
+  // "you will stop receiving payouts" warning already shown before this
+  // call), and stripeAccountId: null means a later "Connect with Stripe"
+  // creates a fresh Express account rather than trying to resume a
+  // deliberately abandoned one.
+  await prisma.seller.updateMany({
+    where: { userId: session.user.id },
+    data: { stripeAccountId: null, stripeOnboarded: false },
+  });
   const res = NextResponse.json({ disconnected: true });
   res.cookies.delete('seller_account_id');
   return res;

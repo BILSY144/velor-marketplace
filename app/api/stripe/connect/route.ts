@@ -3,8 +3,16 @@ import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' as any });
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://velor-marketplace.vercel.app';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
+// Was 'https://velor-marketplace.vercel.app' -- a stale placeholder from
+// before the custom domain existed. Every other file in this codebase that
+// needs a base-URL fallback (lib/orders.ts callers, app/api/payoneer/onboard,
+// app/api/stripe/connect/callback) already uses velorcommerce.store. If
+// NEXT_PUBLIC_BASE_URL is ever unset in a Vercel environment, this file's
+// old fallback would send sellers into Stripe's hosted onboarding with a
+// refresh_url/return_url on a different, unmaintained domain -- breaking the
+// redirect back into the dashboard. Matches the rest of the codebase now.
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://velorcommerce.store';
 
 export async function POST() {
   const session = await auth();
