@@ -67,14 +67,31 @@ export async function GET(req: NextRequest) {
 
       const pi = await stripe.paymentIntents.retrieve(o.stripePaymentId as string)
       const md = (pi.metadata || {}) as Record<string, string>
-      const sellerShare = parseInt(md.sellerShare || '0', 10)
+      // app/api/stripe/payment-intent/route.ts has only ever written
+      // `sellerShareGBP` (a GBP decimal string, e.g. "45.99") -- `sellerShare`
+      // (plain, minor-units) was never a real metadata key, so parseInt on it
+      // always silently returned 0 here and every order was skipped forever.
+      // No seller payout has actually succeeded via this cron until this fix.
+      const sellerShareGBP = parseFloat(md.sellerShareGBP || '0')
+      const sellerShare = Math.round(sellerShareGBP * 100) // minor units (pence) for Stripe/Payoneer
       const sellerAccountId = md.sellerAccountId || ''
       if (!sellerShare || sellerShare <= 0) {
         skipped++
         continue
       }
       const chargeId = (pi as unknown as { latest_charge?: string }).latest_charge
-      const currency = (pi.currency || o.currency || 'gbp').toLowerCase()
+      // sellerShareGBP is ALWAYS GBP-denominated, computed server-side in GBP
+      // regardless of what currency the buyer actually paid in (payment-intent/
+      // route.ts converts everything to GBP before working out the seller's
+      // share). pi.currency reflects the buyer's charge currency instead, which
+      // can be non-GBP -- pairing that with a GBP-denominated amount would
+      // silently send the wrong amount in the wrong currency. Using 'gbp' here
+      // is the only pairing that's ever actually correct; if the platform's
+      // Stripe balance doesn't hold enough GBP to cover it, the transfer call
+      // below throws and is caught by the existing catch-and-retry -- a safe
+      // failure (funds stay in escrow, retried next run), never a silently
+      // wrong payout.
+      const currency = 'gbp'
 
       if (sellerAccountId) {
         // STRIPE rail. Idempotency key keyed on the order guarantees we never
