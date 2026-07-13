@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 const TIER_COMMISSION: Record<string, number> = {
   STARTER:    0.12,
   PRO:        0.08,
-  ENTERPRISE: 0.05,
+  ENTERPRISE: 0,
 }
 
 export async function GET() {
