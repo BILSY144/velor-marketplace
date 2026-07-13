@@ -2,7 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-const PLATFORM_FEE_RATE = 0.15
+const PLATFORM_FEE_RATE = 0.1 // NOTE: flat Starter-equivalent rate, not tier-aware -- see CLAUDE.md 2026-07-13 checkpoint
 
 function maskName(name: string): string {
   if (!name) return 'Customer'
