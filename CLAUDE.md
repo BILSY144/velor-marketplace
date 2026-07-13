@@ -1200,3 +1200,22 @@ Two fields are known NOT to be tier-aware and were deliberately only rate-swappe
 Also surfaced but explicitly NOT touched, unrelated to this change: docs/SUBSCRIPTION_AND_TIERS.md\u2019s own Stripe price-object reference for Enterprise still shows price_1TpCqXDB5eA3Wfmuw3y2bScF at \u00a3199/mo even though the app displays and TIER_CONFIG charges \u00a399/mo everywhere else -- needs live verification in the Stripe dashboard, not resolved here; flagged to William directly in-session.
 
 NOT VERIFIED live in production yet -- confirm the new commission figures render correctly on /sell, /dashboard/upgrade, /help, the legal pages, and a live payment-intent breakdown after this deploys. All edits were made via the GitHub contents API using a short-lived PAT William provided for this session; he should revoke it now that this work is done.
+
+## 2026-07-13 checkpoint (continued) -- Business email aliases + Payoneer partner application status
+
+**Business email aliases added.** velorcommerce.co.uk email is hosted via GoDaddy (Microsoft 365 Email Essentials), with one paid mailbox, customerservice@velorcommerce.co.uk (William Sinclair, admin), signed in and working. Rather than buying additional paid mailboxes (~\u00a36.49+/mo each), William added free email aliases on that same mailbox -- GoDaddy's Email Essentials plan supports up to 300 aliases at no extra cost, and all mail sent to any alias lands in the one customerservice@ inbox. Current aliases (6), confirmed live in the GoDaddy Email & Office admin panel (productivity.godaddy.com Aliases page) on 2026-07-13:
+- hello@velorcommerce.co.uk
+- legal@velorcommerce.co.uk
+- partnerships@velorcommerce.co.uk
+- sales@velorcommerce.co.uk
+- sellers@velorcommerce.co.uk
+- william@velorcommerce.co.uk
+
+All six deliver to customerservice@velorcommerce.co.uk. Use william@velorcommerce.co.uk for direct business/partner correspondence (e.g. Payoneer), sellers@ for seller-facing support, partnerships@ for business development and outreach, legal@ for compliance/takedown notices, sales@ for sales inquiries, hello@ as a general public-facing address. None of these are separate logins -- they all route to the same inbox.
+
+**Payoneer -- two distinct products, do not conflate them:**
+1. **Payoneer Payouts / Mass Payments API** (seller payouts, outbound) -- this is what lib/payoneer.ts, lib/payoutRail.ts, app/api/payoneer/onboard/route.ts, and app/api/cron/release-payouts/route.ts are built against. Requires Payoneer's **Mass Payouts partner program**, applied for via https://www.payoneer.com/marketplace/mass-payouts-platform/ ("Apply Now" -> modal lead form: first name, last name, work phone, country, work email, company name, job title, expected current monthly payout amount [$50k or less / $50k-$250k / $250k+ / Not Sure], comments). This is a Salesforce lead-gen form, not account signup -- no password, no account creation.
+2. **developer.payoneer.com is a DIFFERENT product** (PSD2/open-banking APIs -- Account Information, Payment Initiation). An earlier application attempt (submitted 8 Jul 2026, referenced elsewhere in this doc) may have gone through this wrong portal, on a Payoneer account that was also set up with the wrong email by a prior session. Needs verification: log into the *correct* Payoneer account (VELOR COMMERCE LTD, bank account already connected) and check application/lead status directly, don't assume the 8 Jul application is the right one.
+3. **Payoneer Checkout** (buyer payments, inbound) -- entirely unbuilt in this codebase. Payoneer markets Checkout at $20k+/month merchants; worth deferring until Velor has real buyer volume post-launch (6 Aug 2026).
+
+Next step when resuming: submit the Mass Payouts partner application at the URL above using company name Velor Commerce Ltd, country United Kingdom, work email william@velorcommerce.co.uk (now live), and expected volume "Not Sure" or "$50,000 or less" given pre-launch status -- William to supply phone number, job title, and final sign-off on comments text before submitting.
