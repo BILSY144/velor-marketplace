@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
+const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0 }
+
 // POST - create order after successful Stripe payment
 // Body: { sellerId, buyerEmail, buyerName, address, total, productSubtotal, shippingCost, items, paymentIntentId }
 export async function POST(req: NextRequest) {
@@ -43,6 +45,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  const sellerForCommission = await prisma.seller.findUnique({ where: { id: sellerId }, select: { tier: true } })
+  const commissionRate = TIER_COMMISSION[sellerForCommission?.tier as unknown as string] ?? 0.1
+
   // Idempotency: if order already exists for this PaymentIntent, return it
   if (paymentIntentId) {
     const existing = await prisma.order.findUnique({ where: { stripePaymentId: paymentIntentId } })
@@ -67,7 +72,7 @@ export async function POST(req: NextRequest) {
               productId: item.productId ?? item.id ?? '',
               quantity: Number(item.quantity),
               price: Number(item.price),
-              commission: Number(item.price) * Number(item.quantity) * 0.1, // NOTE: flat Starter-equivalent rate, not tier-aware -- see CLAUDE.md 2026-07-13 checkpoint
+              commission: Number(item.price) * Number(item.quantity) * commissionRate,
             })),
           },
         },
