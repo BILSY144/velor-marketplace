@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
 import { useCart } from '@/lib/cart'
 import { cultureHints } from '@/lib/cultureHints'
+import { slugifyCountryName } from '@/lib/worldCountries'
 
 const NAV_ORIGINS: { code: string; name: string }[] = [
   { code: 'CN', name: 'China' }, { code: 'JP', name: 'Japan' }, { code: 'MA', name: 'Morocco' },
@@ -201,7 +202,7 @@ export default function GlobalHeader() {
                     {NAV_ORIGINS.map((o) => (
                       <Link
                         key={o.code}
-                        href="/founding"
+                        href={`/origins/${slugifyCountryName(o.name)}`}
                         style={{ ...menuItem, borderRadius: 9, fontSize: 13, display: 'flex', alignItems: 'center', gap: 9 }}
                       >
                         <span style={{ fontSize: 15 }}>{navFlag(o.code)}</span>
@@ -215,7 +216,7 @@ export default function GlobalHeader() {
                     ))}
                   </div>
                   <Link
-                    href="/founding"
+                    href="/origins"
                     style={{ ...menuItem, borderRadius: 9, fontSize: 12.5, marginTop: 6, display: 'block', textAlign: 'center', color: 'var(--accent)', borderTop: '1px solid var(--border)', paddingTop: 12 }}
                   >
                     All 190 countries &rarr;

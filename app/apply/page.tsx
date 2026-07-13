@@ -115,12 +115,20 @@ export default function ApplyPage() {
   const [error, setError] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
 
-  // Prefill country when arriving from /apply/invited?country=XX.
+  // Prefill country when arriving from /apply/invited?country=XX or from an
+  // /origins/[slug] "Be the first from X" link (both pass the ISO code).
+  // The business/culture country <select> below stores the COUNTRY NAME as
+  // its option value, not the code -- setting form.country to a raw code
+  // silently failed to select anything in that dropdown (found 2026-07-13
+  // while building /origins). Resolve the code to its matching name here,
+  // and prefill shippingCountry (which IS code-keyed) at the same time,
+  // mirroring what setCountry() below does when a seller picks manually.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = (params.get('country') || '').toUpperCase();
-    if (code && WORLD_COUNTRIES.some(c => c.code === code)) {
-      setForm(prev => ({ ...prev, country: code }));
+    const match = WORLD_COUNTRIES.find(c => c.code === code);
+    if (match) {
+      setForm(prev => ({ ...prev, country: match.name, shippingCountry: prev.shippingCountry || match.code }));
     }
   }, []);
 
