@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     description,
     url: 'https://velorcommerce.store/sell',
     siteName: 'Velor',
-    type: 'website',
+    type: 'website', images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary_large_image', images: ['https://velorcommerce.store/opengraph-image'],
     title,
     description,
   },
