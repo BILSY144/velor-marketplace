@@ -28,12 +28,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // in an earlier run's canonical batch, not something to paper over by
   // listing it here -- logged as a new backlog item instead of decided
   // unilaterally in a sitemap-only change.
+  //
+  // Extended 2026-07-13 (evening) by the standing SEO agent: /origins, the
+  // buyer-facing country index, was built the same day (commit a62357e) and
+  // had no metadata or sitemap entry at all until this pass (see
+  // app/origins/layout.tsx, added alongside this change). Added the index
+  // page itself here. Deliberately NOT adding all 190 /origins/[slug]
+  // per-country URLs in this same pass -- see SEO_LOG.md backlog for the
+  // thin-content-vs-indexing-value trade-off this raises; they are still
+  // fully crawlable via the real internal links on /origins itself, a
+  // sitemap listing just isn't the only path to discovering them.
   return [
     { url: base, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/apply`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/marketplace`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${base}/founding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${base}/origins`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/sell`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${base}/live`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
