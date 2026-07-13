@@ -109,6 +109,37 @@ const jsonLd = {
       // marketplace... buy from independent sellers worldwide"). schema.org
       // confirms Organization is a valid domain for areaServed.
       areaServed: 'Worldwide',
+      // address added by the standing SEO agent, 2026-07-13 (sixth pass) --
+      // a prior pass (2026-07-13, third pass log entry) explicitly
+      // considered and ruled OUT an Organization.address, on the stated
+      // grounds that "no postal address ... is published anywhere on the
+      // live site". That was true of the JSON-LD/metadata surfaces checked
+      // at the time, but not of the page body copy: the exact same
+      // registered-office address is stated live, word-for-word identical,
+      // in three separate places -- app/legal/terms/page.tsx ("Velor
+      // Commerce Ltd (company number 17268133), registered office at 49
+      // Station Road, Polegate, East Sussex, BN26 6EA"), app/contact/page.tsx,
+      // and app/about/page.tsx (both: "Velor Commerce Ltd (company no.
+      // 17268133) is registered in England and Wales, registered office 49
+      // Station Road, Polegate, East Sussex, BN26 6EA"). Three independent,
+      // consistent live citations is a stronger verification bar than this
+      // file's own legalName field was added against (a single CLAUDE.md
+      // line). An external Companies House lookup (company number 17268133)
+      // was attempted for a fourth, independent check but blocked by
+      // PROVENANCE_REQUIRED in this unattended run (no one available to
+      // approve the fetch) -- logged honestly in SEO_LOG.md rather than
+      // treated as a completed check. structured as schema.org's standard
+      // PostalAddress shape (streetAddress/addressLocality/addressRegion/
+      // postalCode/addressCountry), confirmed via search against schema.org's
+      // own PostalAddress and address property pages.
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: '49 Station Road',
+        addressLocality: 'Polegate',
+        addressRegion: 'East Sussex',
+        postalCode: 'BN26 6EA',
+        addressCountry: 'GB',
+      },
       sameAs: ['https://www.facebook.com/Velorcommerce', 'https://www.instagram.com/velorcommerce'],
       // email added by the standing SEO agent, 2026-07-13 (fifth pass) --
       // schema.org/email confirms Organization (alongside ContactPoint and
