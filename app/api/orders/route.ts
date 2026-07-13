@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
               productId: item.productId ?? item.id ?? '',
               quantity: Number(item.quantity),
               price: Number(item.price),
-              commission: Number(item.price) * Number(item.quantity) * 0.15,
+              commission: Number(item.price) * Number(item.quantity) * 0.1, // NOTE: flat Starter-equivalent rate, not tier-aware -- see CLAUDE.md 2026-07-13 checkpoint
             })),
           },
         },
