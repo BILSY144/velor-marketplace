@@ -254,7 +254,7 @@ export default function AboutPage() {
             <div>
               <h2>Make something your country is known for?</h2>
               <p>Velor is built for makers and sellers with real origin stories, not warehouses of unbranded stock. If that&apos;s you, there&apos;s a seller door at the end of this page.</p>
-              <p className="ab-legal">Velor Commerce Ltd is registered in England and Wales.</p>
+              <p className="ab-legal">Velor Commerce Ltd (company no. 17268133) is registered in England and Wales, registered office 49 Station Road, Polegate, East Sussex, BN26 6EA.</p>
             </div>
             <Link href="/apply" className="ab-btn ab-btn-p">Apply to sell</Link>
           </div>
