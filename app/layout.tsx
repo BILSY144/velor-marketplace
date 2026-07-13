@@ -67,6 +67,13 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Organization',
+      // '@id' added by the standing SEO agent, 2026-07-13 (fourth pass) --
+      // this is a stable, dereferenceable node identifier (the '#organization'
+      // fragment convention Google's own structured-data docs use), not a new
+      // factual claim -- it lets the WebSite entity below reference this exact
+      // Organization node instead of duplicating an unlinked, anonymous copy
+      // of the same entity. Purely structural graph-linking, nothing invented.
+      '@id': 'https://velorcommerce.store/#organization',
       name: 'Velor',
       // legalName added by the standing SEO agent, 2026-07-13 (second pass) --
       // this marketplace's own Stripe account (acct_1TlcWCDB5eA3Wfmu) is
@@ -107,11 +114,23 @@ const jsonLd = {
     },
     {
       '@type': 'WebSite',
+      // '@id' added by the standing SEO agent, 2026-07-13 (fourth pass) --
+      // same stable-node-identifier convention as Organization's '@id' above.
+      '@id': 'https://velorcommerce.store/#website',
       name: 'Velor',
       url: 'https://velorcommerce.store',
       // inLanguage added 2026-07-13 -- matches the real <html lang="en">
       // attribute below; the site has no other live locale to verify.
       inLanguage: 'en',
+      // publisher added 2026-07-13 (fourth pass) -- references the
+      // Organization node above by its '@id' rather than repeating a second,
+      // disconnected copy of the same name/url/logo facts. This is the
+      // standard schema.org/Google pattern for tying a WebSite to the
+      // Organization that publishes it, turning two previously-anonymous,
+      // unlinked '@graph' entries into one connected entity graph. No new
+      // fact asserted -- purely a structural reference to data already in
+      // this same object.
+      publisher: { '@id': 'https://velorcommerce.store/#organization' },
       potentialAction: {
         '@type': 'SearchAction',
         target: {
