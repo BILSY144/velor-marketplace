@@ -103,6 +103,10 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   MR: ['Tuareg silver jewellery', 'Malahfa embroidered textiles'],
   DZ: ['Berber rugs', 'Dates'],
   LY: ['Dates', 'Copperware'],
+  AO: ['Chokwe wood-carved masks', 'Carved stools & thrones', 'Sisal basketry', 'Clay pottery'],
+  BI: ['Coiled basketry', 'Twa pottery', 'Wood carvings'],
+  LR: ['Ceremonial wood masks', 'Figurative wood carvings', 'Patchwork quilts'],
+  TD: ['Leather goods', 'Tuareg silver jewellery', 'Hand-dyed textiles', 'Wood carvings'],
   // Europe
   IT: ['Leather bags', 'Murano glass', 'Olive oil', 'Tailoring', 'Hand-painted ceramics', 'Espresso ware', 'Venetian masks', 'Silk ties', 'Marble boards', 'Stationery', 'Gold jewellery', 'Pantry & preserves'],
   FR: ['Perfume', 'Copper cookware', 'Linen', 'Preserves', 'Marseille soap', 'Lavender oils', 'Table linen', 'Ceramics', 'Berets', 'Mustards & pantry', 'Candles', 'Basque linens'],
@@ -168,6 +172,7 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   LC: ['Coal pot clay cookware', 'Woven straw baskets'],
   DM: ['Kalinago larouma-reed baskets', 'Carved calabash art'],
   KN: ['Caribelle batik textiles'],
+  VC: ['Woven baskets & mats', 'Wood carvings', 'Handcrafted jewellery'],
   HT: ['Steel-drum art', 'Vetiver oil'],
   JM: ['Blue Mountain coffee', 'Spices'],
   TT: ['Steelpan instruments', 'Cacao'],
