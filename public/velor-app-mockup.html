@@ -267,13 +267,13 @@ function phCoverBg(code){ var h=phHue(code), h2=(h+38)%360;
     +'<div class="phcover-fl">'+flag(code)+'</div>'
     +'<div class="phcover-grain"></div></div>'; }
 function phReelTile(name,code){ var h=phHue(code+name), h2=(h+30)%360;
-  return '<button class="crafttile reeltile phtile" onclick="toast(\'Speciality page in the build\')" style="background:'
+  return '<button class="crafttile reeltile phtile" onclick="goCraft(\''+code+'\',\''+craftEnc(name)+'\')" style="background:'
     +'radial-gradient(120% 100% at 80% 0%,hsla('+h+',48%,26%,.9),transparent 62%),'
     +'linear-gradient(150deg,hsla('+h2+',30%,15%,1),#0c0c11)">'
     +'<div class="g"></div><div class="ct-n">'+name+'</div>'
     +'<div class="pt-soon">Opening soon</div><div class="ct-a">'+I.arrow+'</div></button>'; }
 function phTile(name,code){ var h=phHue(code+name), h2=(h+30)%360;
-  return '<button class="crafttile phtile" onclick="toast(\'Speciality page in the build\')" style="background:'
+  return '<button class="crafttile phtile" onclick="goCraft(\''+code+'\',\''+craftEnc(name)+'\')" style="background:'
     +'radial-gradient(120% 100% at 80% 0%,hsla('+h+',48%,26%,.9),transparent 62%),'
     +'linear-gradient(150deg,hsla('+h2+',30%,15%,1),#0c0c11)">'
     +'<div class="g"></div><div class="ct-n">'+name+'</div>'
@@ -641,7 +641,7 @@ function countryScreen(){
   +'<div class="pad"><div class="k d" style="margin-top:28px">THE ORIGIN</div><p class="storytext">'+storyFor(c)+'</p></div>'
   /* ---- signature crafts as editorial tiles ---- */
   +(reel.length?'<div class="pad"><div class="k d" style="margin-top:30px">SIGNATURE CRAFTS</div><p class="sm dim" style="margin-top:6px">'+reel.length+' categories '+c.n+' is known for &mdash; scroll the reel.</p></div>'
-    +'<div class="hrail craftreel" style="padding-top:13px">'+reel.map(function(cr){return cr.ph?phReelTile(cr.n,c.c):'<button class="crafttile reeltile" onclick="toast(\'Speciality page in the build\')"><img src="'+cr.url+'" loading="lazy"><div class="g"></div><div class="ct-n">'+cr.n+'</div><div class="ct-a">'+I.arrow+'</div></button>'}).join('')+'</div>':'')
+    +'<div class="hrail craftreel" style="padding-top:13px">'+reel.map(function(cr){return cr.ph?phReelTile(cr.n,c.c):'<button class="crafttile reeltile" onclick="goCraft(\''+c.c+'\',\''+craftEnc(cr.n)+'\')"><img src="'+cr.url+'" loading="lazy"><div class="g"></div><div class="ct-n">'+cr.n+'</div><div class="ct-a">'+I.arrow+'</div></button>'}).join('')+'</div>':'')
   /* ---- shopping [country] filmstrip: only this country's films ---- */
   +liveStripFor(c)
   /* ---- founding spotlight ---- */
@@ -716,7 +716,7 @@ function renderLive(){
     +'<div class="cbub"><b>seller</b> lead-free, fired at 1280&deg;C &mdash; I&rsquo;ll show the base</div></div>':'')
   +'</div>'
   +(demo
-    ?'<div class="ptray" style="padding:7px 9px;gap:9px;border-radius:15px;bottom:104px"><img src="'+px(30767475)+'" style="width:34px;height:34px;border-radius:9px"><div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px"><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gongfu tea set</span><span class="p" style="margin-top:0;white-space:nowrap">&pound;54 <span class="pfl">'+flag('CN')+'</span></span></div><button class="add" style="padding:8px 13px" onclick="addCart()">Add</button></div>'
+    ?'<div class="ptray" style="padding:7px 9px;gap:9px;border-radius:15px;bottom:104px"><img src="'+px(30767475)+'" style="width:34px;height:34px;border-radius:9px"><div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px" onclick="go(\'pdp\')"><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gongfu tea set</span><span class="p" style="margin-top:0;white-space:nowrap">&pound;54 <span class="pfl">'+flag('CN')+'</span></span></div><button class="add" style="padding:8px 13px" onclick="addCart()">Add</button></div>'
     +'<div class="askrow"><div class="f">Ask the maker anything&hellip;</div><button class="hb" onclick="toast(\'Saved to favourites\')">'+I.heart+'</button></div>'
     :'<div class="ptray" style="bottom:56px;padding:7px 9px;gap:9px;border-radius:15px"><span style="width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)">'+flag(v.c)+'</span><div style="flex:1;min-width:0"><div class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cn+'&rsquo;s seat is open</div><div class="p" style="margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">First verified seller broadcasts here for life</div></div><button class="add" style="padding:8px 13px" onclick="go(\'apply\')">Claim</button></div>');
   scr.innerHTML=h;
@@ -728,31 +728,64 @@ function renderLive(){
   var vid=document.getElementById('livevid'); if(vid){ var pp=vid.play(); if(pp&&pp.catch) pp.catch(function(){}) }
 }
 
+/* ===== CRAFT PAGE — per-country signature-craft screen =====
+   Honest by construction: only the China porcelain demo has a sample
+   listing; every other craft/country shows the founding zero-state. */
+var CRAFTCTX=null;
+function craftEnc(n){ return encodeURIComponent(n).replace(/'/g,'%27') }
+function goCraft(cc,en){ CRAFTCTX={c:cc,n:decodeURIComponent(en)}; var cs=document.getElementById('craftslot'); if(cs){ cs.innerHTML=craftScreen() } go('craft') }
+function goPdpBack(){ reopen(CRAFTCTX?'craft':'country') }
+function craftScreen(){
+  var x=CRAFTCTX||{c:'CN',n:'Porcelain tea sets'};
+  var cn=liveCountryName(x.c);
+  var demo=(x.c==='CN'&&x.n==='Porcelain tea sets');
+  var bank=IMG[x.c]||[], img=null, shown={}, rail=[], i;
+  for(i=0;i<bank.length;i++){ if(bank[i].n===x.n){ img=px(bank[i].i,bank[i].s); break } }
+  for(i=0;i<bank.length;i++){ if(bank[i].n!==x.n){ rail.push({n:bank[i].n,url:px(bank[i].i,bank[i].s)}) } shown[bank[i].n]=1 }
+  var cats=HINTS[x.c]||[];
+  for(i=0;i<cats.length;i++){ if(!shown[cats[i]]&&cats[i]!==x.n) rail.push({n:cats[i]}) }
+  rail=rail.slice(0,10);
+  return '<div class="scr" id="s-craft"><div class="sc" style="padding-bottom:120px">'
+  +'<div class="cover" style="height:46vh">'+(img?'<img class="kenburns" src="'+img+'">':phCoverBg(x.c))+'<div class="cover-g"></div>'
+  +'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="reopen(\'country\')">'+I.back+' '+cn+'</button>'
+  +'<div class="cover-in"><div class="k">'+cn.toUpperCase()+' &times; SIGNATURE CRAFT</div>'
+  +'<h1 class="dspl" style="font-size:36px;margin-top:6px;line-height:1.02">'+x.n+'</h1></div></div>'
+  +'<div class="pad"><div class="k d" style="margin-top:26px">LISTINGS'+(demo?' &middot; 1 &middot; SAMPLE':'')+'</div></div>'
+  +(demo
+    ?'<div class="pad" style="padding-top:12px"><button style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:11px;color:inherit" onclick="go(\'pdp\')"><img src="'+px(30767475)+'" style="width:64px;height:64px;border-radius:12px;object-fit:cover"><div style="flex:1;min-width:0"><div class="fd" style="font-size:13.5px;font-weight:600">Gongfu tea set, hand-thrown</div><div class="sm dim" style="margin-top:3px">Lin Ceramics Studio &middot; Jingdezhen &middot; SAMPLE</div><div class="fd" style="font-size:14px;font-weight:700;margin-top:4px">&pound;54</div></div>'+I.arrow+'</button></div>'
+    :'<div class="pad" style="padding-top:12px"><div style="border:1px dashed var(--line);border-radius:16px;padding:22px 18px;text-align:center;background:var(--ink)"><div class="fd" style="font-size:13.5px;font-weight:600">No '+x.n.toLowerCase()+' listed from '+cn+' yet</div><div class="sm dim" style="margin-top:7px;line-height:1.5">The seller who opens '+cn+'&rsquo;s channel puts it on the map. Its first verified seller keeps the founding badge, Pro free for life, and live broadcasting for life.</div><button class="btn sm" style="margin-top:14px" onclick="go(\'apply\')">Claim the founding seat</button><button class="btn ghost sm" style="margin-top:8px" onclick="toast(\'You&rsquo;ll get the opening bell\')">Follow '+cn+'</button></div></div>')
+  +(rail.length?'<div class="pad"><div class="k d" style="margin-top:28px">MORE FROM '+cn.toUpperCase()+'</div></div>'
+    +'<div class="hrail" style="padding-top:12px">'+rail.map(function(r){ return r.url
+      ?'<button class="hcard sm" onclick="goCraft(\''+x.c+'\',\''+craftEnc(r.n)+'\')"><img src="'+r.url+'"><div class="g"></div><div class="m"><div class="t">'+r.n+'</div></div></button>'
+      :'<button class="hcard sm" onclick="goCraft(\''+x.c+'\',\''+craftEnc(r.n)+'\')" style="background:linear-gradient(150deg,var(--surf2),var(--ink))"><div class="g"></div><div class="m"><div class="t">'+r.n+'</div><div class="s">Opening soon</div></div></button>' }).join('')+'</div>':'')
+  +'</div></div>';
+}
+
 /* ===== PRODUCT — editorial ===== */
 S.pdp='<div class="scr" id="s-pdp"><div class="sc" style="padding-bottom:128px">'
 +'<div class="pcover"><img src="'+px(30767475)+'"><div class="pcover-g"></div>'
-+'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="reopen(\'country\')">'+I.back+'</button>'
++'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="goPdpBack()">'+I.back+'</button>'
 +'<button class="gbtn" style="position:absolute;top:58px;right:16px;z-index:5" onclick="toast(\'Saved\')">'+I.heart+'</button>'
 +'<div class="gdots"><i class="on"></i><i></i><i></i><i></i></div></div>'
 +'<div class="pad"><div class="k" style="margin-top:22px">CHINA &times; CLAY &middot; JINGDEZHEN</div>'
 +'<h1 class="serif" style="font-size:31px;margin-top:10px;line-height:1.1">Gongfu tea set, hand-thrown</h1>'
-+'<div style="display:flex;align-items:baseline;gap:12px;margin-top:14px"><span class="dspl" style="font-size:30px">&pound;54</span><span class="sm" style="color:var(--green)">Delivery &pound;6.40 &middot; 8&ndash;12 days</span></div></div>'
++'<div style="display:flex;align-items:baseline;gap:12px;margin-top:14px"><span class="dspl" style="font-size:30px">&pound;54</span><button class="sm" style="color:var(--green);background:none;border:none;padding:0;text-align:left;font:inherit;font-size:12px" onclick="toast(\'Quoted for your location &mdash; exact cost confirmed at checkout\')">Deliver to UK &middot; est &pound;6.40 &middot; 8&ndash;12 days <span style="color:var(--mut,#8b8b95);text-decoration:underline">change</span></button></div></div>'
 +'<div class="maker"><div class="mav">'+flag('CN')+'</div><div style="flex:1"><div class="mn">Lin Ceramics Studio</div><div class="ml">Jingdezhen &middot; opened this channel</div></div><span class="fbadge">FOUNDING</span></div>'
 +'<div class="story"><span class="k d">THE MAKING</span><p>Thrown on the wheel and fired at 1280&deg;C in Jingdezhen &mdash; the city that has made porcelain for a thousand years. Each set differs slightly. That is the point.</p></div>'
 +'<div class="prot"><div class="prot-h">'+I.shield+' <span>Your money is protected</span></div><p>You pay Velor, not the seller. Held in escrow, released only after your delivery is confirmed. Anything wrong &mdash; open a dispute and the funds freeze immediately.</p></div>'
 +'<div class="pad"><div class="flow" style="margin-top:20px"><span class="pill">Clay</span><span class="pill">Tea ceremony</span></div></div>'
-+'<div class="pad"><div class="k d" style="margin-top:28px">VERIFIED BUYERS &middot; 4.9</div></div>'
++'<div class="pad"><div class="k d" style="margin-top:28px">BUYER REVIEWS &middot; SAMPLE</div><p class="sm dim" style="margin-top:6px">These are mock reviews to show how this section will look. Real reviews appear here once verified buyers receive real orders &mdash; nothing on Velor carries a rating it has not earned.</p></div>'
 +'<div class="pad">'+review('Amira K.','UK',5,'Arrived from Jingdezhen in nine days, wrapped like treasure. The glaze is deeper in person.')
 +review('Tom R.','IE',4,'Beautiful. One cup slightly uneven — but that’s hand-thrown, and the maker messaged to check I was happy.')+'</div>'
 +'<div class="pad"><div class="k d" style="margin-top:26px">MORE FROM CHINA '+flag('CN')+'</div></div>'
-+'<div class="hrail">'+(IMG['CN']||[]).slice(1,6).map(function(x){return '<button class="hcard sm" onclick="toast(\'Sample listing\')"><img src="'+px(x.i,x.s)+'"><div class="g"></div><div class="m"><div class="t">'+x.n+'</div></div></button>'}).join('')+'</div>'
++'<div class="hrail">'+(IMG['CN']||[]).slice(1,6).map(function(x){return '<button class="hcard sm" onclick="goCraft(\'CN\',\''+craftEnc(x.n)+'\')"><img src="'+px(x.i,x.s)+'"><div class="g"></div><div class="m"><div class="t">'+x.n+'</div></div></button>'}).join('')+'</div>'
 +'</div>'
 +'<div class="pdock"><div class="qty"><button onclick="dq(-1)">&minus;</button><span id="qv">1</span><button onclick="dq(1)">+</button></div><button class="btn" onclick="addCart()">Add &middot; &pound;54</button></div>'
 +'</div>'
 
 function review(who,cc,st,txt){
   var stars=''; for(var i=0;i<5;i++) stars+='<svg viewBox="0 0 24 24" class="'+(i<st?'on':'')+'"><path d="M12 3l2.4 5.4 5.9.5-4.5 3.9 1.4 5.8L12 16.9 6.8 19l1.4-5.8-4.5-3.9 5.9-.5z"/></svg>';
-  return '<div class="rev"><div class="rh"><span class="who">'+who+'</span><span class="vfy">VERIFIED &middot; '+cc+'</span></div><div class="rstars">'+stars+'</div><p>'+txt+'</p></div>'
+  return '<div class="rev"><div class="rh"><span class="who">'+who+'</span><span class="vfy">SAMPLE &middot; '+cc+'</span></div><div class="rstars">'+stars+'</div><p>'+txt+'</p></div>'
 }
 
 /* ===== SEARCH ===== */
@@ -1101,9 +1134,9 @@ S.golive='<div class="scr" id="s-golive" style="background:#000">'
 +'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air.</div>'
 +'</div>'
 /* ================= ROUTER & BEHAVIOURS ================= */
-var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['passport','Passport'],['notif','Opening bell'],['account','You'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
+var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['passport','Passport'],['notif','Opening bell'],['account','You'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
 var TABS=[['atlas','Atlas',I.globe],['live','Live',I.live],['search','Search',I.search],['cart','Basket',I.bag],['account','You',I.user]]
-var FULL={splash:1,atlas:1,live:1,golive:1,confirm:1}
+var FULL={splash:1,atlas:1,live:1,golive:1,craft:1,confirm:1}
 var TABMAP={atlas:'atlas',country:'atlas',pdp:'atlas',live:'live',search:'search',cart:'cart',checkout:'cart',confirm:'cart',orders:'account',odetail:'account',dispute:'account',passport:'account',notif:'atlas',account:'account',assist:'account',sell:'account',seats:'account',apply:'account',verify:'account',dash:'account',newlisting:'account',payouts:'account',golive:'account'}
 
 var MENU_HTML=''
@@ -1122,8 +1155,8 @@ MENU_HTML+='</div></div>'
 var host=document.getElementById('screens')
 function buildScreens(){
   var html=''
-  for(var i=0;i<SCREENS.length;i++){ var id=SCREENS[i][0]; if(id==='country'){ continue } html += (S[id]||'') }
-  host.innerHTML=html + '<div id="countryslot"></div>'
+  for(var i=0;i<SCREENS.length;i++){ var id=SCREENS[i][0]; if(id==='country'||id==='craft'){ continue } html += (S[id]||'') }
+  host.innerHTML=html + '<div id="countryslot"></div>' + '<div id="craftslot"></div>'
 }
 buildScreens()
 document.querySelector('.vp').insertAdjacentHTML('beforeend', MENU_HTML)
@@ -1143,7 +1176,7 @@ function assistAsk(){ var sc=document.getElementById('assistSc'); if(!sc) return
   setTimeout(function(){ var b=document.createElement('div'); b.className='amsg bot'; b.innerHTML='Yes — Turkish tulip tea glasses run about £32 for six, and a Jingdezhen porcelain cup pair is £24. Both from sellers opening their country&rsquo;s channel first.'; sc.appendChild(b); sc.scrollTop=sc.scrollHeight },560); sc.scrollTop=sc.scrollHeight }
 
 /* country screen is rebuilt each visit from SELCH */
-function reopen(id){ if(id==='country'){ document.getElementById('countryslot').innerHTML=countryScreen() } go(id) }
+function reopen(id){ if(id==='country'){ document.getElementById('countryslot').innerHTML=countryScreen() } if(id==='craft'){ document.getElementById('craftslot').innerHTML=craftScreen() } go(id) }
 
 var tabbar=document.getElementById('tabbar')
 function renderTabs(active){ tabbar.className='tabbar'; tabbar.innerHTML=TABS.map(function(t){ var isC=t[0]==='cart'; return '<button class="tab'+(t[0]===active?' on':'')+'" onclick="'+(t[0]==='atlas'?'go(\'atlas\')':(t[0]==='live'?'go(\'live\')':'go(\''+t[0]+'\')'))+'"><span class="ct">'+t[2]+(isC&&cartN>0?'<span class="cb">'+cartN+'</span>':'')+'</span><span class="lb">'+t[1]+'</span></button>' }).join('')
@@ -1157,6 +1190,7 @@ function go(id){
   cur=id
   if(id==='country'){ document.getElementById('countryslot').innerHTML=countryScreen() }
   if(id==='live'){ var lsc=document.getElementById('s-live'); if(lsc&&!lsc.childElementCount) renderLive() }
+  if(id==='craft'){ var csl=document.getElementById('craftslot'); if(csl&&!csl.childElementCount){ csl.innerHTML=craftScreen() } }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
