@@ -67,6 +67,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // nothing to this filter today and was not used; if/when a country goes
   // live with real listings before it also has a cultureHints entry, this
   // filter should be revisited to include it too.
+  //
+  // Updated 2026-07-14 by the standing SEO agent: added 6 new, sourced
+  // CULTURE_HINTS entries this run (Comoros, Eswatini, Grenada, Guinea,
+  // Lesotho, Zambia -- see SEO_LOG.md for citations), so the true split is
+  // now 151/190 (79%) with an entry, 40 without. This filter needed no code
+  // change to pick them up -- it re-derives from cultureHints() directly.
+  // The 46-name list two paragraphs up is now stale by those 6 names; left
+  // as-is rather than silently rewritten, since it documents the exact
+  // count backlog item 15 resolved against at the time -- the current split
+  // is the sentence just above. Still without an entry (40): Andorra,
+  // Angola, Antigua and Barbuda, Bahamas, Barbados, Benin, Burundi, Cape
+  // Verde, Central African Republic, Chad, Congo, Djibouti, Dominica,
+  // Equatorial Guinea, Eritrea, Gabon, Gambia, Guinea-Bissau, Guyana,
+  // Kiribati, Liberia, Liechtenstein, Luxembourg, Macau, Malawi, Mauritania,
+  // Monaco, Niger, San Marino, Sierra Leone, Somalia, South Sudan, St Kitts
+  // and Nevis, St Lucia, St Vincent and the Grenadines, Suriname, Togo,
+  // Turkmenistan, Tuvalu, Vatican City.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
