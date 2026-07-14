@@ -133,6 +133,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 23, still not this agent's call to resolve. No code change needed here
   // -- this filter already re-derives from cultureHints() and
   // WORLD_COUNTRIES directly.
+  //
+  // Updated 2026-07-14 (09:xx UTC run) by the standing SEO agent: added 6
+  // more sourced CULTURE_HINTS entries -- Cape Verde (grogue sugarcane
+  // spirit, handwoven baskets), Bahamas (Androsia hand-batiked textiles,
+  // straw-woven goods from Nassau's Straw Market), Barbados (Chalky Mount
+  // pottery, rum cakes, mahogany carvings), Liechtenstein (collectible
+  // postage stamps -- still actively issued today per Liechtenstein
+  // Marketing's own site), Macau (almond cookies, Portuguese-style egg
+  // tarts), San Marino (collectible stamps & coins, Torta Tre Monti wafer
+  // cake) -- see SEO_LOG.md for citations. Net effect on this filter: of
+  // the 190 real WORLD_COUNTRIES entries, 168 now have a real cultureHints
+  // entry (88%) and 22 do not -- Andorra, Angola, Antigua and Barbuda,
+  // Burundi, Central African Republic, Chad, Congo, Djibouti, Equatorial
+  // Guinea, Eritrea, Gabon, Guinea-Bissau, Liberia, Luxembourg, Mauritania,
+  // Monaco, Niger, Somalia, South Sudan, St Vincent and the Grenadines,
+  // Tuvalu, Vatican City. The orphaned CI (Côte d'Ivoire) entry noted above
+  // is unaffected by this run, still backlog item 23. No code change needed
+  // here -- this filter already re-derives from cultureHints() and
+  // WORLD_COUNTRIES directly.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
