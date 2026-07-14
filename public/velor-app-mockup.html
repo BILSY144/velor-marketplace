@@ -160,6 +160,8 @@ img,video,canvas{display:block}
 .livestrip::-webkit-scrollbar{display:none}
 .lcard{flex:0 0 138px;position:relative;aspect-ratio:9/14;border-radius:18px;overflow:hidden;background:var(--surf2)}
 .lcard video,.lcard img{width:100%;height:100%;object-fit:cover;opacity:.9}
+.lcard .lposter{position:absolute;inset:0;z-index:0}
+.lcard video{position:absolute;inset:0;z-index:1}
 .lcard .g{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 40%,rgba(0,0,0,.85))}
 .lcard .pv{position:absolute;top:9px;left:9px;font-family:var(--fd);font-size:7px;letter-spacing:.16em;font-weight:600;text-transform:uppercase;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px 8px;color:#e4e4ea;backdrop-filter:blur(6px)}
 .lcard .fl{position:absolute;top:9px;right:9px;font-size:13px}
@@ -530,7 +532,7 @@ S.atlas =
 +'<button class="livepill" onclick="toggleSheet()"><span class="vmark">V</span><span style="letter-spacing:.06em">LIVE</span></button>'
 +'</div>'
 +'<div class="livestrip">'
-+ LIVE.map(function(v){return '<button class="lcard" onclick="go(\'live\')"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div><div class="s">'+v.s+'</div></div></button>'}).join('')
++ LIVE.map(function(v){return '<button class="lcard" onclick="go(\'live\')"><img class="lposter" src="'+px(v.img)+'" loading="lazy"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div><div class="s">'+v.s+'</div></div></button>'}).join('')
 + CH.slice(0,6).map(function(c){return '<button class="lcard" onclick="showChannel(getCH(\''+c.c+'\'));go(\'country\')"><img src="'+(imgFor(c.c,0)||px(c.img))+'" loading="lazy"><div class="g"></div><div class="m"><div class="t">'+c.n+'</div><div class="s" style="color:var(--accent)">Seat open</div></div></button>'}).join('')
 +'<button class="lcard seat" onclick="go(\'sell\')"><div class="big">Open your<br>country&rsquo;s<br>channel &rarr;</div></button>'
 +'</div>'
@@ -594,7 +596,7 @@ function countryScreen(){
     +'<div class="crafttiles">'+crafts.map(function(cr,i){return '<button class="crafttile" onclick="toast(\'Speciality page in the build\')"><img src="'+cr.url+'" loading="lazy"><div class="g"></div><div class="ct-n">'+cr.n+'</div><div class="ct-a">'+I.arrow+'</div></button>'}).join('')+'</div>':'')
   /* ---- shopping [country] filmstrip ---- */
   +'<div class="pad"><div class="k d" style="margin-top:32px">SHOPPING '+c.n.toUpperCase()+'</div><p class="sm dim" style="margin-top:6px">Preview films &mdash; real broadcasts begin as '+c.n+'&rsquo;s seller goes on air.</p></div>'
-  +'<div class="hrail" style="padding-top:12px">'+LIVE.map(function(v){return '<button class="lcard" style="flex:0 0 138px" onclick="go(\'live\')"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div></div></button>'}).join('')+'</div>'
+  +'<div class="hrail" style="padding-top:12px">'+LIVE.map(function(v){return '<button class="lcard" style="flex:0 0 138px" onclick="go(\'live\')"><img class="lposter" src="'+px(v.img)+'" loading="lazy"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div></div></button>'}).join('')+'</div>'
   /* ---- founding spotlight ---- */
   +'<div class="pad"><div class="foundmoment"><div class="fm-glow"></div>'
   +'<div class="k">BE THE FIRST</div>'
