@@ -530,8 +530,8 @@ S.atlas =
 +'<button class="livepill" onclick="toggleSheet()"><span class="vmark">V</span><span style="letter-spacing:.06em">LIVE</span></button>'
 +'</div>'
 +'<div class="livestrip">'
-+ LIVE.map(function(v){return '<button class="lcard" onclick="go(\'live\')"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="fl">'+flag(v.c)+'</div><div class="m"><div class="t">'+v.t+'</div><div class="s">'+v.s+'</div></div></button>'}).join('')
-+ CH.slice(0,6).map(function(c){return '<button class="lcard" onclick="showChannel(getCH(\''+c.c+'\'));go(\'country\')"><img src="'+(imgFor(c.c,0)||px(c.img))+'" loading="lazy"><div class="g"></div><div class="fl">'+flag(c.c)+'</div><div class="m"><div class="t">'+c.n+'</div><div class="s" style="color:var(--accent)">Seat open</div></div></button>'}).join('')
++ LIVE.map(function(v){return '<button class="lcard" onclick="go(\'live\')"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div><div class="s">'+v.s+'</div></div></button>'}).join('')
++ CH.slice(0,6).map(function(c){return '<button class="lcard" onclick="showChannel(getCH(\''+c.c+'\'));go(\'country\')"><img src="'+(imgFor(c.c,0)||px(c.img))+'" loading="lazy"><div class="g"></div><div class="m"><div class="t">'+c.n+'</div><div class="s" style="color:var(--accent)">Seat open</div></div></button>'}).join('')
 +'<button class="lcard seat" onclick="go(\'sell\')"><div class="big">Open your<br>country&rsquo;s<br>channel &rarr;</div></button>'
 +'</div>'
 +'<div class="sheet-more">'
@@ -584,8 +584,7 @@ function countryScreen(){
   /* ---- cinematic cover ---- */
   +'<div class="cover"><img class="kenburns" src="'+coverUrl+'"><div class="cover-g"></div>'
   +'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="go(\'atlas\')">'+I.back+' Atlas</button>'
-  +'<div class="loc-pin"><span class="fl">'+flag(c.c)+'</span></div>'
-  +'<div class="cover-in"><div class="k">YOU HAVE ARRIVED IN</div>'
+    +'<div class="cover-in"><div class="k">YOU HAVE ARRIVED IN</div>'
   +'<h1 class="dspl" style="font-size:52px;margin-top:6px">'+c.n+'</h1>'
   +'<div class="cover-meta"><span class="seatdot"></span>Channel seat open</div></div></div>'
   /* ---- origin story ---- */
@@ -607,7 +606,7 @@ function countryScreen(){
   +'<div class="pad"><button class="passtie" onclick="go(\'passport\')"><span class="pt-stamp"><span class="fl">'+flag(c.c)+'</span></span><div style="flex:1;text-align:left"><div class="fd" style="font-size:13px;font-weight:600">Earn the '+c.n+' stamp</div><div class="sm dim">Buy from here and '+c.n+' joins your Passport on delivery.</div></div>'+I.arrow.replace('<svg','<svg style="width:16px;height:16px;stroke:var(--mut);fill:none;stroke-width:2"')+'</button></div>'
   /* ---- nearby ---- */
   +'<div class="pad"><div class="k d" style="margin-top:32px">TRAVEL ON</div></div>'
-  +'<div class="hrail">'+CH.slice(6,12).map(function(x){return '<button class="hcard" onclick="showChannel(getCH(\''+x.c+'\'));reopen(\'country\')"><img src="'+(imgFor(x.c,0)||px(x.img))+'"><div class="g"></div><div class="m"><div class="fl">'+flag(x.c)+'</div><div class="t">'+x.n+'</div></div></button>'}).join('')+'</div>'
+  +'<div class="hrail">'+CH.slice(6,12).map(function(x){return '<button class="hcard" onclick="showChannel(getCH(\''+x.c+'\'));reopen(\'country\')"><img src="'+(imgFor(x.c,0)||px(x.img))+'"><div class="g"></div><div class="m"><div class="t">'+x.n+'</div></div></button>'}).join('')+'</div>'
   +'</div></div>'
 }
 
