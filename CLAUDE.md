@@ -1508,3 +1508,15 @@ The open item from the 2026-07-13 commission checkpoint ("docs/SUBSCRIPTION_AND_
 Fix, all verified live: (1) created price_1Tt7a6DB5eA3WfmuKt5ocwCv, £99.00/mo GBP recurring flat-rate on the same product, set as default; (2) the £199 price was DELETED (not archived -- an accidental delete-confirm during what was meant to be an archive, owned per LAW #1; William then explicitly confirmed he wanted it gone anyway: "i dont want the £199 price on there any way, we will never use it now"; Stripe only allows deleting never-used prices, so zero data/billing impact); (3) STRIPE_ENTERPRISE_PRICE_ID updated in Vercel (Production and Preview) to the new price ID -- mandatory, since the old value pointed at a now-nonexistent price and Enterprise checkout would have failed on "No such price"; (4) redeployed via the Vercel Redeploy button, confirmed Ready and holding the Production badge. Pro checked at the same time: Stripe £49/mo matches the site, no change needed. William re-confirmed the full tier scheme in chat this session: Enterprise £99/0% commission, Pro £49/4%, Starter free/10%. docs/SUBSCRIPTION_AND_TIERS.md corrected in this same commit (tiers-table £199 -> £99, new price ID recorded with deletion note, two stale Pro=8%/Enterprise=5% commission strings -> 4%/0%).
 
 Note for future sessions: this cloud sandbox HAS outbound network in bash (git clone/fetch/push to github.com all work directly) -- the "no outbound network" line in TOOLING TRAPS describes earlier environments, not this one. Verify per session rather than assuming either way.
+
+---
+
+## 2026-07-14 checkpoint — Velor App ("The Atlas") design mockup
+
+A native mobile-app design for the **marketplace** (velorcommerce.store) is in progress with William, design-first. Full state, decisions, and how to resume are in **docs/app-mockup/CHECKPOINT.md**. Summary:
+
+- Mockup: public/velor-app-mockup.html on branch **app-mockup-preview** (NOT main). Preview: https://velor-marketplace-git-app-mockup-preview-velor1.vercel.app/velor-app-mockup.html . Working source is /home/claude/velor-app-design/index.html in the cloud sandbox.
+- Home is an interactive canvas globe ("The Atlas"). Country-dive page layout is APPROVED: cover, origin story, **SIGNATURE CRAFTS scrollable reel**, preview films, founding CTA.
+- Culture data DONE for all 190 (deep category lists up to 29/country) — see docs/app-mockup/cdata.py + cadd.py, merged into the mockup's HINTS var.
+- Imagery: sourcing real, visually-verified Pexels photos per country, region by region ("cannot get this wrong" — wrong ones stay as honest "Opening soon" placeholders, never a wrong photo). **Wave 1 (Latin America + Caribbean, 156 photos) DONE & pushed.** Wave 2 (East/SE Asia) candidates fetched, verification pending. Method + remaining waves in the checkpoint doc; picks in docs/app-mockup/wave1_picks.py.
+- Next after imagery: scaffold the real Expo/RN app (spec in the mockup's VELOR-APP-FEATURE-MAP.md).
