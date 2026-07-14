@@ -1,0 +1,107 @@
+# Deep expansion: extra product categories to merge into each country's list.
+# Comprehensive coverage — crafts, textiles, ceramics, metal, wood, leather,
+# jewellery, homeware, pantry/food, drinks, instruments, art, personal care.
+ADD = {
+# EAST ASIA
+"CN":["Silk carpets","Cricket & bird cages","Cinnabar lacquer","Bamboo & scroll art","Snuff bottles","Tea (pu-erh, oolong)","Enamel & brass ware","Feng-shui & jade carving","Wood joinery furniture","Zisha clay ware","Silk embroidery (Su/Xiang)"],
+"JP":["Nanbu ironware","Raku & Kutani ceramics","Urushi lacquer boxes","Boro & sashiko textiles","Damascus (Damascus-steel) blades","Sensu & uchiwa fans","Daruma & maneki-neko","Green tea (sencha, gyokuro)","Whisky & sake","Woodblock (ukiyo-e) prints","Noren curtains","Hinoki bath goods"],
+"KR":[" Handmade soju & makgeolli","Norigae & binyeo ornaments","Dancheong-motif crafts","Ramie (mosi) textiles","Ox-horn (hwagak) craft","Traditional bows","Tea (green, barley)","Lacquer chests","Hanbok silk"],
+"TW":["Pineapple & pastry pantry","Aboriginal weaving","Koji pottery","Wood & bamboo craft","Tea sets & teaware","Paper umbrellas","Glass art","Incense"],
+"MN":["Argali & yak-wool goods","Traditional boots (gutal)","Snuff bottles","Morin khuur instruments","Bone & horn carving","Airag & dairy pantry","Wrestling-garb craft"],
+# SOUTH ASIA
+"IN":["Pashmina & Kani shawls","Kanjivaram & Banarasi silk","Meenakari & Kundan jewellery","Dhurrie & carpet weaving","Sandalwood carving","Bidri metalware","Blue pottery (Jaipur)","Attar & essential oils","Tea (Assam, Darjeeling)","Papier-mache (Kashmir)","Channapatna wooden toys","Phulkari & Chikankari embroidery","Terracotta & Dhokra art","Leather mojari"],
+"PK":["Ajrak block-print","Sindhi & Balochi embroidery","Multani blue pottery","Camel-bone inlay","Naan-khatai & pantry","Sialkot sports goods","Copper & brass ware","Khussa shoes","Shawls & shu-wool"],
+"BD":["Nakshi kantha embroidery","Shital-pati mats","Conch-shell (shankha) craft","Pink pearl","Brass & bell-metal","Tant & muslin saris","Coconut & jute crafts"],
+"LK":["Handloom sarongs","Wood & devil masks","Lacquerware","Moonstone & gems","Coconut-shell craft","Ceylon cinnamon & spices","Beeralu lace","Brass & bronze"],
+"NP":["Dhaka textiles","Thangka & paubha art","Wooden windows & carving","Metal statues (lost-wax)","Himalayan tea & honey","Hemp & nettle goods","Rudraksha & bead malas","Felt slippers & bags"],
+# SE ASIA
+"TH":["Nielloware & silver","Mother-of-pearl inlay","Sa-paper & umbrellas (Bo Sang)","Coconut & mango-wood ware","Herbal balm & inhalers","Fruit-carving craft","Hill-tribe textiles","Jasmine rice & pantry"],
+"VN":["Bat Trang porcelain","Non la & bamboo hats","Do (poonah) paper art","Water-puppet craft","Fish sauce & pantry","Silk (Van Phuc)","Sedge mats & baskets","Cinnamon & star anise","Coffee (weasel/robusta)"],
+"ID":["Wayang kulit & golek puppets","Kris daggers","Rattan & bamboo furniture","Silver (Kotagede) filigree","Wood (Jepara) carving","Coffee (Toraja, Gayo, luwak)","Spices (nutmeg, clove)","Songket & ikat","Bali offerings & baskets"],
+"MY":["Wau kite craft","Congkak boards","Labu sayong pottery","Mengkuang & pandan weaving","White coffee & pantry","Tekat gold embroidery","Sarawak beadwork","Keris & metalwork"],
+"PH":["T'nalak abaca cloth","Capiz & shell homeware","Barong Tagalog piña shirts","Wood (Paete) carving","Vinta & weaving","Coffee (barako) & pantry","Rattan furniture","Pearl & shellcraft"],
+"KH":["Kbach carving","Kampot pepper & salt","Krama & silk ikat","Silver betel boxes","Rattan & water-hyacinth craft","Palm sugar & pantry","Stone & sandstone carving"],
+"LA":["Sa-paper & lanterns","Hill-tribe silver","Naga-motif silk","Bamboo & rattan","Coffee (Bolaven)","Wood carving","Natural-dye textiles"],
+"MM":["Kalaga tapestry","Shwe-chi-doe sequin art","Yun lacquer","Parabaik paper art","Jade & gems","Longyi silk & cotton","Thanaka & bath goods","Tea-leaf salad pantry"],
+# CENTRAL ASIA & CAUCASUS
+"UZ":["Chust pichak knives","Gold-thread (zardozi) embroidery","Miniature & lacquer art","Silk paper (Samarkand)","Wood-carved doors","Copper engraving","Dried fruit & nuts","Skullcaps (doppi)"],
+"KZ":["Tekemet & syrmak felt","Dombra instruments","Silver & carnelian","Leather flasks","Camel-wool textiles","Horsehair craft"],
+"KG":["Kalpak & felt hats","Ala-kiyiz art","Yurt & tush-kyiz textiles","Leather & silver","Honey & pantry","Wool slippers"],
+"GE":["Cha-cha & wine ware","Felt bags & hats","Enamel icons","Ceramics & qvevri","Silk (Sheki-style)","Wood & horn craft","Churchkhela & spice"],
+"AM":["Duduk & instruments","Obsidian & silver jewellery","Carpets & rugs","Ceramics","Dried fruit & lavash pantry","Wood-cross carving","Brandy ware"],
+"AZ":["Kelaghayi silk scarves","Sheki shebeke glass","Copper (lahij) ware","Carpets (Kazakh, Guba)","Tea & spice pantry","Felt & wool"],
+# MIDDLE EAST
+"TR":["Ebru marbling art","Cini & Kutahya tiles","Meerschaum pipes","Oltu-stone & silver","Felt (kece) craft","Tea & coffee pantry","Leather & suede","Backgammon & inlay boxes","Gaziantep copper"],
+"IR":["Ghalamkar block-print","Giveh shoes","Minakari enamel","Firoozeh-kubi turquoise inlay","Marquetry (khatam)","Nomadic gabbeh rugs","Rosewater & saffron pantry","Ceramics & tilework","Pistachio & date pantry"],
+"SA":["Sadu weaving","Najdi door & wood craft","Bisht cloaks","Silver Bedouin jewellery","Dates & Arabic coffee","Oud & bakhoor","Pottery & clay"],
+"AE":["Khoos palm weaving","Camel-milk chocolate","Gold souk jewellery","Sadu textiles","Oud & attar","Dates & pantry"],
+"OM":["Silver khanjar craft","Frankincense & bakhoor","Bahla & Nizwa pottery","Rosewater & pantry","Camel & goat wool","Halwa & dates"],
+# WESTERN & SOUTHERN EUROPE
+"IT":["Deruta & Vietri ceramics","Amalfi & Fabriano paper","Alta moda tailoring","Panama & Borsalino hats","Coral & cameo (Torre del Greco)","Truffle, balsamic & olive pantry","Sardinian filigree","Florentine gold","Carnival masks (Venice)","Wrought-iron & mosaic"],
+"FR":["Haute couture & millinery","Sevres & Limoges porcelain","Laguiole knives","Perfume (Grasse)","Champagne, wine & spirits","Foie gras, mustard & pantry","Basque & Provencal linen","Espadrilles","Cheese & confiserie","Leather goods & gloves"],
+"ES":["Lladro porcelain","Botijo & talavera ceramics","Toledo damascene & steel","Flamenco guitars & fans","Wine, sherry & olive pantry","Turron & saffron","Leather (Ubrique) & shoes","Manton shawls & lace","Wicker & esparto weaving"],
+"PT":["Vista Alegre porcelain","Bordallo faience","Arraiolos rugs","Cork bags & homeware","Port, wine & tinned pantry","Filigree gold","Burel wool goods","Ginjinha & pantry","Handpainted azulejo"],
+"GB":["Harris & Donegal tweed","Bone china (Wedgwood, Spode)","Sheffield steel & cutlery","Tartan, kilts & cashmere","Gin, whisky & marmalade pantry","Wax jackets & brogues","Fountain pens & stationery","Umbrellas & walking sticks","Perfume & grooming"],
+"DE":["Meissen & Rosenthal porcelain","Solingen knives & scissors","Erzgebirge woodcraft","Loden & felt goods","Beer, wine & pantry","Leather (Offenbach) goods","Optics & fountain pens","Christmas markets craft","Cuckoo clocks (Black Forest)"],
+"IE":["Aran & Donegal knitwear","Belleek & Nicholas Mosse pottery","Waterford crystal","Celtic & Claddagh gold","Irish whiskey & pantry","Linen & tweed caps","Bodhran & harps","Wool blankets & throws"],
+"NL":["Delft & Makkum pottery","Clogs & tulip craft","Cheese (gouda, edam)","Stroopwafel & licorice pantry","Genever & jenever ware","Bicycle & design goods","Diamonds (Amsterdam)"],
+"SE":["Orrefors & Kosta glass","Dala horse & folk woodcraft","Sami duodji craft","Sloyd & outdoor knives","Lingonberry & pantry","Linen & felt","Ceramics (Gustavsberg)"],
+"PL":["Boleslawiec pottery","Amber (Gdansk) jewellery","Wycinanki & pisanki folk art","Wooden folk carving","Pierogi, vodka & pantry","Lace & linen","Christmas ornaments","Highlander wool"],
+"CZ":["Bohemian crystal & glass","Garnet jewellery","Marionettes & wooden toys","Krkonose & folk ceramics","Beer & pantry","Straw & corn-husk art","Blueprint (modrotisk) textiles"],
+"RU":["Palekh & Fedoskino lacquer","Gzhel & Lomonosov porcelain","Orenburg & Pavlovo Posad shawls","Samovars & Tula ware","Amber & malachite","Valenki & felt","Vodka, tea & pantry","Dymkovo & Gzhel toys"],
+# NORDIC & BALTIC
+"FI":["Iittala & Arabia glass/ceramics","Marimekko textiles","Puukko & Kuksa woodcraft","Reindeer & Sami craft","Sauna & birch goods","Liquorice & berry pantry","Wool & felt"],
+"DK":["Royal Copenhagen porcelain","Georg Jensen silver","Design furniture & lighting","Amber jewellery","Liquorice & pantry","Wool & knitwear","Kay Bojesen woodcraft"],
+"NO":["Selbu & Fana knitwear","Rosemaling folk art","Pewter & silver (bunad)","Troll & wood carving","Brown cheese & pantry","Sami duodji craft","Enamel jewellery"],
+"IS":["Lopapeysa wool goods","Lava & Icelandic-spar jewellery","Fish-leather craft","Sheepskin & wool","Skyr, salt & pantry","Design homeware"],
+"LT":["Amber (Palanga) jewellery","Linen goods","Sakotis & pantry","Black-ceramic pottery","Wooden crosses & folk art","Straw ornaments","Wool mittens"],
+# EASTERN / SE EUROPE
+"HU":["Herend & Zsolnay porcelain","Halas & Kalocsa lace/embroidery","Paprika, salami & pantry","Matyo folk textiles","Tokaji & pálinka ware","Leather & horse craft","Painted eggs"],
+"RO":["Horezu & Corund ceramics","Wool rugs & carpets","Folk (ie) blouses","Painted glass icons","Wood & carved gates","Merry-cemetery folk art","Plum brandy & pantry"],
+"UA":["Vyshyvanka embroidery","Petrykivka painting","Pysanky eggs","Opishnia ceramics","Motanka dolls","Rushnyk cloth","Honey, salo & pantry","Amber & beadwork"],
+"HR":["Lavender oil & sachets","Pag & Lepoglava lace","Licitar hearts","Olive oil, truffle & pantry","Filigree (Morcic) jewellery","Sibenik caps & wool","Ceramics & glass"],
+# NORTH AMERICA
+"US":["Selvedge denim & workwear","Bourbon, hot-sauce & pantry","Navajo turquoise & silver","Pendleton & quilt textiles","Cast-iron & cookware","Cowboy boots, hats & leather","Vinyl, poster & Americana art","Maple, honey & pantry","Fragrance & grooming"],
+"CA":["Maple syrup & pantry","Inuit soapstone & bone carving","Cowichan & Hudson's Bay wool","Ice-wine & pantry","Birchbark & beadwork","First Nations art","Amethyst & ammolite"],
+# LATIN AMERICA & CARIBBEAN
+"MX":["Talavera & barro negro pottery","Otomi & Oaxacan textiles","Taxco & filigree silver","Alebrijes & copal carving","Copper (Santa Clara) ware","Huichol beadwork","Mezcal, chocolate & mole pantry","Hammocks & palm weaving","Amber & obsidian","Tin & lacquer folk art"],
+"GT":["Backstrap huipiles & textiles","Jade jewellery","Antigua coffee & cacao","Worry dolls","Ceramics & pottery","Beaded & wood crafts","Wool blankets"],
+"PE":["Alpaca & vicuna knitwear","Andean & Ayacucho textiles","Chulucanas & Cusco ceramics","Silver & Andean filigree","Retablo & tabla folk art","Gourd (mate burilado) carving","Pima cotton","Cacao, coffee & pisco pantry","Chullo hats & weavings"],
+"CO":["Wayuu mochila & textiles","Emerald jewellery","Filigree (Mompox) silver","Vueltiao & aguadeno hats","Coffee & cacao pantry","Ceramics (La Chamba, Raquira)","Ruana wool & leather","Werregue palm weaving"],
+"BR":["Gemstone & jewellery","Capim-dourado golden grass","Havaianas & leather","Hammocks & fio-de-cordao","Cachaca, coffee & cacao pantry","Marajoara ceramics","Berimbau & instruments","Carnival & lacework"],
+"AR":["Gaucho leather & saddlery","Mate gourds & bombillas","Poncho & alpaca textiles","Silver (facon, rastra) craft","Wine, dulce-de-leche & pantry","Rhodochrosite jewellery","Alpargatas & espadrilles"],
+"CU":["Cigars & tobacco craft","Guayabera shirts","Rum & coffee pantry","Papier-mache & folk art","Leather & straw goods","Percussion instruments"],
+"JM":["Blue Mountain coffee","Jerk & pepper pantry","Wood & lignum-vitae carving","Rum & pantry","Bead & seed jewellery","Bamboo & straw craft"],
+# NORTH AFRICA
+"MA":["Zellige & tadelakt craft","Fez & Safi ceramics","Berber & kilim rugs","Leather (babouche, poufs)","Brass & pierced lanterns","Argan & rose pantry","Thuya-wood boxes","Silver Berber jewellery","Mint tea & spice pantry","Cactus-silk (sabra) textiles"],
+"EG":["Muski hand-blown glass","Khayamiya appliqué","Alabaster & stone carving","Brass & copper ware","Egyptian cotton linens","Papyrus & perfume","Inlaid (sadaf) boxes","Dukkah & spice pantry"],
+"TN":["Nabeul & Sejnane ceramics","Kairouan & Berber rugs","Fouta & chechia textiles","Silver & coral jewellery","Olive oil, harissa & pantry","Birdcage & metal craft","Leather & basketry"],
+"DZ":["Kabyle silver & enamel","Berber (Ghardaia) rugs","Pottery & ceramics","Copper & brass ware","Dates & pantry","Burnous & wool cloaks","Basketry & leather"],
+# WEST AFRICA
+"NG":["Adire & aso-oke textiles","Benin bronze & brass casting","Coral & Yoruba beadwork","Ankara wax-print fashion","Calabash carving","Nok & terracotta art","Leather (Sokoto) goods","Talking drums & instruments","Shea butter & pantry","Akwete & Okene weaving"],
+"GH":["Kente & fugu weaving","Adinkra stamped cloth","Krobo & recycled-glass beads","Ashanti stool & wood carving","Brass (lost-wax) & goldweights","Shea & black soap","Bolga baskets","Djembe & drums","Cacao & pantry"],
+"SN":["Wax-print & boubou fashion","Sous-verre glass painting","Sabar & djembe drums","Coiled Sahel baskets","Fulani gold & silver","Leather & sandals","Bissap & pantry","Wood & mask carving"],
+"ML":["Bogolan mud-cloth","Kora, ngoni & djembe","Tuareg silver & leather","Fulani gold earrings","Wool blankets & khasa","Wood & mask carving","Indigo & pottery"],
+"CI":["Korhogo mud-cloth","Baoule masks & goldweights","Wax-print (pagne) fashion","Cacao & coffee pantry","Woven baskets","Wood & bronze casting"],
+# EAST AFRICA & HORN
+"ET":["Coffee-ceremony sets & jebena","Habesha & shemma weaving","Mesob & basket weaving","Ethiopian-cross & silver jewellery","Berbere, teff & spice pantry","Leather & parchment art","Pottery & clay"],
+"KE":["Maasai & Samburu beadwork","Kiondo sisal baskets","Kisii soapstone carving","Kikoy, kanga & kitenge","Kenyan tea & coffee","Wood & animal carving","Leather (akala) sandals","Shuka blankets"],
+"TZ":["Tingatinga painting","Makonde ebony carving","Maasai beadwork","Zanzibar spice & pantry","Tanzanite & gems","Kanga & kitenge","Woven baskets & mats","Coffee & pantry"],
+"RW":["Agaseke peace baskets","Imigongo geometric art","Coffee & tea pantry","Beaded & cow-horn jewellery","Woven mats & bowls","Wood carving","Honey & pantry"],
+"MG":["Vanilla, spice & pantry","Raffia bags & weaving","Wild-silk (landibe) textiles","Zafimaniry wood carving","Antaimoro flower paper","Semi-precious gemstones","Embroidery & lace","Horn & zebu craft"],
+# SOUTHERN & CENTRAL AFRICA
+"ZA":["Zulu beadwork & baskets","Ndebele-motif crafts","Rooibos, biltong & pantry","Wire & recycled art","Shweshwe textiles","Springbok-leather goods","Ceramics & pottery","Wine & pantry","Wooden bowls & salad ware"],
+"ZW":["Shona stone sculpture","Binga & Tonga baskets","Verdite & serpentine carving","Crocheted & wire craft","Beaded jewellery","Batik & textiles","Copper & tin craft"],
+"BW":["Coiled mokola baskets","San (Bushman) art & jewellery","Leather & hide goods","Ostrich-eggshell beads","Pottery & clay","Wood carving","Beaded jewellery"],
+"NA":["Karakul wool rugs & weaving","Himba ochre & craft","Ostrich-eggshell beads","Semi-precious gemstones","Leather & hide goods","Baskets & wood carving","Marula & pantry"],
+"CM":["Bamileke beaded thrones & masks","Toghu embroidered cloth","Coffee & cacao pantry","Wood & bronze casting","Woven baskets","Calabash & gourd craft","Beadwork"],
+# SOUTH AMERICA (remaining)
+"BO":["Aguayo & alpaca textiles","Silver (Andean) jewellery","Ceramics & pottery","Salt & mineral craft","Charango instruments","Woven hats & bags","Coca & pantry"],
+"EC":["Montecristi Panama hats","Tagua (vegetable ivory) carving","Otavalo textiles & weaving","Balsa-wood birds","Chordeleg filigree","Roses & floral craft","Cacao & coffee pantry","Ceramics"],
+"CL":["Lapis lazuli jewellery","Mapuche silver & textiles","Copper homeware","Combarbalita stone craft","Chamanto & wool","Pomaire ceramics","Wine & pantry"],
+# OCEANIA
+"AU":["Aboriginal dot & bark art","Opal & pearl (Broome) jewellery","Merino & sheepskin (ugg)","Akubra & Driza-Bone leather","Tea-tree & bush skincare","Macadamia, manuka & pantry","Boomerang & didgeridoo","Wine & pantry"],
+"NZ":["Pounamu (greenstone) carving","Maori bone & wood carving","Merino & possum knitwear","Paua-shell jewellery","Manuka honey & pantry","Flax (harakeke) weaving","Sheepskin & wool blankets","Kauri-wood craft"],
+"FJ":["Masi (tapa) bark cloth","Voivoi mat & basket weaving","Tanoa & kava ware","Sandalwood & coconut craft","Shell & pearl jewellery","Wood carving"],
+"PG":["Bilum string bags","Sepik masks & carving","Kina & shell jewellery","Woven baskets & mats","Bark-cloth & pottery","Coffee & pantry"],
+}
