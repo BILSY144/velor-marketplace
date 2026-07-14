@@ -1,12 +1,15 @@
+// description shortened by the standing SEO agent, 2026-07-14 -- the prior
+// 201-char version exceeded Google's ~155-160 char SERP display limit and
+// was truncating mid-sentence in search results. Same facts, no new claim.
 export const metadata = {
   title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
   description:
-    'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+    'Who can sell on Velor: listing standards, prohibited items, certificate-required materials, customs/HS codes, product safety, and how listing review works.',
   alternates: { canonical: 'https://velorcommerce.store/legal/seller-rules' },
   openGraph: {
     title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
     description:
-      'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+      'Who can sell on Velor: listing standards, prohibited items, certificate-required materials, customs/HS codes, product safety, and how listing review works.',
     url: 'https://velorcommerce.store/legal/seller-rules',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -24,7 +27,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Seller Rules and Product Compliance Policy — Velor Marketplace',
     description:
-      'Who can sell on Velor, listing standards, prohibited items, certificate-required regulated materials, food and dangerous goods rules, customs and HS codes, product safety, and how listing review works.',
+      'Who can sell on Velor: listing standards, prohibited items, certificate-required materials, customs/HS codes, product safety, and how listing review works.',
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }

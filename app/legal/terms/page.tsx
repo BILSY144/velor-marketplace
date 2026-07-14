@@ -1,12 +1,15 @@
+// description shortened by the standing SEO agent, 2026-07-14 -- the prior
+// 175-char version exceeded Google's ~155-160 char SERP display limit and
+// was truncating mid-sentence in search results. Same facts, no new claim.
 export const metadata = {
   title: 'Terms of Service — Velor Marketplace',
   description:
-    'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+    'Velor Marketplace Terms of Service: platform role, accounts, seller and buyer obligations, fees, prohibited items, intellectual property and liability.',
   alternates: { canonical: 'https://velorcommerce.store/legal/terms' },
   openGraph: {
     title: 'Terms of Service — Velor Marketplace',
     description:
-      'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+      'Velor Marketplace Terms of Service: platform role, accounts, seller and buyer obligations, fees, prohibited items, intellectual property and liability.',
     url: 'https://velorcommerce.store/legal/terms',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -24,7 +27,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Terms of Service — Velor Marketplace',
     description:
-      'Velor Marketplace Terms of Service: platform role, accounts, seller obligations, buyer protections, fees, prohibited items, intellectual property, liability and governing law.',
+      'Velor Marketplace Terms of Service: platform role, accounts, seller and buyer obligations, fees, prohibited items, intellectual property and liability.',
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }

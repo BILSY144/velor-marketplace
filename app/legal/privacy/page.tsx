@@ -1,12 +1,15 @@
+// description shortened by the standing SEO agent, 2026-07-14 -- the prior
+// 171-char version exceeded Google's ~155-160 char SERP display limit and
+// was truncating mid-sentence in search results. Same facts, no new claim.
 export const metadata = {
   title: 'Privacy Policy — Velor Marketplace',
   description:
-    'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+    'How Velor Marketplace collects, uses, shares and protects your personal data under UK GDPR and the Data Protection Act 2018, and your data rights.',
   alternates: { canonical: 'https://velorcommerce.store/legal/privacy' },
   openGraph: {
     title: 'Privacy Policy — Velor Marketplace',
     description:
-      'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+      'How Velor Marketplace collects, uses, shares and protects your personal data under UK GDPR and the Data Protection Act 2018, and your data rights.',
     url: 'https://velorcommerce.store/legal/privacy',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -24,7 +27,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Privacy Policy — Velor Marketplace',
     description:
-      'How Velor Marketplace collects, uses, shares, retains and protects your personal data under UK GDPR and the Data Protection Act 2018, and how to exercise your data rights.',
+      'How Velor Marketplace collects, uses, shares and protects your personal data under UK GDPR and the Data Protection Act 2018, and your data rights.',
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }

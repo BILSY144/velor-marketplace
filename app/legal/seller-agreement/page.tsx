@@ -1,12 +1,15 @@
+// description shortened by the standing SEO agent, 2026-07-14 -- the prior
+// 190-char version exceeded Google's ~155-160 char SERP display limit and
+// was truncating mid-sentence in search results. Same facts, no new claim.
 export const metadata = {
   title: 'Seller Agreement — Legal Terms — Velor Marketplace',
   description:
-    'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+    "Velor's legal Seller Agreement: fees by tier, seller responsibilities, product approval, payouts, returns and disputes, and account suspension.",
   alternates: { canonical: 'https://velorcommerce.store/legal/seller-agreement' },
   openGraph: {
     title: 'Seller Agreement — Legal Terms — Velor Marketplace',
     description:
-      'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+      "Velor's legal Seller Agreement: fees by tier, seller responsibilities, product approval, payouts, returns and disputes, and account suspension.",
     url: 'https://velorcommerce.store/legal/seller-agreement',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -24,7 +27,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Seller Agreement — Legal Terms — Velor Marketplace',
     description:
-      'The legal Seller Agreement for Velor Marketplace: platform fees by tier, seller responsibilities, product approval, payouts, returns and disputes, prohibited conduct, and account suspension.',
+      "Velor's legal Seller Agreement: fees by tier, seller responsibilities, product approval, payouts, returns and disputes, and account suspension.",
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }
