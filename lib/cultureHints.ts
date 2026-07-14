@@ -170,6 +170,38 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   MT: ['Filigree jewellery', 'Blown glass'],
   SM: ['Collectible stamps & coins', 'Torta Tre Monti wafer cake'],
   VA: ['Vatican postage stamps', 'Vatican commemorative coins'],
+  // Added by the standing SEO agent, 2026-07-14 -- Andorra was one of the
+  // two remaining CULTURE_HINTS holdouts (backlog item 22; the other,
+  // Monaco, is still unresolved -- this run re-searched it too and again
+  // found only generic souvenir listicles and the Fragonard perfumery,
+  // which is actually in Eze/Grasse, France, not Monaco itself, so nothing
+  // new to add there). Prior Andorra attempts were rejected for being a
+  // single non-authoritative source (a suspected AI-content-farm domain) or
+  // generic wood-flooring product results. This run found two distinct,
+  // multi-source-verifiable Andorran producers: FORA Gin, described by
+  // Andorra's own Ordino parish tourism site (visitordino.com) and by
+  // Andorran news outlet alto.ad as a real working distillery in Ordino,
+  // and independently covered by UK packaging trade press (Label and
+  // Narrow Web, Packaging News) as "FORA gin captures the spirit of
+  // Andorra" -- three independent sources, not one. Xocland, an Andorran
+  // chocolate maker, is listed directly on the official government
+  // tourism site (visitandorra.com/es/compras/xocland) and independently
+  // covered by multiple Andorran travel/lifestyle sites describing an
+  // established "Ruta del Chocolate" (chocolate route) built around it
+  // (esquiades.com, principado-de-andorra.com, hoyandorra.com,
+  // hoteldeltarter.com). Named generically ("Craft gin", "Artisan
+  // chocolate"), matching this file's existing convention of product
+  // categories rather than brand names (e.g. CH's 'Chocolate', not a
+  // specific Swiss chocolatier). Deliberately did NOT add Vital's
+  // shepherd's wool cushions, Casa Raubert's sheep's-milk cheese, or
+  // Ratafia liqueur, all found on the same official visitandorra.com local-
+  // products page -- cushions and cheese are single-sourced (only that one
+  // page), and Ratafia is a Catalan-region product with its own protected
+  // geographical indication (IGP Ratafia catalana), so labelling it as
+  // distinctly Andorran would risk this file's own "no protected
+  // geographical indications used loosely" rule. No shell/ivory/coral/bone
+  // material in either product added.
+  AD: ['Craft gin', 'Artisan chocolate'],
   CY: ['Halloumi pantry', 'Lace'],
   AL: ['Filigree', 'Wool rugs'],
   MK: ['Filigree jewellery'],
