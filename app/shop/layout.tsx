@@ -9,9 +9,18 @@ import type { Metadata } from 'next'
 // the backlog — it needs a dynamic generateMetadata with a DB read, not a
 // static layout like this one.
 
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 203 characters, past Google's
+// practical ~155-160 char SERP display limit (same class of fix already
+// applied to /apply, /origins, /founding, /sell and /help the same run).
+// Kept every category named (ceramics, textiles, food, adornment, craft),
+// "independent sellers worldwide", and the country/speciality filter --
+// cut only the closing "every listing carries its maker and origin" clause,
+// which is redundant with the root layout's own description and with
+// /origins's description already carrying the same fact.
 const title = 'Shop Velor — Authentic Goods from Sellers Worldwide'
 const description =
-  'Browse the full Velor catalogue — ceramics, textiles, food, adornment and craft from independent sellers around the world. Filter by country or speciality; every listing carries its maker and its origin.'
+  "Browse Velor's catalogue — ceramics, textiles, food, adornment and craft from independent sellers worldwide, filterable by country or speciality."
 
 export const metadata: Metadata = {
   title,

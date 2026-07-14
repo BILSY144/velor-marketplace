@@ -7,11 +7,25 @@
 // already correct and untouched; only the three literal `title` strings
 // (metadata/openGraph/twitter) changed, plus the hyphen normalized to the
 // em dash used by every one of those sibling pages.
+//
+// description added by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- this page previously had no meta description at all (title,
+// canonical, openGraph and twitter were all set, but no description field
+// existed anywhere in this file), so search engines had to auto-generate a
+// snippet instead of Velor controlling it. Copy is drawn directly from the
+// page's own live body text below (each seller sets their own returns
+// policy, shown on the product page; contact the seller via Your Orders)
+// -- nothing invented.
+const description =
+  'Each Velor seller sets their own returns and refunds policy, shown on the product page before you buy. Contact the seller via Your Orders for help.'
+
 export const metadata = {
   title: 'Returns and Refunds — Velor Marketplace',
+  description,
   alternates: { canonical: 'https://velorcommerce.store/returns' },
   openGraph: {
     title: 'Returns and Refunds — Velor Marketplace',
+    description,
     url: 'https://velorcommerce.store/returns',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -28,6 +42,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Returns and Refunds — Velor Marketplace',
+    description,
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }

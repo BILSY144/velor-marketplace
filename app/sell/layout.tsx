@@ -7,9 +7,15 @@ import type { Metadata } from 'next'
 // row (190 countries, 0% listing fees, live broadcasting for founding
 // sellers) — see the copy-honesty rule at the top of app/sell/page.tsx.
 
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 180 characters, past Google's
+// practical ~155-160 char SERP display limit (same class of fix already
+// applied to /apply, /origins and /founding the same run). Kept every
+// concrete fact (free to list, live or anytime selling, 190 countries,
+// maker + origin on every listing) and only tightened the phrasing.
 const title = "Sell on Velor — Your Country's Shopping Channel"
 const description =
-  'List free and sell live or around the clock. Velor connects buyers worldwide with independent sellers from 190 countries, each listing carrying its maker and its country of origin.'
+  'List free and sell live or anytime. Velor connects buyers worldwide with sellers from 190 countries, each listing carrying its maker and origin.'
 
 export const metadata: Metadata = {
   title,

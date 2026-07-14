@@ -8,9 +8,17 @@ import type { Metadata } from 'next'
 // the live trading-country count is dynamic on the page itself and is
 // deliberately NOT hardcoded here since it changes as sellers list.
 
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 195 characters, past Google's
+// practical ~155-160 char SERP display limit (same class of fix already
+// applied to /apply and /origins the same run). Kept every concrete fact
+// (190 countries, one founding seat each, founding badge, Pro free for
+// life, permanent Velor Live access) and only tightened the phrasing --
+// "as the seller who opened your country" was cut as restating what "be
+// first from yours" already says, not a fact removed.
 const title = 'Founding Sellers | One Seat Per Country — Velor'
 const description =
-  '190 countries, one founding seller each. Be the first to list from yours and keep the founding badge, Pro free for life, and Velor Live access permanently — as the seller who opened your country.'
+  '190 countries, one founding seller each. Be first from yours and keep the founding badge, Pro free for life, and permanent Velor Live access.'
 
 export const metadata: Metadata = {
   title,

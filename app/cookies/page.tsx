@@ -7,11 +7,24 @@
 // already correct and untouched; only the three literal `title` strings
 // (metadata/openGraph/twitter) changed, plus the hyphen normalized to the
 // em dash used by every one of those sibling pages.
+//
+// description added by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- this page previously had no meta description at all (title,
+// canonical, openGraph and twitter were all set, but no description field
+// existed anywhere in this file), so search engines had to auto-generate a
+// snippet instead of Velor controlling it. Copy is drawn directly from the
+// page's own live body text below (essential cookies for sign-in/cart/core
+// features, limited analytics, browser-level control) -- nothing invented.
+const description =
+  'Velor uses essential cookies to keep you signed in and run core features, plus limited analytics. Control cookies in your browser settings.'
+
 export const metadata = {
   title: 'Cookie Policy — Velor Marketplace',
+  description,
   alternates: { canonical: 'https://velorcommerce.store/cookies' },
   openGraph: {
     title: 'Cookie Policy — Velor Marketplace',
+    description,
     url: 'https://velorcommerce.store/cookies',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -28,6 +41,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Cookie Policy — Velor Marketplace',
+    description,
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }

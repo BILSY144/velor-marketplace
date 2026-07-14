@@ -41,9 +41,19 @@ import { cultureHints } from '@/lib/cultureHints'
 // checklist under AI-visibility/answer-engine readiness.
 const originListCountries = WORLD_COUNTRIES.filter((c) => cultureHints(c.code).length > 0)
 
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 202 characters, past Google's
+// practical ~155-160 char SERP display limit (same class of fix already
+// applied to the 4 /legal/* pages, 2026-07-14 01:xx UTC, and to /apply the
+// same run as this one). Kept every concrete fact (maker + origin on every
+// listing, 190 countries, open founding-seller seats) and cut only the
+// redundant "authentic culture and heritage goods" phrase already covered
+// by the title and root layout description. This description is also
+// reused verbatim as the ItemList JSON-LD's own `description` field below
+// -- shortening it here shortens both in one place, no separate edit needed.
 const title = 'Shop by Origin | 190 Countries — Velor'
 const description =
-  'Browse Velor by country of origin. Every listing carries its maker and its origin — shop authentic culture and heritage goods, or see which of 190 countries are still an open seat for a founding seller.'
+  'Browse Velor by country of origin — every listing carries its maker and origin. See which of 190 countries still have an open founding seller seat.'
 
 export const metadata: Metadata = {
   title,

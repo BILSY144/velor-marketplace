@@ -13,9 +13,15 @@ import type { Metadata } from 'next'
 // FAQS array on page.tsx changes, this list must be updated to match or
 // removed -- do not let it drift out of sync with the live page.
 
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 169 characters, past Google's
+// practical ~155-160 char SERP display limit (same class of fix already
+// applied to /apply, /origins, /founding and /sell the same run). Kept
+// every category named (buying, orders/returns, Velor Live, selling,
+// account) and the reply-time fact, only tightened the phrasing.
 const title = 'Help Centre — Velor Marketplace Support'
 const description =
-  'Answers on buying, tracking orders and returns, watching and buying on Velor Live, becoming a seller, payouts, and your account — or contact us for a reply within a day.'
+  'Answers on buying, orders and returns, Velor Live, becoming a seller, payouts and your account — or contact us for a reply within a day.'
 
 export const metadata: Metadata = {
   title,

@@ -7,10 +7,19 @@ import type { Metadata } from 'next'
 // (the "Be the first from your country" hero, the founding-seller perks
 // list, and the 24-hour decision line already on the page) — nothing here
 // invents a claim the page itself doesn't already make.
-
+//
+// description trimmed by the standing SEO agent, 2026-07-14 (full audit
+// re-run) -- the previous version was 215 characters, well past Google's
+// practical ~155-160 char SERP display limit (the same class of issue this
+// log already fixed on the 4 /legal/* pages, 2026-07-14 01:xx UTC), meaning
+// it was being truncated mid-sentence in search results. Trimmed to keep
+// every concrete fact (free to list, 24-hour decision, Pro free for life
+// for founding sellers) and only cut the generic "global marketplace for
+// authentic cultural and heritage goods" framing, which duplicates the
+// title and the root layout's own description -- no fact added or removed.
 const title = 'Apply to Sell on Velor | Founding Seller Programme'
 const description =
-  "Be the first seller from your country on Velor, the global marketplace for authentic cultural and heritage goods. Free to list, a decision within 24 hours of verification, and Pro free for life for founding sellers."
+  'Be the first seller from your country on Velor. Free to list, a decision within 24 hours, and Pro free for life for founding sellers.'
 
 export const metadata: Metadata = {
   title,
