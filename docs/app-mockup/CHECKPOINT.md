@@ -25,8 +25,14 @@ Last updated: 2026-07-14 (session with William — country-dive videos).
 - Video pauses when leaving the live screen (go() handles it).
 - Verified live: goLive(21) holds on Guatemala backstrap loom (22/41), China
   demo renders product+chat, Hungary-style films render the Claim tray.
+- Feed order is COUNTRY-FIRST (William, 2026-07-14): opening a film from a
+  country page plays all of that country's broadcasts first (counter shows
+  position within the country, e.g. "2/2"), then flows into the rest of the
+  world -- at scale, "swipe through 300 Turkish sellers, then keep
+  travelling." Home-rail entry keeps the global order. buildFeed()/liveStep()
+  in the mockup; verified live on TR (2 films -> China next, reverse works).
 - Commits: cf8073d (feed), da791cd (flag/legibility), 44839e1 (compact trays),
-  0018d31 (drop wheel nav).
+  0018d31 (drop wheel nav), 9807dd9 (country-first feed order).
 
 ## 2026-07-14: SHOPPING <country> strip is now per-country verified video
 
