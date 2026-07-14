@@ -152,6 +152,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // is unaffected by this run, still backlog item 23. No code change needed
   // here -- this filter already re-derives from cultureHints() and
   // WORLD_COUNTRIES directly.
+  //
+  // Updated 2026-07-14 (10:xx UTC run) by the standing SEO agent: added 4
+  // more sourced CULTURE_HINTS entries -- Luxembourg (Péckvillercher clay
+  // bird whistles, sold each Easter Monday at the Émaischen market),
+  // Gabon (Mbigou stone carvings), Mauritania (Tuareg silver jewellery,
+  // Malahfa embroidered textiles), Tuvalu (pandanus & coconut-leaf weaving,
+  // Kolose crochet) -- see SEO_LOG.md for citations. Two candidates were
+  // researched and deliberately dropped, same "don't stretch to fill a
+  // quota" rule the 08:xx UTC run applied to Antigua and Barbuda: Andorra
+  // (the only sourced items were gourmet food/drink brand names -- cheese,
+  // cured meat, craft beer -- not a culture-first craft product this file's
+  // own header rule favours) and Djibouti (the one specific-product lead
+  // found, cowrie-shell-decorated vessels, is exactly the restricted-shell
+  // material this file's header explicitly excludes; the only other lead,
+  // woven baskets/embroidered shawls, rested on a single non-authoritative
+  // source this run wasn't confident enough in to use alone). Net effect on
+  // this filter: of the 190 real WORLD_COUNTRIES entries, 172 now have a
+  // real cultureHints entry (90%) and 18 do not -- Andorra, Angola, Antigua
+  // and Barbuda, Burundi, Central African Republic, Chad, Congo, Djibouti,
+  // Equatorial Guinea, Eritrea, Guinea-Bissau, Liberia, Monaco, Niger,
+  // Somalia, South Sudan, St Vincent and the Grenadines, Vatican City. The
+  // orphaned CI (Côte d'Ivoire) entry noted above is unaffected by this
+  // run, still backlog item 23. No code change needed here -- this filter
+  // already re-derives from cultureHints() and WORLD_COUNTRIES directly.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
