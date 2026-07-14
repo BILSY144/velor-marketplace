@@ -63,6 +63,45 @@ export const metadata: Metadata = {
     description,
     images: ['https://velorcommerce.store/opengraph-image'],
   },
+  // robots.googleBot added by the standing SEO agent, 2026-07-14 -- verified
+  // directly against Google's own robots-meta-tag documentation
+  // (developers.google.com/search/docs/crawling-indexing/robots-meta-tag,
+  // fetched and quoted this run): "If you don't specify the
+  // max-image-preview rule, Google may show an image preview of the default
+  // size" -- i.e. large image thumbnails in Search are opt-in, not the
+  // default, and a repo-wide grep this run confirmed `googleBot` /
+  // `max-image-preview` appeared nowhere in the codebase before this change.
+  // Velor is an inherently visual, product-photography-led marketplace (per
+  // CLAUDE.md's own positioning), so leaving every indexable page on
+  // Google's smaller default preview size is a real, if easy to miss, SEO
+  // cost once the catalogue and origin pages have real images to show.
+  // index: true / follow: true here are explicit restatements of Next.js's
+  // own implicit default (no prior `robots` field existed on this file), so
+  // this changes nothing about indexability -- only the preview size for
+  // pages that are already indexed. `max-snippet: -1` / `max-video-preview:
+  // -1` (Google's own documented "no limit" values) are included alongside
+  // `max-image-preview: 'large'` since all three live in the same directive
+  // family and this is the one place to set them site-wide. This is set on
+  // the shared root layout so every route without its own `metadata.robots`
+  // export inherits it automatically (confirmed via a repo-wide grep: only
+  // 7 files set their own `robots` field -- `/search`, `/apply/invited`,
+  // `/unsubscribe`, `not-found.tsx`, `/origins/[slug]`'s invalid-slug case,
+  // `/pulse`, and `/live/[room]`, all deliberately `noindex` already -- and
+  // Next.js metadata objects are replaced wholesale per key rather than deep
+  // -merged, the same behaviour already documented above for `openGraph`, so
+  // this addition cannot weaken any of those 7 pages' existing noindex
+  // directives; it simply never reaches them).
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
 }
 
 // Added by the standing SEO agent, 2026-07-13 -- the root layout had no
