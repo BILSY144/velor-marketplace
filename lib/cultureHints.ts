@@ -112,6 +112,9 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   GW: ['Cashew nuts', 'Bijagós wood carvings'],
   NE: ['Tuareg silver jewellery', 'Tuareg leather goods'],
   SS: ['Beaded jewellery', 'Woven baskets'],
+  GQ: ['Fang wood masks', 'Woven raffia baskets', 'Beaded jewellery'],
+  ER: ['Jebena coffee pots', 'Woven baskets', 'Filigree silver jewellery'],
+  SO: ['Woven sisal baskets', 'Frankincense'],
   // Europe
   IT: ['Leather bags', 'Murano glass', 'Olive oil', 'Tailoring', 'Hand-painted ceramics', 'Espresso ware', 'Venetian masks', 'Silk ties', 'Marble boards', 'Stationery', 'Gold jewellery', 'Pantry & preserves'],
   FR: ['Perfume', 'Copper cookware', 'Linen', 'Preserves', 'Marseille soap', 'Lavender oils', 'Table linen', 'Ceramics', 'Berets', 'Mustards & pantry', 'Candles', 'Basque linens'],
@@ -149,6 +152,7 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   EE: ['Knitwear', 'Juniper ware'],
   MT: ['Filigree jewellery', 'Blown glass'],
   SM: ['Collectible stamps & coins', 'Torta Tre Monti wafer cake'],
+  VA: ['Vatican postage stamps', 'Vatican commemorative coins'],
   CY: ['Halloumi pantry', 'Lace'],
   AL: ['Filigree', 'Wool rugs'],
   MK: ['Filigree jewellery'],
