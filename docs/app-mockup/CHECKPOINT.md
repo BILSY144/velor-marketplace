@@ -37,7 +37,8 @@ Pexels image URL format: `https://images.pexels.com/photos/<ID>/pexels-photo-<ID
 - **Wave 2 — East & SE Asia (18 countries): DONE & PUSHED.** 102 verified photos added (158 candidates, 41 rejected + near-dupe dedup). Picks/rejects in docs/app-mockup/wave2_picks.py. China/Japan/Vietnam/Indonesia/Macau near-perfect; Hong Kong/Mongolia patchier (street/scenery shots rejected).
 - **Wave 3 — South+Central Asia+Caucasus (16 countries): DONE & PUSHED.** 83 photos added (dedup collapses repeated Central-Asian stock). India/Nepal/Uzbekistan/Azerbaijan/Georgia strong; Turkmenistan all-placeholder (no Pexels coverage). Picks in docs/app-mockup/wave3_picks.py.
 - **Wave 4 — Middle East (14 countries): DONE & PUSHED.** 65 photos added. Turkey/Iran near-perfect; Gulf states patchier (camels/skylines/musical-oud rejected). Picks in docs/app-mockup/wave4_picks.py.
-- **Remaining waves (Wave 5+):** Middle East; W/S/C Europe; E Europe+Nordic+Baltic; N Africa+W Africa; E/C/S Africa; N America+Oceania.
+- **Wave 5 — Western/Southern/Central Europe (20 countries): DONE & PUSHED.** 116 photos added. Italy/France/Germany/Vatican near-perfect; microstates thinner (landmarks/harbors rejected). Picks in docs/app-mockup/wave5_picks.py.
+- **Remaining waves (Wave 6+):** Eastern Europe/Nordic/Baltic/Balkans; Africa (N/W/E/C/S); North America + Oceania. Middle East; W/S/C Europe; E Europe+Nordic+Baltic; N Africa+W Africa; E/C/S Africa; N America+Oceania.
 
 ## How to resume the imagery grind (per wave)
 1. In cloud: build query rows `[code, exactHINTScategory, "<countryName> <simplifiedCraft>"]` for the wave's countries (top ~10 categories each).
