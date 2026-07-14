@@ -688,7 +688,7 @@ function renderLive(){
   +'<button style="'+navBtn+'" onclick="goLive(LIVEIDX-1)">'+chevU+'</button>'
   +'<span style="font-family:var(--fd);font-size:9px;letter-spacing:.08em;color:#b9b9c2">'+(LIVEIDX+1)+'/'+LIVE.length+'</span>'
   +'<button style="'+navBtn+'" onclick="goLive(LIVEIDX+1)">'+chevD+'</button></div>'
-  +'<div style="position:absolute;left:16px;right:96px;bottom:'+(demo?'210':'126')+'px;z-index:5;display:flex;flex-direction:column;gap:7px" id="livemeta">'
+  +'<div style="position:absolute;left:16px;right:96px;bottom:'+(demo?'168':'120')+'px;z-index:5;display:flex;flex-direction:column;gap:7px" id="livemeta">'
   +'<button onclick="liveToCountry()" style="display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 12px 5px 6px;color:#fff;align-self:flex-start;backdrop-filter:blur(6px)"><span style="display:flex;width:18px;height:18px;border-radius:50%;overflow:hidden;align-items:center;justify-content:center">'+flag(v.c)+'</span><span style="font-family:var(--fd);font-size:10.5px;font-weight:600;letter-spacing:.04em">'+cn+'</span></button>'
   +'<div class="serif" style="font-size:23px;line-height:1.12;text-shadow:0 1px 10px rgba(0,0,0,.65)">'+v.t+'</div>'
   +'<div class="sm" style="color:#d6d6de;text-shadow:0 1px 8px rgba(0,0,0,.65)">'+v.s+'</div>'
@@ -697,9 +697,9 @@ function renderLive(){
     +'<div class="cbub"><b>seller</b> lead-free, fired at 1280&deg;C &mdash; I&rsquo;ll show the base</div></div>':'')
   +'</div>'
   +(demo
-    ?'<div class="ptray"><img src="'+px(30767475)+'"><div><div class="t">Gongfu tea set &middot; 6 pieces</div><div class="p">&pound;54 &middot; ships from Jingdezhen <span class="pfl">'+flag('CN')+'</span></div></div><button class="add" onclick="addCart()">Add</button></div>'
+    ?'<div class="ptray" style="padding:7px 9px;gap:9px;border-radius:15px;bottom:104px"><img src="'+px(30767475)+'" style="width:34px;height:34px;border-radius:9px"><div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px"><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gongfu tea set</span><span class="p" style="margin-top:0;white-space:nowrap">&pound;54 <span class="pfl">'+flag('CN')+'</span></span></div><button class="add" style="padding:8px 13px" onclick="addCart()">Add</button></div>'
     +'<div class="askrow"><div class="f">Ask the maker anything&hellip;</div><button class="hb" onclick="toast(\'Saved to favourites\')">'+I.heart+'</button></div>'
-    :'<div class="ptray" style="bottom:56px"><span style="width:52px;height:52px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)">'+flag(v.c)+'</span><div style="flex:1"><div class="t">'+cn+'&rsquo;s seat is open</div><div class="p">Its first verified seller broadcasts here &mdash; live for life</div></div><button class="add" onclick="go(\'apply\')">Claim</button></div>');
+    :'<div class="ptray" style="bottom:56px;padding:7px 9px;gap:9px;border-radius:15px"><span style="width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)">'+flag(v.c)+'</span><div style="flex:1;min-width:0"><div class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cn+'&rsquo;s seat is open</div><div class="p" style="margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">First verified seller broadcasts here for life</div></div><button class="add" style="padding:8px 13px" onclick="go(\'apply\')">Claim</button></div>');
   scr.innerHTML=h;
   if(!scr.__nav){ scr.__nav=1;
     var y0=null;
