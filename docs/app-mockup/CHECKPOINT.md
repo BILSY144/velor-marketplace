@@ -1,6 +1,35 @@
 # Velor App (The Atlas) — Design Mockup Checkpoint
 
-Last updated: 2026-07-14 (session with William).
+Last updated: 2026-07-14 (session with William — country-dive videos).
+
+## 2026-07-14: SHOPPING <country> strip is now per-country verified video
+
+William's rule: the bottom of every country dive must only show films from
+that country. Previously all 190 pages shared the same 3 global clips
+(CN tea set / MA souk / TR sand coffee) — a real accuracy bug, fixed.
+
+- 380 Pexels video queries (2/country from HINTS top crafts) fetched via
+  same-origin fetch on pexels.com; top-10 candidates parsed per query
+  (portrait mp4 + poster slug). Slug-relevance pre-filter cut 380 keys to
+  154 plausible; every surviving poster was visually verified on a labelled
+  contact sheet. 38 videos ACCEPTED across 37 countries (NP has 2), plus the
+  3 original clips kept (CN, MA souk, TR sand coffee) = 41 LIVE entries.
+  TR/MA/NP have 2 films each, verified live.
+- Picks + full reject rationale: docs/app-mockup/video_picks.py. Notable
+  reject classes: wrong-country slugs (kente→Indonesia, Dala horses→real
+  horses in Cappadocia), same clip surfacing for 2+ countries (assigned to
+  exactly one, never shared), scenery/landmarks, generic unverifiable
+  closeups, animals-instead-of-craft.
+- Wiring: `liveStripFor(c)` in the mockup filters LIVE by `v.c===c.c`.
+  Countries with no verified film render an honest dashed zero-state tile
+  ("No films from <country> yet — its founding seller opens this channel"),
+  never foreign footage. New entries carry a `p` poster URL (video posters
+  live under images.pexels.com/videos/, not /photos/); render sites use
+  `v.p||px(v.img)`.
+- Live-verified on the preview: Guatemala (1 film, backstrap loom),
+  Papua New Guinea (zero-state), counts TR:2 MA:2 NP:2 CN:1 CO:1 MX:1.
+- Commit 141e3a8 on app-mockup-preview. Origin-text fact-check pass
+  (all 190, commit b557b9e) also stands from earlier today.
 
 ## What this is
 A native mobile app design for the Velor **marketplace** (velorcommerce.store),
