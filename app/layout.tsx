@@ -109,7 +109,25 @@ const jsonLd = {
       // string, so the two can never drift out of sync.
       description,
       url: 'https://velorcommerce.store',
-      logo: 'https://velorcommerce.store/velor-logo-globe-v2.png',
+      // logo swapped by the standing SEO agent, 2026-07-14 -- Google's own
+      // Organization structured-data docs (developers.google.com/search/docs/
+      // appearance/structured-data/organization, fetched and quoted directly
+      // this run) state the logo image "must be 112x112px, at minimum." The
+      // previous value, velor-logo-globe-v2.png, is 206x60px (confirmed via
+      // PIL) -- its 60px height is well under that floor, so it was likely
+      // ineligible for Google's logo rich result / knowledge-panel logo even
+      // though the rest of this Organization node is fully populated.
+      // velor-logo.png is 608x118px (also confirmed via PIL, both dimensions
+      // clear the 112px minimum) and is not a new or unused asset -- it is
+      // already the live brand mark used in app/opengraph-image.tsx's real,
+      // shipped Open Graph image, so this is a like-for-like swap to an
+      // already-approved asset, not a new design decision. No aspect-ratio
+      // requirement exists in Google's docs, so the non-square shape is not
+      // a concern. Purely additive: only this one JSON-LD string changed,
+      // nothing else in the Organization/WebSite graph touched, and the
+      // header/footer's own <img> logo (still velor-logo-globe-v2.png,
+      // correctly sized for that 28-34px UI use) is untouched.
+      logo: 'https://velorcommerce.store/velor-logo.png',
       // areaServed added by the standing SEO agent, 2026-07-13 (third pass) --
       // "Worldwide"/"global marketplace" is an already-established, verified
       // live claim repeated across the codebase, not a new assertion:
