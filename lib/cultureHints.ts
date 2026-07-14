@@ -107,6 +107,11 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   BI: ['Coiled basketry', 'Twa pottery', 'Wood carvings'],
   LR: ['Ceremonial wood masks', 'Figurative wood carvings', 'Patchwork quilts'],
   TD: ['Leather goods', 'Tuareg silver jewellery', 'Hand-dyed textiles', 'Wood carvings'],
+  CF: ['Woven baskets', 'Wood carvings'],
+  CG: ['Wood carvings', 'Raffia textiles', 'Poto-Poto paintings'],
+  GW: ['Cashew nuts', 'Bijagós wood carvings'],
+  NE: ['Tuareg silver jewellery', 'Tuareg leather goods'],
+  SS: ['Beaded jewellery', 'Woven baskets'],
   // Europe
   IT: ['Leather bags', 'Murano glass', 'Olive oil', 'Tailoring', 'Hand-painted ceramics', 'Espresso ware', 'Venetian masks', 'Silk ties', 'Marble boards', 'Stationery', 'Gold jewellery', 'Pantry & preserves'],
   FR: ['Perfume', 'Copper cookware', 'Linen', 'Preserves', 'Marseille soap', 'Lavender oils', 'Table linen', 'Ceramics', 'Berets', 'Mustards & pantry', 'Candles', 'Basque linens'],
