@@ -35,7 +35,8 @@ Pexels image URL format: `https://images.pexels.com/photos/<ID>/pexels-photo-<ID
 ### Wave status
 - **Wave 1 — Latin America & Caribbean (25 countries): DONE & PUSHED.** 156 verified photos wired (209 candidates, ~50 rejected to placeholder). Picks + reject list saved in docs/app-mockup/wave1_picks.py. Colombia/Peru/Brazil/Argentina/Venezuela near-perfect; Belize/Bolivia/DR/Jamaica patchier (more placeholders).
 - **Wave 2 — East & SE Asia (18 countries): DONE & PUSHED.** 102 verified photos added (158 candidates, 41 rejected + near-dupe dedup). Picks/rejects in docs/app-mockup/wave2_picks.py. China/Japan/Vietnam/Indonesia/Macau near-perfect; Hong Kong/Mongolia patchier (street/scenery shots rejected).
-- **Remaining waves (Wave 3+):** South+Central Asia+Caucasus; Middle East; W/S/C Europe; E Europe+Nordic+Baltic; N Africa+W Africa; E/C/S Africa; N America+Oceania.
+- **Wave 3 — South+Central Asia+Caucasus (16 countries): DONE & PUSHED.** 83 photos added (dedup collapses repeated Central-Asian stock). India/Nepal/Uzbekistan/Azerbaijan/Georgia strong; Turkmenistan all-placeholder (no Pexels coverage). Picks in docs/app-mockup/wave3_picks.py.
+- **Remaining waves (Wave 4+):** Middle East; W/S/C Europe; E Europe+Nordic+Baltic; N Africa+W Africa; E/C/S Africa; N America+Oceania.
 
 ## How to resume the imagery grind (per wave)
 1. In cloud: build query rows `[code, exactHINTScategory, "<countryName> <simplifiedCraft>"]` for the wave's countries (top ~10 categories each).
