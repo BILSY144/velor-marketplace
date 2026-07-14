@@ -182,7 +182,7 @@ export default function ProductDetail({ id }: { id: string }) {
                     <img
                       key={i}
                       src={img}
-                      alt=""
+                      alt={`${product.title} — photo ${i + 1} of ${product.images.length}`}
                       className={`pd-thumb ${i === activeImg ? 'active' : ''}`}
                       onClick={() => setActiveImg(i)}
                     />
