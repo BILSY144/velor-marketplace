@@ -26,6 +26,19 @@ import { cultureHints } from '@/lib/cultureHints'
 // no-real-content states in this codebase (/search, /unsubscribe,
 // /apply/invited) -- since it is a "we can't find that country" error state,
 // not a real page worth a search engine indexing.
+//
+// BreadcrumbList JSON-LD added by the standing SEO agent, 2026-07-14 (see
+// SEO_LOG.md backlog). This is a real, live, three-level navigational
+// hierarchy, not an invented one: the header logo links Home
+// (components/GlobalHeader.tsx), the "Origins" nav dropdown's "All 190
+// countries" link and this page's own metadata canonical both point at
+// /origins (app/origins/layout.tsx), and this exact page is the third,
+// current level -- the same Home > Section > Entity shape Google's own
+// BreadcrumbList documentation shows, and the direct country-page analogue
+// of the FAQPage markup already shipped on /help (app/help/layout.tsx). Only
+// rendered for a valid slug -- an invalid slug renders no breadcrumb, same
+// "no schema for a non-content error state" rule already applied to the
+// metadata block below.
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -70,6 +83,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function OriginCountryLayout({ children }: { children: React.ReactNode }) {
-  return children
+export default async function OriginCountryLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const country = findCountryBySlug(slug)
+
+  if (!country) {
+    return children
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://velorcommerce.store' },
+      { '@type': 'ListItem', position: 2, name: 'Shop by Origin', item: 'https://velorcommerce.store/origins' },
+      { '@type': 'ListItem', position: 3, name: country.name, item: `https://velorcommerce.store/origins/${slug}` },
+    ],
+  }
+
+  return (
+    <>
+      {children}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+    </>
+  )
 }
