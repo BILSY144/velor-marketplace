@@ -2,6 +2,32 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-14: Velor Live rebuilt as a swipeable feed of the verified films
+
+- The live screen previously always played LIVE[0] (China tea set) with the
+  China demo product/chat regardless of which film was tapped. Now goLive(i)
+  opens the exact film tapped (home rail + country strips wired), and the
+  screen is a feed: swipe up/down on touch, chevron buttons + n/41 counter
+  on the right. Country chip on each film jumps into that country's dive.
+- Honesty split per William: film 0 (China) keeps the full live-shopping demo
+  (product tray + chat) as the vision; every other film shows the honest
+  founding-seat tray ("<Country>'s seat is open ... Claim") -- no fake chat,
+  no fake listings on the other 40 films.
+- Product/founding trays compacted to one slim bar (34px thumb, single line,
+  small Add/Claim) per William's "more room for the film" note. Title/sub get
+  a text-shadow for legibility over bright footage; inline price-line flags
+  scoped via .ptray .pfl (the .ptray img 52px rule was blowing them up --
+  pre-existing bug from the old static screen).
+- Wheel navigation was added then REMOVED: stray synthetic wheel events (from
+  the browser-automation environment, LIVENAVT confirmed set with no human
+  scroll) advanced the feed by itself. Touch swipe + chevrons remain; do not
+  re-add wheel nav without solving that.
+- Video pauses when leaving the live screen (go() handles it).
+- Verified live: goLive(21) holds on Guatemala backstrap loom (22/41), China
+  demo renders product+chat, Hungary-style films render the Claim tray.
+- Commits: cf8073d (feed), da791cd (flag/legibility), 44839e1 (compact trays),
+  0018d31 (drop wheel nav).
+
 ## 2026-07-14: SHOPPING <country> strip is now per-country verified video
 
 William's rule: the bottom of every country dive must only show films from
