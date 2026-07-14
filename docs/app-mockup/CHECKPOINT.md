@@ -2,6 +2,33 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-14: Product page + craft pages — buyer journey completed
+
+- Every craft tile (real photo or "Opening soon") now opens a CRAFT PAGE:
+  hero (verified photo or branded placeholder), "<COUNTRY> x SIGNATURE
+  CRAFT" kicker, LISTINGS section, "More from <country>" cross-links.
+  189 countries show the honest founding zero-state ("No <craft> listed
+  from <country> yet" + Claim/Follow); only China x Porcelain tea sets
+  carries the one SAMPLE listing, which opens the PDP. New craftslot
+  screen + goCraft(cc, encodedName); names URI-encoded in onclick attrs
+  (apostrophes!). Listing-card arrows must be explicitly sized (bare
+  I.arrow renders unconstrained and crushes flex text).
+- PDP delivery: "Deliver to UK - est GBP 6.40 - 8-12 days - change" row.
+  DECISION (William asked how delivery cost works without a label): rate
+  QUOTES need no label -- seller ship-from (SellerShippingProfile) +
+  parcel dims + buyer location (saved address / device country / picker)
+  -> Shippo quote shown as estimate, exact at checkout, label only after
+  order. Same model the marketplace checkout already uses per seller.
+- Reviews (William): kept as mock-up of the vision but explicitly
+  labelled -- "BUYER REVIEWS - SAMPLE" header, note "These are mock
+  reviews... nothing on Velor carries a rating it has not earned",
+  per-review chips SAMPLE - UK/IE, invented 4.9 aggregate removed.
+- Live demo tray text opens the PDP; PDP back button returns to the craft
+  page when arrived from there (goPdpBack).
+- Verified live: GT "Mayan weaving" zero-state page, CN porcelain page
+  with sample listing, PDP deliver-to row + sample-review section.
+- Commits: 66dafd6 (craft pages + PDP), fcf6b1f (arrow fix).
+
 ## 2026-07-14: Velor Live rebuilt as a swipeable feed of the verified films
 
 - The live screen previously always played LIVE[0] (China tea set) with the
