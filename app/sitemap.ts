@@ -84,6 +84,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Monaco, Niger, San Marino, Sierra Leone, Somalia, South Sudan, St Kitts
   // and Nevis, St Lucia, St Vincent and the Grenadines, Suriname, Togo,
   // Turkmenistan, Tuvalu, Vatican City.
+  //
+  // Updated 2026-07-14 (later run) by the standing SEO agent: added 6 more
+  // sourced CULTURE_HINTS entries (Turkmenistan, Malawi, Togo, Sierra Leone,
+  // Suriname, St Lucia -- see SEO_LOG.md for citations). While re-deriving
+  // the split with the same script, found a real data inconsistency worth
+  // recording rather than silently smoothing over, per LAW #1: lib/
+  // cultureHints.ts has a CI entry (Cacao, Wax-print fashion) but WORLD_
+  // COUNTRIES in lib/worldCountries.ts has no Côte d'Ivoire / Ivory Coast
+  // entry under any code or name -- confirmed by a full 190-name dump, not
+  // a regex miss. That CI entry is orphaned: this filter iterates
+  // WORLD_COUNTRIES and calls cultureHints(c.code), so a hints entry with
+  // no matching country is simply never reached and changes nothing here
+  // or in app/origins/layout.tsx's ItemList. Logged as a new backlog item
+  // (not fixed this run -- whether to add Côte d'Ivoire as a 191st country
+  // touches the "190 countries" copy used on /apply and /founding, a bigger
+  // call than this agent's additive lane). Net effect on this filter: of
+  // the 190 real WORLD_COUNTRIES entries, 156 now have a real cultureHints
+  // entry (82%) and 34 do not -- Andorra, Angola, Antigua and Barbuda,
+  // Bahamas, Barbados, Benin, Burundi, Cape Verde, Central African Republic,
+  // Chad, Congo, Djibouti, Dominica, Equatorial Guinea, Eritrea, Gabon,
+  // Gambia, Guinea-Bissau, Guyana, Kiribati, Liberia, Liechtenstein,
+  // Luxembourg, Macau, Mauritania, Monaco, Niger, San Marino, Somalia,
+  // South Sudan, St Kitts and Nevis, St Vincent and the Grenadines, Tuvalu,
+  // Vatican City. No code change needed here -- this filter already
+  // re-derives from cultureHints() and WORLD_COUNTRIES directly.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
