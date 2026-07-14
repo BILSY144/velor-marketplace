@@ -5,7 +5,7 @@ Last locked: 2026-07-04.
 
 **2026-07-04 update (William's decision):** Starter listing cap lowered 50 → 20 (headline features now explicitly include seller dashboard and buyer protection). Pro listing cap changed from unlimited to a 200 hard cap, and Pro now includes a free custom storefront. Enterprise unchanged except it also now explicitly lists a free custom storefront. Commission rates unchanged (15% / 8% / 5%). SUPERSEDED 2026-07-13 -- see the update note below; commission is now 10% / 4% / 0%.
 
-**2026-07-13 update (William's decision, via Claude session):** Commission rates changed to new permanent figures -- Starter 10% (was 12%), Pro 4% (was 8%), Enterprise 0% (was 5%). Monthly subscription fees unchanged (Pro £49/mo, Enterprise £99/mo per the app -- note this doc's own Stripe price-object reference for Enterprise below still shows £199/mo, a pre-existing discrepancy NOT resolved by this change and flagged for William to verify live in Stripe). Updated across roughly 30 files site-wide (API routes, dashboard/legal/help pages, public/llms.txt, this doc, docs/PAYOUTS.md, docs/GLOBAL_MARKETING_STRATEGY.md, and all 19 outreach email translations in lib/outreachI18n.ts). Two fields intentionally left as flat non-tier-aware rates rather than risk an unreviewed behavioural change: OrderItem.commission in app/api/orders/route.ts and PLATFORM_FEE_RATE in app/api/dashboard/orders/route.ts. See CLAUDE.md 2026-07-13 checkpoint for full detail.
+**2026-07-13 update (William's decision, via Claude session):** Commission rates changed to new permanent figures -- Starter 10% (was 12%), Pro 4% (was 8%), Enterprise 0% (was 5%). Monthly subscription fees unchanged (Pro £49/mo, Enterprise £99/mo per the app -- note this doc's own Stripe price-object reference for Enterprise below still shows £199/mo, a pre-existing discrepancy NOT resolved by this change and flagged for William to verify live in Stripe). RESOLVED 2026-07-14: the Stripe Enterprise price object really was £199/mo and STRIPE_ENTERPRISE_PRICE_ID pointed at it — a live overcharge risk (never triggered, 0 subscriptions). Fixed by creating a new £99/mo default price (price_1Tt7a6DB5eA3WfmuKt5ocwCv), deleting the £199 price, updating the Vercel env var, and redeploying (confirmed Ready in Production). Updated across roughly 30 files site-wide (API routes, dashboard/legal/help pages, public/llms.txt, this doc, docs/PAYOUTS.md, docs/GLOBAL_MARKETING_STRATEGY.md, and all 19 outreach email translations in lib/outreachI18n.ts). Two fields intentionally left as flat non-tier-aware rates rather than risk an unreviewed behavioural change: OrderItem.commission in app/api/orders/route.ts and PLATFORM_FEE_RATE in app/api/dashboard/orders/route.ts. See CLAUDE.md 2026-07-13 checkpoint for full detail.
 
 ## Tiers
 
@@ -13,20 +13,20 @@ Last locked: 2026-07-04.
 |------|-------|-----------|----------|--------|
 | Starter | Free | 10% | Up to 20 (hard cap) | Seller dashboard, analytics, order tools, buyer protection on every sale |
 | Pro | £49/mo | 4% | Up to 200 (hard cap) | Free custom storefront, professional dashboard (AI optimisation, pricing insights, advanced analytics, priority placement, dedicated support) |
-| Enterprise | £199/mo (fixed, non-negotiable) | 0% | Unlimited | Everything in Pro + Go Live video shopping + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
+| Enterprise | £99/mo (fixed, non-negotiable) | 0% | Unlimited | Everything in Pro + Go Live video shopping + dedicated personal account manager + full API access/integrations + custom analytics + early feature access |
 
 ## Stripe (LIVE mode, acct_1TlcWCDB5eA3Wfmu — VELOR COMMERCE LTD)
 
 - Velor Pro: product prod_UoqPFKqNkXMB52, price price_1TpCiTDB5eA3Wfmu2kP5Ilwg (£49/mo GBP recurring)
-- Velor Enterprise: product prod_UoqXwy4RXYEoFl, price price_1TpCqXDB5eA3Wfmuw3y2bScF (£199/mo GBP recurring)
+- Velor Enterprise: product prod_UoqXwy4RXYEoFl, price price_1Tt7a6DB5eA3WfmuKt5ocwCv (£99/mo GBP recurring, created 2026-07-14, default). The original £199/mo price (price_1TpCqXDB5eA3Wfmuw3y2bScF) was DELETED from Stripe on 2026-07-14 (0 subscriptions ever; William's decision) — any reference to it anywhere is stale.
 
 Vercel env (Production + Preview): STRIPE_PRO_PRICE_ID, STRIPE_ENTERPRISE_PRICE_ID.
 
 ## Billing behaviour (all automatic)
 
 1. Monthly charge: Stripe recurring subscription auto-charges every month. No manual step.
-2. Checkout: POST /api/seller/subscription with action 'upgrade_to_pro' or 'upgrade_to_enterprise'. priceId is chosen by action; success_url carries &plan= so the confirmation toast is plan-correct (Pro=8%, Enterprise=5%).
-3. Tier resolution (webhook): tier is resolved by matching the Stripe price id against STRIPE_ENTERPRISE_PRICE_ID / STRIPE_PRO_PRICE_ID env vars — NOT price metadata. This guarantees Enterprise = 5% and Pro = 8%.
+2. Checkout: POST /api/seller/subscription with action 'upgrade_to_pro' or 'upgrade_to_enterprise'. priceId is chosen by action; success_url carries &plan= so the confirmation toast is plan-correct (Pro=4%, Enterprise=0%).
+3. Tier resolution (webhook): tier is resolved by matching the Stripe price id against STRIPE_ENTERPRISE_PRICE_ID / STRIPE_PRO_PRICE_ID env vars — NOT price metadata. This guarantees Enterprise = 0% and Pro = 4%.
 4. Failed payment: invoice.payment_failed sets subscriptionStatus = 'past_due' and emails the seller with the retry date. Stripe auto-retries (dunning).
 5. Cancellation / dunning exhausted: customer.subscription.deleted resets seller to STARTER (tier=STARTER, subscriptionStatus='cancelled', subscription fields cleared).
 
