@@ -705,7 +705,6 @@ function renderLive(){
     var y0=null;
     scr.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY },{passive:true});
     scr.addEventListener('touchend',function(e){ if(y0===null) return; var dy=e.changedTouches[0].clientY-y0; y0=null; if(Math.abs(dy)>60) goLive(LIVEIDX+(dy<0?1:-1)) },{passive:true});
-    scr.addEventListener('wheel',function(e){ var n=Date.now(); if(n-LIVENAVT<650) return; if(Math.abs(e.deltaY)<20) return; LIVENAVT=n; goLive(LIVEIDX+(e.deltaY>0?1:-1)) },{passive:true});
   }
   var vid=document.getElementById('livevid'); if(vid){ var pp=vid.play(); if(pp&&pp.catch) pp.catch(function(){}) }
 }
