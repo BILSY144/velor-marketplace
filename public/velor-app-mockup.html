@@ -690,14 +690,14 @@ function renderLive(){
   +'<button style="'+navBtn+'" onclick="goLive(LIVEIDX+1)">'+chevD+'</button></div>'
   +'<div style="position:absolute;left:16px;right:96px;bottom:'+(demo?'210':'126')+'px;z-index:5;display:flex;flex-direction:column;gap:7px" id="livemeta">'
   +'<button onclick="liveToCountry()" style="display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 12px 5px 6px;color:#fff;align-self:flex-start;backdrop-filter:blur(6px)"><span style="display:flex;width:18px;height:18px;border-radius:50%;overflow:hidden;align-items:center;justify-content:center">'+flag(v.c)+'</span><span style="font-family:var(--fd);font-size:10.5px;font-weight:600;letter-spacing:.04em">'+cn+'</span></button>'
-  +'<div class="serif" style="font-size:23px;line-height:1.12">'+v.t+'</div>'
-  +'<div class="sm dim">'+v.s+'</div>'
+  +'<div class="serif" style="font-size:23px;line-height:1.12;text-shadow:0 1px 10px rgba(0,0,0,.65)">'+v.t+'</div>'
+  +'<div class="sm" style="color:#d6d6de;text-shadow:0 1px 8px rgba(0,0,0,.65)">'+v.s+'</div>'
   +(demo?'<div style="display:flex;flex-direction:column;gap:7px;margin-top:4px" id="livechat">'
     +'<div class="cbub"><b>amira</b> is the glaze food safe?</div>'
     +'<div class="cbub"><b>seller</b> lead-free, fired at 1280&deg;C &mdash; I&rsquo;ll show the base</div></div>':'')
   +'</div>'
   +(demo
-    ?'<div class="ptray"><img src="'+px(30767475)+'"><div><div class="t">Gongfu tea set &middot; 6 pieces</div><div class="p">&pound;54 &middot; ships from Jingdezhen '+flag('CN')+'</div></div><button class="add" onclick="addCart()">Add</button></div>'
+    ?'<div class="ptray"><img src="'+px(30767475)+'"><div><div class="t">Gongfu tea set &middot; 6 pieces</div><div class="p">&pound;54 &middot; ships from Jingdezhen <span class="pfl">'+flag('CN')+'</span></div></div><button class="add" onclick="addCart()">Add</button></div>'
     +'<div class="askrow"><div class="f">Ask the maker anything&hellip;</div><button class="hb" onclick="toast(\'Saved to favourites\')">'+I.heart+'</button></div>'
     :'<div class="ptray" style="bottom:56px"><span style="width:52px;height:52px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)">'+flag(v.c)+'</span><div style="flex:1"><div class="t">'+cn+'&rsquo;s seat is open</div><div class="p">Its first verified seller broadcasts here &mdash; live for life</div></div><button class="add" onclick="go(\'apply\')">Claim</button></div>');
   scr.innerHTML=h;
@@ -852,7 +852,7 @@ S.search='<div class="scr" id="s-search"><div class="sc" style="padding-bottom:1
 .cbub{background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:8px 12px;font-size:11.5px;line-height:1.45;backdrop-filter:blur(6px);align-self:flex-start;max-width:100%}
 .cbub b{color:var(--accent);font-weight:600}
 .ptray{position:absolute;left:12px;right:12px;bottom:108px;z-index:5;background:rgba(18,18,22,.9);border:1px solid var(--line);border-radius:20px;padding:11px;display:flex;gap:11px;align-items:center;backdrop-filter:blur(12px)}
-.ptray img{width:52px;height:52px;border-radius:12px;object-fit:cover}
+.ptray img{width:52px;height:52px;border-radius:12px;object-fit:cover}.ptray .pfl img{width:15px;height:15px;border-radius:3px;object-fit:cover;vertical-align:-2px}
 .ptray .t{font-family:var(--fd);font-size:12.5px;font-weight:600}
 .ptray .p{font-size:11.5px;color:var(--accent);font-weight:600;margin-top:3px}
 .ptray .add{margin-left:auto;background:var(--accent);color:#160a00;font-family:var(--fd);font-weight:700;font-size:12.5px;border-radius:12px;padding:12px 17px}
