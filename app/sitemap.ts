@@ -109,6 +109,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // South Sudan, St Kitts and Nevis, St Vincent and the Grenadines, Tuvalu,
   // Vatican City. No code change needed here -- this filter already
   // re-derives from cultureHints() and WORLD_COUNTRIES directly.
+  //
+  // Updated 2026-07-14 (08:xx UTC run) by the standing SEO agent: added 6
+  // more sourced CULTURE_HINTS entries (Benin -- Abomey appliqué tapestries;
+  // Gambia -- Serekunda batik textiles; Guyana -- Tibiseri straw baskets;
+  // Dominica -- Kalinago larouma-reed baskets and carved calabash art; St
+  // Kitts and Nevis -- Caribelle batik textiles; Kiribati -- pandanus-leaf
+  // woven mats -- see SEO_LOG.md for citations). A candidate seventh entry,
+  // Antigua and Barbuda, was researched and deliberately dropped: the only
+  // strong lead found (Betty's Hope) is a historic sugar-plantation site,
+  // not a craft or product, so nothing confidently product-level turned up
+  // this run -- left for a future run rather than stretched to fill a quota.
+  // Net effect on this filter: of the 190 real WORLD_COUNTRIES entries, 162
+  // now have a real cultureHints entry (85%) and 28 do not -- Andorra,
+  // Angola, Antigua and Barbuda, Bahamas, Barbados, Burundi, Cape Verde,
+  // Central African Republic, Chad, Congo, Djibouti, Equatorial Guinea,
+  // Eritrea, Gabon, Guinea-Bissau, Liberia, Liechtenstein, Luxembourg,
+  // Macau, Mauritania, Monaco, Niger, San Marino, Somalia, South Sudan, St
+  // Vincent and the Grenadines, Tuvalu, Vatican City. The orphaned CI
+  // (Côte d'Ivoire) entry noted in the paragraph above is unaffected by
+  // this run and still not counted in either the 162 or the 28, since it
+  // has no matching WORLD_COUNTRIES entry either way -- still backlog item
+  // 23, still not this agent's call to resolve. No code change needed here
+  // -- this filter already re-derives from cultureHints() and
+  // WORLD_COUNTRIES directly.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
