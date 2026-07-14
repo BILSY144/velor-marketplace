@@ -1,8 +1,17 @@
+// title brand suffix fixed by the standing SEO agent, 2026-07-14 -- was
+// "Velor Commerce", the brand name of the separate, unrelated
+// velorcommerce.co.uk dropshipping business (see CLAUDE.md's standing
+// instruction to never conflate the two). This site's real brand suffix,
+// already used by /legal/terms, /legal/privacy, /about, and
+// /seller-agreement, is "Velor Marketplace" -- `siteName: 'Velor'` below was
+// already correct and untouched; only the three literal `title` strings
+// (metadata/openGraph/twitter) changed, plus the hyphen normalized to the
+// em dash used by every one of those sibling pages.
 export const metadata = {
-  title: 'Returns and Refunds - Velor Commerce',
+  title: 'Returns and Refunds — Velor Marketplace',
   alternates: { canonical: 'https://velorcommerce.store/returns' },
   openGraph: {
-    title: 'Returns and Refunds - Velor Commerce',
+    title: 'Returns and Refunds — Velor Marketplace',
     url: 'https://velorcommerce.store/returns',
     siteName: 'Velor',
     // locale added by the standing SEO agent, 2026-07-13 -- see app/layout.tsx
@@ -18,7 +27,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Returns and Refunds - Velor Commerce',
+    title: 'Returns and Refunds — Velor Marketplace',
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }
