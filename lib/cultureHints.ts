@@ -115,6 +115,23 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   GQ: ['Fang wood masks', 'Woven raffia baskets', 'Beaded jewellery'],
   ER: ['Jebena coffee pots', 'Woven baskets', 'Filigree silver jewellery'],
   SO: ['Woven sisal baskets', 'Frankincense'],
+  // Added by the standing SEO agent, 2026-07-14 -- previously researched and
+  // deliberately skipped in 3+ prior runs (only a single, non-authoritative
+  // basket-weaving source found each time). This run found a second,
+  // independent, higher-authority source corroborating woven grass/palm
+  // baskets: blogs.worldbank.org's "Women in Djibouti make money weaving
+  // grass and pearls into baskets, belts" (a World Bank livelihoods
+  // programme article naming baskets and belts specifically), plus
+  // harbingerstandard.com's "Handmade Crafts Anchor Djibouti's Cultural
+  // Heritage" (independently describing "tightly coiled palm-fiber" basket
+  // construction). Two independent sources meets the bar this file's own
+  // header sets that prior runs' single-source finds did not. Deliberately
+  // excluded the embroidered "Gadha" shawl and pottery mentioned only in the
+  // Harbinger Standard article -- single-sourced, not carried forward this
+  // run per the same no-stretch-to-fill-a-quota rule applied to Andorra/
+  // Monaco below. No shell/ivory/coral/bone material involved in either
+  // product per both sources.
+  DJ: ['Woven grass baskets', 'Woven palm-fiber belts'],
   // Europe
   IT: ['Leather bags', 'Murano glass', 'Olive oil', 'Tailoring', 'Hand-painted ceramics', 'Espresso ware', 'Venetian masks', 'Silk ties', 'Marble boards', 'Stationery', 'Gold jewellery', 'Pantry & preserves'],
   FR: ['Perfume', 'Copper cookware', 'Linen', 'Preserves', 'Marseille soap', 'Lavender oils', 'Table linen', 'Ceramics', 'Berets', 'Mustards & pantry', 'Candles', 'Basque linens'],
@@ -181,6 +198,24 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   LC: ['Coal pot clay cookware', 'Woven straw baskets'],
   DM: ['Kalinago larouma-reed baskets', 'Carved calabash art'],
   KN: ['Caribelle batik textiles'],
+  // Added by the standing SEO agent, 2026-07-14 -- previously researched and
+  // deliberately skipped (2026-07-14 08:xx UTC run: the only lead found then,
+  // Betty's Hope, is a historic plantation site, not a craft product). This
+  // run found a genuinely new, product-level, two-source-corroborated
+  // angle: visitantiguabarbuda.com (the official tourism board's own site,
+  // "Arts, Crafts & Cuisine: A Taste of Authentic Antiguan & Barbudan Life")
+  // names handwoven baskets/straw creations, pottery, and Barbuda sea-glass
+  // jewellery-making; discoverantiguabarbuda.com's "Made in Antigua and
+  // Barbuda" independently corroborates handwoven baskets and separately
+  // names "handwoven Sea Island cotton products" (Sea Island cotton is a
+  // real historic Antiguan crop/textile tradition, not a brand) and guava
+  // cheese (a traditional preserve, also named on the tourism-board page).
+  // Deliberately excluded from this entry: rum brand names (Cavalier,
+  // English Harbour) and gallery-sold paintings/ceramics generally, both
+  // too generic or too brand-specific to be a culture-first product hint
+  // per this file's own header rule. Sea-glass is glass, not a restricted
+  // shell/coral/ivory/bone material.
+  AG: ['Handwoven straw baskets', 'Sea Island cotton textiles', 'Sea-glass jewellery', 'Guava cheese preserves'],
   VC: ['Woven baskets & mats', 'Wood carvings', 'Handcrafted jewellery'],
   HT: ['Steel-drum art', 'Vetiver oil'],
   JM: ['Blue Mountain coffee', 'Spices'],
