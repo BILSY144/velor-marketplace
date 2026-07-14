@@ -615,7 +615,7 @@ function liveStripFor(c){
   if(!vids.length){
     return head+'<div class="pad" style="padding-top:12px"><div style="border:1px dashed var(--line);border-radius:14px;padding:22px 18px;text-align:center;background:var(--ink)"><div class="fd" style="font-size:13px;font-weight:600">No films from '+c.n+' yet</div><div class="sm dim" style="margin-top:6px">Its founding seller opens this channel &mdash; previews follow the first listing.</div></div></div>';
   }
-  return head+'<div class="hrail" style="padding-top:12px">'+vids.map(function(v){return '<button class="lcard" style="flex:0 0 138px" onclick="goLive('+LIVE.indexOf(v)+')"><img class="lposter" src="'+(v.p||px(v.img))+'" loading="lazy"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div></div></button>'}).join('')+'</div>';
+  return head+'<div class="hrail" style="padding-top:12px">'+vids.map(function(v){return '<button class="lcard" style="flex:0 0 138px" onclick="goLive('+LIVE.indexOf(v)+',\''+c.c+'\')"><img class="lposter" src="'+(v.p||px(v.img))+'" loading="lazy"><video src="'+v.src+'" muted loop playsinline preload="metadata"></video><div class="g"></div><div class="pv">Preview</div><div class="m"><div class="t">'+v.t+'</div></div></button>'}).join('')+'</div>';
 }
 function countryScreen(){
   var c=SELCH;
@@ -667,13 +667,32 @@ S.live='<div class="scr" id="s-live" style="background:#000"></div>'
    Film 0 (China tea set) keeps the full live-shopping demo (product + chat);
    every other film shows the honest founding-seat tray — no fake chat, no
    fake listings. */
-var LIVEIDX=0, LIVENAVT=0;
-function goLive(i){ LIVEIDX=((i%LIVE.length)+LIVE.length)%LIVE.length; renderLive(); go('live') }
+var LIVEIDX=0, LIVENAVT=0, FEED=null, FEEDPOS=0, FEEDCC=null;
+function buildFeed(start, cc){
+  var order=[], i;
+  if(cc){
+    var mine=[], rest=[];
+    for(i=0;i<LIVE.length;i++){ (LIVE[i].c===cc?mine:rest).push(i) }
+    var k=mine.indexOf(start); if(k>0) mine=mine.slice(k).concat(mine.slice(0,k));
+    order=mine.concat(rest);
+  } else {
+    for(i=0;i<LIVE.length;i++) order.push((start+i)%LIVE.length);
+  }
+  return order;
+}
+function goLive(i, cc){ FEEDCC=cc||null; FEED=buildFeed(((i%LIVE.length)+LIVE.length)%LIVE.length, FEEDCC); FEEDPOS=0; LIVEIDX=FEED[0]; renderLive(); go('live') }
+function liveStep(d){ if(!FEED){ FEED=buildFeed(LIVEIDX,FEEDCC); FEEDPOS=0 } FEEDPOS=(((FEEDPOS+d)%FEED.length)+FEED.length)%FEED.length; LIVEIDX=FEED[FEEDPOS]; renderLive() }
 function liveCountryName(c){ for(var i=0;i<WORLD.length;i++) if(WORLD[i].c===c) return WORLD[i].n; return c }
 function liveToCountry(){ var v=LIVE[LIVEIDX]; for(var i=0;i<WORLD.length;i++) if(WORLD[i].c===v.c){ SELCH=WORLD[i]; break } reopen('country') }
 function renderLive(){
   var scr=document.getElementById('s-live'); if(!scr) return;
+  if(!FEED){ FEED=buildFeed(LIVEIDX,null); FEEDPOS=0 }
   var v=LIVE[LIVEIDX], cn=liveCountryName(v.c), demo=(LIVEIDX===0);
+  var ctr;
+  if(FEEDCC && v.c===FEEDCC){
+    var mine=[]; for(var mi=0;mi<FEED.length;mi++) if(LIVE[FEED[mi]].c===FEEDCC) mine.push(FEED[mi]);
+    ctr=(mine.indexOf(LIVEIDX)+1)+'/'+mine.length;
+  } else { ctr=(FEEDPOS+1)+'/'+FEED.length }
   var chevU='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M6 15l6-6 6 6"/></svg>';
   var chevD='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M6 9l6 6 6-6"/></svg>';
   var navBtn='background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.18);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
@@ -685,9 +704,9 @@ function renderLive(){
   +'<span style="font-family:var(--fd);font-size:9px;letter-spacing:.12em;font-weight:700;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 9px">PREVIEW</span></div>'
   +'<div style="position:absolute;top:104px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px);line-height:1.5">Preview film &mdash; real broadcasts begin as founding sellers go on air. Live is a founding-seller privilege.</div>'
   +'<div style="position:absolute;right:10px;top:44%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:9px">'
-  +'<button style="'+navBtn+'" onclick="goLive(LIVEIDX-1)">'+chevU+'</button>'
-  +'<span style="font-family:var(--fd);font-size:9px;letter-spacing:.08em;color:#b9b9c2">'+(LIVEIDX+1)+'/'+LIVE.length+'</span>'
-  +'<button style="'+navBtn+'" onclick="goLive(LIVEIDX+1)">'+chevD+'</button></div>'
+  +'<button style="'+navBtn+'" onclick="liveStep(-1)">'+chevU+'</button>'
+  +'<span style="font-family:var(--fd);font-size:9px;letter-spacing:.08em;color:#b9b9c2">'+ctr+'</span>'
+  +'<button style="'+navBtn+'" onclick="liveStep(1)">'+chevD+'</button></div>'
   +'<div style="position:absolute;left:16px;right:96px;bottom:'+(demo?'168':'120')+'px;z-index:5;display:flex;flex-direction:column;gap:7px" id="livemeta">'
   +'<button onclick="liveToCountry()" style="display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 12px 5px 6px;color:#fff;align-self:flex-start;backdrop-filter:blur(6px)"><span style="display:flex;width:18px;height:18px;border-radius:50%;overflow:hidden;align-items:center;justify-content:center">'+flag(v.c)+'</span><span style="font-family:var(--fd);font-size:10.5px;font-weight:600;letter-spacing:.04em">'+cn+'</span></button>'
   +'<div class="serif" style="font-size:23px;line-height:1.12;text-shadow:0 1px 10px rgba(0,0,0,.65)">'+v.t+'</div>'
@@ -704,7 +723,7 @@ function renderLive(){
   if(!scr.__nav){ scr.__nav=1;
     var y0=null;
     scr.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY },{passive:true});
-    scr.addEventListener('touchend',function(e){ if(y0===null) return; var dy=e.changedTouches[0].clientY-y0; y0=null; if(Math.abs(dy)>60) goLive(LIVEIDX+(dy<0?1:-1)) },{passive:true});
+    scr.addEventListener('touchend',function(e){ if(y0===null) return; var dy=e.changedTouches[0].clientY-y0; y0=null; if(Math.abs(dy)>60) liveStep(dy<0?1:-1) },{passive:true});
   }
   var vid=document.getElementById('livevid'); if(vid){ var pp=vid.play(); if(pp&&pp.catch) pp.catch(function(){}) }
 }
