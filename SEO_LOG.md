@@ -57,7 +57,7 @@ Backlog item 22 (cultureHints) is now down to only the 4 already-researched-and-
 
 **Edit made: `app/legal/seller-rules/page.tsx` only** (title text + an explanatory comment; description, canonical, robots, JSON-LD, and every other file left untouched).
 
-**Push:** attempted `git push` through the local proxy remote first (matches the working method from the 2026-07-14 13:18 UTC run, commit `8ec016f`) -- [PUSH_RESULT_PLACEHOLDER]
+**Push:** `git push` through the local proxy remote returned a plain `403` with no body, same as several recent runs (not the `api.github.com` "use add_repo" message -- a different block, at the proxy layer). Swapped to the documented workaround: `git remote set-url origin` to `https://x-access-token:<PAT>@github.com/BILSY144/velor-marketplace.git` and pushed directly to github.com over HTTPS -- succeeded immediately (`8ec016f..40de6bf main -> main`). Confirmed, not assumed: reset the remote back to the plain HTTPS URL (no token left in `git remote -v` output) and ran `git fetch origin main` + `git rev-list --count HEAD..origin/main` (0) + `git rev-list --count origin/main..HEAD` (0) both directions, and `git log -1 --oneline origin/main` shows `40de6bf` -- this run's commit -- as the real remote HEAD. Vercel deployment Ready/Error status not independently checked from this sandbox (no outbound access beyond GitHub) -- per this log's own 2026-07-12 rule, Vercel emails William directly on any deployment failure, so this is not being claimed as verified Ready.
 
 **Backlog edit:** added new item 24 (the `/seller-agreement` vs `/legal/seller-agreement` duplicate-content flag) above; no existing item's status line changed.
 
