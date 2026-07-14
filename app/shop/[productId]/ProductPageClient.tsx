@@ -242,7 +242,7 @@ export default function ProductPageClient() {
                   flexShrink: 0,
                 }}
               >
-                <img src={img} alt='' style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src={img} alt={`${product.title} — photo ${i + 1} of ${images.length}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
             ))}
           </div>
