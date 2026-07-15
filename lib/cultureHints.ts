@@ -257,7 +257,45 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // as-is (pearls are not a restricted material under this file's rules).
   BH: ['Pearl jewellery', "A'ali hand-thrown pottery", 'Al-Sadu woven textiles', 'Palm-frond basketware', 'Al-Naqda gold & silver-thread embroidery', 'Hand-built model dhows'],
   TW: ['High-mountain oolong', 'Ceramics'],
-  HK: ['Tea ware'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- backlog item 25's
+  // content-depth project, floor-of-1 list, next entry after Bahrain.
+  // Hong Kong had only 1 item ('Tea ware', kept as-is). Five product-level
+  // additions, each corroborated across at least two independent,
+  // Hong-Kong-specific sources: Hand-carved mahjong tiles (144-tile sets,
+  // cut/sanded/carved/hand-painted by artisans; officially inscribed on
+  // Hong Kong's own Intangible Cultural Heritage list in 2014 per Cathay
+  // Pacific's ICH feature) are documented by Time Out HK ("Disappearing
+  // trades and crafts", Biu Kee Mahjong in Jordan), Wanderlust magazine's
+  // "Handmade Hong Kong" feature, and Cathay Pacific's ICH article, which
+  // also confirms modern tiles are carved from acrylic resin, not
+  // bone/ivory -- historic material deliberately not used in this entry
+  // per this file's own restricted-material rule. Handwoven bamboo
+  // birdcages (bamboo soaked, shaved, bent and moulded by hand, then
+  // nailed together, a process that can take months) are documented by
+  // Time Out HK, China Daily, Xinhua, and SCMP, all covering Chan Lok-choi
+  // of Choi Kee, described as Hong Kong's last remaining birdcage maker --
+  // four independent outlets covering the same living craft. Hand-painted
+  // Cantonese porcelain (Guangcai ware -- overglaze enamel painting of
+  // birds, flowers and figures onto white porcelain blanks, then kiln-
+  // fired) is documented by SCMP (multiple features, including on Yuet
+  // Tung China Works, described as Hong Kong's last hand-painted porcelain
+  // factory), VOA News, and Xinhua, and the technique itself is on Hong
+  // Kong's official Intangible Cultural Heritage Inventory as "Guangcai
+  // (Canton Famille Rose Porcelain) Making Technique" per icho.hk, the
+  // government's own ICH register -- the strongest sourcing tier used in
+  // this file. Embroidered silk slippers (dragon, phoenix and floral
+  // motifs, hand-stitched, historically taking months per pair) are
+  // documented by SCMP (multiple features on Sindart, a Jordan-district
+  // shop founded 1958, now run by third-generation owner Miru Wong) and
+  // Wanderlust magazine's "Handmade Hong Kong" feature -- kept as silk
+  // embroidery, a permitted material under this file's rules. Jade
+  // carvings & jewellery (centred on the Jade Market / Jade Street in Yau
+  // Ma Tei, a dedicated jade-trading market distinct from mainland China's
+  // own jade trade already reflected in the CN entry above) is documented
+  // by the Hong Kong Tourism Board's own Jade Market listing plus
+  // independent travel-guide coverage (Hong Kong Traveller, Next Stop Hong
+  // Kong). No shell/ivory/coral/bone material in any of the five.
+  HK: ['Tea ware', 'Hand-carved mahjong tiles', 'Handwoven bamboo birdcages', 'Hand-painted Cantonese porcelain', 'Embroidered silk slippers', 'Jade carvings & jewellery'],
   SG: ['Kaya & pantry', 'Peranakan ceramics'],
   MO: ['Macau almond cookies', 'Portuguese-style egg tarts'],
   BN: ['Woven songket'],
