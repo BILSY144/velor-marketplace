@@ -22,12 +22,14 @@ interface ShippingProfile {
   name: string; company: string; street1: string; street2: string;
   city: string; state: string; zip: string; country: string;
   phone: string; email: string; handlingDays: number;
+  handlingFeeGBP: number;
 }
 
 const empty: ShippingProfile = {
   name: '', company: '', street1: '', street2: '',
   city: '', state: '', zip: '', country: 'GB',
   phone: '', email: '', handlingDays: 1,
+  handlingFeeGBP: 0,
 }
 
 export default function ShippingSettingsPage() {
@@ -54,6 +56,7 @@ export default function ShippingSettingsPage() {
             phone: d.profile.phone ?? '',
             email: d.profile.email ?? '',
             handlingDays: d.profile.handlingDays ?? 1,
+            handlingFeeGBP: d.profile.handlingFeeGBP ?? 0,
           })
         }
       })
@@ -176,12 +179,26 @@ export default function ShippingSettingsPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: '200px' }}>
-          <label style={labelStyle}>Handling Time (days)</label>
-          <input style={inputStyle} type="number" min={0} max={30}
-            value={form.handlingDays}
-            onChange={e => set('handlingDays', parseInt(e.target.value, 10) || 0)}
-          />
+        <div style={row2}>
+          <div>
+            <label style={labelStyle}>Handling Time (days)</label>
+            <input style={inputStyle} type="number" min={0} max={30}
+              value={form.handlingDays}
+              onChange={e => set('handlingDays', parseInt(e.target.value, 10) || 0)}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Shipping Buffer (£, optional)</label>
+            <input style={inputStyle} type="number" min={0} max={25} step={0.5}
+              value={form.handlingFeeGBP}
+              onChange={e => set('handlingFeeGBP', Math.min(Math.max(parseFloat(e.target.value) || 0, 0), 25))}
+            />
+            <p style={{ color: 'var(--muted)', fontSize: '12px', margin: '6px 0 0', lineHeight: 1.5 }}>
+              Added to every carrier quote your buyers see. Covers packaging and small
+              rate changes between quote and label purchase — you receive it in full
+              with your payout. Max £25.
+            </p>
+          </div>
         </div>
 
         {error && (

@@ -4,6 +4,7 @@ import {
   createShippoShipment, buildParcelFromItems, sortRatesGlobal,
   ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
+import { convert } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
         })
 
         const sorted = sortRatesGlobal(shipment.rates || [])
-        const mapped: Rate[] = sorted.slice(0, 6).map(r => ({
+        let mapped: Rate[] = sorted.slice(0, 6).map(r => ({
           rateId: r.object_id,
           carrier: r.provider || 'Carrier',
           service: r.servicelevel?.name || 'Standard',
@@ -200,6 +201,21 @@ export async function POST(request: NextRequest) {
           isDDP: isInternational,
           isFallback: false,
         }))
+
+        // Seller's optional shipping buffer (packaging + rate-drift cover,
+        // set in Settings -> Shipping, clamped 0-25 at write time and again
+        // here). Added to every real quote so the amount the buyer pays is
+        // the amount the seller actually receives for shipping -- shipping
+        // passes through to the seller commission-free (see payment-intent).
+        // Never added to fallback quote-required placeholders.
+        const bufferGBP = Math.min(Math.max(Number(p.handlingFeeGBP) || 0, 0), 25)
+        if (bufferGBP > 0 && mapped.length) {
+          mapped = await Promise.all(mapped.map(async (rate) => {
+            const cur = (rate.currency || 'GBP').toUpperCase()
+            const fee = cur === 'GBP' ? bufferGBP : await convert(bufferGBP, 'GBP', cur)
+            return { ...rate, amount: (parseFloat(rate.amount) + fee).toFixed(2) }
+          }))
+        }
 
         result.push({
           sellerId,

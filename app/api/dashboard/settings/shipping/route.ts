@@ -41,6 +41,11 @@ export async function POST(request: NextRequest) {
     if (!name || !street1 || !city || !zip || !country) {
       return NextResponse.json({ error: 'Missing required fields: name, street1, city, zip, country' }, { status: 400 })
     }
+    // Optional shipping buffer: a flat GBP amount added to every carrier
+    // quote shown to buyers (packaging + rate-drift cover). Clamped 0-25
+    // server-side so it can never be abused as a hidden price hike.
+    const rawFee = Number(body.handlingFeeGBP)
+    const handlingFeeGBP = Number.isFinite(rawFee) ? Math.min(Math.max(rawFee, 0), 25) : 0
     const profile = await prisma.sellerShippingProfile.upsert({
       where: { sellerId: seller.id },
       create: {
@@ -50,6 +55,7 @@ export async function POST(request: NextRequest) {
         city, state: state || null,
         zip, country: country || 'GB',
         phone: phone || null,
+        handlingFeeGBP,
       },
       update: {
         name, company: company || null,
@@ -57,6 +63,7 @@ export async function POST(request: NextRequest) {
         city, state: state || null,
         zip, country: country || 'GB',
         phone: phone || null,
+        handlingFeeGBP,
       },
     })
     return NextResponse.json({ profile })

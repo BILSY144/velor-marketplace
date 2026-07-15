@@ -162,6 +162,10 @@ model SellerShippingProfile {
   zip       String
   country   String
   phone     String?
+  // Optional flat buffer (GBP) the seller adds on top of every live carrier
+  // quote -- covers packaging materials and rate drift between quote time and
+  // label purchase. Added server-side in app/api/shipping/rates; capped at 25.
+  handlingFeeGBP Float @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
