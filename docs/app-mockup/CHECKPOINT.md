@@ -2,6 +2,23 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Passport newest-first; Opening Bell wired live
+
+- Passport grid: stamped countries always sort to the top, newest first
+  (earned -> EN ROUTE -> grey). Commit 8396cba.
+- Opening Bell (notif) is now real: FOLLOWS model, Follow buttons on
+  country dives + craft pages genuinely toggle (state-aware label
+  "Following · bell set"). YOUR BELLS lists followed countries (Watch
+  previews -> country-scoped live feed when films exist, else Visit) and
+  placed orders (Track it -> filtered orders). Honest zero-state
+  ("Quiet. That's the point."). The three vision cards stay under
+  "WHAT THE BELL SOUNDS LIKE · SAMPLE" -- fabricated "Studio Kaede"
+  seller removed. Bell badges start hidden at 0 (were hardcoded 3) and
+  count follows+orders live.
+- Verified live: zero state -> follow TR+GT + place order -> 4 bells,
+  badge 4, newest follow on top.
+- Commit c4482f9.
+
 ## 2026-07-15: Stamps deep-link to country-filtered orders
 
 - William: pressing a stamp shows ALL orders from that country. Earned +
