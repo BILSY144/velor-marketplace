@@ -592,7 +592,33 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   KM: ['Ylang-ylang perfume oil', 'Vanilla'],
   CM: ['Coffee', 'Beadwork'],
   CD: ['Coffee', 'Raffia textiles'],
-  GA: ['Mbigou stone carvings'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- continuing backlog
+  // item 25's content-depth floor list. Kept the existing 'Mbigou stone
+  // carvings' entry (Mbigou steatite/soapstone carving) untouched. Three
+  // new product-level items, each verified across multiple independent,
+  // authoritative sources, no single-source or AI-content-farm result
+  // carried forward: Punu masks (white-kaolin-faced ceremonial masks of
+  // the Punu people, southern Gabon) have their own dedicated Wikipedia
+  // article ("Punu-Lumbo mask") and a Smarthistory feature, and are
+  // currently carved and sold as a living tradition today, confirmed by
+  // multiple independent, currently-listed commercial galleries (Hemingway
+  // Gallery NYC, Beads of Paradise NYC, french-nc.com) alongside cultural
+  // festival appearances noted by gabon-tourisme.com. Kota reliquary
+  // figures / mbulu ngulu (mirror-and-metal-faced guardian figures of the
+  // Kota people, made from wood and copper/brass alloy -- no restricted
+  // material) are independently documented by Smarthistory, Britannica,
+  // Khan Academy, the Met Museum and the Art Institute of Chicago, and are
+  // still carved and sold today at Libreville galleries per
+  // gabon-tourisme.com and current commercial listings (Jacaranda Tribal,
+  // The Maasai Market). Ngombi harps (the arched wooden harp, hide
+  // soundboard membrane, used by the Beti Ngombi in Bwiti ceremonies) are
+  // documented by Wikipedia ("Ngombi", "Bwiti") and the Smithsonian's
+  // National Museum of African Art collection; Bwiti is described by
+  // Wikipedia as "one of Gabon's official traditions," a living practice,
+  // and hand-carved ngombi harps are currently made and sold today per
+  // multiple live listings (Etsy, eBay, PicClick). No ivory/coral/shell
+  // material in anything added, no weapons, no raw-material-only entries.
+  GA: ['Mbigou stone carvings', 'Punu masks', 'Kota reliquary figures (mbulu ngulu)', 'Ngombi harps (Bwiti ceremonial harp)'],
   SD: ['Hibiscus & spices'],
   MR: ['Tuareg silver jewellery', 'Malahfa embroidered textiles'],
   DZ: ['Berber rugs', 'Dates'],
