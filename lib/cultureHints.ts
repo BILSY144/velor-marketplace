@@ -514,7 +514,40 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   ZA: ['Zulu baskets', 'Rooibos tea', 'Beadwork'],
   ZW: ['Shona stone sculpture', 'Baskets'],
   ZM: ['Emerald jewellery', 'Tonga baskets'],
-  BW: ['Woven baskets'],
+  // Expanded by the standing SEO agent, 2026-07-15 (backlog item 25, next
+  // country on the floor-of-1 priority list after Sierra Leone). Kept the
+  // existing 'Woven baskets' entry untouched (not re-verified or renamed
+  // this run). Added two new product-level items, each corroborated across
+  // at least two independent sources: Hand-thrown pottery (Thamaga & Gabane)
+  // -- sokarilondon.co.uk names Thamaga, Gabane, Molepolole and Gaborone as
+  // the country's pottery centres, kaolin-clay, oxide-painted, "old
+  // knowledge in new hands"; independently corroborated by a Nircle feature
+  // on Thamaga Pottery specifically (founded 1985, staffed by local women
+  // "trained from scratch," a nationally recognised working studio with an
+  // on-site shop, still operating today) and by botswana.co.za's country
+  // guide naming Thamaga/Molepolole/Kanye/Gaborone as active commercial
+  // pottery centres today. Hand-tanned leather goods (San & Tswana
+  // leatherwork) -- botswanacraft.com's San Crafts page describes San
+  // artisans making carrying bags, dancing skirts and loin aprons for sale
+  // today ("increased production and sale... provides a crucial source of
+  // cash income"); independently corroborated by Brighton & Hove Museums'
+  // "Making Botswana: Leatherwork" (a living craft, named contemporary
+  // leathersmith Edwin Keipedile, an annual leatherwork exhibition at the
+  // National Museum of Botswana) and by botswana.co.za confirming Bushman
+  // leather goods are sold at cooperative outlets countrywide. Deliberately
+  // NOT added, researched and rejected: San ostrich-eggshell bead jewellery
+  // -- well-corroborated as a real, currently-sold craft (botswanacraft.com,
+  // botswana.co.za, womensworkbw.com) but excluded under this file's own
+  // header rule against shell as a restricted material, applying the exact
+  // same literal-reading precedent this file already used to exclude
+  // Maldivian coconut-shell items even though that shell was botanical, not
+  // animal (see the Maldives entry's own comment) -- staying unambiguous
+  // with the rule as written rather than deciding eggshell is an exception.
+  // Also not added: San hunting equipment (bows, spears, "love bows") and
+  // quiver bags -- weapons/weapon-adjacent, excluded per this file's
+  // no-weapons rule, the same call already applied to Kazakhstan's kamcha
+  // and Benin's récade. No ivory/coral/bone material in either item added.
+  BW: ['Woven baskets', 'Hand-thrown pottery (Thamaga & Gabane)', 'Hand-tanned leather goods (San & Tswana leatherwork)'],
   NA: ['Karakul wool weaving'],
   LS: ['Basotho blankets', 'Mokorotlo woven hats'],
   SZ: ['Ngwenya recycled glassware', 'Sisal woven baskets'],
