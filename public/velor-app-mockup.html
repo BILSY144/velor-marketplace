@@ -1935,14 +1935,85 @@ S.payouts='<div class="scr" id="s-payouts"><div class="sc" style="padding-bottom
 
 /* ===== GO LIVE ===== */
 S.golive='<div class="scr" id="s-golive" style="background:#000">'
-+'<video src="'+LIVE[2].src+'" muted loop playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>'
++'<video src="'+LIVE[27].src+'" muted loop playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>'
 +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 30%,rgba(0,0,0,.85))"></div>'
-+'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="go(\'dash\')">'+I.back+'</button>'
++'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:6" onclick="glEndAll();go(\'dash\')">'+I.back+'</button>'
+/* ---- phase 1: camera check ---- */
++'<div id="glpre">'
 +'<div style="position:absolute;top:58px;right:16px;z-index:5"><span style="font-family:var(--fd);font-size:9px;letter-spacing:.12em;font-weight:700;color:var(--accent);background:rgba(0,0,0,.5);border:1px solid rgba(255,107,0,.5);border-radius:6px;padding:5px 9px">CAMERA CHECK</span></div>'
-+'<div class="golivecard"><div class="k d">BROADCAST TITLE</div><div class="fd" style="font-size:15px;font-weight:600;margin-top:8px">Morning firing — raku, from the kiln</div><div style="height:1px;background:var(--line);margin:13px 0"></div><div class="k d">PINNED LISTINGS</div><div class="flow" style="margin-top:9px"><span class="pill on">Kuro raku bowl · &pound;68</span><span class="pill on">Sake set · &pound;84</span><span class="pill">+ Add</span></div></div>'
-+'<div style="position:absolute;left:16px;right:16px;bottom:56px;z-index:5"><button class="btn" onclick="toast(\'You&rsquo;re live — followers get the bell\')">Go live</button></div>'
-+'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air.</div>'
++'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air. Preview uses a sample film.</div>'
++'<div class="golivecard"><div class="k d">BROADCAST TITLE</div><div class="fd" contenteditable="true" spellcheck="false" style="font-size:15px;font-weight:600;margin-top:8px;outline:none">Morning firing — raku, from the kiln</div><div style="height:1px;background:var(--line);margin:13px 0"></div><div class="k d">PINNED LISTINGS</div><div class="flow" id="glpins" style="margin-top:9px"><span class="pill on">Kuro raku bowl · &pound;68</span><span class="pill on">Sake set · &pound;84</span><button class="pill" onclick="glAddPin()">+ Add</button></div></div>'
++'<div style="position:absolute;left:16px;right:16px;bottom:56px;z-index:5"><button class="btn" onclick="glStart()">Go live</button></div>'
 +'</div>'
+/* ---- phase 2: on air ---- */
++'<div id="glon" style="display:none">'
++'<div style="position:absolute;top:58px;right:16px;z-index:5;display:flex;gap:7px;align-items:center"><span class="glchip" style="color:#ff4d4d;border-color:rgba(255,77,77,.55)"><span class="reddot"></span>LIVE <span id="gltime">0:00</span></span><span class="glchip" style="color:var(--mut)"><span id="glviewers">0</span> watching &middot; SIMULATED</span></div>'
++'<div id="glchat" style="position:absolute;left:16px;right:96px;bottom:170px;z-index:5;display:flex;flex-direction:column;gap:7px"></div>'
++'<div style="position:absolute;left:16px;right:16px;bottom:104px;z-index:5"><div class="glpinned"><img src="'+px(14705063)+'"><div style="flex:1;min-width:0"><div class="fd" style="font-size:12.5px;font-weight:600">Kuro raku tea bowl</div><div class="sm dim">Pinned &middot; buyers tap to buy &middot; <span id="glsales" style="color:var(--accent)">&pound;0 sold</span></div></div></div></div>'
++'<div style="position:absolute;left:16px;right:16px;bottom:44px;z-index:5"><button class="btn" style="background:#c62828" onclick="glEnd()">End stream</button></div>'
++'</div>'
+/* ---- phase 3: summary ---- */
++'<div id="glsum" style="display:none;position:absolute;inset:0;z-index:7;background:rgba(5,5,8,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px">'
++'<div style="width:100%"><div class="k d" style="text-align:center">STREAM ENDED &middot; SIMULATED PREVIEW</div>'
++'<h2 class="dspl" style="font-size:26px;text-align:center;margin-top:10px">That&rsquo;s a wrap.</h2>'
++'<div class="sstats" style="margin-top:22px"><div class="sstat"><div class="sv serif" id="gsDur">0:00</div><div class="sl">ON AIR</div></div><div class="sstat"><div class="sv serif" id="gsPeak">0</div><div class="sl">PEAK VIEWERS</div></div><div class="sstat"><div class="sv serif" id="gsSales">&pound;0</div><div class="sl">SOLD</div></div></div>'
++'<p class="sm dim" style="text-align:center;margin-top:14px" id="gsFollows">+0 new followers will hear your next opening bell.</p>'
++'<button class="btn" style="margin-top:22px" onclick="glEndAll();go(\'dash\')">Back to dashboard</button>'
++'<button class="btn ghost" style="margin-top:9px" onclick="glReset()">Set up another stream</button></div>'
++'</div>'
++'</div>'
+/* Go-live demo state: timer, simulated viewers/chat/sales — all clearly
+   labelled SIMULATED. Buyer-facing pages never show fake counts (CAP/ASA);
+   this is the seller's own preview flow. */
+var GL={on:false,t0:0,timer:null,viewers:0,peak:0,sales:0,chatI:0};
+var GLCHAT=[['Mara','That glaze is unreal'],['Kenji','Is the sake set food-safe?'],['Ana','Just bought a bowl — cannot wait'],['Tom','How long does one firing take?'],['Yuki','The kiln shot was amazing'],['Priya','Do you ship to India?']];
+function glAddPin(){ var pins=document.getElementById('glpins'); if(!pins) return; var b=document.createElement('span'); b.className='pill on'; b.innerHTML='Matcha whisk · &pound;52'; pins.insertBefore(b,pins.lastElementChild); toast('Pinned — buyers see it under your stream') }
+function glStart(){
+  GL.on=true; GL.t0=Date.now(); GL.viewers=0; GL.peak=0; GL.sales=0; GL.chatI=0;
+  document.getElementById('glpre').style.display='none';
+  document.getElementById('glon').style.display='block';
+  var ch=document.getElementById('glchat'); if(ch) ch.innerHTML='';
+  var s=document.getElementById('glsales'); if(s) s.innerHTML='&pound;0 sold';
+  toast('You are live — followers get the bell');
+  GL.timer=setInterval(glTick,1000);
+}
+function glTick(){
+  if(!GL.on) return;
+  var el=Math.floor((Date.now()-GL.t0)/1000);
+  var t=document.getElementById('gltime'); if(t) t.textContent=Math.floor(el/60)+':'+('0'+el%60).slice(-2);
+  /* simulated audience: quick ramp, gentle wobble */
+  var target=Math.min(40+el*7,612);
+  GL.viewers=Math.max(0,Math.round(target+((el*13)%9)-4));
+  GL.peak=Math.max(GL.peak,GL.viewers);
+  var v=document.getElementById('glviewers'); if(v) v.textContent=GL.viewers.toLocaleString('en-GB');
+  if(el>0&&el%4===0&&GL.chatI<GLCHAT.length){ glBubble(GLCHAT[GL.chatI][0],GLCHAT[GL.chatI][1]); GL.chatI++ }
+  if(el===10||el===22){ GL.sales+=68; var s=document.getElementById('glsales'); if(s) s.innerHTML='&pound;'+GL.sales+' sold'; glBubble('Velor','Kuro raku bowl sold — held in escrow') }
+}
+function glBubble(who,msg){
+  var ch=document.getElementById('glchat'); if(!ch) return;
+  var d=document.createElement('div');
+  d.setAttribute('style','background:rgba(0,0,0,.5);backdrop-filter:blur(6px);border-radius:12px;padding:7px 11px;font-size:11.5px;line-height:1.45;color:#e8e7e3;max-width:100%');
+  d.innerHTML='<span style="font-family:var(--fd);font-weight:700;font-size:10px;color:'+(who==='Velor'?'var(--accent)':'#9c9ca7')+'">'+who+'</span>  '+msg;
+  ch.appendChild(d);
+  while(ch.childElementCount>4) ch.removeChild(ch.firstElementChild);
+}
+function glEnd(){
+  if(GL.timer) clearInterval(GL.timer); GL.on=false;
+  var el=Math.floor((Date.now()-GL.t0)/1000);
+  document.getElementById('gsDur').textContent=Math.floor(el/60)+':'+('0'+el%60).slice(-2);
+  document.getElementById('gsPeak').textContent=GL.peak.toLocaleString('en-GB');
+  document.getElementById('gsSales').innerHTML='&pound;'+GL.sales;
+  document.getElementById('gsFollows').textContent='+'+Math.max(1,Math.round(GL.peak/13))+' new followers will hear your next opening bell.';
+  document.getElementById('glon').style.display='none';
+  var sm=document.getElementById('glsum'); sm.style.display='flex';
+}
+function glReset(){
+  document.getElementById('glsum').style.display='none';
+  document.getElementById('glon').style.display='none';
+  document.getElementById('glpre').style.display='block';
+}
+function glEndAll(){ if(GL.timer) clearInterval(GL.timer); GL.on=false; glReset() }
+
 /* ================= ROUTER & BEHAVIOURS ================= */
 var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['addr','Addresses'],['pay','Payment'],['langcur','Language'],['legal','Legal'],['legaldoc','Legal doc'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['sellorders','Seller orders'],['apikeys','API keys'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
 var TABS=[['atlas','Atlas',I.globe],['live','Live',I.live],['search','Search',I.search],['cart','Basket',I.bag],['account','You',I.user]]
@@ -2277,6 +2348,11 @@ splashT=setTimeout(endSplash,2600)
 .nltext{font-size:13.5px;line-height:1.65;color:#d8d7d3;padding:10px 0 12px;border-bottom:1px solid rgba(255,255,255,.1);outline:none;margin-top:4px;min-height:40px}
 .nlrow{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px}
 .okpill{font:600 10.5px var(--fd);letter-spacing:.04em;color:var(--green);border:1px solid rgba(61,220,132,.35);border-radius:999px;padding:7px 12px}
+.glchip{display:inline-flex;align-items:center;gap:6px;font-family:var(--fd);font-size:9px;letter-spacing:.1em;font-weight:700;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 9px}
+.reddot{width:7px;height:7px;border-radius:50%;background:#ff4d4d;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.glpinned{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:10px}
+.glpinned img{width:44px;height:44px;border-radius:11px;object-fit:cover;flex:0 0 44px}
 .steps3{margin:14px 20px 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,.03)}
 .vstep{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}.vstep:last-child{border:none}
 .vn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--mut);flex:0 0 auto}
