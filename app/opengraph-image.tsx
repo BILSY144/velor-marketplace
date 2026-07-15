@@ -35,31 +35,19 @@ export default async function Image() {
           display: 'flex',
         },
       }),
+      // New 2026 brand mark already carries the GLOBAL MARKETPLACE strap,
+      // so no separate strap text line is rendered under it.
       h('img', {
-        src: 'https://velorcommerce.store/velor-logo.png',
-        width: 720,
-        height: 140,
+        src: 'https://velorcommerce.store/velor-logo-2026.png',
+        width: 810,
+        height: 270,
         style: { objectFit: 'contain' },
       }),
       h(
         'div',
         {
           style: {
-            marginTop: 44,
-            fontSize: 32,
-            color: '#b4b4b0',
-            letterSpacing: 10,
-            fontWeight: 700,
-            display: 'flex',
-          },
-        },
-        'GLOBAL MARKETPLACE'
-        ),
-      h(
-        'div',
-        {
-          style: {
-            marginTop: 18,
+            marginTop: 30,
             fontSize: 26,
             color: '#FF6B00',
             display: 'flex',

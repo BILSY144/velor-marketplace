@@ -166,7 +166,10 @@ const jsonLd = {
       // nothing else in the Organization/WebSite graph touched, and the
       // header/footer's own <img> logo (still velor-logo-globe-v2.png,
       // correctly sized for that 28-34px UI use) is untouched.
-      logo: 'https://velorcommerce.store/velor-logo.png',
+      // Swapped to the 2026 brand mark (William, 2026-07-15). 900x300px
+      // (confirmed via ImageMagick identify at creation), comfortably above
+      // Google's 112x112 minimum in both dimensions.
+      logo: 'https://velorcommerce.store/velor-logo-2026.png',
       // areaServed added by the standing SEO agent, 2026-07-13 (third pass) --
       // "Worldwide"/"global marketplace" is an already-established, verified
       // live claim repeated across the codebase, not a new assertion:
