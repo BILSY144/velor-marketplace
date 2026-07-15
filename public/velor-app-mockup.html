@@ -581,7 +581,7 @@ S.atlas =
 +'<div class="chrome"><img class="wm" src="'+LOGO+'" alt="VELOR">'
 +'<div style="display:flex;gap:9px"><button class="gbtn" onclick="go(\'search\')">'+I.search+'</button>'
 +'<button class="gbtn" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'
-+'<button class="gbtn" onclick="go(\'notif\')">'+I.bell+'<span class="gdot">3</span></button>'
++'<button class="gbtn" onclick="go(\'notif\')">'+I.bell+'<span class="gdot" style="display:none">0</span></button>'
 +'</div></div>'
 +'<div class="atlas-hero"><h1>Shop <em id="heroword">the world</em></h1></div>'
 +'<div class="atlas-hint" id="ahint">Drag anywhere &middot; tap a light &middot; double-tap to zoom</div>'+'<button class="gseg gswap" id="gseg" onclick="toggleGlobeMode()"><span class="gpv ink" id="gpv"></span></button>'+'<div class="pickpop" id="pickpop"></div>'+'<div class="idx" id="idx" onclick="if(event.target===this)closeIndex()"><div class="idx-panel"><div class="idx-grip"></div><div class="idx-h">Every channel, A&ndash;Z</div>'+'<div class="searchbar" style="margin:12px 20px 0"><span class="si">'+I.search+'</span><input placeholder="Type your country" oninput="filterIdx(this.value)"></div>'+'<div class="idx-list" id="idxlist"></div></div></div>'
@@ -652,7 +652,7 @@ function countryScreen(){
   +'<h2 class="serif" style="font-size:29px;margin-top:12px;line-height:1.1">Open '+c.n+'&rsquo;s<br>channel.</h2>'
   +'<p class="sm mut" style="margin-top:12px;max-width:32ch">Nobody sells from '+c.n+' yet. Its first verified seller keeps the founding badge, Pro free for life, and live broadcasting for life &mdash; and is credited as the seller who opened it.</p>'
   +'<button class="btn" style="margin-top:18px" onclick="go(\'apply\')">Claim the founding seat</button>'
-  +'<button class="btn ghost sm" style="margin-top:9px" onclick="toast(\'You&rsquo;ll get '+c.n+'&rsquo;s opening bell\')">Follow '+c.n+'</button></div></div>'
+  +'<button class="btn ghost sm" style="margin-top:9px" onclick="follow(\''+c.c+'\')">'+(isFollowed(c.c)?'Following '+c.n+' &middot; bell set':'Follow '+c.n)+'</button></div></div>'
   /* ---- passport tie-in ---- */
   +'<div class="pad"><button class="passtie" onclick="go(\'passport\')"><span class="pt-stamp"><span class="fl">'+flag(c.c)+'</span></span><div style="flex:1;text-align:left"><div class="fd" style="font-size:13px;font-weight:600">Earn the '+c.n+' stamp</div><div class="sm dim">Buy from here and '+c.n+' joins your Passport on delivery.</div></div>'+I.arrow.replace('<svg','<svg style="width:16px;height:16px;stroke:var(--mut);fill:none;stroke-width:2"')+'</button></div>'
   /* ---- nearby ---- */
@@ -755,7 +755,7 @@ function craftScreen(){
   +'<div class="pad"><div class="k d" style="margin-top:26px">LISTINGS'+(demo?' &middot; 1 &middot; SAMPLE':'')+'</div></div>'
   +(demo
     ?'<div class="pad" style="padding-top:12px"><button style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:11px;color:inherit" onclick="go(\'pdp\')"><img src="'+px(30767475)+'" style="width:64px;height:64px;border-radius:12px;object-fit:cover"><div style="flex:1;min-width:0"><div class="fd" style="font-size:13.5px;font-weight:600">Gongfu tea set, hand-thrown</div><div class="sm dim" style="margin-top:3px">Lin Ceramics Studio &middot; Jingdezhen &middot; SAMPLE</div><div class="fd" style="font-size:14px;font-weight:700;margin-top:4px">&pound;54</div></div>'+I.arrow.replace('<svg','<svg style="width:16px;height:16px;flex:0 0 16px;stroke:var(--mut);fill:none;stroke-width:2"')+'</button></div>'
-    :'<div class="pad" style="padding-top:12px"><div style="border:1px dashed var(--line);border-radius:16px;padding:22px 18px;text-align:center;background:var(--ink)"><div class="fd" style="font-size:13.5px;font-weight:600">No '+x.n.toLowerCase()+' listed from '+cn+' yet</div><div class="sm dim" style="margin-top:7px;line-height:1.5">The seller who opens '+cn+'&rsquo;s channel puts it on the map. Its first verified seller keeps the founding badge, Pro free for life, and live broadcasting for life.</div><button class="btn sm" style="margin-top:14px" onclick="go(\'apply\')">Claim the founding seat</button><button class="btn ghost sm" style="margin-top:8px" onclick="toast(\'You&rsquo;ll get the opening bell\')">Follow '+cn+'</button></div></div>')
+    :'<div class="pad" style="padding-top:12px"><div style="border:1px dashed var(--line);border-radius:16px;padding:22px 18px;text-align:center;background:var(--ink)"><div class="fd" style="font-size:13.5px;font-weight:600">No '+x.n.toLowerCase()+' listed from '+cn+' yet</div><div class="sm dim" style="margin-top:7px;line-height:1.5">The seller who opens '+cn+'&rsquo;s channel puts it on the map. Its first verified seller keeps the founding badge, Pro free for life, and live broadcasting for life.</div><button class="btn sm" style="margin-top:14px" onclick="go(\'apply\')">Claim the founding seat</button><button class="btn ghost sm" style="margin-top:8px" onclick="follow(\''+x.c+'\')">'+(isFollowed(x.c)?'Following &middot; bell set':'Follow '+cn)+'</button></div></div>')
   +(rail.length?'<div class="pad"><div class="k d" style="margin-top:28px">MORE FROM '+cn.toUpperCase()+'</div></div>'
     +'<div class="hrail" style="padding-top:12px">'+rail.map(function(r){ return r.url
       ?'<button class="hcard sm" onclick="goCraft(\''+x.c+'\',\''+craftEnc(r.n)+'\')"><img src="'+r.url+'"><div class="g"></div><div class="m"><div class="t">'+r.n+'</div></div></button>'
@@ -1131,6 +1131,7 @@ function renderConfirm(){
       ORDERS.push({num:'VLR-'+(8241+ix),seller:sn,c:g.c,title:first.t+(g.items.length>1?' +'+(g.items.length-1)+' more':''),img:g.img,stage:0,foot:'Seller preparing your parcel &middot; usually ships in 2 days'});
     });
     CART.length=0; cartN=0; renderTabs(cur);
+    bellBadge();
   }
 }
 
@@ -1295,13 +1296,51 @@ function renderPassport(){
 }
 
 /* ===== NOTIFICATIONS ===== */
-S.notif='<div class="scr" id="s-notif"><div class="sc" style="padding-bottom:120px">'
-+'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'atlas\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">The opening bell</h1></div>'
-+'<div class="ncard hot"><span class="nfl">'+flag('JP')+'</span><div class="nc"><div class="nt">Japan just opened</div><div class="ns">Studio Kaede is Japan&rsquo;s founding seller — 12 listings live now.</div><button class="nb" onclick="showChannel(getCH(\'JP\'));go(\'country\')">Visit the channel</button></div></div>'
-+'<div class="ncard"><span class="nfl">'+flag('CN')+'</span><div class="nc"><div class="nt">Live in 15 minutes</div><div class="ns">Lin Ceramics — Throwing the tea set, from the wheel.</div><button class="nb line" onclick="go(\'live\')">Set a reminder</button></div></div>'
-+'<div class="ncard"><span class="nfl" style="background:rgba(61,220,132,.12);color:var(--green);font-size:16px;display:flex;align-items:center;justify-content:center">'+I.bag+'</span><div class="nc"><div class="nt">VLR-8241 is out for delivery</div><div class="ns">Your Gongfu tea set arrives today. The stamp is ready.</div></div></div>'
-+'<div class="pad"><p class="sm dim" style="margin-top:16px;text-align:center">Quiet by default — Velor only speaks when something is genuinely yours: an order, a follow, an opening bell.</p></div>'
-+'</div></div>'
+S.notif='<div class="scr" id="s-notif"><div class="sc" id="notifslot" style="padding-bottom:120px"></div></div>'
+
+/* ===== OPENING BELL — notifications. Real follows + real session orders
+   on top; the three vision cards stay below, labelled SAMPLE. ===== */
+var FOLLOWS=[];
+function isFollowed(cc){ return FOLLOWS.indexOf(cc)>=0 }
+function follow(cc){
+  var i=FOLLOWS.indexOf(cc);
+  if(i>=0){ FOLLOWS.splice(i,1); toast('Unfollowed '+liveCountryName(cc)) }
+  else { FOLLOWS.unshift(cc); toast('Following '+liveCountryName(cc)+' — you&rsquo;ll hear its opening bell') }
+  bellBadge();
+  if(cur==='country') reopen('country');
+  if(cur==='craft') reopen('craft');
+  if(cur==='notif') renderNotif();
+}
+function bellBadge(){
+  var n=FOLLOWS.length+ORDERS.length;
+  document.querySelectorAll('.gdot').forEach(function(d){ d.textContent=n; d.style.display=n?'':'none' });
+}
+function renderNotif(){
+  var host=document.getElementById('notifslot'); if(!host) return;
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'atlas\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">The opening bell</h1></div>';
+  if(!FOLLOWS.length&&!ORDERS.length){
+    h+='<div class="empty" style="margin:26px 20px 0"><div class="ering">'+I.bell+'</div><h2 class="serif" style="font-size:21px;margin-top:14px">Quiet. That&rsquo;s the point.</h2><p class="sm mut" style="margin-top:9px;max-width:30ch;margin-left:auto;margin-right:auto">Follow a country and the bell rings the moment its channel opens. Order something and every step of the parcel lands here.</p><button class="btn ghost sm" style="margin-top:14px;max-width:230px;margin-left:auto;margin-right:auto" onclick="go(\'search\')">Find a country to follow</button></div>';
+  } else {
+    h+='<div class="pad"><div class="k d" style="margin-top:6px">YOUR BELLS</div></div>';
+    FOLLOWS.forEach(function(cc){
+      var cn=liveCountryName(cc);
+      var hasFilm=LIVE.some(function(v){return v.c===cc});
+      h+='<div class="ncard"><span class="nfl">'+flag(cc)+'</span><div class="nc"><div class="nt">You follow '+cn+'</div><div class="ns">'+(hasFilm?'Its founding seat is open &mdash; preview films are already playing.':'Its founding seat is open &mdash; you&rsquo;ll hear the bell the moment it rings.')+'</div>'
+      +(hasFilm?'<button class="nb line" onclick="goLive('+LIVE.map(function(v,i){return v.c===cc?i:-1}).filter(function(i){return i>=0})[0]+',\''+cc+'\')">Watch previews</button>'
+               :'<button class="nb line" onclick="SELCH=getW(\''+cc+'\');reopen(\'country\')">Visit '+cn+'</button>')
+      +'</div></div>';
+    });
+    ORDERS.forEach(function(o){
+      h+='<div class="ncard"><span class="nfl" style="background:rgba(61,220,132,.12);color:var(--green);font-size:16px;display:flex;align-items:center;justify-content:center">'+I.bag+'</span><div class="nc"><div class="nt">'+o.num+' placed</div><div class="ns">'+o.seller+' is preparing your parcel &mdash; its stamp follows the delivery.</div><button class="nb line" onclick="ordersFor(\''+o.c+'\')">Track it</button></div></div>';
+    });
+  }
+  h+='<div class="pad"><div class="k d" style="margin-top:24px">WHAT THE BELL SOUNDS LIKE &middot; SAMPLE</div></div>'
+  +'<div class="ncard hot"><span class="nfl">'+flag('JP')+'</span><div class="nc"><div class="nt">Japan just opened <span style="font-size:9px;letter-spacing:.08em;color:var(--mut);font-family:var(--fd)">SAMPLE</span></div><div class="ns">Japan&rsquo;s founding seller goes live with their first listings.</div><button class="nb" onclick="SELCH=getW(\'JP\');reopen(\'country\')">Visit the channel</button></div></div>'
+  +'<div class="ncard"><span class="nfl">'+flag('CN')+'</span><div class="nc"><div class="nt">Live in 15 minutes <span style="font-size:9px;letter-spacing:.08em;color:var(--mut);font-family:var(--fd)">SAMPLE</span></div><div class="ns">Lin Ceramics &mdash; Throwing the tea set, from the wheel.</div><button class="nb line" onclick="goLive(0)">Set a reminder</button></div></div>'
+  +'<div class="ncard"><span class="nfl" style="background:rgba(61,220,132,.12);color:var(--green);font-size:16px;display:flex;align-items:center;justify-content:center">'+I.bag+'</span><div class="nc"><div class="nt">Out for delivery <span style="font-size:9px;letter-spacing:.08em;color:var(--mut);font-family:var(--fd)">SAMPLE</span></div><div class="ns">Your parcel arrives today. The stamp is ready.</div></div></div>'
+  +'<div class="pad"><p class="sm dim" style="margin-top:16px;text-align:center">Quiet by default &mdash; Velor only speaks when something is genuinely yours: an order, a follow, an opening bell.</p></div>';
+  host.innerHTML=h;
+}
 
 /* ===== ACCOUNT ===== */
 S.account='<div class="scr" id="s-account"><div class="sc" style="padding-bottom:120px">'
@@ -1446,7 +1485,7 @@ function buildScreens(){
 buildScreens()
 document.querySelector('.vp').insertAdjacentHTML('beforeend', MENU_HTML)
 document.querySelector('.vp').insertAdjacentHTML('beforeend','<button class="gbtn menufab" id="menufab" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>')
-document.querySelector('.vp').insertAdjacentHTML('beforeend','<div class="topicons" id="topicons">'+'<button class="gbtn" onclick="go(\'search\')" aria-label="Search">'+I.search+'</button>'+'<button class="gbtn" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'+'<button class="gbtn" onclick="go(\'notif\')" aria-label="Notifications">'+I.bell+'<span class="gdot">3</span></button>'+'</div>')
+document.querySelector('.vp').insertAdjacentHTML('beforeend','<div class="topicons" id="topicons">'+'<button class="gbtn" onclick="go(\'search\')" aria-label="Search">'+I.search+'</button>'+'<button class="gbtn" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'+'<button class="gbtn" onclick="go(\'notif\')" aria-label="Notifications">'+I.bell+'<span class="gdot" style="display:none">0</span></button>'+'</div>')
 
 var cartN=2
 function toast(m){ var t=document.getElementById('toast'); t.innerHTML=I.check+'<span>'+m+'</span>'; t.classList.add('on'); clearTimeout(window._tt); window._tt=setTimeout(function(){t.classList.remove('on')},2200) }
@@ -1483,6 +1522,7 @@ function go(id){
   if(id==='confirm'){ renderConfirm() }
   if(id==='passport'){ renderPassport() }
   if(id==='orders'){ renderOrders() }
+  if(id==='notif'){ renderNotif() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
