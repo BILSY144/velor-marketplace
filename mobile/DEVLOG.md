@@ -285,3 +285,23 @@ returnreq (plates 11/12/13) — they render a real order and none can exist
 before buyer launch + sign-in; building them dead violates the no-dead-
 links rule. They are the first build the day real orders exist. Store
 release (EAS Build + Apple/Play) remains William's registration.
+
+## 2026-07-15 (hotfix) — Bell page black screen: expo-audio version mismatch
+
+William: "Favourites and follows goes to a dead black screen. And bell page
+goes to black dead screen." Both routes land on BellScreen — one crash.
+Root cause: expo-audio@57.0.0 was installed (matched to a wrong belief the
+app runs SDK 57 — see AGENTS.md's own warning) but the app is pinned to
+EXPO SDK 54 (store Expo Go), whose bundled expo-audio is ~1.1.1. The 57.x
+JS calls natives the SDK 54 runtime doesn't have; useAudioPlayer threw at
+render; the published (production-mode) bundle shows a crash as a black
+screen. THE LESSON, permanently: check node_modules/expo/
+bundledNativeModules.json for the EXACT version before adding ANY expo-*
+package — never infer from npm's latest majors.
+
+Fix: expo-audio pinned ~1.1.1 (same useAudioPlayer/createAudioPlayer/
+seekTo API, verified in its .d.ts). BellScreen hardened: NO native audio
+call at render — the player is created lazily on first RING inside
+try/catch (plus playsInSilentMode so the iPhone mute switch doesn't eat
+the preview), released on unmount. If audio ever breaks again the bell
+swings silently and the page still renders. tsc + iOS export clean.

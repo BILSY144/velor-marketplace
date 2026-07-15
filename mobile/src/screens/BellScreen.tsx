@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Text, Animated, Easing } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { Image } from 'expo-image'
-import { useAudioPlayer } from 'expo-audio'
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
 import { countryName } from '../data'
@@ -18,6 +18,12 @@ import { Chrome } from '../components/Chrome'
 // to audio (assets/bell.m4a — same partials, same detuned shimmer, same
 // strike noise) with a swing animation. William's call 2026-07-15: "bell
 // notifications need a real bell noise."
+//
+// HARD RULE after the 2026-07-15 black-screen bug (expo-audio 57.x on the
+// SDK 54 runtime crashed useAudioPlayer at render): NO native audio call
+// happens at render time. The player is created lazily on the first RING,
+// inside try/catch — if audio ever breaks again, the bell still swings and
+// the page still renders.
 const BELL = require('../../assets/bell.m4a')
 
 export default function BellScreen() {
@@ -25,14 +31,29 @@ export default function BellScreen() {
   const nav = useNavigation<any>()
   const follows = useFollows((s) => s.ids)
   const toggleFollow = useFollows((s) => s.toggle)
-  const player = useAudioPlayer(BELL)
+  const playerRef = useRef<AudioPlayer | null>(null)
   const swing = useRef(new Animated.Value(0)).current
   const [rung, setRung] = useState(false)
 
+  useEffect(
+    () => () => {
+      try {
+        playerRef.current?.release()
+      } catch {}
+    },
+    []
+  )
+
   const ring = () => {
     try {
-      player.seekTo(0)
-      player.play()
+      if (!playerRef.current) {
+        // Audible even with the iPhone mute switch on — it's a preview the
+        // user explicitly asked to hear.
+        setAudioModeAsync({ playsInSilentMode: true }).catch(() => {})
+        playerRef.current = createAudioPlayer(BELL)
+      }
+      playerRef.current.seekTo(0)
+      playerRef.current.play()
     } catch {}
     setRung(true)
     swing.setValue(0)
