@@ -674,7 +674,7 @@ async function scoutBrave(
   const candidates: ProspectCandidate[] = [];
   const errors: string[] = [];
   const seen = new Set<string>();
-  for (const target of BRAVE_TARGETS) {
+  for (const target of braveQueriesForRun()) {
     try {
       const url = new URL('https://api.search.brave.com/res/v1/web/search');
       url.searchParams.set('q', target.query + NEGATIVE_SUFFIX);
