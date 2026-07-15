@@ -58,7 +58,28 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   NP: ['Singing bowls', 'Lokta paper', 'Pashmina shawls', 'Copperware'],
   PK: ['Salt lamps', 'Onyx ware', 'Embroidered textiles'],
   MN: ['Cashmere knitwear', 'Felt boots'],
-  KZ: ['Felt & leather goods'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Kazakhstan was one of
+  // the 20 countries sitting at the 1-item content-depth floor flagged in
+  // SEO_LOG.md backlog item 25. Five product-level additions, each
+  // corroborated across at least two independent sources, no single-source
+  // or AI-content-farm result carried forward. Dombra instruments (a
+  // two-stringed lute) and tekemet/syrmak felt carpets are both documented
+  // on advantour.com's "Crafts of Kazakhstan" page and independently on
+  // central-asia.guide's "Kazakh national crafts" page. Nomadic silver
+  // jewellery (rings, bracelets, earrings, pendants, historically forged
+  // and stamped) is corroborated by the same two sources plus
+  // central-asia.guide's "What to buy in Kazakhstan" souvenir-shopping
+  // page. Tuzkiiz embroidered wall hangings (silk- or wool-yarn embroidery
+  // on felt) are documented on central-asia.guide's crafts page. Kalpak
+  // felt hats are documented on central-asia.guide's souvenir-shopping
+  // page. Deliberately not added: kamcha (a decorated riding whip -- too
+  // weapon-adjacent per this file's own "no weapons" rule) and any bone-
+  // carved item (advantour documents Kazakh bone carving, but this file's
+  // own established practice, e.g. Indonesia/Monaco/Andorra entries above,
+  // treats bone the same as the explicitly restricted shell/ivory/coral
+  // materials, so it is excluded here for consistency even though the
+  // written rule only names shell/ivory/coral).
+  KZ: ['Felt & leather goods', 'Dombra instruments', 'Tekemet & syrmak felt carpets', 'Nomadic silver jewellery', 'Tuzkiiz embroidered wall hangings', 'Kalpak felt hats'],
   KG: ['Shyrdak felt rugs'],
   UZ: ['Ikat silks', 'Suzani embroidery', 'Ceramics'],
   TJ: ['Embroidered textiles'],
