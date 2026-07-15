@@ -32,7 +32,13 @@ interface ProspectCandidate {
   category: string;
   score: number;
   country: string | null;
-  sellerType: 'individual' | 'brand';
+  // 'multiplier' (2026-07-15, William's global-reach directive): an
+  // organization that REPRESENTS many makers -- artisan cooperative,
+  // fair-trade org, craft association, handicraft export collective. One
+  // recruited multiplier can bring in hundreds of sellers. Gets its own
+  // qualification prompt (lib/prospectQualify.ts) and its own partnership
+  // pitch email (lib/outreachEmail.ts) instead of the single-maker copy.
+  sellerType: 'individual' | 'brand' | 'multiplier';
   notes: string;
 }
 
@@ -614,7 +620,36 @@ const BRAVE_FRAMINGS: Array<(craft: string) => string> = [
 
 const BRAVE_QUERIES_PER_RUN = 30;
 
-function braveQueriesForRun(): Array<{ query: string; category: string }> {
+// Multiplier targets (2026-07-15, William's global-reach directive): artisan
+// cooperatives, fair-trade organizations, and craft associations. Each one
+// that signs up can bring MANY makers, so these get a higher base score (they
+// sort first through enrichment, qualification, and outreach) and their own
+// pitch. A finite set by nature -- duplicates are expected and harmless.
+const BRAVE_MULTIPLIER_TARGETS: Array<{ query: string; category: string }> = [
+  { query: 'women artisan cooperative handwoven textiles fair trade shop', category: 'Rugs, cloth & thread' },
+  { query: 'moroccan artisan cooperative handicrafts online', category: 'Light, scent & self' },
+  { query: 'peruvian weavers cooperative alpaca textiles', category: 'Rugs, cloth & thread' },
+  { query: 'guatemalan maya weavers cooperative textiles', category: 'Rugs, cloth & thread' },
+  { query: 'indian handicraft artisans cooperative society', category: 'Adornment' },
+  { query: 'kenyan artisan cooperative beadwork fair trade', category: 'Adornment' },
+  { query: 'ghana artisan cooperative shea butter kente', category: 'Light, scent & self' },
+  { query: 'ethiopian artisan cooperative handicrafts', category: 'Tea, coffee & pantry' },
+  { query: 'nepal fair trade artisan collective handicrafts', category: 'Rugs, cloth & thread' },
+  { query: 'vietnamese artisan collective lacquerware bamboo craft village', category: 'Ceramics & porcelain' },
+  { query: 'indonesian batik artisan cooperative community', category: 'Rugs, cloth & thread' },
+  { query: 'uzbekistan craft association ikat suzani artisans', category: 'Rugs, cloth & thread' },
+  { query: 'turkish artisan cooperative ceramics kilim weavers', category: 'Ceramics & porcelain' },
+  { query: 'mexican artisan cooperative talavera oaxaca crafts', category: 'Ceramics & porcelain' },
+  { query: 'fair trade federation artisan member organization handmade', category: 'Adornment' },
+  { query: 'artisan association handmade jewellery members shop', category: 'Adornment' },
+  { query: 'sri lanka artisan cooperative handloom', category: 'Tea, coffee & pantry' },
+  { query: 'bolivian andean weavers association textiles', category: 'Rugs, cloth & thread' },
+  { query: 'tunisian artisan cooperative pottery olive oil soap', category: 'Light, scent & self' },
+  { query: 'philippine artisan cooperative handicrafts weaving', category: 'Rugs, cloth & thread' },
+];
+const MULTIPLIER_QUERIES_PER_RUN = 6;
+
+function braveQueriesForRun(): Array<{ query: string; category: string; multiplier?: boolean }> {
   const all: Array<{ query: string; category: string }> = [];
   for (const framing of BRAVE_FRAMINGS) {
     for (const c of BRAVE_CRAFTS) {
@@ -627,9 +662,15 @@ function braveQueriesForRun(): Array<{ query: string; category: string }> {
   // queries rather than skipping a slice.
   const slot = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
   const start = (slot * BRAVE_QUERIES_PER_RUN) % all.length;
-  const window: Array<{ query: string; category: string }> = [];
+  const window: Array<{ query: string; category: string; multiplier?: boolean }> = [];
   for (let i = 0; i < Math.min(BRAVE_QUERIES_PER_RUN, all.length); i++) {
     window.push(all[(start + i) % all.length]);
+  }
+  // A small rotating slice of multiplier queries rides along on every run.
+  const mStart = (slot * MULTIPLIER_QUERIES_PER_RUN) % BRAVE_MULTIPLIER_TARGETS.length;
+  for (let i = 0; i < MULTIPLIER_QUERIES_PER_RUN; i++) {
+    const t = BRAVE_MULTIPLIER_TARGETS[(mStart + i) % BRAVE_MULTIPLIER_TARGETS.length];
+    window.push({ ...t, multiplier: true });
   }
   return window;
 }
@@ -694,16 +735,20 @@ async function scoutBrave(
         seen.add(host);
         const isShopify = host.endsWith('myshopify.com') || /shopify/i.test(r.description || '');
         const rawName = String(r.title || host).split(/[|\u2013\u2014\-\u00b7]/)[0].trim();
+        const isMultiplier = 'multiplier' in target && target.multiplier === true;
         candidates.push({
           name: (rawName || host).slice(0, 120),
           platform: isShopify ? 'shopify' : 'web',
           storeUrl: 'https://' + host,
           email: null,
           category: target.category,
-          score: 55 + (isShopify ? 15 : 0),
+          // Multipliers outrank single stores so they move through
+          // enrichment/qualification/outreach first (everything sorts by
+          // score desc).
+          score: isMultiplier ? 70 : 55 + (isShopify ? 15 : 0),
           country: braveCountry(host),
-          sellerType: 'brand',
-          notes: String(r.description || '').slice(0, 240),
+          sellerType: isMultiplier ? 'multiplier' : 'brand',
+          notes: (isMultiplier ? 'Multiplier discovery: ' : '') + String(r.description || '').slice(0, 240),
         });
       }
     } catch (e) {

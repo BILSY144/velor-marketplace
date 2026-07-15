@@ -11,9 +11,11 @@ const SELLER_FROM = 'Velor Seller Team <noreply@velorcommerce.store>';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
 
-type SellerTypeStr = 'individual' | 'brand';
+type SellerTypeStr = 'individual' | 'brand' | 'multiplier';
 function safeSellerType(raw: string): SellerTypeStr {
-  return raw === 'brand' ? 'brand' : 'individual';
+  // 'multiplier' must survive: it routes the prospect to the English
+  // partnership pitch in lib/outreachEmail.ts instead of the maker copy.
+  return raw === 'brand' ? 'brand' : raw === 'multiplier' ? 'multiplier' : 'individual';
 }
 
 function unsub(email: string | null): string {

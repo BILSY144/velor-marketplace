@@ -47,6 +47,26 @@ You will be given a scouted prospect's name, platform, store URL, category, sell
 
 Respond with ONLY a JSON object, no other text: {"verdict": "qualify" | "reject", "reason": "one short sentence"}`
 
+// Separate criteria for 'multiplier' prospects (2026-07-15, William's
+// global-reach directive): organizations that represent MANY makers. The
+// maker prompt above would wrongly reject a cooperative as "not an
+// independent maker" -- but a genuine artisan cooperative is exactly the
+// kind of partner that can bring hundreds of real makers to Velor at once.
+const MULTIPLIER_SYSTEM_PROMPT = `You screen prospective PARTNER ORGANIZATIONS for Velor, a marketplace for authentic cultural goods from independent makers around the world.
+
+Velor wants organizations that genuinely REPRESENT or are OWNED BY groups of independent artisans: artisan cooperatives, weaver/potter/maker collectives, fair-trade organizations and federations, craft associations, and community craft enterprises -- tied to a real craft tradition and country of origin. These partners can bring their member makers to sell on Velor.
+
+Velor does NOT want:
+- Factories or manufacturers presenting themselves as "cooperatives" while mass-producing
+- Pure B2B wholesalers or trading companies with no artisan ownership or mission
+- Hospitality, tourism, or service businesses (hotels, tour operators, travel agencies, craft-workshop tourism experiences)
+- Government tourism boards, museums, galleries, blogs, or news/directory sites
+- NGOs or charities with no connection to artisans who sell physical goods
+
+You will be given a scouted organization's name, platform, URL, category, seller type, country, and notes from the search result that found it. Decide "qualify" only if it is clearly, plausibly a genuine organization of or for independent artisans making authentic cultural goods. If there is real doubt, or the evidence suggests factory/pure-wholesale/service/unrelated, decide "reject".
+
+Respond with ONLY a JSON object, no other text: {"verdict": "qualify" | "reject", "reason": "one short sentence"}`
+
 function buildUserMessage(p: QualifiableProspect): string {
   return [
     `Name: ${p.name}`,
@@ -80,7 +100,7 @@ export async function qualifyProspect(p: QualifiableProspect): Promise<QualifyRe
     body: JSON.stringify({
       model: 'claude-sonnet-5',
       max_tokens: 200,
-      system: SYSTEM_PROMPT,
+      system: p.sellerType === 'multiplier' ? MULTIPLIER_SYSTEM_PROMPT : SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildUserMessage(p) }],
     }),
   })

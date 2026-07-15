@@ -53,7 +53,12 @@ export interface OutreachProspect {
   platform: string
   storeUrl: string
   category: string
-  sellerType: 'individual' | 'small_business' | 'brand'
+  // 'multiplier' (2026-07-15): a partner ORGANIZATION representing many
+  // makers (cooperative, fair-trade org, craft association). Gets the
+  // partnership pitch below instead of the single-maker copy. English only
+  // by design: these orgs have staff, and hand-writing a second full
+  // template in 19 languages adds risk, not value.
+  sellerType: 'individual' | 'small_business' | 'brand' | 'multiplier'
   country?: string | null
 }
 
@@ -154,6 +159,92 @@ function ctaButton(url: string, label: string): string {
   </td></tr></table>`
 }
 
+// Partnership pitch for multiplier organizations. Reuses the exact same
+// chrome (header, footer, CTA button, benefit rows) as the maker emails so
+// the brand reads identically; only the words change. Every claim is true of
+// the live platform, same discipline as the maker copy.
+const MULTIPLIER_COPY = {
+  subjectInitial: 'A founding-seller partnership for your artisans on Velor -- before buyers arrive 6 August',
+  subjectFollowup1: 'How your artisans join Velor as founding sellers (4 steps)',
+  subjectFollowup2: 'Last call: founding-seller places for your artisans on Velor',
+  badge: 'PARTNER INVITATION',
+  headline: 'Bring your artisans to a global marketplace built for them',
+  intro:
+    'Velor is a new global marketplace for authentic cultural goods -- every listing carries its maker and country of origin, and buyers arrive on 6 August 2026. We are inviting a small number of artisan organizations to join as founding partners before launch: every one of your member makers can claim a founding-seller place, free.',
+  b1t: 'Founding Pro plan, free for your members',
+  b1b: 'Each maker you bring gets the Pro seller plan (normally £49/mo) free as a founding seller -- their own storefront, listings, and payouts.',
+  b2t: 'Built for where your makers are',
+  b2b: 'Live prices in 20 currencies, 190+ shipping destinations, and sellers can deal with Velor entirely in their own language -- our team replies in whatever language they write.',
+  f1Intro: 'A quick follow-up on the founding-partner invitation. Getting your artisans onto Velor takes four steps:',
+  f1s1: 'Reply to this email or apply at the link below -- tell us roughly how many makers you represent.',
+  f1s2: 'We set up founding-seller places for your members (free Pro plan for every one).',
+  f1s3: 'Makers list their goods -- each listing carries the maker’s name and country of origin.',
+  f1s4: 'Buyers arrive 6 August. Payouts are escrow-protected and released on delivery.',
+  f2Line1: 'Buyers arrive on Velor on 6 August, and founding-partner places close before then. This is our last note about it.',
+  f2Line2: 'If bringing your artisans to a global marketplace -- free, in their own language, with their craft and country on every listing -- is interesting, reply to this email and we will set it up together.',
+  cta: 'Start the partnership',
+  ctaNote: 'Or simply reply to this email -- a real person reads every reply, in any language.',
+  signoff: 'William Sinclair<br>Founder, Velor -- velorcommerce.store',
+}
+
+function buildMultiplierBody(
+  c: typeof MULTIPLIER_COPY,
+  emailType: OutreachEmailType,
+  p: OutreachProspect,
+  cta: (label: string) => string,
+  appNote: string
+): string {
+  if (emailType === 'initial') {
+    return `
+      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' height='64' style='background-color:#0D0D0D;background:linear-gradient(100deg,#2A1505 0%,#0D0D0D 70%);line-height:64px;font-size:0;'>&nbsp;</td></tr></table>
+      <div style='padding:32px;'>
+        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
+        <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
+        <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>Hello ${h(p.name)},</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${c.intro}</p>
+        <div style='margin-bottom:22px;'>
+          ${benefitRow(c.b1t, c.b1b)}
+          ${benefitRow(c.b2t, c.b2b)}
+        </div>
+        ${cta(c.cta)}
+        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
+        ${appNote ? `<p style='color:#B9B9B9;font-size:13px;line-height:1.6;margin:14px 0 0;'>${appNote}</p>` : ''}
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>${c.signoff}</p>
+      </div>`
+  }
+  if (emailType === 'followup1') {
+    const step = (n: number, text: string, last = false) =>
+      `<div style='${last ? '' : 'margin-bottom:10px;'}'><span style='color:#FF6B00;font-weight:800;'>${n}.</span>&nbsp; ${text}</div>`
+    return `
+      <div style='padding:32px;'>
+        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
+        <div style='color:#FFFFFF;font-size:24px;font-weight:800;line-height:1.2;margin-bottom:18px;'>${c.subjectFollowup1.replace(' (4 steps)', '')}</div>
+        <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>Hello ${h(p.name)},</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 20px;'>${c.f1Intro}</p>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom:22px;'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:20px 22px;'>
+          <div style='color:#EAEAEA;font-size:14px;line-height:1.8;'>
+            ${step(1, c.f1s1)}
+            ${step(2, c.f1s2)}
+            ${step(3, c.f1s3)}
+            ${step(4, c.f1s4, true)}
+          </div>
+        </td></tr></table>
+        ${cta(c.cta)}
+        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>${c.signoff}</p>
+      </div>`
+  }
+  return `
+      <div style='padding:36px 32px;'>
+        <p style='color:#CFCFCF;font-size:15px;line-height:1.8;margin:0 0 16px;'>Hello ${h(p.name)},</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:0 0 16px;'>${c.f2Line1}</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:0 0 24px;'>${c.f2Line2}</p>
+        ${cta(c.cta)}
+        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
+        <p style='color:#B9B9B9;font-size:15px;line-height:1.8;margin:22px 0 0;'>${c.signoff}</p>
+      </div>`
+}
+
 export function buildOutreachEmail(d: {
   prospect: OutreachProspect
   emailType: OutreachEmailType
@@ -166,7 +257,10 @@ export function buildOutreachEmail(d: {
   const unsub = d.unsubscribeUrl || 'https://velorcommerce.store/unsubscribe'
   const isBrand = p.sellerType === 'brand'
 
-  const lang: OutreachLang = d.lang || langForCountry(p.country)
+  // Multiplier organizations always get the English partnership pitch (see
+  // OutreachProspect.sellerType comment) -- forcing 'en' here also keeps the
+  // document dir/align ltr even for e.g. a Moroccan cooperative.
+  const lang: OutreachLang = p.sellerType === 'multiplier' ? 'en' : d.lang || langForCountry(p.country)
   const c = OUTREACH_COPY[lang] || OUTREACH_COPY.en
   const rtl = RTL_OUTREACH_LANGS.includes(lang)
   const dir = rtl ? 'rtl' : 'ltr'
@@ -174,7 +268,13 @@ export function buildOutreachEmail(d: {
 
   // English keeps its brand-specific subject line; other languages use the one
   // localized subject (writing two variants per language adds risk, not value).
-  const subject =
+  const multiplierSubject =
+    emailType === 'initial'
+      ? MULTIPLIER_COPY.subjectInitial
+      : emailType === 'followup1'
+        ? MULTIPLIER_COPY.subjectFollowup1
+        : MULTIPLIER_COPY.subjectFollowup2
+  const makerSubject =
     emailType === 'initial'
       ? lang === 'en' && isBrand
         ? `Founding seller invitation: ${p.category} on Velor before buyers arrive 6 August`
@@ -184,6 +284,7 @@ export function buildOutreachEmail(d: {
       : emailType === 'followup1'
         ? c.subjectFollowup1
         : c.subjectFollowup2
+  const subject = p.sellerType === 'multiplier' ? multiplierSubject : makerSubject
 
   // Outreach recipients land on the congratulations page (/apply/invited),
   // not the general /apply form -- that page is only reachable via this
@@ -215,7 +316,9 @@ ${OUTREACH_HEADER}`
 
   let body = ''
 
-  if (emailType === 'initial') {
+  if (p.sellerType === 'multiplier') {
+    body = buildMultiplierBody(MULTIPLIER_COPY, emailType, p, cta, appNote)
+  } else if (emailType === 'initial') {
     const intro = isBrand ? c.introBrand : c.introMaker
     // No hotlinked stock photo -- a plain gradient strip instead. A hotlinked
     // image can render as a broken-image icon in some viewers/clients, which
