@@ -104,6 +104,16 @@ const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = 
     names: ['VIETNAM', 'THAILAND', 'INDONESIA', 'MALAYSIA', 'PHILIPPINES', 'SINGAPORE', 'CAMBODIA', 'LAOS', 'MYANMAR', 'BALI'],
   },
   {
+    file: 'hero-japan.jpg',
+    codes: ['JP'],
+    names: ['JAPAN', 'KYOTO', 'OSAKA', 'TOKYO'],
+  },
+  {
+    file: 'hero-india.jpg',
+    codes: ['IN', 'BD'],
+    names: ['INDIA', 'BANGLADESH', 'RAJASTHAN', 'JAIPUR', 'DELHI', 'MUMBAI'],
+  },
+  {
     file: 'hero-eastafrica.jpg',
     codes: ['KE', 'ET', 'TZ', 'UG', 'RW'],
     names: ['KENYA', 'ETHIOPIA', 'TANZANIA', 'UGANDA', 'RWANDA', 'MAASAI'],
