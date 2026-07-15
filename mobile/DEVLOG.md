@@ -216,3 +216,22 @@ git checkout + rm -rf node_modules package-lock.json at root before any
 commit). RING IT seeks to 0, plays, and swings the bell icon. YOUR BELLS
 now lists real follows (useFollows) with Visit/Unfollow; sample explainer
 cards stay SAMPLE-labelled per the plate's own honesty labels.
+
+## 2026-07-15 (checkout + assist) — Checkout to plate 08; Ask Velor aligned
+## to plate 22
+
+Checkout rebuilt to plate 08's full structure: Fraunces "Checkout",
+DELIVER TO row, DELIVERY · N PARCELS card (per-seller rows, flag + "their
+own carrier"), SUMMARY card, the white wallet-pay button, "or pay by card
+· Stripe" divider, CARD placeholders, the green escrow banner verbatim,
+sticky "Pay securely · £" bar. Honesty kept: no sample address, per-parcel
+prices "quoted live", and EVERY pay control explains the 6-August gate —
+Velor never fakes an order.
+
+Ask Velor: plate 22 copy applied — the welcome bubble ("I can help you
+find something specific…"), the three starter pills verbatim including the
+Spanish one, and the header sub "The same guide as the website — any
+language, honest answers". The real assistant API wiring is unchanged.
+
+CLAUDE.md checkpoint pushed to MAIN (ea57e1b) summarizing the whole app
+day for future sessions — the branch doc (this file) stays canonical.

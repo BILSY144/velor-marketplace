@@ -17,11 +17,16 @@ import { Kicker, Body, Dim, Serif, Pill } from '../ui'
 
 const AVATAR = 'https://velorcommerce.store/velor-assistant.png'
 
+// Plate 22's starter pills, verbatim — including the Spanish one, since she
+// really does answer in any language.
 const STARTERS = [
-  'What is Velor?',
-  'How does escrow protect me?',
-  'How do I become a founding seller?',
+  'A gift for a tea lover',
+  'How is my money protected?',
+  '¿Cómo funciona el escrow?',
 ]
+
+const WELCOME =
+  'I can help you find something specific, explain where a craft comes from, or walk you through how your money is protected. Any language you like.'
 
 export default function AssistScreen() {
   const insets = useSafeAreaInsets()
@@ -70,7 +75,7 @@ export default function AssistScreen() {
         <Image source={{ uri: AVATAR }} style={s.avatar} contentFit="cover" />
         <View>
           <Serif style={{ fontSize: 16 }}>Ask Velor</Serif>
-          <Dim style={{ fontSize: 10.5 }}>Any language · live from velorcommerce.store</Dim>
+          <Dim style={{ fontSize: 10.5 }}>The same guide as the website — any language, honest answers</Dim>
         </View>
       </View>
 
@@ -80,9 +85,11 @@ export default function AssistScreen() {
         keyExtractor={(_, i) => String(i)}
         contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 20 }}
         ListEmptyComponent={
-          <View style={{ paddingTop: 30 }}>
-            <Kicker style={{ textAlign: 'center' }}>SHE ANSWERS IN YOUR LANGUAGE</Kicker>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+          <View>
+            <View style={[s.bubble, s.bot]}>
+              <Body style={{ fontSize: 13, lineHeight: 19 }}>{WELCOME}</Body>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
               {STARTERS.map((q) => (
                 <Pill key={q} label={q} onPress={() => send(q)} />
               ))}
