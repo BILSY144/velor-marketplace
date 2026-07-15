@@ -1124,7 +1124,7 @@ function renderConfirm(){
   h+='<div class="stamptease"><span style="font-size:24px">'+order.map(function(sn){return flag(groups[sn].c)}).join(' ')+'</span><div><div class="fd" style="font-size:13px;font-weight:600">'+(uniq.length>1?NW[uniq.length]+' stamps incoming':'A stamp incoming')+'</div><div class="sm dim">'+stampTxt+'</div></div></div>'
   +'<div class="pad" style="margin-top:20px"><button class="btn" onclick="go(\'orders\')">Track my orders</button><button class="btn ghost" style="margin-top:9px" onclick="go(\'atlas\')">Back to the Atlas</button></div>';
   host.innerHTML=h;
-  if(CART.length){ CART.length=0; cartN=0; renderTabs(cur) }
+  if(CART.length){ order.forEach(function(sn){ passportAdd(groups[sn].c) }); CART.length=0; cartN=0; renderTabs(cur) }
 }
 
 /* ===== ORDERS ===== */
@@ -1224,18 +1224,42 @@ function dSubmit(){
 }
 
 /* ===== PASSPORT — your personal atlas filling in ===== */
-S.passport='<div class="scr" id="s-passport"><div class="sc" style="padding-bottom:120px">'
-+'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Share card generated\')">Share</button></div>'
-+'<div class="pad"><div class="k" style="margin-top:16px">VELOR · BUYER PASSPORT</div><h1 class="dspl" style="font-size:44px;margin-top:10px">3<span class="mut" style="font-size:22px"> / 190</span></h1><p class="sm mut" style="margin-top:8px;max-width:30ch">Countries you&rsquo;ve bought from, stamped on delivery. The only passport that fills up from your sofa.</p></div>'
-+'<div class="pbar"><i style="width:1.6%"></i></div>'
-+'<div class="stampgrid">'
-+'<div class="stamp got"><span class="fl">'+flag('JP')+'</span><span class="nm">JAPAN</span><span class="dt">14 JUL</span></div>'
-+'<div class="stamp got"><span class="fl">'+flag('MA')+'</span><span class="nm">MOROCCO</span><span class="dt">02 JUL</span></div>'
-+'<div class="stamp got"><span class="fl">'+flag('TR')+'</span><span class="nm">TURKEY</span><span class="dt">29 JUN</span></div>'
-+['CN','IN','PE','MX','IT','GH','KR','ET','VN'].map(function(c){var n={CN:'CHINA',IN:'INDIA',PE:'PERU',MX:'MEXICO',IT:'ITALY',GH:'GHANA',KR:'KOREA',ET:'ETHIOPIA',VN:'VIETNAM'}[c];return '<div class="stamp"><span class="fl">'+flag(c)+'</span><span class="nm">'+n+'</span></div>'}).join('')
-+'</div>'
-+'<div class="pad"><div class="nextcard"><div class="fd" style="font-size:13px;font-weight:600">Next stamps</div><p class="sm mut" style="margin-top:6px">Peru&rsquo;s weavers and Ghana&rsquo;s kente looms are among the channels opening soon. Follow them, be first in.</p><button class="btn ghost sm" style="margin-top:12px" onclick="go(\'atlas\')">Open the Atlas</button></div></div>'
-+'</div></div>'
+S.passport='<div class="scr" id="s-passport"><div class="sc" id="passportslot" style="padding-bottom:120px"></div></div>'
+
+/* ===== PASSPORT — earned on delivery only; placed orders show EN ROUTE.
+   No fabricated history: the demo starts at 0/190. ===== */
+var PASSPORT={earned:[],incoming:[]};
+function passportAdd(cc){ if(PASSPORT.earned.indexOf(cc)<0&&PASSPORT.incoming.indexOf(cc)<0) PASSPORT.incoming.push(cc) }
+function renderPassport(){
+  var host=document.getElementById('passportslot'); if(!host) return;
+  var n=PASSPORT.earned.length, inc=PASSPORT.incoming;
+  var pct=Math.max(n/190*100, n>0?1.2:0);
+  var suggest=['JP','MA','TR','CN','IN','PE','MX','IT','GH','KR','ET','VN'].filter(function(c){
+    return PASSPORT.earned.indexOf(c)<0 && inc.indexOf(c)<0;
+  }).slice(0,12-n-inc.length>3?12-n-inc.length:9);
+  var h='<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Share card generated\')">Share</button></div>'
+  +'<div class="pad"><div class="k" style="margin-top:16px">VELOR &middot; BUYER PASSPORT</div>'
+  +'<h1 class="dspl" style="font-size:44px;margin-top:10px">'+n+'<span class="mut" style="font-size:22px"> / 190</span>'
+  +(inc.length?' <span style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--accent);vertical-align:14px">+'+inc.length+' EN ROUTE</span>':'')+'</h1>'
+  +'<p class="sm mut" style="margin-top:8px;max-width:30ch">'
+  +(n===0&&!inc.length?'Nothing stamped yet. Buy from a country and it joins your passport the day the parcel is confirmed delivered.'
+   :n===0?'Your first stamps are on their way &mdash; each lands the day its parcel&rsquo;s delivery is confirmed.'
+   :'Countries you&rsquo;ve bought from, stamped on delivery. The only passport that fills up from your sofa.')+'</p></div>'
+  +'<div class="pbar"><i style="width:'+pct+'%"></i></div>'
+  +'<div class="stampgrid">';
+  PASSPORT.earned.forEach(function(c){
+    h+='<div class="stamp got"><span class="fl">'+flag(c)+'</span><span class="nm">'+liveCountryName(c).toUpperCase()+'</span><span class="dt">DELIVERED</span></div>';
+  });
+  inc.forEach(function(c){
+    h+='<div class="stamp" style="border:1.5px dashed rgba(255,107,0,.5)"><span class="fl">'+flag(c)+'</span><span class="nm">'+liveCountryName(c).toUpperCase()+'</span><span class="dt" style="color:var(--accent)">EN ROUTE</span></div>';
+  });
+  suggest.forEach(function(c){
+    h+='<div class="stamp"><span class="fl">'+flag(c)+'</span><span class="nm">'+liveCountryName(c).toUpperCase()+'</span></div>';
+  });
+  h+='</div>'
+  +'<div class="pad"><div class="nextcard"><div class="fd" style="font-size:13px;font-weight:600">Next stamps</div><p class="sm mut" style="margin-top:6px">190 countries are opening their channels. Every one is a stamp waiting to happen.</p><button class="btn ghost sm" style="margin-top:12px" onclick="go(\'atlas\')">Open the Atlas</button></div></div>';
+  host.innerHTML=h;
+}
 
 /* ===== NOTIFICATIONS ===== */
 S.notif='<div class="scr" id="s-notif"><div class="sc" style="padding-bottom:120px">'
@@ -1424,6 +1448,7 @@ function go(id){
   if(id==='checkout'){ renderCheckout() }
   if(id==='dispute'){ dRefresh() }
   if(id==='confirm'){ renderConfirm() }
+  if(id==='passport'){ renderPassport() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
