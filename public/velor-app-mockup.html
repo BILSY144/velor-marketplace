@@ -1280,10 +1280,10 @@ function renderPassport(){
    :'Countries you&rsquo;ve bought from, stamped on delivery. The only passport that fills up from your sofa.')+'</p></div>'
   +'<div class="pbar"><i style="width:'+pct+'%"></i></div>'
   +'<div class="stampgrid">';
-  PASSPORT.earned.forEach(function(c){
+  PASSPORT.earned.slice().reverse().forEach(function(c){
     h+='<button class="stamp got" onclick="ordersFor(\''+c+'\')"><span class="fl">'+flag(c)+'</span><span class="nm">'+liveCountryName(c).toUpperCase()+'</span><span class="dt">DELIVERED</span></button>';
   });
-  inc.forEach(function(c){
+  inc.slice().reverse().forEach(function(c){
     h+='<button class="stamp" style="border:1.5px dashed rgba(255,107,0,.5)" onclick="ordersFor(\''+c+'\')"><span class="fl">'+flag(c)+'</span><span class="nm">'+liveCountryName(c).toUpperCase()+'</span><span class="dt" style="color:var(--accent)">EN ROUTE</span></button>';
   });
   suggest.forEach(function(c){
