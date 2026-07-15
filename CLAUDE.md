@@ -1511,12 +1511,13 @@ Note for future sessions: this cloud sandbox HAS outbound network in bash (git c
 
 ---
 
-## 2026-07-14 checkpoint — Velor App ("The Atlas") design mockup
+## 2026-07-15 checkpoint — Velor App ("The Atlas"): buyer side COMPLETE in the mockup
 
-A native mobile-app design for the **marketplace** (velorcommerce.store) is in progress with William, design-first. Full state, decisions, and how to resume are in **docs/app-mockup/CHECKPOINT.md**. Summary:
+A native mobile-app design for the **marketplace** (velorcommerce.store), design-first with William. Full state and every decision: **docs/app-mockup/CHECKPOINT.md on branch app-mockup-preview** (the branch doc is canonical; this is the summary).
 
-- Mockup: public/velor-app-mockup.html on branch **app-mockup-preview** (NOT main). Preview: https://velor-marketplace-git-app-mockup-preview-velor1.vercel.app/velor-app-mockup.html . Working source is /home/claude/velor-app-design/index.html in the cloud sandbox.
-- Home is an interactive canvas globe ("The Atlas"). Country-dive page layout is APPROVED: cover, origin story, **SIGNATURE CRAFTS scrollable reel**, preview films, founding CTA.
-- Culture data DONE for all 190 (deep category lists up to 29/country) — see docs/app-mockup/cdata.py + cadd.py, merged into the mockup's HINTS var.
-- Imagery: sourcing real, visually-verified Pexels photos per country, region by region ("cannot get this wrong" — wrong ones stay as honest "Opening soon" placeholders, never a wrong photo). **Wave 1 (Latin America + Caribbean, 156 photos) DONE & pushed.** Wave 2 (East/SE Asia) candidates fetched, verification pending. Method + remaining waves in the checkpoint doc; picks in docs/app-mockup/wave1_picks.py.
-- Next after imagery: scaffold the real Expo/RN app (spec in the mockup's VELOR-APP-FEATURE-MAP.md).
+- Mockup: public/velor-app-mockup.html on branch **app-mockup-preview** (NOT main). Preview: https://velor-marketplace-git-app-mockup-preview-velor1.vercel.app/velor-app-mockup.html . Push from bash git works; sandbox has outbound network.
+- IMAGERY DONE (2026-07-14): all 9 waves, 186 countries with verified real Pexels photos (PG deliberately placeholder-only). Origin text for all 190 web-fact-checked by 12 parallel agents. Country dives carry per-country verified FILMS only (38 accepted from 380 queries; honest zero-state tile otherwise).
+- BUYER SIDE COMPLETE & LIVE-WIRED (2026-07-14/15): Velor Live is a swipeable country-first feed (goLive/buildFeed; wheel nav removed — stray synthetic wheel events); craft pages for every tile (only China porcelain carries the SAMPLE listing -> PDP); PDP has deliver-to estimate row (rate quote, no label) + mock-labelled reviews; basket/checkout/confirmed/orders/passport/bell/You all render from live session models (CART/ORDERS/PASSPORT/FOLLOWS/FAVS) with honest zero-states; stamps deep-link to country-filtered orders; opening bell RINGS (4s synthesized real-bell, RING IT button; real app = custom notification sound reserved for channel openings); dispute needs 3 photos (except not-arrived), return flow built (14 days per published terms); legal docs read fully in-app (53 real sections embedded verbatim); language page lists the real 19; currency picker converts the whole money pipeline with LIVE FX (frankfurter -> open.er-api fallback, the lib/fx.ts strategy), 20 real currencies.
+- Production findings flagged, NOT changed: terms say 14-day returns but app/api/returns/route.ts enforces 15 (code more generous — align when decided); the WORLD atlas 190 excludes CI/XK/FM/MH/NR/PW despite culture data existing for them.
+- Sample universe: Lin Ceramics (CN) + Atlas Weave (MA) and everything derived from them, labelled SAMPLE; the real Polegate office address was scrubbed from buyer-facing sample data (checkout/addresses/You).
+- REMAINING for review: Ask Velor, seller-side screens (Sell pitch, Founding seats, Apply, Verify ID, Dashboard, New listing, Payouts, Go live). Then scaffold the real Expo/RN app.
