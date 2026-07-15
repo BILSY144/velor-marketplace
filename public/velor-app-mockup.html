@@ -1530,7 +1530,7 @@ jump.innerHTML=SCREENS.map(function(s){return '<button data-s="'+s[0]+'" onclick
 
 var cur='splash'
 function go(id){
-  cur=id
+  var prevScr=cur; cur=id
   if(id==='country'){ document.getElementById('countryslot').innerHTML=countryScreen() }
   if(id==='live'){ var lsc=document.getElementById('s-live'); if(lsc&&!lsc.childElementCount) renderLive() }
   if(id==='craft'){ var csl=document.getElementById('craftslot'); if(csl&&!csl.childElementCount){ csl.innerHTML=craftScreen() } }
@@ -1540,7 +1540,7 @@ function go(id){
   if(id==='dispute'){ dRefresh() }
   if(id==='confirm'){ renderConfirm() }
   if(id==='passport'){ renderPassport() }
-  if(id==='orders'){ if(cur!=='orders'&&id!==cur){ ORDBACK=(cur==='confirm'||cur==='splash')?'atlas':cur } renderOrders() }
+  if(id==='orders'){ if(prevScr&&prevScr!=='orders'){ ORDBACK=(prevScr==='confirm'||prevScr==='splash')?'atlas':prevScr } renderOrders() }
   if(id==='notif'){ renderNotif() }
   if(id==='account'){ renderAccount() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
