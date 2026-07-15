@@ -719,7 +719,7 @@ function renderLive(){
   +'</div>'
   +(demo
     ?'<div class="ptray" style="padding:7px 9px;gap:9px;border-radius:15px;bottom:104px"><img src="'+px(30767475)+'" style="width:34px;height:34px;border-radius:9px"><div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px" onclick="go(\'pdp\')"><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gongfu tea set</span><span class="p" style="margin-top:0;white-space:nowrap">&pound;54 <span class="pfl">'+flag('CN')+'</span></span></div><button class="add" style="padding:8px 13px" onclick="addCart()">Add</button></div>'
-    +'<div class="askrow"><div class="f">Ask the maker anything&hellip;</div><button class="hb" onclick="toast(\'Saved to favourites\')">'+I.heart+'</button></div>'
+    +'<div class="askrow"><div class="f">Ask the maker anything&hellip;</div><button class="hb" onclick="fav()">'+I.heart+'</button></div>'
     :'<div class="ptray" style="bottom:56px;padding:7px 9px;gap:9px;border-radius:15px"><span style="width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)">'+flag(v.c)+'</span><div style="flex:1;min-width:0"><div class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cn+'&rsquo;s seat is open</div><div class="p" style="margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">First verified seller broadcasts here for life</div></div><button class="add" style="padding:8px 13px" onclick="go(\'apply\')">Claim</button></div>');
   scr.innerHTML=h;
   if(!scr.__nav){ scr.__nav=1;
@@ -767,7 +767,7 @@ function craftScreen(){
 S.pdp='<div class="scr" id="s-pdp"><div class="sc" style="padding-bottom:128px">'
 +'<div class="pcover"><img src="'+px(30767475)+'"><div class="pcover-g"></div>'
 +'<button class="chip-back" style="position:absolute;top:58px;left:16px;z-index:5" onclick="goPdpBack()">'+I.back+'</button>'
-+'<button class="gbtn" style="position:absolute;top:58px;right:16px;z-index:5" onclick="toast(\'Saved\')">'+I.heart+'</button>'
++'<button class="gbtn" style="position:absolute;top:58px;right:16px;z-index:5" onclick="fav()">'+I.heart+'</button>'
 +'<div class="gdots"><i class="on"></i><i></i><i></i><i></i></div></div>'
 +'<div class="pad"><div class="k" style="margin-top:22px">CHINA &times; CLAY &middot; JINGDEZHEN</div>'
 +'<h1 class="serif" style="font-size:31px;margin-top:10px;line-height:1.1">Gongfu tea set, hand-thrown</h1>'
@@ -1343,13 +1343,32 @@ function renderNotif(){
 }
 
 /* ===== ACCOUNT ===== */
-S.account='<div class="scr" id="s-account"><div class="sc" style="padding-bottom:120px">'
-+'<div class="pad" style="padding-top:64px"><div class="k d">YOU</div><h1 class="dspl" style="font-size:30px;margin-top:8px">William</h1><p class="sm dim" style="margin-top:6px">Signed in with passkey — no password to steal</p></div>'
-+'<button class="passcard" onclick="go(\'passport\')"><span style="font-size:26px">'+flag('JP')+'</span><div style="flex:1"><div class="fd" style="font-size:14px;font-weight:600">Your Passport</div><div class="sm dim">3 of 190 countries collected</div></div><span class="pbig">3</span></button>'
-+'<div class="pad"><div class="k d" style="margin-top:22px">ACCOUNT</div></div>'
-+[['Orders &amp; tracking','Both parcels on the way','orders'],['Favourites &amp; follows','4 saved · 6 channels followed','notif'],['Addresses','49 Station Road, Polegate','x'],['Payment methods','Passkey-protected · held by Stripe','x'],['Language &amp; currency','English · GBP','x'],['Ask Velor','Your guide, in any language','assist'],['Privacy &amp; legal','Terms, privacy, buyer protection','x']].map(function(m){return '<button class="arow" onclick="'+(m[2]==='x'?'toast(\'Full page in the build\')':'go(\''+m[2]+'\')')+'"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">'+m[0]+'</div><div class="sm dim">'+m[1]+'</div></div><svg viewBox="0 0 24 24" class="chev"><path d="m9 5 7 7-7 7"/></svg></button>'}).join('')
-+'<div class="pad"><div class="sellband"><div class="k">SELL ON VELOR</div><h2 class="serif" style="font-size:22px;margin-top:10px">Open your country&rsquo;s channel.</h2><p class="sm mut" style="margin-top:8px">One founding seat per country — badge, Pro free for life, live broadcasting for life.</p><button class="btn sm" style="margin-top:14px" onclick="go(\'sell\')">See what you&rsquo;d earn</button></div></div>'
-+'</div></div>'
+S.account='<div class="scr" id="s-account"><div class="sc" id="accountslot" style="padding-bottom:120px"></div></div>'
+
+/* ===== YOU — derives from the live session models ===== */
+var FAVS=0;
+function fav(){ FAVS++; toast('Saved to favourites') }
+function renderAccount(){
+  var host=document.getElementById('accountslot'); if(!host) return;
+  var earned=PASSPORT.earned.length, inc=PASSPORT.incoming.length;
+  var latest=PASSPORT.earned.length?PASSPORT.earned[PASSPORT.earned.length-1]:(PASSPORT.incoming.length?PASSPORT.incoming[PASSPORT.incoming.length-1]:null);
+  var passSub=earned?earned+' of 190 collected'+(inc?' &middot; '+inc+' en route':''):(inc?inc+' en route &mdash; stamped on delivery':'Your first delivery starts it');
+  var ordSub=ORDERS.length?ORDERS.length+(ORDERS.length>1?' parcels':' parcel')+' on the way':'Nothing on the way yet';
+  var folSub=(FAVS?FAVS+' saved &middot; ':'')+(FOLLOWS.length?FOLLOWS.length+(FOLLOWS.length>1?' channels':' channel')+' followed':'Follow a country to hear its bell');
+  var rows=[
+   ['Orders &amp; tracking',ordSub,'orders'],
+   ['Favourites &amp; follows',folSub,'notif'],
+   ['Addresses','14 Portland Mews, London W1 &middot; SAMPLE','x'],
+   ['Payment methods','Passkey-protected &middot; held by Stripe','x'],
+   ['Language &amp; currency','English &middot; GBP','x'],
+   ['Ask Velor','Your guide, in any language','assist'],
+   ['Privacy &amp; legal','Terms, privacy, buyer protection','x']];
+  host.innerHTML='<div class="pad" style="padding-top:64px"><div class="k d">YOU</div><h1 class="dspl" style="font-size:30px;margin-top:8px">William</h1><p class="sm dim" style="margin-top:6px">Signed in with passkey &mdash; no password to steal</p></div>'
+  +'<button class="passcard" onclick="go(\'passport\')"><span style="font-size:26px">'+(latest?flag(latest):'<svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18"/></svg>')+'</span><div style="flex:1"><div class="fd" style="font-size:14px;font-weight:600">Your Passport</div><div class="sm dim">'+passSub+'</div></div><span class="pbig">'+earned+'</span></button>'
+  +'<div class="pad"><div class="k d" style="margin-top:22px">ACCOUNT</div></div>'
+  +rows.map(function(m){return '<button class="arow" onclick="'+(m[2]==='x'?'toast(\'Full page in the build\')':'go(\''+m[2]+'\')')+'"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">'+m[0]+'</div><div class="sm dim">'+m[1]+'</div></div><svg viewBox="0 0 24 24" class="chev"><path d="m9 5 7 7-7 7"/></svg></button>'}).join('')
+  +'<div class="pad"><div class="sellband"><div class="k">SELL ON VELOR</div><h2 class="serif" style="font-size:22px;margin-top:10px">Open your country&rsquo;s channel.</h2><p class="sm mut" style="margin-top:8px">One founding seat per country &mdash; badge, Pro free for life, live broadcasting for life.</p><button class="btn sm" style="margin-top:14px" onclick="go(\'sell\')">See what you&rsquo;d earn</button></div></div>';
+}
 
 /* ===== ASSISTANT ===== */
 S.assist='<div class="scr" id="s-assist"><div class="sc" id="assistSc" style="padding-bottom:110px">'
@@ -1523,6 +1542,7 @@ function go(id){
   if(id==='passport'){ renderPassport() }
   if(id==='orders'){ renderOrders() }
   if(id==='notif'){ renderNotif() }
+  if(id==='account'){ renderAccount() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
