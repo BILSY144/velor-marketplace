@@ -134,3 +134,20 @@ COUNTRY is a real searchable 190-country picker modal (William catch — it
 never clicked before); the WEBSITE OR SOCIAL field is REMOVED entirely
 (William: "we dont want buyers bypassing us") — standing rule: nothing on
 the application invites buyers off-platform.
+
+## 2026-07-15 (later still) — Sell page full plate treatment + the founding
+## seats page (plate 24) built
+
+Sell rebuilt to the complete plate 23: the sellhero photo cover (the
+mockup's own Pexels 31330206) melting into black with SELL ON VELOR +
+Fraunces 34 hero over it, shared Chrome (back chip to You + the three
+icons), checkmark perks, the calculator, and BOTH plate CTAs — "See if
+your seat is open" now lands on a real screen.
+
+SeatsScreen is new (plate 24): THE FOUNDING MAP, "One seat per country.",
+search across countries AND craft hints, the SEATS/TAKEN/24H DECISION stat
+row (TAKEN live from /api/lattice — counts countries actually trading,
+never faked), WHAT THE SEAT CARRIES, the CRAFT POWERHOUSES photo rail, and
+every region's countries as seat rows (photo, flag, real craft hints, SEAT
+OPEN chip — CHANNEL OPEN in green once a country really trades). Open
+seats land on Apply with the country pre-picked; taken ones open the dive.

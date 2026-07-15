@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Text, PanResponder } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { C, F } from '../theme'
-import { Kicker, Display, Body, Dim, Btn } from '../ui'
+import { C, F, pexels } from '../theme'
+import { Kicker, Body, Dim, Btn } from '../ui'
+import { Chrome } from '../components/Chrome'
 
 const PERKS: [string, string][] = [
   ['Founding badge, permanent', 'On your store and every listing, forever.'],
@@ -24,81 +26,91 @@ type TierKey = keyof typeof TIERS
 const keep = (t: TierKey, sales: number) =>
   Math.max(0, Math.round(sales * (1 - TIERS[t].rate) - TIERS[t].fee))
 
-// The sell pitch — plate 23: hero, founding-seat perks, the "What you'd
-// keep" calculator (drag the slider, TAP A TIER CARD to choose the plan the
-// figure is computed on), then the CTA. The application itself is in-app;
-// only Stripe-hosted identity verification opens in the browser.
+// The sell pitch — plate 23 + spec/sell.txt, exact: the sellhero photo cover
+// (the mockup's own Pexels 31330206) melting into black, SELL ON VELOR
+// kicker, Fraunces 34 hero, founding-seat perks, the "What you'd keep"
+// calculator (drag the slider, TAP A TIER CARD to choose the plan the figure
+// is computed on), then the plate's two CTAs — the seats map and Apply.
 export default function SellScreen() {
-  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [sales, setSales] = useState(1000)
   const [tier, setTier] = useState<TierKey>('starter')
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
-      <View style={{ paddingHorizontal: 20 }}>
-        <Pressable onPress={() => nav.goBack()} style={s.back}>
-          <Body style={{ fontFamily: F.display }}>{'←'}</Body>
-        </Pressable>
-        <Kicker style={{ marginTop: 16 }}>SELL ON VELOR</Kicker>
-        <Display style={{ marginTop: 6 }}>Your country's{'\n'}shopping channel.</Display>
-        <Dim style={{ marginTop: 10, lineHeight: 19 }}>
-          Broadcast live from the workshop and sell around the clock with listings.
-          Buyers arrive 6 August.
-        </Dim>
-      </View>
-
-      <Kicker style={{ paddingHorizontal: 20, marginTop: 26 }}>
-        THE FOUNDING SEAT — ONE PER COUNTRY
-      </Kicker>
-      <View style={{ paddingHorizontal: 20, marginTop: 6 }}>
-        {PERKS.map(([t, b], i) => (
-          <View key={t} style={[s.perk, i === PERKS.length - 1 && { borderBottomWidth: 0 }]}>
-            <Ionicons name="checkmark" size={16} color={C.accent} style={{ marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Body style={{ fontFamily: F.bodySemi, fontSize: 13.5 }}>{t}</Body>
-              <Dim style={{ marginTop: 3, lineHeight: 17, fontSize: 11.5 }}>{b}</Dim>
-            </View>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+        {/* Hero — sellhero cover */}
+        <View style={s.hero}>
+          <Image source={{ uri: pexels(31330206, 900) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />
+          <LinearGradient
+            colors={['rgba(8,8,11,0.35)', 'rgba(8,8,11,0.55)', '#08080b']}
+            locations={[0, 0.6, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={{ position: 'absolute', left: 20, right: 20, bottom: 26 }}>
+            <Kicker>SELL ON VELOR</Kicker>
+            <Text style={s.h1}>Your country's{'\n'}shopping channel.</Text>
+            <Text style={s.heroSub}>
+              Broadcast live from the workshop and sell around the clock with listings. Buyers
+              arrive 6 August.
+            </Text>
           </View>
-        ))}
-      </View>
-
-      {/* What you'd keep — plate 23 calculator, tier cards are the choice */}
-      <View style={s.calc}>
-        <Body style={{ fontFamily: F.bodySemi, fontSize: 14 }}>What you'd keep</Body>
-        <Dim style={{ fontSize: 11.5, marginTop: 3 }}>
-          Drag your expected monthly sales — tap a plan to compare.
-        </Dim>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 14 }}>
-          <Text style={s.calcAmt}>{'£'}{keep(tier, sales).toLocaleString('en-GB')}</Text>
-          <Dim style={{ fontSize: 12 }}>
-            of £{sales.toLocaleString('en-GB')} · {TIERS[tier].label}
-          </Dim>
         </View>
-        <Slider value={sales} min={0} max={10000} step={100} onChange={setSales} />
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-          {(Object.keys(TIERS) as TierKey[]).map((k) => (
-            <Pressable key={k} style={[s.tcard, tier === k && s.tcardOn]} onPress={() => setTier(k)}>
-              <Text style={[s.tn, tier === k && { color: C.accent }]}>{TIERS[k].label}</Text>
-              <Text style={s.tk}>{'£'}{keep(k, sales).toLocaleString('en-GB')}</Text>
-              <Text style={s.tf}>{TIERS[k].foot}</Text>
-            </Pressable>
+
+        <Kicker style={{ paddingHorizontal: 20, marginTop: 26 }}>
+          THE FOUNDING SEAT — ONE PER COUNTRY
+        </Kicker>
+        <View style={{ paddingHorizontal: 20, marginTop: 6 }}>
+          {PERKS.map(([t, b], i) => (
+            <View key={t} style={[s.perk, i === PERKS.length - 1 && { borderBottomWidth: 0 }]}>
+              <Ionicons name="checkmark" size={16} color={C.accent} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Body style={{ fontFamily: F.bodySemi, fontSize: 13.5 }}>{t}</Body>
+                <Dim style={{ marginTop: 3, lineHeight: 17, fontSize: 11.5 }}>{b}</Dim>
+              </View>
+            </View>
           ))}
         </View>
-        <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>
-          0% listing fees on every plan. Paid out after each delivery is confirmed. Every seller
-          starts free — upgrade to Pro any time from your dashboard.
-        </Dim>
-      </View>
 
-      <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-        <Btn label="Apply to sell — five minutes" onPress={() => nav.navigate('Apply', {})} />
-        <Dim style={{ textAlign: 'center', marginTop: 9, fontSize: 11 }}>
-          Five minutes in-app. Only the Stripe-hosted identity check opens in your
-          browser — decision within 24h of verification.
-        </Dim>
-      </View>
-    </ScrollView>
+        {/* What you'd keep — plate 23 calculator, tier cards are the choice */}
+        <View style={s.calc}>
+          <Body style={{ fontFamily: F.bodySemi, fontSize: 14 }}>What you'd keep</Body>
+          <Dim style={{ fontSize: 11.5, marginTop: 3 }}>
+            Drag your expected monthly sales — tap a plan to compare.
+          </Dim>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 14 }}>
+            <Text style={s.calcAmt}>{'£'}{keep(tier, sales).toLocaleString('en-GB')}</Text>
+            <Dim style={{ fontSize: 12 }}>
+              of £{sales.toLocaleString('en-GB')} · {TIERS[tier].label}
+            </Dim>
+          </View>
+          <Slider value={sales} min={0} max={10000} step={100} onChange={setSales} />
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            {(Object.keys(TIERS) as TierKey[]).map((k) => (
+              <Pressable key={k} style={[s.tcard, tier === k && s.tcardOn]} onPress={() => setTier(k)}>
+                <Text style={[s.tn, tier === k && { color: C.accent }]}>{TIERS[k].label}</Text>
+                <Text style={s.tk}>{'£'}{keep(k, sales).toLocaleString('en-GB')}</Text>
+                <Text style={s.tf}>{TIERS[k].foot}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>
+            0% listing fees on every plan. Paid out after each delivery is confirmed. Every seller
+            starts free — upgrade to Pro any time from your dashboard.
+          </Dim>
+        </View>
+
+        <View style={{ paddingHorizontal: 20, marginTop: 24, gap: 10 }}>
+          <Btn label="See if your seat is open" onPress={() => nav.navigate('Seats')} />
+          <Btn ghost label="Apply now" onPress={() => nav.navigate('Apply', {})} />
+          <Dim style={{ textAlign: 'center', marginTop: 4, fontSize: 11 }}>
+            Five minutes in-app. Only the Stripe-hosted identity check opens in your
+            browser — decision within 24h of verification.
+          </Dim>
+        </View>
+      </ScrollView>
+      <Chrome back="You" onBack={() => nav.goBack()} />
+    </View>
   )
 }
 
@@ -150,11 +162,9 @@ function Slider({
 }
 
 const s = StyleSheet.create({
-  back: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    alignItems: 'center', justifyContent: 'center',
-  },
+  hero: { height: 430, backgroundColor: C.surf },
+  h1: { fontFamily: F.serifLight, fontSize: 34, lineHeight: 38, color: C.text, marginTop: 10 },
+  heroSub: { fontFamily: F.body, fontSize: 11.5, lineHeight: 18, color: '#d4d3cf', marginTop: 12, maxWidth: 280 },
   perk: {
     flexDirection: 'row', gap: 12, alignItems: 'flex-start',
     paddingVertical: 14, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.05)',

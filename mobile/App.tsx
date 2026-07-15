@@ -40,6 +40,7 @@ import BellScreen from './src/screens/BellScreen'
 import CraftScreen from './src/screens/CraftScreen'
 import PdpScreen from './src/screens/PdpScreen'
 import { AddrScreen, PayScreen, LangCurScreen } from './src/screens/SettingsScreens'
+import SeatsScreen from './src/screens/SeatsScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -145,6 +146,7 @@ export default function App() {
             <Stack.Screen name="Addr" component={AddrScreen} />
             <Stack.Screen name="Pay" component={PayScreen} />
             <Stack.Screen name="LangCur" component={LangCurScreen} />
+            <Stack.Screen name="Seats" component={SeatsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>
