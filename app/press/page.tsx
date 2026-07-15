@@ -166,15 +166,16 @@ export default function PressPage() {
               <cite>William Sinclair, Founder, Velor</cite>
             </blockquote>
             <p>
-              What makes Velor unusual isn&apos;t just the marketplace — it&apos;s who&apos;s
-              running it. Velor is built and operated by a single founder, William Sinclair,
-              working with AI agents doing a large share of the operational work: researching
+              What makes Velor unusual isn&apos;t just the marketplace — it&apos;s who built it,
+              and how. William Sinclair has a physical disability that rules out manual work, and
+              built Velor entirely from a laptop in a shed. That constraint is what shaped the way
+              Velor gets run: AI agents carry a large share of the operational work — researching
               and drafting seller outreach across dozens of countries and 19 languages, screening
               prospective sellers, and handling day-to-day site content and engineering alongside
               him. It is not autonomous — William reviews and personally sends every outreach
               message and makes every product and business decision — but the AI-assisted
-              approach is what has let one person build and run a 190-country marketplace ahead
-              of launch.
+              approach is what has let one person, working from a shed, build and run a
+              190-country marketplace ahead of launch.
             </p>
           </div>
 
