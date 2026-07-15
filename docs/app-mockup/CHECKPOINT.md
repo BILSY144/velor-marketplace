@@ -2,6 +2,33 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: ENTERPRISE TIER RETIRED (production + mockup) — major business change
+
+William's decisions this session, applied to the FULL production codebase
+(commit 2c79f75 on main, 60 files) and the mockup:
+- Enterprise removed completely. Pro (GBP 49/mo, 4%) inherits every
+  Enterprise feature: unlimited listings, Go Live, dedicated AI account
+  manager (full capability set: order lookups, drafting, escalation),
+  full API access, priority support. Legacy ENTERPRISE rows read as PRO
+  everywhere; commission maps alias ENTERPRISE->0.04 so no stray row
+  ever bills 0%.
+- LIVE SHOPPING ON EVERY TIER, Starter included. The standing
+  "live broadcasting is the founding privilege" rule (2026-07-08) is
+  SUPERSEDED; founding perk is now "the full Pro tier free for life".
+  All site + mockup copy rewritten accordingly.
+- Starter listing cap 20 -> 10 (create block, downgrade delist, copy).
+- Ask Velor (app) wired to the REAL /api/assistant/chat on this same
+  deployment — identical brain to the website widget, her avatar
+  (/velor-assistant.png), real reply bar. Preview env needs
+  ANTHROPIC_API_KEY ticked for Preview in Vercel (William's task) —
+  currently returns the honest 503 copy.
+- Stripe: Velor Enterprise product prod_UoqXwy4RXYEoFl ARCHIVED (0 subs
+  ever). STRIPE_ENTERPRISE_PRICE_ID env now unused.
+- Mockup: tier calculator reworked to 2 tiers, founding/live copy
+  updated in country dive / craft pages / live feed / You sellband,
+  embedded LEGALDOCS regenerated from the updated site source (0
+  Enterprise mentions anywhere in the mockup).
+
 ## 2026-07-15: Language & currency — real data, live FX conversion
 
 - All 19 languages the platform speaks (from lib/outreachI18n.ts;
