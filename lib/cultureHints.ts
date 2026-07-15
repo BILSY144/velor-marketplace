@@ -421,7 +421,35 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   GH: ['Kente cloth', 'Single-origin cacao', 'Recycled-glass beads', 'Adinkra prints', 'Shea butter', 'Bolga baskets', 'Krobo beads', 'Djembe drums', 'Black soap', 'Carved stools'],
   CI: ['Cacao', 'Wax-print fashion'],
   SN: ['Baskets', 'Wax-print accessories'],
-  GM: ['Serekunda batik textiles'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Gambia had only 1 item
+  // (backlog item 25's content-depth floor list). Four product-level
+  // additions, each corroborated across at least two independent,
+  // Gambia-specific sources, none invented: Hand-thrown pottery is
+  // documented both as an ongoing regional tradition (accessgambia.com:
+  // Serahule women potters of Basse and Alohungari, clay pots made in the
+  // Senegambia area "for over 6,000 years") and as a specific still-running
+  // workshop (footstepsinthegambia.com: Saines Pottery in Brikama, founded
+  // by Edrissa Saine over three decades ago, Mandinka-rooted, family-run,
+  // currently producing glazed decorative and functional ware). Palm-leaf
+  // basketware is corroborated by accessgambia.com (baskets, hand fans,
+  // table mats, lampshades, fruit bowls woven from palm leaves) and
+  // my-gambia.com's profile of weaver Ebrima Sorrie Camara in the
+  // Senegambia tourist area (handbags, sling bags, small baskets, table
+  // mats, hats, bottle holders). Hand-made silver jewellery is corroborated
+  // by two independent artisan profiles: my-gambia.com on brothers Mamat
+  // Ndure and Njaga Njie's family workshop in Serekunda (~30 years running,
+  // learned from their grandfather, bangles/bracelets/chains/rings), and
+  // footstepsinthegambia.com on master silversmith Bai Sering Secka of
+  // Gunjur (necklaces, bracelets, rings, still using goat-skin bellows,
+  // teaching his own children). Hand-carved wood items are corroborated by
+  // accessgambia.com (masks, mortars and pestles, combs, djembe drums,
+  // bowls, rooted in Mandinka/Fulani/Bambara tradition) and
+  // footstepsinthegambia.com's profile of carver Malang Manneh of Gunjur
+  // (tool handles, wildlife figures, trained by his father, a "master
+  // carver"). No shell/ivory/coral/bone material, no weapons, no
+  // raw-material-only entries. Pre-existing 'Serekunda batik textiles' kept
+  // unchanged, not re-verified this run.
+  GM: ['Serekunda batik textiles', 'Hand-thrown pottery (Brikama & Basse)', 'Palm-leaf basketware', 'Hand-made silver jewellery (Serekunda & Gunjur)', 'Hand-carved wood items (Gunjur)'],
   ML: ['Mudcloth (bogolan)', 'Instruments'],
   BF: ['Bronze casting', 'Woven cotton'],
   GN: ['Djembe drums'],
