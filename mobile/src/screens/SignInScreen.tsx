@@ -15,7 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { signInWithPassword, requestPasswordReset } from '../api'
 import { useSession } from '../store'
-import { biometricsAvailable, setFaceIdEnabled } from '../biometrics'
+import { biometricsAvailable, setFaceIdEnabled, unlockWithBiometrics } from '../biometrics'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 
@@ -179,8 +179,13 @@ export default function SignInScreen() {
                 <Pressable
                   style={[s.panelBtn, { flex: 1 }]}
                   onPress={async () => {
-                    await setFaceIdEnabled(true)
-                    nav.goBack()
+                    // Prove the face right now — enabling is only real if the
+                    // biometric actually fires and passes.
+                    const ok = await unlockWithBiometrics()
+                    if (ok) {
+                      await setFaceIdEnabled(true)
+                      nav.goBack()
+                    }
                   }}
                 >
                   <Text style={s.panelBtnTx}>Enable {bioOffer}</Text>

@@ -420,3 +420,19 @@ everywhere it matters).
 3. PASSWORD RESET BY EMAIL (app side built): "Forgot your password?" on
    the sign-in screen posts /api/auth/forgot — one-hour emailed link, no
    user enumeration. Backend routes/pages land on main (same session).
+
+## 2026-07-15 — Face ID lock FIXED to guard the app door itself
+
+William on-device: enable offer appeared but "when I open the app it
+should have Face ID to open the app" — it didn't. Two real gaps: (1) the
+lock only armed after a NETWORK session check on cold start (slow/failed
+fetch = no lock), and (2) it never armed on background→foreground, which
+is how an app is usually "opened". Fixed: the lock now arms instantly
+from the local SecureStore flag on cold start AND re-arms the moment the
+app goes to the background (AppState listener) — session restore is
+independent. Enabling from the sign-in card now FIRES Face ID immediately
+(no silent enable — the biometric must pass to switch on). New "Face ID
+lock" row on the You page shows ON/OFF and flips it, each flip guarded by
+the face itself. "Use password instead" on the lock screen disables the
+flag, signs out, and returns to the password door. Sign-out also clears
+the flag.

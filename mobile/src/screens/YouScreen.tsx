@@ -6,6 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { useFavs, useFollows, useSession } from '../store'
 import { signOutRemote } from '../api'
+import { biometricsAvailable, isFaceIdEnabled, setFaceIdEnabled, unlockWithBiometrics } from '../biometrics'
 import { Chrome } from '../components/Chrome'
 
 // You — plate 16 + spec/account.txt, exact: YOU kicker, Fraunces 30 name,
@@ -22,9 +23,37 @@ export default function YouScreen() {
   const follows = useFollows((s) => s.ids)
   const user = useSession((s) => s.user)
   const setSession = useSession((s) => s.set)
+  const [bio, setBio] = React.useState<{ available: boolean; label: string }>({
+    available: false,
+    label: 'Face ID',
+  })
+  const [bioOn, setBioOn] = React.useState(false)
+
+  React.useEffect(() => {
+    biometricsAvailable().then(setBio)
+    isFaceIdEnabled().then(setBioOn)
+  }, [])
+
+  const toggleBio = async () => {
+    if (bioOn) {
+      // Turning protection OFF requires the face that owns it.
+      const ok = await unlockWithBiometrics()
+      if (!ok) return
+      await setFaceIdEnabled(false)
+      setBioOn(false)
+    } else {
+      const ok = await unlockWithBiometrics()
+      if (!ok) return
+      await setFaceIdEnabled(true)
+      setBioOn(true)
+    }
+  }
 
   const signOut = () => {
-    signOutRemote().finally(() => setSession(null))
+    setFaceIdEnabled(false).finally(() => {
+      setBioOn(false)
+      signOutRemote().finally(() => setSession(null))
+    })
   }
 
   const favSub =
@@ -109,6 +138,26 @@ export default function YouScreen() {
             <Text style={s.passN}>0</Text>
           </Pressable>
 
+          {/* Face ID lock — visible, flippable, guarded by the face itself */}
+          {user && bio.available ? (
+            <Pressable style={s.bioRow} onPress={toggleBio}>
+              <Ionicons name="scan-circle-outline" size={20} color={bioOn ? C.accent : C.mut} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.rowT}>{bio.label} lock</Text>
+                <Text style={s.rowS}>
+                  {bioOn
+                    ? `On — ${bio.label} opens the app, password is the backup`
+                    : `Off — tap to require ${bio.label} when the app opens`}
+                </Text>
+              </View>
+              <View style={[s.pillState, bioOn && s.pillStateOn]}>
+                <Text style={[s.pillStateTx, bioOn && { color: C.accent }]}>
+                  {bioOn ? 'ON' : 'OFF'}
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+
           <Text style={[s.kickDim, { marginTop: 28 }]}>ACCOUNT</Text>
         </View>
 
@@ -171,6 +220,26 @@ const s = StyleSheet.create({
   passT: { fontFamily: F.bodySemi, fontSize: 14, color: C.text },
   passS: { fontFamily: F.body, fontSize: 11.5, color: C.dim, marginTop: 2 },
   passN: { fontFamily: F.display, fontSize: 26, color: C.accent },
+  bioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 18,
+    padding: 14,
+  },
+  pillState: {
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
+  pillStateOn: { borderColor: 'rgba(255,107,0,0.5)', backgroundColor: 'rgba(255,107,0,0.1)' },
+  pillStateTx: { fontFamily: F.display, fontSize: 9.5, letterSpacing: 1, color: C.mut },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

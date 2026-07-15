@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Image, Pressable, StyleSheet, Animated } from 'react-native'
+import { View, Text, Image, Pressable, StyleSheet, Animated, AppState } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
@@ -48,7 +48,7 @@ import GoLiveScreen from './src/screens/GoLiveScreen'
 import SignInScreen from './src/screens/SignInScreen'
 import { useSession } from './src/store'
 import { getSession, signOutRemote } from './src/api'
-import { isFaceIdEnabled, unlockWithBiometrics, biometricsAvailable } from './src/biometrics'
+import { isFaceIdEnabled, setFaceIdEnabled, unlockWithBiometrics, biometricsAvailable } from './src/biometrics'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -260,25 +260,31 @@ export default function App() {
   const setSession = useSession((s) => s.set)
   const markReady = useSession((s) => s.markReady)
 
+  // FACE ID GUARDS THE APP DOOR (William, 2026-07-15: "when I open the app
+  // it should have Face ID to open the app"). The lock arms INSTANTLY from
+  // the local SecureStore flag — no network wait — on every cold start, and
+  // re-arms the moment the app goes to the background, so returning to the
+  // app always demands a face. Session restore runs independently.
+  React.useEffect(() => {
+    isFaceIdEnabled().then((on) => {
+      if (on) setLocked(true)
+    })
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') {
+        isFaceIdEnabled().then((on) => {
+          if (on) setLocked(true)
+        })
+      }
+    })
+    return () => sub.remove()
+  }, [])
+
   // Restore the seller session from the platform cookie jar on cold start —
   // if the site's NextAuth cookie survived, the dashboard is live instantly.
-  // If Face ID protection is on, the restored session stays LOCKED behind
-  // biometrics until the owner unlocks (password sign-in is the fallback).
   React.useEffect(() => {
-    ;(async () => {
-      try {
-        const u = await getSession()
-        if (u) {
-          const gate = await isFaceIdEnabled()
-          if (gate) setLocked(true)
-          setSession(u)
-        } else {
-          markReady()
-        }
-      } catch {
-        markReady()
-      }
-    })()
+    getSession()
+      .then((u) => (u ? setSession(u) : markReady()))
+      .catch(() => markReady())
   }, [setSession, markReady])
 
   if (!loaded) {
@@ -325,9 +331,13 @@ export default function App() {
             <BiometricLock
               onUnlocked={() => setLocked(false)}
               onUsePassword={() => {
-                signOutRemote().finally(() => {
-                  setSession(null)
-                  setLocked(false)
+                // Password fallback: Face ID comes off, the session signs
+                // out, and the password door is the way back in.
+                setFaceIdEnabled(false).finally(() => {
+                  signOutRemote().finally(() => {
+                    setSession(null)
+                    setLocked(false)
+                  })
                 })
               }}
             />
