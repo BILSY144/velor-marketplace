@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
@@ -59,11 +59,11 @@ export default function SellScreen() {
       <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
         <Btn
           label="Apply to sell — five minutes"
-          onPress={() => Linking.openURL('https://velorcommerce.store/apply')}
+          onPress={() => nav.navigate('Apply', {})}
         />
         <Dim style={{ textAlign: 'center', marginTop: 9, fontSize: 11 }}>
-          The application and Stripe-hosted identity check run on velorcommerce.store —
-          decision within 24h of verification.
+          Five minutes in-app. Only the Stripe-hosted identity check opens in your
+          browser — decision within 24h of verification.
         </Dim>
       </View>
     </ScrollView>

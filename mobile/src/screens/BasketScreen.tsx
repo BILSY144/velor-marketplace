@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react'
-import { View, FlatList, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, FlatList, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
+import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import { useCart } from '../store'
 import { Kicker, Display, Body, Dim, Serif, Btn, Empty } from '../ui'
 
 export default function BasketScreen() {
+  const nav = useNavigation<any>()
   const insets = useSafeAreaInsets()
   const { items, setQty, remove, total } = useCart()
   const sellers = useMemo(
@@ -79,13 +81,7 @@ export default function BasketScreen() {
             that parcel's delivery is confirmed. Delivery is quoted per seller at
             checkout, from their real dispatch address.
           </Dim>
-          <Btn
-            label="Checkout on velorcommerce.store"
-            onPress={() => Linking.openURL('https://velorcommerce.store/checkout')}
-          />
-          <Dim style={{ fontSize: 10.5, textAlign: 'center', marginTop: 8 }}>
-            In-app checkout ships with buyer launch — 6 August.
-          </Dim>
+          <Btn label="Checkout" onPress={() => nav.navigate('Checkout')} />
         </View>
       )}
     </View>

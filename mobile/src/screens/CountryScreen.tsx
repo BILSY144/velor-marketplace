@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useQuery } from '@tanstack/react-query'
@@ -122,7 +122,7 @@ export default function CountryScreen() {
             <View style={{ paddingHorizontal: 20 }}>
               <Btn
                 label="Open this channel — apply to sell"
-                onPress={() => Linking.openURL(`https://velorcommerce.store/apply?country=${cc}`)}
+                onPress={() => nav.navigate('Apply', { cc })}
               />
             </View>
           </View>

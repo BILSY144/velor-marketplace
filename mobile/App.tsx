@@ -32,6 +32,9 @@ import OrdersScreen from './src/screens/OrdersScreen'
 import PassportScreen from './src/screens/PassportScreen'
 import SellScreen from './src/screens/SellScreen'
 import LegalScreen from './src/screens/LegalScreen'
+import ApplyScreen from './src/screens/ApplyScreen'
+import VerifyScreen from './src/screens/VerifyScreen'
+import CheckoutScreen from './src/screens/CheckoutScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -115,6 +118,9 @@ export default function App() {
             <Stack.Screen name="Passport" component={PassportScreen} />
             <Stack.Screen name="Sell" component={SellScreen} />
             <Stack.Screen name="Legal" component={LegalScreen} />
+            <Stack.Screen name="Apply" component={ApplyScreen} />
+            <Stack.Screen name="Verify" component={VerifyScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>
