@@ -1232,9 +1232,10 @@ S.langcur='<div class="scr" id="s-langcur"><div class="sc" id="langcurslot" styl
    platform speaks (buyer app ships English-first), 20 supported
    currencies converted with LIVE ECB rates from frankfurter.app — the
    same source the real checkout uses. ===== */
-var LANGS=[['en','English'],['es','Espanol'],['fr','Francais'],['de','Deutsch'],['it','Italiano'],['pt','Portugues'],['nl','Nederlands'],['pl','Polski'],['tr','Turkce'],['ru','Russkiy'],['ar','Arabic'],['hi','Hindi'],['bn','Bangla'],['vi','Tieng Viet'],['th','Thai'],['id','Bahasa Indonesia'],['zh','Zhongwen'],['ja','Nihongo'],['ko','Hangugeo']];
-var CURRENCIES=['GBP','USD','EUR','CAD','AUD','JPY','CNY','INR','AED','SGD','CHF','SEK','NOK','DKK','NZD','HKD','ZAR','BRL','MXN','KRW'];
+var LANGS=[['en','English','English',1],['es','Español','Spanish',0],['fr','Français','French',0],['de','Deutsch','German',0],['it','Italiano','Italian',0],['pt','Português','Portuguese',0],['nl','Nederlands','Dutch',0],['pl','Polski','Polish',0],['tr','Türkçe','Turkish',0],['ru','Русский','Russian',0],['ar','العربية','Arabic',0],['hi','हिन्दी','Hindi',0],['bn','বাংলা','Bengali',0],['vi','Tiếng Việt','Vietnamese',0],['th','ไทย','Thai',0],['id','Bahasa Indonesia','Indonesian',0],['zh','中文','Chinese',0],['ja','日本語','Japanese',0],['ko','한국어','Korean',0]];
+var CURRENCIES=[['GBP','Pound sterling'],['USD','US dollar'],['EUR','Euro'],['CAD','Canadian dollar'],['AUD','Australian dollar'],['JPY','Japanese yen'],['CNY','Chinese yuan'],['INR','Indian rupee'],['AED','UAE dirham'],['SGD','Singapore dollar'],['CHF','Swiss franc'],['SEK','Swedish krona'],['NOK','Norwegian krone'],['DKK','Danish krone'],['NZD','NZ dollar'],['HKD','HK dollar'],['ZAR','SA rand'],['BRL','Brazilian real'],['MXN','Mexican peso'],['KRW','SK won']];
 var CSYM={GBP:'£',USD:'$',EUR:'€',CAD:'CA$',AUD:'A$',JPY:'¥',CNY:'CN¥',INR:'₹',AED:'AED ',SGD:'S$',CHF:'CHF ',SEK:'kr ',NOK:'kr ',DKK:'kr ',NZD:'NZ$',HKD:'HK$',ZAR:'R',BRL:'R$',MXN:'MX$',KRW:'₩'};
+var CBADGE={GBP:'£',USD:'$',EUR:'€',CAD:'$',AUD:'$',JPY:'¥',CNY:'¥',INR:'₹',AED:'د.إ',SGD:'$',CHF:'₣',SEK:'kr',NOK:'kr',DKK:'kr',NZD:'$',HKD:'$',ZAR:'R',BRL:'R$',MXN:'$',KRW:'₩'};
 var CZERO={JPY:1,KRW:1};
 var CURRENCY={code:'GBP',rate:1};
 function gbp(x){
@@ -1243,12 +1244,10 @@ function gbp(x){
   return CSYM[c]+v.toFixed(2).replace(/\.00$/,'');
 }
 function setCurrency(code){
-  /* Same two-source strategy as the site's lib/fx.ts: frankfurter (ECB)
-     first, open.er-api.com as fallback. */
   if(code===CURRENCY.code) return;
   if(code==='GBP'){ CURRENCY={code:'GBP',rate:1}; renderLangCur(); toast('Prices in GBP'); return }
   toast('Fetching the live rate&hellip;');
-  function apply(rate,src){ CURRENCY={code:code,rate:rate}; renderLangCur(); toast('Prices now in '+code+' &middot; live rate '+Number(rate).toFixed(4)) }
+  function apply(rate){ CURRENCY={code:code,rate:rate}; renderLangCur(); toast('Prices now in '+code+' &middot; live rate '+Number(rate).toFixed(4)) }
   fetch('https://api.frankfurter.app/latest?from=GBP&to='+code)
     .then(function(r){return r.json()})
     .then(function(d){ if(d&&d.rates&&d.rates[code]){ apply(d.rates[code]) } else { throw new Error('no rate') } })
@@ -1261,22 +1260,43 @@ function setCurrency(code){
 }
 function renderLangCur(){
   var host=document.getElementById('langcurslot'); if(!host) return;
-  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Language<br>&amp; currency</h1></div>'
-  +'<div class="pad"><div class="k d" style="margin-top:22px">LANGUAGE</div></div>'
-  +LANGS.map(function(l,i){ var live=(l[0]==='en');
-    return '<button class="radio'+(live?' on':'')+'" onclick="'+(live?'':'toast(\''+l[1]+' arrives with the buyer app launch\')')+'"><span class="rd"></span><span class="t">'+l[1]+(live?'':' <span style=\'font-size:10px;color:var(--mut)\'>arriving</span>')+'</span></button>';
-  }).join('')
-  +'<div class="pad"><p class="sm dim" style="margin-top:8px">Velor already speaks all 19 of these to its sellers &mdash; the buyer app ships English-first and follows with the rest.</p></div>'
-  +'<div class="pad"><div class="k d" style="margin-top:24px">CURRENCY &middot; '+CURRENCY.code+'</div></div>'
-  +'<div class="pad" style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px">'
-  +CURRENCIES.map(function(c){ var on=(c===CURRENCY.code);
-    return '<button style="font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:.04em;padding:9px 14px;border-radius:999px;border:1px solid '+(on?'rgba(255,107,0,.55)':'var(--line)')+';background:'+(on?'rgba(255,107,0,.12)':'var(--surf)')+';color:'+(on?'var(--accent)':'inherit')+'" onclick="setCurrency(\''+c+'\')">'+c+'</button>';
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button>'
+  +'<div class="k" style="margin-top:16px">YOUR VELOR</div>'
+  +'<h1 class="dspl" style="font-size:30px;margin-top:8px">Your words.<br>Your money.</h1></div>'
+  /* ---- language grid, native scripts ---- */
+  +'<div class="pad"><div class="k d" style="margin-top:24px">LANGUAGE</div><p class="sm dim" style="margin-top:6px">Velor already speaks all nineteen to its sellers &mdash; the buyer app ships English-first.</p></div>'
+  +'<div class="pad" style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px;padding-top:13px">'
+  +LANGS.map(function(l){
+    var live=l[3]===1;
+    return '<button style="position:relative;text-align:left;border-radius:16px;padding:13px 14px;border:1px solid '+(live?'rgba(255,107,0,.55)':'var(--line)')+';background:'+(live?'rgba(255,107,0,.10)':'var(--surf)')+';color:inherit'+(live?'':';opacity:.72')+'" onclick="'+(live?'toast(\'English is live\')':'toast(\''+l[2]+' arrives with the buyer app launch\')')+'">'
+    +'<span class="serif" style="font-size:16.5px;display:block;line-height:1.25">'+l[1]+'</span>'
+    +'<span class="sm dim" style="font-size:10.5px;display:block;margin-top:3px">'+l[2]+'</span>'
+    +(live?'<span style="position:absolute;top:11px;right:12px;width:7px;height:7px;border-radius:50%;background:var(--accent)"></span>'
+          :'<span style="position:absolute;top:12px;right:12px;font:700 8px var(--fd);letter-spacing:.1em;color:var(--mut)">ARRIVING</span>')
+    +'</button>';
   }).join('')+'</div>'
-  +'<div class="pad"><p class="sm dim" style="margin-top:12px">Prices show &mdash; and you are charged &mdash; in your own currency. Converted here with the live European Central Bank rate, the same source checkout uses.</p>'
-  +'<div style="margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:var(--ink)"><div class="sm dim">The sample tea set right now</div><div class="fd" style="font-size:19px;font-weight:700;margin-top:4px">'+gbp(54)+'</div></div></div>';
+  /* ---- currency grid, symbol-led ---- */
+  +'<div class="pad"><div class="k d" style="margin-top:28px">CURRENCY</div><p class="sm dim" style="margin-top:6px">Prices show &mdash; and you are charged &mdash; in your own money. Live European Central Bank rate, the same source checkout uses.</p></div>'
+  +'<div class="pad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding-top:13px">'
+  +CURRENCIES.map(function(c){
+    var on=(c[0]===CURRENCY.code);
+    return '<button style="text-align:left;border-radius:16px;padding:12px 12px 10px;border:1px solid '+(on?'rgba(255,107,0,.6)':'var(--line)')+';background:'+(on?'rgba(255,107,0,.12)':'var(--surf)')+';color:inherit" onclick="setCurrency(\''+c[0]+'\')">'
+    +'<span class="dspl" style="font-size:21px;display:block;color:'+(on?'var(--accent)':'inherit')+'">'+CBADGE[c[0]]+'</span>'
+    +'<span class="fd" style="font-size:11.5px;font-weight:700;letter-spacing:.05em;display:block;margin-top:5px">'+c[0]+'</span>'
+    +'<span class="sm dim" style="font-size:9.5px;display:block;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c[1]+'</span>'
+    +'</button>';
+  }).join('')+'</div>'
+  /* ---- live rate + specimen ---- */
+  +'<div class="pad"><div style="margin-top:16px;border:1px solid var(--line);border-radius:18px;padding:15px 16px;background:var(--ink)">'
+  +(CURRENCY.code==='GBP'
+    ?'<div class="sm dim">Base currency</div><div class="fd" style="font-size:15px;font-weight:700;margin-top:3px">GBP &middot; no conversion</div>'
+    :'<div class="sm dim">Live rate</div><div class="fd" style="font-size:15px;font-weight:700;margin-top:3px">&pound;1 = '+CSYM[CURRENCY.code]+Number(CURRENCY.rate).toFixed(4)+' &middot; European Central Bank</div>')
+  +'<div style="display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><span class="sm dim" style="flex:1">Gongfu tea set &middot; SAMPLE</span>'
+  +(CURRENCY.code==='GBP'?'<span class="dspl" style="font-size:19px">&pound;54</span>'
+   :'<span class="sm dim" style="text-decoration:line-through">&pound;54</span><span class="dspl" style="font-size:19px;color:var(--accent)">'+gbp(54)+'</span>')
+  +'</div></div></div>';
   host.innerHTML=h;
 }
-
 S.legal='<div class="scr" id="s-legal"><div class="sc" style="padding-bottom:120px">'
 +'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Privacy &amp; legal</h1></div>'
 +'<div class="escrow-bar">'+I.shield+'<span>You pay Velor, not the seller. Money is held in escrow and released per parcel, only on confirmed delivery. Anything wrong &mdash; the funds freeze.</span></div>'
