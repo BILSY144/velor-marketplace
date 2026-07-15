@@ -2,6 +2,26 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Dispute fixed (photo layout + 3-photo gate) and return flow built
+
+- ADD PHOTOS off-page bug: the sample <img> in a flex rail refused to
+  shrink below intrinsic size (flex min-width:auto), blowing up full-
+  width. Photos are now fixed 84px div tiles that wrap in-page.
+- William's rule: minimum 3 photos to open a dispute. Implemented with a
+  counter label + blocked submit and toast. One reasoned exception,
+  flagged to William: "It hasn't arrived" lifts the gate (label says
+  "NOT NEEDED -- NOTHING ARRIVED TO PHOTOGRAPH").
+- "Request return" (odetail) no longer dead-ends: real returnreq screen
+  -- 14-day window per the PUBLISHED terms, reason radios, optional
+  photos, escrow-freeze copy, pointer to the dispute flow for damage.
+  Added to review chips.
+- OBSERVED PRODUCTION INCONSISTENCY (flagged, not changed): live terms
+  page says returns "within 14 days of delivery" but
+  app/api/returns/route.ts enforces RETURN_WINDOW_MS = 15 days. Code is
+  more generous than the promise; align one of them when William
+  decides.
+- Commit 37fa8a3.
+
 ## 2026-07-15: Checkout derives live from the cart
 
 - DELIVERY section lists each seller's parcel with the service chosen on
