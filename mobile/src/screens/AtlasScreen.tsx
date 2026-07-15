@@ -1,176 +1,120 @@
-import React, { useMemo } from 'react'
-import { View, SectionList, Pressable, StyleSheet, ScrollView } from 'react-native'
+import React, { useMemo, useRef, useState } from 'react'
+import { View, Pressable, StyleSheet, ScrollView } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'
-import { useQuery } from '@tanstack/react-query'
 import { useNavigation } from '@react-navigation/native'
-import { C, F, flagUrl } from '../theme'
-import { countriesByRegion, FILMS, HINTS } from '../data'
-import { fetchLattice } from '../api'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { C, F } from '../theme'
+import { FILMS } from '../data'
 import { globeHtml } from '../globeHtml'
-import { Kicker, Display, Body, Dim, Serif } from '../ui'
+import { Kicker, Display, Body, Dim } from '../ui'
 
+// The Atlas — full-bleed interactive globe, exactly like the mockup.
+// The globe owns every gesture (nothing here scrolls vertically); the
+// film reel sits at the bottom, and the round button flips the globe
+// between the realistic earth and the dark ink view.
 export default function AtlasScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
-  const sections = useMemo(countriesByRegion, [])
   const html = useMemo(globeHtml, [])
-  const lattice = useQuery({ queryKey: ['lattice'], queryFn: fetchLattice })
-  const tradingByCode = useMemo(() => {
-    const m: Record<string, number> = {}
-    for (const c of lattice.data?.countries ?? []) m[c.code] = c.products
-    return m
-  }, [lattice.data])
+  const web = useRef<WebView>(null)
+  const [mode, setMode] = useState<'real' | 'ink'>('real')
+
+  function toggleMode() {
+    const next = mode === 'real' ? 'ink' : 'real'
+    setMode(next)
+    web.current?.injectJavaScript(`setMode('${next}');true;`)
+  }
 
   return (
-    <SectionList
-      style={{ flex: 1, backgroundColor: C.bg }}
-      sections={sections}
-      keyExtractor={(item) => item.c}
-      stickySectionHeadersEnabled={false}
-      ListHeaderComponent={
-        <View>
-          <View style={{ paddingHorizontal: 20, paddingTop: insets.top + 12 }}>
-            <Kicker>THE ATLAS</Kicker>
-            <Display style={{ marginTop: 6 }}>Shop the world.</Display>
-          </View>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <WebView
+        ref={web}
+        source={{ html }}
+        style={[StyleSheet.absoluteFill as any, { backgroundColor: C.bg }]}
+        containerStyle={{ backgroundColor: C.bg }}
+        scrollEnabled={false}
+        overScrollMode="never"
+        setSupportMultipleWindows={false}
+        originWhitelist={['*']}
+        onMessage={(e) => {
+          const cc = e.nativeEvent.data
+          if (cc && cc.length === 2) nav.navigate('Country', { cc })
+        }}
+      />
 
-          {/* The globe — drag to spin, tap a light to dive into that country */}
-          <View style={s.globeWrap}>
-            <WebView
-              source={{ html }}
-              style={s.globe}
-              containerStyle={{ backgroundColor: C.bg }}
-              scrollEnabled={false}
-              overScrollMode="never"
-              setSupportMultipleWindows={false}
-              originWhitelist={['*']}
-              onMessage={(e) => {
-                const cc = e.nativeEvent.data
-                if (cc && cc.length === 2) nav.navigate('Country', { cc })
-              }}
-            />
-          </View>
-          <Dim style={{ textAlign: 'center', fontSize: 10.5, marginTop: 2 }}>
-            Drag to spin · tap a light to dive in
-          </Dim>
+      {/* Title — taps pass through to the globe beneath */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: insets.top + 12, left: 20, right: 20 }}>
+        <Kicker>THE ATLAS</Kicker>
+        <Display style={{ marginTop: 6 }}>Shop the world.</Display>
+        <Dim style={{ marginTop: 6, fontSize: 11 }}>
+          Drag to spin · tap a light to dive in
+        </Dim>
+      </View>
 
-          <View style={s.statRow}>
-            <Stat value={String(lattice.data?.totalCountries ?? 190)} label="COUNTRIES" />
-            <Stat
-              value={lattice.isLoading ? '—' : String(lattice.data?.trading ?? 0)}
-              label="TRADING NOW"
-            />
-            <Stat value="6 AUG" label="BUYERS ARRIVE" />
-          </View>
+      {/* Globe view toggle — realistic earth vs dark ink */}
+      <Pressable style={[s.mode, { bottom: 232 }]} onPress={toggleMode}>
+        <Ionicons
+          name={mode === 'real' ? 'moon-outline' : 'earth-outline'}
+          size={19}
+          color={C.text}
+        />
+      </Pressable>
 
-          <Kicker style={{ paddingHorizontal: 20, marginTop: 22 }}>
-            SHOPPING THE WORLD — PREVIEW FILMS
-          </Kicker>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 12 }}
-          >
-            {FILMS.slice(0, 12).map((f, i) => (
-              <Pressable key={f.src} style={s.filmCard} onPress={() => nav.navigate('Live', { start: i })}>
-                <Image source={{ uri: f.poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-                <View style={s.filmShade} />
-                <View style={s.previewTag}>
-                  <Body style={s.previewTx}>PREVIEW</Body>
-                </View>
-                <View style={{ position: 'absolute', left: 9, right: 9, bottom: 9 }}>
-                  <Body style={{ fontFamily: F.bodySemi, fontSize: 11.5 }} numberOfLines={1}>
-                    {f.title}
-                  </Body>
-                  <Dim style={{ fontSize: 10 }} numberOfLines={1}>
-                    {f.sub}
-                  </Dim>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      }
-      renderSectionHeader={({ section }) => (
-        <View style={{ paddingHorizontal: 20, paddingTop: 26, paddingBottom: 6 }}>
-          <Kicker style={{ color: C.mut }}>
-            {section.title.toUpperCase()} · {section.data.length}
-          </Kicker>
-        </View>
-      )}
-      renderItem={({ item }) => {
-        const products = tradingByCode[item.c] ?? 0
-        const crafts = (HINTS[item.c] ?? []).slice(0, 2).join(' · ')
-        return (
-          <Pressable style={s.row} onPress={() => nav.navigate('Country', { cc: item.c })}>
-            <Image source={{ uri: flagUrl(item.c) }} style={s.flag} contentFit="cover" />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Serif style={{ fontSize: 15.5 }}>{item.n}</Serif>
-              {crafts ? (
-                <Dim style={{ fontSize: 11, marginTop: 2 }} numberOfLines={1}>
-                  {crafts}
-                </Dim>
-              ) : null}
-            </View>
-            {products > 0 ? (
-              <View style={s.tradingTag}>
-                <Body style={{ fontFamily: F.displayMed, fontSize: 9.5, color: C.green }}>
-                  {products} LIVE
+      {/* Bottom reel — preview films, swipes horizontally only */}
+      <View style={s.reelWrap}>
+        <Kicker style={{ paddingHorizontal: 20 }}>SHOPPING THE WORLD — PREVIEW FILMS</Kicker>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 10 }}
+        >
+          {FILMS.slice(0, 14).map((f, i) => (
+            <Pressable key={f.src} style={s.filmCard} onPress={() => nav.navigate('Live', { start: i })}>
+              <Image source={{ uri: f.poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+              <View style={s.filmShade} />
+              <View style={s.previewTag}>
+                <Body style={s.previewTx}>PREVIEW</Body>
+              </View>
+              <View style={{ position: 'absolute', left: 8, right: 8, bottom: 8 }}>
+                <Body style={{ fontFamily: F.bodySemi, fontSize: 10.5 }} numberOfLines={1}>
+                  {f.title}
                 </Body>
               </View>
-            ) : (
-              <View style={s.openTag}>
-                <Body style={{ fontFamily: F.displayMed, fontSize: 9, color: C.accent }}>
-                  OPENING
-                </Body>
-              </View>
-            )}
-          </Pressable>
-        )
-      }}
-      ListFooterComponent={<View style={{ height: 40 }} />}
-    />
-  )
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={s.stat}>
-      <Serif style={{ fontSize: 22, color: C.accent }}>{value}</Serif>
-      <Body style={s.statLabel}>{label}</Body>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
     </View>
   )
 }
 
 const s = StyleSheet.create({
-  globeWrap: {
-    height: 390,
-    marginTop: 6,
-    overflow: 'hidden',
-  },
-  globe: { flex: 1, backgroundColor: C.bg },
-  statRow: {
-    flexDirection: 'row',
-    marginTop: 18,
-    marginHorizontal: 20,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
+  mode: {
+    position: 'absolute',
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(20,20,26,0.85)',
+    borderWidth: 1,
     borderColor: C.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
   },
-  stat: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-  statLabel: {
-    fontFamily: F.display,
-    fontSize: 8.5,
-    letterSpacing: 1.2,
-    color: C.mut,
-    marginTop: 4,
+  reelWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 8,
+    paddingBottom: 6,
   },
   filmCard: {
-    width: 128,
-    aspectRatio: 9 / 14,
-    borderRadius: 16,
+    width: 108,
+    aspectRatio: 9 / 13,
+    borderRadius: 14,
     overflow: 'hidden',
     backgroundColor: C.surf2,
   },
@@ -184,37 +128,12 @@ const s = StyleSheet.create({
   },
   previewTag: {
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: 7,
+    left: 7,
     backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
-  previewTx: { fontFamily: F.display, fontSize: 8, letterSpacing: 1, color: C.text },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
-  },
-  flag: { width: 26, height: 19, borderRadius: 4 },
-  tradingTag: {
-    borderWidth: 1,
-    borderColor: 'rgba(61,220,132,0.4)',
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  openTag: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(255,107,0,0.5)',
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
+  previewTx: { fontFamily: F.display, fontSize: 7.5, letterSpacing: 1, color: C.text },
 })
