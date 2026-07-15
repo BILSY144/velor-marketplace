@@ -2,6 +2,22 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Language & currency — real data, live FX conversion
+
+- All 19 languages the platform speaks (from lib/outreachI18n.ts;
+  English live, rest "arriving"), all 20 checkout currencies (from
+  lib/currency.ts) as chips. Picking one fetches the LIVE rate --
+  frankfurter (ECB) first, open.er-api.com fallback, the exact
+  two-source strategy of lib/fx.ts. frankfurter was unreachable from
+  William's browser context; fallback verified working.
+- gbp() is now currency-aware (zero-decimal JPY/KRW handled), so the
+  whole cart->checkout->confirmed pipeline converts: verified live in
+  USD ($72.29 tea set, $296.65 checkout dock at rate 1.3387). You-page
+  row shows the live selection; in-page sample tile converts.
+- Honest failure path: both sources down -> stays in current currency
+  with a toast.
+- Commits: fdc461c, 9f37824.
+
 ## 2026-07-15: Legal rows read in-app (no more browser-tab jumps)
 
 - William: all four Privacy & legal links dumped him into desktop tab
