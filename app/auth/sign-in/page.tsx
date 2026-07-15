@@ -195,6 +195,20 @@ function SignInForm() {
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
+
+          <a
+            href="/auth/forgot"
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              marginTop: '14px',
+              color: '#8a8a95',
+              fontSize: '13px',
+              textDecoration: 'none',
+            }}
+          >
+            Forgot your password? <span style={{ color: '#FF6B00' }}>Reset by email</span>
+          </a>
         </form>
 
         <p
