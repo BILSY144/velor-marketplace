@@ -486,3 +486,11 @@ Old page: static camera-check card, Go live button was a toast, background film 
 Verified live (?v=golive1): pin add 3→4, timer 0:05/0:17, viewers 73→160, chat + Velor escrow bubbles, £68 sold on pinned card, summary fills correctly. William: "perfect".
 
 STATUS: every page of the mockup has now been reviewed and approved by William — buyer side (previous sessions) and seller side (this session: sell pitch, founding seats, apply, verify, dashboard ×2 tiers, seller orders, API keys, new listing, payouts, go live). Next big step per the roadmap: scaffold the real Expo/RN app (spec: VELOR-APP-FEATURE-MAP.md).
+
+## 2026-07-15 — Brand refresh: new logo + glow removals
+
+William supplied a new master logo (VELOR with globe-as-O + GLOBAL MARKETPLACE strap, black bg) and an app-store icon, uploaded via GitHub web to main ("Add files via upload", 3d932f8). Processed:
+- Cutout: edge flood-fill (protects the globe's dark interior) + scipy component pass to clear enclosed letter counters OUTSIDE a protective circle around the globe (size-based selection fails — gridlines slice the ocean into ~1000 small components). Result: clean transparency, globe intact.
+- main: public/brand/velor-logo-master.png, public/brand/velor-app-icon.png (1254px, for store listings when the real app ships), public/velor-logo-2026.png (900px cutout). GlobalHeader (h40) + GlobalFooter (h32) swapped to it; layout.tsx schema logo + og-image left on old assets deliberately (dimension comments pinned there). Commit 167c93b, verified live on velorcommerce.store.
+- Mockup splash: biglogo (VEL+canvas+R) + lstrap replaced with the new logo img (public/velor-logo-2026.png committed to this branch too). drawOGlobe now no-ops safely (canvas gone, guard exists).
+- Atlas glow removals (William): orange .glow-c halo div+CSS deleted; blue atmosphere halo in initGlobe GMODE 'real' deleted; rim light desaturated blue→neutral white at lower alpha. Verified live: globe reads clean with only seller lights.
