@@ -619,7 +619,42 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // multiple live listings (Etsy, eBay, PicClick). No ivory/coral/shell
   // material in anything added, no weapons, no raw-material-only entries.
   GA: ['Mbigou stone carvings', 'Punu masks', 'Kota reliquary figures (mbulu ngulu)', 'Ngombi harps (Bwiti ceremonial harp)'],
-  SD: ['Hibiscus & spices'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Sudan (SD) had only 1
+  // item; continuing backlog item 25's content-depth floor list. Five new
+  // product-level additions, each multi-source verified this run, all
+  // currently made/worn/sold today, none invented: the toub / thobe sudani
+  // (a long draped women's wrap garment, 2m x 4-7m, cotton/silk/blend) has
+  // its own detailed treatment on Wikipedia's "Clothing in Sudan" article
+  // and is independently corroborated as still actively worn today
+  // (Savoir Flair, Regal Fabrics, the "Women's literacy in Sudan" blog's
+  // "The Enduring Appeal of the Sudanese Toub") and currently sold on Etsy.
+  // Khumra (a home-blended, smoke-based perfume of sandalwood, musk and
+  // aromatic woods, traditionally prepared by women for weddings) is
+  // documented by the "Women's literacy in Sudan" blog ("Karkar, Dilka and
+  // Dukhan"), 500wordsmag and Diva Nihal, and is confirmed still produced
+  // today -- both traditionally at home and commercially, including
+  // current Etsy listings. Sudanese bakhoor (incense of wood chips soaked
+  // in aromatic oils with musk, clove and sandalwood, shaped into balls or
+  // cones) is documented by the same "Women's literacy in Sudan" blog
+  // ("Incense in Sudan") and Diva Nihal, which confirms it is "actively
+  // manufactured and sold today" through commercial retailers -- described
+  // only as wood chips/resins/oils generically, deliberately not naming
+  // any CITES-listed wood species. Nubian coiled palm-leaf baskets (palm
+  // fibre wrapped around a papyrus-and-grass coil, stitched by hand) are
+  // documented by basketsofafrica.com (a verified Fair Trade seller
+  // sourcing directly from Nubian women's weaving groups, including
+  // Darfur refugee-camp collectives) and corroborated by current
+  // marketplace listings (eBay) and Wikipedia's "Material culture of the
+  // Manasir". Markoob sandals (hand-stitched leather footwear, part of
+  // Sudanese national dress) have their own Wikipedia article describing
+  // the sole as "typically tar-tanned cowhide" and the upper as "commonly
+  // ... goat skin" -- deliberately described here using only that
+  // cowhide/goatskin construction, not the python- or crocodile-skin
+  // premium variants the same source also mentions, since those are
+  // CITES-regulated wildlife materials this list must not carry as a
+  // hint. No ivory/coral/shell material in anything added, no weapons, no
+  // raw-material-only entries.
+  SD: ['Hibiscus & spices', 'Toub wrap garments (thobe sudani)', 'Khumra perfume oil', 'Sudanese bakhoor incense', 'Nubian coiled palm-leaf baskets', 'Hand-stitched markoob sandals'],
   MR: ['Tuareg silver jewellery', 'Malahfa embroidered textiles'],
   DZ: ['Berber rugs', 'Dates'],
   LY: ['Dates', 'Copperware'],
