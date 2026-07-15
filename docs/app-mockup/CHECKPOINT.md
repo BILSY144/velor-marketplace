@@ -2,6 +2,27 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Basket rebuilt as a live cart model
+
+- Static two-seller demo replaced by a real CART model: qty +/- works (x
+  removes at qty 1), per-seller shipping options select and re-price,
+  totals + checkout dock recompute live, addCart() from PDP/live tray
+  genuinely adds the sample item, basket tab badge stays in sync.
+- Headline + copy adapt to seller count, numbers spelled out (William
+  asked: 6 sellers -> "Six makers. One payment." / "6 sellers, 6 parcels,
+  6 tracking numbers -- one charge"). Verified live with a simulated
+  6-seller basket.
+- Empty basket = honest zero-state ("Nothing here yet / The world is
+  open" -> Spin the globe). Both seed items labelled SAMPLE.
+- Shipping Q&A logged (William asked twice -- PDP + basket): carriers
+  separate RATING from LABEL PURCHASE. Shippo rating call (seller
+  ship-from + buyer address + parcel dims) returns real named services
+  with prices/ETAs at quote time; no label exists until bought. On Velor
+  sellers ship themselves (own carrier account, self-reported tracking),
+  so the quote is what the buyer is charged for delivery. Same model as
+  app/api/shipping/rates/route.ts on the marketplace.
+- Commits: 06e52c4 (live basket), b0499df (worded maker count).
+
 ## 2026-07-15: Search page rebuilt — 190 countries on region reels + working search
 
 - William's call: no craft-chip index needed; countries on swipeable reels
