@@ -397,3 +397,16 @@ Pexels image URL format: `https://images.pexels.com/photos/<ID>/pexels-photo-<ID
 
 ## After all imagery: build the real app
 Expo SDK (RN New Arch) + TS + Expo Router + Zustand + TanStack Query + NativeWind + Stripe RN + Expo Notifications + Sentry. Intended repo BILSY144/velor-app (note: PAT could not create new repos last session — pushed to a marketplace branch instead). Full build spec in the mockup's VELOR-APP-FEATURE-MAP.md (cloud sandbox).
+
+## 2026-07-15 — Founding seats page rebuilt (commit 10b2ca0)
+
+William: "this page can do with some serious redesigning/layout." Old page was 14 flat CH rows, a dead search input, and an "All 190 countries" button that only fired a toast. Replaced with a slot screen (`seatsslot` + `renderSeats()` hook in go(), built once) containing:
+
+- Header: THE FOUNDING MAP kicker, "One seat per country." display, honest sub ("first verified seller… keeps the seat permanently. All 190 are still open" — opener language, no "claims/owns").
+- Working search (`seatsSearch`): filters all 190 rows by country name OR craft (data-n = name + HINTS crafts, lowercased). Hides the top block while searching, shows "N SEATS MATCH", honest empty state for no matches. Verified live: "kilim" → 4 seats, "japan" → 1, "zzzz" → empty state, clear → resets.
+- Stat band .sstats: 190 SEATS · 0 TAKEN · 24H DECISION (all true).
+- Perks grid .sgrid (2×2): the four corrected founding perks (badge / Pro free for life with 4% / homepage showreel / opening credit) — matches the post-Enterprise-retirement sell pitch.
+- "CRAFT POWERHOUSES — EVERY ONE STILL OPEN" hrail: 10 .fseat cards from CH with Pexels images (hero img uses class .fs-i, NOT bare img selector — the .ptray lesson), known-for line, dashed SEAT OPEN chip → apply.
+- Full directory: 13 REGNAMES groups, all 190 WORLD rows (flag, name, first-2 HINTS crafts sub, SEAT OPEN chip) → apply. Bottom CTA "Apply for your seat" + 24h line.
+
+Verified on preview (?v=seats1): 190 rows / 13 groups / 10 featured cards render; search + empty state + reset all pass; visual check of header, stats, perks grid, rail and directory rows all clean.
