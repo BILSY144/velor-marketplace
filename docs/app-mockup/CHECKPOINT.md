@@ -422,3 +422,21 @@ William: no 2-speciality cap at application; sellers describe everything they pl
 - Optional website/social field; ship-from + materials declaration kept; dock line "Submitting takes you straight to identity verification"; submit → verify.
 
 Verified live (?v=apply2): header/steps/sections render, photo row single-line, description box and helper copy correct.
+
+## 2026-07-15 — Seller dashboard: two tier views, Pro advanced
+
+William: two tiers need two views, "the pro dashboard more advanced… highly advanced and sophisticated for pro. The dashboard on show atm is good for starter tier." S.dash → slot + renderDash() with a STARTER/PRO segmented toggle (.dseg, DASHTIER, dashTier()).
+
+STARTER (Killa Textiles · Peru, real PE wave images): the original simple layout — 3 stats, Go Live card ("Live is open to every seller" — old "Founding privilege" copy REMOVED, live is all-tiers since 2026-07-15), listings cap meter 7 OF 10 (.capbar), 3 listings, Pro upsell card ("Keep 6% more of every sale", button flips to the Pro view), to-do, payouts.
+
+PRO (Studio Kaede · FOUNDING JAPAN + PRO · 4% badges): the advanced layer —
+- 4-stat row (adds Paid out £2,140)
+- Revenue chart card with working 7D/30D/90D tabs (DCHART datasets, chartRange() swaps SVG sparkline + total; labelled SAMPLE DATA)
+- AI account manager card (her avatar /velor-assistant.png, 3 insight tips, "Ask her anything" → assist screen)
+- THIS MONTH analytics grid (conversion, repeat buyers, avg order, rating)
+- WHERE YOUR VIEWS COME FROM source bars (dashBar helper)
+- ORDER PIPELINE strip (New/To ship/In transit/Delivered, escrow-release line)
+- TOP LISTINGS · 30D revenue bars, YOUR BUYERS country rows (flags + orders)
+- Go Live card with last-stream stats, to-do, LISTINGS · UNLIMITED, API access row (Pro-only), payouts.
+
+Verified live (?v=dash1): toggle re-renders both views; chart tabs switch £412/£1,872/£5,630; Starter cap bar + upsell + Peru listings render; Pro pipeline/top-listings/buyers/API all render. New CSS: .dseg/.tbadge/.chart/.aimgr/.aitip/.angrid/.capbar/.upsell/.ctabs/.pipe.
