@@ -1774,6 +1774,28 @@ function renderDash(){
   }
   host.innerHTML=h;
 }
+/* ===== NEW LISTING PHOTO UPLOAD ===== */
+/* Real picker: + opens the device gallery/camera, chosen images render as
+   tiles via object URLs and every count on the page updates live. */
+var NLPHOTOS=3;
+function nlPick(){ var f=document.getElementById('nlfile'); if(f) f.click() }
+function nlAdd(inp){
+  if(!inp||!inp.files||!inp.files.length) return;
+  var rail=document.getElementById('nlrail'), i;
+  for(i=0;i<inp.files.length;i++){
+    var url=URL.createObjectURL(inp.files[i]);
+    var d=document.createElement('div');
+    d.setAttribute('style','flex:0 0 92px;width:92px;height:92px;border-radius:18px;overflow:hidden');
+    d.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+    if(rail) rail.appendChild(d);
+    NLPHOTOS++;
+  }
+  inp.value='';
+  var c=document.getElementById('nlcount'); if(c) c.innerHTML=NLPHOTOS+' photos added &middot; 3 minimum — listings without them are auto-rejected.';
+  var ck=document.getElementById('nlphotock'); if(ck) ck.textContent=' Photos · '+NLPHOTOS+' added';
+  toast(NLPHOTOS>3?'Photo added — '+NLPHOTOS+' on this listing':'Photo added');
+}
+
 /* ===== SELLER ORDERS ===== */
 /* One live model drives the dashboard pipeline numbers AND this screen —
    Ship actually moves an order to In transit and everything recomputes. */
@@ -1865,16 +1887,18 @@ function renderApiKeys(){
 S.newlisting='<div class="scr" id="s-newlisting"><div class="sc" style="padding-bottom:150px">'
 +'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Draft saved\')">Save draft</button></div>'
 +'<div class="pad"><h1 class="dspl" style="font-size:28px;margin-top:14px">New listing</h1></div>'
-+'<div class="hrail" style="padding-top:14px"><div class="addphoto">'+I.plus+'</div>'+[14705063,14563207,8330375].map(function(id){return '<div style="flex:0 0 92px;width:92px;height:92px;border-radius:18px;overflow:hidden"><img src="'+px(id)+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>'}).join('')+'</div>'
-+'<div class="pad"><p class="sm dim" style="margin-top:4px">3 photos minimum — listings without them are auto-rejected.</p></div>'
++'<input type="file" id="nlfile" accept="image/*" multiple style="display:none" onchange="nlAdd(this)">'
++'<div class="hrail" id="nlrail" style="padding-top:14px"><button class="addphoto" onclick="nlPick()">'+I.plus+'</button>'+[14705063,14563207,8330375].map(function(id){return '<div style="flex:0 0 92px;width:92px;height:92px;border-radius:18px;overflow:hidden"><img src="'+px(id)+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>'}).join('')+'</div>'
++'<div class="pad"><p class="sm dim" style="margin-top:4px" id="nlcount">3 photos added &middot; 3 minimum — listings without them are auto-rejected.</p></div>'
 +'<div class="fld"><label>TITLE</label><div class="in">Kuro raku tea bowl, wood-fired</div></div>'
 +'<div style="display:flex;gap:10px;padding:0 20px"><div class="fld" style="flex:1;padding:0"><label style="padding-left:0">PRICE</label><div class="in">&pound;68</div></div><div class="fld" style="flex:1;padding:0"><label style="padding-left:0">STOCK</label><div class="in">3</div></div></div>'
 +'<div class="pad"><p class="sm dim" style="margin-top:8px">You&rsquo;d keep <span style="color:var(--accent)">&pound;65.28</span> of &pound;68 &mdash; Pro, 4% commission. Shipping is paid on top and passes to you in full.</p></div>'
-+'<div class="fld"><label>SPECIALITIES · UP TO 2 · CLOSED VOCABULARY</label><div class="flow" style="margin-top:2px">'+['Clay','Tea ceremony','Paper','Lacquerware'].map(function(s,i){return '<button class="pill sel'+(i===0?' on':'')+'" onclick="pickSpec(this)">'+s+'</button>'}).join('')+'<button class="pill" onclick="toast(\'Requests surface in the daily briefing\')">Request a term…</button></div></div>'
++'<div class="fld"><label>WHAT IS IT? &middot; CATEGORY &amp; MATERIALS</label><div class="in ta" style="min-height:88px">A raku chawan &mdash; tea ceremony bowl. Stoneware clay, natural ash glaze, food-safe. Ceramics &middot; tea ware &middot; kitchen &amp; table.</div>'
++'<p class="sm dim" style="margin-top:8px;padding-left:2px">Your words, no lists to pick from &mdash; this places the piece in search, craft pages and Japan&rsquo;s dive.</p></div>'
 +'<div class="fld"><label>THE STORY &middot; BUYERS READ THIS</label><div class="in ta" style="min-height:96px">Each bowl is thrown on a kick wheel, raku-fired in the wood kiln behind the studio, and pulled from the flames by hand. No two glazes ever land the same.</div></div>'
 +'<div class="fld"><label>PARCEL &middot; POWERS REAL DELIVERY QUOTES</label><div class="in row" style="font-size:13px">1.2 kg &middot; 20 &times; 20 &times; 15 cm<span class="ed" style="color:var(--accent)">Edit</span></div></div>'
 +'<div class="fld"><label>MATERIALS DECLARATION</label><div class="in row" style="font-size:13px">Contains regulated materials?<span class="dim">No</span></div></div>'
-+'<div class="pad"><div class="readycard"><div class="fd" style="font-size:12.5px;font-weight:600;margin-bottom:8px">Ready to publish?</div><div class="sm" style="color:var(--green);line-height:2"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Photos · 3 added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Ship-from address · on file<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Speciality · Clay<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Story · added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Parcel size · set — buyers get live quotes</div></div></div>'
++'<div class="pad"><div class="readycard"><div class="fd" style="font-size:12.5px;font-weight:600;margin-bottom:8px">Ready to publish?</div><div class="sm" style="color:var(--green);line-height:2"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg><span id="nlphotock"> Photos · 3 added</span><br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Ship-from address · on file<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Description · added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Story · added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Parcel size · set — buyers get live quotes</div></div></div>'
 +'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="toast(\'Published — live on your channel\');go(\'dash\')">Publish listing</button></div></div>'
 
 /* ===== PAYOUTS ===== */
