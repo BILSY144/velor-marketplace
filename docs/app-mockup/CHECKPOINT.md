@@ -2,6 +2,17 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Legal rows read in-app (no more browser-tab jumps)
+
+- William: all four Privacy & legal links dumped him into desktop tab
+  view (window.open). The site blocks iframing, so each doc got an
+  in-app reader page: faithful synopsis (escrow / 14-day returns per
+  published terms; GDPR rights; seller tiers + prohibited items; dispute
+  flow) + the REAL section list extracted from the live pages'
+  source, with "Read the full text -- opens your browser" as an explicit
+  choice at the bottom. Verified live: Terms opens in-app, no tab.
+- Commit 5759fb7.
+
 ## 2026-07-15: The opening bell audibly rings
 
 - William asked whether the bell can actually sound as a notification.
