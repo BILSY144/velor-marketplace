@@ -1141,7 +1141,7 @@ S.orders='<div class="scr" id="s-orders"><div class="sc" id="ordersslot" style="
 /* ===== ORDERS — model-driven, filterable by country (passport stamps
    deep-link here). Session orders come from renderConfirm; the seed
    sample pair shows when nothing has been ordered yet. ===== */
-var ORDERS=[], OFILTER=null;
+var ORDERS=[], OFILTER=null, ORDBACK='account';
 var ORDERSEED=[
  {num:'VLR-8241',seller:'Lin Ceramics Studio',c:'CN',title:'Gongfu tea set',img:30767475,stage:1,foot:'Shipped 12 Jul &middot; CN Post &middot; LX3348219CN'},
  {num:'VLR-8242',seller:'Atlas Weave',c:'MA',title:'Berber rug',img:33282224,stage:0,foot:'Seller preparing your parcel &middot; usually ships in 2 days'}
@@ -1161,7 +1161,7 @@ function renderOrders(){
   var list=ORDERS.length?ORDERS:ORDERSEED;
   var cn=OFILTER?liveCountryName(OFILTER):null;
   var shown=OFILTER?list.filter(function(o){return o.c===OFILTER}):list;
-  var h='<div class="pad" style="padding-top:64px"><div class="k d">TRACKING</div><h1 class="dspl" style="font-size:32px;margin-top:8px">On the way.</h1>'
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(ORDBACK)">'+I.back+'</button><div class="k d" style="margin-top:16px">TRACKING</div><h1 class="dspl" style="font-size:32px;margin-top:8px">On the way.</h1>'
   +(OFILTER?'<button style="display:inline-flex;align-items:center;gap:7px;margin-top:12px;background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 7px;color:inherit" onclick="OFILTER=null;renderOrders()"><span style="display:flex;width:16px;height:16px;border-radius:4px;overflow:hidden">'+flag(OFILTER)+'</span><span class="fd" style="font-size:11px;font-weight:600">'+cn.toUpperCase()+' ONLY</span><span class="sm dim" style="font-size:11px">&times; show all</span></button>':'')
   +'</div>';
   if(!shown.length){
@@ -1540,7 +1540,7 @@ function go(id){
   if(id==='dispute'){ dRefresh() }
   if(id==='confirm'){ renderConfirm() }
   if(id==='passport'){ renderPassport() }
-  if(id==='orders'){ renderOrders() }
+  if(id==='orders'){ if(cur!=='orders'&&id!==cur){ ORDBACK=(cur==='confirm'||cur==='splash')?'atlas':cur } renderOrders() }
   if(id==='notif'){ renderNotif() }
   if(id==='account'){ renderAccount() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
