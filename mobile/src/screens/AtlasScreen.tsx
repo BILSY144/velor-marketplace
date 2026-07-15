@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { View, SectionList, Pressable, StyleSheet, ScrollView } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'
 import { useQuery } from '@tanstack/react-query'
@@ -11,6 +12,7 @@ import { globeHtml } from '../globeHtml'
 import { Kicker, Display, Body, Dim, Serif } from '../ui'
 
 export default function AtlasScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const sections = useMemo(countriesByRegion, [])
   const html = useMemo(globeHtml, [])
@@ -29,7 +31,7 @@ export default function AtlasScreen() {
       stickySectionHeadersEnabled={false}
       ListHeaderComponent={
         <View>
-          <View style={{ paddingHorizontal: 20, paddingTop: 58 }}>
+          <View style={{ paddingHorizontal: 20, paddingTop: insets.top + 12 }}>
             <Kicker>THE ATLAS</Kicker>
             <Display style={{ marginTop: 6 }}>Shop the world.</Display>
           </View>

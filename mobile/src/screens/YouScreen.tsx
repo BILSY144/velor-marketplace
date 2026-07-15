@@ -1,10 +1,12 @@
 import React from 'react'
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import { Kicker, Display, Body, Dim, Serif } from '../ui'
 
 export default function YouScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
 
   const rows: { title: string; sub: string; onPress: () => void }[] = [
@@ -46,7 +48,7 @@ export default function YouScreen() {
   ]
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: 64, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 60 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Kicker>YOU</Kicker>
         <Display style={{ marginTop: 6, fontSize: 26 }}>Your Velor.</Display>

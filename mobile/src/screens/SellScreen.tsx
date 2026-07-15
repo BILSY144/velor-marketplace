@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import { Kicker, Display, Body, Dim, Serif, Btn } from '../ui'
@@ -14,9 +15,10 @@ const PERKS: [string, string][] = [
 // The sell pitch, in-app. The application itself lives on the site (identity
 // verification is Stripe-hosted web) — the Apply button hands off there.
 export default function SellScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: 58, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Pressable onPress={() => nav.goBack()} style={s.back}>
           <Body style={{ fontFamily: F.display }}>{'←'}</Body>

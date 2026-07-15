@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { View, TextInput, FlatList, Pressable, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { C, F, flagUrl } from '../theme'
@@ -9,6 +10,7 @@ import { Kicker, Display, Body, Dim, Serif, Empty } from '../ui'
 type Hit = { cc: string; name: string; craft?: string }
 
 export default function SearchScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [q, setQ] = useState('')
 
@@ -31,7 +33,7 @@ export default function SearchScreen() {
   }, [q])
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg, paddingTop: 64 }}>
+    <View style={{ flex: 1, backgroundColor: C.bg, paddingTop: insets.top + 12 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Kicker>SEARCH</Kicker>
         <Display style={{ marginTop: 6, fontSize: 26 }}>A place, a craft, a thing.</Display>

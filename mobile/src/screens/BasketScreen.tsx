@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react'
 import { View, FlatList, Pressable, StyleSheet, Linking } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { C, F } from '../theme'
 import { useCart } from '../store'
 import { Kicker, Display, Body, Dim, Serif, Btn, Empty } from '../ui'
 
 export default function BasketScreen() {
+  const insets = useSafeAreaInsets()
   const { items, setQty, remove, total } = useCart()
   const sellers = useMemo(
     () => new Set(items.map((i) => i.product.sellerName ?? 'seller')).size,
@@ -13,7 +15,7 @@ export default function BasketScreen() {
   )
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg, paddingTop: 64 }}>
+    <View style={{ flex: 1, backgroundColor: C.bg, paddingTop: insets.top + 12 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Kicker>BASKET</Kicker>
         <Display style={{ marginTop: 6, fontSize: 26 }}>

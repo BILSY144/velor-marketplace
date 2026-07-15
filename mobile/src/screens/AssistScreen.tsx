@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
@@ -23,6 +24,7 @@ const STARTERS = [
 ]
 
 export default function AssistScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [msgs, setMsgs] = useState<AssistMessage[]>([])
   const [input, setInput] = useState('')
@@ -61,7 +63,7 @@ export default function AssistScreen() {
       style={{ flex: 1, backgroundColor: C.bg }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + 6 }]}>
         <Pressable onPress={() => nav.goBack()} style={s.back}>
           <Body style={{ fontFamily: F.display }}>{'←'}</Body>
         </Pressable>
@@ -124,7 +126,6 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
-    paddingTop: 56,
     paddingBottom: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,

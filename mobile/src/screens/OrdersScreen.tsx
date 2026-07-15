@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import { Kicker, Display, Body, Dim, Empty } from '../ui'
@@ -7,9 +8,10 @@ import { Kicker, Display, Body, Dim, Empty } from '../ui'
 // Honest pre-launch state: no fake orders, ever. Sign-in and live order
 // tracking arrive with buyer launch on 6 August.
 export default function OrdersScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: 58, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Pressable onPress={() => nav.goBack()} style={s.back}>
           <Body style={{ fontFamily: F.display }}>{'←'}</Body>

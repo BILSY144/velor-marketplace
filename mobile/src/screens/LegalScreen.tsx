@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import LEGAL from '../data/legal'
@@ -9,6 +10,7 @@ type DocKey = keyof typeof LEGAL
 
 // The real, current legal documents — full text in-app, no browser needed.
 export default function LegalScreen() {
+  const insets = useSafeAreaInsets()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const docKey: DocKey = route.params?.doc ?? 'terms'
@@ -16,7 +18,7 @@ export default function LegalScreen() {
   const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: 58, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Pressable onPress={() => nav.goBack()} style={s.back}>
           <Body style={{ fontFamily: F.display }}>{'←'}</Body>

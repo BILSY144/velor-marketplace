@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
@@ -10,6 +11,7 @@ import { Kicker, Display, Body, Dim, Serif, Btn, Pill, Empty } from '../ui'
 import { useCart } from '../store'
 
 export default function CountryScreen() {
+  const insets = useSafeAreaInsets()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const cc: string = route.params?.cc ?? 'JP'
@@ -36,7 +38,7 @@ export default function CountryScreen() {
           <View style={[StyleSheet.absoluteFill, { backgroundColor: C.surf2 }]} />
         )}
         <View style={s.coverShade} />
-        <Pressable style={s.back} onPress={() => nav.goBack()}>
+        <Pressable style={[s.back, { top: insets.top + 8 }]} onPress={() => nav.goBack()}>
           <Body style={{ fontFamily: F.display, fontSize: 13 }}>{'←'}</Body>
         </Pressable>
         <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
@@ -138,7 +140,6 @@ const s = StyleSheet.create({
   },
   back: {
     position: 'absolute',
-    top: 54,
     left: 16,
     width: 38,
     height: 38,

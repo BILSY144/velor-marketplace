@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { C, F, flagUrl } from '../theme'
@@ -10,9 +11,10 @@ const SUGGEST = ['JP', 'MA', 'PE', 'TR', 'IN', 'MX', 'GH', 'IT']
 // Passport — stamp a country every time you buy from it. Honest zero state
 // until buying opens; the suggestions row shows how stamps will look.
 export default function PassportScreen() {
+  const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: 58, paddingBottom: 60 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
       <View style={{ paddingHorizontal: 20 }}>
         <Pressable onPress={() => nav.goBack()} style={s.back}>
           <Body style={{ fontFamily: F.display }}>{'←'}</Body>
