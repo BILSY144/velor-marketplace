@@ -510,38 +510,129 @@ async function scoutBing(
 // ââ Main Handler âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 // -- Brave Search: compliant independent-seller discovery (Shopify / DTC stores) --
-const BRAVE_TARGETS: Array<{ query: string; category: string }> = [
-  { query: '"powered by Shopify" moroccan ceramic tagine artisan store', category: 'Ceramics & porcelain' },
-  { query: '"proudly powered by WooCommerce" japanese pottery artisan shop', category: 'Ceramics & porcelain' },
-  { query: '"powered by Shopify" portuguese hand painted ceramics shop', category: 'Ceramics & porcelain' },
-  { query: '"powered by Shopify" turkish iznik tile ceramics store', category: 'Ceramics & porcelain' },
-  { query: '"powered by Shopify" mexican talavera pottery shop', category: 'Ceramics & porcelain' },
-  { query: '"powered by Shopify" turkish handwoven kilim rug store', category: 'Rugs, cloth & thread' },
-  { query: '"proudly powered by WooCommerce" peruvian alpaca textile shop', category: 'Rugs, cloth & thread' },
-  { query: '"powered by Shopify" moroccan berber rug artisan store', category: 'Rugs, cloth & thread' },
-  { query: '"powered by Shopify" guatemalan handwoven textile shop', category: 'Rugs, cloth & thread' },
-  { query: '"proudly powered by WooCommerce" indian block print textile store', category: 'Rugs, cloth & thread' },
-  { query: '"powered by Shopify" ghanaian kente cloth store', category: 'Rugs, cloth & thread' },
-  { query: '"powered by Shopify" uzbek suzani embroidery shop', category: 'Rugs, cloth & thread' },
-  { query: '"powered by Shopify" japanese matcha tea artisan store', category: "The world's kitchen" },
-  { query: '"proudly powered by WooCommerce" moroccan spice souk shop', category: "The world's kitchen" },
-  { query: '"powered by Shopify" turkish delight artisan food store', category: "The world's kitchen" },
-  { query: '"powered by Shopify" ethiopian coffee roastery shop', category: "The world's kitchen" },
-  { query: '"powered by Shopify" indian handmade jewellery artisan store', category: 'Adornment' },
-  { query: '"proudly powered by WooCommerce" moroccan silver jewellery shop', category: 'Adornment' },
-  { query: '"powered by Shopify" peruvian silver jewellery artisan store', category: 'Adornment' },
-  { query: '"powered by Shopify" kenyan beaded jewellery shop', category: 'Adornment' },
-  { query: '"powered by Shopify" turkish evil eye jewellery store', category: 'Adornment' },
-  { query: '"powered by Shopify" polish amber jewellery artisan shop', category: 'Adornment' },
-  { query: '"powered by Shopify" japanese green tea artisan store', category: 'Tea, coffee & pantry' },
-  { query: '"proudly powered by WooCommerce" sri lankan ceylon tea shop', category: 'Tea, coffee & pantry' },
-  { query: '"powered by Shopify" turkish coffee artisan store', category: 'Tea, coffee & pantry' },
-  { query: '"powered by Shopify" ethiopian single origin coffee shop', category: 'Tea, coffee & pantry' },
-  { query: '"powered by Shopify" moroccan argan oil artisan store', category: 'Light, scent & self' },
-  { query: '"proudly powered by WooCommerce" indian ayurvedic skincare shop', category: 'Light, scent & self' },
-  { query: '"powered by Shopify" ghanaian shea butter artisan store', category: 'Light, scent & self' },
-  { query: '"powered by Shopify" moroccan rose water perfume shop', category: 'Light, scent & self' },
+//
+// REBUILT 2026-07-15 (William): the previous 30 fixed queries had exhausted --
+// scout runs were returning ~2 new prospects vs ~310 duplicates because the
+// same 30 searches were repeated every 6 hours. Queries are now GENERATED
+// from a craft-x-framing matrix (~290 combinations) and a fixed-size window
+// rotates through it one slice per 6-hour cron slot, so consecutive runs
+// explore new ground and the full matrix is covered roughly every 2.5 days
+// before cycling. Craft coverage stays weighted toward the Global South and
+// East per the standing instruction, mapped to the six homepage categories.
+
+const BRAVE_CRAFTS: Array<{ craft: string; category: string }> = [
+  // Ceramics & porcelain
+  { craft: 'moroccan ceramic tagine artisan', category: 'Ceramics & porcelain' },
+  { craft: 'moroccan zellige tile artisan', category: 'Ceramics & porcelain' },
+  { craft: 'mexican talavera pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'japanese kintsugi pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'japanese raku pottery studio', category: 'Ceramics & porcelain' },
+  { craft: 'turkish iznik ceramic artisan', category: 'Ceramics & porcelain' },
+  { craft: 'portuguese hand painted ceramics artisan', category: 'Ceramics & porcelain' },
+  { craft: 'polish boleslawiec stoneware artisan', category: 'Ceramics & porcelain' },
+  { craft: 'vietnamese lacquerware artisan', category: 'Ceramics & porcelain' },
+  { craft: 'vietnamese bat trang ceramic artisan', category: 'Ceramics & porcelain' },
+  { craft: 'korean celadon pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'tunisian nabeul pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'peruvian chulucanas pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'greek handmade ceramic pottery artisan', category: 'Ceramics & porcelain' },
+  // Rugs, cloth & thread
+  { craft: 'turkish handwoven kilim rug', category: 'Rugs, cloth & thread' },
+  { craft: 'moroccan berber rug weaver', category: 'Rugs, cloth & thread' },
+  { craft: 'persian handwoven rug artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'peruvian alpaca textile weaver', category: 'Rugs, cloth & thread' },
+  { craft: 'guatemalan handwoven textile artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'indian block print textile artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'indian kantha quilt artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'ghanaian kente cloth weaver', category: 'Rugs, cloth & thread' },
+  { craft: 'malian mudcloth bogolan artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'indonesian batik artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'uzbek suzani embroidery artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'uzbek ikat silk weaver', category: 'Rugs, cloth & thread' },
+  { craft: 'nepali felt wool artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'mexican oaxaca woven rug artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'kyrgyz shyrdak felt rug artisan', category: 'Rugs, cloth & thread' },
+  { craft: 'turkish hammam towel weaver', category: 'Rugs, cloth & thread' },
+  // The world's kitchen
+  { craft: 'japanese hand forged kitchen knife', category: "The world's kitchen" },
+  { craft: 'turkish copper cookware artisan', category: "The world's kitchen" },
+  { craft: 'mexican molcajete artisan', category: "The world's kitchen" },
+  { craft: 'moroccan tagine cooking pot artisan', category: "The world's kitchen" },
+  { craft: 'ethiopian jebena clay coffee pot artisan', category: "The world's kitchen" },
+  { craft: 'indian brass kansa cookware artisan', category: "The world's kitchen" },
+  { craft: 'vietnamese bamboo kitchenware artisan', category: "The world's kitchen" },
+  { craft: 'thai celadon tableware artisan', category: "The world's kitchen" },
+  { craft: 'nepali copper cookware artisan', category: "The world's kitchen" },
+  { craft: 'spanish olive wood utensils artisan', category: "The world's kitchen" },
+  // Adornment
+  { craft: 'indian handmade jewellery artisan', category: 'Adornment' },
+  { craft: 'indian kundan jewellery artisan', category: 'Adornment' },
+  { craft: 'moroccan berber silver jewellery artisan', category: 'Adornment' },
+  { craft: 'peruvian silver filigree jewellery artisan', category: 'Adornment' },
+  { craft: 'kenyan maasai beaded jewellery artisan', category: 'Adornment' },
+  { craft: 'turkish evil eye jewellery artisan', category: 'Adornment' },
+  { craft: 'polish baltic amber jewellery artisan', category: 'Adornment' },
+  { craft: 'mexican oaxacan silver jewellery artisan', category: 'Adornment' },
+  { craft: 'balinese silver jewellery artisan', category: 'Adornment' },
+  { craft: 'ethiopian telsum jewellery artisan', category: 'Adornment' },
+  { craft: 'ecuadorian panama hat weaver', category: 'Adornment' },
+  { craft: 'vietnamese buffalo horn jewellery artisan', category: 'Adornment' },
+  // Tea, coffee & pantry
+  { craft: 'japanese matcha tea farm direct', category: 'Tea, coffee & pantry' },
+  { craft: 'japanese single estate green tea', category: 'Tea, coffee & pantry' },
+  { craft: 'sri lankan ceylon tea small estate', category: 'Tea, coffee & pantry' },
+  { craft: 'ethiopian single origin coffee roaster', category: 'Tea, coffee & pantry' },
+  { craft: 'turkish coffee artisan roaster', category: 'Tea, coffee & pantry' },
+  { craft: 'moroccan mint tea artisan', category: 'Tea, coffee & pantry' },
+  { craft: 'darjeeling tea estate direct', category: 'Tea, coffee & pantry' },
+  { craft: 'vietnamese specialty coffee farm direct', category: 'Tea, coffee & pantry' },
+  { craft: 'turkish delight artisan confectioner', category: 'Tea, coffee & pantry' },
+  { craft: 'mexican oaxacan chocolate artisan', category: 'Tea, coffee & pantry' },
+  { craft: 'georgian mountain tea artisan', category: 'Tea, coffee & pantry' },
+  // Light, scent & self
+  { craft: 'moroccan argan oil cooperative', category: 'Light, scent & self' },
+  { craft: 'moroccan rose water artisan', category: 'Light, scent & self' },
+  { craft: 'ghanaian shea butter cooperative', category: 'Light, scent & self' },
+  { craft: 'indian ayurvedic skincare artisan', category: 'Light, scent & self' },
+  { craft: 'moroccan mosaic lamp artisan', category: 'Light, scent & self' },
+  { craft: 'japanese incense maker artisan', category: 'Light, scent & self' },
+  { craft: 'indian natural incense artisan', category: 'Light, scent & self' },
+  { craft: 'vietnamese rattan lantern artisan', category: 'Light, scent & self' },
+  { craft: 'tunisian olive oil soap artisan', category: 'Light, scent & self' },
+  { craft: 'greek olive oil soap artisan', category: 'Light, scent & self' },
 ];
+
+// Four ways of framing each craft as a shop search. Framings are the OUTER
+// loop when the matrix is flattened, so one run's window is ~30 DIFFERENT
+// crafts under one framing rather than the same few crafts phrased four ways.
+const BRAVE_FRAMINGS: Array<(craft: string) => string> = [
+  (c) => `"powered by Shopify" ${c} store`,
+  (c) => `"proudly powered by WooCommerce" ${c} shop`,
+  (c) => `${c} independent online store worldwide shipping`,
+  (c) => `${c} workshop shop buy online`,
+];
+
+const BRAVE_QUERIES_PER_RUN = 30;
+
+function braveQueriesForRun(): Array<{ query: string; category: string }> {
+  const all: Array<{ query: string; category: string }> = [];
+  for (const framing of BRAVE_FRAMINGS) {
+    for (const c of BRAVE_CRAFTS) {
+      all.push({ query: framing(c.craft), category: c.category });
+    }
+  }
+  // Advance one window per 6-hour cron slot (matches the vercel.json
+  // schedule), wrapping around when the matrix is exhausted. Deterministic
+  // per slot: a mid-window retry of the same cron slot re-runs the same
+  // queries rather than skipping a slice.
+  const slot = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+  const start = (slot * BRAVE_QUERIES_PER_RUN) % all.length;
+  const window: Array<{ query: string; category: string }> = [];
+  for (let i = 0; i < Math.min(BRAVE_QUERIES_PER_RUN, all.length); i++) {
+    window.push(all[(start + i) % all.length]);
+  }
+  return window;
+}
 
 const BRAVE_BLOCKLIST = [
   'amazon.', 'ebay.', 'etsy.', 'walmart.', 'aliexpress.', 'alibaba.', 'wish.com',
