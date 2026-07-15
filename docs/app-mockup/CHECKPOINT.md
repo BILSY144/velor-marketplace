@@ -440,3 +440,13 @@ PRO (Studio Kaede · FOUNDING JAPAN + PRO · 4% badges): the advanced layer —
 - Go Live card with last-stream stats, to-do, LISTINGS · UNLIMITED, API access row (Pro-only), payouts.
 
 Verified live (?v=dash1): toggle re-renders both views; chart tabs switch £412/£1,872/£5,630; Starter cap bar + upsell + Peru listings render; Pro pipeline/top-listings/buyers/API all render. New CSS: .dseg/.tbadge/.chart/.aimgr/.aitip/.angrid/.capbar/.upsell/.ctabs/.pipe.
+
+## 2026-07-15 — Dashboard deep-links + seller orders + API keys screens
+
+William: sections must be clickable ("6 to ship should take them to the orders need shipping") and Pro sellers must manage API keys in-app. Added two registered screens (SCREENS + TABMAP entries: sellorders, apikeys — both TABMAP 'account'):
+
+- S.sellorders / renderSellOrders(): SELLORD live model (3 new / 6 ship / 4 transit / 5 delivered + SO_EARLIER=21 → counts match the dashboard pipeline exactly). Filter pills with live counts; rows show item image, VLR id, buyer flag+country, price, per-status detail (tracking no. for transit, release note for delivered). Ship button (soShip) really moves the order to In transit, assigns a tracking number, toasts, and re-renders BOTH this screen and the dashboard — dashboard counts are computed from SELLORD via soCount(), so they stay consistent (verified: ship VLR-8241 → To ship 6→5 everywhere).
+- S.apikeys / renderApiKeys(): Pro tools page — existing masked key card, Create a new key (akCreate pushes a key, full value shown once in accent with "copy it now" note), Revoke per key (akRevoke), scope pills, hashed-storage + 600 req/min note.
+- Dashboard wiring: To ship stat (both tiers) → sellorders pre-filtered to ship; In escrow / Paid out stats + escrow-release line → payouts; every pipeline cell → sellorders with that filter; To-do Ship row → sellorders; API access row → apikeys. .ds.tap arrows via CSS ::after. go('dash') now clears the slot so counts recompute on every visit.
+
+Verified live (?v=dash2) end to end via JS + screenshots. Cosmetic follow-up: inline flags in order rows sized to fill wrapper.
