@@ -1120,22 +1120,79 @@ S.odetail='<div class="scr" id="s-odetail"><div class="sc" style="padding-bottom
 +'<button class="btn ghost sm" style="margin-top:14px" onclick="toast(\'Opens carrier tracking\')">Track parcel</button></div>'
 +'<div class="escrow-bar">'+I.shield+'<span>Your &pound;60.40 is held by Velor. The seller is paid only after delivery is confirmed.</span></div>'
 +'<div class="pad"><div class="wrongcard"><div class="fd" style="font-size:13px;font-weight:600">Something wrong?</div><p class="sm mut" style="margin-top:6px">Not arrived, damaged, or not as described — open a dispute and the money freezes while we sort it.</p>'
-+'<div style="display:flex;gap:9px;margin-top:13px"><button class="btn line sm" style="flex:1" onclick="go(\'dispute\')">Open a dispute</button><button class="btn line sm" style="flex:1" onclick="toast(\'Return flow\')">Request return</button></div></div></div>'
++'<div style="display:flex;gap:9px;margin-top:13px"><button class="btn line sm" style="flex:1" onclick="go(\'dispute\')">Open a dispute</button><button class="btn line sm" style="flex:1" onclick="go(\'returnreq\')">Request return</button></div></div></div>'
 +'</div></div>'
+
+/* ===== REQUEST A RETURN — 14-day window per published terms; an open
+   return freezes the seller's funds in escrow (money rules). ===== */
+S.returnreq='<div class="scr" id="s-returnreq"><div class="sc" style="padding-bottom:150px">'
++'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'odetail\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Request a return</h1></div>'
++'<div class="escrow-bar">'+I.shield+'<span>Returns are open for 14 days after delivery. While a return is open, the seller&rsquo;s funds stay frozen in escrow.</span></div>'
++'<div class="pad"><div class="k d" style="margin-top:22px">WHY ARE YOU RETURNING IT?</div></div>'
++'<button class="radio on" onclick="pickR(this)"><span class="rd"></span><span class="t">Changed my mind</span></button>'
++'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Wrong size or fit</span></button>'
++'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Arrived damaged</span></button>'
++'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Not as described</span></button>'
++'<div class="fld" style="margin-top:18px"><label>ANYTHING THE SELLER SHOULD KNOW?</label><div class="in ta">Optional&hellip;</div></div>'
++'<div class="fld"><label>ADD PHOTOS &middot; OPTIONAL</label><div class="hrail" id="rphotos" style="padding:2px 0 0;flex-wrap:wrap;overflow:visible"><button class="addphoto" onclick="rAddPhoto()">'+I.plus+'</button></div></div>'
++'<div class="pad"><p class="sm dim" style="margin-top:12px">If the item arrived damaged or isn&rsquo;t as described, a dispute protects you more strongly &mdash; the funds freeze immediately and Velor steps in.</p><button class="btn line sm" style="margin-top:10px" onclick="go(\'dispute\')">Open a dispute instead</button></div>'
++'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="toast(\'Return requested — funds stay frozen in escrow\');go(\'orders\')">Request return</button></div></div>'
+var RPHOTOS=0;
+function rAddPhoto(){
+  RPHOTOS++;
+  var host=document.getElementById('rphotos');
+  var t=document.createElement('div');
+  t.style.cssText='flex:0 0 84px;width:84px;height:84px;border-radius:16px;background:linear-gradient(150deg,var(--surf2),var(--ink));border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px';
+  t.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--mut);fill:none;stroke-width:1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font:600 9px var(--fd);letter-spacing:.06em;color:var(--mut)">PHOTO '+RPHOTOS+'</span>';
+  host.appendChild(t);
+}
 
 /* ===== DISPUTE ===== */
 S.dispute='<div class="scr" id="s-dispute"><div class="sc" style="padding-bottom:150px">'
 +'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'odetail\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Open a dispute</h1></div>'
 +'<div class="escrow-bar" style="border-color:rgba(255,90,82,.3);background:linear-gradient(90deg,rgba(255,90,82,.1),transparent)"><svg viewBox="0 0 24 24" style="stroke:var(--red)">'+I.shield.replace('<svg viewBox="0 0 24 24">','').replace('</svg>','')+'</svg><span style="color:#ffd0cc">The moment you open this, your &pound;60.40 freezes. The seller cannot be paid until it&rsquo;s resolved.</span></div>'
 +'<div class="pad"><div class="k d" style="margin-top:22px">WHAT WENT WRONG?</div></div>'
-+'<button class="radio on" onclick="pickR(this)"><span class="rd"></span><span class="t">It hasn&rsquo;t arrived</span></button>'
-+'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Arrived damaged</span></button>'
-+'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Not as described</span></button>'
-+'<button class="radio" onclick="pickR(this)"><span class="rd"></span><span class="t">Wrong item</span></button>'
++'<button class="radio on" onclick="pickR(this);dReason(0)"><span class="rd"></span><span class="t">It hasn&rsquo;t arrived</span></button>'
++'<button class="radio" onclick="pickR(this);dReason(1)"><span class="rd"></span><span class="t">Arrived damaged</span></button>'
++'<button class="radio" onclick="pickR(this);dReason(2)"><span class="rd"></span><span class="t">Not as described</span></button>'
++'<button class="radio" onclick="pickR(this);dReason(3)"><span class="rd"></span><span class="t">Wrong item</span></button>'
 +'<div class="fld" style="margin-top:18px"><label>TELL US MORE</label><div class="in ta">Two of the six cups arrived cracked…</div></div>'
-+'<div class="fld"><label>ADD PHOTOS</label><div class="hrail" style="padding:2px 0 0"><div class="addphoto">'+I.plus+'</div><img src="'+px(30767475)+'" style="flex:0 0 84px;aspect-ratio:1;border-radius:16px;object-fit:cover"></div></div>'
++'<div class="fld"><label id="dplabel">ADD PHOTOS &middot; 0 OF 3 REQUIRED</label><div class="hrail" id="dphotos" style="padding:2px 0 0;flex-wrap:wrap;overflow:visible"><button class="addphoto" onclick="dAddPhoto()">'+I.plus+'</button></div></div>'
 +'<div class="pad"><p class="sm dim" style="margin-top:12px">Velor reviews within 48 hours. Most disputes resolve without you sending anything back — your money never leaves escrow until you&rsquo;re happy.</p></div>'
-+'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="toast(\'Dispute opened — funds frozen\');go(\'orders\')">Open dispute &amp; freeze funds</button></div></div>'
++'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" id="dsubmit" onclick="dSubmit()">Open dispute &amp; freeze funds</button></div></div>'
+
+/* Dispute logic: photos are evidence. Damaged / not-as-described / wrong
+   item need at least 3; "It hasn't arrived" cannot be photographed, so
+   the gate lifts and the label says so. */
+var DREASON=0, DPHOTOS=0;
+function dNeedsPhotos(){ return DREASON!==0 }
+function dReason(i){ DREASON=i; dRefresh() }
+function dAddPhoto(){
+  DPHOTOS++;
+  var host=document.getElementById('dphotos');
+  var t=document.createElement('div');
+  t.style.cssText='flex:0 0 84px;width:84px;height:84px;border-radius:16px;background:linear-gradient(150deg,var(--surf2),var(--ink));border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px';
+  t.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--mut);fill:none;stroke-width:1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font:600 9px var(--fd);letter-spacing:.06em;color:var(--mut)">PHOTO '+DPHOTOS+'</span>';
+  host.appendChild(t);
+  dRefresh();
+}
+function dRefresh(){
+  var lab=document.getElementById('dplabel'), btn=document.getElementById('dsubmit');
+  if(!lab||!btn) return;
+  if(dNeedsPhotos()){
+    lab.innerHTML='ADD PHOTOS &middot; '+Math.min(DPHOTOS,3)+' OF 3 REQUIRED';
+    var ok=DPHOTOS>=3;
+    btn.style.opacity=ok?'1':'.4';
+  } else {
+    lab.innerHTML='ADD PHOTOS &middot; NOT NEEDED &mdash; NOTHING ARRIVED TO PHOTOGRAPH';
+    btn.style.opacity='1';
+  }
+}
+function dSubmit(){
+  if(dNeedsPhotos()&&DPHOTOS<3){ toast('Add at least 3 photos of the problem first'); return }
+  toast('Dispute opened — funds frozen'); go('orders');
+}
+
 /* ===== PASSPORT — your personal atlas filling in ===== */
 S.passport='<div class="scr" id="s-passport"><div class="sc" style="padding-bottom:120px">'
 +'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Share card generated\')">Share</button></div>'
@@ -1275,7 +1332,7 @@ S.golive='<div class="scr" id="s-golive" style="background:#000">'
 +'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air.</div>'
 +'</div>'
 /* ================= ROUTER & BEHAVIOURS ================= */
-var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['passport','Passport'],['notif','Opening bell'],['account','You'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
+var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
 var TABS=[['atlas','Atlas',I.globe],['live','Live',I.live],['search','Search',I.search],['cart','Basket',I.bag],['account','You',I.user]]
 var FULL={splash:1,atlas:1,live:1,golive:1,craft:1,confirm:1}
 var TABMAP={atlas:'atlas',country:'atlas',pdp:'atlas',live:'live',search:'search',cart:'cart',checkout:'cart',confirm:'cart',orders:'account',odetail:'account',dispute:'account',passport:'account',notif:'atlas',account:'account',assist:'account',sell:'account',seats:'account',apply:'account',verify:'account',dash:'account',newlisting:'account',payouts:'account',golive:'account'}
@@ -1335,6 +1392,7 @@ function go(id){
   if(id==='search'){ buildSearchBrowse() }
   if(id==='cart'){ renderCart() }
   if(id==='checkout'){ renderCheckout() }
+  if(id==='dispute'){ dRefresh() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
