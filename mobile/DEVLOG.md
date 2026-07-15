@@ -327,3 +327,10 @@ SplashOverlay in App.tsx that renders the same splash.png the native
 splash shows (seamless handoff — no visual jump), adds the ON AIR line +
 pulse + skip, and fades out after 2.4s or on tap. Native driver anims
 only; overlay unmounts after fade so it costs nothing afterward.
+
+## 2026-07-15 — Splash glow removed (William's call)
+
+"We need to take away the orange glow from opening page" — the soft orange
+radial behind the logo is gone; the opening is now pure logo on black with
+the ON AIR pulse and TAP TO SKIP. STANDING: do not reintroduce a glow or
+backdrop on the splash without William asking.

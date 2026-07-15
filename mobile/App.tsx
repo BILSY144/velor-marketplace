@@ -140,7 +140,6 @@ function SplashOverlay({ onDone }: { onDone: () => void }) {
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade, zIndex: 99 }]}>
       <Pressable style={sp.fill} onPress={dismiss}>
-        <View style={sp.glow} />
         <Image
           source={require('./assets/splash.png')}
           style={sp.logo}
@@ -158,14 +157,6 @@ function SplashOverlay({ onDone }: { onDone: () => void }) {
 
 const sp = StyleSheet.create({
   fill: { flex: 1, backgroundColor: '#050507', alignItems: 'center', justifyContent: 'center' },
-  glow: {
-    position: 'absolute',
-    width: 520,
-    height: 520,
-    borderRadius: 260,
-    backgroundColor: 'rgba(255,107,0,0.055)',
-    top: '28%',
-  },
   logo: { width: '96%', height: 300 },
   idRow: {
     position: 'absolute',
