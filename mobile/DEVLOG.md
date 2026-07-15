@@ -164,3 +164,24 @@ Basket, Orders, Passport / Notifications, Ask Velor, Account / Sell on
 Velor, Founding seats (→ the new Seats page), Apply. Honesty divergence:
 the mockup's "Seller dashboard · Preview" row is omitted until the
 seller-side sweep builds that screen — no dead links.
+
+## 2026-07-15 (menu v2 + dashboard) — Menu properly redesigned; seller
+## dashboard preview built (plate 27 structure)
+
+William on menu v1: "still looks the same just different font. no redesign
+or uplift" — his explicit call OVERRIDES the mirror-the-mockup rule for
+this screen (the mockup's menu is itself a flat list). Menu v2 is layered:
+MENU header + ×, two feature cards (Atlas dashed-globe mark; Velor Live
+with a real preview-film still + V LIVE pill), a 2×2 glass grid
+(Search/Basket/Orders/Passport, live basket badge), YOU pill row, the
+orange SELL band ("Your country's shopping channel." + Founding seats /
+Dashboard / Apply chips), language/currency + legal footer.
+
+DashScreen is new — plate 27's full structure as an HONEST PREVIEW (the
+plate itself is all sample data: Studio Kaede, fake revenue; the app
+renders the same sections with real zero states and a PREVIEW banner, no
+invented numbers). The STARTER/PRO toggle is live and shows what each plan
+really gets: 10 listings vs unlimited, AI account manager + API Pro-only,
+Go Live on every plan. Becomes the real dashboard when seller sign-in
+ships. Reached from the menu's SELL band (Dashboard chip) — the mockup's
+"Seller dashboard" entry now has a real destination.
