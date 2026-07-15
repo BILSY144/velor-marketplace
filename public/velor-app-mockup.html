@@ -1339,25 +1339,45 @@ S.notif='<div class="scr" id="s-notif"><div class="sc" id="notifslot" style="pad
    on top; the three vision cards stay below, labelled SAMPLE. ===== */
 var __actx=null;
 function bellSound(soft){
-  /* Full ring = the 4-second opening bell: two strikes, long hum decay.
-     Soft = short single-strike preview when setting a follow. */
+  /* Real-bell synthesis: inharmonic partials (hum/prime/tierce/quint/
+     nominal + uppers), detuned doublets for the shimmer/beating a cast
+     bell has, and a filtered-noise clang at the strike. Full ring is the
+     ~4s double-strike opening bell; soft is the short follow preview. */
   try{
     if(!__actx) __actx=new (window.AudioContext||window.webkitAudioContext)();
     var ctx=__actx, t0=ctx.currentTime;
-    var strikes=soft?[[0,0.5]]:[[0,1],[0.85,0.72]];
-    var dk=soft?0.35:1;
-    strikes.forEach(function(s){
-      var t=t0+s[0];
-      [[330,.30,4.0],[660,.42,3.0],[792,.22,2.2],[990,.14,1.6],[1320,.10,1.2]].forEach(function(p){
-        var o=ctx.createOscillator(), g=ctx.createGain();
-        o.type='sine'; o.frequency.value=p[0];
-        g.gain.setValueAtTime(0.0001,t);
-        g.gain.exponentialRampToValueAtTime(p[1]*0.20*s[1], t+0.012);
-        g.gain.exponentialRampToValueAtTime(0.0001, t+p[2]*dk);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(t); o.stop(t+p[2]*dk+0.05);
+    var comp=ctx.createDynamicsCompressor();
+    comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6;
+    comp.connect(ctx.destination);
+    var F=470, dk=soft?0.38:1;
+    var P=[[0.5,.50,4.2],[1.0,.85,3.2],[1.183,.38,2.6],[1.506,.26,2.0],[2.0,.40,1.7],[2.514,.15,1.25],[2.662,.19,1.05],[3.011,.11,.9],[4.166,.07,.6],[5.433,.045,.45]];
+    function strike(at, amp){
+      var t=t0+at;
+      P.forEach(function(p,pi){
+        [ -1, 1 ].forEach(function(d){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine';
+          o.frequency.value=F*p[0]*(1+d*(0.0012+0.0006*pi));
+          g.gain.setValueAtTime(0.0001,t);
+          g.gain.exponentialRampToValueAtTime(p[1]*amp*0.10, t+0.008);
+          g.gain.exponentialRampToValueAtTime(0.0001, t+p[2]*dk);
+          o.connect(g); g.connect(comp);
+          o.start(t); o.stop(t+p[2]*dk+0.05);
+        });
       });
-    });
+      var nlen=Math.floor(ctx.sampleRate*0.09);
+      var nb=ctx.createBuffer(1,nlen,ctx.sampleRate);
+      var ch=nb.getChannelData(0);
+      for(var i=0;i<nlen;i++){ ch[i]=(Math.random()*2-1)*Math.pow(1-i/nlen,2) }
+      var ns=ctx.createBufferSource(); ns.buffer=nb;
+      var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=0.8;
+      var ng=ctx.createGain();
+      ng.gain.setValueAtTime(amp*0.5,t);
+      ng.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+      ns.connect(bp); bp.connect(ng); ng.connect(comp);
+      ns.start(t);
+    }
+    if(soft){ strike(0,0.5) } else { strike(0,1); strike(0.9,0.78) }
   }catch(e){}
 }
 var FOLLOWS=[];
