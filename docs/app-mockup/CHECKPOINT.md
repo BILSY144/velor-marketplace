@@ -2,6 +2,22 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Confirmed page generated from the cart; escrow copy corrected
+
+- Order lines (VLR-numbered, one per seller with that seller's items +
+  chosen shipping), headline, total and passport-stamp tease all derive
+  from the live cart. Paying clears the basket (badge -> 0), completing
+  the loop; opened with an empty cart (review chips) it falls back to
+  CARTSEED so the page stays reviewable.
+- ESCROW COPY FIX (William caught it): "held until both are delivered"
+  was wrong -- each seller's share is held separately and released when
+  THAT parcel's delivery is confirmed, matching per-order release-payouts.
+  Copy now says exactly that. Basket/checkout bars were already correct
+  ("each parcel's delivery").
+- Verified live: 2 orders at GBP 72.90 (incl DHL upgrade) + GBP 161.20,
+  total 234.10 consistent with the modified basket; cart emptied after.
+- Commits: 1b681c4 (live confirm), 20885c5 (escrow copy).
+
 ## 2026-07-15: Dispute fixed (photo layout + 3-photo gate) and return flow built
 
 - ADD PHOTOS off-page bug: the sample <img> in a flex rail refused to
