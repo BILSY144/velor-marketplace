@@ -548,7 +548,40 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // no-weapons rule, the same call already applied to Kazakhstan's kamcha
   // and Benin's récade. No ivory/coral/bone material in either item added.
   BW: ['Woven baskets', 'Hand-thrown pottery (Thamaga & Gabane)', 'Hand-tanned leather goods (San & Tswana leatherwork)'],
-  NA: ['Karakul wool weaving'],
+  // Expanded by the standing SEO agent, 2026-07-15 (backlog item 25,
+  // continuing the floor-of-1 priority list -- Namibia next after
+  // Botswana). Kept the existing 'Karakul wool weaving' entry untouched
+  // (not re-verified or renamed this run). Added three new product-level
+  // items, each corroborated across at least two independent sources:
+  // Hand-woven grass baskets (Kavango & Caprivi) -- travelnam.com documents
+  // Khwe/Kavango/Caprivi/Owambo women coiling veld grass with makalani
+  // palm strips, naturally dyed with rust/aloe/berries/bark, and names two
+  // currently-active sellers: Omba Arts Trust (active since 1992, 400+
+  // artisans across nine regions) and Mashi Crafts (a community-owned
+  // cooperative of roughly 299 weavers near Kongola); independently
+  // corroborated by the Namibia Craft Shop's own Omba Arts Trust vendor
+  // page (ongoing sales, physical Windhoek premises) and by Indigo Arts'
+  // and Selvedge Magazine's dedicated Kavango-basket gallery pages. Kavango
+  // hand-carved wood bowls & animal figures -- travelnam.com profiles a
+  // working Chokwe woodcarver in the Kavango region carving giraffes,
+  // elephants, hippos, bowls and stools from Kiaat/Rosewood, still selling
+  // to tourists today; independently corroborated by a ResearchGate figure
+  // captioned "Woodcarving by Kavango craftspeople... displayed at the
+  // Ncumcara Community Forest Craft Centre, Rundu" and by the Namibia
+  // Craft Centre's own about page listing wood carving among its ~40
+  // resident craft enterprises in Windhoek. Herero cloth dolls --
+  // 99fm.com.na profiles two named artisans (Elsie Riruako, Philladelphia
+  // Koujo) hand-making Herero dolls in traditional dress six days a week
+  // since 1991, sold at Windhoek's Gustav Voigts Centre; independently
+  // corroborated by a currently-listed product page at oyetu-namibia.org
+  // (patchwork-material construction, in stock today) and by multiple
+  // completed eBay listings for handmade Namibian Herero dolls. Deliberately
+  // NOT added: San ostrich-eggshell jewellery, seen at the Namibia Craft
+  // Centre -- excluded under this file's own restricted-shell-material
+  // rule, same precedent as Botswana's ostrich-eggshell exclusion. No
+  // shell/ivory/coral/bone material in any item added, no weapons, no
+  // raw-material-only entries, no PGI used loosely.
+  NA: ['Karakul wool weaving', 'Hand-woven grass baskets (Kavango & Caprivi)', 'Kavango hand-carved wood bowls & animal figures', 'Herero cloth dolls'],
   LS: ['Basotho blankets', 'Mokorotlo woven hats'],
   SZ: ['Ngwenya recycled glassware', 'Sisal woven baskets'],
   MW: ['Dedza pottery', 'Chitenje wax-print textiles', 'Carved wood figures'],
