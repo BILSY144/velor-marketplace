@@ -1,5 +1,5 @@
 import React from 'react'
-import { View } from 'react-native'
+import { View, Text, Image, Pressable, StyleSheet, Animated } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
@@ -111,6 +111,81 @@ const theme = {
   },
 }
 
+// The opening moment — plate 00. Continues seamlessly from the native
+// splash (same logo image, same black), adds the mockup's "THE ATLAS ·
+// ON AIR" status line with the pulsing live dot and TAP TO SKIP, then
+// fades into the Atlas after ~2.4s (or on tap).
+function SplashOverlay({ onDone }: { onDone: () => void }) {
+  const fade = React.useRef(new Animated.Value(1)).current
+  const pulse = React.useRef(new Animated.Value(1)).current
+  const done = React.useRef(false)
+
+  const dismiss = React.useCallback(() => {
+    if (done.current) return
+    done.current = true
+    Animated.timing(fade, { toValue: 0, duration: 450, useNativeDriver: true }).start(onDone)
+  }, [fade, onDone])
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.25, duration: 650, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ])
+    ).start()
+    const t = setTimeout(dismiss, 2400)
+    return () => clearTimeout(t)
+  }, [dismiss, pulse])
+
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade, zIndex: 99 }]}>
+      <Pressable style={sp.fill} onPress={dismiss}>
+        <View style={sp.glow} />
+        <Image
+          source={require('./assets/splash.png')}
+          style={sp.logo}
+          resizeMode="contain"
+        />
+        <View style={sp.idRow}>
+          <Animated.View style={[sp.dot, { opacity: pulse }]} />
+          <Text style={sp.idTx}>THE ATLAS · ON AIR</Text>
+        </View>
+        <Text style={sp.skip}>TAP TO SKIP</Text>
+      </Pressable>
+    </Animated.View>
+  )
+}
+
+const sp = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: '#050507', alignItems: 'center', justifyContent: 'center' },
+  glow: {
+    position: 'absolute',
+    width: 520,
+    height: 520,
+    borderRadius: 260,
+    backgroundColor: 'rgba(255,107,0,0.055)',
+    top: '28%',
+  },
+  logo: { width: '96%', height: 300 },
+  idRow: {
+    position: 'absolute',
+    bottom: '24%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.accent },
+  idTx: { fontFamily: F.display, fontSize: 9.5, letterSpacing: 2.4, color: C.accent },
+  skip: {
+    position: 'absolute',
+    bottom: 46,
+    fontFamily: F.displayMed,
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: '#45454e',
+  },
+})
+
 export default function App() {
   const [loaded] = useFonts({
     SpaceGrotesk_600SemiBold,
@@ -122,9 +197,10 @@ export default function App() {
     Fraunces_500Medium_Italic,
     Fraunces_600SemiBold,
   })
+  const [splash, setSplash] = React.useState(true)
 
   if (!loaded) {
-    return <View style={{ flex: 1, backgroundColor: C.bg }} />
+    return <View style={{ flex: 1, backgroundColor: '#050507' }} />
   }
 
   return (
@@ -162,6 +238,7 @@ export default function App() {
             <Stack.Screen name="NewListing" component={NewListingScreen} />
             <Stack.Screen name="GoLive" component={GoLiveScreen} />
           </Stack.Navigator>
+          {splash ? <SplashOverlay onDone={() => setSplash(false)} /> : null}
         </NavigationContainer>
       </QueryClientProvider>
     </SafeAreaProvider>

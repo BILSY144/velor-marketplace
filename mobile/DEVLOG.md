@@ -316,3 +316,14 @@ and that regulated items cannot list without one. The READY TO PUBLISH
 checklist gains a "Certificate · N" pill that must be green when
 regulated=Yes, mirroring the production admin gate (409 without a valid
 certificate — see velor-cultural-marketplace / compliance chain).
+
+## 2026-07-15 — The opening moment (plate 00) built
+
+William: "Is the opening page done" — the native splash (the gold VELOR
+GLOBAL MARKETPLACE logo on black) was already in place, but plate 00 is a
+MOMENT, not an image: logo over a soft orange glow, "THE ATLAS · ON AIR"
+with a pulsing live dot, TAP TO SKIP, fading into the Atlas. Built as a
+SplashOverlay in App.tsx that renders the same splash.png the native
+splash shows (seamless handoff — no visual jump), adds the ON AIR line +
+pulse + skip, and fades out after 2.4s or on tap. Native driver anims
+only; overlay unmounts after fade so it costs nothing afterward.
