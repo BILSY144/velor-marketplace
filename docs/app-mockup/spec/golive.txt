@@ -1,0 +1,31 @@
+<video>  [Inter 16px/400 rgb(244, 243, 241)]
+<button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=glEndAll();go('dash')
+    <span> "CAMERA CHECK" [Space Grotesk 9px/700 rgb(255, 107, 0)]
+  <div> "Followers of your channel and country are notified the moment you go on air. Preview uses a sample film." [Inter 10.5px/400 rgb(185, 185, 194)]
+    <div.k.d> "BROADCAST TITLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <div.fd> "Morning firing — raku, from the kiln" [Inter 15px/600 rgb(244, 243, 241)]
+    <div.k.d> "PINNED LISTINGS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <span.pill.on> "Kuro raku bowl · £68" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill.on> "Sake set · £84" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <button.pill> "+ Add" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=glAddPin()
+    <button.btn> "Go live" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=glStart()
+    <span.glchip> "LIVE" [Space Grotesk 9px/700 rgb(255, 77, 77)]
+      <span> "0:00" [Space Grotesk 9px/700 rgb(255, 77, 77)]
+    <span.glchip> "watching · SIMULATED" [Space Grotesk 9px/700 rgb(138, 138, 149)]
+      <span> "0" [Space Grotesk 9px/700 rgb(138, 138, 149)]
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+        <div.fd> "Kuro raku tea bowl" [Inter 12.5px/600 rgb(244, 243, 241)]
+        <div.sm.dim> "Pinned · buyers tap to buy ·" [Inter 11.5px/400 rgb(90, 90, 100)]
+          <span> "£0 sold" [Inter 11.5px/400 rgb(255, 107, 0)]
+    <button.btn> "End stream" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=glEnd()
+    <div.k.d> "STREAM ENDED · SIMULATED PREVIEW" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <h2.dspl> "That’s a wrap." [Fraunces 26px/480 rgb(244, 243, 241)]
+        <div.sv.serif> "0:00" [Fraunces 26px/500 rgb(255, 107, 0)]
+        <div.sl> "ON AIR" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+        <div.sv.serif> "0" [Fraunces 26px/500 rgb(255, 107, 0)]
+        <div.sl> "PEAK VIEWERS" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+        <div.sv.serif> "£0" [Fraunces 26px/500 rgb(255, 107, 0)]
+        <div.sl> "SOLD" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+    <p.sm.dim> "+0 new followers will hear your next opening bell." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button.btn> "Back to dashboard" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=glEndAll();go('dash')
+    <button.btn.ghost> "Set up another stream" [Space Grotesk 14.5px/600 rgb(244, 243, 241)] onclick=glReset()

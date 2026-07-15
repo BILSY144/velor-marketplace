@@ -1,0 +1,312 @@
+  <canvas>  [Inter 16px/400 rgb(244, 243, 241)]
+  <img.wm>  [Inter 16px/400 rgb(244, 243, 241)]
+    <button.gbtn>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('search')
+    <button.gbtn>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=openMenu()
+    <button.gbtn>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('notif')
+      <span.gdot> "0" [Space Grotesk 9.5px/700 rgb(22, 10, 0)]
+  <h1> "Shop" [Fraunces 31px/480 rgb(244, 243, 241)]
+    <em> "the world" [Fraunces 31px/500 rgb(255, 107, 0)]
+<div.atlas-hint> "Drag anywhere · tap a light · double-tap to zoom" [Space Grotesk 11px/400 rgb(90, 90, 100)]
+<button.gseg.gswap>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toggleGlobeMode()
+<div.idx>  [Inter 16px/400 rgb(244, 243, 241)] onclick=if(event.target===this)closeIndex()
+    <div.idx-h> "Every channel, A–Z" [Fraunces 18px/520 rgb(244, 243, 241)]
+      <input>  [Inter 15px/400 rgb(244, 243, 241)]
+    <div.st> "SEAT OPEN" [Space Grotesk 10px/700 rgb(255, 107, 0)]
+  <button.go>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('country')
+    <button.livepill>  [Space Grotesk 8.5px/700 rgb(255, 255, 255)] onclick=toggleSheet()
+      <span.vmark> "V" [Space Grotesk 11px/700 rgb(255, 107, 0)]
+      <span> "LIVE" [Space Grotesk 8.5px/700 rgb(255, 255, 255)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(0)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Throwing the tea set" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Ceramics, from the wheel" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(1)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The spice souk opens" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Marrakech, live" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(2)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Coffee on sand" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Watch it made" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(3)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Gaucho leather country" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Riding with the flag" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(4)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Bosnian coffee, poured" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "The copper set" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(5)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The praline box" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Chocolate, assorted" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(6)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Casting at full heat" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Lost-wax, glowing" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(7)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The jeweller at work" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Gold, worked by hand" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(8)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Pachamama in colour" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Aguayo on parade" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(9)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Coffee, brewed slow" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "The daily ritual" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(10)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Chocolate, melted" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Folded and tempered" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(11)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The roasted bean" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Coffee up close" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(12)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Coffee, sun-dried" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "On the drying beds" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(13)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The roasting drum" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Costa Rica coffee" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(14)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Dates of the oasis" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Deglet Nour" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(15)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Glass with air inside" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Blown by hand" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(16)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Jebena on the fire" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Coffee the slow way" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(17)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Olive oil, poured" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Liquid gold" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(18)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Coffee, ground fresh" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "The birthplace bean" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(19)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The tailoring bench" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Stitch by stitch" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(20)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Honey off the dipper" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Golden and slow" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(21)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The backstrap loom" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Weaving in Antigua" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(22)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Paprika on the vine" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Before the string" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(23)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Batik, wax and dye" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Drawn by hand" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(24)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Salt of the Dead Sea" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Minerals at the shore" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(25)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Sanganeri block print" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Jaipur, by hand" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(26)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The carpet craftsman" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Knot by knot" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(27)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The tea ceremony" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Matcha, whisked" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(28)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Maasai colour" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Beadwork, worn daily" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(29)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Stamps, collected" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Under the tweezers" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(30)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The Fes tanneries" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Leather in the pits" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(31)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "La Catrina walks" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Day of the Dead craft" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(32)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Cloth of celebration" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Worn in Nigeria" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(33)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The singing bowl" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Struck, then still" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(34)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Kathmandu in festival" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Buddha Jayanti" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(35)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The pollera in motion" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Panama, danced" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(36)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Taquile island" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Peru at altitude" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(37)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Turkish coffee, served" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "From the cezve" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(38)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Maasai on the move" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Tanzania plains" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(39)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The mate ritual" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Passed and shared" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(40)
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "Arabian coffee" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Named for Mocha" [Inter 9.5px/400 rgb(240, 239, 236)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('JP'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Japan" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('CN'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "China" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('IN'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "India" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('MA'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Morocco" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('TR'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Turkey" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('PE'));go('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Peru" [Fraunces 14px/520 rgb(255, 107, 0)]
+        <div.s> "Seat open" [Inter 9.5px/400 rgb(255, 107, 0)]
+    <button.lcard.seat>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('sell')
+      <div.big> "Open your country’s channel →" [Space Grotesk 11px/600 rgb(255, 107, 0)]
+    <div.sm-k> "Opening soon" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.sm-pill> "Peru" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('PE');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Ghana" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('GH');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Uzbekistan" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('UZ');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Nepal" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('NP');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Ethiopia" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('ET');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Mexico" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('MX');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Turkey" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('TR');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+      <button.sm-pill> "Indonesia" [Fraunces 13.5px/530 rgb(244, 243, 241)] onclick=SELCH=getW('ID');reopen('country')
+        <img.fimg>  [Fraunces 13.5px/530 rgb(244, 243, 241)]
+    <div.sm-k> "You follow" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <span.t> "Japan" [Fraunces 14px/530 rgb(244, 243, 241)]
+      <span.s> "You’ll get the opening bell" [Inter 10.5px/400 rgb(138, 138, 149)]
+      <span.t> "Clay" [Fraunces 14px/530 rgb(244, 243, 241)]
+      <span.s> "6 countries known for it" [Inter 10.5px/400 rgb(138, 138, 149)]

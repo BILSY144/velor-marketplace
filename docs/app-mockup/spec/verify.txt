@@ -1,0 +1,4 @@
+    <h1.serif> "One step left." [Fraunces 26px/500 rgb(244, 243, 241)]
+    <p.sm.mut> "Verify your identity with your phone camera — hosted by Stripe. Velor never receives or stores your documents," [Inter 11.5px/400 rgb(138, 138, 149)]
+    <button.btn> "Verify with Stripe" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=go('dash')
+    <button.btn.ghost> "Do it later" [Space Grotesk 14.5px/600 rgb(244, 243, 241)] onclick=toast('A link is in your email too')

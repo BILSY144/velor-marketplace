@@ -1,0 +1,26 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('atlas')
+    <h1.dspl> "The opening bell" [Fraunces 30px/480 rgb(244, 243, 241)]
+    <div.k.d> "YOUR BELLS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <div.nt> "VLR-8241 placed" [Inter 13px/600 rgb(244, 243, 241)]
+      <div.ns> "Lin Ceramics Studio is preparing your parcel — its stamp follows the delivery." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.nb.line> "Track it" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=ordersFor('CN')
+      <div.nt> "VLR-8242 placed" [Inter 13px/600 rgb(244, 243, 241)]
+      <div.ns> "Atlas Weave is preparing your parcel — its stamp follows the delivery." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.nb.line> "Track it" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=ordersFor('MA')
+    <div.k.d> "WHAT THE BELL SOUNDS LIKE · SAMPLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(255, 107, 0)] onclick=bellSound()
+      <span.fd> "RING IT" [Inter 10.5px/700 rgb(255, 107, 0)]
+      <img.fimg>  [Inter 20px/400 rgb(244, 243, 241)]
+      <div.nt> "Japan just opened" [Inter 13px/600 rgb(244, 243, 241)]
+        <span> "SAMPLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <div.ns> "Japan’s founding seller goes live with their first listings." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.nb> "Visit the channel" [Space Grotesk 12px/600 rgb(22, 10, 0)] onclick=SELCH=getW('JP');reopen('country')
+      <img.fimg>  [Inter 20px/400 rgb(244, 243, 241)]
+      <div.nt> "Live in 15 minutes" [Inter 13px/600 rgb(244, 243, 241)]
+        <span> "SAMPLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <div.ns> "Lin Ceramics — Throwing the tea set, from the wheel." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.nb.line> "Set a reminder" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=goLive(0)
+      <div.nt> "Out for delivery" [Inter 13px/600 rgb(244, 243, 241)]
+        <span> "SAMPLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <div.ns> "Your parcel arrives today. The stamp is ready." [Inter 11.5px/400 rgb(138, 138, 149)]
+    <p.sm.dim> "Quiet by default — Velor only speaks when something is genuinely yours: an order, a follow, an opening bell." [Inter 11.5px/400 rgb(90, 90, 100)]

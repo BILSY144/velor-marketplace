@@ -44,3 +44,24 @@ behaviour — do not improvise layouts. Changes this round:
 - Hint "Drag anywhere · tap a light" centered at ~54% like .atlas-hint.
 - Logo: splash ONLY (William) — not on Atlas.
 - Safe-area padding everywhere (notch was hiding back buttons).
+
+## 2026-07-15 (later still) — THE SCAN: mockup reference kit committed
+
+William: "is there not a way for you to scan the mock design and layout and
+directly apply every detail." Built it:
+- docs/app-mockup/plates/ — all 33 mockup screens rendered at 2x with the
+  REAL fonts (served locally from @expo-google-fonts TTFs) via Playwright
+  in the sandbox. Pexels media is network-blocked here so photos/films show
+  the mockup's own gradient fallbacks — layout, type, spacing and copy are
+  pixel-true. THESE PLATES ARE THE VISUAL CONTRACT for every app screen.
+- docs/app-mockup/spec/ — per-screen element tree: tag/class, exact copy,
+  computed font family/size/weight/colour, onclick target. Use with plates.
+- Regenerate: /tmp/plates.js + /tmp/spec.js pattern (serve mockup+fonts on
+  localhost, loop SCREENS, clip .vp). Mockup source lives on the
+  app-mockup-preview branch (git show app-mockup-preview:public/velor-app-mockup.html).
+- First application: Atlas reel corrected from plate 01 — V LIVE pill header
+  (V orange + LIVE white, dark pill w/ orange border) and 138pt film cards
+  with Fraunces-italic orange titles + Inter 9.5 subs, 'Preview' chip 7px.
+- Deliberate divergences from plates (William's explicit calls or honesty):
+  no VELOR wordmark on Atlas (logo splash-only), no double-tap-zoom claim in
+  hint, PREVIEW badging + no fake counts, payment gated to 6 Aug.

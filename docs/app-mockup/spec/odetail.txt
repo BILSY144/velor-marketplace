@@ -1,0 +1,21 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('orders')
+    <span.prot-chip> "PROTECTED" [Space Grotesk 8.5px/700 rgb(61, 220, 132)]
+    <h1.dspl> "VLR-8241" [Fraunces 28px/480 rgb(244, 243, 241)]
+        <img.fimg>  [Inter 17px/400 rgb(244, 243, 241)]
+      <span.snm> "Lin Ceramics Studio" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <span.sfrom> "Jingdezhen" [Inter 11px/400 rgb(90, 90, 100)]
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+        <div.t> "Gongfu tea set, 6 pieces" [Inter 13px/600 rgb(244, 243, 241)]
+        <div.v> "Qty 1" [Inter 11px/400 rgb(138, 138, 149)]
+        <div.pr> "£54 + £6.40 delivery" [Space Grotesk 13px/700 rgb(244, 243, 241)]
+    <div.fd> "Tracking · LX3348219CN" [Inter 13px/600 rgb(244, 243, 241)]
+      <span> "PAID 10 JUL" [Space Grotesk 9px/700 rgb(138, 138, 149)]
+      <span> "SHIPPED 12 JUL" [Space Grotesk 9px/700 rgb(138, 138, 149)]
+      <span> "DELIVERED" [Space Grotesk 9px/700 rgb(138, 138, 149)]
+    <div.tevents> "12 Jul · Collected, Jingdezhen 13 Jul · Export scan, Shanghai 14 Jul · In transit to the UK" [Inter 11.5px/400 rgb(138, 138, 149)]
+    <button.btn.ghost.sm> "Track parcel" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=toast('Opens carrier tracking')
+    <span> "Your £60.40 is held by Velor. The seller is paid only after delivery is confirmed." [Inter 11.5px/400 rgb(191, 238, 211)]
+      <div.fd> "Something wrong?" [Inter 13px/600 rgb(244, 243, 241)]
+      <p.sm.mut> "Not arrived, damaged, or not as described — open a dispute and the money freezes while we sort it." [Inter 11.5px/400 rgb(138, 138, 149)]
+        <button.btn.line.sm> "Open a dispute" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=go('dispute')
+        <button.btn.line.sm> "Request return" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=go('returnreq')

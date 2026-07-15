@@ -1,0 +1,11 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('account')
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+        <h1.dspl> "Ask Velor" [Fraunces 26px/480 rgb(244, 243, 241)]
+        <p.sm.dim> "The same guide as the website — any language, honest answers." [Inter 11.5px/400 rgb(90, 90, 100)]
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+    <div.amsg.bot> "I can help you find something specific, explain where a craft comes from, or walk you through how your money i" [Inter 13px/400 rgb(244, 243, 241)]
+      <button.pill> "A gift for a tea lover" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=assistSend('A gift for someone who loves tea')
+      <button.pill> "How is my money protected?" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=assistSend('How is my money protected when I buy?')
+      <button.pill> "¿Cómo funciona el escrow?" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=assistSend('¿Cómo funciona el escrow de Velor?')
+  <input>  [Inter 13.5px/400 rgb(244, 243, 241)]
+  <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=assistAsk()

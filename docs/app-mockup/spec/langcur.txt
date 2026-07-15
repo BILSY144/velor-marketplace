@@ -1,0 +1,166 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('account')
+    <div.k> "YOUR VELOR" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.dspl> "Your words. Your money." [Fraunces 30px/480 rgb(244, 243, 241)]
+    <div.k.d> "LANGUAGE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.sm.dim> "Velor already speaks all nineteen to its sellers — the buyer app ships English-first." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('English is live')
+      <span.serif> "English" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "English" [Inter 10.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Spanish arrives with the buyer app launch')
+      <span.serif> "Español" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Spanish" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('French arrives with the buyer app launch')
+      <span.serif> "Français" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "French" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('German arrives with the buyer app launch')
+      <span.serif> "Deutsch" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "German" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Italian arrives with the buyer app launch')
+      <span.serif> "Italiano" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Italian" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Portuguese arrives with the buyer app launch')
+      <span.serif> "Português" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Portuguese" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Dutch arrives with the buyer app launch')
+      <span.serif> "Nederlands" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Dutch" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Polish arrives with the buyer app launch')
+      <span.serif> "Polski" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Polish" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Turkish arrives with the buyer app launch')
+      <span.serif> "Türkçe" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Turkish" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Russian arrives with the buyer app launch')
+      <span.serif> "Русский" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Russian" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Arabic arrives with the buyer app launch')
+      <span.serif> "العربية" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Arabic" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Hindi arrives with the buyer app launch')
+      <span.serif> "हिन्दी" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Hindi" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Bengali arrives with the buyer app launch')
+      <span.serif> "বাংলা" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Bengali" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Vietnamese arrives with the buyer app launch')
+      <span.serif> "Tiếng Việt" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Vietnamese" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Thai arrives with the buyer app launch')
+      <span.serif> "ไทย" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Thai" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Indonesian arrives with the buyer app launch')
+      <span.serif> "Bahasa Indonesia" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Indonesian" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Chinese arrives with the buyer app launch')
+      <span.serif> "中文" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Chinese" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Japanese arrives with the buyer app launch')
+      <span.serif> "日本語" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Japanese" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=toast('Korean arrives with the buyer app launch')
+      <span.serif> "한국어" [Fraunces 16.5px/500 rgb(244, 243, 241)]
+      <span.sm.dim> "Korean" [Inter 10.5px/400 rgb(90, 90, 100)]
+      <span> "ARRIVING" [Space Grotesk 8px/700 rgb(138, 138, 149)]
+    <div.k.d> "CURRENCY" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.sm.dim> "Prices show — and you are charged — in your own money. Live European Central Bank rate, the same source checko" [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('GBP')
+      <span.dspl> "£" [Fraunces 21px/480 rgb(255, 107, 0)]
+      <span.fd> "GBP" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Pound sterling" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('USD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "USD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "US dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('EUR')
+      <span.dspl> "€" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "EUR" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Euro" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('CAD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "CAD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Canadian dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('AUD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "AUD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Australian dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('JPY')
+      <span.dspl> "¥" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "JPY" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Japanese yen" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('CNY')
+      <span.dspl> "¥" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "CNY" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Chinese yuan" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('INR')
+      <span.dspl> "₹" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "INR" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Indian rupee" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('AED')
+      <span.dspl> "د.إ" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "AED" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "UAE dirham" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('SGD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "SGD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Singapore dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('CHF')
+      <span.dspl> "₣" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "CHF" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Swiss franc" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('SEK')
+      <span.dspl> "kr" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "SEK" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Swedish krona" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('NOK')
+      <span.dspl> "kr" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "NOK" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Norwegian krone" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('DKK')
+      <span.dspl> "kr" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "DKK" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Danish krone" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('NZD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "NZD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "NZ dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('HKD')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "HKD" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "HK dollar" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('ZAR')
+      <span.dspl> "R" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "ZAR" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "SA rand" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('BRL')
+      <span.dspl> "R$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "BRL" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Brazilian real" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('MXN')
+      <span.dspl> "$" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "MXN" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "Mexican peso" [Inter 9.5px/400 rgb(90, 90, 100)]
+    <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=setCurrency('KRW')
+      <span.dspl> "₩" [Fraunces 21px/480 rgb(244, 243, 241)]
+      <span.fd> "KRW" [Inter 11.5px/700 rgb(244, 243, 241)]
+      <span.sm.dim> "SK won" [Inter 9.5px/400 rgb(90, 90, 100)]
+      <div.sm.dim> "Base currency" [Inter 11.5px/400 rgb(90, 90, 100)]
+      <div.fd> "GBP · no conversion" [Inter 15px/700 rgb(244, 243, 241)]
+        <span.sm.dim> "Gongfu tea set · SAMPLE" [Inter 11.5px/400 rgb(90, 90, 100)]
+        <span.dspl> "£54" [Fraunces 19px/480 rgb(244, 243, 241)]

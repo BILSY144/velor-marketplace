@@ -1,0 +1,16 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('account')
+    <h1.dspl> "Privacy & legal" [Fraunces 28px/480 rgb(244, 243, 241)]
+    <span> "You pay Velor, not the seller. Money is held in escrow and released per parcel, only on confirmed delivery. An" [Inter 11.5px/400 rgb(191, 238, 211)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLegal('terms')
+      <div.fd> "Terms of service" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Read in the app" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLegal('privacy')
+      <div.fd> "Privacy policy" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Read in the app" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLegal('seller')
+      <div.fd> "Seller agreement" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Read in the app" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLegal('help')
+      <div.fd> "Help & buyer protection" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Read in the app" [Inter 11.5px/400 rgb(90, 90, 100)]
+    <p.sm.dim> "Summaries read in the app; the full text lives on velorcommerce.store — one set of rules for app and site." [Inter 11.5px/400 rgb(90, 90, 100)]

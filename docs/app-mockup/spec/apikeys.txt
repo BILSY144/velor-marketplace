@@ -1,0 +1,17 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('dash')
+    <div.k> "PRO TOOLS" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.dspl> "API access." [Fraunces 30px/480 rgb(244, 243, 241)]
+    <p.sm.dim> "Wire your channel into your own tools — stock sync, order export, live-session alerts. Included with Pro." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <div.k.d> "YOUR KEYS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+          <div.fd> "Workshop stock sync" [Inter 13.5px/600 rgb(244, 243, 241)]
+          <div.sm.dim> "vlr_live_••••••••3kf9" [monospace 11.5px/400 rgb(90, 90, 100)]
+          <div.sm.dim> "Created 2 Jul 2026" [Inter 11.5px/400 rgb(90, 90, 100)]
+        <button.btn.line.sm> "Revoke" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=akRevoke(0)
+    <button.btn> "Create a new key" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=akCreate()
+    <div.k.d> "WHAT KEYS CAN DO" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <span.pill> "Read orders" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill> "Update stock" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill> "Create listings" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill> "Live-session events" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill> "Payout reports" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+    <p.sm.dim> "Keys are shown once and stored hashed. Revoke instantly from here if one leaks. Rate limit: 600 requests/min." [Inter 11.5px/400 rgb(90, 90, 100)]

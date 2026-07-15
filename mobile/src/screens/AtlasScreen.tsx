@@ -76,25 +76,27 @@ export default function AtlasScreen() {
         />
       </Pressable>
 
-      {/* Bottom reel — preview films, swipes horizontally only */}
+      {/* Bottom reel — the mockup's V LIVE pill + large film cards */}
       <View style={s.reelWrap}>
-        <Kicker style={{ paddingHorizontal: 20 }}>SHOPPING THE WORLD — PREVIEW FILMS</Kicker>
+        <View style={s.livepill}>
+          <Text style={s.vmark}>V</Text>
+          <Text style={s.livetx}>LIVE</Text>
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 10 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 11, paddingTop: 10 }}
         >
           {FILMS.slice(0, 14).map((f, i) => (
             <Pressable key={f.src} style={s.filmCard} onPress={() => nav.navigate('Live', { start: i })}>
               <Image source={{ uri: f.poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
               <View style={s.filmShade} />
               <View style={s.previewTag}>
-                <Body style={s.previewTx}>PREVIEW</Body>
+                <Body style={s.previewTx}>Preview</Body>
               </View>
-              <View style={{ position: 'absolute', left: 8, right: 8, bottom: 8 }}>
-                <Body style={{ fontFamily: F.bodySemi, fontSize: 10.5 }} numberOfLines={1}>
-                  {f.title}
-                </Body>
+              <View style={{ position: 'absolute', left: 10, right: 10, bottom: 10 }}>
+                <Text style={s.filmTitle} numberOfLines={2}>{f.title}</Text>
+                <Text style={s.filmSub} numberOfLines={1}>{f.sub}</Text>
               </View>
             </Pressable>
           ))}
@@ -173,23 +175,40 @@ const s = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 8,
-    paddingBottom: 6,
+    bottom: 6,
+    paddingBottom: 4,
   },
+  livepill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    marginLeft: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.55)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  vmark: { fontFamily: F.display, fontSize: 11, color: C.accent },
+  livetx: { fontFamily: F.display, fontSize: 8.5, letterSpacing: 1.2, color: '#fff' },
   filmCard: {
-    width: 108,
-    aspectRatio: 9 / 13,
-    borderRadius: 14,
+    width: 138,
+    aspectRatio: 9 / 14,
+    borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: C.surf2,
   },
+  filmTitle: { fontFamily: F.serifItalic, fontSize: 14, lineHeight: 17, color: C.accent },
+  filmSub: { fontFamily: F.body, fontSize: 9.5, color: '#f0efec', marginTop: 2 },
   filmShade: {
     position: 'absolute' as const,
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.24)',
   },
   previewTag: {
     position: 'absolute',
@@ -200,5 +219,5 @@ const s = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  previewTx: { fontFamily: F.display, fontSize: 7.5, letterSpacing: 1, color: C.text },
+  previewTx: { fontFamily: F.displayMed, fontSize: 7, letterSpacing: 0.6, color: '#e4e4ea' },
 })

@@ -1,0 +1,47 @@
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=goPdpBack()
+    <button.gbtn>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=fav()
+    <div.k> "CHINA × CLAY · JINGDEZHEN" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.serif> "Gongfu tea set, hand-thrown" [Fraunces 31px/500 rgb(244, 243, 241)]
+      <span.dspl> "£54" [Fraunces 30px/480 rgb(244, 243, 241)]
+      <button.sm> "Deliver to UK · est £6.40 · 8–12 days" [Inter 12px/400 rgb(61, 220, 132)] onclick=toast('Quoted for your location — exact cost confirmed at ch
+        <span> "change" [Inter 12px/400 rgb(138, 138, 149)]
+      <img.fimg>  [Inter 22px/400 rgb(244, 243, 241)]
+      <div.mn> "Lin Ceramics Studio" [Fraunces 15px/550 rgb(244, 243, 241)]
+      <div.ml> "Jingdezhen · opened this channel" [Inter 11px/400 rgb(138, 138, 149)]
+    <span.fbadge> "FOUNDING" [Space Grotesk 8.5px/700 rgb(255, 107, 0)]
+    <span.k.d> "THE MAKING" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p> "Thrown on the wheel and fired at 1280°C in Jingdezhen — the city that has made porcelain for a thousand years." [Fraunces 16px/400 rgb(212, 211, 207)]
+      <span> "Your money is protected" [Space Grotesk 13.5px/600 rgb(244, 243, 241)]
+    <p> "You pay Velor, not the seller. Held in escrow, released only after your delivery is confirmed. Anything wrong " [Inter 12px/400 rgb(138, 138, 149)]
+      <span.pill> "Clay" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+      <span.pill> "Tea ceremony" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+    <div.k.d> "BUYER REVIEWS · SAMPLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.sm.dim> "These are mock reviews to show how this section will look. Real reviews appear here once verified buyers recei" [Inter 11.5px/400 rgb(90, 90, 100)]
+        <span.who> "Amira K." [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+        <span.vfy> "SAMPLE · UK" [Space Grotesk 8.5px/700 rgb(61, 220, 132)]
+      <p> "Arrived from Jingdezhen in nine days, wrapped like treasure. The glaze is deeper in person." [Inter 12px/400 rgb(199, 199, 207)]
+        <span.who> "Tom R." [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+        <span.vfy> "SAMPLE · IE" [Space Grotesk 8.5px/700 rgb(61, 220, 132)]
+      <p> "Beautiful. One cup slightly uneven — but that’s hand-thrown, and the maker messaged to check I was happy." [Inter 12px/400 rgb(199, 199, 207)]
+    <div.k.d> "MORE FROM CHINA" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <img.fimg>  [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=goCraft('CN','Blue-and-white%20vases')
+      <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+        <div.t> "Blue-and-white vases" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=goCraft('CN','Woks')
+      <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+        <div.t> "Woks" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=goCraft('CN','Bamboo%20steamers')
+      <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+        <div.t> "Bamboo steamers" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=goCraft('CN','Jade%20%26%20stone')
+      <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+        <div.t> "Jade & stone" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=goCraft('CN','Gongfu%20tea%20ware')
+      <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+        <div.t> "Gongfu tea ware" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button> "−" [Inter 18px/400 rgb(244, 243, 241)] onclick=dq(-1)
+    <span> "1" [Space Grotesk 16px/700 rgb(244, 243, 241)]
+    <button> "+" [Inter 18px/400 rgb(244, 243, 241)] onclick=dq(1)
+  <button.btn> "Add · £54" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=addCart()

@@ -1,0 +1,45 @@
+    <div.k.d> "YOUR BASKET" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <h1.dspl> "Two makers. One payment." [Fraunces 32px/480 rgb(244, 243, 241)]
+    <span> "Held in escrow until each parcel’s delivery is confirmed." [Inter 11.5px/400 rgb(191, 238, 211)]
+        <img.fimg>  [Inter 17px/400 rgb(244, 243, 241)]
+      <span.snm> "Lin Ceramics Studio" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <span.sfrom> "ships from China" [Inter 11px/400 rgb(90, 90, 100)]
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+        <div.t> "Gongfu tea set, 6 pieces" [Inter 13px/600 rgb(244, 243, 241)]
+        <div.v> "Hand-thrown · Jingdezhen · SAMPLE" [Inter 11px/400 rgb(138, 138, 149)]
+        <div.pr> "£54" [Space Grotesk 13px/700 rgb(244, 243, 241)]
+        <button> "×" [Inter 15px/400 rgb(244, 243, 241)] onclick=cartQty(0,-1)
+        <span> "1" [Space Grotesk 16px/700 rgb(244, 243, 241)]
+        <button> "+" [Inter 15px/400 rgb(244, 243, 241)] onclick=cartQty(0,1)
+      <button.shop.on>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=cartShip(0,0)
+          <div.t> "Tracked international" [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+          <div.s> "8–12 days · door to door" [Inter 10.5px/400 rgb(138, 138, 149)]
+        <span.p> "£6.40" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.shop>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=cartShip(0,1)
+          <div.t> "Express · DHL" [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+          <div.s> "3–5 days" [Inter 10.5px/400 rgb(138, 138, 149)]
+        <span.p> "£18.90" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+        <img.fimg>  [Inter 17px/400 rgb(244, 243, 241)]
+      <span.snm> "Atlas Weave" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <span.sfrom> "ships from Morocco" [Inter 11px/400 rgb(90, 90, 100)]
+      <img>  [Inter 16px/400 rgb(244, 243, 241)]
+        <div.t> "Berber rug, 90 × 150" [Inter 13px/600 rgb(244, 243, 241)]
+        <div.v> "Hand-knotted wool · Atlas mts · SAMPLE" [Inter 11px/400 rgb(138, 138, 149)]
+        <div.pr> "£149" [Space Grotesk 13px/700 rgb(244, 243, 241)]
+        <button> "×" [Inter 15px/400 rgb(244, 243, 241)] onclick=cartQty(1,-1)
+        <span> "1" [Space Grotesk 16px/700 rgb(244, 243, 241)]
+        <button> "+" [Inter 15px/400 rgb(244, 243, 241)] onclick=cartQty(1,1)
+      <button.shop.on>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=cartShip(1,0)
+          <div.t> "Tracked international" [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+          <div.s> "6–10 days" [Inter 10.5px/400 rgb(138, 138, 149)]
+        <span.p> "£12.20" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <span.mut> "Items" [Inter 13px/400 rgb(138, 138, 149)]
+      <span> "£203" [Inter 13px/400 rgb(244, 243, 241)]
+      <span.mut> "Delivery · 2 parcels" [Inter 13px/400 rgb(138, 138, 149)]
+      <span> "£18.60" [Inter 13px/400 rgb(244, 243, 241)]
+      <span.mut> "Import duty · est." [Inter 13px/400 rgb(138, 138, 149)]
+      <span> "£0.00" [Inter 13px/400 rgb(244, 243, 241)]
+      <span> "Total" [Space Grotesk 17px/700 rgb(244, 243, 241)]
+      <span> "£221.60" [Space Grotesk 17px/700 rgb(244, 243, 241)]
+    <p.sm.dim> "2 sellers, 2 parcels, 2 tracking numbers — one charge. Each seller only ever sees their own order." [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.btn> "Checkout · £221.60" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=go('checkout')

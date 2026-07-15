@@ -1,0 +1,768 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('atlas')
+    <h1.dspl> "Search the world." [Fraunces 34px/480 rgb(244, 243, 241)]
+    <input>  [Inter 15px/400 rgb(244, 243, 241)]
+      <div.k.d> "LATIN AMERICA · 20" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Argentina" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Belize" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bolivia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Brazil" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Chile" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Colombia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Costa Rica" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('EC');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Ecuador" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SV');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "El Salvador" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Guatemala" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Guyana" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('HN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Honduras" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MX');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mexico" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Nicaragua" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Panama" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Paraguay" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Peru" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Suriname" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('UY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Uruguay" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('VE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Venezuela" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "CARIBBEAN · 13" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AG');reopen('country')
+          <div.t> "Antigua and Barbuda" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BS');reopen('country')
+          <div.t> "Bahamas" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BB');reopen('country')
+          <div.t> "Barbados" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Cuba" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DM');reopen('country')
+          <div.t> "Dominica" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Dominican Republic" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GD');reopen('country')
+          <div.t> "Grenada" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('HT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Haiti" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('JM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Jamaica" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KN');reopen('country')
+          <div.t> "St Kitts and Nevis" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LC');reopen('country')
+          <div.t> "St Lucia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('VC');reopen('country')
+          <div.t> "St Vincent and the Grenadines" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Trinidad and Tobago" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "NORTH AMERICA · 2" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Canada" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('US');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "United States" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "WESTERN EUROPE · 20" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Andorra" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Austria" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Belgium" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Cyprus" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('FR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "France" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Germany" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Greece" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Ireland" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Italy" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Liechtenstein" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Luxembourg" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Malta" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MC');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Monaco" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Netherlands" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Portugal" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "San Marino" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ES');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Spain" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Switzerland" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GB');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "United Kingdom" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('VA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Vatican City" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "NORDICS & BALTICS · 8" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Denmark" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('EE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Estonia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('FI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Finland" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IS');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Iceland" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LV');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Latvia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Lithuania" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Norway" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Sweden" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "EASTERN EUROPE & BALKANS · 17" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Albania" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Belarus" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bosnia and Herzegovina" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bulgaria" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('HR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Croatia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Czech Republic" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('HU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Hungary" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Moldova" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ME');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Montenegro" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "North Macedonia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Poland" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('RO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Romania" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('RU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Russia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('RS');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Serbia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Slovakia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Slovenia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('UA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Ukraine" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "MIDDLE EAST & CAUCASUS · 17" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Armenia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Azerbaijan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bahrain" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Georgia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Iran" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IQ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Iraq" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Israel" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('JO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Jordan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Kuwait" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LB');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Lebanon" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('OM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Oman" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('QA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Qatar" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Saudi Arabia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Syria" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Turkey" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "United Arab Emirates" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('YE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Yemen" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "CENTRAL & SOUTH ASIA · 13" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AF');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Afghanistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bangladesh" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BT');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Bhutan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('IN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "India" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Kazakhstan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Kyrgyzstan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MV');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Maldives" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NP');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Nepal" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Pakistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Sri Lanka" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TJ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Tajikistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TM');reopen('country')
+          <div.t> "Turkmenistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('UZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Uzbekistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "EAST & SOUTHEAST ASIA · 18" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Brunei" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Cambodia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "China" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('HK');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Hong Kong" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ID');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Indonesia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('JP');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Japan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Laos" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Macau" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Malaysia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mongolia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Myanmar" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Philippines" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Singapore" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "South Korea" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Taiwan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Thailand" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Timor-Leste" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('VN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Vietnam" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "NORTH AFRICA · 7" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Algeria" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('EG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Egypt" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LY');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Libya" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mauritania" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Morocco" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Sudan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Tunisia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "WEST & CENTRAL AFRICA · 21" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BJ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Benin" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BF');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Burkina Faso" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Cameroon" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CV');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Cape Verde" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CF');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Central African Republic" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Chad" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Congo" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('CD');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Congo (DRC)" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GQ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Equatorial Guinea" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Gabon" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Gambia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GH');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Ghana" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Guinea" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('GW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Guinea-Bissau" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LR');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Liberia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ML');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mali" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Niger" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Nigeria" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SN');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Senegal" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SL');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Sierra Leone" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Togo" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "EAST & SOUTHERN AFRICA · 24" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Angola" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Botswana" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('BI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Burundi" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Comoros" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('DJ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Djibouti" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ER');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Eritrea" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Eswatini" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ET');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Ethiopia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KE');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Kenya" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('LS');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Lesotho" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Madagascar" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Malawi" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mauritius" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('MZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Mozambique" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Namibia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('RW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Rwanda" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SC');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Seychelles" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Somalia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ZA');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "South Africa" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SS');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "South Sudan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Tanzania" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('UG');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Uganda" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ZM');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Zambia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('ZW');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Zimbabwe" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <div.k.d> "OCEANIA · 10" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('AU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Australia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('FJ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Fiji" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('KI');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Kiribati" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('NZ');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "New Zealand" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('PG');reopen('country')
+          <div.t> "Papua New Guinea" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('WS');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Samoa" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('SB');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Solomon Islands" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TO');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Tonga" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('TV');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Tuvalu" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <button.hcard.sm>  [Inter 11.5px/400 rgb(244, 243, 241)] onclick=SELCH=getW('VU');reopen('country')
+        <img>  [Inter 11.5px/400 rgb(244, 243, 241)]
+          <div.t> "Vanuatu" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+              <img.fimg>  [Space Grotesk 13px/600 rgb(244, 243, 241)]
+      <h2.serif> "190 channels, still opening." [Fraunces 22px/500 rgb(244, 243, 241)]
+      <p.sm.mut> "Tap a country to dive in — every craft it is known for lives on its page." [Inter 11.5px/400 rgb(138, 138, 149)]

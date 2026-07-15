@@ -1,0 +1,18 @@
+    <h1.serif> "Two orders placed." [Fraunces 30px/500 rgb(244, 243, 241)]
+    <p.sm.mut> "One payment, 2 parcels — each ships on its own, with its own tracking. Each seller’s share of your £221.60 is " [Inter 11.5px/400 rgb(138, 138, 149)]
+    <img.othumb>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.on> "VLR-8241 · Lin Ceramics Studio" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.os> "Gongfu tea set, 6 pieces · £60.40" [Inter 11px/400 rgb(138, 138, 149)]
+        <img.fimg>  [Inter 11px/400 rgb(138, 138, 149)]
+    <span.prot-chip> "PROTECTED" [Space Grotesk 8.5px/700 rgb(61, 220, 132)]
+    <img.othumb>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.on> "VLR-8242 · Atlas Weave" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.os> "Berber rug, 90 × 150 · £161.20" [Inter 11px/400 rgb(138, 138, 149)]
+        <img.fimg>  [Inter 11px/400 rgb(138, 138, 149)]
+    <span.prot-chip> "PROTECTED" [Space Grotesk 8.5px/700 rgb(61, 220, 132)]
+      <img.fimg>  [Inter 24px/400 rgb(244, 243, 241)]
+      <img.fimg>  [Inter 24px/400 rgb(244, 243, 241)]
+      <div.fd> "Two stamps incoming" [Inter 13px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "China and Morocco join your Passport on delivery." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button.btn> "Track my orders" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=go('orders')
+    <button.btn.ghost> "Back to the Atlas" [Space Grotesk 14.5px/600 rgb(244, 243, 241)] onclick=go('atlas')

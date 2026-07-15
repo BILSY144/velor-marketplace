@@ -1,0 +1,48 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('account')
+    <button.l> "Share" [Space Grotesk 12px/600 rgb(255, 107, 0)] onclick=toast('Share card generated')
+    <div.k> "VELOR · BUYER PASSPORT" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.dspl> "0" [Fraunces 44px/480 rgb(244, 243, 241)]
+      <span.mut> "/ 190" [Fraunces 22px/480 rgb(138, 138, 149)]
+      <span> "+2 EN ROUTE" [Space Grotesk 11px/700 rgb(255, 107, 0)]
+    <p.sm.mut> "Your first stamps are on their way — each lands the day its parcel’s delivery is confirmed." [Inter 11.5px/400 rgb(138, 138, 149)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=ordersFor('MA')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "MOROCCO" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+      <span.dt> "EN ROUTE" [Inter 13.3333px/400 rgb(255, 107, 0)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=ordersFor('CN')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "CHINA" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+      <span.dt> "EN ROUTE" [Inter 13.3333px/400 rgb(255, 107, 0)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('JP');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "JAPAN" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('TR');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "TURKEY" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('IN');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "INDIA" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('PE');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "PERU" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('MX');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "MEXICO" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('IT');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "ITALY" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('GH');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "GHANA" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('KR');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "SOUTH KOREA" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('ET');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "ETHIOPIA" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+    <button.stamp>  [Inter 13.3333px/400 rgb(66, 66, 76)] onclick=SELCH=getW('VN');reopen('country')
+        <img.fimg>  [Inter 24px/400 rgb(66, 66, 76)]
+      <span.nm> "VIETNAM" [Space Grotesk 8.5px/700 rgb(66, 66, 76)]
+      <div.fd> "Next stamps" [Inter 13px/600 rgb(244, 243, 241)]
+      <p.sm.mut> "190 countries are opening their channels. Every one is a stamp waiting to happen." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.btn.ghost.sm> "Open the Atlas" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=go('atlas')

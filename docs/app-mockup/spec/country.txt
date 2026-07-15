@@ -1,0 +1,155 @@
+    <img.kenburns>  [Inter 16px/400 rgb(244, 243, 241)]
+    <button.chip-back> "Atlas" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('atlas')
+      <div.k> "YOU HAVE ARRIVED IN" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+      <h1.dspl> "Japan" [Fraunces 52px/480 rgb(244, 243, 241)]
+      <div.cover-meta> "Channel seat open" [Space Grotesk 12px/600 rgb(255, 107, 0)]
+    <div.k.d> "THE ORIGIN" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.storytext> "An island that turned restraint into an art form — steel folded a thousand times, a bowl kept for the crack th" [Fraunces 19px/400 rgb(217, 216, 212)]
+    <div.k.d> "SIGNATURE CRAFTS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.sm.dim> "37 categories Japan is known for — scroll the reel." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Tea%20bowls')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Tea bowls" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Sake%20sets')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Sake sets" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Kimono')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Kimono" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Hand-forged%20knives')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Hand-forged knives" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Cast-iron%20teapots')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Cast-iron teapots" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Ramen%20bowls')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Ramen bowls" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Pearls')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Pearls" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Matcha')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Matcha" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Kyoto%20joinery')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Kyoto joinery" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Japanese%20hand%20planes')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Japanese hand planes" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Anvil%20work')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Anvil work" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Hand-forged%20blades')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Hand-forged blades" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Lens%20grinding')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Lens grinding" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Circuit%20assembly')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Circuit assembly" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Incense')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Incense" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Kokeshi%20dolls')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Kokeshi dolls" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Furoshiki%20wraps')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Furoshiki wraps" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Tenugui%20towels')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Tenugui towels" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Kintsugi%20repair%20kits')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.ct-n> "Kintsugi repair kits" [Fraunces 14px/530 rgb(244, 243, 241)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Washi%20paper%20%26%20stationery')
+      <div.ct-n> "Washi paper & stationery" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Bonsai%20tools')
+      <div.ct-n> "Bonsai tools" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Ceramics%20(Arita%2C%20Bizen)')
+      <div.ct-n> "Ceramics (Arita, Bizen)" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Lacquerware')
+      <div.ct-n> "Lacquerware" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Indigo%20(aizome)%20textiles')
+      <div.ct-n> "Indigo (aizome) textiles" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Origami%20paper')
+      <div.ct-n> "Origami paper" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Nanbu%20ironware')
+      <div.ct-n> "Nanbu ironware" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Raku%20%26%20Kutani%20ceramics')
+      <div.ct-n> "Raku & Kutani ceramics" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Urushi%20lacquer%20boxes')
+      <div.ct-n> "Urushi lacquer boxes" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Boro%20%26%20sashiko%20textiles')
+      <div.ct-n> "Boro & sashiko textiles" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Damascus%20(Damascus-steel)%20blades')
+      <div.ct-n> "Damascus (Damascus-steel) blades" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Sensu%20%26%20uchiwa%20fans')
+      <div.ct-n> "Sensu & uchiwa fans" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Daruma%20%26%20maneki-neko')
+      <div.ct-n> "Daruma & maneki-neko" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Green%20tea%20(sencha%2C%20gyokuro)')
+      <div.ct-n> "Green tea (sencha, gyokuro)" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Whisky%20%26%20sake')
+      <div.ct-n> "Whisky & sake" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Woodblock%20(ukiyo-e)%20prints')
+      <div.ct-n> "Woodblock (ukiyo-e) prints" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Noren%20curtains')
+      <div.ct-n> "Noren curtains" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <button.crafttile.reeltile.phtile>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goCraft('JP','Hinoki%20bath%20goods')
+      <div.ct-n> "Hinoki bath goods" [Fraunces 14px/530 rgb(243, 241, 238)]
+      <div.pt-soon> "Opening soon" [Space Grotesk 8.5px/700 rgba(255, 255, 255, 0.62)]
+    <div.k.d> "SHOPPING JAPAN" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <p.sm.dim> "Preview films — real broadcasts begin as Japan’s seller goes on air." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button.lcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=goLive(27,'JP')
+      <img.lposter>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <video>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <div.pv> "Preview" [Space Grotesk 7px/600 rgb(228, 228, 234)]
+        <div.t> "The tea ceremony" [Fraunces 14px/520 rgb(255, 107, 0)]
+      <div.k> "BE THE FIRST" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+      <h2.serif> "Open Japan’s channel." [Fraunces 29px/500 rgb(244, 243, 241)]
+      <p.sm.mut> "Nobody sells from Japan yet. Its first verified seller keeps the founding badge and the full Pro tier free for" [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.btn> "Claim the founding seat" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=go('apply')
+      <button.btn.ghost.sm> "Follow Japan" [Space Grotesk 13px/600 rgb(244, 243, 241)] onclick=follow('JP')
+    <button.passtie>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('passport')
+          <img.fimg>  [Inter 18px/400 rgb(244, 243, 241)]
+        <div.fd> "Earn the Japan stamp" [Inter 13px/600 rgb(244, 243, 241)]
+        <div.sm.dim> "Buy from here and Japan joins your Passport on delivery." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <div.k.d> "TRAVEL ON" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('MX'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Mexico" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('IT'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Italy" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('UZ'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Uzbekistan" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('GH'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Ghana" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('ET'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Ethiopia" [Space Grotesk 13px/600 rgb(244, 243, 241)]
+    <button.hcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=showChannel(getCH('PT'));reopen('country')
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+        <div.t> "Portugal" [Space Grotesk 13px/600 rgb(244, 243, 241)]

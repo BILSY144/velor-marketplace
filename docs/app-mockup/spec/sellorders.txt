@@ -1,0 +1,44 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('dash')
+    <div.k> "STUDIO KAEDE" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.dspl> "Orders." [Fraunces 30px/480 rgb(244, 243, 241)]
+    <p.sm.dim> "Every parcel, every stage. You ship with your own carrier — tracking goes straight to the buyer." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <button.pill> "New · 3" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=soFilter('new')
+    <button.pill.on> "To ship · 6" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=soFilter('ship')
+    <button.pill> "In transit · 4" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=soFilter('transit')
+    <button.pill> "Delivered · 26" [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=soFilter('done')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Gongfu tea set" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8241 · United Kingdom" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£120" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8241')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Kuro raku tea bowl" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8240 · Australia" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£68" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8240')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Sake set, wood-fired" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8238 · United States" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£84" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8238')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Kuro raku tea bowl" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8236 · United Kingdom" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£68" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8236')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Matcha whisk & bowl" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8233 · United States" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£52" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8233')
+    <img>  [Inter 16px/400 rgb(244, 243, 241)]
+      <div.lt> "Kuro raku tea bowl" [Inter 12.5px/600 rgb(244, 243, 241)]
+      <div.ls> "VLR-8231 · Germany" [Inter 10.5px/400 rgb(138, 138, 149)]
+          <img.fimg>  [Inter 10.5px/400 rgb(138, 138, 149)]
+      <div.lp> "£68" [Space Grotesk 12.5px/700 rgb(244, 243, 241)]
+      <button.btn.sm> "Ship" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=soShip('VLR-8231')

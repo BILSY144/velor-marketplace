@@ -1,0 +1,34 @@
+    <div.k.d> "YOU" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <h1.dspl> "William" [Fraunces 30px/480 rgb(244, 243, 241)]
+    <p.sm.dim> "Signed in with passkey — no password to steal" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.passcard>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('passport')
+      <img.fimg>  [Inter 26px/400 rgb(244, 243, 241)]
+      <div.fd> "Your Passport" [Inter 14px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "2 en route — stamped on delivery" [Inter 11.5px/400 rgb(90, 90, 100)]
+    <span.pbig> "0" [Space Grotesk 26px/700 rgb(255, 107, 0)]
+    <div.k.d> "ACCOUNT" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('orders')
+      <div.fd> "Orders & tracking" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "2 parcels on the way" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('notif')
+      <div.fd> "Favourites & follows" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Follow a country to hear its bell" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('addr')
+      <div.fd> "Addresses" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "14 Portland Mews, London W1 · SAMPLE" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('pay')
+      <div.fd> "Payment methods" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Passkey-protected · held by Stripe" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('langcur')
+      <div.fd> "Language & currency" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "English · GBP" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('assist')
+      <div.fd> "Ask Velor" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Your guide, in any language" [Inter 11.5px/400 rgb(90, 90, 100)]
+  <button.arow>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=go('legal')
+      <div.fd> "Privacy & legal" [Inter 13.5px/600 rgb(244, 243, 241)]
+      <div.sm.dim> "Terms, privacy, buyer protection" [Inter 11.5px/400 rgb(90, 90, 100)]
+      <div.k> "SELL ON VELOR" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+      <h2.serif> "Open your country’s channel." [Fraunces 22px/500 rgb(244, 243, 241)]
+      <p.sm.mut> "One founding seat per country — the badge and the full Pro tier, free for life." [Inter 11.5px/400 rgb(138, 138, 149)]
+      <button.btn.sm> "See what you’d earn" [Space Grotesk 13px/600 rgb(22, 10, 0)] onclick=go('sell')

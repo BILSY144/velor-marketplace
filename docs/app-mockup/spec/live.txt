@@ -1,0 +1,24 @@
+<video>  [Inter 16px/400 rgb(244, 243, 241)]
+<button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('atlas')
+  <span> "PREVIEW" [Space Grotesk 9px/700 rgb(244, 243, 241)]
+<div> "Preview film — real broadcasts begin as sellers go on air. Every seller can go live, on any plan." [Inter 10.5px/400 rgb(185, 185, 194)]
+  <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=liveStep(-1)
+  <span> "1/41" [Space Grotesk 9px/400 rgb(185, 185, 194)]
+  <button>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=liveStep(1)
+  <button>  [Inter 13.3333px/400 rgb(255, 255, 255)] onclick=liveToCountry()
+      <img.fimg>  [Inter 13.3333px/400 rgb(255, 255, 255)]
+    <span> "China" [Space Grotesk 10.5px/600 rgb(255, 255, 255)]
+  <div.serif> "Throwing the tea set" [Fraunces 23px/500 rgb(244, 243, 241)]
+  <div.sm> "Ceramics, from the wheel" [Inter 11.5px/400 rgb(214, 214, 222)]
+    <div.cbub> "is the glaze food safe?" [Inter 11.5px/400 rgb(244, 243, 241)]
+      <b> "amira" [Inter 11.5px/600 rgb(255, 107, 0)]
+    <div.cbub> "lead-free, fired at 1280°C — I’ll show the base" [Inter 11.5px/400 rgb(244, 243, 241)]
+      <b> "seller" [Inter 11.5px/600 rgb(255, 107, 0)]
+  <img>  [Inter 16px/400 rgb(244, 243, 241)]
+  <div>  [Inter 16px/400 rgb(244, 243, 241)] onclick=go('pdp')
+    <span.t> "Gongfu tea set" [Space Grotesk 12.5px/600 rgb(244, 243, 241)]
+    <span.p> "£54" [Inter 11.5px/600 rgb(255, 107, 0)]
+        <img.fimg>  [Inter 11.5px/600 rgb(255, 107, 0)]
+  <button.add> "Add" [Space Grotesk 12.5px/700 rgb(22, 10, 0)] onclick=addCart()
+  <div.f> "Ask the maker anything…" [Inter 12.5px/400 rgb(141, 141, 151)]
+  <button.hb>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=fav()

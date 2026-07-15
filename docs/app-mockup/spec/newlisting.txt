@@ -1,0 +1,42 @@
+    <button.chip-back>  [Space Grotesk 12px/600 rgb(244, 243, 241)] onclick=go('dash')
+    <button.l> "Save draft" [Space Grotesk 12px/600 rgb(255, 107, 0)] onclick=toast('Draft saved')
+    <div.k> "STUDIO KAEDE · NEW LISTING" [Space Grotesk 9px/600 rgb(255, 107, 0)]
+    <h1.dspl> "List a piece." [Fraunces 30px/480 rgb(244, 243, 241)]
+    <button.nlcover>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=nlPick()
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+      <span.nlcover-b> "Add photo" [Space Grotesk 11px/600 rgb(255, 255, 255)]
+    <button.nlth>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=nlSetCover(this)
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+    <button.nlth>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=nlSetCover(this)
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+    <button.nlth>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=nlSetCover(this)
+      <img>  [Inter 13.3333px/400 rgb(244, 243, 241)]
+    <button.addphoto>  [Inter 13.3333px/400 rgb(244, 243, 241)] onclick=nlPick()
+    <p.sm.dim> "3 photos · 3 minimum — listings without them are auto-rejected. Tap a photo to make it the cover." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <div.k.d> "TITLE" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <div.nltitle> "Kuro raku tea bowl, wood-fired" [Fraunces 22px/530 rgb(244, 243, 241)]
+      <div.sv.serif> "£68" [Fraunces 26px/500 rgb(255, 107, 0)]
+      <div.sl> "PRICE" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+      <div.sv.serif> "3" [Fraunces 26px/500 rgb(255, 107, 0)]
+      <div.sl> "STOCK" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+      <div.sv.serif> "1.2 kg" [Fraunces 26px/500 rgb(255, 107, 0)]
+      <div.sl> "PARCEL" [Space Grotesk 8.5px/700 rgb(138, 138, 149)]
+      <span.sm.dim> "20 × 20 × 15 cm · powers real delivery quotes" [Inter 11.5px/400 rgb(90, 90, 100)]
+      <span.ed> "Edit" [Inter 12px/600 rgb(255, 107, 0)]
+    <p.sm.dim> "You’d keep of £68 — Pro, 4%. Shipping is paid on top and passes to you in full." [Inter 11.5px/400 rgb(90, 90, 100)]
+      <span> "£65.28" [Inter 11.5px/400 rgb(255, 107, 0)]
+    <div.k.d> "WHAT IS IT · CATEGORY & MATERIALS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <div.nltext> "A raku chawan — tea ceremony bowl. Stoneware clay, natural ash glaze, food-safe." [Inter 13.5px/400 rgb(216, 215, 211)]
+    <p.sm.dim> "Your words, no lists to pick from — this places the piece in search, craft pages and Japan’s dive." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <div.k.d> "THE STORY · BUYERS READ THIS" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+    <div.nltext> "Each bowl is thrown on a kick wheel, raku-fired in the wood kiln behind the studio, and pulled from the flames" [Inter 13.5px/400 rgb(216, 215, 211)]
+      <span.fd> "Regulated materials?" [Inter 13px/600 rgb(244, 243, 241)]
+      <span.pill> "No" [Space Grotesk 12px/600 rgb(244, 243, 241)]
+    <p.sm.dim> "Wildlife, plant, wood, leather, shell or antique parts need certificates before listing." [Inter 11.5px/400 rgb(90, 90, 100)]
+    <div.k.d> "READY TO PUBLISH" [Space Grotesk 9px/600 rgb(138, 138, 149)]
+      <span.okpill> "Photos · 3" [Space Grotesk 10.5px/600 rgb(61, 220, 132)]
+      <span.okpill> "Ship-from · on file" [Space Grotesk 10.5px/600 rgb(61, 220, 132)]
+      <span.okpill> "Description" [Space Grotesk 10.5px/600 rgb(61, 220, 132)]
+      <span.okpill> "Story" [Space Grotesk 10.5px/600 rgb(61, 220, 132)]
+      <span.okpill> "Parcel size" [Space Grotesk 10.5px/600 rgb(61, 220, 132)]
+  <button.btn> "Publish listing" [Space Grotesk 14.5px/600 rgb(22, 10, 0)] onclick=toast('Published — live on your channel');go('dash')
