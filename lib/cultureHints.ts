@@ -298,7 +298,35 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   HK: ['Tea ware', 'Hand-carved mahjong tiles', 'Handwoven bamboo birdcages', 'Hand-painted Cantonese porcelain', 'Embroidered silk slippers', 'Jade carvings & jewellery'],
   SG: ['Kaya & pantry', 'Peranakan ceramics'],
   MO: ['Macau almond cookies', 'Portuguese-style egg tarts'],
-  BN: ['Woven songket'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Brunei had only 1 item
+  // (SEO_LOG.md backlog item 25's content-depth floor list). Three
+  // product-level additions, each multi-source verified this run, existing
+  // 'Woven songket' entry left untouched (not re-verified or renamed).
+  // Silver jewellery & ceremonial silverware is documented by
+  // BruneiResources.com's dedicated silverwork page (Kampong Pandai Mas/
+  // Goldsmiths' Village origin, the 'Bunga Air Mulih' floral motif, the
+  // still-operating Brunei Arts and Handicrafts Training Centre formalising
+  // instruction since 1975) and corroborated by FactsAndDetails' and
+  // TravelDojo's independent Brunei craft overviews, which both separately
+  // list silverwork among the country's living traditions. Handwoven
+  // rattan & bamboo basketry (anyaman), specifically the Tudung Dulang
+  // woven dish cover, is documented by BruneiResources.com's dedicated
+  // anyaman page (materials/technique: split bamboo strips plus rattan
+  // rim-and-securing-strip construction, village-level production in
+  // Kampong Ayer, Sengkurong and Tanjung Nangka) and independently by the
+  // Brunei Arts Centre's (Pusat Kesenian Brunei) own social page describing
+  // Tudung Dulang as pandan-leaf-and-rattan woven dish covers -- a
+  // government cultural body, not a travel blog. Songkok caps (velvet,
+  // hand-sewn over a stiffened frame) are documented by BruneiResources.com's
+  // dedicated songkok page (13th-century arrival with Islam, the shift from
+  // round kopiah to Brunei's oblong shape, BAHTC's formal songkok course
+  // running since 1978 with 30+ graduates) and independently corroborated
+  // as a still-practiced regional Malay craft by Singapore's National
+  // Heritage Board (roots.gov.sg, "Making and Wearing of Songkok"). No
+  // shell/ivory/coral/bone material in any of the three; kris daggers and
+  // other weaponry mentioned in the same source material were deliberately
+  // excluded per this file's own no-weapons rule.
+  BN: ['Woven songket', 'Silver jewellery & ceremonial silverware', 'Handwoven rattan dish covers (Tudung Dulang)', 'Songkok caps'],
   BT: ['Woven textiles', 'Incense'],
   MV: ['Lacquer boxes'],
   TL: ['Tais weaving', 'Coffee'],
