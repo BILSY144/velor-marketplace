@@ -56,3 +56,18 @@ export const useFavs = create<FavState>((set, get) => ({
     })),
   has: (id) => get().ids.includes(id),
 }))
+
+// Country follows — session-local, shared between the country dive, You and
+// the bell (mockup FOLLOWS model).
+type FollowState = {
+  ids: string[]
+  toggle: (cc: string) => void
+}
+
+export const useFollows = create<FollowState>((set) => ({
+  ids: [],
+  toggle: (cc) =>
+    set((s) => ({
+      ids: s.ids.includes(cc) ? s.ids.filter((x) => x !== cc) : [...s.ids, cc],
+    })),
+}))

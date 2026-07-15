@@ -102,3 +102,35 @@ Wiring: Pdp registered in the stack; Craft listing rows, Country dive
 product cards and the Live strip all navigate to it. Cart add() takes a qty;
 new useFavs store (session-local, like the mockup's FAVS). tsc --noEmit
 clean with full node_modules (npm ci works from this sandbox).
+
+## 2026-07-15 (later) — Uplift pass: Search + You rebuilt to plates; Sell tier
+## picker; Apply fixes (all four William catches this session)
+
+Search (plate 06): "Search the world." Fraunces 34, the "A place, a craft,
+a thing…" input, every region as a horizontal rail of tall country photo
+tiles (lead IMAGERY photo + flag + name), dashed-globe "190 channels,
+still opening." footer, back chip to Atlas. Typing swaps rails for
+results; IMAGERY craft hits now open the Craft page (photo row), culture
+hints open the dive.
+
+You (plate 16): YOU kicker, Fraunces h1, passkey line (honest pre-launch
+copy — no fake signed-in name), Passport card with the big orange stamp
+count, the seven ACCOUNT rows exactly as the plate, SELL ON VELOR card.
+New Addr / Pay / LangCur screens (plates 17/18/19) so every row lands
+somewhere real: addresses honest zero state (no SAMPLE address), payment
+methods with the Stripe green card + wallet row, language list (the real
+19, English LIVE + ARRIVING badges) and 20-currency grid (GBP live,
+others honestly ARRIVING until the FX pipeline ships at launch).
+Favourites & follows row shows real counts — follows moved from
+CountryScreen's module-local Set into a shared useFollows store.
+
+Sell (plate 23): "What you'd keep" calculator built — drag slider
+(PanResponder, no new dep) + CLICKABLE tier cards (William: "no clickable
+option to choose what tier you want"), real TIER_CONFIG maths (Starter
+free/10%, Pro £49/4%), keep-figure per selected plan.
+
+Apply: photo thumbnails now carry a delete × (William catch); YOUR
+COUNTRY is a real searchable 190-country picker modal (William catch — it
+never clicked before); the WEBSITE OR SOCIAL field is REMOVED entirely
+(William: "we dont want buyers bypassing us") — standing rule: nothing on
+the application invites buyers off-platform.

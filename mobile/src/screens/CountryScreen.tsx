@@ -10,7 +10,7 @@ import { countryName, HINTS, IMAGERY, STORIES, filmsFor } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
 import { Kicker, Body, Dim, Btn, Empty } from '../ui'
-import { useCart } from '../store'
+import { useCart, useFollows } from '../store'
 
 // Country dive — built from plate 02 + spec/country.txt:
 // kenburns cover fading into bg, YOU HAVE ARRIVED IN kicker, Fraunces 52
@@ -18,7 +18,6 @@ import { useCart } from '../store'
 // SIGNATURE CRAFTS reel (IMAGERY tiles, Fraunces 14 titles + orange arrow),
 // preview films, then real listings / founding CTA (honest zero state).
 const TRAVEL_ON = ['MX', 'IT', 'UZ', 'GH', 'ET', 'PT', 'JP']
-const FOLLOWED = new Set<string>()
 
 export default function CountryScreen() {
   const route = useRoute<any>()
@@ -36,12 +35,9 @@ export default function CountryScreen() {
     queryFn: () => fetchProductsByOrigin(cc),
   })
   const trading = (products.data?.length ?? 0) > 0
-  const [followed, setFollowed] = React.useState(FOLLOWED.has(cc))
-  function toggleFollow(code: string) {
-    if (FOLLOWED.has(code)) FOLLOWED.delete(code)
-    else FOLLOWED.add(code)
-    setFollowed(FOLLOWED.has(code))
-  }
+  const follows = useFollows((s) => s.ids)
+  const toggleFollow = useFollows((s) => s.toggle)
+  const followed = follows.includes(cc)
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
