@@ -2,6 +2,23 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Orders back button + You sub-pages (no dead rows)
+
+- Orders gained a context-aware back button: go() now captures the
+  previous screen (prevScr, before cur reassignment -- first attempt had
+  a bug where cur was already overwritten) so back returns to wherever
+  you came from (You / passport / bell); confirm maps to atlas.
+- William: "most links don't do anything" on You. Built four sub-pages:
+  Addresses (SAMPLE address book + default chip), Payment methods (Apple
+  Pay READY + honest no-saved-cards state + Stripe/passkey trust bar),
+  Language & currency (radio pickers, 19-languages note, charged-in-your-
+  currency note), Privacy & legal (escrow summary + rows that window.open
+  the LIVE site's real /legal/terms, /legal/privacy, /legal/seller-
+  agreement, /help). All 7 account rows now navigate.
+- Verified live: 7/7 rows navigate, orders back -> account, pay page
+  renders.
+- Commits: 93fa901+88c0b24 (back), 7971431 (sub-pages).
+
 ## 2026-07-15: You page derives from live session state
 
 - Passport card: real earned/en-route counts, latest stamp's flag (globe
