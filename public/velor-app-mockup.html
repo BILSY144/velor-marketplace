@@ -867,6 +867,9 @@ function searchRun(q){
 .pill.lg{font-size:13px;padding:11px 16px}
 .flow{display:flex;flex-wrap:wrap;gap:8px}
 .hrail{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:14px 20px 4px}
+.hrail{cursor:grab;-webkit-overflow-scrolling:touch;user-select:none}
+.hrail.dragging{cursor:grabbing}
+.hrail.dragging *{pointer-events:none}
 .hrail::-webkit-scrollbar{display:none}
 .hcard{position:relative;flex:0 0 156px;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:var(--surf2)}
 .hcard.sm{flex:0 0 132px}
@@ -2130,6 +2133,33 @@ var splashT=null
 function endSplash(){ clearTimeout(splashT); var sp=document.getElementById('s-splash'); if(!sp) return
   sp.classList.add('handoff')
   setTimeout(function(){ sp.classList.remove('handoff'); go('atlas') },520) }
+
+/* Global drag-to-scroll: every horizontal rail (.hrail, .livestrip) on
+   every page is mouse-drag swipeable. Touch input is left to the browser's
+   native overflow scrolling; the atlas reel keeps its own snap handler. */
+var DRG=null;
+document.addEventListener('pointerdown',function(e){
+  if(e.pointerType&&e.pointerType!=='mouse') return;
+  var t=e.target; if(!t||!t.closest) return;
+  var r=t.closest('.hrail,.livestrip'); if(!r||r._wired) return;
+  DRG={r:r,x:e.clientX,sl:r.scrollLeft,moved:0};
+},true);
+document.addEventListener('pointermove',function(e){
+  if(!DRG) return;
+  var dx=e.clientX-DRG.x;
+  if(!DRG.moved&&Math.abs(dx)>4){ DRG.moved=1; DRG.r.classList.add('dragging') }
+  if(DRG.moved) DRG.r.scrollLeft=DRG.sl-dx;
+});
+document.addEventListener('pointerup',function(){
+  if(!DRG) return;
+  var r=DRG.r, moved=DRG.moved; DRG=null;
+  r.classList.remove('dragging');
+  if(moved){
+    var kill=function(ev){ ev.stopPropagation(); ev.preventDefault(); document.removeEventListener('click',kill,true) };
+    document.addEventListener('click',kill,true);
+    setTimeout(function(){ document.removeEventListener('click',kill,true) },80);
+  }
+});
 
 /* graceful image fallback so broken/blocked images never show a broken icon */
 (function(){
