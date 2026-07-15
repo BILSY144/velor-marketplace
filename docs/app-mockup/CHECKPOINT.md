@@ -502,3 +502,18 @@ William supplied a new master logo (VELOR with globe-as-O + GLOBAL MARKETPLACE s
 - Full wiring audit, every screen in SCREENS (33 incl. dynamic country/craft): ~700 rendered buttons, 0 without onclick, on every single screen (atlas 62, search 191, seats 202, dash 21, langcur 40, …). The mockup is fully interactive end to end.
 
 NEXT: this HTML mockup cannot itself go in the App Store / Play Store — the real Expo/React Native app must be scaffolded from it (spec: VELOR-APP-FEATURE-MAP.md; icon asset ready at public/brand/velor-app-icon.png). That build is the next major phase.
+
+## 2026-07-15 — REAL APP STARTED: Expo scaffold live on branch mobile-app
+
+William: "start now." Branch **mobile-app** (from main), directory **mobile/** — commits 56aebc4 + README. Expo SDK 57 / RN 0.86 / TypeScript, deps: React Navigation 7 (tabs+stack), Zustand, TanStack Query, expo-image/video/font, Google fonts (Space Grotesk/Inter/Fraunces — the mockup's exact faces).
+
+Built and verified (tsc --noEmit clean, `expo export` bundles 2.3MB Hermes):
+- src/theme.ts — tokens verbatim from mockup :root; flagcdn flags (no emoji), pexels() helper
+- src/data/* — generated TS modules extracted from the mockup: 190 countries, REG/REGNAMES, HINTS, IMAGERY (verified waves), 38 FILMS, STORIES
+- src/api.ts — shapes read from the REAL route handlers: /api/lattice {totalCountries,trading,countries[]}, /api/shop/products {products[]} (origin param), /api/assistant/chat POST {messages,audience:'buyer'}→{reply}
+- Screens: Atlas (logo hero, live trading stats, film rail, region-grouped 190 list with OPENING/N LIVE tags), Country (cover/story/crafts/films/real listings with honest zero state + founding CTA → site apply), Live (vertical paging expo-video feed, PREVIEW chip, poster fallback for inactive pages), Search (country+craft local search), Basket (zustand, per-seller escrow copy, checkout deep-link + "in-app checkout ships 6 Aug"), You (Ask Velor + site links), Assist (REAL /api/assistant/chat, her avatar, starters)
+- app.json: name Velor, slug velor, dark, icon from brand app icon, splash = logo on #08080b, bundle ids store.velorcommerce.app
+- Root tsconfig excludes mobile/ so Next/Vercel builds never typecheck the app (verified needed — root include was **/*.tsx)
+- Traps hit: create-expo-app template has no @expo/vector-icons (installed); TS6+Expo base rejects .json imports (data generated as .ts modules instead); RN 0.86 types dropped StyleSheet.absoluteFillObject (explicit position styles); a cwd slip put data JSONs in mobile/mobile (moved).
+
+William runs it via Expo Go: clone -b mobile-app, cd mobile, npm install, npx expo start, scan QR (mobile/README.md has full steps + EAS store path). NOT yet done: run on a real device (sandbox has no phone), EAS project setup, store accounts (William registers Apple $99/yr + Play $25 himself).
