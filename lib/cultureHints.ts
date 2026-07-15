@@ -170,9 +170,46 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   MT: ['Filigree jewellery', 'Blown glass'],
   SM: ['Collectible stamps & coins', 'Torta Tre Monti wafer cake'],
   VA: ['Vatican postage stamps', 'Vatican commemorative coins'],
+  // Added by the standing SEO agent, 2026-07-15 -- Monaco was the last of
+  // the original 190 WORLD_COUNTRIES entries with no CULTURE_HINTS entry at
+  // all (backlog item 22). Every prior run's attempt (English-language
+  // "artisanat monégalois"/generic searches) turned up only souvenir
+  // listicles and the Fragonard perfumery, which fact-checking found is
+  // actually in Eze/Grasse, France, not Monaco -- correctly never added.
+  // This run tried a different angle: following this file's own
+  // already-established precedent for other small European states with a
+  // philatelic/numismatic tradition (LI's 'Collectible postage stamps', SM's
+  // 'Collectible stamps & coins', VA's 'Vatican postage stamps'/'Vatican
+  // commemorative coins' immediately above) and searching for Monaco's
+  // equivalent directly. Found strong, multi-source corroboration: Monaco
+  // has its own dedicated Wikipedia article ("Postage stamps and postal
+  // history of Monaco") and a government-recognised "Musée des Timbres et
+  // des Monnaies" (Museum of Stamps and Coins) with its own English
+  // Wikipedia page, an official government tourism listing
+  // (visitmonaco.com), the official Monaco culture-ministry site
+  // (culture.mc), and independent local press (Monaco Tribune, Monaco Life)
+  // covering new stamp issues as ongoing news -- i.e. still actively
+  // produced today, the same "actively issued" bar this file used for
+  // Liechtenstein, not a defunct historical curiosity. Second, separate
+  // product found: hand-made leather goods from Atelier Grinda ("Grinda
+  // Monaco"), a real Monaco-based leather workshop -- independently
+  // corroborated by Monaco Tribune (a genuine local news outlet, not a
+  // marketing blog) reporting Prince Albert II personally received an
+  // Atelier Grinda briefcase for his 20th reign anniversary, plus the
+  // workshop's own active Etsy/Facebook/LinkedIn presence. Named as generic
+  // product categories, not brand names, matching this file's existing
+  // convention (e.g. CH's 'Chocolate', not a named chocolatier). No
+  // shell/ivory/coral/bone material in either product. This brings
+  // CULTURE_HINTS coverage to 190/190 (100%) of real WORLD_COUNTRIES
+  // entries -- the separate orphaned CI (Cote d'Ivoire) key noted elsewhere
+  // in this file is unaffected and still not a WORLD_COUNTRIES match
+  // (backlog item 23, a different, still-open question).
+  MC: ['Collectible postage stamps & coins', 'Hand-made leather goods'],
   // Added by the standing SEO agent, 2026-07-14 -- Andorra was one of the
   // two remaining CULTURE_HINTS holdouts (backlog item 22; the other,
-  // Monaco, is still unresolved -- this run re-searched it too and again
+  // Monaco, was still unresolved as of this 2026-07-14 entry -- see the
+  // 2026-07-15 comment on the MC entry above for how it was later resolved
+  // -- this 2026-07-14 run re-searched it too and again
   // found only generic souvenir listicles and the Fragonard perfumery,
   // which is actually in Eze/Grasse, France, not Monaco itself, so nothing
   // new to add there). Prior Andorra attempts were rejected for being a
