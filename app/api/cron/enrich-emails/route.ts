@@ -3,10 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-const BATCH = 24;
-const TIME_BUDGET_MS = 50000;
+// Raised 24 -> 96 (2026-07-16): the rebuilt scout now lands ~250 prospects
+// per run and a 24-per-run enrichment was the funnel's new bottleneck --
+// 190+ prospects were queueing for email discovery. Enrichment sends no
+// email itself, so higher throughput here carries no deliverability risk.
+const BATCH = 96;
+const TIME_BUDGET_MS = 280000;
 const ROLE_PRIORITY = ['hello', 'info', 'contact', 'sales', 'support', 'team', 'shop', 'enquiries', 'hi', 'orders', 'admin'];
 
 function extractEmails(html: string): string[] {

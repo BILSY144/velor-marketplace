@@ -233,21 +233,58 @@ function buildMultiplierBody(
   appNote: string
 ): string {
   if (emailType === 'initial') {
+    // Same v2 visual language as the maker initial email (William's design):
+    // hero band, kicker between hairlines, serif headline with orange accent,
+    // centered paragraphs, icon feature grid, full-width pill CTA, tagline.
+    const featCell = (icon: string, title: string, note: string, extra: string) =>
+      `<td width='50%' align='center' valign='top' style='padding:22px 14px;${extra}'>
+        <img src='${ASSETS}/icon-${icon}.png' width='40' height='40' alt='' style='display:block;margin:0 auto 10px;width:40px;height:40px;'>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:13px;font-weight:bold;line-height:1.5;'>${title}</div>
+        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:11px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
+      </td>`
     return `
-      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' height='64' style='background-color:#0D0D0D;background:linear-gradient(100deg,#2A1505 0%,#0D0D0D 70%);line-height:64px;font-size:0;'>&nbsp;</td></tr></table>
-      <div style='padding:32px;'>
-        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
-        <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
-        <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>Hello ${h(p.name)},</p>
-        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${c.intro}</p>
-        <div style='margin-bottom:22px;'>
-          ${benefitRow(c.b1t, c.b1b)}
-          ${benefitRow(c.b2t, c.b2b)}
-        </div>
-        ${cta(c.cta)}
-        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
-        ${appNote ? `<p style='color:#B9B9B9;font-size:13px;line-height:1.6;margin:14px 0 0;'>${appNote}</p>` : ''}
-        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>${c.signoff}</p>
+      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;padding:22px 0 0;'>
+        <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
+      </td></tr></table>
+      <div style='padding:30px 36px 36px;text-align:center;'>
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:0 auto;'>
+          <tr>
+            <td width='40' style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+            <td style='padding:0 12px;'><div style='font-family:Arial,Helvetica,sans-serif;color:#FF6B00;font-size:12px;font-weight:700;letter-spacing:3px;white-space:nowrap;'>FOUNDING&nbsp;PARTNER&nbsp;INVITATION</div></td>
+            <td width='40' style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+          </tr>
+        </table>
+        <div style='font-family:Georgia,"Times New Roman",serif;color:#FFFFFF;font-size:33px;line-height:1.25;font-weight:400;padding-top:20px;'>Bring your artisans to the <span style='color:#FF6B00;'>world</span></div>
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:18px auto 0;'><tr><td width='64' height='2' bgcolor='#FF6B00' style='background-color:#FF6B00;font-size:0;line-height:0;'>&nbsp;</td></tr></table>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#CFCFCF;font-size:14.5px;line-height:1.75;margin:26px 0 0;'>Hello ${h(p.name)},</p>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${c.intro}</p>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:28px 0 0;border:1px solid #2A2A2A;border-radius:14px;'>
+          <tr>
+            ${featCell('globe', 'Reach customers around the world', '', 'border-bottom:1px solid #222222;border-right:1px solid #222222;')}
+            ${featCell('live', 'Live selling for your makers', '', 'border-bottom:1px solid #222222;')}
+          </tr>
+          <tr>
+            ${featCell('star', 'Founding places for every member', '', 'border-right:1px solid #222222;')}
+            ${featCell('pro', 'Free lifetime Pro membership', 'for your member makers', '')}
+          </tr>
+        </table>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#A9A9A9;font-size:13px;line-height:1.75;margin:24px 0 0;'>${c.b2b}</p>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:26px 0 0;'>
+          <tr><td bgcolor='#FF6B00' align='center' style='background-color:#FF6B00;background:linear-gradient(180deg,#FF7D1A 0%,#F26200 100%);border-radius:10px;'>
+            <a href='https://velorcommerce.store/apply/invited' style='display:block;font-family:Arial,Helvetica,sans-serif;color:#FFFFFF;font-size:15.5px;font-weight:800;letter-spacing:1.5px;text-decoration:none;padding:17px 20px;border-radius:10px;'>BECOME A FOUNDING PARTNER</a>
+          </td></tr>
+        </table>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#FF9A4d;font-size:12.5px;letter-spacing:1px;padding-top:16px;'>&mdash;&nbsp; velorcommerce.store &nbsp;&mdash;</div>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:12px;line-height:1.6;margin:16px 0 0;'>${c.ctaNote}</p>
+        ${appNote ? `<p style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:12px;line-height:1.6;margin:8px 0 0;'>${appNote}</p>` : ''}
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:26px auto 0;'>
+          <tr>
+            <td width='170' style='border-top:1px solid #2A2A2A;font-size:0;line-height:0;'>&nbsp;</td>
+            <td width='30' align='center' style='color:#FF6B00;font-size:10px;line-height:10px;padding:0 4px;'>&#9670;</td>
+            <td width='170' style='border-top:1px solid #2A2A2A;font-size:0;line-height:0;'>&nbsp;</td>
+          </tr>
+        </table>
+        <div style='font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:2.5px;line-height:1.8;padding-top:20px;'><span style='color:#EAEAEA;'>REAL CULTURE. REAL PEOPLE.</span> <span style='color:#FF6B00;'>GLOBAL OPPORTUNITY.</span></div>
       </div>`
   }
   if (emailType === 'followup1') {
