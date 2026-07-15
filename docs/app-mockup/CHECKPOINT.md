@@ -2,6 +2,18 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Passport wired to real order state
+
+- Fabricated history removed (was 3/190 with invented delivery dates).
+  PASSPORT model: earned[] (delivery only -- never populated in the demo,
+  honestly) + incoming[] (fed by renderConfirm on order placement).
+  Headline shows n/190 with "+N EN ROUTE" chip; EN ROUTE stamps render
+  dashed-accent; grey suggestion stamps fill the grid; copy adapts to
+  zero / en-route / earned states; progress bar derives from earned.
+- Verified live: 0/190 zero state -> place sample order -> "+2 EN ROUTE"
+  with China + Morocco dashed stamps.
+- Commit 4b2188e.
+
 ## 2026-07-15: Confirmed page generated from the cart; escrow copy corrected
 
 - Order lines (VLR-numbered, one per seller with that seller's items +
