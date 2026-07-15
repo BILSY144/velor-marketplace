@@ -103,6 +103,11 @@ const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = 
     codes: ['VN', 'TH', 'ID', 'MY', 'PH', 'SG', 'KH', 'LA', 'MM'],
     names: ['VIETNAM', 'THAILAND', 'INDONESIA', 'MALAYSIA', 'PHILIPPINES', 'SINGAPORE', 'CAMBODIA', 'LAOS', 'MYANMAR', 'BALI'],
   },
+  {
+    file: 'hero-europe.jpg',
+    codes: ['PL', 'PT', 'IT', 'GR', 'ES', 'FR', 'DE', 'NL', 'BE', 'AT', 'CH', 'CZ', 'HU', 'RO', 'HR', 'BG', 'LT', 'LV', 'EE', 'SK', 'SI', 'IE', 'DK', 'SE', 'NO', 'FI'],
+    names: ['POLAND', 'PORTUGAL', 'ITALY', 'GREECE', 'SPAIN', 'FRANCE', 'GERMANY', 'NETHERLANDS', 'BELGIUM', 'AUSTRIA', 'CZECH', 'HUNGARY', 'ROMANIA', 'CROATIA', 'BULGARIA', 'LITHUANIA', 'LATVIA', 'ESTONIA', 'SLOVAK', 'SLOVENIA', 'IRELAND', 'DENMARK', 'SWEDEN', 'NORWAY', 'FINLAND'],
+  },
 ]
 
 function heroForCountry(country: string | null | undefined): string {
