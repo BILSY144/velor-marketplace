@@ -20,7 +20,34 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   IN: ['Block-printed bedding', 'Brass homeware', 'Spice boxes', 'Silk scarves', 'Kashmiri shawls', 'Marble inlay', 'Jaipur ceramics', 'Ayurvedic skincare', 'Chai blends', 'Bangles', 'Carved wood screens', 'Leather juttis'],
   TH: ['Thai silk', 'Celadon ware', 'Curry pastes', 'Benjarong porcelain', 'Bronzeware', 'Thai spa products', 'Rattan bags', 'Khon masks', 'Soap flowers'],
   VN: ['Lacquer bowls', 'Silk lanterns', 'Robusta coffee', 'Conical hats', 'Bamboo homeware', 'Ao dai fabrics', 'Phin coffee filters', 'Embroidered art', 'Rice paper crafts'],
-  ID: ['Batik sarongs', 'Rattan homeware', 'Teak carvings'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Indonesia had only 3
+  // items (SEO_LOG.md backlog: content depth on /origins/[country] pages is
+  // still short of the "15+ researched items" standing target for every
+  // country; this is one incremental step, not a claim of completion).
+  // Five product-level additions, each multi-source verified this run, no
+  // single-source or AI-content-farm result carried forward: Songket
+  // (gold/silver-thread ceremonial weaving, historically centred on
+  // Palembang, Sumatra) is documented on Wikipedia, Google Arts & Culture's
+  // "Woven Tales of Indonesia: Songket Palembang" feature, and the National
+  // Gallery of Australia's Indonesian Textiles collection notes. Ikat
+  // weaving (tenun ikat) -- a distinct resist-dye weaving tradition from
+  // Indonesia's own regions, not the same product as Uzbekistan's ikat
+  // silks already listed under UZ below -- is corroborated by the same
+  // National Gallery of Australia collection notes and by the Natural Dye
+  // Store's dedicated piece on Indonesian weaving styles and techniques.
+  // Silver filigree jewellery from Kotagede, Yogyakarta has its own
+  // Wikipedia entry (Kotagede) plus independent tourism/craft coverage
+  // (Java Heritage Tour, Jogjalanjalan, YogyakartaTour.com, ANTARA Foto
+  // photo-story) all describing it as a still-active, centuries-old local
+  // craft, not a historical curiosity. Wayang kulit shadow puppets are
+  // UNESCO-inscribed Intangible Cultural Heritage ("Wayang puppet theatre,"
+  // ich.unesco.org) with their own Wikipedia article. Angklung (bamboo
+  // musical instrument) is separately UNESCO-inscribed, documented on
+  // UNESCO's own Silk Roads Programme site. No shell/ivory/coral/bone
+  // material in any of the five; wayang kulit puppets are traditionally
+  // buffalo/goat leather, the same accepted leather-goods category already
+  // used elsewhere in this file (e.g. IN's 'Leather juttis').
+  ID: ['Batik sarongs', 'Rattan homeware', 'Teak carvings', 'Songket weaving', 'Ikat weaving', 'Silver filigree jewellery', 'Wayang kulit puppets', 'Angklung instruments'],
   MY: ['Batik', 'Pewter ware'],
   PH: ['Handwoven textiles', 'Barako coffee'],
   KH: ['Silk kramas', 'Silverware'],
