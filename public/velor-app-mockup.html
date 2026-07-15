@@ -1054,16 +1054,38 @@ function renderCart(){
 }
 
 /* ===== CHECKOUT ===== */
-S.checkout='<div class="scr" id="s-checkout"><div class="sc" style="padding-bottom:150px">'
-+'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'cart\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">Checkout</h1></div>'
-+'<div class="fld"><label>DELIVER TO</label><div class="in row"><span>49 Station Road, Polegate, BN26 6EA</span><span class="ed">Change</span></div></div>'
-+'<div class="fld"><label>DELIVERY</label><div class="in col">'+flag('CN')+' Lin Ceramics · Tracked · &pound;6.40<br>'+flag('MA')+' Atlas Weave · Tracked · &pound;12.20</div></div>'
-+'<div class="pad"><button class="btn wht" style="margin-top:16px" onclick="go(\'confirm\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="#000"><path d="M17.1 12.6c0-2 1.7-3 1.7-3.1-.9-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.6.6 2.6.6 1.8-1 2.4-2c.8-1.1 1.1-2.2 1.1-2.3s-2.1-.8-2.1-3z"/></svg> Pay &middot; &pound;221.60</button></div>'
-+'<div class="ordiv">or pay by card &middot; Stripe</div>'
-+'<div class="fld"><label>CARD</label><div class="in ph">Card number</div></div>'
-+'<div style="display:flex;gap:10px;padding:0 20px"><div class="fld" style="flex:1;padding:0"><div class="in ph" style="margin-top:12px">MM / YY</div></div><div class="fld" style="flex:1;padding:0"><div class="in ph" style="margin-top:12px">CVC</div></div></div>'
-+'<div class="escrow-bar" style="margin-top:18px">'+I.shield+'<span>Charged once, by Velor. Held in escrow until each parcel is delivered. Anything wrong — the funds freeze.</span></div>'
-+'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="go(\'confirm\')">Pay securely &middot; &pound;221.60</button></div></div>'
+S.checkout='<div class="scr" id="s-checkout"><div class="sc" id="checkoutslot" style="padding-bottom:150px"></div><div class="pdock" id="checkoutdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"></div></div>'
+
+/* ===== CHECKOUT — derives everything from the live CART ===== */
+function renderCheckout(){
+  var host=document.getElementById('checkoutslot'), dock=document.getElementById('checkoutdock');
+  if(!host) return;
+  if(!CART.length){
+    host.innerHTML='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'cart\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">Checkout</h1></div>'
+    +'<div class="empty" style="margin:34px 20px 0"><div class="ering">'+I.globe+'</div><h2 class="serif" style="font-size:22px;margin-top:14px">Your basket is empty.</h2><p class="sm mut" style="margin-top:9px;max-width:28ch;margin-left:auto;margin-right:auto">Nothing to pay for yet &mdash; the world is waiting.</p><button class="btn sm" style="margin-top:16px;max-width:220px;margin-left:auto;margin-right:auto" onclick="go(\'atlas\')">Spin the globe</button></div>';
+    dock.innerHTML=''; return;
+  }
+  var T=cartTotals(), i, groups={}, order=[];
+  for(i=0;i<CART.length;i++){ if(!groups[CART[i].seller]){ groups[CART[i].seller]=CART[i]; order.push(CART[i].seller) } }
+  var delRows=order.map(function(sn){
+    var it=groups[sn], o=it.ships[it.ship];
+    return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'+flag(it.c)+' <span style="flex:1">'+sn+' &middot; '+o.t+'</span><span>'+gbp(o.p)+'</span></div>';
+  }).join('');
+  host.innerHTML='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'cart\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">Checkout</h1></div>'
+  +'<div class="fld"><label>DELIVER TO</label><div class="in row" onclick="toast(\'Address book in the build\')"><span>14 Portland Mews, London W1 &middot; SAMPLE</span><span class="ed">Change</span></div></div>'
+  +'<div class="fld"><label>DELIVERY &middot; '+T.ns+(T.ns>1?' PARCELS':' PARCEL')+'</label><div class="in col">'+delRows+'</div></div>'
+  +'<div class="fld"><label>SUMMARY</label><div class="in col">'
+  +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="mut">Items ('+cartCount()+')</span><span>'+gbp(T.items)+'</span></div>'
+  +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="mut">Delivery</span><span>'+gbp(T.del)+'</span></div>'
+  +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="mut">Import duty &middot; est.</span><span>&pound;0.00</span></div>'
+  +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700"><span>Total</span><span>'+gbp(T.total)+'</span></div></div></div>'
+  +'<div class="pad"><button class="btn wht" style="margin-top:16px" onclick="go(\'confirm\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="#000"><path d="M17.1 12.6c0-2 1.7-3 1.7-3.1-.9-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.6.6 2.6.6 1.8-1 2.4-2c.8-1.1 1.1-2.2 1.1-2.3s-2.1-.8-2.1-3z"/></svg> Pay &middot; '+gbp(T.total)+'</button></div>'
+  +'<div class="ordiv">or pay by card &middot; Stripe</div>'
+  +'<div class="fld"><label>CARD</label><div class="in ph">Card number</div></div>'
+  +'<div style="display:flex;gap:10px;padding:0 20px"><div class="fld" style="flex:1;padding:0"><div class="in ph" style="margin-top:12px">MM / YY</div></div><div class="fld" style="flex:1;padding:0"><div class="in ph" style="margin-top:12px">CVC</div></div></div>'
+  +'<div class="escrow-bar" style="margin-top:18px">'+I.shield+'<span>Charged once, by Velor. Held in escrow until each parcel is delivered. Anything wrong &mdash; the funds freeze.</span></div>';
+  dock.innerHTML='<button class="btn" onclick="go(\'confirm\')">Pay securely &middot; '+gbp(T.total)+'</button>';
+}
 
 /* ===== CONFIRM ===== */
 S.confirm='<div class="scr" id="s-confirm"><div class="sc" style="display:flex;flex-direction:column;justify-content:center;padding:40px 0 140px">'
@@ -1312,6 +1334,7 @@ function go(id){
   if(id==='craft'){ var csl=document.getElementById('craftslot'); if(csl&&!csl.childElementCount){ csl.innerHTML=craftScreen() } }
   if(id==='search'){ buildSearchBrowse() }
   if(id==='cart'){ renderCart() }
+  if(id==='checkout'){ renderCheckout() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
