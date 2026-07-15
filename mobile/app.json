@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Velor",
-    "slug": "velor",
+    "slug": "velorvelor",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,6 +28,18 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#08080b"
+    },
+    "owner": "bilsy144",
+    "extra": {
+      "eas": {
+        "projectId": "3207e08b-8832-4dba-bc40-d690d70628d9"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3207e08b-8832-4dba-bc40-d690d70628d9"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }
