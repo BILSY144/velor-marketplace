@@ -219,7 +219,43 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // shell/ivory/coral/bone material in any of the five.
   QA: ['Oud & bakhoor', 'Hand-woven bisht cloaks', 'Al-Sadu woven textiles', 'Gold & silver-thread naqdah embroidery', 'Gypsum-carved decor', 'Pottery & ceramics'],
   KW: ['Dates', 'Perfume oils'],
-  BH: ['Pearl jewellery'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Bahrain had only 1 item
+  // (SEO_LOG.md backlog item 25, content-depth floor list). Five product-
+  // level additions, each corroborated across at least two independent,
+  // Bahrain-specific sources (not single-source, not AI-content-farm
+  // results): A'ali hand-thrown pottery (clay pots hand-molded on
+  // foot-operated wheels, A'ali village, archaeological pottery finds
+  // there dating back to c. 2000 BC, an annual A'ali Pottery Festival) is
+  // documented by Outlook Traveller's "Discover The Traditional Crafts Of
+  // Bahrain", bahrainguide.org's "Traditional skills still alive in
+  // Bahrain", and Eastern Chronicles' "Bahrain's Traditional Crafts and
+  // Artisans". Al-Sadu woven textiles (Bedouin geometric weaving from wool
+  // and camel/goat hair) is corroborated by the same three sources as
+  // still practiced in Bahrain today (revived via Bahrain National Museum
+  // workshops per Eastern Chronicles) -- noted for accuracy, per LAW #1:
+  // unlike Qatar/Kuwait/Saudi Arabia/UAE, Bahrain is NOT itself a party
+  // state to any UNESCO "Al Sadu" inscription (verified directly against
+  // the UNESCO ICH register and Al Sadu's own Wikipedia inscription
+  // history), so this entry is included on craft-practice evidence only,
+  // not on UNESCO status. Palm-frond basketware (dining mats, storage
+  // baskets woven from local date-palm fronds, historically passed mother
+  // to daughter) is documented by Outlook Traveller (the House of Basket
+  // Weaving training programme at Qala'at al Bahrain) and bahrainguide.org,
+  // both naming the same three villages (Karbabad, Jasra, Budaiya).
+  // Al-Naqda gold & silver-thread embroidery (hand embroidery for garments
+  // and, per the Kurar sub-technique, decorative ribbons) is documented by
+  // Outlook Traveller (Kurar House in Muharraq, a three-generation family
+  // craft) and bahrainguide.org (Al Naqda project, "modernized for
+  // contemporary appeal"). Hand-built model dhows (scaled wooden replicas
+  // of traditional pearling/fishing boats, built with the same techniques
+  // and teak as full-size dhows) is documented by Outlook Traveller
+  // (Muharraq/Naeem/Ras Ruman shipyards) and bahrainguide.org, which notes
+  // full-size dhow-yard work has declined while "model dhow production has
+  // increased" -- i.e. this is the currently-active, currently-sold form
+  // of the craft, not a historical curiosity. No shell/ivory/coral/bone
+  // material in any of the five; existing 'Pearl jewellery' entry kept
+  // as-is (pearls are not a restricted material under this file's rules).
+  BH: ['Pearl jewellery', "A'ali hand-thrown pottery", 'Al-Sadu woven textiles', 'Palm-frond basketware', 'Al-Naqda gold & silver-thread embroidery', 'Hand-built model dhows'],
   TW: ['High-mountain oolong', 'Ceramics'],
   HK: ['Tea ware'],
   SG: ['Kaya & pantry', 'Peranakan ceramics'],
