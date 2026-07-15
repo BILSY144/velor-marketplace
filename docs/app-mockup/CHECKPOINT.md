@@ -461,3 +461,16 @@ Kept the existing structure (it was good); fixed gaps found on review:
 - Speciality picker UNTOUCHED (max 2, closed vocab, request-a-term) — that's the real listing-time rule (design decision #5), distinct from the apply page where the cap was removed.
 
 PRODUCTION (main, commit a81e198 + CLAUDE.md note): Shipping Buffer built at William's request — SellerShippingProfile.handlingFeeGBP (0–25, clamped at write + quote time), added server-side to real Shippo quotes only, currency-converted via lib/fx, commission-free pass-through. Settings page field beside Handling Time. Verified Ready/Production.
+
+## 2026-07-15 — Working image upload everywhere + new listing de-boxed
+
+William: "the upload imagery… goes nowhere", "speciality up to 2 again should be a description box", "make sure on all pages the upload imagery works where relevant", "the page needs an uplift, atm its very boxed".
+
+GLOBAL PICKER: one hidden <input type=file id=gfile accept=image/* multiple> injected next to the menu; pickImage(cb) opens the device gallery/camera, each chosen file becomes an object URL passed to cb. Wired into all three photo surfaces:
+- New listing: + tile and cover both call nlPick(); new photos append to the thumb rail, become the cover, and update the count line + "Photos · N" readiness pill live. Tap any thumb → nlSetCover.
+- Apply (SHOW YOUR WORK): + tile calls apAdd(); tiles insert before the button (row now flex-wraps), count line updates.
+- Dispute evidence: dAddPhoto() now shows the real chosen photo in the 84px tile (was a placeholder camera graphic) and still drives the 3-photo gate via dRefresh().
+
+NEW LISTING REDESIGN (de-boxed): cover hero (4:3, rounded, "Add photo" chip) + 64px thumb rail; big serif TITLE and description/story as contenteditable hairline blocks (.nltitle/.nltext) instead of grey boxes; PRICE/STOCK/PARCEL as a .sstats stat strip with dims+Edit row and the keep-£65.28 line; materials as a hairline row with a No pill; readiness as green .okpill chips. Speciality picker fully REMOVED from listing too (matches apply — William's call; note this supersedes design decision #5's closed vocabulary for the app design). pickSpec() now orphaned but harmless.
+
+Verified live (?v=newlist3): simulated upload via nlAddUrl(dataURL) → thumb count 3→4, cover swaps, count line + pill update, tap-thumb restores original cover; gfile input present; visual pass of hero/strip/hairline sections clean. Note: .sstat .sv is globally accent-orange (from the seats-page change) so all three stat numerals render orange — looks intentional, William approved orange numerals.
