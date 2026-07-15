@@ -2,6 +2,20 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: The opening bell audibly rings
+
+- William asked whether the bell can actually sound as a notification.
+  Yes: mockup now synthesizes a struck-bell chime in Web Audio (partials
+  330/660/792/990/1320, no asset) -- "RING IT" button beside the
+  WHAT THE BELL SOUNDS LIKE header plays it full, and setting a follow
+  gives a soft preview ring. Verified live (AudioContext running).
+- Real-app mapping for the Expo build: bundle a custom notification
+  sound; iOS payload sound field (<=30s caf/wav/aiff), Android dedicated
+  "opening-bell" notification channel with the sound attached. The bell
+  sound is RESERVED for channel-opening alerts -- order/parcel updates
+  keep the default quiet tone, preserving "quiet by default".
+- Commit fac9a2c.
+
 ## 2026-07-15: Orders back button + You sub-pages (no dead rows)
 
 - Orders gained a context-aware back button: go() now captures the
