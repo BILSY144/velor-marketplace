@@ -474,3 +474,15 @@ GLOBAL PICKER: one hidden <input type=file id=gfile accept=image/* multiple> inj
 NEW LISTING REDESIGN (de-boxed): cover hero (4:3, rounded, "Add photo" chip) + 64px thumb rail; big serif TITLE and description/story as contenteditable hairline blocks (.nltitle/.nltext) instead of grey boxes; PRICE/STOCK/PARCEL as a .sstats stat strip with dims+Edit row and the keep-£65.28 line; materials as a hairline row with a No pill; readiness as green .okpill chips. Speciality picker fully REMOVED from listing too (matches apply — William's call; note this supersedes design decision #5's closed vocabulary for the app design). pickSpec() now orphaned but harmless.
 
 Verified live (?v=newlist3): simulated upload via nlAddUrl(dataURL) → thumb count 3→4, cover swaps, count line + pill update, tap-thumb restores original cover; gfile input present; visual pass of hero/strip/hairline sections clean. Note: .sstat .sv is globally accent-orange (from the seats-page change) so all three stat numerals render orange — looks intentional, William approved orange numerals.
+
+## 2026-07-15 — Go live rebuilt as a three-phase flow (LAST PAGE — full app review COMPLETE)
+
+Old page: static camera-check card, Go live button was a toast, background film was Turkey (LIVE[2]) under Studio Kaede's Japanese persona. Rebuilt:
+
+- Phase 1 CAMERA CHECK: Japan film (LIVE[27], "The tea ceremony"), editable broadcast title (contenteditable), pinned-listings pills with working + Add (glAddPin pins Matcha whisk · £52), honest note "Preview uses a sample film".
+- Phase 2 ON AIR (glStart): pulsing LIVE chip with real ticking mm:ss timer, viewers counter ramping toward 612 explicitly labelled SIMULATED (buyer pages still never show fake counts — this is the seller's own demo), rolling chat bubbles (GLCHAT, max 4 on screen, no emojis), sale events at 10s/22s ("Kuro raku bowl sold — held in escrow") updating the pinned-card £ sold, red End stream button. Back chip calls glEndAll() so timers never leak.
+- Phase 3 SUMMARY (glEnd): "That's a wrap." + SIMULATED PREVIEW label, .sstats strip (on-air duration / peak viewers / £ sold), "+N new followers will hear your next opening bell", Back to dashboard / Set up another stream (glReset).
+
+Verified live (?v=golive1): pin add 3→4, timer 0:05/0:17, viewers 73→160, chat + Velor escrow bubbles, £68 sold on pinned card, summary fills correctly. William: "perfect".
+
+STATUS: every page of the mockup has now been reviewed and approved by William — buyer side (previous sessions) and seller side (this session: sell pitch, founding seats, apply, verify, dashboard ×2 tiers, seller orders, API keys, new listing, payouts, go live). Next big step per the roadmap: scaffold the real Expo/RN app (spec: VELOR-APP-FEATURE-MAP.md).
