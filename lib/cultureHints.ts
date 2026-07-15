@@ -80,7 +80,31 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // materials, so it is excluded here for consistency even though the
   // written rule only names shell/ivory/coral).
   KZ: ['Felt & leather goods', 'Dombra instruments', 'Tekemet & syrmak felt carpets', 'Nomadic silver jewellery', 'Tuzkiiz embroidered wall hangings', 'Kalpak felt hats'],
-  KG: ['Shyrdak felt rugs'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- backlog item 25
+  // (content-depth). KG had only 1 item (Shyrdak felt rugs). Five
+  // product-level additions, each corroborated across at least two
+  // independent, real sources (central-asia.guide's "Kyrgyz craft" page,
+  // central-asia.guide's "What to buy in Kyrgyzstan" page,
+  // visitkyrgyzstan.org's souvenirs guide, and triptokyrgyzstan.com's
+  // arts-and-crafts page): Ala-kiyiz felt tapestries (a distinct wet-felted
+  // technique from shyrdak's cut-and-pieced method, confirmed by all four
+  // sources); Tush kiyiz embroidered wall hangings (traditional wedding
+  // gifts, confirmed by three sources); Kalpak felt hats (Kyrgyzstan's
+  // national symbol, the four panels representing the four cardinal
+  // directions, confirmed by central-asia.guide and visitkyrgyzstan.org);
+  // Komuz instruments (the three-stringed fretless lute, Kyrgyzstan's
+  // national instrument -- has its own dedicated Wikipedia and Britannica
+  // entries plus visitkyrgyzstan.org's souvenir guide, the same
+  // UNESCO/encyclopedia corroboration bar already used for Indonesia's
+  // wayang kulit/angklung); Silver jewellery with turquoise (three sources
+  // name silver jewellery set with turquoise; deliberately named without
+  // "coral", which two of the four sources also mention as a stone used,
+  // since coral is a restricted material under this file's own header
+  // rule). Deliberately not added: leatherwork (too generic/undifferentiated
+  // across the region's other entries), woodwork, and stone/bone-carved
+  // items (bone excluded for the same restricted-material-consistency
+  // reason already applied to Kazakhstan above).
+  KG: ['Shyrdak felt rugs', 'Ala-kiyiz felt tapestries', 'Tush kiyiz embroidered wall hangings', 'Kalpak felt hats', 'Komuz instruments', 'Silver jewellery with turquoise'],
   UZ: ['Ikat silks', 'Suzani embroidery', 'Ceramics'],
   TJ: ['Embroidered textiles'],
   TM: ['Hand-knotted Turkmen carpets'],
