@@ -1622,12 +1622,50 @@ S.sell='<div class="scr" id="s-sell"><div class="sc" style="padding-bottom:150px
 +'</div></div>'
 
 /* ===== SEATS ===== */
-S.seats='<div class="scr" id="s-seats"><div class="sc" style="padding-bottom:120px">'
-+'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'sell\')">'+I.back+'</button><h1 class="dspl" style="font-size:30px;margin-top:16px">Founding seats</h1><p class="sm dim" style="margin-top:6px">One per country. Every seat below is still open.</p></div>'
-+'<div class="searchbar"><span class="si">'+I.search+'</span><input placeholder="Find your country"></div>'
-+'<div style="margin-top:10px">'+CH.slice(0,14).map(function(c){return '<button class="seat-row" onclick="go(\'apply\')"><span class="fl">'+flag(c.c)+'</span><span class="nm">'+c.n+'</span><span class="open">SEAT OPEN</span></button>'}).join('')+'</div>'
-+'<div class="pad"><button class="btn ghost sm" style="margin-top:16px" onclick="toast(\'All 190 in the build\')">All 190 countries</button></div>'
-+'</div></div>'
+S.seats='<div class="scr" id="s-seats"><div class="sc" id="seatsslot" style="padding-bottom:140px"></div></div>'
+function seatRow(w){
+  var crafts=(HINTS[w.c]||[]).slice(0,2).join(' &middot; ');
+  var key=(w.n+' '+(HINTS[w.c]||[]).join(' ')).toLowerCase();
+  return '<button class="seat-row" data-n="'+key+'" onclick="go(\'apply\')"><span style="display:flex;width:22px;height:22px;border-radius:5px;overflow:hidden;flex:0 0 22px">'+flag(w.c)+'</span><span style="flex:1;min-width:0;text-align:left"><span class="nm" style="display:block">'+w.n+'</span>'+(crafts?'<span class="sub">'+crafts+'</span>':'')+'</span><span class="open">SEAT OPEN</span></button>';
+}
+function renderSeats(){
+  var host=document.getElementById('seatsslot'); if(!host||host.childElementCount) return;
+  var i,h='';
+  h+='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'sell\')">'+I.back+'</button>'
+   +'<div class="k" style="margin-top:18px">THE FOUNDING MAP</div>'
+   +'<h1 class="dspl" style="font-size:30px;margin-top:8px;line-height:1.04">One seat<br>per country.</h1>'
+   +'<p class="sm dim" style="margin-top:9px;max-width:30ch">The first verified seller from a country opens its channel and keeps the seat permanently. All 190 are still open.</p></div>'
+   +'<div class="searchbar"><span class="si">'+I.search+'</span><input id="seatq" placeholder="Find your country, or a craft" oninput="seatsSearch(this.value)"></div>'
+   +'<div id="seatstop">'
+   +'<div class="sstats">'+[['190','SEATS'],['0','TAKEN'],['24H','DECISION']].map(function(s){return '<div class="sstat"><div class="sv serif">'+s[0]+'</div><div class="sl">'+s[1]+'</div></div>'}).join('')+'</div>'
+   +'<div class="pad"><div class="k d" style="margin-top:24px">WHAT THE SEAT CARRIES</div></div>'
+   +'<div class="sgrid">'+[['Founding badge','Permanent, on your store and every listing.'],['Pro free for life','Unlimited listings, Go Live, your AI account manager &mdash; 4% commission.'],['Homepage showreel','Your film on the front page of the channel.'],['Opening credit','Named as the seller who opened your country&rsquo;s page.']].map(function(p){return '<div class="sgc"><div class="st">'+p[0]+'</div><div class="ss">'+p[1]+'</div></div>'}).join('')+'</div>'
+   +'<div class="pad"><div class="k d" style="margin-top:26px">CRAFT POWERHOUSES &mdash; EVERY ONE STILL OPEN</div></div>'
+   +'<div class="hrail" style="padding-top:12px">'+CH.slice(0,10).map(function(c){return '<button class="fseat" onclick="go(\'apply\')"><img class="fs-i" src="'+px(c.img)+'" loading="lazy"><div class="fs-b"><div class="fs-n">'+flag(c.c)+' '+c.n+'</div><div class="fs-k">'+c.know.slice(0,2).join(' &middot; ')+'</div><span class="open">SEAT OPEN</span></div></button>'}).join('')+'</div>'
+   +'</div>'
+   +'<div class="pad"><div class="k d" style="margin-top:26px" id="seatcount">ALL 190 COUNTRIES</div></div><div id="seatdir">';
+  var groups=[]; for(i=0;i<REGNAMES.length;i++) groups.push([]);
+  for(i=0;i<WORLD.length;i++){ var r=REG[WORLD[i].c]; if(r!==undefined) groups[r].push(WORLD[i]) }
+  for(i=0;i<REGNAMES.length;i++){
+    if(!groups[i].length) continue;
+    h+='<div class="sgrp"><div class="pad"><div class="k" style="margin-top:20px;color:var(--mut)">'+REGNAMES[i].toUpperCase()+' &middot; '+groups[i].length+'</div></div>'+groups[i].map(seatRow).join('')+'</div>';
+  }
+  h+='</div><div class="empty" id="seatempty" style="display:none;margin:34px 20px 0"><div class="ering">'+I.globe+'</div><h2 class="serif" style="font-size:20px;margin-top:14px">No seat by that name.</h2><p class="sm mut" style="margin-top:8px;max-width:28ch;margin-left:auto;margin-right:auto">Try the country&rsquo;s English name, or a craft it is known for.</p></div>'
+   +'<div class="pad"><button class="btn" style="margin-top:26px" onclick="go(\'apply\')">Apply for your seat</button><p class="sm dim" style="text-align:center;margin-top:10px">Five-minute application &middot; decision within 24h of verification.</p></div>';
+  host.innerHTML=h;
+}
+function seatsSearch(q){
+  var ql=(q||'').trim().toLowerCase(), vis=0, i, j;
+  var grps=document.querySelectorAll('#seatdir .sgrp');
+  for(i=0;i<grps.length;i++){
+    var rows=grps[i].querySelectorAll('.seat-row'), g=0;
+    for(j=0;j<rows.length;j++){ var on=!ql||rows[j].getAttribute('data-n').indexOf(ql)>=0; rows[j].style.display=on?'flex':'none'; if(on) g++ }
+    grps[i].style.display=g?'block':'none'; vis+=g;
+  }
+  var top=document.getElementById('seatstop'); if(top) top.style.display=ql?'none':'block';
+  var cnt=document.getElementById('seatcount'); if(cnt) cnt.textContent=ql?(vis+(vis===1?' SEAT MATCHES':' SEATS MATCH')):'ALL 190 COUNTRIES';
+  var emp=document.getElementById('seatempty'); if(emp) emp.style.display=(ql&&!vis)?'block':'none';
+}
 
 /* ===== APPLY ===== */
 S.apply='<div class="scr" id="s-apply"><div class="sc" style="padding-bottom:150px">'
@@ -1760,6 +1798,7 @@ function go(id){
   if(id==='account'){ renderAccount() }
   if(id==='langcur'){ renderLangCur() }
   if(id==='assist'){ renderAssist() }
+  if(id==='seats'){ renderSeats() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
@@ -1973,6 +2012,22 @@ splashT=setTimeout(endSplash,2600)
 .seat-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.04)}
 .seat-row .fl{font-size:22px;flex:0 0 28px;text-align:center}.seat-row .nm{font-family:var(--fd);font-size:14px;font-weight:600;flex:1}
 .seat-row .open{font-family:var(--fd);font-size:8.5px;letter-spacing:.08em;font-weight:700;color:var(--accent);border:1px dashed rgba(255,107,0,.5);border-radius:999px;padding:5px 10px}
+.seat-row .sub{display:block;font-size:11px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sstats{display:flex;margin:22px 20px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)}
+.sstat{flex:1;padding:16px 0 14px;text-align:center}
+.sstat+.sstat{border-left:1px solid rgba(255,255,255,.07)}
+.sstat .sv{font-size:26px;color:var(--text)}
+.sstat .sl{font-family:var(--fd);font-size:8.5px;letter-spacing:.14em;font-weight:700;color:var(--mut);margin-top:4px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 20px 0}
+.sgc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:13px 14px}
+.sgc .st{font-family:var(--fd);font-size:12.5px;font-weight:700}
+.sgc .ss{font-size:10.5px;color:var(--mut);margin-top:4px;line-height:1.45}
+.fseat{flex:0 0 172px;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden}
+.fseat .fs-i{width:100%;height:104px;object-fit:cover;display:block}
+.fseat .fs-b{padding:11px 12px 13px}
+.fseat .fs-n{font-family:var(--fd);font-size:13px;font-weight:600}
+.fseat .fs-k{font-size:10.5px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fseat .open{display:inline-block;font-family:var(--fd);font-size:8px;letter-spacing:.08em;font-weight:700;color:var(--accent);border:1px dashed rgba(255,107,0,.5);border-radius:999px;padding:4px 9px;margin-top:9px}
 .steps3{margin:14px 20px 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,.03)}
 .vstep{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}.vstep:last-child{border:none}
 .vn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--mut);flex:0 0 auto}
