@@ -2,6 +2,20 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Stamps deep-link to country-filtered orders
+
+- William: pressing a stamp shows ALL orders from that country. Earned +
+  EN ROUTE stamps call ordersFor(cc) -> Orders filtered with a
+  "<COUNTRY> ONLY x show all" chip; grey unearned stamps open the
+  country dive instead (shop it to earn it).
+- Orders page is now model-driven: ORDERS[] fed by renderConfirm (stage
+  0, "seller preparing"), ORDERSEED sample pair when nothing ordered,
+  per-stage tracking bars, honest "No orders from X yet" filtered-empty
+  state with a Shop-CTA.
+- Verified live: simulated earned CN stamp -> click -> CHINA ONLY chip +
+  exactly the China order.
+- Commit b1acb33.
+
 ## 2026-07-15: Passport wired to real order state
 
 - Fabricated history removed (was 3/190 with invented delivery dates).
