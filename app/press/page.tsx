@@ -219,12 +219,13 @@ export default function PressPage() {
               brands directly with customers worldwide.
             </p>
             <p>
-              Velor recruits sellers worldwide, with deliberate focus on makers across Africa,
-              Asia, the Middle East and Latin America. Sellers deal with the platform entirely in
-              their own language — seller communications are currently localized into {LANGUAGE_COUNT}{' '}
-              languages. Prices display to buyers in {CURRENCY_COUNT} currencies and the platform ships
-              to more than {COUNTRY_COUNT} destinations. Payments are escrow-protected, released to the
-              seller on delivery, with payouts via Stripe or Payoneer.
+              Velor is open to sellers from every one of the world&apos;s {COUNTRY_COUNT} countries,
+              with a founding seat reserved for whoever verifies and lists first from each one.
+              Sellers deal with the platform entirely in their own language — seller communications
+              are currently localized into {LANGUAGE_COUNT} languages. Prices display to buyers in{' '}
+              {CURRENCY_COUNT} currencies and the platform ships to more than {COUNTRY_COUNT} destinations.
+              Payments are escrow-protected, released to the seller on delivery, with payouts via
+              Stripe or Payoneer.
             </p>
             <p>
               Ahead of launch, Velor is offering founding-seller places: the platform&apos;s Pro

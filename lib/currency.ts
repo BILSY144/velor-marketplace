@@ -2,29 +2,21 @@
 
 // Client-side currency helpers: symbol formatting, locale-based detection of
 // a buyer's likely currency, and persisting their chosen display currency.
-// This is a display-layer concern only â the actual amount charged at
+// This is a display-layer concern only -- the actual amount charged at
 // checkout is computed server-side (see app/checkout and the FX conversion
 // there), so what a buyer sees here is guaranteed to match what they pay.
-
-export const SUPPORTED_CURRENCIES = [
-  'GBP', 'USD', 'EUR', 'CAD', 'AUD', 'JPY', 'CNY', 'INR', 'AED', 'SGD',
-  'CHF', 'SEK', 'NOK', 'DKK', 'NZD', 'HKD', 'ZAR', 'BRL', 'MXN', 'KRW',
-] as const
-
-export type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number]
+//
+// The actual data (SUPPORTED_CURRENCIES, COUNTRY_TO_CURRENCY, CURRENCY_NAMES)
+// moved to lib/currencyData.ts 2026-07-15 -- see that file's header comment
+// for why (a real bug: a server component importing SUPPORTED_CURRENCIES
+// from this 'use client' file got an empty array at render time). Re-exported
+// here so every existing `from '@/lib/currency'` import keeps working
+// unchanged; new server-side code should import lib/currencyData.ts directly.
+export { SUPPORTED_CURRENCIES, COUNTRY_TO_CURRENCY, CURRENCY_NAMES } from './currencyData'
+export type { SupportedCurrency } from './currencyData'
 
 const STORAGE_KEY = 'velor-display-currency'
 
-// Maps a country code (from Intl locale region, or a seller's Origin Country
-// field) to its most common currency. Falls back to GBP for anything unmapped.
-export const COUNTRY_TO_CURRENCY: Record<string, SupportedCurrency> = {
-  GB: 'GBP', US: 'USD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
-  DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR',
-  AT: 'EUR', IE: 'EUR', PT: 'EUR', FI: 'EUR', GR: 'EUR', LU: 'EUR',
-  JP: 'JPY', CN: 'CNY', HK: 'HKD', SG: 'SGD', IN: 'INR', KR: 'KRW',
-  AE: 'AED', ZA: 'ZAR', BR: 'BRL', MX: 'MXN',
-  CH: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK',
-}
 
 export function symbolFor(currency: string): string {
   const symbols: Record<string, string> = {
@@ -81,14 +73,4 @@ export function getDisplayCurrency(): SupportedCurrency {
   const detected = detectCurrencyFromLocale()
   setStoredCurrency(detected)
   return detected
-}
-
-export const CURRENCY_NAMES: Record<SupportedCurrency, string> = {
-  GBP: 'British Pound', USD: 'US Dollar', EUR: 'Euro', CAD: 'Canadian Dollar',
-  AUD: 'Australian Dollar', JPY: 'Japanese Yen', CNY: 'Chinese Yuan',
-  INR: 'Indian Rupee', AED: 'UAE Dirham', SGD: 'Singapore Dollar',
-  CHF: 'Swiss Franc', SEK: 'Swedish Krona', NOK: 'Norwegian Krone',
-  DKK: 'Danish Krone', NZD: 'New Zealand Dollar', HKD: 'Hong Kong Dollar',
-  ZAR: 'South African Rand', BRL: 'Brazilian Real', MXN: 'Mexican Peso',
-  KRW: 'South Korean Won',
 }
