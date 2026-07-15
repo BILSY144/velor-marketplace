@@ -1582,3 +1582,20 @@ Ordered from his phone mid-session; all three are now standing product requireme
 3. **Email-verified password resets.** BUILT end to end on main: /api/auth/forgot (one-hour SHA-256-hashed single-use token, Resend email, no user enumeration), /api/auth/reset (+ marks emailVerified -- the click IS the verification), /auth/forgot + /auth/reset pages, "Forgot your password?" link on /auth/sign-in. The app's sign-in screen has the same door. New Prisma models PasswordResetToken + PushToken (additive, prisma db push applies on deploy).
 
 Also this session: real seller sign-in in the app (NextAuth via the platform cookie jar -- live dashboard/orders/payouts and REAL listing publishing with data-URL images), EAS store-release scaffolding (eas.json, STORE-RELEASE.md; the build workflow file is stashed at /tmp on the session box because the PAT lacks `workflow` scope -- NEXT PAT NEEDS THE WORKFLOW SCOPE TICKED). NOT yet verified on-device: a real sign-in round trip, Face ID lock, and the forgot-password email (needs this deploy to go Ready first).
+
+## 2026-07-15 checkpoint (4) -- ON-DEVICE VERIFIED: seller sign-in + automatic biometric sign-in. Session handover for tonight.
+
+**Verified by William on his phone:** password sign-in against the live site works from the app; the biometric lock arms on open and on return-from-background; automatic sign-in works end to end -- "Ok yes all working now just not Face ID until we go through App Store set up."
+
+**How the auth system now works (app, branch mobile-app):**
+- Password signs in once (NextAuth, cookie jar). Enabling the biometric lock fires the biometric immediately and stores the credentials in the device's hardware-encrypted keychain (SecureStore). From then on, opening the app IS the sign-in: biometric passes -> live cookie, else silent keychain re-auth ("Signing you in..."). Keychain is wiped by: toggling the lock off (You page row, biometric-gated both ways), "Use password instead" on the lock, sign-out, or a server-side password change (fails once, self-clears).
+- **EXPO GO LIMITATION (documented, told in-UI):** true Face ID cannot appear inside Expo Go -- iOS downgrades to the DEVICE PASSCODE sheet, which stands in and proves the owner. NSFaceIDUsageDescription is already in app.json ios.infoPlist, so the real (store/dev) build shows genuine Face ID from day one. William understands and accepts this pending store setup.
+
+**TONIGHT'S QUEUE (William: "you will complete this later tonight"):**
+1. William registers **Apple Developer** ($99/yr, org enrolment for Velor Commerce Ltd -- needs D-U-N-S) and **Google Play** ($25) -- mobile/STORE-RELEASE.md is the walkthrough. This unlocks true Face ID, push notifications with the bell chime, and the store path before 6 Aug.
+2. **Next PAT must have the `workflow` scope ticked** -- the EAS build-trigger workflow (.github/workflows/eas-build.yml) is written and stashed at /tmp/eas-build.yml.pending on the session box (regenerate from STORE-RELEASE.md/DEVLOG if the box is gone: workflow_dispatch, platform+profile inputs, npm ci + eas-cli build with EXPO_TOKEN).
+3. After credentials exist: `eas credentials` once (EAS-managed keystore + iOS certs), then an Android preview APK / iOS build via the workflow, then TestFlight.
+4. Still open from earlier phases: buyer passkey sign-in (site-side WebAuthn, needs a go-ahead), push SENDERS server-side (PushToken registry + /api/push/register are live; wire opening-bell/order events at launch), odetail/dispute/returnreq screens when real orders exist.
+5. PAT hygiene: the PAT used all day (11CGSBRSI0...) should be revoked when William ends the day; issue the new workflow-scoped one for tonight.
+
+State of the branches: mobile-app tip 7b9a0eca (all app work, 30+ green publishes), main tip includes password-reset flow + push registry (live-verified: /auth/forgot renders on production). mobile/DEVLOG.md remains the canonical app log -- read it top-to-bottom before touching the app tonight.
