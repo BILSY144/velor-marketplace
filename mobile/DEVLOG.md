@@ -77,3 +77,28 @@ Country dive completed from the full plate: BE THE FIRST founding spotlight
 card (mockup copy incl. "Claim the founding seat" + Follow button with
 session-local follow state), passport tie row ("Earn the Japan stamp"),
 TRAVEL ON rail (MX/IT/UZ/GH/ET/PT per spec, nav.push for stacked dives).
+
+## 2026-07-15 — Sweep: Live feed matched to plate 03; product page (PDP) built from plate 04
+
+Live feed rebuilt to spec/live.txt: back chip to Atlas, PREVIEW pill
+top-right, the honest preview note + menu button, step chevrons with the
+n/41 counter, country chip into the dive, Fraunces 23 title, product strip
+and the ask-row + heart. Honesty divergences (standing rule): the mockup's
+sample chat bubbles (amira/seller) are NOT rendered — live chat begins with
+real broadcasts; the product strip renders only when a REAL listing exists
+for the film's country (fetched live, shared query key with the dive).
+
+PdpScreen is new — the app finally has a product page (cards previously
+only added to basket). Plate 04 top-to-bottom: swipeable gallery + dots,
+COUNTRY × CRAFT kicker, Fraunces 31 title, Fraunces 30 price, delivery row
+(honest "quoted live at checkout" instead of the plate's invented estimate),
+maker card, THE MAKING (real description), escrow block (spec copy
+verbatim), speciality pills, BUYER REVIEWS (real rating only — the plate's
+SAMPLE reviews replaced by its own honesty line), MORE FROM {COUNTRY} craft
+rail, sticky qty-stepper + "Add · £" bar. FOUNDING badge deliberately not
+shown until the API exposes a real founding flag.
+
+Wiring: Pdp registered in the stack; Craft listing rows, Country dive
+product cards and the Live strip all navigate to it. Cart add() takes a qty;
+new useFavs store (session-local, like the mockup's FAVS). tsc --noEmit
+clean with full node_modules (npm ci works from this sandbox).

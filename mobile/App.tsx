@@ -38,6 +38,7 @@ import CheckoutScreen from './src/screens/CheckoutScreen'
 import MenuScreen from './src/screens/MenuScreen'
 import BellScreen from './src/screens/BellScreen'
 import CraftScreen from './src/screens/CraftScreen'
+import PdpScreen from './src/screens/PdpScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -139,6 +140,7 @@ export default function App() {
             <Stack.Screen name="Menu" component={MenuScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Bell" component={BellScreen} />
             <Stack.Screen name="Craft" component={CraftScreen} />
+            <Stack.Screen name="Pdp" component={PdpScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>

@@ -131,7 +131,11 @@ export default function CountryScreen() {
           ) : trading ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 12 }}>
               {products.data!.map((p) => (
-                <View key={p.id} style={s.prodCard}>
+                <Pressable
+                  key={p.id}
+                  style={s.prodCard}
+                  onPress={() => nav.navigate('Pdp', { product: p, cc })}
+                >
                   {p.images?.[0] ? (
                     <Image source={{ uri: p.images[0] }} style={s.prodImg} contentFit="cover" />
                   ) : (
@@ -147,7 +151,7 @@ export default function CountryScreen() {
                   <Pressable style={s.addBtn} onPress={() => add(p)}>
                     <Body style={{ fontFamily: F.display, fontSize: 10, color: '#0b0b0e' }}>ADD TO BASKET</Body>
                   </Pressable>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           ) : (

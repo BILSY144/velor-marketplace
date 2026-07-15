@@ -42,6 +42,13 @@ export type ShopProduct = {
   percentOff?: number | null
   rating?: number | null
   reviewCount?: number
+  // Extra fields the live route already returns (it spreads the full Prisma
+  // row): used by the product page. All optional — never assumed present.
+  description?: string | null
+  category?: string | null
+  specialities?: string[]
+  avgRating?: number | null
+  sellerId?: string
 }
 
 export async function fetchProductsByOrigin(cc: string, limit = 12): Promise<ShopProduct[]> {

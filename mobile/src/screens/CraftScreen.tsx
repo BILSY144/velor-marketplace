@@ -61,7 +61,11 @@ export default function CraftScreen() {
             <Dim style={{ paddingHorizontal: 20, paddingTop: 12 }}>Checking the live catalogue…</Dim>
           ) : shown.length ? (
             shown.map((p) => (
-              <View key={p.id} style={s.listRow}>
+              <Pressable
+                key={p.id}
+                style={s.listRow}
+                onPress={() => nav.navigate('Pdp', { product: p, cc })}
+              >
                 {p.images?.[0] ? (
                   <Image source={{ uri: p.images[0] }} style={s.listImg} contentFit="cover" />
                 ) : (
@@ -79,7 +83,7 @@ export default function CraftScreen() {
                   </Body>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color={C.mut} />
-              </View>
+              </Pressable>
             ))
           ) : (
             <View>
