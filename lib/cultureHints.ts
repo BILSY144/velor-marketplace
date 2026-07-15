@@ -698,7 +698,30 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   DE: ['Kitchen knives', 'Optics', 'Christmas ornaments', 'Cuckoo clocks', 'Beer steins', 'Nutcrackers', 'Enamel cookware', 'Leather goods', 'Precision tools', 'Teddy bears'],
   CH: ['Watches', 'Chocolate'],
   AT: ['Crystal glassware', 'Loden wool'],
-  LI: ['Collectible postage stamps'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Liechtenstein had only
+  // 1 item (SEO_LOG.md backlog item 25's floor-of-1 list). Two product-level
+  // additions, each multi-source verified this run, no single-source or
+  // AI-content-farm result carried forward. Wine from the Prince of
+  // Liechtenstein's own Hofkellerei (Court Winery) in Vaduz -- an active,
+  // still-operating vineyard and cellar confirmed by Liechtenstein's own
+  // official tourism site (en.tourismus.li), the winery's own site
+  // (hofkellerei.at), and independent wine coverage (Falstaff, Archetyp
+  // Wines, Atlas Obscura); the tourism site names the two grapes grown in
+  // the Herawingert vineyard as Pinot Noir and Chardonnay. Air-dried ham and
+  // sausage specialities from Ospelt (Malbuner), the Liechtenstein food
+  // company founded as a Vaduz butcher's shop in 1958 and still
+  // family-owned and headquartered in Gamprin-Bendern, Liechtenstein today
+  // -- confirmed via the company's own official history page (ospelt.com),
+  // which names "meat and sausage specialities" and "air-dried ham" among
+  // its core products, and independently corroborated as a real, operating
+  // Liechtenstein manufacturer by the buendnerfleisch.swiss producer
+  // directory and a Dun & Bradstreet business profile listing its
+  // Gamprin-Bendern address. Deliberately did not use the generic
+  // "Landjäger" name, since that dried-sausage style is shared broadly
+  // across Switzerland/Austria/Germany and isn't distinctly Liechtenstein
+  // the way the specific Ospelt/Malbuner company and the princely vineyard
+  // are.
+  LI: ['Collectible postage stamps', 'Alpine Pinot Noir & Chardonnay wine', 'Air-dried ham & sausage specialities'],
   NL: ['Delftware pottery', 'Cheese'],
   BE: ['Chocolate', 'Lace'],
   LU: ['Péckvillercher clay bird whistles'],
