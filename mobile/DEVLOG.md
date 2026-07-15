@@ -235,3 +235,53 @@ language, honest answers". The real assistant API wiring is unchanged.
 
 CLAUDE.md checkpoint pushed to MAIN (ea57e1b) summarizing the whole app
 day for future sessions — the branch doc (this file) stays canonical.
+
+## 2026-07-15 (final pass) — Seller-side pages complete + FULL WIRING SCAN
+
+All five remaining seller pages built, reached from the Dash preview:
+- SellerOrders (plate 28): filter pills (all real zeros), honest zero desk.
+- ApiKeys (plate 29): PRO TOOLS, zero keys state, capability pills, the
+  shown-once/hashed/600rpm footer verbatim.
+- Payouts (plate 31): HELD IN ESCROW FOR YOU £0.00, the no-withdraw-button
+  copy, payout method (Stripe + Payoneer-on-the-way), zero history.
+- NewListing (plate 30): FULLY INTERACTIVE preview — real photo picker with
+  tap-to-set-cover, title/price/stock/parcel inputs, live "you'd keep" line
+  from real tier maths, description/story, regulated-materials gate, and a
+  READY TO PUBLISH checklist computed from what's actually filled in.
+  Publish explains the approved-account gate.
+- GoLive (plate 32): camera-check stage on a real preview-film still,
+  broadcast title, pinned listings, Go live gate. The plate's SIMULATED
+  live/ended stages are not rendered (no fake counts).
+Dash wiring: stat tiles, pipeline cards, escrow note, Go live card, + New
+and Keys all navigate to their real pages now (say-gates removed).
+
+### THE SCAN — every page, every wire (2026-07-15)
+
+Method: tsc --noEmit; full Metro export for BOTH platforms (ios + android,
+both clean — this catches every import/asset/parse error the phone would
+hit); grep-audit of every nav.navigate target against the registered route
+table; per-screen route.params audit; app.json asset audit; live endpoint
+checks via Chrome.
+
+VERIFIED CLEAN: 27 distinct navigate targets, every one registered; all
+param readers have fallbacks; bare tab-name navigations (Atlas/Search/Live)
+only ever fire from sibling tabs where they resolve; app.json's 6 asset
+refs all exist; bell.m4a (64,592B) confirmed inside the exported bundle;
+LEGAL keys terms/privacy/help all present; live endpoints confirmed via
+browser: /api/lattice {"totalCountries":190,"trading":0,...},
+/api/shop/products (real empty catalogue), velor-assistant.png (512×512).
+
+BUGS THE SCAN FOUND AND FIXED (both real):
+1. Atlas film reel navigated Live with { start: i } — LiveScreen never read
+   it, so every film card opened the feed at film #1. Now deep-links to the
+   tapped film (scrollToIndex, safe with getItemLayout).
+2. Privacy + buyer-protection legal docs were UNREACHABLE — every entry
+   passed doc:'terms' and LegalScreen had no switcher. Added the doc pill
+   switcher inside LegalScreen; all three docs reachable from every entry.
+Also removed dead say/note code left in DashScreen after the wiring pass.
+
+Screens NOT built, by design (documented, not forgotten): odetail/dispute/
+returnreq (plates 11/12/13) — they render a real order and none can exist
+before buyer launch + sign-in; building them dead violates the no-dead-
+links rule. They are the first build the day real orders exist. Store
+release (EAS Build + Apple/Play) remains William's registration.

@@ -9,13 +9,17 @@ import { Kicker, Display, Body, Dim, Serif } from '../ui'
 type DocKey = keyof typeof LEGAL
 
 // The real, current legal documents — full text in-app, no browser needed.
+// The doc switcher makes all three reachable from any entry point (the
+// 2026-07-15 wiring scan found privacy/help had no path to them once the
+// You rows collapsed into one "Privacy & legal" row).
 export default function LegalScreen() {
   const insets = useSafeAreaInsets()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
-  const docKey: DocKey = route.params?.doc ?? 'terms'
+  const [docKey, setDocKey] = useState<DocKey>(route.params?.doc ?? 'terms')
   const doc = LEGAL[docKey]
   const [open, setOpen] = useState<number | null>(0)
+  const docKeys = Object.keys(LEGAL) as DocKey[]
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 60 }}>
@@ -26,6 +30,28 @@ export default function LegalScreen() {
         <Kicker style={{ marginTop: 16 }}>{doc.u.toUpperCase()}</Kicker>
         <Display style={{ marginTop: 6, fontSize: 26 }}>{doc.t}.</Display>
         <Dim style={{ marginTop: 8, lineHeight: 19 }}>{doc.syn}</Dim>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+          {docKeys.map((k) => (
+            <Pressable
+              key={k}
+              style={[s.docPill, k === docKey && s.docPillOn]}
+              onPress={() => {
+                setDocKey(k)
+                setOpen(0)
+              }}
+            >
+              <Body
+                style={{
+                  fontFamily: F.displayMed,
+                  fontSize: 11.5,
+                  color: k === docKey ? C.accent : C.mut,
+                }}
+              >
+                {LEGAL[k].t}
+              </Body>
+            </Pressable>
+          ))}
+        </View>
       </View>
       <View style={{ marginTop: 16 }}>
         {doc.secs.map(([h, b], i) => (
@@ -56,6 +82,17 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.07)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  docPill: {
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  docPillOn: {
+    backgroundColor: 'rgba(255,107,0,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.4)',
   },
   sec: { borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   secHead: {

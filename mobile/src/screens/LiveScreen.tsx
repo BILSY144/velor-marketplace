@@ -11,7 +11,7 @@ import {
 import { Image } from 'expo-image'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
@@ -29,8 +29,23 @@ import { useCart, useFavs } from '../store'
 // the film's country; no viewer counts anywhere (CAP/ASA rule).
 export default function LiveScreen() {
   const { height, width } = useWindowDimensions()
-  const [active, setActive] = useState(0)
+  const route = useRoute<any>()
+  // The Atlas reel deep-links here with { start } — open the feed AT that
+  // film (was silently ignored before the 2026-07-15 wiring scan caught it).
+  const start: number = Math.min(FILMS.length - 1, Math.max(0, route.params?.start ?? 0))
+  const [active, setActive] = useState(start)
   const listRef = useRef<FlatList<Film>>(null)
+
+  React.useEffect(() => {
+    const target = route.params?.start
+    if (typeof target === 'number' && target >= 0 && target < FILMS.length) {
+      setActive(target)
+      // let the list mount, then jump without animation
+      requestAnimationFrame(() =>
+        listRef.current?.scrollToIndex({ index: target, animated: false })
+      )
+    }
+  }, [route.params?.start])
 
   const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length) setActive(viewableItems[0].index ?? 0)

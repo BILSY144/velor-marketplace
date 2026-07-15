@@ -21,13 +21,7 @@ export default function DashScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [tier, setTier] = useState<Tier>('STARTER')
-  const [note, setNote] = useState<string | null>(null)
   const pro = tier === 'PRO'
-
-  const say = (m: string) => {
-    setNote(m)
-    setTimeout(() => setNote(null), 2400)
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -63,18 +57,20 @@ export default function DashScreen() {
             ))}
           </View>
 
-          {/* Stat tiles */}
+          {/* Stat tiles — each taps through, like the plate's ds.tap */}
           <View style={s.statRow}>
-            {[
-              ['0', 'Views · 7d'],
-              ['0', 'To ship'],
-              ['£0', 'In escrow'],
-              ['£0', 'Paid out'],
-            ].map(([k, l]) => (
-              <View key={l} style={s.stat}>
+            {(
+              [
+                ['0', 'Views · 7d', null],
+                ['0', 'To ship', () => nav.navigate('SellerOrders')],
+                ['£0', 'In escrow', () => nav.navigate('Payouts')],
+                ['£0', 'Paid out', () => nav.navigate('Payouts')],
+              ] as [string, string, (() => void) | null][]
+            ).map(([k, l, fn]) => (
+              <Pressable key={l} style={s.stat} onPress={fn ?? undefined}>
                 <Text style={s.dk}>{k}</Text>
                 <Text style={s.dl}>{l}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
 
@@ -134,18 +130,21 @@ export default function DashScreen() {
           <Text style={[s.kickDim, { marginTop: 24 }]}>ORDER PIPELINE</Text>
           <View style={s.pipeRow}>
             {['New', 'To ship', 'In transit', 'Delivered'].map((l) => (
-              <View key={l} style={s.pc}>
+              <Pressable key={l} style={s.pc} onPress={() => nav.navigate('SellerOrders')}>
                 <Text style={s.pcN}>0</Text>
                 <Text style={s.smdim}>{l}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
-          <Dim style={{ fontSize: 11.5, marginTop: 10 }}>
-            Escrow releases automatically after each delivery is confirmed — you'll see it here.
-          </Dim>
+          <Pressable onPress={() => nav.navigate('Payouts')}>
+            <Dim style={{ fontSize: 11.5, marginTop: 10 }}>
+              Escrow releases automatically after each delivery is confirmed —{' '}
+              <Text style={{ color: C.accent }}>Payouts →</Text>
+            </Dim>
+          </Pressable>
 
           {/* Go live — every plan */}
-          <Pressable style={s.golive} onPress={() => say('Go Live opens with your approved account')}>
+          <Pressable style={s.golive} onPress={() => nav.navigate('GoLive')}>
             <View style={s.liveDot} />
             <View style={{ flex: 1 }}>
               <Text style={s.fd}>Go live on your channel</Text>
@@ -168,7 +167,7 @@ export default function DashScreen() {
             <Text style={[s.kickDim, { flex: 1, marginTop: 0 }]}>
               LISTINGS · {pro ? 'UNLIMITED' : 'UP TO 10'}
             </Text>
-            <Pressable onPress={() => say('Listing creation opens with your approved account')}>
+            <Pressable onPress={() => nav.navigate('NewListing')}>
               <Text style={s.newTx}>+ New</Text>
             </Pressable>
           </View>
@@ -190,19 +189,13 @@ export default function DashScreen() {
               </Text>
             </View>
             {pro ? (
-              <Pressable style={s.lineBtn} onPress={() => say('Keys are issued on your approved account')}>
+              <Pressable style={s.lineBtn} onPress={() => nav.navigate('ApiKeys')}>
                 <Text style={s.lineBtnTx}>Keys</Text>
               </Pressable>
             ) : (
               <Ionicons name="lock-closed" size={14} color={C.mut} />
             )}
           </View>
-
-          {note ? (
-            <View style={s.noteBub}>
-              <Text style={s.noteTx}>{note}</Text>
-            </View>
-          ) : null}
 
           <View style={{ marginTop: 26, gap: 10 }}>
             <Btn label="Apply to sell — five minutes" onPress={() => nav.navigate('Apply', {})} />

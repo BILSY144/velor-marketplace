@@ -42,6 +42,9 @@ import PdpScreen from './src/screens/PdpScreen'
 import { AddrScreen, PayScreen, LangCurScreen } from './src/screens/SettingsScreens'
 import SeatsScreen from './src/screens/SeatsScreen'
 import DashScreen from './src/screens/DashScreen'
+import { SellerOrdersScreen, ApiKeysScreen, PayoutsScreen } from './src/screens/SellerOpsScreens'
+import NewListingScreen from './src/screens/NewListingScreen'
+import GoLiveScreen from './src/screens/GoLiveScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -153,6 +156,11 @@ export default function App() {
             <Stack.Screen name="LangCur" component={LangCurScreen} />
             <Stack.Screen name="Seats" component={SeatsScreen} />
             <Stack.Screen name="Dash" component={DashScreen} />
+            <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
+            <Stack.Screen name="ApiKeys" component={ApiKeysScreen} />
+            <Stack.Screen name="Payouts" component={PayoutsScreen} />
+            <Stack.Screen name="NewListing" component={NewListingScreen} />
+            <Stack.Screen name="GoLive" component={GoLiveScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>
