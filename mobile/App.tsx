@@ -16,7 +16,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from '@expo-google-fonts/inter'
-import { Fraunces_400Regular, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
+import { Fraunces_400Regular, Fraunces_500Medium_Italic, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
 import { C, F } from './src/theme'
@@ -94,6 +94,7 @@ export default function App() {
     Inter_500Medium,
     Inter_600SemiBold,
     Fraunces_400Regular,
+    Fraunces_500Medium_Italic,
     Fraunces_600SemiBold,
   })
 

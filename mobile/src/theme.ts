@@ -24,6 +24,7 @@ export const F = {
   bodySemi: 'Inter_600SemiBold',
   serif: 'Fraunces_600SemiBold', // --fs
   serifLight: 'Fraunces_400Regular',
+  serifItalic: 'Fraunces_500Medium_Italic',
 } as const
 
 export const flagUrl = (cc: string, w: 40 | 80 | 160 = 80) =>

@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react'
-import { View, Pressable, StyleSheet, ScrollView } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { View, Pressable, StyleSheet, ScrollView, Animated, Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'
@@ -44,13 +44,14 @@ export default function AtlasScreen() {
         }}
       />
 
-      {/* Title — taps pass through to the globe beneath */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: insets.top + 12, left: 20, right: 20 }}>
-        <Kicker>THE ATLAS</Kicker>
-        <Display style={{ marginTop: 6 }}>Shop the world.</Display>
-        <Dim style={{ marginTop: 6, fontSize: 11 }}>
-          Drag to spin · tap a light to dive in
-        </Dim>
+      {/* Hero — exactly the mockup: centered "Shop <rotating word>" */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: insets.top + 78, left: 0, right: 0, alignItems: 'center' }}>
+        <HeroLine />
+      </View>
+
+      {/* Hint — centered over the lower globe, like the mockup */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: '54%', left: 0, right: 0 }}>
+        <Text style={s.hint}>Drag anywhere · tap a light to dive in</Text>
       </View>
 
       {/* Globe view toggle — realistic earth vs dark ink */}
@@ -90,7 +91,48 @@ export default function AtlasScreen() {
   )
 }
 
+const HERO_WORDS = ['the world', 'Japan', 'Morocco', 'Peru', 'Mexico', 'Ghana', 'Italy', 'Nepal', 'Turkey', 'the world']
+
+function HeroLine() {
+  const [i, setI] = useState(0)
+  const fade = useRef(new Animated.Value(1)).current
+  const shift = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    const t = setInterval(() => {
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 450, useNativeDriver: true }),
+        Animated.timing(shift, { toValue: 8, duration: 450, useNativeDriver: true }),
+      ]).start(() => {
+        setI((n) => (n + 1) % HERO_WORDS.length)
+        shift.setValue(-8)
+        Animated.parallel([
+          Animated.timing(fade, { toValue: 1, duration: 450, useNativeDriver: true }),
+          Animated.timing(shift, { toValue: 0, duration: 450, useNativeDriver: true }),
+        ]).start()
+      })
+    }, 2400)
+    return () => clearInterval(t)
+  }, [fade, shift])
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+      <Text style={s.heroBase}>Shop </Text>
+      <Animated.Text style={[s.heroWord, { opacity: fade, transform: [{ translateY: shift }] }]}>
+        {HERO_WORDS[i]}
+      </Animated.Text>
+    </View>
+  )
+}
+
 const s = StyleSheet.create({
+  heroBase: { fontFamily: F.serifLight, fontSize: 31, letterSpacing: -0.5, color: C.text },
+  heroWord: { fontFamily: F.serifItalic, fontSize: 31, letterSpacing: -0.5, color: C.accent },
+  hint: {
+    textAlign: 'center',
+    fontFamily: F.display,
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: C.dim,
+  },
   mode: {
     position: 'absolute',
     right: 16,
