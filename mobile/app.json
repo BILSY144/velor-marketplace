@@ -27,7 +27,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#08080b"
+      "backgroundColor": "#000000"
     },
     "owner": "bilsy144",
     "extra": {

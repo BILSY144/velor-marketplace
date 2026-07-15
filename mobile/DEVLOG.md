@@ -342,3 +342,14 @@ The overlay's background was #050507 while splash.png's own black is
 the 3-point difference read as the logo "sitting on a black box." Overlay
 and pre-font-load view now use #08080b exactly. RULE: any surface that
 shows splash.png must be #08080b, nothing darker.
+
+## 2026-07-15 — Splash box KILLED for good: transparent logo PNG
+
+Matching blacks wasn't enough on-device ("still visible... two shades of
+black"). Root fix: assets/splash.png is now TRANSPARENT — the (8,8,11)
+background floor was subtracted and black-to-alpha applied (un-premultiplied
+so the gold stays exact; verified by compositing over pure black). Every
+launch surface (native splash bg, pre-font view, overlay) is now pure
+#000000. There is physically only one black behind the logo now. RULE: the
+splash PNG must stay transparent; never re-export it with a baked
+background.

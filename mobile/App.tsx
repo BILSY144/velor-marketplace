@@ -156,9 +156,10 @@ function SplashOverlay({ onDone }: { onDone: () => void }) {
 }
 
 const sp = StyleSheet.create({
-  // #08080b exactly — the splash image's own background (sampled from the
-  // PNG). Any other black shows the logo sitting in a visible box.
-  fill: { flex: 1, backgroundColor: '#08080b', alignItems: 'center', justifyContent: 'center' },
+  // Pure black. The splash image is now TRANSPARENT (background stripped
+  // from the PNG, 2026-07-15) so only ever one black exists behind the
+  // logo — no box, no seams, whatever surface shows it.
+  fill: { flex: 1, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   logo: { width: '96%', height: 300 },
   idRow: {
     position: 'absolute',
@@ -193,7 +194,7 @@ export default function App() {
   const [splash, setSplash] = React.useState(true)
 
   if (!loaded) {
-    return <View style={{ flex: 1, backgroundColor: '#08080b' }} />
+    return <View style={{ flex: 1, backgroundColor: '#000000' }} />
   }
 
   return (
