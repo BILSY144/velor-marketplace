@@ -15,7 +15,13 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { signInWithPassword, requestPasswordReset } from '../api'
 import { useSession } from '../store'
-import { biometricsAvailable, setFaceIdEnabled, unlockWithBiometrics } from '../biometrics'
+import {
+  biometricsAvailable,
+  setFaceIdEnabled,
+  unlockWithBiometrics,
+  isFaceIdEnabled,
+  saveCredentials,
+} from '../biometrics'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 
@@ -49,6 +55,13 @@ export default function SignInScreen() {
       const user = await signInWithPassword(email.trim().toLowerCase(), password)
       if (user) {
         setSession(user)
+        // Face ID already on? Refresh the keychain credentials so the
+        // automatic sign-in always uses the latest password.
+        if (await isFaceIdEnabled()) {
+          await saveCredentials(email.trim().toLowerCase(), password)
+          nav.goBack()
+          return
+        }
         // Offer Face ID / fingerprint before leaving — William's standing
         // requirement: biometric sign-in with password as the backup.
         const bio = await biometricsAvailable()
@@ -172,18 +185,22 @@ export default function SignInScreen() {
               <Ionicons name="scan-circle-outline" size={22} color={C.accent} />
               <Text style={s.panelT}>Sign in with {bioOffer} next time?</Text>
               <Dim style={{ fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
-                Your {bioOffer} unlocks the account on this phone — your password stays the
-                backup and is never stored on the device.
+                {bioOffer} opens the app AND signs you in — no more passwords. Your credentials
+                live in this phone's encrypted keychain, used only after your {bioOffer} passes,
+                and are wiped the moment you turn this off or sign out.
               </Dim>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                 <Pressable
                   style={[s.panelBtn, { flex: 1 }]}
                   onPress={async () => {
                     // Prove the face right now — enabling is only real if the
-                    // biometric actually fires and passes.
+                    // biometric actually fires and passes. Credentials go
+                    // into the hardware keychain so Face ID alone signs in
+                    // from here on — no more passwords.
                     const ok = await unlockWithBiometrics()
                     if (ok) {
                       await setFaceIdEnabled(true)
+                      await saveCredentials(email.trim().toLowerCase(), password)
                       nav.goBack()
                     }
                   }}

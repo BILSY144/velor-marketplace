@@ -55,3 +55,42 @@ export async function unlockWithBiometrics(): Promise<boolean> {
     return false
   }
 }
+
+// -----------------------------------------------------------------------
+// Automatic sign-in behind Face ID (William, 2026-07-15: "no more sign
+// ins, as Face ID has already established I am the account holder").
+// With the lock enabled, credentials live in the device's hardware-
+// encrypted keychain (SecureStore) and are ONLY read in the unlock path,
+// immediately after a successful biometric — so Face ID alone restores
+// the account even when the session cookie has expired. Disabling Face
+// ID, signing out, or the password fallback all WIPE them.
+// -----------------------------------------------------------------------
+
+const CRED_EMAIL = 'velor.auth.email'
+const CRED_SECRET = 'velor.auth.secret'
+
+export async function saveCredentials(email: string, secret: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(CRED_EMAIL, email)
+    await SecureStore.setItemAsync(CRED_SECRET, secret)
+  } catch {}
+}
+
+export async function loadCredentials(): Promise<{ email: string; secret: string } | null> {
+  try {
+    const [email, secret] = await Promise.all([
+      SecureStore.getItemAsync(CRED_EMAIL),
+      SecureStore.getItemAsync(CRED_SECRET),
+    ])
+    return email && secret ? { email, secret } : null
+  } catch {
+    return null
+  }
+}
+
+export async function clearCredentials(): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(CRED_EMAIL)
+    await SecureStore.deleteItemAsync(CRED_SECRET)
+  } catch {}
+}

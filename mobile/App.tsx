@@ -47,8 +47,15 @@ import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
 import SignInScreen from './src/screens/SignInScreen'
 import { useSession } from './src/store'
-import { getSession, signOutRemote } from './src/api'
-import { isFaceIdEnabled, setFaceIdEnabled, unlockWithBiometrics, biometricsAvailable } from './src/biometrics'
+import { getSession, signOutRemote, signInWithPassword } from './src/api'
+import {
+  isFaceIdEnabled,
+  setFaceIdEnabled,
+  unlockWithBiometrics,
+  biometricsAvailable,
+  loadCredentials,
+  clearCredentials,
+} from './src/biometrics'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -191,16 +198,23 @@ function BiometricLock({
   onUnlocked,
   onUsePassword,
 }: {
-  onUnlocked: () => void
+  onUnlocked: () => Promise<void>
   onUsePassword: () => void
 }) {
   const [label, setLabel] = React.useState('Face ID')
+  const [busy, setBusy] = React.useState(false)
   const tried = React.useRef(false)
 
   const attempt = React.useCallback(async () => {
+    if (busy) return
     const ok = await unlockWithBiometrics()
-    if (ok) onUnlocked()
-  }, [onUnlocked])
+    if (ok) {
+      // Face ID has established the account holder — finish the sign-in
+      // silently (session cookie, or keychain credentials if it expired).
+      setBusy(true)
+      await onUnlocked()
+    }
+  }, [onUnlocked, busy])
 
   React.useEffect(() => {
     biometricsAvailable().then((b) => setLabel(b.label))
@@ -208,18 +222,23 @@ function BiometricLock({
       tried.current = true
       setTimeout(attempt, 350)
     }
-  }, [attempt])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <View style={[StyleSheet.absoluteFill, lk.fill]}>
       <Image source={require('./assets/splash.png')} style={lk.logo} resizeMode="contain" />
-      <Text style={lk.title}>Unlock your Velor account</Text>
-      <Pressable style={lk.btn} onPress={attempt}>
-        <Text style={lk.btnTx}>Unlock with {label}</Text>
-      </Pressable>
-      <Pressable onPress={onUsePassword} style={{ marginTop: 16 }}>
-        <Text style={lk.alt}>Use password instead</Text>
-      </Pressable>
+      <Text style={lk.title}>{busy ? 'Signing you in…' : 'Unlock your Velor account'}</Text>
+      {!busy ? (
+        <>
+          <Pressable style={lk.btn} onPress={attempt}>
+            <Text style={lk.btnTx}>Unlock with {label}</Text>
+          </Pressable>
+          <Pressable onPress={onUsePassword} style={{ marginTop: 16 }}>
+            <Text style={lk.alt}>Use password instead</Text>
+          </Pressable>
+        </>
+      ) : null}
     </View>
   )
 }
@@ -329,11 +348,27 @@ export default function App() {
           </Stack.Navigator>
           {locked ? (
             <BiometricLock
-              onUnlocked={() => setLocked(false)}
+              onUnlocked={async () => {
+                // Face ID passed — make sure the account is signed in
+                // without asking for anything: live session cookie first,
+                // keychain credentials as the silent fallback.
+                try {
+                  let u = await getSession()
+                  if (!u) {
+                    const creds = await loadCredentials()
+                    if (creds) {
+                      u = await signInWithPassword(creds.email, creds.secret)
+                      if (!u) await clearCredentials() // password changed server-side
+                    }
+                  }
+                  if (u) setSession(u)
+                } catch {}
+                setLocked(false)
+              }}
               onUsePassword={() => {
-                // Password fallback: Face ID comes off, the session signs
-                // out, and the password door is the way back in.
-                setFaceIdEnabled(false).finally(() => {
+                // Password fallback: Face ID comes off, keychain wiped, the
+                // session signs out, and the password door is the way in.
+                Promise.all([setFaceIdEnabled(false), clearCredentials()]).finally(() => {
                   signOutRemote().finally(() => {
                     setSession(null)
                     setLocked(false)

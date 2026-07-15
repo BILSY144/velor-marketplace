@@ -436,3 +436,19 @@ lock" row on the You page shows ON/OFF and flips it, each flip guarded by
 the face itself. "Use password instead" on the lock screen disables the
 flag, signs out, and returns to the password door. Sign-out also clears
 the flag.
+
+## 2026-07-15 — Face ID = automatic sign-in, no more passwords (William)
+
+"That should be automatic sign in to the account, no more sign ins, as
+Face ID has already established I am the account holder." Built: enabling
+Face ID now stores the credentials in the device's hardware-encrypted
+keychain (SecureStore). The unlock path, after the biometric PASSES, first
+tries the live session cookie, then silently re-signs-in with the keychain
+credentials ("Signing you in…" state on the lock screen). Password is only
+ever typed again if Face ID is off. Wipe rules, enforced everywhere: turn
+Face ID off (You toggle), "Use password instead" on the lock, sign out, or
+a server-side password change (silent sign-in fails once) — all clear the
+keychain. Signing in again with Face ID already on refreshes the stored
+credentials. SUPERSEDES the earlier "password never stored" note — William
+explicitly chose automatic sign-in; storage is keychain-encrypted and
+biometric-gated by the app's own lock.

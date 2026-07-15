@@ -6,7 +6,13 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { useFavs, useFollows, useSession } from '../store'
 import { signOutRemote } from '../api'
-import { biometricsAvailable, isFaceIdEnabled, setFaceIdEnabled, unlockWithBiometrics } from '../biometrics'
+import {
+  biometricsAvailable,
+  isFaceIdEnabled,
+  setFaceIdEnabled,
+  unlockWithBiometrics,
+  clearCredentials,
+} from '../biometrics'
 import { Chrome } from '../components/Chrome'
 
 // You — plate 16 + spec/account.txt, exact: YOU kicker, Fraunces 30 name,
@@ -36,10 +42,12 @@ export default function YouScreen() {
 
   const toggleBio = async () => {
     if (bioOn) {
-      // Turning protection OFF requires the face that owns it.
+      // Turning protection OFF requires the face that owns it — and wipes
+      // the keychain credentials with it.
       const ok = await unlockWithBiometrics()
       if (!ok) return
       await setFaceIdEnabled(false)
+      await clearCredentials()
       setBioOn(false)
     } else {
       const ok = await unlockWithBiometrics()
@@ -50,7 +58,7 @@ export default function YouScreen() {
   }
 
   const signOut = () => {
-    setFaceIdEnabled(false).finally(() => {
+    Promise.all([setFaceIdEnabled(false), clearCredentials()]).finally(() => {
       setBioOn(false)
       signOutRemote().finally(() => setSession(null))
     })
