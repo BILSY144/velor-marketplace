@@ -87,6 +87,29 @@ function h(text: string) {
     .replace(/"/g, '&quot;')
 }
 
+// Region-specific hero art (2026-07-16, William): the hero band matches the
+// prospect's part of the world when a regional image exists; everyone else
+// gets the global default. William generates each region's art (no text in
+// the image, same copper/globe style); new regions are added here as their
+// files land in public/email-assets/hero-<region>.jpg.
+const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = [
+  {
+    file: 'hero-morocco.jpg',
+    codes: ['MA', 'EG', 'AE', 'SA', 'JO', 'QA', 'KW', 'TN', 'DZ', 'BH', 'OM', 'LB'],
+    names: ['MOROCCO', 'EGYPT', 'EMIRATES', 'SAUDI', 'JORDAN', 'QATAR', 'KUWAIT', 'TUNISIA', 'ALGERIA', 'BAHRAIN', 'OMAN', 'LEBANON', 'DUBAI'],
+  },
+]
+
+function heroForCountry(country: string | null | undefined): string {
+  if (!country) return 'outreach-hero.jpg'
+  const key = country.trim().toUpperCase()
+  for (const r of HERO_REGIONS) {
+    if (r.codes.includes(key)) return r.file
+    if (r.names.some((n) => key.includes(n))) return r.file
+  }
+  return 'outreach-hero.jpg'
+}
+
 // Bulletproof table+bgcolor wrapper for any block that needs its own solid
 // background colour distinct from its parent. `extra` carries any additional
 // td-level styles (padding, borders) so callers keep exact prior spacing.
@@ -243,7 +266,7 @@ function buildMultiplierBody(
       </td>`
     return `
       <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#010101' style='background-color:#010101;padding:0;'>
-        <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
+        <img src='${ASSETS}/${heroForCountry(p.country)}' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
       </td></tr></table>
       <div style='padding:30px 36px 36px;text-align:center;'>
         <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:0 auto;'>
@@ -404,7 +427,7 @@ ${OUTREACH_HEADER}`
       </td>`
     body = `
       <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#010101' style='background-color:#010101;padding:0;'>
-        <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
+        <img src='${ASSETS}/${heroForCountry(p.country)}' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
       </td></tr></table>
       <div style='padding:30px 36px 36px;text-align:center;'>
         <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:0 auto;'>
