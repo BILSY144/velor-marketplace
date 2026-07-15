@@ -989,19 +989,68 @@ function searchRun(q){
 </style>
 <script>
 /* ===== CART ===== */
-S.cart='<div class="scr" id="s-cart"><div class="sc" style="padding-bottom:150px">'
-+'<div class="pad" style="padding-top:64px"><div class="k d">YOUR BASKET</div><h1 class="dspl" style="font-size:32px;margin-top:8px">Two makers.<br>One payment.</h1></div>'
-+'<div class="escrow-bar">'+I.shield+'<span>Held in escrow until each parcel&rsquo;s delivery is confirmed.</span></div>'
-+'<div class="sgroup"><div class="sgh"><span class="fl">'+flag('CN')+'</span><span class="snm">Lin Ceramics Studio</span><span class="sfrom">ships from China</span></div>'
-+'<div class="ci"><img src="'+px(30767475)+'"><div class="cid"><div class="t">Gongfu tea set, 6 pieces</div><div class="v">Hand-thrown · Jingdezhen</div><div class="pr">&pound;54</div></div><div class="cq"><button>&minus;</button><span>1</span><button>+</button></div></div>'
-+'<div class="ship"><button class="shop on"><span class="rd"></span><div><div class="t">Tracked international</div><div class="s">8–12 days · door to door</div></div><span class="p">&pound;6.40</span></button>'
-+'<button class="shop"><span class="rd"></span><div><div class="t">Express · DHL</div><div class="s">3–5 days</div></div><span class="p">&pound;18.90</span></button></div></div>'
-+'<div class="sgroup"><div class="sgh"><span class="fl">'+flag('MA')+'</span><span class="snm">Atlas Weave</span><span class="sfrom">ships from Morocco</span></div>'
-+'<div class="ci"><img src="'+px(33282224)+'"><div class="cid"><div class="t">Berber rug, 90 × 150</div><div class="v">Hand-knotted wool · Atlas mts</div><div class="pr">&pound;149</div></div><div class="cq"><button>&minus;</button><span>1</span><button>+</button></div></div>'
-+'<div class="ship"><button class="shop on"><span class="rd"></span><div><div class="t">Tracked international</div><div class="s">6–10 days</div></div><span class="p">&pound;12.20</span></button></div></div>'
-+'<div class="totals"><div class="tr"><span class="mut">Items</span><span>&pound;203.00</span></div><div class="tr"><span class="mut">Delivery · 2 parcels</span><span>&pound;18.60</span></div><div class="tr"><span class="mut">Import duty · est.</span><span>&pound;0.00</span></div><div class="tr big"><span>Total</span><span>&pound;221.60</span></div></div>'
-+'<div class="pad"><p class="sm dim" style="margin-top:12px">Two sellers, two parcels, two tracking numbers — one charge. Each seller only ever sees their own order.</p></div>'
-+'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="go(\'checkout\')">Checkout &middot; &pound;221.60</button></div></div>'
+S.cart='<div class="scr" id="s-cart"><div class="sc" id="cartslot" style="padding-bottom:150px"></div><div class="pdock" id="cartdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"></div></div>'
+
+/* ===== BASKET — live model, per-seller parcels, one payment =====
+   Two SAMPLE items seed the basket so the multi-seller design is
+   reviewable; quantities, shipping choices, removal and totals are real. */
+var CART=[
+ {id:'gongfu',c:'CN',seller:'Lin Ceramics Studio',from:'ships from China',img:30767475,
+  t:'Gongfu tea set, 6 pieces',v:'Hand-thrown &middot; Jingdezhen &middot; SAMPLE',price:54,qty:1,ship:0,
+  ships:[{t:'Tracked international',s:'8&ndash;12 days &middot; door to door',p:6.40},{t:'Express &middot; DHL',s:'3&ndash;5 days',p:18.90}]},
+ {id:'rug',c:'MA',seller:'Atlas Weave',from:'ships from Morocco',img:33282224,
+  t:'Berber rug, 90 &times; 150',v:'Hand-knotted wool &middot; Atlas mts &middot; SAMPLE',price:149,qty:1,ship:0,
+  ships:[{t:'Tracked international',s:'6&ndash;10 days',p:12.20}]}
+];
+function cartCount(){ var n=0; for(var i=0;i<CART.length;i++) n+=CART[i].qty; return n }
+function cartTotals(){
+  var items=0, del=0, sellers={}, i;
+  for(i=0;i<CART.length;i++){ items+=CART[i].price*CART[i].qty;
+    if(!sellers[CART[i].seller]){ sellers[CART[i].seller]=1; del+=CART[i].ships[CART[i].ship].p } }
+  var ns=Object.keys(sellers).length;
+  return {items:items, del:del, ns:ns, total:items+del};
+}
+function gbp(x){ return '&pound;'+x.toFixed(2).replace(/\.00$/,'') }
+function cartQty(i,d){ CART[i].qty+=d; if(CART[i].qty<=0){ CART.splice(i,1) } cartN=cartCount(); renderTabs(cur); renderCart() }
+function cartShip(i,s){ CART[i].ship=s; renderCart() }
+function addCart(){
+  var g=null,i; for(i=0;i<CART.length;i++) if(CART[i].id==='gongfu') g=CART[i];
+  if(g){ g.qty++ } else { CART.unshift({id:'gongfu',c:'CN',seller:'Lin Ceramics Studio',from:'ships from China',img:30767475,t:'Gongfu tea set, 6 pieces',v:'Hand-thrown &middot; Jingdezhen &middot; SAMPLE',price:54,qty:1,ship:0,ships:[{t:'Tracked international',s:'8&ndash;12 days &middot; door to door',p:6.40},{t:'Express &middot; DHL',s:'3&ndash;5 days',p:18.90}]}) }
+  cartN=cartCount(); renderTabs(cur); toast('Added to your basket'); if(cur==='cart') renderCart();
+}
+function renderCart(){
+  var host=document.getElementById('cartslot'), dock=document.getElementById('cartdock');
+  if(!host) return;
+  if(!CART.length){
+    host.innerHTML='<div class="pad" style="padding-top:64px"><div class="k d">YOUR BASKET</div><h1 class="dspl" style="font-size:32px;margin-top:8px">Nothing here<br>yet.</h1></div>'
+    +'<div class="empty" style="margin:34px 20px 0"><div class="ering">'+I.globe+'</div><h2 class="serif" style="font-size:22px;margin-top:14px">The world is open.</h2><p class="sm mut" style="margin-top:9px;max-width:28ch;margin-left:auto;margin-right:auto">190 countries of real makers are arriving. Spin the globe and find the first thing worth keeping.</p><button class="btn sm" style="margin-top:16px;max-width:220px;margin-left:auto;margin-right:auto" onclick="go(\'atlas\')">Spin the globe</button></div>';
+    dock.innerHTML=''; return;
+  }
+  var T=cartTotals(), i, groups={}, order=[];
+  for(i=0;i<CART.length;i++){ if(!groups[CART[i].seller]){ groups[CART[i].seller]=[]; order.push(CART[i].seller) } groups[CART[i].seller].push(i) }
+  var h='<div class="pad" style="padding-top:64px"><div class="k d">YOUR BASKET</div><h1 class="dspl" style="font-size:32px;margin-top:8px">'+(T.ns>1?(T.ns===2?'Two':T.ns)+' makers.<br>One payment.':'One maker.<br>One payment.')+'</h1></div>'
+  +'<div class="escrow-bar">'+I.shield+'<span>Held in escrow until each parcel&rsquo;s delivery is confirmed.</span></div>';
+  order.forEach(function(sn){
+    var idxs=groups[sn], first=CART[idxs[0]];
+    h+='<div class="sgroup"><div class="sgh"><span class="fl">'+flag(first.c)+'</span><span class="snm">'+sn+'</span><span class="sfrom">'+first.from+'</span></div>';
+    idxs.forEach(function(ix){
+      var it=CART[ix];
+      h+='<div class="ci"><img src="'+px(it.img)+'"><div class="cid"><div class="t">'+it.t+'</div><div class="v">'+it.v+'</div><div class="pr">'+gbp(it.price*it.qty)+(it.qty>1?' <span class="sm dim">('+gbp(it.price)+' each)</span>':'')+'</div></div>'
+      +'<div class="cq"><button onclick="cartQty('+ix+',-1)">'+(it.qty===1?'&times;':'&minus;')+'</button><span>'+it.qty+'</span><button onclick="cartQty('+ix+',1)">+</button></div></div>';
+    });
+    var sh=CART[idxs[0]];
+    h+='<div class="ship">'+sh.ships.map(function(o,si){
+      return '<button class="shop'+(si===sh.ship?' on':'')+'" onclick="cartShip('+idxs[0]+','+si+')"><span class="rd"></span><div><div class="t">'+o.t+'</div><div class="s">'+o.s+'</div></div><span class="p">'+gbp(o.p)+'</span></button>';
+    }).join('')+'</div></div>';
+  });
+  h+='<div class="totals"><div class="tr"><span class="mut">Items</span><span>'+gbp(T.items)+'</span></div>'
+  +'<div class="tr"><span class="mut">Delivery &middot; '+T.ns+(T.ns>1?' parcels':' parcel')+'</span><span>'+gbp(T.del)+'</span></div>'
+  +'<div class="tr"><span class="mut">Import duty &middot; est.</span><span>&pound;0.00</span></div>'
+  +'<div class="tr big"><span>Total</span><span>'+gbp(T.total)+'</span></div></div>'
+  +'<div class="pad"><p class="sm dim" style="margin-top:12px">'+(T.ns>1?T.ns+' sellers, '+T.ns+' parcels, '+T.ns+' tracking numbers &mdash; one charge. Each seller only ever sees their own order.':'One seller, one parcel, one tracking number. The seller only ever sees their own order.')+'</p></div>';
+  host.innerHTML=h;
+  dock.innerHTML='<button class="btn" onclick="go(\'checkout\')">Checkout &middot; '+gbp(T.total)+'</button>';
+}
 
 /* ===== CHECKOUT ===== */
 S.checkout='<div class="scr" id="s-checkout"><div class="sc" style="padding-bottom:150px">'
@@ -1261,6 +1310,7 @@ function go(id){
   if(id==='live'){ var lsc=document.getElementById('s-live'); if(lsc&&!lsc.childElementCount) renderLive() }
   if(id==='craft'){ var csl=document.getElementById('craftslot'); if(csl&&!csl.childElementCount){ csl.innerHTML=craftScreen() } }
   if(id==='search'){ buildSearchBrowse() }
+  if(id==='cart'){ renderCart() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
