@@ -452,7 +452,32 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   GM: ['Serekunda batik textiles', 'Hand-thrown pottery (Brikama & Basse)', 'Palm-leaf basketware', 'Hand-made silver jewellery (Serekunda & Gunjur)', 'Hand-carved wood items (Gunjur)'],
   ML: ['Mudcloth (bogolan)', 'Instruments'],
   BF: ['Bronze casting', 'Woven cotton'],
-  GN: ['Djembe drums'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Guinea had only 1 item
+  // (backlog item 25's content-depth floor list). Two product-level
+  // additions, each corroborated across at least two independent sources,
+  // none invented, no PGI name used loosely (this is the genuine, correctly
+  // named product from its own protected region, not a borrowed term):
+  // Leppi indigo-dyed cotton cloth is a real, hand-woven-then-indigo-dyed
+  // textile from the Fouta-Djallon region, made by Peul artisans -- cotton
+  // hand-woven on traditional looms, dyed with fermented indigofera-leaf
+  // paste (brown tones from n'galama tree bark), worn at weddings and
+  // religious ceremonies. It received an official Indication Geographique
+  // Protegee (Protected Geographic Indication) from OAPI (African
+  // Intellectual Property Organization) in March 2025 -- reported
+  // independently by Pulse Cote d'Ivoire and corroborated by guzangs.com's
+  // "Guinea: A Textile Civilization in Four Systems" (which separately names
+  // it "Leppi (Moyenne-Guinee/Fouta-Djalon)", handwoven on narrow-strip
+  // looms). Hand tie-dyed cotton textiles from Kindia are a distinct,
+  // still-active craft: guzangs.com and africanvibes.com both independently
+  // profile the Association of Women Tie-Dyers of Kindia (co-founded by
+  // designer Mariama Camara and her sister Aissata M.B. Camara), whose work
+  // was the subject of a documented 2008-2013 collaboration with Tory Burch
+  // and the There Is No Limit Foundation reaching over 300 women tie-dyers
+  // and retailers including Bloomingdale's and Galeries Lafayette Paris.
+  // No shell/ivory/coral/bone material, no weapons, no raw-material-only
+  // entries. Djembe drums (pre-existing) kept unchanged, not re-verified
+  // this run.
+  GN: ['Djembe drums', 'Leppi indigo-dyed cotton cloth (Fouta Djallon)', 'Hand tie-dyed cotton textiles (Kindia)'],
   SL: ['Gara tie-dye textiles'],
   TG: ['Kente cloth', 'Batik textiles'],
   CV: ['Grogue sugarcane spirit', 'Handwoven baskets'],
