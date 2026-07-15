@@ -450,3 +450,14 @@ William: sections must be clickable ("6 to ship should take them to the orders n
 - Dashboard wiring: To ship stat (both tiers) → sellorders pre-filtered to ship; In escrow / Paid out stats + escrow-release line → payouts; every pipeline cell → sellorders with that filter; To-do Ship row → sellorders; API access row → apikeys. .ds.tap arrows via CSS ::after. go('dash') now clears the slot so counts recompute on every visit.
 
 Verified live (?v=dash2) end to end via JS + screenshots. Cosmetic follow-up: inline flags in order rows sized to fill wrapper.
+
+## 2026-07-15 — New listing page polished
+
+Kept the existing structure (it was good); fixed gaps found on review:
+- Photos: was 2 imgs + unverified id 18848781 while claiming "3 added" — now 3 verified JP images (14705063/14563207/8330375) in fixed 92px wrapper divs. First render blew up full-width: bare <img> flex items ignore flex-basis because min-width:auto resolves to intrinsic width — SAME trap as the dispute tiles and the craft-page arrow. Rule: never rely on flex-basis to size an <img>; always wrap in a fixed-size div.
+- Earnings hint under price/stock: "You'd keep £65.28 of £68 — Pro, 4% commission. Shipping is paid on top and passes to you in full."
+- New THE STORY textarea (buyers read this) + PARCEL row ("1.2 kg · 20×20×15 cm — powers real delivery quotes", mirrors production weightGrams/dims requirement for Shippo rates).
+- Readiness checklist now honest: photos 3 added, ship-from on file, speciality Clay, story added, parcel size set.
+- Speciality picker UNTOUCHED (max 2, closed vocab, request-a-term) — that's the real listing-time rule (design decision #5), distinct from the apply page where the cap was removed.
+
+PRODUCTION (main, commit a81e198 + CLAUDE.md note): Shipping Buffer built at William's request — SellerShippingProfile.handlingFeeGBP (0–25, clamped at write + quote time), added server-side to real Shippo quotes only, currency-converted via lib/fx, commission-free pass-through. Settings page field beside Handling Time. Verified Ready/Production.
