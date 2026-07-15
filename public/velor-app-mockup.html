@@ -1534,13 +1534,67 @@ function renderAccount(){
 }
 
 /* ===== ASSISTANT ===== */
-S.assist='<div class="scr" id="s-assist"><div class="sc" id="assistSc" style="padding-bottom:110px">'
-+'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Ask Velor</h1><p class="sm dim" style="margin-top:6px">Your culture-literate guide. Ask in any language — it answers in yours.</p></div>'
-+'<div class="amsg bot">I can help you find something specific, explain where a craft comes from, or track an order. What are you after?</div>'
-+'<div class="amsg me">A gift for someone who loves tea</div>'
-+'<div class="amsg bot">Lovely. A few real traditions: a <b>gongfu tea set</b> from Jingdezhen '+flag('CN')+', a <b>cast-iron tetsubin</b> from Japan '+flag('JP')+', or Turkish <b>tulip glasses</b> '+flag('TR')+'. Jingdezhen&rsquo;s channel is first to open — want to see it?</div>'
-+'<div class="pad"><div class="flow" style="margin-top:4px"><button class="pill" onclick="toast(\'Opens the set\')">Show the tea set</button><button class="pill" onclick="toast(\'Following Japan\')">Follow Japan</button><button class="pill" onclick="assistAsk()">Under &pound;40?</button></div></div>'
-+'</div><div class="chatbar"><input placeholder="Ask anything, in any language…" id="assistIn"><button onclick="assistAsk()">'+I.send+'</button></div></div>'
+S.assist='<div class="scr" id="s-assist"><div class="sc" id="assistslot" style="padding-bottom:110px"></div>'
++'<div class="chatbar"><input placeholder="Ask anything, in any language&hellip;" id="assistIn" onkeydown="if(event.key===\'Enter\')assistAsk()"><button onclick="assistAsk()">'+I.send+'</button></div></div>'
+
+/* ===== ASK VELOR — the REAL assistant. Same-origin call to
+   /api/assistant/chat on this deployment: the exact same Claude-powered
+   brain, buyer persona, 19-language rule as the website widget. ===== */
+var AMSGS=[{role:'assistant',content:'I can help you find something specific, explain where a craft comes from, or walk you through how your money is protected. Ask me in any language &mdash; I answer in yours.'}];
+var AWAIT=false;
+function assistAvatar(sz){ return '<img src="/velor-assistant.png" alt="" style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;object-fit:cover;flex:0 0 '+sz+'px;border:1px solid var(--line)">' }
+function renderAssist(){
+  var host=document.getElementById('assistslot'); if(!host) return;
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button>'
+  +'<div style="display:flex;align-items:center;gap:13px;margin-top:16px">'+assistAvatar(48)
+  +'<div><h1 class="dspl" style="font-size:26px">Ask Velor</h1><p class="sm dim" style="margin-top:3px">The same guide as the website &mdash; any language, honest answers.</p></div></div></div>';
+  AMSGS.forEach(function(m){
+    if(m.role==='assistant'){
+      h+='<div style="display:flex;gap:8px;align-items:flex-end;padding-right:20px">'
+        +'<span style="margin:6px 0 6px 20px;flex:0 0 24px">'+assistAvatar(24)+'</span>'
+        +'<div class="amsg bot" style="margin-left:0">'+m.content+'</div></div>';
+    } else {
+      h+='<div class="amsg me">'+m.content+'</div>';
+    }
+  });
+  if(AWAIT){
+    h+='<div style="display:flex;gap:8px;align-items:flex-end;padding-right:20px">'
+      +'<span style="margin:6px 0 6px 20px;flex:0 0 24px">'+assistAvatar(24)+'</span>'
+      +'<div class="amsg bot" style="margin-left:0;color:var(--mut)">Velor is typing&hellip;</div></div>';
+  }
+  if(AMSGS.length===1&&!AWAIT){
+    h+='<div class="pad"><div class="flow" style="margin-top:8px">'
+    +'<button class="pill" onclick="assistSend(\'A gift for someone who loves tea\')">A gift for a tea lover</button>'
+    +'<button class="pill" onclick="assistSend(\'How is my money protected when I buy?\')">How is my money protected?</button>'
+    +'<button class="pill" onclick="assistSend(\'&iquest;C&oacute;mo funciona el escrow de Velor?\')">&iquest;C&oacute;mo funciona el escrow?</button>'
+    +'</div></div>';
+  }
+  host.innerHTML=h;
+  var sc=host.parentNode; sc.scrollTop=sc.scrollHeight;
+}
+function assistSend(text){
+  var t=(text||'').replace(/&iquest;/g,'¿').replace(/&oacute;/g,'ó').trim();
+  if(!t||AWAIT) return;
+  AMSGS.push({role:'user',content:t});
+  AWAIT=true; renderAssist();
+  fetch('/api/assistant/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:AMSGS.map(function(m){return {role:m.role,content:m.content}})})})
+  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d} }) })
+  .then(function(x){
+    AWAIT=false;
+    if(x.ok&&x.d&&x.d.reply){ AMSGS.push({role:'assistant',content:x.d.reply.replace(/</g,'&lt;').replace(/\n/g,'<br>')}) }
+    else { AMSGS.push({role:'assistant',content:(x.d&&x.d.error)?x.d.error:'I&rsquo;m not reachable right now &mdash; give me a moment and try again.'}) }
+    renderAssist();
+  })
+  .catch(function(){ AWAIT=false; AMSGS.push({role:'assistant',content:'I&rsquo;m not reachable right now &mdash; give me a moment and try again.'}); renderAssist() });
+}
+function assistAsk(){
+  var el=document.getElementById('assistIn'); if(!el) return;
+  var t=el.value.trim(); if(!t) return;
+  el.value='';
+  assistSend(t.replace(/</g,'&lt;'));
+}
+
 /* ===== SPLASH — animated logo reveal ===== */
 S.splash='<div class="scr" id="s-splash" onclick="endSplash()" style="background:#000;align-items:center;justify-content:center">'
 +'<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,107,0,.09),transparent 55%)"></div>'
@@ -1678,8 +1732,6 @@ function pickR(el){ el.parentNode.querySelectorAll('.radio').forEach(function(r)
 function calc(v){ v=parseInt(v); var a=[v*0.9,v*0.96-49,v*1.0-99]; var names=['Starter','Pro','Enterprise']; var best=a.indexOf(Math.max.apply(null,a))
   document.getElementById('cAmt').innerHTML='&pound;'+Math.round(a[best]).toLocaleString()+' <small>of &pound;'+v.toLocaleString()+' · '+names[best]+'</small>'
   for(var i=0;i<3;i++){ document.getElementById('tk'+i).innerHTML='&pound;'+Math.round(Math.max(0,a[i])).toLocaleString(); document.getElementById('ti'+i).className='tier'+(i===best?' best':'') } }
-function assistAsk(){ var sc=document.getElementById('assistSc'); if(!sc) return; var me=document.createElement('div'); me.className='amsg me'; me.textContent='Under £40?'; sc.appendChild(me)
-  setTimeout(function(){ var b=document.createElement('div'); b.className='amsg bot'; b.innerHTML='Yes — Turkish tulip tea glasses run about £32 for six, and a Jingdezhen porcelain cup pair is £24. Both from sellers opening their country&rsquo;s channel first.'; sc.appendChild(b); sc.scrollTop=sc.scrollHeight },560); sc.scrollTop=sc.scrollHeight }
 
 /* country screen is rebuilt each visit from SELCH */
 function reopen(id){ if(id==='country'){ document.getElementById('countryslot').innerHTML=countryScreen() } if(id==='craft'){ document.getElementById('craftslot').innerHTML=craftScreen() } go(id) }
@@ -1707,6 +1759,7 @@ function go(id){
   if(id==='notif'){ renderNotif() }
   if(id==='account'){ renderAccount() }
   if(id==='langcur'){ renderLangCur() }
+  if(id==='assist'){ renderAssist() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
