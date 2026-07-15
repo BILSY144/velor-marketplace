@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { C, F } from '../theme'
 import { Kicker, Display, Body, Dim, Serif } from '../ui'
@@ -15,28 +15,33 @@ export default function YouScreen() {
     },
     {
       title: 'Orders & tracking',
-      sub: 'Arrives with buyer launch, 6 August — escrow-protected from day one',
-      onPress: () => Linking.openURL('https://velorcommerce.store/orders'),
+      sub: 'Escrow-protected from day one — live orders land here at launch',
+      onPress: () => nav.navigate('Orders'),
     },
     {
       title: 'Passport',
-      sub: 'Stamp a country every time you buy from it — launches with buyers',
-      onPress: () => Linking.openURL('https://velorcommerce.store'),
+      sub: 'Stamp a country every time you buy from it',
+      onPress: () => nav.navigate('Passport'),
     },
     {
       title: 'Sell on Velor',
       sub: 'Your country’s channel. One founding seat per country, all still open',
-      onPress: () => Linking.openURL('https://velorcommerce.store/sell'),
+      onPress: () => nav.navigate('Sell'),
     },
     {
       title: 'Terms of service',
-      sub: 'The real, current terms on velorcommerce.store',
-      onPress: () => Linking.openURL('https://velorcommerce.store/legal/terms'),
+      sub: 'The full, current terms — read them right here',
+      onPress: () => nav.navigate('Legal', { doc: 'terms' }),
     },
     {
       title: 'Privacy',
       sub: 'What we hold, and what we never see',
-      onPress: () => Linking.openURL('https://velorcommerce.store/legal/privacy'),
+      onPress: () => nav.navigate('Legal', { doc: 'privacy' }),
+    },
+    {
+      title: 'Help & buyer protection',
+      sub: 'Escrow, disputes, returns — how you are covered',
+      onPress: () => nav.navigate('Legal', { doc: 'help' }),
     },
   ]
 

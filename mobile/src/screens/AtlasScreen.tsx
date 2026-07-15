@@ -1,18 +1,19 @@
 import React, { useMemo } from 'react'
 import { View, SectionList, Pressable, StyleSheet, ScrollView } from 'react-native'
 import { Image } from 'expo-image'
+import { WebView } from 'react-native-webview'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigation } from '@react-navigation/native'
 import { C, F, flagUrl } from '../theme'
-import { COUNTRIES, countriesByRegion, FILMS, HINTS } from '../data'
+import { countriesByRegion, FILMS, HINTS } from '../data'
 import { fetchLattice } from '../api'
+import { globeHtml } from '../globeHtml'
 import { Kicker, Display, Body, Dim, Serif } from '../ui'
-
-const logo = require('../../assets/velor-logo.png')
 
 export default function AtlasScreen() {
   const nav = useNavigation<any>()
   const sections = useMemo(countriesByRegion, [])
+  const html = useMemo(globeHtml, [])
   const lattice = useQuery({ queryKey: ['lattice'], queryFn: fetchLattice })
   const tradingByCode = useMemo(() => {
     const m: Record<string, number> = {}
@@ -28,28 +29,41 @@ export default function AtlasScreen() {
       stickySectionHeadersEnabled={false}
       ListHeaderComponent={
         <View>
-          <View style={s.hero}>
-            <Image source={logo} style={s.logo} contentFit="contain" />
-            <Kicker style={{ marginTop: 26 }}>THE ATLAS</Kicker>
-            <Display style={{ marginTop: 8 }}>Shop the world.</Display>
-            <Dim style={{ marginTop: 8, maxWidth: 300 }}>
-              190 countries, one channel each. Every page below shows only what real,
-              verified sellers actually offer — nothing invented.
-            </Dim>
-            <View style={s.statRow}>
-              <Stat
-                value={String(lattice.data?.totalCountries ?? 190)}
-                label="COUNTRIES"
-              />
-              <Stat
-                value={lattice.isLoading ? '—' : String(lattice.data?.trading ?? 0)}
-                label="TRADING NOW"
-              />
-              <Stat value="6 AUG" label="BUYERS ARRIVE" />
-            </View>
+          <View style={{ paddingHorizontal: 20, paddingTop: 58 }}>
+            <Kicker>THE ATLAS</Kicker>
+            <Display style={{ marginTop: 6 }}>Shop the world.</Display>
           </View>
 
-          <Kicker style={{ paddingHorizontal: 20, marginTop: 10 }}>
+          {/* The globe — drag to spin, tap a light to dive into that country */}
+          <View style={s.globeWrap}>
+            <WebView
+              source={{ html }}
+              style={s.globe}
+              containerStyle={{ backgroundColor: C.bg }}
+              scrollEnabled={false}
+              overScrollMode="never"
+              setSupportMultipleWindows={false}
+              originWhitelist={['*']}
+              onMessage={(e) => {
+                const cc = e.nativeEvent.data
+                if (cc && cc.length === 2) nav.navigate('Country', { cc })
+              }}
+            />
+          </View>
+          <Dim style={{ textAlign: 'center', fontSize: 10.5, marginTop: 2 }}>
+            Drag to spin · tap a light to dive in
+          </Dim>
+
+          <View style={s.statRow}>
+            <Stat value={String(lattice.data?.totalCountries ?? 190)} label="COUNTRIES" />
+            <Stat
+              value={lattice.isLoading ? '—' : String(lattice.data?.trading ?? 0)}
+              label="TRADING NOW"
+            />
+            <Stat value="6 AUG" label="BUYERS ARRIVE" />
+          </View>
+
+          <Kicker style={{ paddingHorizontal: 20, marginTop: 22 }}>
             SHOPPING THE WORLD — PREVIEW FILMS
           </Kicker>
           <ScrollView
@@ -58,11 +72,7 @@ export default function AtlasScreen() {
             contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 12 }}
           >
             {FILMS.slice(0, 12).map((f, i) => (
-              <Pressable
-                key={f.src}
-                style={s.filmCard}
-                onPress={() => nav.navigate('Live', { start: i })}
-              >
+              <Pressable key={f.src} style={s.filmCard} onPress={() => nav.navigate('Live', { start: i })}>
                 <Image source={{ uri: f.poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
                 <View style={s.filmShade} />
                 <View style={s.previewTag}>
@@ -133,11 +143,16 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 const s = StyleSheet.create({
-  hero: { paddingHorizontal: 20, paddingTop: 18 },
-  logo: { width: 190, height: 64, alignSelf: 'flex-start' },
+  globeWrap: {
+    height: 390,
+    marginTop: 6,
+    overflow: 'hidden',
+  },
+  globe: { flex: 1, backgroundColor: C.bg },
   statRow: {
     flexDirection: 'row',
-    marginTop: 22,
+    marginTop: 18,
+    marginHorizontal: 20,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: C.line,
@@ -158,7 +173,11 @@ const s = StyleSheet.create({
     backgroundColor: C.surf2,
   },
   filmShade: {
-    position: 'absolute' as const, top: 0, left: 0, right: 0, bottom: 0,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.18)',
   },
   previewTag: {

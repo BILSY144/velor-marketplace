@@ -28,6 +28,10 @@ import SearchScreen from './src/screens/SearchScreen'
 import BasketScreen from './src/screens/BasketScreen'
 import YouScreen from './src/screens/YouScreen'
 import AssistScreen from './src/screens/AssistScreen'
+import OrdersScreen from './src/screens/OrdersScreen'
+import PassportScreen from './src/screens/PassportScreen'
+import SellScreen from './src/screens/SellScreen'
+import LegalScreen from './src/screens/LegalScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -106,6 +110,10 @@ export default function App() {
             <Stack.Screen name="Tabs" component={Tabs} />
             <Stack.Screen name="Country" component={CountryScreen} />
             <Stack.Screen name="Assist" component={AssistScreen} />
+            <Stack.Screen name="Orders" component={OrdersScreen} />
+            <Stack.Screen name="Passport" component={PassportScreen} />
+            <Stack.Screen name="Sell" component={SellScreen} />
+            <Stack.Screen name="Legal" component={LegalScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>
