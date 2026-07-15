@@ -478,7 +478,37 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // entries. Djembe drums (pre-existing) kept unchanged, not re-verified
   // this run.
   GN: ['Djembe drums', 'Leppi indigo-dyed cotton cloth (Fouta Djallon)', 'Hand tie-dyed cotton textiles (Kindia)'],
-  SL: ['Gara tie-dye textiles'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Sierra Leone, next on
+  // backlog item 25's floor-of-1 priority list after Guinea. Four new
+  // product-level items, each corroborated across at least two independent,
+  // Sierra-Leone-specific sources; kept the existing Gara tie-dye textiles
+  // entry unchanged (not re-verified or renamed this run). Hand-woven
+  // country cloth (Kondi gula in Mende, sold locally as "Kontri Kloth") --
+  // sierraleoneheritage.org (National Museum, describing the tripod-loom
+  // strip-weaving technique) corroborated as still actively made today by
+  // jillinsierraleone.blog's first-hand profile of weaver Bangalie of
+  // Kabala and by the Sweet Salone/Aurora Foundation artisan directory's
+  // profile of Mariatu of Grafton, who sells it in Freetown's Big Market;
+  // independently confirmed as a currently-sold product by a TripAdvisor
+  // review of the Tambakula Arts and Crafts Center cooperative in Freetown.
+  // Hand-carved wood masks & figures -- visitsierraleone.org's profile of
+  // carver Mohamed Kargbo at the Aberdeen Arts & Craft Center (tribal
+  // masques, statues, chairs) corroborated by Wikipedia's "Art in Sierra
+  // Leone" (wood carving "remains prominent" today, with distinct Mende/
+  // Vai/Bullom vs. Temne/Limba/Loko regional styles) and by the same
+  // Tambakula TripAdvisor review (wooden carvings, statues, masks). Hand-
+  // woven baskets (Brama Town) -- the Sweet Salone/Aurora Foundation
+  // artisan directory profiles a community of roughly 30 basket weavers in
+  // Brama Town, corroborated independently by the Tambakula TripAdvisor
+  // review listing woven bags among its cooperative's goods. Contemporary
+  // studio pottery (Waterloo) -- the Lettie Stuart Pottery Centre (SLADEA/
+  // Aurora Foundation) is independently corroborated by insightmag.news
+  // (international export orders to Iceland and Los Angeles) and by a
+  // first-hand visitor review at minabilkis.com describing an actively
+  // operating pottery school and studio. No shell/ivory/coral/bone
+  // material, no weapons, no raw-material-only entries, no PGI used
+  // loosely.
+  SL: ['Gara tie-dye textiles', 'Hand-woven country cloth (Kondi gula)', 'Hand-carved wood masks & figures', 'Hand-woven baskets (Brama Town)', 'Contemporary studio pottery (Waterloo)'],
   TG: ['Kente cloth', 'Batik textiles'],
   CV: ['Grogue sugarcane spirit', 'Handwoven baskets'],
   ZA: ['Zulu baskets', 'Rooibos tea', 'Beadwork'],
