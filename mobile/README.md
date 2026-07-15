@@ -36,3 +36,5 @@ EAS Build (`npx eas build`) compiles cloud iOS/Android binaries — no Mac
 needed. Requires an Expo account plus Apple Developer ($99/yr) and Google
 Play ($25 one-off) accounts, which William registers himself.
 App icon: assets/icon.png (from public/brand/velor-app-icon.png).
+
+Published via GitHub Actions (EAS Update, branch preview).
