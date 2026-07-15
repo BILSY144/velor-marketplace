@@ -37,6 +37,7 @@ import VerifyScreen from './src/screens/VerifyScreen'
 import CheckoutScreen from './src/screens/CheckoutScreen'
 import MenuScreen from './src/screens/MenuScreen'
 import BellScreen from './src/screens/BellScreen'
+import CraftScreen from './src/screens/CraftScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -44,10 +45,11 @@ const Stack = createNativeStackNavigator()
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Atlas: 'globe-outline',
-  Live: 'radio-outline',
+  Live: 'videocam-outline',
   Search: 'search-outline',
   Basket: 'bag-outline',
   You: 'person-outline',
+  MenuTab: 'menu-outline',
 }
 
 function Tabs() {
@@ -75,6 +77,17 @@ function Tabs() {
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Basket" component={BasketScreen} />
       <Tab.Screen name="You" component={YouScreen} />
+      <Tab.Screen
+        name="MenuTab"
+        component={YouScreen}
+        options={{ tabBarLabel: 'Menu' }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault()
+            navigation.navigate('Menu')
+          },
+        })}
+      />
     </Tab.Navigator>
   )
 }
@@ -125,6 +138,7 @@ export default function App() {
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="Menu" component={MenuScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Bell" component={BellScreen} />
+            <Stack.Screen name="Craft" component={CraftScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>
