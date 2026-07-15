@@ -185,3 +185,34 @@ really gets: 10 listings vs unlimited, AI account manager + API Pro-only,
 Go Live on every plan. Becomes the real dashboard when seller sign-in
 ships. Reached from the menu's SELL band (Dashboard chip) — the mockup's
 "Seller dashboard" entry now has a real destination.
+
+## 2026-07-15 (buyer sweep) — Basket/Orders/Passport/Bell to plate standard;
+## THE BELL ACTUALLY RINGS
+
+Basket (plate 07): "N makers. One payment." dynamic Fraunces title, green
+escrow banner, items grouped by REAL seller (flag, store name, "ships from
+…", qty steppers, tap-through to PDP), summary card and sticky checkout
+button. Honesty: the plate's sample shipping rates are replaced by "quoted
+at checkout from this maker's real dispatch address" — checkout is where
+real Shippo rates exist.
+
+Orders (plate 10): TRACKING / "On the way." header, the plate's order card
+drawn honestly — PAID→SHIPPED→DELIVERED rail unfilled, PROTECTED chip,
+"your first parcel lands here" — plus the three protection explainers.
+
+Passport (plate 14): VELOR · BUYER PASSPORT kicker, Fraunces 44 "0 / 190",
+progress hairline, round dashed stamp circles (dimmed flags, tap → dive),
+Next stamps card with Open the Atlas. No EN ROUTE chips until real orders.
+
+Bell (plate 15) + REAL BELL SOUND (William: "bell notifications need a
+real bell noise"): the mockup's bellSound() synthesis (F=470Hz, 10
+inharmonic partials with detuned doublets, bandpassed strike noise, double
+strike at 0s/0.9s) was re-rendered in Python/numpy to assets/bell.m4a
+(~65KB AAC) — the SAME bell, as a real audio asset. expo-audio@57.0.0
+added (pinned to SDK 57; expo install can't reach the API from here, npm
+view + matching major used instead — NOTE: first npm install accidentally
+ran at the REPO ROOT and polluted the web app's package.json; reverted via
+git checkout + rm -rf node_modules package-lock.json at root before any
+commit). RING IT seeks to 0, plays, and swings the bell icon. YOUR BELLS
+now lists real follows (useFollows) with Visit/Unfollow; sample explainer
+cards stay SAMPLE-labelled per the plate's own honesty labels.
