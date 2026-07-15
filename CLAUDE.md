@@ -1531,3 +1531,23 @@ A native mobile-app design for the **marketplace** (velorcommerce.store), design
 - Production findings flagged, NOT changed: terms say 14-day returns but app/api/returns/route.ts enforces 15 (code more generous — align when decided); the WORLD atlas 190 excludes CI/XK/FM/MH/NR/PW despite culture data existing for them.
 - Sample universe: Lin Ceramics (CN) + Atlas Weave (MA) and everything derived from them, labelled SAMPLE; the real Polegate office address was scrubbed from buyer-facing sample data (checkout/addresses/You).
 - REMAINING for review: Ask Velor, seller-side screens (Sell pitch, Founding seats, Apply, Verify ID, Dashboard, New listing, Payouts, Go live). Then scaffold the real Expo/RN app.
+
+## 2026-07-15 checkpoint -- Shipping buffer shipped (seller-set quote padding)
+
+William asked what happens when a label costs more than the buyer paid at
+checkout (seller absorbs it; no re-billing) and ordered the fix built. New
+optional "Shipping Buffer" on SellerShippingProfile (`handlingFeeGBP`,
+default 0): a flat GBP amount added server-side to every real Shippo quote
+buyers see for that seller. Clamped 0-25 at write time (settings POST) AND
+at quote time (rates route). Never added to fallback quote-required
+placeholders; currency-converted via lib/fx when a carrier rate isn't GBP.
+Like all shipping money it passes to the seller commission-free and sits in
+escrow until delivery + hold. Files: prisma/schema.prisma,
+app/api/dashboard/settings/shipping/route.ts, app/api/shipping/rates/route.ts,
+app/dashboard/settings/shipping/page.tsx (new field beside Handling Time).
+Commit a81e198, verified Ready/Production on Vercel. NOT yet exercised
+against a live checkout with a buffered profile -- verify alongside the
+multi-seller cart walkthrough already flagged in checkpoint continued 12.
+Side note (pre-existing, untouched): the settings page also sends
+email/handlingDays fields the API silently ignores -- schema has no columns
+for them; flag if William ever expects handling time to do something.
