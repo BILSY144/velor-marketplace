@@ -2,6 +2,17 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: You page derives from live session state
+
+- Passport card: real earned/en-route counts, latest stamp's flag (globe
+  icon before any), honest zero copy ("Your first delivery starts it").
+- Orders & tracking row counts real parcels; Favourites & follows shows
+  a real FAVS counter (heart buttons on live + PDP now feed it) +
+  FOLLOWS count; Addresses row shows the SAMPLE address (was the real
+  Polegate office, third and last instance removed).
+- Verified live: zero state, then follow+fav+order -> all rows update.
+- Commit 0bb297e.
+
 ## 2026-07-15: Passport newest-first; Opening Bell wired live
 
 - Passport grid: stamped countries always sort to the top, newest first
