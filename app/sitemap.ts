@@ -200,6 +200,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/live`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/help`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/press`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/track`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/legal/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
