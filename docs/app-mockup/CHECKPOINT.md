@@ -2,6 +2,18 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Checkout derives live from the cart
+
+- DELIVERY section lists each seller's parcel with the service chosen on
+  the basket (verified: DHL switch on basket carries through), SUMMARY +
+  both pay buttons (Apple Pay + dock) recompute from cartTotals().
+  Verified live at GBP 234.10 for the qty/service-modified sample basket.
+- DELIVER TO no longer shows the real Polegate registered-office address
+  -- replaced with an explicitly SAMPLE address row.
+- Empty cart -> honest zero-state. Pay deliberately does NOT clear the
+  basket (design-review tool; the confirm screen is static).
+- Commit c10f48f.
+
 ## 2026-07-15: Basket rebuilt as a live cart model
 
 - Static two-seller demo replaced by a real CART model: qty +/- works (x
