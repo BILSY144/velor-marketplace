@@ -26,3 +26,21 @@ Next build phases: passport + orders screens, real product detail page,
 sign-in (passkeys at launch), in-app checkout for 6 Aug, seller side.
 Store release path: EAS Build + Apple Developer ($99/yr) + Play ($25) —
 William registers those himself.
+
+## 2026-07-15 (later) — STANDING RULE from William: the app must match the mockup EXACTLY
+
+"everything needs to be exactly the same as mock design exactly the same."
+When building any app screen, open the mockup (app-mockup-preview branch,
+public/velor-app-mockup.html) and copy its layout, copy, type sizes and
+behaviour — do not improvise layouts. Changes this round:
+- Atlas = full-bleed globe page (NO scrolling, NO country list w/ flags —
+  that list was never on the mockup's atlas). Globe owns all gestures.
+- Globe has both mockup views + toggle (bottom-right): 'real' procedural
+  earth (renderReal ported verbatim: climate bands, ocean spec, day light)
+  and 'ink' dark sphere + land dots. Channel lights + orbit rings in both.
+- Hero exactly as mockup: centered "Shop <em>the world</em>" Fraunces,
+  rotating word (HERO_WORDS) fading every 2.4s, italic accent word
+  (Fraunces_500Medium_Italic registered).
+- Hint "Drag anywhere · tap a light" centered at ~54% like .atlas-hint.
+- Logo: splash ONLY (William) — not on Atlas.
+- Safe-area padding everywhere (notch was hiding back buttons).
