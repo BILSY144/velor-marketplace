@@ -750,7 +750,26 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   SE: ['Glassware', 'Dala horses', 'Outdoor knives'],
   FI: ['Puukko knives', 'Design glassware'],
   DK: ['Design furniture', 'Ceramics'],
-  NO: ['Norwegian knitwear'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Norway had only 1 item
+  // (SEO_LOG.md backlog item 25's content-depth floor list). Two product-level
+  // additions, each multi-source verified this run, no single-source or
+  // AI-content-farm result carried forward: Rosemaling folk-painted woodware
+  // -- decorative floral folk painting on wooden objects, rooted in 1700s
+  // Norway with distinct regional styles (Telemark, Hallingdal, Rogaland) --
+  // confirmed via Life in Norway's dedicated feature ("far from a lost art;
+  // in fact, it's very much alive and evolving," sold today via Norway's
+  // Husfliden stores, independent artists, Christmas markets, and the
+  // Vesterheim museum store) and corroborated by Wikipedia's "Rosemåling"
+  // entry. Sølje silver filigree jewelry -- the traditional dangling-disc
+  // silver brooch worn with the bunad (Norwegian national costume) --
+  // confirmed via the official Visit Norway tourism site (own dedicated
+  // page) and independently by RysstadSylv, a working silversmith in
+  // Setesdal producing "around 200-300 sets of bunad brooches a year" using
+  // traditional techniques, plus the Vesterheim Museum Store's own sølje
+  // jewelry listings, i.e. still actively made and sold today, not a
+  // historical-only craft. No ivory/coral/shell material, no weapons, no
+  // raw-material-only entries.
+  NO: ['Norwegian knitwear', 'Rosemaling folk-painted woodware', 'Sølje silver filigree jewelry'],
   IS: ['Lopapeysa knitwear', 'Flaky sea salt'],
   PL: ['Amber jewellery', 'Bolesławiec pottery'],
   CZ: ['Bohemian crystal', 'Marionettes'],
