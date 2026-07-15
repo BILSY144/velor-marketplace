@@ -376,7 +376,48 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   UG: ['Coffee', 'Bark cloth', 'Baskets'],
   RW: ['Agaseke peace baskets', 'Coffee'],
   NG: ['Adire indigo cloth', 'Beadwork'],
-  BJ: ['Abomey appliqué tapestries'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Benin was next on
+  // SEO_LOG.md backlog item 25's content-depth floor list. Existing
+  // 'Abomey appliqué tapestries' entry left untouched (not re-verified or
+  // renamed). Two product-level additions, each multi-source verified this
+  // run. Bocio wood-carved Vodun figures (Ouidah) are documented by
+  // Wikipedia's "Vodun art" article (bocio described as wood carvings, the
+  // primary Vodun sculptural form) naming still-working 20th/21st-century
+  // Beninese artists (Cyprien Tokoudagba, Calixte Dakpogan, Theodore
+  // Dakpogan and others) and the 1993 International Festival of Vodun Arts
+  // and Cultures in Ouidah, independently corroborated by a travel guide
+  // (takeyourbackpack.com) describing hand-carved Vodun wood sculptures
+  // and masks currently sold at Cotonou's Artisanal Center. Hand-dyed
+  // indigo cotton textiles (Parakou) are documented by an Oko Farms
+  // profile of Isidore Kouton, founder of CEPROMET (Centre de Promotion
+  // des Métiers du textile) in Parakou, northern Benin, which the source
+  // states has trained roughly 1,500 adults and nearly 2,000 students in
+  // organic indigo dyeing and hand-weaving over ten years and "still
+  // actively practiced and taught" -- not a historical curiosity.
+  // Deliberately NOT added, two considered and rejected: (1) récade --
+  // multiple sources (Abomey's own tourism-office director, quoted via
+  // 100pour100culture.com, confirming local artisans still make them; a
+  // Le Havre museum page; an MIT Press African Arts article) confirm this
+  // Fon royal-sceptre craft is a real, still-made tradition, but it is
+  // also documented (Oriental Arms militaria dealer; Le Havre museum's own
+  // description of a "metal blade" example "employed as a weapon for
+  // executioners") as a functional ceremonial axe/blade historically used
+  // for executions -- too weapon-adjacent for this file's own no-weapons
+  // rule, the same reasoning already applied to Kazakhstan's kamcha whip.
+  // (2) asen (Fon iron memorial-altar staffs) -- extremely well documented
+  // as a genuine historical Fon/Dahomey art form (Met Museum x3, Art
+  // Institute of Chicago, Smithsonian National Museum of African Art,
+  // Cornell, Barbier-Mueller Museum) but every source describes 19th- and
+  // early-20th-century production; none confirms asen are still forged
+  // today, and one Wikipedia page that might have clarified this
+  // ("Benin ancestral altars") turned out on inspection to be about the
+  // unrelated Edo people/Kingdom of Benin in Nigeria, not the Fon/Republic
+  // of Benin -- the same Benin-Bronzes/Nigeria-vs-Benin-country naming
+  // trap this run was careful to avoid throughout (a bronze-casting search
+  // for this country returned only Nigerian Edo results and was discarded
+  // entirely for that reason). Not added without a clear "still practiced
+  // today" source, per this log's own honesty standard.
+  BJ: ['Abomey appliqué tapestries', 'Bocio wood-carved Vodun figures (Ouidah)', 'Hand-dyed indigo cotton textiles (Parakou)'],
   GH: ['Kente cloth', 'Single-origin cacao', 'Recycled-glass beads', 'Adinkra prints', 'Shea butter', 'Bolga baskets', 'Krobo beads', 'Djembe drums', 'Black soap', 'Carved stools'],
   CI: ['Cacao', 'Wax-print fashion'],
   SN: ['Baskets', 'Wax-print accessories'],
