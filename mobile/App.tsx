@@ -139,7 +139,11 @@ export default function App() {
             <Stack.Screen name="Apply" component={ApplyScreen} />
             <Stack.Screen name="Verify" component={VerifyScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
-            <Stack.Screen name="Menu" component={MenuScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="Menu"
+              component={MenuScreen}
+              options={{ presentation: 'transparentModal', animation: 'fade' }}
+            />
             <Stack.Screen name="Bell" component={BellScreen} />
             <Stack.Screen name="Craft" component={CraftScreen} />
             <Stack.Screen name="Pdp" component={PdpScreen} />

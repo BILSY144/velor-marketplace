@@ -151,3 +151,16 @@ never faked), WHAT THE SEAT CARRIES, the CRAFT POWERHOUSES photo rail, and
 every region's countries as seat rows (photo, flag, real craft hints, SEAT
 OPEN chip — CHANNEL OPEN in green once a country really trades). Open
 seats land on Apply with the country pre-picked; taken ones open the dive.
+
+## 2026-07-15 (menu) — Hamburger menu rebuilt to the mockup's MENU_HTML
+
+Exact structure from the mockup source (no plate exists for the menu — read
+MENU_HTML + .menu CSS from the mockup HTML directly): near-black fade-in
+overlay (transparentModal + fade; expo-blur not in deps so the blur is
+approximated by opacity), 44px × top-right, content from 28px margins,
+orange tracked Shop/You/Sell kickers, Fraunces 23 row titles + 10.5 dim
+subs. Rows: All countries (→ Search rails), Atlas, Velor Live, Search,
+Basket, Orders, Passport / Notifications, Ask Velor, Account / Sell on
+Velor, Founding seats (→ the new Seats page), Apply. Honesty divergence:
+the mockup's "Seller dashboard · Preview" row is omitted until the
+seller-side sweep builds that screen — no dead links.
