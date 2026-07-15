@@ -334,3 +334,11 @@ only; overlay unmounts after fade so it costs nothing afterward.
 radial behind the logo is gone; the opening is now pure logo on black with
 the ON AIR pulse and TAP TO SKIP. STANDING: do not reintroduce a glow or
 backdrop on the splash without William asking.
+
+## 2026-07-15 — Splash box seam fixed
+
+The overlay's background was #050507 while splash.png's own black is
+#08080b (sampled from the PNG; the native splash config already used it) —
+the 3-point difference read as the logo "sitting on a black box." Overlay
+and pre-font-load view now use #08080b exactly. RULE: any surface that
+shows splash.png must be #08080b, nothing darker.
