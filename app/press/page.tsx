@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
-import { SUPPORTED_CURRENCIES } from '@/lib/currency'
+import { SUPPORTED_CURRENCIES } from '@/lib/currencyData'
 import { OUTREACH_V2 } from '@/lib/outreachI18n'
 
 // /press — built 2026-07-15 at William's request, alongside the first real
@@ -12,7 +12,7 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 // Every fact below is true of the live platform today, same standing rule
 // as every other page in this codebase (see /about, /sell, /founding):
 //   190 countries   = WORLD_COUNTRIES.length (lib/worldCountries.ts)
-//   20 currencies    = SUPPORTED_CURRENCIES.length (lib/currency.ts)
+//   20 currencies    = SUPPORTED_CURRENCIES.length (lib/currencyData.ts)
 //   19 languages     = Object.keys(OUTREACH_V2).length (lib/outreachI18n.ts)
 //   6 August 2026    = the same launch date used sitewide (/sell, /founding)
 //   Company details  = Velor Commerce Ltd no. 17268133, same as /about footer
@@ -223,9 +223,9 @@ export default function PressPage() {
               with a founding seat reserved for whoever verifies and lists first from each one.
               Sellers deal with the platform entirely in their own language — seller communications
               are currently localized into {LANGUAGE_COUNT} languages. Prices display to buyers in{' '}
-              {CURRENCY_COUNT} currencies and the platform ships to more than {COUNTRY_COUNT} destinations.
-              Payments are escrow-protected, released to the seller on delivery, with payouts via
-              Stripe or Payoneer.
+              {CURRENCY_COUNT} currencies. Payments are escrow-protected, released to the seller on
+              delivery, with payouts via Stripe where supported and Payoneer opening on a rolling
+              basis for the countries Stripe does not cover.
             </p>
             <p>
               Ahead of launch, Velor is offering founding-seller places: the platform&apos;s Pro
