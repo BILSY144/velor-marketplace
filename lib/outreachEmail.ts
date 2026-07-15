@@ -41,10 +41,27 @@
 
 import {
   OUTREACH_COPY,
+  OUTREACH_V2,
   RTL_OUTREACH_LANGS,
   langForCountry,
   type OutreachLang,
 } from './outreachI18n'
+
+// V2 REDESIGN (2026-07-16, William's design): the initial email now follows
+// his "Bring Your Country's Culture to the World" layout -- centered serif
+// masthead, hero image band, kicker between hairlines, big serif headline
+// with an orange accent, three centered paragraphs, a 2x2 feature grid with
+// line icons, categories line, full-width orange CTA pill (a DIRECT link to
+// /apply/invited per William), and the REAL CULTURE / REAL PEOPLE / GLOBAL
+// OPPORTUNITY tagline. Assets live in public/email-assets/ (line icons are
+// generated; outreach-hero.jpg is a brand-styled fallback band until William
+// supplies the hero art from his design as a standalone file).
+// Two corrections vs the mockup, on purpose: the footer carries the REAL
+// registered company (Velor Commerce Ltd, no. 17268133 -- the mockup's
+// "Velor Global Market Ltd 16243986" does not exist), and the Pro panel says
+// "free for founding sellers" rather than "lifetime / first verified seller
+// per country", which is not currently a platform policy.
+const ASSETS = 'https://velorcommerce.store/email-assets'
 
 export type OutreachEmailType = 'initial' | 'followup1' | 'followup2'
 
@@ -86,23 +103,44 @@ function colorBlock(bg: string, extra: string, inner: string): string {
 // only ever reliably aligns inline content, not a nested table.
 const GLOBAL_MARKET_BADGE = `<table role='presentation' align='right' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#1FAE7A' style='background-color:#1FAE7A;background-image:url('https://velorcommerce.store/email-assets/badge-bg.png');background-size:100% 100%;background-repeat:no-repeat;color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;'>GLOBAL MARKET</td></tr></table>`
 
-const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
-  <tr><td bgcolor='#141414' align='right' style='background-color:#141414;background:#141414;padding:14px 14px 0;text-align:right;'>
-    ${GLOBAL_MARKET_BADGE}
+// V2 masthead: centered serif wordmark + GLOBAL MARKET subline + orange
+// hairline with a centered diamond, per William's design. dir stays ltr --
+// a centered wordmark is direction-neutral.
+const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' dir='ltr'>
+  <tr><td bgcolor='#0D0D0D' align='center' style='background-color:#0D0D0D;background:#0D0D0D;padding:34px 32px 0;'>
+    <div style='font-family:Georgia,"Times New Roman",serif;color:#FF6B00;font-size:36px;font-weight:700;letter-spacing:12px;line-height:1;'>VEL<span style='color:#FF8A33;'>O</span>R</div>
+    <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:11px;font-weight:400;letter-spacing:7px;padding-top:12px;'>GLOBAL&nbsp;MARKET</div>
   </td></tr>
-  <tr><td bgcolor='#141414' style='background-color:#141414;background:#141414;height:10px;line-height:10px;font-size:0;'>&nbsp;</td></tr>
-  <tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;padding:18px 32px;border-bottom:1px solid #2A2A2A;'>
-    <span style='color:#FF6B00;font-size:22px;font-weight:800;letter-spacing:-0.5px;'>VELOR</span>
-    <span style='color:#777777;font-size:11px;font-weight:700;letter-spacing:2px;margin-left:10px;'>SHOPPING CHANNEL</span>
+  <tr><td align='center' style='padding:22px 0 0;'>
+    <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
+      <tr>
+        <td style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+        <td width='30' align='center' style='color:#FF6B00;font-size:11px;line-height:11px;padding:0 4px;transform:translateY(-6px);'>&#9670;</td>
+        <td style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+      </tr>
+    </table>
   </td></tr>
 </table>`
 
 // The footer stays in English on purpose: it is the compliance/identification
 // block, and "Unsubscribe" is the string recipients and mail clients expect.
+// V2: William's design footer, but with the REAL registered company details
+// (Velor Commerce Ltd, company no. 17268133).
 function outreachFooter(name: string, platform: string, unsubUrl: string) {
-  const inner = `<p style='color:#666666;font-size:12px;line-height:1.6;margin:0 0 8px;'>Velor Commerce Ltd &middot; a global online marketplace &middot; velorcommerce.store</p>
-    <p style='color:#666666;font-size:12px;line-height:1.6;margin:0;'>You received this because ${h(name)} appeared on a public ${h(platform)} listing. Not interested? <a href='${unsubUrl}' style='color:#FF6B00;text-decoration:underline;'>Unsubscribe</a> &mdash; one click and we will not contact you again.</p>`
-  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;background:#0D0D0D;padding:20px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
+  const inner = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
+    <tr>
+      <td width='150' valign='middle'>
+        <div style='font-family:Georgia,"Times New Roman",serif;color:#FF6B00;font-size:19px;font-weight:700;letter-spacing:5px;'>VELOR</div>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:8px;letter-spacing:3px;padding-top:4px;'>GLOBAL&nbsp;MARKET</div>
+      </td>
+      <td valign='middle' style='border-left:1px solid #2A2A2A;padding-left:18px;'>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#9a9a9a;font-size:12px;line-height:1.6;'>Connecting independent sellers and cultures worldwide.</div>
+      </td>
+    </tr>
+  </table>
+  <div style='border-top:1px solid #222222;margin-top:18px;padding-top:14px;font-family:Arial,Helvetica,sans-serif;color:#666666;font-size:10.5px;letter-spacing:1px;text-align:center;'>VELOR COMMERCE LTD &nbsp;|&nbsp; COMPANY NO. 17268133 &nbsp;|&nbsp; UNITED KINGDOM</div>
+  <p style='font-family:Arial,Helvetica,sans-serif;color:#5a5a5a;font-size:11px;line-height:1.6;margin:12px 0 0;text-align:center;'>You received this because ${h(name)} appeared on a public ${h(platform)} listing. Not interested? <a href='${unsubUrl}' style='color:#FF6B00;text-decoration:underline;'>Unsubscribe</a> &mdash; one click and we will not contact you again.</p>`
+  return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0A0A0A' style='background-color:#0A0A0A;background:#0A0A0A;padding:24px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
 }
 
 // No icon column -- William's approved reference (saved 2026-07-09,
@@ -279,7 +317,7 @@ export function buildOutreachEmail(d: {
       ? lang === 'en' && isBrand
         ? `Founding seller invitation: ${p.category} on Velor before buyers arrive 6 August`
         : lang === 'en'
-          ? `${p.name}, a founding seller spot on Velor Ã¢ÂÂ free before buyers arrive 6 August`
+          ? `${p.name}, a founding seller spot on Velor — free before buyers arrive 6 August`
           : c.subjectInitial
       : emailType === 'followup1'
         ? c.subjectFollowup1
@@ -319,34 +357,61 @@ ${OUTREACH_HEADER}`
   if (p.sellerType === 'multiplier') {
     body = buildMultiplierBody(MULTIPLIER_COPY, emailType, p, cta, appNote)
   } else if (emailType === 'initial') {
-    const intro = isBrand ? c.introBrand : c.introMaker
-    // No hotlinked stock photo -- a plain gradient strip instead. A hotlinked
-    // image can render as a broken-image icon in some viewers/clients, which
-    // is confusing next to the logo; a CSS gradient always renders. Solid
-    // #0D0D0D bgcolor fallback for clients (Outlook) that drop the gradient.
+    // V2 initial email -- William's design. Everything centered; feature grid
+    // is 2x2 (not 4-across like the flat mockup) so localized titles never
+    // crush at 600px. The CTA pill is a DIRECT <a> link to /apply/invited.
+    const v2 = OUTREACH_V2[lang] || OUTREACH_V2.en
+    const featCell = (icon: string, title: string, note: string, extra: string) =>
+      `<td width='50%' align='center' valign='top' style='padding:22px 14px;${extra}'>
+        <img src='${ASSETS}/icon-${icon}.png' width='40' height='40' alt='' style='display:block;margin:0 auto 10px;width:40px;height:40px;'>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:13px;font-weight:bold;line-height:1.5;'>${title}</div>
+        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:11px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
+      </td>`
     body = `
-      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' height='64' style='background-color:#0D0D0D;background:linear-gradient(100deg,#2A1505 0%,#0D0D0D 70%);line-height:64px;font-size:0;'>&nbsp;</td></tr></table>
-      <div style='padding:32px;'>
-        <div style='display:inline-block;background-color:#2A1A0A;background:#2A1A0A;color:#FF6B00;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;margin-bottom:18px;'>${c.badge}</div>
-        <div style='color:#FFFFFF;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:18px;'>${c.headline}</div>
-        <p style='color:#CFCFCF;font-size:15px;line-height:1.7;margin:0 0 8px;'>${c.greeting(h(p.name))}</p>
-        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:0 0 24px;'>${intro}</p>
-        <div style='margin-bottom:8px;'>
-          ${benefitRow(c.b1t, c.b1b)}
-          ${benefitRow(c.b4t, c.b4b)}
-        </div>
-        <!-- b2 (commission/free plan) and b3 (escrow payout) are deliberately
-             not shown here: William flagged them as wrong or irrelevant for a
-             founding-tier invitation -- b2's 10% is the Starter rate, not the
-             founding Pro rate, and b3 describes live payout mechanics that
-             don't apply before launch. Fields stay in outreachI18n.ts for any
-             non-founding context that may use them later. -->
-        ${proPlanCard(c)}
-        ${cta(c.cta)}
-        <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
-        ${appNote ? `<p style='color:#B9B9B9;font-size:13px;line-height:1.6;margin:14px 0 0;'>${appNote}</p>` : ''}
-        ${languagePanel(c.languagePromise)}
-        <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>${c.signoff}</p>
+      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;padding:22px 0 0;'>
+        <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
+      </td></tr></table>
+      <div style='padding:30px 36px 36px;text-align:center;'>
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:0 auto;'>
+          <tr>
+            <td width='40' style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+            <td style='padding:0 12px;'><div style='font-family:Arial,Helvetica,sans-serif;color:#FF6B00;font-size:12px;font-weight:700;letter-spacing:3px;white-space:nowrap;'>${v2.kicker}</div></td>
+            <td width='40' style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+          </tr>
+        </table>
+        <div style='font-family:Georgia,"Times New Roman",serif;color:#FFFFFF;font-size:33px;line-height:1.25;font-weight:400;padding-top:20px;'>${v2.headlineA} <span style='color:#FF6B00;'>${v2.headlineB}</span></div>
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:18px auto 0;'><tr><td width='64' height='2' bgcolor='#FF6B00' style='background-color:#FF6B00;font-size:0;line-height:0;'>&nbsp;</td></tr></table>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#CFCFCF;font-size:14.5px;line-height:1.75;margin:26px 0 0;'>${c.greeting(h(p.name))}</p>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${v2.p1}</p>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${v2.p2}</p>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${v2.p3}</p>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:28px 0 0;border:1px solid #2A2A2A;border-radius:14px;'>
+          <tr>
+            ${featCell('globe', v2.feat1, '', 'border-bottom:1px solid #222222;border-right:1px solid #222222;')}
+            ${featCell('live', v2.feat2, '', 'border-bottom:1px solid #222222;')}
+          </tr>
+          <tr>
+            ${featCell('star', v2.feat3, '', 'border-right:1px solid #222222;')}
+            ${featCell('pro', v2.feat4, v2.feat4note, '')}
+          </tr>
+        </table>
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#A9A9A9;font-size:12.5px;line-height:1.9;margin:24px 0 0;'>${v2.cats}</p>
+        <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:26px 0 0;'>
+          <tr><td bgcolor='#FF6B00' align='center' style='background-color:#FF6B00;background:linear-gradient(180deg,#FF7D1A 0%,#F26200 100%);border-radius:10px;'>
+            <a href='${inviteUrl}' style='display:block;font-family:Arial,Helvetica,sans-serif;color:#FFFFFF;font-size:15.5px;font-weight:800;letter-spacing:1.5px;text-decoration:none;padding:17px 20px;border-radius:10px;'>${v2.ctaV2}</a>
+          </td></tr>
+        </table>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#FF9A4d;font-size:12.5px;letter-spacing:1px;padding-top:16px;'>&mdash;&nbsp; velorcommerce.store &nbsp;&mdash;</div>
+        ${appNote ? `<p style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:12px;line-height:1.6;margin:16px 0 0;'>${appNote}</p>` : ''}
+        <p style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:12px;line-height:1.6;margin:8px 0 0;'>${c.languagePromise}</p>
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' align='center' style='margin:26px auto 0;'>
+          <tr>
+            <td width='170' style='border-top:1px solid #2A2A2A;font-size:0;line-height:0;'>&nbsp;</td>
+            <td width='30' align='center' style='color:#FF6B00;font-size:10px;line-height:10px;padding:0 4px;'>&#9670;</td>
+            <td width='170' style='border-top:1px solid #2A2A2A;font-size:0;line-height:0;'>&nbsp;</td>
+          </tr>
+        </table>
+        <div style='font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:2.5px;line-height:1.8;padding-top:20px;'><span style='color:#EAEAEA;'>${v2.tagA}</span> <span style='color:#FF6B00;'>${v2.tagB}</span></div>
       </div>`
   } else if (emailType === 'followup1') {
     const step = (n: number, text: string, last = false) =>
