@@ -1,0 +1,38 @@
+name: EAS Build (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to build"
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+        default: android
+      profile:
+        description: "Build profile (from mobile/eas.json)"
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+          - development
+        default: preview
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+      - name: Start EAS build
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait
