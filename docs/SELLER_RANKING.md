@@ -16,7 +16,7 @@ Products and featured-seller lists are ordered by rankingScore descending, then 
 
 - STARTER: +0
 - PRO: +8
-- ENTERPRISE: +15
+- ENTERPRISE: +8 (tier retired 2026-07-15; legacy rows boost as Pro)
 
 This is additive on top of the 0-100 merit score, not a replacement for it. It is a genuine, noticeable placement advantage for paid tiers — a Pro or Enterprise seller with an average score now visibly outranks a Starter seller with an equally average score — but it is bounded so it cannot fully override merit: a strongly-performing Starter seller (e.g. score 70) still outranks a poorly-performing Enterprise seller (e.g. score 40 + 15 = 55). The boost only ever closes part of the gap, never all of it.
 

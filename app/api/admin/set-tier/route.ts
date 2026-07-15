@@ -19,9 +19,9 @@ export async function GET(req: NextRequest) {
 
   const email = searchParams.get('email')
   const tier = searchParams.get('tier')
-  const validTiers = ['STARTER', 'PRO', 'ENTERPRISE']
+  const validTiers = ['STARTER', 'PRO'] // Enterprise retired 2026-07-15
   if (!email || !tier || !validTiers.includes(tier)) {
-    return NextResponse.json({ error: 'Provide email and tier (STARTER|PRO|ENTERPRISE)' }, { status: 400 })
+    return NextResponse.json({ error: 'Provide email and tier (STARTER|PRO)' }, { status: 400 })
   }
 
   const seller = await prisma.seller.findFirst({

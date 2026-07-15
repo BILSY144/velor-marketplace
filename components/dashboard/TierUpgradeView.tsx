@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 interface SubscriptionStatus {
-  tier: 'STARTER' | 'PRO' | 'ENTERPRISE'
+  tier: 'STARTER' | 'PRO' | 'ENTERPRISE' // ENTERPRISE only ever appears as a legacy status value
   commissionRate: number
   monthlyFee: number | null
   foundingBadge: boolean
@@ -17,7 +17,7 @@ interface SubscriptionStatus {
   hasActiveSubscription: boolean
 }
 
-export type TierId = 'STARTER' | 'PRO' | 'ENTERPRISE'
+export type TierId = 'STARTER' | 'PRO' // Enterprise retired 2026-07-15
 
 interface TierDef {
   id: TierId
@@ -42,12 +42,13 @@ const TIERS: Record<TierId, TierDef> = {
     pitch: '"The easy way to test the water before you dive in."',
     price: 0,
     commission: 10,
-    listingLabel: 'Up to 20 active listings',
+    listingLabel: 'Up to 10 active listings',
     gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)',
     glow: 'rgba(180,180,190,0.18)',
     badge: null,
     features: [
-      '20 active product listings',
+      '10 active product listings',
+      'Go Live video shopping',
       'Full seller dashboard & analytics',
       'Buyer protection on every sale',
       'Order & inventory management',
@@ -67,17 +68,20 @@ const TIERS: Record<TierId, TierDef> = {
     pitch: '"Built for sellers ready to grow — cheaper fees, better visibility."',
     price: 49,
     commission: 4,
-    listingLabel: 'Up to 200 active listings',
+    listingLabel: 'Unlimited active listings',
     gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)',
     glow: 'rgba(139,92,246,0.35)',
     badge: 'Most popular',
     features: [
-      '200 active product listings',
+      'Unlimited active listings',
+      'Go Live video shopping',
+      'Dedicated AI account manager',
+      'Full API access & integrations',
       'Free custom storefront',
       'Priority placement in search',
       'Smart listing optimisation',
       'Advanced sales analytics',
-      'Dedicated seller support',
+      'Priority support',
     ],
     steps: [
       'Click "Upgrade to Pro" below',
@@ -85,32 +89,7 @@ const TIERS: Record<TierId, TierDef> = {
       'Your account upgrades instantly — no waiting',
     ],
   },
-  ENTERPRISE: {
-    id: 'ENTERPRISE',
-    name: 'Enterprise',
-    kicker: 'High-volume sellers',
-    pitch: '"For established brands ready to scale without limits."',
-    price: 99,
-    commission: 0,
-    listingLabel: 'Unlimited active listings',
-    gradient: 'linear-gradient(160deg, #f59e0b 0%, #7c2d12 100%)',
-    glow: 'rgba(245,158,11,0.35)',
-    badge: 'High-volume sellers',
-    features: [
-      'Unlimited active listings',
-      'Everything included in Pro',
-      'Go Live video shopping',
-      'Dedicated account manager',
-      'Full API access & integrations',
-      'Free custom storefront',
-      'Custom analytics & early access',
-    ],
-    steps: [
-      'Click "Upgrade to Enterprise" below',
-      'Complete secure checkout via Stripe',
-      'Your account manager reaches out within 24h',
-    ],
-  },
+
 }
 
 function breakEvenVsStarter(price: number, commission: number): number | null {
@@ -120,15 +99,15 @@ function breakEvenVsStarter(price: number, commission: number): number | null {
 }
 
 function CompareModal({ onClose }: { onClose: () => void }) {
-  const rows: [string, string, string, string][] = [
-    ['Commission', '10%', '4%', '0%'],
-    ['Monthly fee', 'Free', '£49/mo', '£99/mo'],
-    ['Listings', '20', '200', 'Unlimited'],
-    ['Custom storefront', '—', 'Free', 'Free'],
-    ['Search placement', 'Standard', 'Priority', 'Priority'],
-    ['Go Live video shopping', '—', '—', 'Yes'],
-    ['Account manager', '—', '—', 'Dedicated'],
-    ['API access', '—', '—', 'Full'],
+  const rows: [string, string, string][] = [
+    ['Commission', '10%', '4%'],
+    ['Monthly fee', 'Free', '£49/mo'],
+    ['Listings', '10', 'Unlimited'],
+    ['Go Live video shopping', 'Yes', 'Yes'],
+    ['Custom storefront', '—', 'Free'],
+    ['Search placement', 'Standard', 'Priority'],
+    ['AI account manager', '—', 'Dedicated'],
+    ['API access', '—', 'Full'],
   ]
   return (
     <div
@@ -157,7 +136,6 @@ function CompareModal({ onClose }: { onClose: () => void }) {
               <th style={{ textAlign: 'left', padding: '8px 6px', color: 'var(--muted)', fontWeight: 600 }}>Feature</th>
               <th style={{ textAlign: 'left', padding: '8px 6px', color: 'var(--text)', fontWeight: 700 }}>Starter</th>
               <th style={{ textAlign: 'left', padding: '8px 6px', color: '#a78bfa', fontWeight: 700 }}>Pro</th>
-              <th style={{ textAlign: 'left', padding: '8px 6px', color: '#fbbf24', fontWeight: 700 }}>Enterprise</th>
             </tr>
           </thead>
           <tbody>
@@ -204,7 +182,7 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleUpgrade(action: 'upgrade_to_pro' | 'upgrade_to_enterprise') {
+  async function handleUpgrade(action: 'upgrade_to_pro') {
     setUpgrading(true)
     setToast(null)
     try {
@@ -466,17 +444,6 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
                 }}
               >
                 {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Pro — £49/mo`}
-              </button>
-            ) : tier.id === 'ENTERPRISE' ? (
-              <button
-                onClick={() => handleUpgrade('upgrade_to_enterprise')}
-                disabled={upgrading}
-                style={{
-                  width: '100%', padding: '16px', borderRadius: '10px', border: 'none', fontWeight: 700, fontSize: '15px',
-                  background: upgrading ? 'var(--border)' : 'var(--accent)', color: '#fff', cursor: upgrading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Enterprise — £99/mo`}
               </button>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>

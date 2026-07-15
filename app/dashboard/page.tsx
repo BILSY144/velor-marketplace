@@ -39,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function DashboardOverview() {
   const { tier, theme } = useSellerTier();
   const isPro = tier === 'PRO';
-  const isEnterprise = tier === 'ENTERPRISE';
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
   const isElevated = isPro || isEnterprise;
 
   return (
@@ -76,7 +76,7 @@ export default function DashboardOverview() {
             </div>
             <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
               {isEnterprise
-                ? 'Welcome back. Your Enterprise concierge dashboard is live.'
+                ? 'Welcome back. Your Pro concierge dashboard is live.'
                 : isPro
                 ? 'Welcome back. Here is what is happening with your store.'
                 : 'Welcome back. Here is what is happening with your store.'}
@@ -129,7 +129,7 @@ export default function DashboardOverview() {
           })}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                Enterprise Concierge
+                Pro Concierge
               </div>
               <div style={{ color: 'var(--muted)', fontSize: 13.5 }}>
                 You have a dedicated account manager and priority support — response times under 2 hours.

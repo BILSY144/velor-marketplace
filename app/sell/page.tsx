@@ -5,7 +5,7 @@
 //   190       = WORLD_COUNTRIES length (same list as /apply and the flag strip)
 //   24h       = APPLICATION_SLA_HOURS, enforced by /api/cron/review-applications
 //   10/4/0%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
-//   GBP 49/99 = Pro/Enterprise subscriptions (CLAUDE.md money rules)
+//   GBP 49 = Pro subscription (Enterprise retired 2026-07-15)
 // The old copy rule stands: do not write a number here that no code backs up.
 //
 // Payout detail policy (William, 2026-07-08): public pages do not state hold
@@ -19,7 +19,6 @@ import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 const TIERS = [
   { name: 'Starter', sub: 0, com: 0.1, fee: 'Free · 10% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
   { name: 'Pro', sub: 49, com: 0.04, fee: '£49 / month · 4% commission', meta: 'Pays for itself past £820 a month. Free for life for founding sellers.' },
-  { name: 'Enterprise', sub: 99, com: 0, fee: '£99 / month · 0% commission', meta: 'For brands and wholesalers moving serious volume. Pays for itself past £5,000 a month.' },
 ]
 
 const css = `
@@ -123,7 +122,7 @@ export default function SellPage() {
             <h1>Your country&apos;s shopping channel.</h1>
             <p className="vs-lede">
               Velor is a live shopping channel with a marketplace built in. Your listings sell
-              around the clock — and founding sellers go on air from the workshop, the stall, the
+              around the clock — and sellers go on air from the workshop, the stall, the
               kitchen, selling in the stream while buyers watch it made. Buyers come looking for
               what your country does best, and your name, your city and your story stay on every
               listing.
@@ -139,7 +138,7 @@ export default function SellPage() {
             </div>
           </div>
           <div className="vs-stack">
-            <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Live broadcasting — the founding privilege.</b> The first verified seller from each country keeps Velor Live access for life. No standard subscription includes it.</div></div>
+            <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Live broadcasting — for every seller.</b> Go on air on Velor Live from any tier, Starter included. Founding sellers keep the whole Pro tier free for life.</div></div>
             <div className="vs-stat"><div className="n">190</div><div className="t"><b>Countries, one marketplace.</b> Your country&apos;s page exists the day you list — and the first seller from each country opens it.</div></div>
             <div className="vs-stat"><div className="n">0%</div><div className="t"><b>Listing fees. None.</b> You pay commission when you sell, or a subscription that lowers it. Nothing to list.</div></div>
             <div className="vs-stat"><div className="n">{APPLICATION_SLA_HOURS}h</div><div className="t"><b>Application decision</b> within {APPLICATION_SLA_HOURS} hours of your identity verification completing. The clock is ours, the camera is yours.</div></div>
@@ -147,7 +146,7 @@ export default function SellPage() {
         </div>
       </div>
 
-      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive 6 August. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-count"><div className="vs-countbox"><div className="v">{dLeft ?? '—'}</div><div className="l">Days</div></div><div className="vs-countbox"><div className="v">{hLeft ?? '—'}</div><div className="l">Hours</div></div><div className="vs-countbox"><div className="v">{mLeft ?? '—'}</div><div className="l">Minutes</div></div><div className="vs-countbox"><div className="v">{sLeft ?? '—'}</div><div className="l">Seconds</div></div><span className="vs-countlabel">until buyers arrive on Velor</span></div><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day between now and 6 August costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps Pro free for life and live broadcasting on Velor Live for life — access no standard subscription includes, and no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Between now and 6 August, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
+      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive 6 August. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-count"><div className="vs-countbox"><div className="v">{dLeft ?? '—'}</div><div className="l">Days</div></div><div className="vs-countbox"><div className="v">{hLeft ?? '—'}</div><div className="l">Hours</div></div><div className="vs-countbox"><div className="v">{mLeft ?? '—'}</div><div className="l">Minutes</div></div><div className="vs-countbox"><div className="v">{sLeft ?? '—'}</div><div className="l">Seconds</div></div><span className="vs-countlabel">until buyers arrive on Velor</span></div><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day between now and 6 August costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps the full Pro tier free for life — unlimited listings, Go Live, the dedicated AI account manager — a deal no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Between now and 6 August, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
         <div className="vs-wrap">
           <div className="vs-calc">
             <div className="toplbl">The honest maths</div>
@@ -263,8 +262,7 @@ export default function SellPage() {
               <h2>First from your country? Pro is free, for life.</h2>
               <p>The first verified seller from each country opens it on Velor — and keeps the
               founding badge, the showreel slot, Pro free for as long as the subscription runs
-              unbroken, and live broadcasting on Velor Live for life — access no standard
-              subscription includes.</p>
+              unbroken — every Pro benefit, on the house, for as long as they keep selling.</p>
             </div>
             <Link className="vs-btn vs-btn-p" href="/founding">See the open countries</Link>
           </div>

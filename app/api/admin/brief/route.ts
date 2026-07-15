@@ -46,8 +46,8 @@ td { padding: 6px 8px; border-bottom: 1px solid #1c1a16; vertical-align: top; }
 
 <h2>Revenue Model</h2>
 <ul>
-<li>Commission: 10% Starter / 4% Pro / 0% Enterprise per sale</li>
-<li>Seller subscription: Free (Starter) / £49 (Pro) / £99 (Enterprise) per month</li>
+<li>Commission: 10% Starter / 4% Pro per sale (Enterprise retired 2026-07-15)</li>
+<li>Seller subscription: Free (Starter) / £49 (Pro) per month</li>
 <li>Promoted listings: TBD</li>
 </ul>
 

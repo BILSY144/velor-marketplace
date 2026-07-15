@@ -30,7 +30,7 @@ function Preview({ t }: { t: StoreTheme }) {
 
 export default function StorefrontDesign() {
   const { tier: sellerTier, theme } = useSellerTier()
-  const isEnterprise = sellerTier === 'ENTERPRISE'
+  const isEnterprise = sellerTier === 'PRO' || sellerTier === 'ENTERPRISE'
   const isPro = sellerTier === 'PRO'
 
   const [active, setActive] = useState('classic')
@@ -193,7 +193,7 @@ export default function StorefrontDesign() {
       {canAll ? (
         <p style={{ color: isPro || isEnterprise ? accentColor : 'var(--green)', fontSize: 13.5, fontWeight: 700, margin: '0 0 24px' }}>
           {tier === 'PRO' || tier === 'ENTERPRISE'
-            ? `Every design is included with your ${tier === 'ENTERPRISE' ? 'Enterprise' : 'Pro'} plan.`
+            ? `Every design is included with your Pro plan.`
             : 'You have unlocked every design.'}
         </p>
       ) : (

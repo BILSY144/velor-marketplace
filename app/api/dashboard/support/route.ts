@@ -87,7 +87,7 @@ export async function POST(req: Request) {
                 subject: 'We received your support request',
                 html: `<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a">
                         <p>Hi ${seller.storeName},</p>
-                                <p>We've received your message${isPriority ? ' and flagged it for priority review as an Enterprise seller' : ''}. Our team will get back to you soon.</p>
+                                <p>We've received your message${isPriority ? ' and flagged it for priority review as a Pro seller' : ''}. Our team will get back to you soon.</p>
                                         <p><strong>Subject:</strong> ${subject.trim()}</p>
                                               </body></html>`,
         }).catch(() => null)

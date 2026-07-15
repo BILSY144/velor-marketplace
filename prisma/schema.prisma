@@ -37,7 +37,7 @@ enum ShipmentStatus {
 enum SellerTier {
   STARTER
   PRO
-  ENTERPRISE
+  ENTERPRISE // retired 2026-07-15 — kept only so legacy rows never break; treated as PRO in code
 }
 
 model User {

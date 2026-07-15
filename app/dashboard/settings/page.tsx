@@ -27,9 +27,9 @@ const COUNTRY_CURRENCY: Record<string, string> = {
 // Feature list shown in the new "Your Plan" card so sellers can see exactly
 // what their subscription buys them, and what upgrading would add.
 const PLAN_FEATURES: Record<string, string[]> = {
-  STARTER: ['Up to 20 listings', 'Seller dashboard', 'Buyer protection built in', '10% commission'],
-  PRO: ['200 listings', 'Free custom storefront', 'Priority search placement', 'Advanced analytics', '4% commission'],
-  ENTERPRISE: ['Unlimited listings', 'Dedicated account manager', 'Full API access', 'Live Shopping', 'Priority support', '0% commission'],
+  STARTER: ['Up to 10 listings', 'Live Shopping', 'Seller dashboard', 'Buyer protection built in', '10% commission'],
+  PRO: ['Unlimited listings', 'Live Shopping', 'Dedicated AI account manager', 'Full API access', 'Free custom storefront', 'Priority search placement', 'Advanced analytics', 'Priority support', '4% commission'],
+  ENTERPRISE: ['Retired — Pro now includes everything Enterprise offered'],
 }
 
 interface Settings {
@@ -172,9 +172,9 @@ export default function SettingsPage() {
     )
   }
 
-  const isEnterprise = tier === 'ENTERPRISE'
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
   const isPro = tier === 'PRO'
-  const nextTier = tier === 'STARTER' ? 'PRO' : tier === 'PRO' ? 'ENTERPRISE' : null
+  const nextTier = tier === 'STARTER' ? 'PRO' : null // Enterprise retired 2026-07-15
 
   return (
     <div style={{ maxWidth: '680px' }}>
@@ -232,8 +232,8 @@ export default function SettingsPage() {
               href={`/dashboard/upgrade/${nextTier.toLowerCase()}`}
               style={{
                 flexShrink: 0,
-                background: nextTier === 'ENTERPRISE' ? 'linear-gradient(90deg, #FFD54A, #FF6B00)' : '#4FC3F7',
-                color: nextTier === 'ENTERPRISE' ? '#111' : '#001018',
+                background: '#4FC3F7',
+                color: '#001018',
                 fontWeight: 800,
                 fontSize: 13,
                 textDecoration: 'none',

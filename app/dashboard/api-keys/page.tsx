@@ -13,8 +13,8 @@ interface ApiKeyRecord {
   createdAt: string
 }
 
-// This entire page is gated Enterprise-only server-side (see the 403 check
-// below), so every card here uses the gold Enterprise treatment directly —
+// This entire page is gated Pro-only server-side (see the 403 check
+// below), so every card here uses the premium treatment directly —
 // there's no Starter/Pro variant of this page to preserve.
 const goldCard: React.CSSProperties = {
   background: 'linear-gradient(180deg, rgba(255,180,60,0.08), var(--surface) 55%)',
@@ -99,10 +99,10 @@ export default function ApiKeysPage() {
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text)', fontSize: '28px', marginBottom: '16px' }}>API Access</h1>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
           <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
-            API key access for programmatic product and order retrieval is available on the Enterprise plan.
+            API key access for programmatic product and order retrieval is available on the Pro plan.
           </p>
-          <Link href="/dashboard/upgrade/enterprise" style={{ display: 'inline-block', background: 'linear-gradient(90deg, #FFD54A, #FF6B00)', color: '#111', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
-            Upgrade to Enterprise
+          <Link href="/dashboard/upgrade/pro" style={{ display: 'inline-block', background: 'linear-gradient(90deg, #FFD54A, #FF6B00)', color: '#111', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+            Upgrade to Pro
           </Link>
         </div>
       </div>

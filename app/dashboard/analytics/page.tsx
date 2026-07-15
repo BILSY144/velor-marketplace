@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
     const tier = (data.tier as SellerTier) in DASHBOARD_TIER_THEME ? (data.tier as SellerTier) : 'STARTER'
     const theme = DASHBOARD_TIER_THEME[tier]
     const isPro = data.tier === 'PRO' || data.tier === 'ENTERPRISE'
-    const isEnterprise = data.tier === 'ENTERPRISE'
+    const isEnterprise = data.tier === 'PRO' || data.tier === 'ENTERPRISE'
     const tCard = (extra?: React.CSSProperties) => tierCardStyle(theme, { padding: '24px', ...extra })
     const forecast = isEnterprise ? forecastNext30(dailyRevenue) : null
 
@@ -326,7 +326,7 @@ export default function AnalyticsPage() {
                       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                          Enterprise Forecast
+                          Pro Forecast
                         </span>
                         <span style={{ fontSize: 11, color: 'var(--muted)' }}>Projected next 30 days, based on your recent momentum</span>
                       </div>

@@ -12,8 +12,8 @@ export async function GET() {
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
-  if (seller.tier !== 'ENTERPRISE') {
-    return NextResponse.json({ error: 'API access is available on the Enterprise plan' }, { status: 403 })
+  if (seller.tier !== 'PRO' && seller.tier !== 'ENTERPRISE') {
+    return NextResponse.json({ error: 'API access is available on the Pro plan' }, { status: 403 })
     }
 
   const keys = await prisma.apiKey.findMany({
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
   const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
-  if (seller.tier !== 'ENTERPRISE') {
-    return NextResponse.json({ error: 'API access is available on the Enterprise plan' }, { status: 403 })
+  if (seller.tier !== 'PRO' && seller.tier !== 'ENTERPRISE') {
+    return NextResponse.json({ error: 'API access is available on the Pro plan' }, { status: 403 })
     }
 
   const activeCount = await prisma.apiKey.count({

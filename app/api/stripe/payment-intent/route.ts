@@ -8,7 +8,7 @@ import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
 export const dynamic = 'force-dynamic'
 
 const PLATFORM_COMMISSION_RATE = 0.1
-const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0 }
+const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0.04 } // ENTERPRISE retired 2026-07-15: legacy rows read as Pro
 
 // Stripe metadata values are capped at 500 chars each. These caps keep the
 // JSON-encoded shippingAddress well under that limit even with every field

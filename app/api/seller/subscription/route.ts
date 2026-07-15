@@ -7,10 +7,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 })
 
+// Enterprise tier retired 2026-07-15 (William's decision): Pro inherited
+// every Enterprise feature (unlimited listings, Go Live, full AI account
+// manager) at Pro's price and commission. Any legacy ENTERPRISE value on a
+// Seller row is treated as PRO everywhere.
 const TIER_CONFIG = {
-  STARTER: { commission: 10, listingLimit: 20, monthlyFee: 0 },
-  PRO: { commission: 4, listingLimit: 200, monthlyFee: 49 },
-  ENTERPRISE: { commission: 0, listingLimit: null, monthlyFee: 99 },
+  STARTER: { commission: 10, listingLimit: 10, monthlyFee: 0 },
+  PRO: { commission: 4, listingLimit: null, monthlyFee: 49 },
 } as const
 
 export async function GET() {
@@ -27,7 +30,8 @@ export async function GET() {
     return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
   }
 
-  const tier = (seller as any).tier ?? 'STARTER'
+  const rawTier = (seller as any).tier ?? 'STARTER'
+  const tier = rawTier === 'ENTERPRISE' ? 'PRO' : rawTier
   const config = TIER_CONFIG[tier as keyof typeof TIER_CONFIG] ?? TIER_CONFIG.STARTER
   const currentListings = (seller as any)._count?.products ?? 0
   const listingLimit = config.listingLimit as number | null
@@ -78,8 +82,12 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (action === 'upgrade_to_pro' || action === 'upgrade_to_enterprise') {
-    const priceId = action === 'upgrade_to_enterprise' ? process.env.STRIPE_ENTERPRISE_PRICE_ID : process.env.STRIPE_PRO_PRICE_ID
+  if (action === 'upgrade_to_enterprise') {
+    return NextResponse.json({ error: 'The Enterprise tier has been retired — Pro now includes everything it offered.' }, { status: 400 })
+  }
+
+  if (action === 'upgrade_to_pro') {
+    const priceId = process.env.STRIPE_PRO_PRICE_ID
     if (!priceId) {
       return NextResponse.json({ error: 'Selected plan not yet configured' }, { status: 503 })
     }
@@ -105,7 +113,7 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: baseUrl + '/dashboard/upgrade?success=true&plan=' + (action === 'upgrade_to_enterprise' ? 'enterprise' : 'pro'),
+      success_url: baseUrl + '/dashboard/upgrade?success=true&plan=pro',
       cancel_url: baseUrl + '/dashboard/upgrade?cancelled=true',
       metadata: { sellerId: seller.id },
     })

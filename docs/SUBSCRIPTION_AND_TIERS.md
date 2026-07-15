@@ -1,5 +1,18 @@
 # Velor Marketplace — Subscription Tiers & Billing (LOCKED SPEC)
 
+**2026-07-15 update (William's decision, via Claude session): ENTERPRISE TIER RETIRED.**
+Two tiers remain. Pro (£49/mo, 4% commission) inherited every Enterprise
+feature: unlimited listings, Go Live video shopping, the dedicated AI account
+manager (full assistant capability set: order lookups, drafting, escalation),
+full API access. Starter's listing cap dropped 20 -> 10. LIVE SHOPPING IS NOW
+AVAILABLE ON EVERY TIER, Starter included — the old "live broadcasting is the
+founding privilege" positioning is retired with it (founding sellers keep the
+whole Pro tier free for life instead). Legacy ENTERPRISE values on Seller rows
+are treated as PRO everywhere in code; the Prisma enum value is kept only so
+existing rows never break. The Stripe Enterprise product/price is retired (see
+Stripe section). The tier table and details below this note describe the OLD
+three-tier scheme and are retained as history.
+
 Status: FINAL and DEPLOYED. Do not re-litigate. Any change requires an explicit new decision from William.
 Last locked: 2026-07-04.
 

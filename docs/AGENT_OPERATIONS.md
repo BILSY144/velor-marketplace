@@ -21,7 +21,7 @@ to what standard, and how failures are caught. The enforcement mechanism is real
 | 1. Seller Prospecting | Find quality sellers worldwide | /api/cron/scout-sellers (Brave) + /api/cron/enrich-emails | every 6h |
 | 2. Seller Outreach | Invite prospects (max 3 emails, personalised, logged) | /api/cron/outreach-auto -> OutreachLog | every 2h (gated by OUTREACH_ENABLED) |
 | 3. Seller Onboarding | Process applications end-to-end | /api/seller/apply -> SellerApplication + /api/agents/applications review + approval/rejection emails | on event; SLA: reviewed within 24h (target 1h) |
-| 4. Seller Success | Support sellers, priority for Enterprise | SupportTicket system (/api/dashboard/support, auto-PRIORITY for Enterprise, email ack + sellers@ notification) | on event; SLA: first response 24h, priority 4h |
+| 4. Seller Success | Support sellers, priority for Pro | SupportTicket system (/api/dashboard/support, auto-PRIORITY for Enterprise, email ack + sellers@ notification) | on event; SLA: first response 24h, priority 4h |
 | 5. Buyer Acquisition / Marketing | Campaigns per docs/GLOBAL_MARKETING_STRATEGY.md | Phase 1 seller recruitment live via agents 1-2; buyer waitlist popup; paid ads REQUIRE ad accounts (see Honest Gaps) | continuous |
 | 6. Buyer Experience | Fast, honest buyer help | Velor AI assistant (/api/assistant/chat, Claude-powered, live on site) + returns/disputes flows + order tracking | 24/7 (assistant), events |
 | 7. Listings Quality | Review every listing | /api/admin/products/auto-moderate (hard-reject banned, hold regulated + suspicious, approve clean) + certificate review queue | every 5 min |

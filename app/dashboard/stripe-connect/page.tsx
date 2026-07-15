@@ -131,7 +131,7 @@ export default function StripeConnectPage() {
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12, padding: 24, marginBottom: 24 }}>
               <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Set Up Payouts</h3>
               <p style={{ color: '#999999', fontSize: 14, marginBottom: 20 }}>
-                You keep every sale minus your tier&apos;s commission (10% Starter, 4% Pro, 0% Enterprise). Payouts are processed by Stripe.
+                You keep every sale minus your tier&apos;s commission (10% Starter, 4% Pro). Payouts are processed by Stripe.
               </p>
               <button
                 onClick={handleConnect}
@@ -166,7 +166,7 @@ export default function StripeConnectPage() {
             <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>How payouts work</h3>
             {[
               { step: '1', text: 'A customer purchases your product' },
-              { step: '2', text: "Velor deducts your tier's commission (10% Starter, 4% Pro, 0% Enterprise)" },
+              { step: '2', text: "Velor deducts your tier's commission (10% Starter, 4% Pro)" },
               { step: '3', text: 'Funds are held safely until the buyer confirms delivery' },
               { step: '4', text: 'Your share is released to your Stripe account -- within 15 days for new sellers, 72 hours once trusted' },
             ].map(item => (

@@ -20,7 +20,7 @@ export interface TierTheme {
   rowHoverBg: string
 }
 
-// Single source of truth for how Starter / Pro / Enterprise dashboard pages
+// Single source of truth for how Starter / Pro dashboard pages (ENTERPRISE kept only as a legacy alias)
 // look. Starter stays exactly as the original plain design. Pro layers in a
 // blue accent treatment. Enterprise layers in a gold "premium" treatment.
 // Import this everywhere instead of re-deriving colours per page.

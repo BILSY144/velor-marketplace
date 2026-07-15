@@ -91,8 +91,7 @@ function CommissionLadder({ tier, accentColor }: { tier: string; accentColor: st
   const tiers: Array<{ key: string; label: string }> = [
     { key: 'STARTER', label: 'Starter' },
     { key: 'PRO', label: 'Pro' },
-    { key: 'ENTERPRISE', label: 'Enterprise' },
-  ];
+      ];
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
       {tiers.map((t) => {
@@ -194,7 +193,7 @@ function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentC
 
 export default function PayoutsPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'ENTERPRISE';
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
   const isElevated = tier !== 'STARTER';
   const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
 
