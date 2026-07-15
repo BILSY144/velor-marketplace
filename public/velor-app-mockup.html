@@ -1731,7 +1731,7 @@ function renderDash(){
   if(DASHTIER==='PRO'){
     h+='<div class="pad" style="padding-top:64px;display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">YOUR CHANNEL</div><h1 class="dspl" style="font-size:26px;margin-top:8px">Studio Kaede</h1><div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap"><span class="fbadge">FOUNDING · JAPAN '+flag('JP')+'</span><span class="tbadge pro">PRO · 4%</span></div></div><button class="gbtn" style="position:static" onclick="go(\'notif\')">'+I.bell+'<span class="gdot">2</span></button></div>'
      +dashSeg()
-     +'<div class="dstats"><div class="ds"><div class="dk">1,284</div><div class="dl">Views · 7d</div></div><div class="ds"><div class="dk">6</div><div class="dl">To ship</div></div><div class="ds"><div class="dk">&pound;412</div><div class="dl">In escrow</div></div><div class="ds"><div class="dk">&pound;2,140</div><div class="dl">Paid out</div></div></div>'
+     +'<div class="dstats"><div class="ds"><div class="dk">1,284</div><div class="dl">Views · 7d</div></div><button class="ds tap" onclick="soFilter(\'ship\');go(\'sellorders\')"><div class="dk">'+soCount('ship')+'</div><div class="dl">To ship</div></button><button class="ds tap" onclick="go(\'payouts\')"><div class="dk">&pound;412</div><div class="dl">In escrow</div></button><button class="ds tap" onclick="go(\'payouts\')"><div class="dk">&pound;2,140</div><div class="dl">Paid out</div></button></div>'
      +'<div class="pad">'+chartCard()+'</div>'
      +'<div class="pad"><div class="aimgr"><div style="display:flex;gap:10px;align-items:center"><img src="/velor-assistant.png" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">Your AI account manager</div><div class="sm dim">Pro-only &middot; watching your channel around the clock</div></div></div>'
      +'<div class="aitip">Your raku bowls take 3&times; more views in the 24h after a live session. One more broadcast this week would catch the weekend buyers.</div>'
@@ -1743,8 +1743,8 @@ function renderDash(){
      +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">WHERE YOUR VIEWS COME FROM</div>'
      +dashBar('Your live sessions',46,'46%')+dashBar('Japan country page',27,'27%')+dashBar('Search',17,'17%')+dashBar('Craft pages &middot; Clay',10,'10%')
      +'</div></div>'
-     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">ORDER PIPELINE</div><div class="pipe">'+[['3','New'],['6','To ship'],['4','In transit'],['26','Delivered']].map(function(p,i){return '<div class="pc'+(i===1?' hot':'')+'"><div class="serif" style="font-size:19px">'+p[0]+'</div><div class="sm dim" style="margin-top:2px">'+p[1]+'</div></div>'}).join('')+'</div>'
-     +'<p class="sm dim" style="margin-top:11px">&pound;86 releases from escrow Friday &mdash; delivery confirmed on VLR-8207.</p></div></div>'
+     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">ORDER PIPELINE</div><div class="pipe">'+[['new','New'],['ship','To ship'],['transit','In transit'],['done','Delivered']].map(function(p,i){return '<button class="pc'+(i===1?' hot':'')+'" onclick="soFilter(\''+p[0]+'\');go(\'sellorders\')"><div class="serif" style="font-size:19px">'+soCount(p[0])+'</div><div class="sm dim" style="margin-top:2px">'+p[1]+'</div></button>'}).join('')+'</div>'
+     +'<button class="sm dim" style="margin-top:11px;text-align:left;color:var(--mut);display:block" onclick="go(\'payouts\')">&pound;86 releases from escrow Friday &mdash; delivery confirmed on VLR-8207. <span style="color:var(--accent)">Payouts &rarr;</span></button></div></div>'
      +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">TOP LISTINGS &middot; 30D REVENUE</div>'
      +dashBar('Kuro raku tea bowl',100,'&pound;816')+dashBar('Gongfu tea set',62,'&pound;504')+dashBar('Sake set, wood-fired',41,'&pound;336')
      +'</div></div>'
@@ -1753,16 +1753,16 @@ function renderDash(){
      +'</div></div>'
      +'<div class="pad"><button class="golive" onclick="go(\'golive\')"><span class="lc">'+I.cam+'</span><div style="flex:1;text-align:left"><div class="fd" style="font-size:15px;font-weight:600">Go live on your channel</div><div class="sm mut">612 watched last stream &middot; &pound;340 sold &middot; +48 follows</div></div>'+I.arrow.replace('<svg','<svg style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2"')+'</button></div>'
      +'<div class="pad"><div class="k d" style="margin-top:24px">TO DO</div></div>'
-     +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">Ship VLR-8241 &middot; Gongfu tea set</div><div class="sm dim">Buyer in the UK &middot; add tracking once collected</div></div><button class="btn sm" style="width:auto;padding:0 16px" onclick="toast(\'Add tracking — buyer sees it instantly\')">Ship</button></div>'
+     +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">Ship VLR-8241 &middot; Gongfu tea set</div><div class="sm dim">Buyer in the UK &middot; add tracking once collected</div></div><button class="btn sm" style="width:auto;padding:0 16px" onclick="soFilter(\'ship\');go(\'sellorders\')">Ship</button></div>'
      +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">1 certificate needed</div><div class="sm dim">Your rosewood tea scoop needs a CITES certificate to list</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="toast(\'Certificate upload\')">Upload</button></div>'
      +'<div class="pad" style="display:flex;align-items:baseline;justify-content:space-between"><div class="k d" style="margin-top:24px">LISTINGS &middot; UNLIMITED</div><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600;margin-top:24px" onclick="go(\'newlisting\')">+ New</button></div>'
      +[['Kuro raku tea bowl','Live &middot; 214 views &middot; 3 in stock','&pound;68',14705063,''],['Sake set, wood-fired','Live &middot; 96 views &middot; 5 in stock','&pound;84',18198515,''],['Rosewood tea scoop','Held &mdash; certificate required','&pound;22',30907889,'held']].map(function(l){return '<div class="listing"><img src="'+px(l[3])+'"><div style="flex:1"><div class="lt">'+l[0]+'</div><div class="ls'+(l[4]?' held':'')+'">'+l[1]+'</div></div><div class="lp">'+l[2]+'</div></div>'}).join('')
-     +'<div class="pad"><div class="todo" style="margin-top:14px;padding-left:0;padding-right:0;border-bottom:none"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">API access</div><div class="sm dim">Pro-only &mdash; wire your channel into your own tools</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="toast(\'API keys live in the seller dashboard on web\')">Keys</button></div></div>'
+     +'<div class="pad"><div class="todo" style="margin-top:14px;padding-left:0;padding-right:0;border-bottom:none"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">API access</div><div class="sm dim">Pro-only &mdash; wire your channel into your own tools</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="go(\'apikeys\')">Keys</button></div></div>'
      +'<div class="pad"><button class="btn ghost sm" style="margin-top:6px" onclick="go(\'payouts\')">Payouts &amp; earnings</button></div>';
   } else {
     h+='<div class="pad" style="padding-top:64px;display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">YOUR CHANNEL</div><h1 class="dspl" style="font-size:26px;margin-top:8px">Killa Textiles</h1><div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap"><span class="fbadge" style="border-color:rgba(255,255,255,.18);color:var(--mut)">PERU '+flag('PE')+'</span><span class="tbadge">STARTER · 10%</span></div></div><button class="gbtn" style="position:static" onclick="go(\'notif\')">'+I.bell+'</button></div>'
      +dashSeg()
-     +'<div class="dstats"><div class="ds"><div class="dk">318</div><div class="dl">Views · 7d</div></div><div class="ds"><div class="dk">2</div><div class="dl">To ship</div></div><div class="ds"><div class="dk">&pound;96</div><div class="dl">In escrow</div></div></div>'
+     +'<div class="dstats"><div class="ds"><div class="dk">318</div><div class="dl">Views · 7d</div></div><button class="ds tap" onclick="soFilter(\'ship\');go(\'sellorders\')"><div class="dk">2</div><div class="dl">To ship</div></button><button class="ds tap" onclick="go(\'payouts\')"><div class="dk">&pound;96</div><div class="dl">In escrow</div></button></div>'
      +'<div class="pad"><button class="golive" onclick="go(\'golive\')"><span class="lc">'+I.cam+'</span><div style="flex:1;text-align:left"><div class="fd" style="font-size:15px;font-weight:600">Go live on your channel</div><div class="sm mut">Live is open to every seller &mdash; broadcast from the loom.</div></div>'+I.arrow.replace('<svg','<svg style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2"')+'</button></div>'
      +'<div class="pad"><div class="k d" style="margin-top:24px">LISTINGS &middot; 7 OF 10</div></div>'
      +'<div class="pad"><div class="capbar"><span style="width:70%"></span></div><p class="sm dim" style="margin-top:7px">3 listing slots left on Starter.</p></div>'
@@ -1774,6 +1774,93 @@ function renderDash(){
   }
   host.innerHTML=h;
 }
+/* ===== SELLER ORDERS ===== */
+/* One live model drives the dashboard pipeline numbers AND this screen —
+   Ship actually moves an order to In transit and everything recomputes. */
+var SELLORD=[
+ {id:'VLR-8259',item:'Kuro raku tea bowl',img:14705063,to:'US',price:68,st:'new'},
+ {id:'VLR-8257',item:'Sake set, wood-fired',img:18198515,to:'GB',price:84,st:'new'},
+ {id:'VLR-8255',item:'Gongfu tea set',img:14563207,to:'DE',price:120,st:'new'},
+ {id:'VLR-8241',item:'Gongfu tea set',img:14563207,to:'GB',price:120,st:'ship'},
+ {id:'VLR-8240',item:'Kuro raku tea bowl',img:14705063,to:'AU',price:68,st:'ship'},
+ {id:'VLR-8238',item:'Sake set, wood-fired',img:18198515,to:'US',price:84,st:'ship'},
+ {id:'VLR-8236',item:'Kuro raku tea bowl',img:14705063,to:'GB',price:68,st:'ship'},
+ {id:'VLR-8233',item:'Matcha whisk & bowl',img:8330375,to:'US',price:52,st:'ship'},
+ {id:'VLR-8231',item:'Kuro raku tea bowl',img:14705063,to:'DE',price:68,st:'ship'},
+ {id:'VLR-8228',item:'Sake set, wood-fired',img:18198515,to:'GB',price:84,st:'transit',trk:'RR20841JP'},
+ {id:'VLR-8224',item:'Gongfu tea set',img:14563207,to:'US',price:120,st:'transit',trk:'RR20713JP'},
+ {id:'VLR-8219',item:'Kuro raku tea bowl',img:14705063,to:'GB',price:68,st:'transit',trk:'RR20698JP'},
+ {id:'VLR-8214',item:'Matcha whisk & bowl',img:8330375,to:'AU',price:52,st:'transit',trk:'RR20655JP'},
+ {id:'VLR-8207',item:'Sake set, wood-fired',img:18198515,to:'GB',price:84,st:'done',when:'Delivered Mon — £86 releases Friday'},
+ {id:'VLR-8199',item:'Kuro raku tea bowl',img:14705063,to:'US',price:68,st:'done',when:'Delivered 9 Jul'},
+ {id:'VLR-8188',item:'Gongfu tea set',img:14563207,to:'DE',price:120,st:'done',when:'Delivered 6 Jul'},
+ {id:'VLR-8174',item:'Kuro raku tea bowl',img:14705063,to:'GB',price:68,st:'done',when:'Delivered 3 Jul'},
+ {id:'VLR-8161',item:'Matcha whisk & bowl',img:8330375,to:'US',price:52,st:'done',when:'Delivered 1 Jul'}
+];
+var SO_EARLIER=21; /* delivered before this sample window */
+function soCount(st){ var n=0,i; for(i=0;i<SELLORD.length;i++) if(SELLORD[i].st===st) n++; return st==='done'?n+SO_EARLIER:n }
+var SOF='ship';
+S.sellorders='<div class="scr" id="s-sellorders"><div class="sc" id="soslot" style="padding-bottom:130px"></div></div>'
+function soName(c){ return {GB:'United Kingdom',US:'United States',DE:'Germany',AU:'Australia'}[c]||c }
+function soShip(id){
+  var i; for(i=0;i<SELLORD.length;i++) if(SELLORD[i].id===id){ SELLORD[i].st='transit'; SELLORD[i].trk='RR'+(20900+Math.floor(i*7))+'JP' }
+  toast('Tracking added — the buyer sees it instantly');
+  renderSellOrders(); var d=document.getElementById('dashslot'); if(d){ d.innerHTML=''; renderDash() }
+}
+function soFilter(f){ SOF=f; renderSellOrders() }
+function renderSellOrders(){
+  var host=document.getElementById('soslot'); if(!host) return;
+  var chips=[['new','New'],['ship','To ship'],['transit','In transit'],['done','Delivered']];
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button>'
+   +'<div class="k" style="margin-top:18px">STUDIO KAEDE</div>'
+   +'<h1 class="dspl" style="font-size:30px;margin-top:8px">Orders.</h1>'
+   +'<p class="sm dim" style="margin-top:8px">Every parcel, every stage. You ship with your own carrier &mdash; tracking goes straight to the buyer.</p></div>'
+   +'<div class="hrail" style="padding-top:16px;gap:7px">'+chips.map(function(c){return '<button class="pill'+(SOF===c[0]?' on':'')+'" style="flex:0 0 auto" onclick="soFilter(\''+c[0]+'\')">'+c[1]+' &middot; '+soCount(c[0])+'</button>'}).join('')+'</div>';
+  var rows=SELLORD.filter(function(o){return o.st===SOF});
+  if(!rows.length){ h+='<div class="empty" style="margin:34px 20px 0"><div class="ering">'+I.bag+'</div><h2 class="serif" style="font-size:20px;margin-top:14px">Nothing here right now.</h2></div>'; }
+  rows.forEach(function(o){
+    h+='<div class="listing" style="align-items:flex-start"><img src="'+px(o.img)+'"><div style="flex:1;min-width:0"><div class="lt">'+o.item+'</div>'
+     +'<div class="ls">'+o.id+' &middot; <span style="display:inline-flex;width:15px;height:11px;border-radius:2px;overflow:hidden;vertical-align:-1px">'+flag(o.to)+'</span> '+soName(o.to)+'</div>'
+     +(o.st==='transit'?'<div class="sm dim" style="margin-top:3px">In transit &middot; '+o.trk+'</div>':'')
+     +(o.st==='done'?'<div class="sm dim" style="margin-top:3px">'+o.when+'</div>':'')
+     +(o.st==='new'?'<div class="sm dim" style="margin-top:3px">Paid &middot; preparing</div>':'')
+     +'</div><div style="text-align:right"><div class="lp">&pound;'+o.price+'</div>'
+     +(o.st==='ship'?'<button class="btn sm" style="width:auto;padding:0 15px;margin-top:8px" onclick="soShip(\''+o.id+'\')">Ship</button>':'')
+     +'</div></div>';
+  });
+  if(SOF==='done') h+='<div class="pad"><p class="sm dim" style="margin-top:14px">+ '+SO_EARLIER+' earlier deliveries &middot; all released from escrow.</p></div>';
+  host.innerHTML=h;
+}
+
+/* ===== API KEYS (Pro) ===== */
+var AKEYS=[{n:'Workshop stock sync',k:'vlr_live_&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;3kf9',made:'2 Jul 2026',fresh:false}];
+S.apikeys='<div class="scr" id="s-apikeys"><div class="sc" id="akslot" style="padding-bottom:130px"></div></div>'
+function akCreate(){
+  AKEYS.push({n:'New key '+AKEYS.length,k:'vlr_live_9h2m4qzt7x1c8vw3',made:'Today',fresh:true});
+  toast('Key created — copy it now, it is shown once');
+  renderApiKeys();
+}
+function akRevoke(i){ AKEYS.splice(i,1); toast('Key revoked'); renderApiKeys() }
+function renderApiKeys(){
+  var host=document.getElementById('akslot'); if(!host) return;
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button>'
+   +'<div class="k" style="margin-top:18px">PRO TOOLS</div>'
+   +'<h1 class="dspl" style="font-size:30px;margin-top:8px">API access.</h1>'
+   +'<p class="sm dim" style="margin-top:9px;max-width:31ch">Wire your channel into your own tools &mdash; stock sync, order export, live-session alerts. Included with Pro.</p></div>'
+   +'<div class="pad"><div class="k d" style="margin-top:24px">YOUR KEYS</div></div>';
+  AKEYS.forEach(function(key,i){
+    h+='<div class="pad"><div class="chart" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1;min-width:0"><div class="fd" style="font-size:13.5px;font-weight:600">'+key.n+'</div>'
+     +'<div class="sm '+(key.fresh?'':'dim')+'" style="margin-top:6px;font-family:monospace;font-size:11.5px;word-break:break-all;'+(key.fresh?'color:var(--accent)':'')+'">'+key.k+'</div>'
+     +'<div class="sm dim" style="margin-top:6px">Created '+key.made+(key.fresh?' &middot; shown once — copy it now':'')+'</div></div>'
+     +'<button class="btn line sm" style="width:auto;padding:0 13px;flex:0 0 auto;margin-left:10px" onclick="akRevoke('+i+')">Revoke</button></div></div></div>';
+  });
+  h+='<div class="pad"><button class="btn" style="margin-top:14px" onclick="akCreate()">Create a new key</button></div>'
+   +'<div class="pad"><div class="k d" style="margin-top:26px">WHAT KEYS CAN DO</div></div>'
+   +'<div class="pad"><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">'+['Read orders','Update stock','Create listings','Live-session events','Payout reports'].map(function(s){return '<span class="pill" style="flex:0 0 auto">'+s+'</span>'}).join('')+'</div>'
+   +'<p class="sm dim" style="margin-top:14px">Keys are shown once and stored hashed. Revoke instantly from here if one leaks. Rate limit: 600 requests/min.</p></div>';
+  host.innerHTML=h;
+}
+
 /* ===== NEW LISTING ===== */
 S.newlisting='<div class="scr" id="s-newlisting"><div class="sc" style="padding-bottom:150px">'
 +'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Draft saved\')">Save draft</button></div>'
@@ -1808,10 +1895,10 @@ S.golive='<div class="scr" id="s-golive" style="background:#000">'
 +'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air.</div>'
 +'</div>'
 /* ================= ROUTER & BEHAVIOURS ================= */
-var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['addr','Addresses'],['pay','Payment'],['langcur','Language'],['legal','Legal'],['legaldoc','Legal doc'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
+var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['addr','Addresses'],['pay','Payment'],['langcur','Language'],['legal','Legal'],['legaldoc','Legal doc'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['sellorders','Seller orders'],['apikeys','API keys'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
 var TABS=[['atlas','Atlas',I.globe],['live','Live',I.live],['search','Search',I.search],['cart','Basket',I.bag],['account','You',I.user]]
 var FULL={splash:1,atlas:1,live:1,golive:1,craft:1,confirm:1}
-var TABMAP={atlas:'atlas',country:'atlas',pdp:'atlas',live:'live',search:'search',cart:'cart',checkout:'cart',confirm:'cart',orders:'account',odetail:'account',dispute:'account',passport:'account',notif:'atlas',account:'account',assist:'account',sell:'account',seats:'account',apply:'account',verify:'account',dash:'account',newlisting:'account',payouts:'account',golive:'account'}
+var TABMAP={atlas:'atlas',country:'atlas',pdp:'atlas',live:'live',search:'search',cart:'cart',checkout:'cart',confirm:'cart',orders:'account',odetail:'account',dispute:'account',passport:'account',notif:'atlas',account:'account',assist:'account',sell:'account',seats:'account',apply:'account',verify:'account',dash:'account',sellorders:'account',apikeys:'account',newlisting:'account',payouts:'account',golive:'account'}
 
 var MENU_HTML=''
 MENU_HTML+='<div class="menu" id="menu">'
@@ -1875,7 +1962,9 @@ function go(id){
   if(id==='langcur'){ renderLangCur() }
   if(id==='assist'){ renderAssist() }
   if(id==='seats'){ renderSeats() }
-  if(id==='dash'){ renderDash() }
+  if(id==='dash'){ var dsl=document.getElementById('dashslot'); if(dsl) dsl.innerHTML=''; renderDash() }
+  if(id==='sellorders'){ renderSellOrders() }
+  if(id==='apikeys'){ renderApiKeys() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
@@ -2124,6 +2213,9 @@ splashT=setTimeout(endSplash,2600)
 .pipe .pc{flex:1;background:rgba(0,0,0,.28);border-radius:13px;padding:11px 6px;text-align:center}
 .pipe .pc.hot{box-shadow:inset 0 0 0 1px rgba(255,107,0,.4)}
 .pipe .pc.hot .serif{color:var(--accent)}
+.ds.tap{cursor:pointer}
+.ds.tap .dl::after{content:' \2192';color:var(--accent)}
+.pipe button.pc{cursor:pointer}
 .steps3{margin:14px 20px 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,.03)}
 .vstep{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}.vstep:last-child{border:none}
 .vn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--mut);flex:0 0 auto}
