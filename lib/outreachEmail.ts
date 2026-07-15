@@ -98,6 +98,11 @@ const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = 
     codes: ['MA', 'EG', 'AE', 'SA', 'JO', 'QA', 'KW', 'TN', 'DZ', 'BH', 'OM', 'LB'],
     names: ['MOROCCO', 'EGYPT', 'EMIRATES', 'SAUDI', 'JORDAN', 'QATAR', 'KUWAIT', 'TUNISIA', 'ALGERIA', 'BAHRAIN', 'OMAN', 'LEBANON', 'DUBAI'],
   },
+  {
+    file: 'hero-seasia.jpg',
+    codes: ['VN', 'TH', 'ID', 'MY', 'PH', 'SG', 'KH', 'LA', 'MM'],
+    names: ['VIETNAM', 'THAILAND', 'INDONESIA', 'MALAYSIA', 'PHILIPPINES', 'SINGAPORE', 'CAMBODIA', 'LAOS', 'MYANMAR', 'BALI'],
+  },
 ]
 
 function heroForCountry(country: string | null | undefined): string {
