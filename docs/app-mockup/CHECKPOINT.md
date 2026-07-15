@@ -11,7 +11,12 @@ Last updated: 2026-07-14 (session with William — country-dive videos).
   flow) + the REAL section list extracted from the live pages'
   source, with "Read the full text -- opens your browser" as an explicit
   choice at the bottom. Verified live: Terms opens in-app, no tab.
-- Commit 5759fb7.
+- FOLLOW-UP (same day): the section rows were static; William flagged
+  it. All 53 sections across the four docs now carry the REAL body text
+  extracted verbatim from the live pages' source (terms 12, privacy 10,
+  seller agreement 11, help 20), rendered as tap-to-expand accordions.
+  Verified live: Buyer Protections expands with the published 14-day
+  text. Commits 5759fb7, 4983969.
 
 ## 2026-07-15: The opening bell audibly rings
 
