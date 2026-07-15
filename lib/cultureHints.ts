@@ -183,7 +183,41 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   AE: ['Oud perfume', 'Dates'],
   OM: ['Frankincense', 'Perfume oils'],
   YE: ['Mocha coffee', 'Sidr honey'],
-  QA: ['Oud & bakhoor'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- backlog item 25's
+  // content-depth project, Qatar picked next from the floor-of-1 list.
+  // Five product-level additions, each multi-source verified, none
+  // invented; existing 'Oud & bakhoor' kept unchanged. Bisht (men's woven
+  // cloak with real gold-thread trim) is UNESCO-inscribed 2025 as "Bisht
+  // (men's Abaa): skills and practices" (ich.unesco.org via visitqatar.com's
+  // own crafts page), independently corroborated by The Peninsula Qatar's
+  // "Age-old tradition of Bisht-making thrives at Souq Waqif" (named
+  // craftsman, week-to-ten-day process, handmade bishts selling QR1,800-
+  // 9,000 today) and Qatar Tribune's coverage of Katara's "Bisht House"
+  // showcase -- a currently-made, currently-sold product, not a museum
+  // piece. Al-Sadu woven textiles (geometric red/black/white weaving from
+  // sheep wool, camel and goat hair, traditionally done by women) is
+  // UNESCO-inscribed 2025 as "Traditional weaving of Al Sadu", corroborated
+  // by Qatar Museums' own Al Sadu page, Qatar's Ministry of Culture
+  // inventory entry, Marhaba Qatar's "Sadu Weaving in Qatar" piece, and
+  // Wikipedia's Al Sadu article -- kept distinct from the bisht cloak it is
+  // sometimes woven into trim for. Gold & silver-thread naqdah embroidery
+  // (an-naqdah technique applied to garments and wedding hijabs) is
+  // documented on visitqatar.com's official crafts page and independently
+  // corroborated by ILoveQatar.net's traditional-arts guide, which notes
+  // the technique is still in active use today, including by contemporary
+  // Qatari brands. Gypsum-carved decor (patterned incense burners, window
+  // frames and small ornamental objects, adapted from Qatari architectural
+  // motifs) is documented on visitqatar.com's official crafts page.
+  // Pottery & ceramics (handmade bowls, coffee mugs, vases sold at Souq
+  // Waqif) is listed as a Qatari craft category on visitqatar.com and
+  // independently corroborated as a currently-operating, currently-selling
+  // craft by Gulf Times' "Souq Waqif potter keeps handmade tradition alive"
+  // -- noted for accuracy: that specific Souq Waqif workshop is run by an
+  // Egyptian-born potter blending Qatari and Egyptian motifs, so the
+  // category (pottery as a real, sold Qatari souq craft) is verified even
+  // though this one example artisan is not himself Qatari by origin. No
+  // shell/ivory/coral/bone material in any of the five.
+  QA: ['Oud & bakhoor', 'Hand-woven bisht cloaks', 'Al-Sadu woven textiles', 'Gold & silver-thread naqdah embroidery', 'Gypsum-carved decor', 'Pottery & ceramics'],
   KW: ['Dates', 'Perfume oils'],
   BH: ['Pearl jewellery'],
   TW: ['High-mountain oolong', 'Ceramics'],
