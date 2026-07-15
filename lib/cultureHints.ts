@@ -106,7 +106,35 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // reason already applied to Kazakhstan above).
   KG: ['Shyrdak felt rugs', 'Ala-kiyiz felt tapestries', 'Tush kiyiz embroidered wall hangings', 'Kalpak felt hats', 'Komuz instruments', 'Silver jewellery with turquoise'],
   UZ: ['Ikat silks', 'Suzani embroidery', 'Ceramics'],
-  TJ: ['Embroidered textiles'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Tajikistan was at the
+  // 1-item floor (backlog item 25's priority list). Five product-level
+  // additions, each corroborated across at least two independent sources,
+  // no invented content: Chakan embroidery (floral/symbolic needlework on
+  // cotton or silk) is a UNESCO Intangible Cultural Heritage element in its
+  // own right ("Chakan, embroidery art in the Republic of Tajikistan",
+  // inscribed 2018, ich.unesco.org) and is separately covered by
+  // central-asia.guide's "Tajik Handicrafts" page and Kalpak Travel's
+  // Tajikistan souvenirs guide -- it replaces the prior generic
+  // "Embroidered textiles" label with the real, specific craft name. Suzani
+  // wall hangings (embroidered dowry cloths) and Zardozi/Zarduzi gold- and
+  // silver-thread embroidery are both documented independently by
+  // central-asia.guide and advantour.com's "Traditional Crafts in
+  // Tajikistan" page (the latter using the transliteration "Suzane" and
+  // "Zarduzi"). Ikat-dyed adras/atlas silk textiles (resist-dye patterning
+  // before weaving) are corroborated by Kalpak Travel's souvenir guide and
+  // advantour.com's description of "Abrbandy" ("the most ancient kind of
+  // national craft of Tajiks"). Istaravshan Kord knives (curved blades,
+  // horn/bone/wood handles, hand-engraved) are documented by Kalpak
+  // Travel's souvenir guide, the Encyclopedia of Crafts in the WCC-Asia
+  // Pacific Region's dedicated "Kord (knives)" entry, and Eurasia.travel's
+  // page on Istaravshan craftsmanship. Hand-carved rubab & dutar
+  // instruments (mulberry/apricot wood, motif-carved) are covered by
+  // Kalpak Travel and advantour.com's note on decorative carving of
+  // "musical instruments" -- and the rubab specifically had its
+  // craftsmanship and playing traditions added to UNESCO's Intangible
+  // Cultural Heritage list in 2024, jointly with Afghanistan, Iran, and
+  // Uzbekistan (World Music Central).
+  TJ: ['Chakan embroidery', 'Suzani wall hangings', 'Zardozi gold & silver thread embroidery', 'Ikat-dyed adras silk textiles', 'Istaravshan Kord knives', 'Hand-carved rubab & dutar instruments'],
   TM: ['Hand-knotted Turkmen carpets'],
   AM: ['Carpets', 'Pomegranate ceramics'],
   AZ: ['Carpets', 'Tea sets'],
