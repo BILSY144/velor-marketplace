@@ -109,6 +109,16 @@ const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = 
     names: ['MEXICO', 'GUATEMALA', 'OAXACA', 'PUEBLA'],
   },
   {
+    file: 'hero-peru.jpg',
+    codes: ['PE', 'BO', 'EC', 'CO', 'CL', 'AR'],
+    names: ['PERU', 'BOLIVIA', 'ECUADOR', 'COLOMBIA', 'CHILE', 'ARGENTINA', 'ANDES', 'CUSCO'],
+  },
+  {
+    file: 'hero-turkey.jpg',
+    codes: ['TR'],
+    names: ['TURKEY', 'TURKIYE', 'ISTANBUL', 'ANATOLIA'],
+  },
+  {
     file: 'hero-japan.jpg',
     codes: ['JP'],
     names: ['JAPAN', 'KYOTO', 'OSAKA', 'TOKYO'],
