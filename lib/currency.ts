@@ -12,8 +12,10 @@
 // from this 'use client' file got an empty array at render time). Re-exported
 // here so every existing `from '@/lib/currency'` import keeps working
 // unchanged; new server-side code should import lib/currencyData.ts directly.
-export { SUPPORTED_CURRENCIES, COUNTRY_TO_CURRENCY, CURRENCY_NAMES } from './currencyData'
-export type { SupportedCurrency } from './currencyData'
+import { SUPPORTED_CURRENCIES, COUNTRY_TO_CURRENCY, CURRENCY_NAMES } from './currencyData'
+import type { SupportedCurrency } from './currencyData'
+export { SUPPORTED_CURRENCIES, COUNTRY_TO_CURRENCY, CURRENCY_NAMES }
+export type { SupportedCurrency }
 
 const STORAGE_KEY = 'velor-display-currency'
 
