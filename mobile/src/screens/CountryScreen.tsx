@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { C, F, pexels } from '../theme'
+import { C, F, pexels, flagUrl } from '../theme'
 import { countryName, HINTS, IMAGERY, STORIES, filmsFor } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -17,6 +17,9 @@ import { useCart } from '../store'
 // name, "Channel seat open" meta, THE ORIGIN story in Fraunces 19, the
 // SIGNATURE CRAFTS reel (IMAGERY tiles, Fraunces 14 titles + orange arrow),
 // preview films, then real listings / founding CTA (honest zero state).
+const TRAVEL_ON = ['MX', 'IT', 'UZ', 'GH', 'ET', 'PT', 'JP']
+const FOLLOWED = new Set<string>()
+
 export default function CountryScreen() {
   const route = useRoute<any>()
   const nav = useNavigation<any>()
@@ -33,6 +36,12 @@ export default function CountryScreen() {
     queryFn: () => fetchProductsByOrigin(cc),
   })
   const trading = (products.data?.length ?? 0) > 0
+  const [followed, setFollowed] = React.useState(FOLLOWED.has(cc))
+  function toggleFollow(code: string) {
+    if (FOLLOWED.has(code)) FOLLOWED.delete(code)
+    else FOLLOWED.add(code)
+    setFollowed(FOLLOWED.has(code))
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -153,6 +162,59 @@ export default function CountryScreen() {
             </View>
           )}
         </View>
+
+        {/* BE THE FIRST — founding spotlight (plate 02), only while nobody sells */}
+        {!trading && !products.isLoading ? (
+          <View style={s.found}>
+            <Text style={s.foundK}>BE THE FIRST</Text>
+            <Text style={s.foundT}>Open {name}'s{'\n'}channel.</Text>
+            <Dim style={{ marginTop: 9, lineHeight: 18 }}>
+              Nobody sells from {name} yet. Its first verified seller keeps the founding
+              badge and the full Pro tier free for life — and is credited as the seller
+              who opened it.
+            </Dim>
+            <Btn label="Claim the founding seat" style={{ marginTop: 16 }} onPress={() => nav.navigate('Apply', { cc })} />
+            <Btn
+              ghost
+              label={followed ? `Following ${name} — the bell will ring` : `Follow ${name}`}
+              style={{ marginTop: 9 }}
+              onPress={() => toggleFollow(cc)}
+            />
+          </View>
+        ) : null}
+
+        {/* Passport tie (plate 02) */}
+        <Pressable style={s.passtie} onPress={() => nav.navigate('Passport')}>
+          <View style={s.passFlag}>
+            <Image source={{ uri: flagUrl(cc) }} style={{ width: 26, height: 19, borderRadius: 3 }} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Body style={{ fontFamily: F.bodySemi, fontSize: 13 }}>Earn the {name} stamp</Body>
+            <Dim style={{ fontSize: 11.5, marginTop: 2 }}>
+              Buy from here and {name} joins your Passport on delivery.
+            </Dim>
+          </View>
+          <Ionicons name="arrow-forward" size={16} color={C.mut} />
+        </Pressable>
+
+        {/* TRAVEL ON (plate 02) */}
+        <View style={{ paddingTop: 26 }}>
+          <Kicker style={{ paddingHorizontal: 20, color: C.mut }}>TRAVEL ON</Kicker>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 12 }}>
+            {TRAVEL_ON.filter((t) => t !== cc).slice(0, 6).map((t) => {
+              const im = (IMAGERY[t] ?? [])[0]
+              return (
+                <Pressable key={t} style={s.travelTile} onPress={() => nav.push('Country', { cc: t })}>
+                  {im ? (
+                    <Image source={{ uri: pexels(im.i, 500) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+                  ) : null}
+                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} locations={[0.55, 1]} style={StyleSheet.absoluteFill} />
+                  <Text style={s.travelName}>{countryName(t)}</Text>
+                </Pressable>
+              )
+            })}
+          </ScrollView>
+        </View>
       </ScrollView>
       <Chrome back="Atlas" onBack={() => nav.goBack()} />
     </View>
@@ -211,6 +273,54 @@ const s = StyleSheet.create({
   pvTx: { fontFamily: F.displayMed, fontSize: 7, letterSpacing: 0.6, color: '#e4e4ea' },
   filmTitle: { fontFamily: F.serifItalic, fontSize: 14, lineHeight: 17, color: C.accent },
   filmSub: { fontFamily: F.body, fontSize: 9.5, color: '#f0efec', marginTop: 2 },
+  found: {
+    marginHorizontal: 20,
+    marginTop: 30,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.3)',
+    backgroundColor: 'rgba(255,107,0,0.10)',
+    padding: 20,
+    overflow: 'hidden',
+  },
+  foundK: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: C.accent },
+  foundT: { fontFamily: F.serifLight, fontSize: 29, lineHeight: 33, color: C.text, marginTop: 11 },
+  passtie: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 20,
+    marginTop: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 18,
+    padding: 14,
+  },
+  passFlag: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  travelTile: {
+    width: 138,
+    aspectRatio: 3 / 4,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: C.surf2,
+  },
+  travelName: {
+    position: 'absolute',
+    left: 11,
+    right: 11,
+    bottom: 11,
+    fontFamily: F.displayMed,
+    fontSize: 13,
+    color: C.text,
+  },
   prodCard: { width: 150 },
   prodImg: { width: 150, height: 150, borderRadius: 16 },
   addBtn: {

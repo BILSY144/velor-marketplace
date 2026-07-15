@@ -65,3 +65,15 @@ directly apply every detail." Built it:
 - Deliberate divergences from plates (William's explicit calls or honesty):
   no VELOR wordmark on Atlas (logo splash-only), no double-tap-zoom claim in
   hint, PREVIEW badging + no fake counts, payment gated to 6 Aug.
+
+## 2026-07-15 — Plates upgraded to FULL-PAGE (stitched); country dive completed
+
+The first plate set only captured above the fold — that's how the country
+dive's lower sections got missed (William caught it). /tmp/plates2.js now
+steps each screen's .sc scroller and stitches segments (PIL) into full-length
+plates (e.g. country 1970px, search 3658px, seats 13795px, dash 2756px).
+ALWAYS check the full plate + the spec tail before calling a screen done.
+Country dive completed from the full plate: BE THE FIRST founding spotlight
+card (mockup copy incl. "Claim the founding seat" + Follow button with
+session-local follow state), passport tie row ("Earn the Japan stamp"),
+TRAVEL ON rail (MX/IT/UZ/GH/ET/PT per spec, nav.push for stacked dives).
