@@ -8,6 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
 import { countryName } from '../data'
 import { useFollows } from '../store'
+import { enableNotifications } from '../push'
 import { Dim } from '../ui'
 import { Chrome } from '../components/Chrome'
 
@@ -34,6 +35,19 @@ export default function BellScreen() {
   const playerRef = useRef<AudioPlayer | null>(null)
   const swing = useRef(new Animated.Value(0)).current
   const [rung, setRung] = useState(false)
+  const [pushState, setPushState] = useState<string | null>(null)
+
+  async function turnOnPush() {
+    setPushState('Asking your phone…')
+    const res = await enableNotifications()
+    setPushState(
+      res.ok
+        ? 'On — this phone is registered. Bells arrive with the store release of the app.'
+        : res.reason === 'denied'
+          ? 'Notifications are off in your phone settings — enable them for Velor and try again.'
+          : 'Permission saved. Delivery to this phone switches on with the store release of the app — Expo Go cannot receive pushes.'
+    )
+  }
 
   useEffect(
     () => () => {
@@ -73,7 +87,21 @@ export default function BellScreen() {
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 50 }}>
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.h1}>The opening bell</Text>
-          <Text style={[s.kickDim, { marginTop: 18 }]}>YOUR BELLS</Text>
+
+          {/* Push door — the chime on your phone */}
+          <Pressable style={s.pushCard} onPress={turnOnPush}>
+            <Ionicons name="notifications-circle-outline" size={22} color={C.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={s.nt}>Ring on this phone</Text>
+              <Text style={s.ns}>
+                {pushState ??
+                  'Turn on notifications — opening bells and order updates arrive with the real bell chime.'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={15} color={C.dim} />
+          </Pressable>
+
+          <Text style={[s.kickDim, { marginTop: 22 }]}>YOUR BELLS</Text>
 
           {follows.length ? (
             follows.map((cc) => (
@@ -188,6 +216,17 @@ const s = StyleSheet.create({
     borderColor: C.line,
     borderRadius: 18,
     padding: 15,
+  },
+  pushCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 16,
+    backgroundColor: 'rgba(255,107,0,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.35)',
+    borderRadius: 18,
+    padding: 14,
   },
   cardHot: { borderColor: 'rgba(255,107,0,0.45)' },
   cardFlag: { width: 38, height: 27, borderRadius: 6 },

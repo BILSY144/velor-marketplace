@@ -396,3 +396,27 @@ assumption (RN fetch + NextAuth __Secure cookies) is the one live risk —
 if sign-in succeeds but the dashboard stays in preview, check whether the
 session cookie is being persisted/sent (credentials:'include' is set
 everywhere it matters).
+
+## 2026-07-15 — STANDING REQUIREMENTS from William (he said REMEMBER):
+## Face ID sign-in + password backup; chimed notifications; email-verified
+## password resets
+
+1. FACE ID (built, app side complete): expo-local-authentication@17.0.8 +
+   expo-secure-store@15.0.8 (bundled SDK 54 versions — checked
+   bundledNativeModules.json FIRST this time). Design: password signs in
+   once (NextAuth cookie persists), Face ID/fingerprint then LOCKS the
+   restored session on every cold start (BiometricLock in App.tsx,
+   auto-prompts, "Use password instead" signs out to the password door).
+   Enable offer appears right after a successful password sign-in. The
+   password is NEVER stored on the device — it is the backup, not a cache.
+2. NOTIFICATIONS WITH CHIMES (app plumbing built): expo-notifications@
+   0.32.17; "Ring on this phone" door on the Bell page — asks permission,
+   registers the Expo push token with the site (/api/push/register),
+   Android opening-bell channel configured with bell.m4a. HONEST LIMIT,
+   told to the user in-UI: remote delivery + custom chime activate with
+   the STORE BUILD (Expo Go cannot receive remote push since SDK 53; iOS
+   custom sounds ship in the binary). Server-side senders hook up at
+   launch events.
+3. PASSWORD RESET BY EMAIL (app side built): "Forgot your password?" on
+   the sign-in screen posts /api/auth/forgot — one-hour emailed link, no
+   user enumeration. Backend routes/pages land on main (same session).

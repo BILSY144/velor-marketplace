@@ -47,7 +47,8 @@ import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
 import SignInScreen from './src/screens/SignInScreen'
 import { useSession } from './src/store'
-import { getSession } from './src/api'
+import { getSession, signOutRemote } from './src/api'
+import { isFaceIdEnabled, unlockWithBiometrics, biometricsAvailable } from './src/biometrics'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -183,6 +184,66 @@ const sp = StyleSheet.create({
   },
 })
 
+// Face ID lock — guards a restored seller session on cold start. Auto-
+// prompts once; "Use password instead" signs out to the password door
+// (the standing backup — no password is ever stored on the device).
+function BiometricLock({
+  onUnlocked,
+  onUsePassword,
+}: {
+  onUnlocked: () => void
+  onUsePassword: () => void
+}) {
+  const [label, setLabel] = React.useState('Face ID')
+  const tried = React.useRef(false)
+
+  const attempt = React.useCallback(async () => {
+    const ok = await unlockWithBiometrics()
+    if (ok) onUnlocked()
+  }, [onUnlocked])
+
+  React.useEffect(() => {
+    biometricsAvailable().then((b) => setLabel(b.label))
+    if (!tried.current) {
+      tried.current = true
+      setTimeout(attempt, 350)
+    }
+  }, [attempt])
+
+  return (
+    <View style={[StyleSheet.absoluteFill, lk.fill]}>
+      <Image source={require('./assets/splash.png')} style={lk.logo} resizeMode="contain" />
+      <Text style={lk.title}>Unlock your Velor account</Text>
+      <Pressable style={lk.btn} onPress={attempt}>
+        <Text style={lk.btnTx}>Unlock with {label}</Text>
+      </Pressable>
+      <Pressable onPress={onUsePassword} style={{ marginTop: 16 }}>
+        <Text style={lk.alt}>Use password instead</Text>
+      </Pressable>
+    </View>
+  )
+}
+
+const lk = StyleSheet.create({
+  fill: {
+    backgroundColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 98,
+  },
+  logo: { width: '70%', height: 160 },
+  title: { fontFamily: F.body, fontSize: 13.5, color: C.text, marginTop: 8 },
+  btn: {
+    marginTop: 22,
+    backgroundColor: C.accent,
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingHorizontal: 34,
+  },
+  btnTx: { fontFamily: F.displayMed, fontSize: 13.5, color: '#160a00' },
+  alt: { fontFamily: F.body, fontSize: 12, color: '#8a8a95' },
+})
+
 export default function App() {
   const [loaded] = useFonts({
     SpaceGrotesk_600SemiBold,
@@ -195,15 +256,29 @@ export default function App() {
     Fraunces_600SemiBold,
   })
   const [splash, setSplash] = React.useState(true)
+  const [locked, setLocked] = React.useState(false)
   const setSession = useSession((s) => s.set)
   const markReady = useSession((s) => s.markReady)
 
   // Restore the seller session from the platform cookie jar on cold start —
   // if the site's NextAuth cookie survived, the dashboard is live instantly.
+  // If Face ID protection is on, the restored session stays LOCKED behind
+  // biometrics until the owner unlocks (password sign-in is the fallback).
   React.useEffect(() => {
-    getSession()
-      .then((u) => (u ? setSession(u) : markReady()))
-      .catch(() => markReady())
+    ;(async () => {
+      try {
+        const u = await getSession()
+        if (u) {
+          const gate = await isFaceIdEnabled()
+          if (gate) setLocked(true)
+          setSession(u)
+        } else {
+          markReady()
+        }
+      } catch {
+        markReady()
+      }
+    })()
   }, [setSession, markReady])
 
   if (!loaded) {
@@ -246,6 +321,17 @@ export default function App() {
             <Stack.Screen name="GoLive" component={GoLiveScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
           </Stack.Navigator>
+          {locked ? (
+            <BiometricLock
+              onUnlocked={() => setLocked(false)}
+              onUsePassword={() => {
+                signOutRemote().finally(() => {
+                  setSession(null)
+                  setLocked(false)
+                })
+              }}
+            />
+          ) : null}
           {splash ? <SplashOverlay onDone={() => setSplash(false)} /> : null}
         </NavigationContainer>
       </QueryClientProvider>

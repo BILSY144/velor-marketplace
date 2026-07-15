@@ -201,3 +201,32 @@ export async function createListing(body: Record<string, unknown>): Promise<{ ok
   const data = await res.json().catch(() => ({}))
   return res.ok ? { ok: true } : { ok: false, error: data?.error ?? `Failed (${res.status})` }
 }
+
+// Password reset — the site emails a one-hour verified link (William's
+// standing requirement: email verification for resets). Always resolves
+// regardless of whether the account exists (no user enumeration).
+export async function requestPasswordReset(email: string): Promise<void> {
+  await fetch(`${BASE}/api/auth/forgot`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+}
+
+// Push token registry — the server keeps Expo push tokens so launch-time
+// events (opening bells, order updates) can notify this device with the
+// bell chime. Remote delivery activates with the store build; Expo Go
+// cannot receive remote push since SDK 53.
+export async function registerPushToken(token: string, platform: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/api/push/register`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token, platform }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
