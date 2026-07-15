@@ -2,6 +2,28 @@
 
 Last updated: 2026-07-14 (session with William — country-dive videos).
 
+## 2026-07-15: Search page rebuilt — 190 countries on region reels + working search
+
+- William's call: no craft-chip index needed; countries on swipeable reels
+  are the browse surface (categories live on the country dive). Browse =
+  13 region rails (new REG/REGNAMES map, exactly the atlas 190; photo tile
+  when the country has verified imagery via imgFor, branded gradient+flag
+  tile otherwise). Tap -> country dive.
+- The search bar actually searches now (searchRun, live oninput): ORIGINS
+  (country name -> dive), CRAFTS (all 1,950 HINTS entries, capped at 40
+  rows + "N more", row -> craft page), FILMS (title/sub/country -> goLive),
+  honest zero-result state -> "Spin the globe".
+- Verified live: 13 rails / 190 tiles exactly; "kente" -> 3 craft rows
+  (Ghana x2, Togo); "coffee" -> 53; craft row tap lands on the Colombia
+  coffee craft page; zero-state renders.
+- NOTE / observed gap, not changed: the WORLD atlas (190) does NOT include
+  CI (Ivory Coast), XK (Kosovo), FM/MH/NR/PW (Micronesia, Marshall Is,
+  Nauru, Palau), BM/TC — all of which HAVE culture data in HINTS/STORY
+  (198 codes there). Wave-9 imagery for FM/MH/PW/NR is therefore
+  unreachable from the globe/search. Flagged to William; the 190 list is
+  a signed-off design decision, so not altered without his say-so.
+- Commit 404fc74.
+
 ## 2026-07-14: Product page + craft pages — buyer journey completed
 
 - Every craft tile (real photo or "Opening soon") now opens a CRAFT PAGE:
