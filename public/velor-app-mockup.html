@@ -1244,9 +1244,38 @@ S.langcur='<div class="scr" id="s-langcur"><div class="sc" style="padding-bottom
 S.legal='<div class="scr" id="s-legal"><div class="sc" style="padding-bottom:120px">'
 +'<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'account\')">'+I.back+'</button><h1 class="dspl" style="font-size:28px;margin-top:16px">Privacy &amp; legal</h1></div>'
 +'<div class="escrow-bar">'+I.shield+'<span>You pay Velor, not the seller. Money is held in escrow and released per parcel, only on confirmed delivery. Anything wrong &mdash; the funds freeze.</span></div>'
-+[['Terms of service','https://velorcommerce.store/legal/terms'],['Privacy policy','https://velorcommerce.store/legal/privacy'],['Seller agreement','https://velorcommerce.store/legal/seller-agreement'],['Help &amp; buyer protection','https://velorcommerce.store/help']].map(function(m){return '<button class="arow" onclick="window.open(\''+m[1]+'\',\'_blank\')"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">'+m[0]+'</div><div class="sm dim">velorcommerce.store</div></div><svg viewBox="0 0 24 24" class="chev"><path d="m9 5 7 7-7 7"/></svg></button>'}).join('')
-+'<div class="pad"><p class="sm dim" style="margin-top:14px">These open the live Velor site &mdash; the app and the site run on one set of rules.</p></div>'
++[['Terms of service','terms'],['Privacy policy','privacy'],['Seller agreement','seller'],['Help &amp; buyer protection','help']].map(function(m){return '<button class="arow" onclick="goLegal(\''+m[1]+'\')"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">'+m[0]+'</div><div class="sm dim">Read in the app</div></div><svg viewBox="0 0 24 24" class="chev"><path d="m9 5 7 7-7 7"/></svg></button>'}).join('')
++'<div class="pad"><p class="sm dim" style="margin-top:14px">Summaries read in the app; the full text lives on velorcommerce.store &mdash; one set of rules for app and site.</p></div>'
 +'</div></div>'
+
+S.legaldoc='<div class="scr" id="s-legaldoc"><div class="sc" id="legaldocslot" style="padding-bottom:120px"></div></div>'
+
+/* ===== IN-APP LEGAL READER — summaries faithful to the published docs;
+   full text opens the browser only as an explicit choice. ===== */
+var LEGALDOCS={
+ terms:{t:'Terms of service',u:'https://velorcommerce.store/legal/terms',
+  syn:'You pay Velor, never the seller directly. Your money is held in escrow and released per parcel, only when that parcel&rsquo;s delivery is confirmed. Returns are open for 14 days from delivery via your order page, and opening a dispute freezes the funds immediately while Velor steps in.',
+  secs:['Introduction','The Velor Platform','Accounts','Seller Obligations','Buyer Protections','Platform Fees','Prohibited Items','Intellectual Property','Limitation of Liability','Governing Law','Changes to Terms','Contact']},
+ privacy:{t:'Privacy policy',u:'https://velorcommerce.store/legal/privacy',
+  syn:'GDPR-first. Velor collects only what your account and orders need to work, card details are handled by Stripe and never stored by Velor, and you can ask for access, correction or deletion of your data at any time.',
+  secs:['Data Controller','Data We Collect','How We Use Your Data','Lawful Basis','Data Sharing','International Transfers','Data Retention','Your Rights','Cookies','Contact and Complaints']},
+ seller:{t:'Seller agreement',u:'https://velorcommerce.store/legal/seller-agreement',
+  syn:'Every seller is identity-verified before they can trade. Earnings are held in escrow and released after confirmed delivery plus a hold window; an open return or dispute freezes them. Tiers: Starter free at 10% commission, Pro &pound;49/mo at 4%, Enterprise &pound;99/mo at 0%. Counterfeits, weapons, controlled substances, ivory and antiquities are banned outright, and regulated materials need verified certificates before listing.',
+  secs:['Verification &amp; onboarding','Listings &amp; authenticity','Payments &amp; escrow','Commission &amp; tiers','Shipping obligations','Prohibited &amp; certificate-gated items']},
+ help:{t:'Help &amp; buyer protection',u:'https://velorcommerce.store/help',
+  syn:'Anything wrong with an order &mdash; not arrived, damaged, not as described &mdash; open a dispute and the seller&rsquo;s funds freeze immediately. Velor reviews within 48 hours. Your money never leaves escrow until you&rsquo;re happy, and each parcel releases on its own confirmed delivery.',
+  secs:['Ordering &amp; payment','Delivery &amp; tracking','Returns &amp; disputes','Velor Live','Selling on Velor','Contact']}
+};
+function goLegal(k){
+  var d=LEGALDOCS[k]; if(!d) return;
+  var h='<div class="pad" style="padding-top:64px"><button class="chip-back" onclick="go(\'legal\')">'+I.back+'</button><h1 class="dspl" style="font-size:27px;margin-top:16px">'+d.t+'</h1></div>'
+  +'<div class="pad"><p class="sm" style="margin-top:14px;line-height:1.65;color:#c9c9d2">'+d.syn+'</p></div>'
+  +'<div class="pad"><div class="k d" style="margin-top:24px">IN THE FULL DOCUMENT</div></div>'
+  +d.secs.map(function(sx,i){return '<div class="pad"><div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)"><span class="fd" style="font-size:11px;color:var(--mut);width:20px">'+(i+1<10?'0':'')+(i+1)+'</span><span class="fd" style="font-size:13px;font-weight:600">'+sx+'</span></div></div>'}).join('')
+  +'<div class="pad"><button class="btn ghost sm" style="margin-top:18px" onclick="window.open(\''+d.u+'\',\'_blank\')">Read the full text &mdash; opens your browser</button></div>';
+  document.getElementById('legaldocslot').innerHTML=h;
+  go('legaldoc');
+}
 
 /* ===== DISPUTE ===== */
 S.dispute='<div class="scr" id="s-dispute"><div class="sc" style="padding-bottom:150px">'
@@ -1557,7 +1586,7 @@ S.golive='<div class="scr" id="s-golive" style="background:#000">'
 +'<div style="position:absolute;top:108px;left:16px;right:16px;z-index:5;font-size:10.5px;color:#b9b9c2;background:rgba(0,0,0,.42);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)">Followers of your channel and country are notified the moment you go on air.</div>'
 +'</div>'
 /* ================= ROUTER & BEHAVIOURS ================= */
-var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['addr','Addresses'],['pay','Payment'],['langcur','Language'],['legal','Legal'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
+var SCREENS=[['splash','Opening'],['atlas','Atlas · Home'],['country','Country dive'],['live','Velor Live'],['pdp','Product'],['craft','Craft page'],['search','Search'],['cart','Basket'],['checkout','Checkout'],['confirm','Confirmed'],['orders','Orders'],['odetail','Order detail'],['dispute','Dispute'],['returnreq','Return'],['passport','Passport'],['notif','Opening bell'],['account','You'],['addr','Addresses'],['pay','Payment'],['langcur','Language'],['legal','Legal'],['legaldoc','Legal doc'],['assist','Ask Velor'],['sell','Sell pitch'],['seats','Founding seats'],['apply','Apply'],['verify','Verify ID'],['dash','Seller dashboard'],['newlisting','New listing'],['payouts','Payouts'],['golive','Go live']]
 var TABS=[['atlas','Atlas',I.globe],['live','Live',I.live],['search','Search',I.search],['cart','Basket',I.bag],['account','You',I.user]]
 var FULL={splash:1,atlas:1,live:1,golive:1,craft:1,confirm:1}
 var TABMAP={atlas:'atlas',country:'atlas',pdp:'atlas',live:'live',search:'search',cart:'cart',checkout:'cart',confirm:'cart',orders:'account',odetail:'account',dispute:'account',passport:'account',notif:'atlas',account:'account',assist:'account',sell:'account',seats:'account',apply:'account',verify:'account',dash:'account',newlisting:'account',payouts:'account',golive:'account'}
