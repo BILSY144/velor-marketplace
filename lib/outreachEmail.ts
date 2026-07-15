@@ -104,6 +104,16 @@ const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = 
     names: ['VIETNAM', 'THAILAND', 'INDONESIA', 'MALAYSIA', 'PHILIPPINES', 'SINGAPORE', 'CAMBODIA', 'LAOS', 'MYANMAR', 'BALI'],
   },
   {
+    file: 'hero-eastafrica.jpg',
+    codes: ['KE', 'ET', 'TZ', 'UG', 'RW'],
+    names: ['KENYA', 'ETHIOPIA', 'TANZANIA', 'UGANDA', 'RWANDA', 'MAASAI'],
+  },
+  {
+    file: 'hero-westafrica.jpg',
+    codes: ['GH', 'ML', 'NG', 'SN', 'CI', 'BF', 'TG', 'BJ', 'CM'],
+    names: ['GHANA', 'MALI', 'NIGERIA', 'SENEGAL', 'IVORY COAST', "COTE D'IVOIRE", 'BURKINA', 'TOGO', 'BENIN', 'CAMEROON'],
+  },
+  {
     file: 'hero-europe.jpg',
     codes: ['PL', 'PT', 'IT', 'GR', 'ES', 'FR', 'DE', 'NL', 'BE', 'AT', 'CH', 'CZ', 'HU', 'RO', 'HR', 'BG', 'LT', 'LV', 'EE', 'SK', 'SI', 'IE', 'DK', 'SE', 'NO', 'FI'],
     names: ['POLAND', 'PORTUGAL', 'ITALY', 'GREECE', 'SPAIN', 'FRANCE', 'GERMANY', 'NETHERLANDS', 'BELGIUM', 'AUSTRIA', 'CZECH', 'HUNGARY', 'ROMANIA', 'CROATIA', 'BULGARIA', 'LITHUANIA', 'LATVIA', 'ESTONIA', 'SLOVAK', 'SLOVENIA', 'IRELAND', 'DENMARK', 'SWEDEN', 'NORWAY', 'FINLAND'],
