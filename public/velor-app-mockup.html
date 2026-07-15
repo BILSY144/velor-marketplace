@@ -1352,13 +1352,15 @@ var DREASON=0, DPHOTOS=0;
 function dNeedsPhotos(){ return DREASON!==0 }
 function dReason(i){ DREASON=i; dRefresh() }
 function dAddPhoto(){
-  DPHOTOS++;
-  var host=document.getElementById('dphotos');
-  var t=document.createElement('div');
-  t.style.cssText='flex:0 0 84px;width:84px;height:84px;border-radius:16px;background:linear-gradient(150deg,var(--surf2),var(--ink));border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px';
-  t.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--mut);fill:none;stroke-width:1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font:600 9px var(--fd);letter-spacing:.06em;color:var(--mut)">PHOTO '+DPHOTOS+'</span>';
-  host.appendChild(t);
-  dRefresh();
+  pickImage(function(url){
+    DPHOTOS++;
+    var host=document.getElementById('dphotos');
+    var t=document.createElement('div');
+    t.style.cssText='flex:0 0 84px;width:84px;height:84px;border-radius:16px;overflow:hidden;border:1px solid var(--line)';
+    t.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+    host.appendChild(t);
+    dRefresh();
+  });
 }
 function dRefresh(){
   var lab=document.getElementById('dplabel'), btn=document.getElementById('dsubmit');
@@ -1682,8 +1684,8 @@ S.apply='<div class="scr" id="s-apply"><div class="sc" style="padding-bottom:150
 +'<p class="sm dim" style="margin-top:8px;padding-left:2px">Write it all — your craft, your categories, every kind of product you plan to sell. No limits, no picking from a list.</p></div>'
 +'<div class="pad"><div class="k d" style="margin-top:28px">SHOW YOUR WORK</div></div>'
 +'<div class="fld"><label>PHOTOS OF YOUR WORK · MINIMUM 3</label>'
-+'<div style="display:flex;gap:8px">'+[14705063,18198515,8330375].map(function(id){return '<div style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex:0 0 64px"><img src="'+px(id)+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>'}).join('')+'<button class="addphoto" style="flex:0 0 64px;border-radius:14px" onclick="toast(\'Sample application — 3 photos added\')">'+I.plus+'</button></div>'
-+'<p class="sm dim" style="margin-top:8px;padding-left:2px">3 added. Applications without at least 3 real photos of your work are declined.</p></div>'
++'<div style="display:flex;gap:8px;flex-wrap:wrap" id="aprow">'+[14705063,18198515,8330375].map(function(id){return '<div style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex:0 0 64px"><img src="'+px(id)+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>'}).join('')+'<button class="addphoto" style="flex:0 0 64px;border-radius:14px" onclick="apAdd()">'+I.plus+'</button></div>'
++'<p class="sm dim" style="margin-top:8px;padding-left:2px" id="apcount">3 added. Applications without at least 3 real photos of your work are declined.</p></div>'
 +'<div class="fld"><label>WEBSITE OR SOCIAL · OPTIONAL</label><div class="in ph">yourshop.com or @studiokaede — helps the review, never required</div></div>'
 +'<div class="pad"><div class="k d" style="margin-top:28px">SHIPPING &amp; MATERIALS</div></div>'
 +'<div class="fld"><label>SHIP-FROM ADDRESS</label><div class="in ph">Where parcels leave from — sets your buyers&rsquo; real delivery quotes</div></div>'
@@ -1774,28 +1776,49 @@ function renderDash(){
   }
   host.innerHTML=h;
 }
-/* ===== NEW LISTING PHOTO UPLOAD ===== */
-/* Real picker: + opens the device gallery/camera, chosen images render as
-   tiles via object URLs and every count on the page updates live. */
-var NLPHOTOS=3;
-function nlPick(){ var f=document.getElementById('nlfile'); if(f) f.click() }
-function nlAdd(inp){
-  if(!inp||!inp.files||!inp.files.length) return;
-  var rail=document.getElementById('nlrail'), i;
-  for(i=0;i<inp.files.length;i++){
-    var url=URL.createObjectURL(inp.files[i]);
-    var d=document.createElement('div');
-    d.setAttribute('style','flex:0 0 92px;width:92px;height:92px;border-radius:18px;overflow:hidden');
-    d.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block">';
-    if(rail) rail.appendChild(d);
-    NLPHOTOS++;
-  }
+/* ===== IMAGE UPLOAD (works on every page that takes photos) ===== */
+/* One hidden <input type=file>. pickImage(cb) opens the device gallery/
+   camera; each chosen file becomes an object URL passed to cb. Used by:
+   new listing (nlPick), apply (apAdd), dispute evidence (dAddPhoto). */
+var PICKCB=null;
+function pickImage(cb){ PICKCB=cb; var f=document.getElementById('gfile'); if(f) f.click() }
+function gFiles(inp){
+  if(!PICKCB||!inp||!inp.files||!inp.files.length) return;
+  for(var i=0;i<inp.files.length;i++) PICKCB(URL.createObjectURL(inp.files[i]));
   inp.value='';
-  var c=document.getElementById('nlcount'); if(c) c.innerHTML=NLPHOTOS+' photos added &middot; 3 minimum — listings without them are auto-rejected.';
-  var ck=document.getElementById('nlphotock'); if(ck) ck.textContent=' Photos · '+NLPHOTOS+' added';
-  toast(NLPHOTOS>3?'Photo added — '+NLPHOTOS+' on this listing':'Photo added');
 }
-
+var NLPHOTOS=3;
+function nlPick(){ pickImage(nlAddUrl) }
+function nlAddUrl(url){
+  NLPHOTOS++;
+  var rail=document.getElementById('nlrail');
+  if(rail){
+    var b=document.createElement('button');
+    b.className='nlth'; b.setAttribute('onclick','nlSetCover(this)');
+    b.innerHTML='<img src="'+url+'">';
+    rail.insertBefore(b, rail.lastElementChild);
+  }
+  var cov=document.getElementById('nlcover'); if(cov) cov.src=url;
+  var c=document.getElementById('nlcount'); if(c) c.innerHTML=NLPHOTOS+' photos &middot; 3 minimum &mdash; listings without them are auto-rejected.';
+  var pk=document.getElementById('nlpk'); if(pk) pk.textContent='Photos · '+NLPHOTOS;
+  toast('Photo added — set as cover');
+}
+function nlSetCover(el){ var img=el.querySelector('img'), cov=document.getElementById('nlcover'); if(img&&cov){ cov.src=img.src; toast('Cover updated') } }
+var APHOTOS=3;
+function apAdd(){
+  pickImage(function(url){
+    APHOTOS++;
+    var row=document.getElementById('aprow');
+    if(row){
+      var d=document.createElement('div');
+      d.setAttribute('style','width:64px;height:64px;border-radius:14px;overflow:hidden;flex:0 0 64px');
+      d.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+      row.insertBefore(d, row.lastElementChild);
+    }
+    var c=document.getElementById('apcount'); if(c) c.textContent=APHOTOS+' added. Applications without at least 3 real photos of your work are declined.';
+    toast('Photo added');
+  })
+}
 /* ===== SELLER ORDERS ===== */
 /* One live model drives the dashboard pipeline numbers AND this screen —
    Ship actually moves an order to In transit and everything recomputes. */
@@ -1886,19 +1909,18 @@ function renderApiKeys(){
 /* ===== NEW LISTING ===== */
 S.newlisting='<div class="scr" id="s-newlisting"><div class="sc" style="padding-bottom:150px">'
 +'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Draft saved\')">Save draft</button></div>'
-+'<div class="pad"><h1 class="dspl" style="font-size:28px;margin-top:14px">New listing</h1></div>'
-+'<input type="file" id="nlfile" accept="image/*" multiple style="display:none" onchange="nlAdd(this)">'
-+'<div class="hrail" id="nlrail" style="padding-top:14px"><button class="addphoto" onclick="nlPick()">'+I.plus+'</button>'+[14705063,14563207,8330375].map(function(id){return '<div style="flex:0 0 92px;width:92px;height:92px;border-radius:18px;overflow:hidden"><img src="'+px(id)+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>'}).join('')+'</div>'
-+'<div class="pad"><p class="sm dim" style="margin-top:4px" id="nlcount">3 photos added &middot; 3 minimum — listings without them are auto-rejected.</p></div>'
-+'<div class="fld"><label>TITLE</label><div class="in">Kuro raku tea bowl, wood-fired</div></div>'
-+'<div style="display:flex;gap:10px;padding:0 20px"><div class="fld" style="flex:1;padding:0"><label style="padding-left:0">PRICE</label><div class="in">&pound;68</div></div><div class="fld" style="flex:1;padding:0"><label style="padding-left:0">STOCK</label><div class="in">3</div></div></div>'
-+'<div class="pad"><p class="sm dim" style="margin-top:8px">You&rsquo;d keep <span style="color:var(--accent)">&pound;65.28</span> of &pound;68 &mdash; Pro, 4% commission. Shipping is paid on top and passes to you in full.</p></div>'
-+'<div class="fld"><label>WHAT IS IT? &middot; CATEGORY &amp; MATERIALS</label><div class="in ta" style="min-height:88px">A raku chawan &mdash; tea ceremony bowl. Stoneware clay, natural ash glaze, food-safe. Ceramics &middot; tea ware &middot; kitchen &amp; table.</div>'
-+'<p class="sm dim" style="margin-top:8px;padding-left:2px">Your words, no lists to pick from &mdash; this places the piece in search, craft pages and Japan&rsquo;s dive.</p></div>'
-+'<div class="fld"><label>THE STORY &middot; BUYERS READ THIS</label><div class="in ta" style="min-height:96px">Each bowl is thrown on a kick wheel, raku-fired in the wood kiln behind the studio, and pulled from the flames by hand. No two glazes ever land the same.</div></div>'
-+'<div class="fld"><label>PARCEL &middot; POWERS REAL DELIVERY QUOTES</label><div class="in row" style="font-size:13px">1.2 kg &middot; 20 &times; 20 &times; 15 cm<span class="ed" style="color:var(--accent)">Edit</span></div></div>'
-+'<div class="fld"><label>MATERIALS DECLARATION</label><div class="in row" style="font-size:13px">Contains regulated materials?<span class="dim">No</span></div></div>'
-+'<div class="pad"><div class="readycard"><div class="fd" style="font-size:12.5px;font-weight:600;margin-bottom:8px">Ready to publish?</div><div class="sm" style="color:var(--green);line-height:2"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg><span id="nlphotock"> Photos · 3 added</span><br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Ship-from address · on file<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Description · added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Story · added<br><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2.6;vertical-align:-1px;display:inline"><path d="m5 12.5 5 5L19.5 7"/></svg> Parcel size · set — buyers get live quotes</div></div></div>'
++'<div class="pad"><div class="k" style="margin-top:14px">STUDIO KAEDE &middot; NEW LISTING</div><h1 class="dspl" style="font-size:30px;margin-top:8px">List a piece.</h1></div>'
++'<div class="pad" style="margin-top:16px"><button class="nlcover" onclick="nlPick()"><img id="nlcover" src="'+px(14705063)+'"><span class="nlcover-b">'+I.cam+' Add photo</span></button></div>'
++'<div class="hrail" id="nlrail" style="padding-top:10px">'+[14705063,14563207,8330375].map(function(id){return '<button class="nlth" onclick="nlSetCover(this)"><img src="'+px(id)+'"></button>'}).join('')+'<button class="addphoto" style="flex:0 0 64px;width:64px;height:64px;aspect-ratio:auto;border-radius:14px" onclick="nlPick()">'+I.plus+'</button></div>'
++'<div class="pad"><p class="sm dim" style="margin-top:6px" id="nlcount">3 photos &middot; 3 minimum &mdash; listings without them are auto-rejected. Tap a photo to make it the cover.</p></div>'
++'<div class="pad" style="margin-top:20px"><div class="k d">TITLE</div><div class="nltitle" contenteditable="true" spellcheck="false">Kuro raku tea bowl, wood-fired</div></div>'
++'<div class="sstats" style="margin-top:22px"><div class="sstat"><div class="sv serif" style="color:var(--accent)">&pound;68</div><div class="sl">PRICE</div></div><div class="sstat"><div class="sv serif">3</div><div class="sl">STOCK</div></div><div class="sstat"><div class="sv serif">1.2 kg</div><div class="sl">PARCEL</div></div></div>'
++'<div class="pad"><div class="nlrow"><span class="sm dim">20 &times; 20 &times; 15 cm &middot; powers real delivery quotes</span><span class="ed" style="color:var(--accent)">Edit</span></div>'
++'<p class="sm dim" style="margin-top:9px">You&rsquo;d keep <span style="color:var(--accent)">&pound;65.28</span> of &pound;68 &mdash; Pro, 4%. Shipping is paid on top and passes to you in full.</p></div>'
++'<div class="pad" style="margin-top:26px"><div class="k d">WHAT IS IT &middot; CATEGORY &amp; MATERIALS</div><div class="nltext" contenteditable="true" spellcheck="false">A raku chawan &mdash; tea ceremony bowl. Stoneware clay, natural ash glaze, food-safe.</div><p class="sm dim" style="margin-top:7px">Your words, no lists to pick from &mdash; this places the piece in search, craft pages and Japan&rsquo;s dive.</p></div>'
++'<div class="pad" style="margin-top:24px"><div class="k d">THE STORY &middot; BUYERS READ THIS</div><div class="nltext" contenteditable="true" spellcheck="false">Each bowl is thrown on a kick wheel, raku-fired in the wood kiln behind the studio, and pulled from the flames by hand. No two glazes ever land the same.</div></div>'
++'<div class="pad" style="margin-top:26px"><div class="nlrow" style="border-top:1px solid rgba(255,255,255,.07);padding-top:16px"><span class="fd" style="font-size:13px;font-weight:600">Regulated materials?</span><span class="pill" style="flex:0 0 auto">No</span></div><p class="sm dim" style="margin-top:7px">Wildlife, plant, wood, leather, shell or antique parts need certificates before listing.</p></div>'
++'<div class="pad" style="margin-top:26px"><div class="k d">READY TO PUBLISH</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px"><span class="okpill" id="nlpk">Photos · 3</span><span class="okpill">Ship-from · on file</span><span class="okpill">Description</span><span class="okpill">Story</span><span class="okpill">Parcel size</span></div></div>'
 +'</div><div class="pdock" style="background:linear-gradient(180deg,transparent,var(--bg) 40%)"><button class="btn" onclick="toast(\'Published — live on your channel\');go(\'dash\')">Publish listing</button></div></div>'
 
 /* ===== PAYOUTS ===== */
@@ -1948,6 +1970,7 @@ function buildScreens(){
 }
 buildScreens()
 document.querySelector('.vp').insertAdjacentHTML('beforeend', MENU_HTML)
+document.querySelector('.vp').insertAdjacentHTML('beforeend','<input type="file" id="gfile" accept="image/*" multiple style="display:none" onchange="gFiles(this)">')
 document.querySelector('.vp').insertAdjacentHTML('beforeend','<button class="gbtn menufab" id="menufab" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>')
 document.querySelector('.vp').insertAdjacentHTML('beforeend','<div class="topicons" id="topicons">'+'<button class="gbtn" onclick="go(\'search\')" aria-label="Search">'+I.search+'</button>'+'<button class="gbtn" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'+'<button class="gbtn" onclick="go(\'notif\')" aria-label="Notifications">'+I.bell+'<span class="gdot" style="display:none">0</span></button>'+'</div>')
 
@@ -2244,6 +2267,16 @@ splashT=setTimeout(endSplash,2600)
 .ds.tap .dl::after{content:' \2192';color:var(--accent)}
 .pipe button.pc{cursor:pointer}
 #soslot .listing .ls .fimg{width:100%;height:100%;object-fit:cover;vertical-align:0;border-radius:0}
+.nlcover{position:relative;display:block;width:100%;aspect-ratio:4/3;border-radius:22px;overflow:hidden;padding:0;text-align:left}
+.nlcover img{width:100%;height:100%;object-fit:cover;display:block}
+.nlcover-b{position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;background:rgba(8,8,11,.72);border-radius:999px;padding:8px 13px;font:600 11px var(--fd);color:#fff;letter-spacing:.03em}
+.nlcover-b svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2}
+.nlth{flex:0 0 64px;width:64px;height:64px;border-radius:14px;overflow:hidden;padding:0}
+.nlth img{width:100%;height:100%;object-fit:cover;display:block}
+.nltitle{font-family:var(--fs);font-size:22px;font-weight:530;padding:10px 0 12px;border-bottom:1px solid rgba(255,255,255,.1);outline:none;margin-top:4px}
+.nltext{font-size:13.5px;line-height:1.65;color:#d8d7d3;padding:10px 0 12px;border-bottom:1px solid rgba(255,255,255,.1);outline:none;margin-top:4px;min-height:40px}
+.nlrow{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px}
+.okpill{font:600 10.5px var(--fd);letter-spacing:.04em;color:var(--green);border:1px solid rgba(61,220,132,.35);border-radius:999px;padding:7px 12px}
 .steps3{margin:14px 20px 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,.03)}
 .vstep{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}.vstep:last-child{border:none}
 .vn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--mut);flex:0 0 auto}
