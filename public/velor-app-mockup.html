@@ -1698,18 +1698,82 @@ S.verify='<div class="scr" id="s-verify"><div class="sc" style="display:flex;fle
 +'<div class="pad" style="margin-top:26px"><button class="btn" onclick="go(\'dash\')">Verify with Stripe</button><button class="btn ghost" style="margin-top:9px" onclick="toast(\'A link is in your email too\')">Do it later</button></div>'
 +'</div></div>'
 /* ===== SELLER DASHBOARD ===== */
-S.dash='<div class="scr" id="s-dash"><div class="sc" style="padding-bottom:120px">'
-+'<div class="pad" style="padding-top:64px;display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">YOUR CHANNEL</div><h1 class="dspl" style="font-size:26px;margin-top:8px">Studio Kaede</h1><span class="fbadge" style="margin-top:8px;display:inline-block">FOUNDING · JAPAN '+flag('JP')+'</span></div><button class="gbtn" style="position:static" onclick="go(\'notif\')">'+I.bell+'<span class="gdot">2</span></button></div>'
-+'<div class="dstats"><div class="ds"><div class="dk">1,284</div><div class="dl">Views · 7d</div></div><div class="ds"><div class="dk">6</div><div class="dl">To ship</div></div><div class="ds"><div class="dk">&pound;412</div><div class="dl">In escrow</div></div></div>'
-+'<div class="pad"><button class="golive" onclick="go(\'golive\')"><span class="lc">'+I.cam+'</span><div style="flex:1;text-align:left"><div class="fd" style="font-size:15px;font-weight:600">Go live on your channel</div><div class="sm mut">Founding privilege — broadcast from the workshop.</div></div>'+I.arrow.replace('<svg','<svg style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2"')+'</button></div>'
-+'<div class="pad"><div class="k d" style="margin-top:24px">TO DO</div></div>'
-+'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">Ship VLR-8241 · Gongfu tea set</div><div class="sm dim">Buyer in the UK · add tracking once collected</div></div><button class="btn sm" style="width:auto;padding:0 16px" onclick="toast(\'Add tracking — buyer sees it instantly\')">Ship</button></div>'
-+'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">1 certificate needed</div><div class="sm dim">Your rosewood tea scoop needs a CITES certificate to list</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="toast(\'Certificate upload\')">Upload</button></div>'
-+'<div class="pad" style="display:flex;align-items:baseline;justify-content:space-between"><div class="k d" style="margin-top:24px">LISTINGS</div><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600;margin-top:24px" onclick="go(\'newlisting\')">+ New</button></div>'
-+[['Kuro raku tea bowl','Live · 214 views · 3 in stock','&pound;68',14705063,''],['Sake set, wood-fired','Live · 96 views · 5 in stock','&pound;84',18198515,''],['Rosewood tea scoop','Held — certificate required','&pound;22',30907889,'held']].map(function(l){return '<div class="listing"><img src="'+px(l[3])+'"><div style="flex:1"><div class="lt">'+l[0]+'</div><div class="ls'+(l[4]?' held':'')+'">'+l[1]+'</div></div><div class="lp">'+l[2]+'</div></div>'}).join('')
-+'<div class="pad"><button class="btn ghost sm" style="margin-top:16px" onclick="go(\'payouts\')">Payouts &amp; earnings</button></div>'
-+'</div></div>'
-
+S.dash='<div class="scr" id="s-dash"><div class="sc" id="dashslot" style="padding-bottom:120px"></div></div>'
+/* Seller dashboard — two tiers, two views. Pro (Studio Kaede, founding Japan)
+   carries the advanced layer: revenue chart, AI account manager, analytics.
+   Starter (Killa Textiles, Peru) shows the honest capped experience. */
+var DASHTIER='PRO';
+function dashTier(t){ DASHTIER=t; var host=document.getElementById('dashslot'); if(host){ host.innerHTML=''; renderDash(); var sc=document.querySelector('#s-dash .sc'); if(sc) sc.scrollTop=0 } }
+var DCHART={ '7D':{d:[38,52,44,61,58,72,68],t:'&pound;412',s:'8 Jul'}, '30D':{d:[18,22,20,26,31,28,36,34,41,38,46,52,49,58],t:'&pound;1,872',s:'14 Jun'}, '90D':{d:[9,14,12,18,16,22,26,24,31,29,36,42,39,47,52,58],t:'&pound;5,630',s:'16 Apr'} };
+var DCHR='30D';
+function dashSpark(d){
+  var w=280, h=56, i, pts=[], max=Math.max.apply(null,d)*1.12;
+  for(i=0;i<d.length;i++) pts.push((i*(w/(d.length-1))).toFixed(1)+','+(h-(d[i]/max)*h).toFixed(1));
+  var line=pts.join(' ');
+  return '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:56px;display:block" preserveAspectRatio="none"><polygon points="0,'+h+' '+line+' '+w+','+h+'" fill="rgba(255,107,0,.12)"/><polyline points="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+function chartCard(){
+  var c=DCHART[DCHR];
+  return '<div class="chart" id="dchart"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">REVENUE &middot; '+DCHR+'</div><div class="serif" style="font-size:24px;margin-top:6px">'+c.t+'</div></div><div class="ctabs">'+['7D','30D','90D'].map(function(r){return '<button class="'+(r===DCHR?'on':'')+'" onclick="chartRange(\''+r+'\')">'+r+'</button>'}).join('')+'</div></div>'
+   +'<div style="margin-top:12px">'+dashSpark(c.d)+'</div>'
+   +'<div class="sm dim" style="margin-top:8px;display:flex;justify-content:space-between"><span>'+c.s+'</span><span>SAMPLE DATA</span><span>Today</span></div></div>';
+}
+function chartRange(r){ DCHR=r; var el=document.getElementById('dchart'); if(el) el.outerHTML=chartCard() }
+function dashBar(label,pc,val){
+  return '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="fd" style="font-size:12px;font-weight:600">'+label+'</span><span class="sm dim">'+val+'</span></div><div class="capbar" style="margin-top:5px"><span style="width:'+pc+'%"></span></div></div>';
+}
+function dashSeg(){
+  return '<div class="dseg"><button class="'+(DASHTIER==='STARTER'?'on':'')+'" onclick="dashTier(\'STARTER\')">STARTER</button><button class="'+(DASHTIER==='PRO'?'on':'')+'" onclick="dashTier(\'PRO\')">PRO</button></div>';
+}
+function renderDash(){
+  var host=document.getElementById('dashslot'); if(!host||host.childElementCount) return;
+  var h='';
+  if(DASHTIER==='PRO'){
+    h+='<div class="pad" style="padding-top:64px;display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">YOUR CHANNEL</div><h1 class="dspl" style="font-size:26px;margin-top:8px">Studio Kaede</h1><div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap"><span class="fbadge">FOUNDING · JAPAN '+flag('JP')+'</span><span class="tbadge pro">PRO · 4%</span></div></div><button class="gbtn" style="position:static" onclick="go(\'notif\')">'+I.bell+'<span class="gdot">2</span></button></div>'
+     +dashSeg()
+     +'<div class="dstats"><div class="ds"><div class="dk">1,284</div><div class="dl">Views · 7d</div></div><div class="ds"><div class="dk">6</div><div class="dl">To ship</div></div><div class="ds"><div class="dk">&pound;412</div><div class="dl">In escrow</div></div><div class="ds"><div class="dk">&pound;2,140</div><div class="dl">Paid out</div></div></div>'
+     +'<div class="pad">'+chartCard()+'</div>'
+     +'<div class="pad"><div class="aimgr"><div style="display:flex;gap:10px;align-items:center"><img src="/velor-assistant.png" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px"><div style="flex:1"><div class="fd" style="font-size:13.5px;font-weight:600">Your AI account manager</div><div class="sm dim">Pro-only &middot; watching your channel around the clock</div></div></div>'
+     +'<div class="aitip">Your raku bowls take 3&times; more views in the 24h after a live session. One more broadcast this week would catch the weekend buyers.</div>'
+     +'<div class="aitip">The rosewood tea scoop is still held &mdash; upload its CITES certificate and it lists the moment it clears.</div>'
+     +'<div class="aitip">Buyers from Germany doubled this month but none have seen your sake sets &mdash; want a German-language listing draft?</div>'
+     +'<button class="btn line sm" style="margin-top:11px" onclick="go(\'assist\')">Ask her anything</button></div></div>'
+     +'<div class="pad"><div class="k d" style="margin-top:26px">THIS MONTH</div></div>'
+     +'<div class="angrid">'+[['3.8%','Conversion','views &rarr; orders'],['31%','Repeat buyers','came back for more'],['&pound;74','Avg order','across 26 orders'],['4.9','Rating','41 reviews &middot; 12 this month']].map(function(a){return '<div class="sgc"><div class="serif" style="font-size:21px;color:var(--accent)">'+a[0]+'</div><div class="st" style="margin-top:3px">'+a[1]+'</div><div class="ss">'+a[2]+'</div></div>'}).join('')+'</div>'
+     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">WHERE YOUR VIEWS COME FROM</div>'
+     +dashBar('Your live sessions',46,'46%')+dashBar('Japan country page',27,'27%')+dashBar('Search',17,'17%')+dashBar('Craft pages &middot; Clay',10,'10%')
+     +'</div></div>'
+     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">ORDER PIPELINE</div><div class="pipe">'+[['3','New'],['6','To ship'],['4','In transit'],['26','Delivered']].map(function(p,i){return '<div class="pc'+(i===1?' hot':'')+'"><div class="serif" style="font-size:19px">'+p[0]+'</div><div class="sm dim" style="margin-top:2px">'+p[1]+'</div></div>'}).join('')+'</div>'
+     +'<p class="sm dim" style="margin-top:11px">&pound;86 releases from escrow Friday &mdash; delivery confirmed on VLR-8207.</p></div></div>'
+     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">TOP LISTINGS &middot; 30D REVENUE</div>'
+     +dashBar('Kuro raku tea bowl',100,'&pound;816')+dashBar('Gongfu tea set',62,'&pound;504')+dashBar('Sake set, wood-fired',41,'&pound;336')
+     +'</div></div>'
+     +'<div class="pad"><div class="chart" style="margin-top:12px"><div class="k d">YOUR BUYERS</div>'
+     +[['GB','United Kingdom',9],['US','United States',7],['DE','Germany',4],['AU','Australia',2]].map(function(b){return '<div style="display:flex;align-items:center;gap:10px;margin-top:11px"><span style="display:flex;width:22px;height:22px;border-radius:5px;overflow:hidden;flex:0 0 22px">'+flag(b[0])+'</span><span class="fd" style="font-size:12.5px;font-weight:600;flex:1">'+b[1]+'</span><span class="sm dim">'+b[2]+' orders</span></div>'}).join('')
+     +'</div></div>'
+     +'<div class="pad"><button class="golive" onclick="go(\'golive\')"><span class="lc">'+I.cam+'</span><div style="flex:1;text-align:left"><div class="fd" style="font-size:15px;font-weight:600">Go live on your channel</div><div class="sm mut">612 watched last stream &middot; &pound;340 sold &middot; +48 follows</div></div>'+I.arrow.replace('<svg','<svg style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2"')+'</button></div>'
+     +'<div class="pad"><div class="k d" style="margin-top:24px">TO DO</div></div>'
+     +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">Ship VLR-8241 &middot; Gongfu tea set</div><div class="sm dim">Buyer in the UK &middot; add tracking once collected</div></div><button class="btn sm" style="width:auto;padding:0 16px" onclick="toast(\'Add tracking — buyer sees it instantly\')">Ship</button></div>'
+     +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">1 certificate needed</div><div class="sm dim">Your rosewood tea scoop needs a CITES certificate to list</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="toast(\'Certificate upload\')">Upload</button></div>'
+     +'<div class="pad" style="display:flex;align-items:baseline;justify-content:space-between"><div class="k d" style="margin-top:24px">LISTINGS &middot; UNLIMITED</div><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600;margin-top:24px" onclick="go(\'newlisting\')">+ New</button></div>'
+     +[['Kuro raku tea bowl','Live &middot; 214 views &middot; 3 in stock','&pound;68',14705063,''],['Sake set, wood-fired','Live &middot; 96 views &middot; 5 in stock','&pound;84',18198515,''],['Rosewood tea scoop','Held &mdash; certificate required','&pound;22',30907889,'held']].map(function(l){return '<div class="listing"><img src="'+px(l[3])+'"><div style="flex:1"><div class="lt">'+l[0]+'</div><div class="ls'+(l[4]?' held':'')+'">'+l[1]+'</div></div><div class="lp">'+l[2]+'</div></div>'}).join('')
+     +'<div class="pad"><div class="todo" style="margin-top:14px;padding-left:0;padding-right:0;border-bottom:none"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">API access</div><div class="sm dim">Pro-only &mdash; wire your channel into your own tools</div></div><button class="btn line sm" style="width:auto;padding:0 14px" onclick="toast(\'API keys live in the seller dashboard on web\')">Keys</button></div></div>'
+     +'<div class="pad"><button class="btn ghost sm" style="margin-top:6px" onclick="go(\'payouts\')">Payouts &amp; earnings</button></div>';
+  } else {
+    h+='<div class="pad" style="padding-top:64px;display:flex;align-items:flex-start;justify-content:space-between"><div><div class="k d">YOUR CHANNEL</div><h1 class="dspl" style="font-size:26px;margin-top:8px">Killa Textiles</h1><div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap"><span class="fbadge" style="border-color:rgba(255,255,255,.18);color:var(--mut)">PERU '+flag('PE')+'</span><span class="tbadge">STARTER · 10%</span></div></div><button class="gbtn" style="position:static" onclick="go(\'notif\')">'+I.bell+'</button></div>'
+     +dashSeg()
+     +'<div class="dstats"><div class="ds"><div class="dk">318</div><div class="dl">Views · 7d</div></div><div class="ds"><div class="dk">2</div><div class="dl">To ship</div></div><div class="ds"><div class="dk">&pound;96</div><div class="dl">In escrow</div></div></div>'
+     +'<div class="pad"><button class="golive" onclick="go(\'golive\')"><span class="lc">'+I.cam+'</span><div style="flex:1;text-align:left"><div class="fd" style="font-size:15px;font-weight:600">Go live on your channel</div><div class="sm mut">Live is open to every seller &mdash; broadcast from the loom.</div></div>'+I.arrow.replace('<svg','<svg style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2"')+'</button></div>'
+     +'<div class="pad"><div class="k d" style="margin-top:24px">LISTINGS &middot; 7 OF 10</div></div>'
+     +'<div class="pad"><div class="capbar"><span style="width:70%"></span></div><p class="sm dim" style="margin-top:7px">3 listing slots left on Starter.</p></div>'
+     +[['Aguayo throw, handwoven','Live &middot; 88 views &middot; 2 in stock','&pound;54',33539680,''],['Alpaca scarf, natural dye','Live &middot; 41 views &middot; 6 in stock','&pound;38',37966505,''],['Woven belt, Cusco pattern','Live &middot; 19 views &middot; 4 in stock','&pound;16',37966508,'']].map(function(l){return '<div class="listing"><img src="'+px(l[3])+'"><div style="flex:1"><div class="lt">'+l[0]+'</div><div class="ls'+(l[4]?' held':'')+'">'+l[1]+'</div></div><div class="lp">'+l[2]+'</div></div>'}).join('')
+     +'<div class="pad"><div class="upsell"><div class="k" style="color:var(--accent)">PRO &middot; &pound;49/MO</div><div class="fd" style="font-size:14.5px;font-weight:600;margin-top:7px">Keep 6% more of every sale.</div><p class="sm dim" style="margin-top:5px">Unlimited listings &middot; 4% commission instead of 10% &middot; your own AI account manager &middot; revenue analytics.</p><button class="btn sm" style="margin-top:12px" onclick="dashTier(\'PRO\')">See the Pro dashboard</button></div></div>'
+     +'<div class="pad"><div class="k d" style="margin-top:24px">TO DO</div></div>'
+     +'<div class="todo"><div style="flex:1"><div class="fd" style="font-size:13px;font-weight:600">Ship VLR-9016 &middot; Aguayo throw</div><div class="sm dim">Buyer in Germany &middot; add tracking once collected</div></div><button class="btn sm" style="width:auto;padding:0 16px" onclick="toast(\'Add tracking — buyer sees it instantly\')">Ship</button></div>'
+     +'<div class="pad"><button class="btn ghost sm" style="margin-top:16px" onclick="go(\'payouts\')">Payouts &amp; earnings</button></div>';
+  }
+  host.innerHTML=h;
+}
 /* ===== NEW LISTING ===== */
 S.newlisting='<div class="scr" id="s-newlisting"><div class="sc" style="padding-bottom:150px">'
 +'<div class="pad" style="padding-top:64px;display:flex;align-items:center;justify-content:space-between"><button class="chip-back" onclick="go(\'dash\')">'+I.back+'</button><button class="l" style="font-family:var(--fd);font-size:12px;color:var(--accent);font-weight:600" onclick="toast(\'Draft saved\')">Save draft</button></div>'
@@ -1811,6 +1875,7 @@ function go(id){
   if(id==='langcur'){ renderLangCur() }
   if(id==='assist'){ renderAssist() }
   if(id==='seats'){ renderSeats() }
+  if(id==='dash'){ renderDash() }
   var lvv=document.getElementById('livevid'); if(lvv){ if(id==='live'){ var lpp=lvv.play(); if(lpp&&lpp.catch) lpp.catch(function(){}) } else { lvv.pause() } }
   var slot=document.getElementById('countryslot')
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on','in') })
@@ -2040,6 +2105,25 @@ splashT=setTimeout(endSplash,2600)
 .fseat .fs-n{font-family:var(--fd);font-size:13px;font-weight:600}
 .fseat .fs-k{font-size:10.5px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fseat .open{display:inline-block;font-family:var(--fd);font-size:8px;letter-spacing:.08em;font-weight:700;color:var(--accent);border:1px dashed rgba(255,107,0,.5);border-radius:999px;padding:4px 9px;margin-top:9px}
+.dseg{display:flex;gap:6px;margin:16px 20px 0;background:rgba(255,255,255,.05);border-radius:14px;padding:4px}
+.dseg button{flex:1;font-family:var(--fd);font-size:10.5px;letter-spacing:.1em;font-weight:700;color:var(--mut);padding:9px 0;border-radius:11px}
+.dseg button.on{background:var(--accent);color:#0b0b0e}
+.tbadge{font-family:var(--fd);font-size:9px;letter-spacing:.08em;font-weight:700;color:var(--mut);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;display:inline-block}
+.tbadge.pro{color:var(--accent);border-color:rgba(255,107,0,.45)}
+.chart{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;margin-top:16px}
+.aimgr{background:linear-gradient(140deg,rgba(255,107,0,.10),rgba(255,255,255,.03));border:1px solid rgba(255,107,0,.22);border-radius:18px;padding:15px;margin-top:12px}
+.aitip{background:rgba(0,0,0,.28);border-radius:13px;padding:11px 13px;font-size:12px;line-height:1.55;color:#d8d7d3;margin-top:10px}
+.angrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 20px 0}
+.capbar{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;display:block}
+.capbar span{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.upsell{background:linear-gradient(140deg,rgba(255,107,0,.12),rgba(255,255,255,.03));border:1px solid rgba(255,107,0,.28);border-radius:18px;padding:16px;margin-top:18px}
+.ctabs{display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:10px;padding:3px}
+.ctabs button{font-family:var(--fd);font-size:9.5px;letter-spacing:.06em;font-weight:700;color:var(--mut);padding:6px 9px;border-radius:8px}
+.ctabs button.on{background:var(--accent);color:#0b0b0e}
+.pipe{display:flex;gap:8px;margin-top:12px}
+.pipe .pc{flex:1;background:rgba(0,0,0,.28);border-radius:13px;padding:11px 6px;text-align:center}
+.pipe .pc.hot{box-shadow:inset 0 0 0 1px rgba(255,107,0,.4)}
+.pipe .pc.hot .serif{color:var(--accent)}
 .steps3{margin:14px 20px 0;padding:6px 16px;border-radius:20px;background:rgba(255,255,255,.03)}
 .vstep{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}.vstep:last-child{border:none}
 .vn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--mut);flex:0 0 auto}
