@@ -1028,7 +1028,8 @@ function renderCart(){
   }
   var T=cartTotals(), i, groups={}, order=[];
   for(i=0;i<CART.length;i++){ if(!groups[CART[i].seller]){ groups[CART[i].seller]=[]; order.push(CART[i].seller) } groups[CART[i].seller].push(i) }
-  var h='<div class="pad" style="padding-top:64px"><div class="k d">YOUR BASKET</div><h1 class="dspl" style="font-size:32px;margin-top:8px">'+(T.ns>1?(T.ns===2?'Two':T.ns)+' makers.<br>One payment.':'One maker.<br>One payment.')+'</h1></div>'
+  var NW=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+  var h='<div class="pad" style="padding-top:64px"><div class="k d">YOUR BASKET</div><h1 class="dspl" style="font-size:32px;margin-top:8px">'+(T.ns>1?(NW[T.ns]||T.ns)+' makers.<br>One payment.':'One maker.<br>One payment.')+'</h1></div>'
   +'<div class="escrow-bar">'+I.shield+'<span>Held in escrow until each parcel&rsquo;s delivery is confirmed.</span></div>';
   order.forEach(function(sn){
     var idxs=groups[sn], first=CART[idxs[0]];
