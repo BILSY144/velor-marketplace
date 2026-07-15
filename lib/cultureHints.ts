@@ -328,7 +328,43 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // excluded per this file's own no-weapons rule.
   BN: ['Woven songket', 'Silver jewellery & ceremonial silverware', 'Handwoven rattan dish covers (Tudung Dulang)', 'Songkok caps'],
   BT: ['Woven textiles', 'Incense'],
-  MV: ['Lacquer boxes'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Maldives had only 1
+  // item (SEO_LOG.md backlog item 25's content-depth floor list). Three
+  // product-level additions, each multi-source verified this run, existing
+  // 'Lacquer boxes' entry left untouched (not re-verified or renamed; note
+  // 'Liyelaa Jehun' turned out to be the Dhivehi name for this same lacquer
+  // craft per encyclocraftsapr.com and ichcourier.ichcap.org, so it was not
+  // added as a separate item -- same duplicate-name check already applied
+  // to Brunei's songket/Jong Sarat). Woven reed mats (Thundu Kunaa) are
+  // documented by the Maldives government's own Expo 2020 pavilion page
+  // (expo2020maldives.gov.mv, material: dried/dyed reed, not coconut leaf --
+  // see caveat below) and independently corroborated by
+  // encyclocraftsapr.com (World Crafts Council Asia-Pacific's craft
+  // encyclopedia, material: local reed called 'haa'/'khau', finest from
+  // Fiori island) and maldives-magazine.com (material: screw-pine leaves,
+  // same reed family), all naming Gadhdhoo island, Gaafu Dhaalu Atoll as the
+  // craft's home; a fourth source (thearrival.mv) described the material as
+  // coconut palm leaves instead of reed -- a real discrepancy caught by
+  // cross-checking, not silently resolved, and the reed material was used
+  // since three independent sources (incl. the official government page)
+  // agree against thearrival.mv's one. Coir rope (Roanu Veshun) is
+  // documented by maldives.com's dedicated craft feature (coconut-husk
+  // fibre, hand-spun, 'Kaashi Hehun'/'Bo'nbi Faakurun'/'Roanu Veshun'
+  // process stages) and independently corroborated by maldivestimes.com's
+  // Raa Atoll feature (same process and Dhivehi terms) and
+  // maldives-magazine.com (naming Haa Alif Atoll's 'aiyvaa roanu' as a
+  // renowned fine-quality variant). Miniature dhoni boat models (wood) are
+  // documented by encyclocraftsapr.com's wood-craft page (kissaru vadaan
+  // boat-building tradition, hubs in Alifushi/Raa Atoll and
+  // Velidhoo/Noonu Atoll) and independently corroborated by
+  // maldives-magazine.com describing dhoni miniatures as a distinct,
+  // currently-sold souvenir craft. Coconut-shell items (e.g. 'Raa Bandhi'
+  // containers), also turned up in the same source material, were
+  // deliberately excluded per this file's own no-shell rule even though
+  // the shell here is botanical (coconut), not animal, to stay unambiguous
+  // with the rule as written. No weapons; no ivory/coral/animal-shell/bone
+  // material in any of the three.
+  MV: ['Lacquer boxes', 'Woven reed mats (Thundu Kunaa)', 'Coir rope (Roanu Veshun)', 'Miniature dhoni boat models'],
   TL: ['Tais weaving', 'Coffee'],
   // Africa
   MA: ['Leather babouches', 'Brass lanterns', 'Argan oil', 'Zellige tables', 'Tagines', 'Berber rugs', 'Leather poufs', 'Mint tea sets', 'Kaftans', 'Rose water', 'Thuya wood boxes', 'Hammam scrubs'],
