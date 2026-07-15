@@ -27,6 +27,7 @@ export default function NewListingScreen() {
   const [desc, setDesc] = useState('')
   const [story, setStory] = useState('')
   const [regulated, setRegulated] = useState<null | boolean>(null)
+  const [certs, setCerts] = useState<string[]>([])
   const [note, setNote] = useState<string | null>(null)
 
   async function addPhotos() {
@@ -38,12 +39,21 @@ export default function NewListingScreen() {
     if (!res.canceled) setPhotos((p) => [...p, ...res.assets.map((a) => a.uri)])
   }
 
+  async function addCerts() {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.9,
+    })
+    if (!res.canceled) setCerts((c) => [...c, ...res.assets.map((a) => a.uri)])
+  }
+
   const priceN = parseFloat(price) || 0
   const keepStarter = Math.max(0, priceN * 0.9)
   const keepPro = Math.max(0, priceN * 0.96)
 
-  const checks: [string, boolean][] = useMemo(
-    () => [
+  const checks: [string, boolean][] = useMemo(() => {
+    const base: [string, boolean][] = [
       [`Photos · ${photos.length}`, photos.length >= 3],
       ['Title', title.trim().length > 2],
       ['Price', priceN > 0],
@@ -51,9 +61,13 @@ export default function NewListingScreen() {
       ['Story', story.trim().length > 10],
       ['Parcel size', parcel.trim().length > 2],
       ['Materials declared', regulated !== null],
-    ],
-    [photos.length, title, priceN, desc, story, parcel, regulated]
-  )
+    ]
+    // The compliance gate: regulated materials cannot list without a
+    // certificate — same rule the production admin approval enforces (409
+    // without a valid certificate).
+    if (regulated === true) base.push([`Certificate · ${certs.length}`, certs.length > 0])
+    return base
+  }, [photos.length, title, priceN, desc, story, parcel, regulated, certs.length])
   const ready = checks.every(([, ok]) => ok)
 
   const publish = () => {
@@ -169,8 +183,48 @@ export default function NewListingScreen() {
           </View>
           <Dim style={{ fontSize: 11.5, marginTop: 6 }}>
             Wildlife, plant, wood, leather, shell or antique parts need certificates before
-            listing{regulated ? ' — you will be asked to upload one before this can go live.' : '.'}
+            listing.
           </Dim>
+
+          {/* Certificate upload — required the moment materials are regulated */}
+          {regulated === true ? (
+            <View style={s.certCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+                <Ionicons name="document-attach-outline" size={16} color={C.accent} />
+                <Text style={s.certT}>Certificate required</Text>
+              </View>
+              <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 6 }}>
+                Upload a clear photo or scan of the certificate that clears this item to ship —
+                CITES for wildlife and protected woods, phytosanitary for plant material, export
+                or provenance papers for antiques. Velor verifies it before the listing can go
+                live; without one, regulated items cannot list.
+              </Dim>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                {certs.map((uri, i) => (
+                  <View key={`${uri}-${i}`} style={s.certWrap}>
+                    <Image source={{ uri }} style={s.certImg} contentFit="cover" />
+                    <Pressable
+                      style={s.certX}
+                      hitSlop={6}
+                      onPress={() => setCerts((c) => c.filter((_, x) => x !== i))}
+                    >
+                      <Ionicons name="close" size={12} color="#fff" />
+                    </Pressable>
+                  </View>
+                ))}
+                <Pressable style={s.certAdd} onPress={addCerts}>
+                  <Ionicons name="add" size={18} color={C.accent} />
+                  <Text style={s.certAddTx}>Upload</Text>
+                </Pressable>
+              </View>
+              {certs.length ? (
+                <Dim style={{ fontSize: 11, marginTop: 8 }}>
+                  {certs.length} document{certs.length === 1 ? '' : 's'} attached — verified by
+                  Velor before the listing goes live.
+                </Dim>
+              ) : null}
+            </View>
+          ) : null}
 
           {/* Ready to publish */}
           <Text style={s.kickDim}>READY TO PUBLISH</Text>
@@ -327,6 +381,42 @@ const s = StyleSheet.create({
     borderColor: C.line,
   },
   okTx: { fontFamily: F.displayMed, fontSize: 10.5, color: C.green },
+  certCard: {
+    marginTop: 14,
+    backgroundColor: 'rgba(255,107,0,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.3)',
+    borderRadius: 18,
+    padding: 14,
+  },
+  certT: { fontFamily: F.bodySemi, fontSize: 13, color: C.text },
+  certWrap: { width: 64, height: 64 },
+  certImg: { width: 64, height: 64, borderRadius: 12 },
+  certX: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  certAdd: {
+    height: 64,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255,107,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  certAddTx: { fontFamily: F.displayMed, fontSize: 10, color: C.accent },
   noteBub: {
     marginTop: 16,
     backgroundColor: 'rgba(20,20,26,0.9)',

@@ -305,3 +305,14 @@ call at render — the player is created lazily on first RING inside
 try/catch (plus playsInSilentMode so the iPhone mute switch doesn't eat
 the preview), released on unmount. If audio ever breaks again the bell
 swings silently and the page still renders. tsc + iOS export clean.
+
+## 2026-07-15 — Certificate upload added to the listing form (William's call)
+
+New Listing's regulated-materials gate now does what production does:
+declaring "Yes" opens a CERTIFICATE REQUIRED card — CITES / phytosanitary /
+export-paper photo upload (image picker, multiple, each with a delete ×),
+with the honest copy that Velor verifies before the listing can go live
+and that regulated items cannot list without one. The READY TO PUBLISH
+checklist gains a "Certificate · N" pill that must be green when
+regulated=Yes, mirroring the production admin gate (409 without a valid
+certificate — see velor-cultural-marketplace / compliance chain).
