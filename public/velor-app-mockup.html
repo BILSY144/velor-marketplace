@@ -1243,16 +1243,21 @@ function gbp(x){
   return CSYM[c]+v.toFixed(2).replace(/\.00$/,'');
 }
 function setCurrency(code){
+  /* Same two-source strategy as the site's lib/fx.ts: frankfurter (ECB)
+     first, open.er-api.com as fallback. */
   if(code===CURRENCY.code) return;
   if(code==='GBP'){ CURRENCY={code:'GBP',rate:1}; renderLangCur(); toast('Prices in GBP'); return }
   toast('Fetching the live rate&hellip;');
-  fetch('https://api.frankfurter.app/latest?from=GBP&to='+code).then(function(r){return r.json()}).then(function(d){
-    if(d&&d.rates&&d.rates[code]){
-      CURRENCY={code:code,rate:d.rates[code]};
-      renderLangCur();
-      toast('Prices now in '+code+' &middot; live ECB rate '+d.rates[code]);
-    } else { toast('Rate unavailable &mdash; staying in '+CURRENCY.code) }
-  }).catch(function(){ toast('Rate unavailable &mdash; staying in '+CURRENCY.code) });
+  function apply(rate,src){ CURRENCY={code:code,rate:rate}; renderLangCur(); toast('Prices now in '+code+' &middot; live rate '+Number(rate).toFixed(4)) }
+  fetch('https://api.frankfurter.app/latest?from=GBP&to='+code)
+    .then(function(r){return r.json()})
+    .then(function(d){ if(d&&d.rates&&d.rates[code]){ apply(d.rates[code]) } else { throw new Error('no rate') } })
+    .catch(function(){
+      fetch('https://open.er-api.com/v6/latest/GBP')
+        .then(function(r){return r.json()})
+        .then(function(d){ if(d&&d.rates&&d.rates[code]){ apply(d.rates[code]) } else { toast('Rate unavailable &mdash; staying in '+CURRENCY.code) } })
+        .catch(function(){ toast('Rate unavailable &mdash; staying in '+CURRENCY.code) });
+    });
 }
 function renderLangCur(){
   var host=document.getElementById('langcurslot'); if(!host) return;
