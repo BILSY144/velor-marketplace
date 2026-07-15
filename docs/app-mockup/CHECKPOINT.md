@@ -410,3 +410,15 @@ William: "this page can do with some serious redesigning/layout." Old page was 1
 - Full directory: 13 REGNAMES groups, all 190 WORLD rows (flag, name, first-2 HINTS crafts sub, SEAT OPEN chip) → apply. Bottom CTA "Apply for your seat" + 24h line.
 
 Verified on preview (?v=seats1): 190 rows / 13 groups / 10 featured cards render; search + empty state + reset all pass; visual check of header, stats, perks grid, rail and directory rows all clean.
+
+## 2026-07-15 — Apply page redesigned (commits 9e0/10b2ca0 successors; see git log)
+
+William: no 2-speciality cap at application; sellers describe everything they plan to sell; "this page needs a complete redesign and layout." Rebuilt S.apply:
+
+- Header: SELL ON VELOR kicker, "Apply to sell.", sub "Five minutes, one form. Free to apply — 0% listing fees on every plan." 3-step strip kept (Apply / Verify identity / Decision in 24h).
+- Sections with .k d kickers: YOUR STORE (name + country row, "Founding seat open" in accent) · WHAT YOU MAKE · SHOW YOUR WORK · SHIPPING & MATERIALS.
+- SPECIALITY PICKER REMOVED from apply (pickSpec stays — still used by New listing). Replaced with a large free-text box "YOUR CRAFT & EVERYTHING YOU PLAN TO SELL" + helper "Write it all — your craft, your categories, every kind of product you plan to sell. No limits, no picking from a list." NOTE: production design decision #5 (max-2 specialities) is a LISTING-time rule, not application-time — production app/apply already collects free-text description + categories, so this aligns, no production change needed.
+- New photos section: "PHOTOS OF YOUR WORK · MINIMUM 3" — three verified JP Pexels images (14705063 tea bowls / 18198515 sake sets / 8330375 matcha) as 64px tiles + dashed add tile, all one row; helper line states apps without 3 real photos are declined (true: MIN_SAMPLE_IMAGES=3 in production review cron). First cut used 84px tiles and the add tile wrapped — fixed to 64px.
+- Optional website/social field; ship-from + materials declaration kept; dock line "Submitting takes you straight to identity verification"; submit → verify.
+
+Verified live (?v=apply2): header/steps/sections render, photo row single-line, description box and helper copy correct.
