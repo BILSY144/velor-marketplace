@@ -29,9 +29,10 @@ export default function YouScreen() {
   const follows = useFollows((s) => s.ids)
   const user = useSession((s) => s.user)
   const setSession = useSession((s) => s.set)
-  const [bio, setBio] = React.useState<{ available: boolean; label: string }>({
+  const [bio, setBio] = React.useState<{ available: boolean; label: string; passcodePreview: boolean }>({
     available: false,
     label: 'Face ID',
+    passcodePreview: false,
   })
   const [bioOn, setBioOn] = React.useState(false)
 
@@ -154,8 +155,9 @@ export default function YouScreen() {
                 <Text style={s.rowT}>{bio.label} lock</Text>
                 <Text style={s.rowS}>
                   {bioOn
-                    ? `On — ${bio.label} opens the app, password is the backup`
+                    ? `On — ${bio.label} opens the app and signs you in`
                     : `Off — tap to require ${bio.label} when the app opens`}
+                  {bio.passcodePreview ? ' · passcode stands in for Face ID in this preview' : ''}
                 </Text>
               </View>
               <View style={[s.pillState, bioOn && s.pillStateOn]}>

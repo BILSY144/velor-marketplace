@@ -1,5 +1,13 @@
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as SecureStore from 'expo-secure-store'
+import Constants, { ExecutionEnvironment } from 'expo-constants'
+
+// Expo Go cannot show TRUE Face ID (Apple requires the NSFaceIDUsageDescription
+// baked into the binary — it's in app.json for the store build). Inside Expo
+// Go, iOS silently downgrades the biometric sheet to the device PASSCODE.
+// The passcode still proves the device owner, so the lock + automatic
+// sign-in work identically — but the UI must say so honestly.
+export const IN_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient
 
 // Face ID / Touch ID / Android biometric gate for the seller session
 // (William, 2026-07-15: "full Face ID sign in availability and password as
@@ -11,7 +19,9 @@ import * as SecureStore from 'expo-secure-store'
 
 const FLAG = 'velor.faceid.enabled'
 
-export async function biometricsAvailable(): Promise<{ available: boolean; label: string }> {
+export type BioInfo = { available: boolean; label: string; passcodePreview: boolean }
+
+export async function biometricsAvailable(): Promise<BioInfo> {
   try {
     const [hw, enrolled, types] = await Promise.all([
       LocalAuthentication.hasHardwareAsync(),
@@ -22,9 +32,12 @@ export async function biometricsAvailable(): Promise<{ available: boolean; label
     return {
       available: hw && enrolled,
       label: face ? 'Face ID' : 'fingerprint',
+      // In Expo Go, a Face ID phone gets the device-passcode sheet instead
+      // of the face prompt — the UI must say so, not promise the wrong thing.
+      passcodePreview: face && IN_EXPO_GO,
     }
   } catch {
-    return { available: false, label: 'Face ID' }
+    return { available: false, label: 'Face ID', passcodePreview: false }
   }
 }
 

@@ -452,3 +452,22 @@ keychain. Signing in again with Face ID already on refreshes the stored
 credentials. SUPERSEDES the earlier "password never stored" note — William
 explicitly chose automatic sign-in; storage is keychain-encrypted and
 biometric-gated by the app's own lock.
+
+## 2026-07-15 — "No Face ID applied": EXPO GO LIMITATION identified + honest UI
+
+William on-device: enabling asked for "password", reopening asked for
+"password", never a face prompt. Root cause is documented Expo Go
+behaviour, not our code: TRUE Face ID needs NSFaceIDUsageDescription baked
+into the binary; Expo Go doesn't carry it for us, so iOS silently
+downgrades LocalAuthentication to the DEVICE PASSCODE sheet — the
+"password" William saw is his phone passcode standing in for his face.
+The lock + automatic sign-in logic all still work (passcode proves the
+owner); the prompt just isn't a face until the real build.
+
+Done: NSFaceIDUsageDescription added to app.json ios.infoPlist (store/dev
+builds get the genuine Face ID prompt from day one); biometricsAvailable()
+now returns passcodePreview (expo-constants@18.0.13, ExecutionEnvironment
+.StoreClient) and every surface says it plainly — lock screen note, enable
+card, You-page row: "passcode stands in for Face ID in this preview."
+TRUE FACE ID = one more reason the Apple Developer registration
+(STORE-RELEASE.md) is the next William-side step.

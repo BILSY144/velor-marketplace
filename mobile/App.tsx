@@ -202,6 +202,7 @@ function BiometricLock({
   onUsePassword: () => void
 }) {
   const [label, setLabel] = React.useState('Face ID')
+  const [preview, setPreview] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const tried = React.useRef(false)
 
@@ -217,7 +218,10 @@ function BiometricLock({
   }, [onUnlocked, busy])
 
   React.useEffect(() => {
-    biometricsAvailable().then((b) => setLabel(b.label))
+    biometricsAvailable().then((b) => {
+      setLabel(b.label)
+      setPreview(b.passcodePreview)
+    })
     if (!tried.current) {
       tried.current = true
       setTimeout(attempt, 350)
@@ -234,6 +238,12 @@ function BiometricLock({
           <Pressable style={lk.btn} onPress={attempt}>
             <Text style={lk.btnTx}>Unlock with {label}</Text>
           </Pressable>
+          {preview ? (
+            <Text style={lk.previewNote}>
+              Expo Go preview: your phone passcode stands in — true Face ID arrives in the full
+              app build
+            </Text>
+          ) : null}
           <Pressable onPress={onUsePassword} style={{ marginTop: 16 }}>
             <Text style={lk.alt}>Use password instead</Text>
           </Pressable>
@@ -261,6 +271,15 @@ const lk = StyleSheet.create({
   },
   btnTx: { fontFamily: F.displayMed, fontSize: 13.5, color: '#160a00' },
   alt: { fontFamily: F.body, fontSize: 12, color: '#8a8a95' },
+  previewNote: {
+    fontFamily: F.body,
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: '#5a5a64',
+    textAlign: 'center',
+    marginTop: 14,
+    maxWidth: 280,
+  },
 })
 
 export default function App() {

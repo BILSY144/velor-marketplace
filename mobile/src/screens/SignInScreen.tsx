@@ -40,6 +40,7 @@ export default function SignInScreen() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [bioOffer, setBioOffer] = useState<string | null>(null)
+  const [bioPreview, setBioPreview] = useState(false)
   const [forgot, setForgot] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
 
@@ -65,8 +66,10 @@ export default function SignInScreen() {
         // Offer Face ID / fingerprint before leaving — William's standing
         // requirement: biometric sign-in with password as the backup.
         const bio = await biometricsAvailable()
-        if (bio.available) setBioOffer(bio.label)
-        else nav.goBack()
+        if (bio.available) {
+          setBioOffer(bio.label)
+          setBioPreview(bio.passcodePreview)
+        } else nav.goBack()
       } else {
         setError('That email and password did not match. Passwords are case-sensitive.')
       }
@@ -188,6 +191,9 @@ export default function SignInScreen() {
                 {bioOffer} opens the app AND signs you in — no more passwords. Your credentials
                 live in this phone's encrypted keychain, used only after your {bioOffer} passes,
                 and are wiped the moment you turn this off or sign out.
+                {bioPreview
+                  ? ' Note: in this Expo Go preview, Apple shows your phone PASSCODE instead of the face prompt — true Face ID switches on in the full app build.'
+                  : ''}
               </Dim>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                 <Pressable
