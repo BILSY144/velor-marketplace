@@ -353,3 +353,46 @@ launch surface (native splash bg, pre-font view, overlay) is now pure
 #000000. There is physically only one black behind the logo now. RULE: the
 splash PNG must stay transparent; never re-export it with a baked
 background.
+
+## 2026-07-15 — PUSH AHEAD phase: store-release scaffolding + REAL seller sign-in
+
+William chose "all three in order" (store prep, seller sign-in, buyer prep).
+
+STORE RELEASE (phase 1): eas.json build profiles (preview APK / production
+store builds, channels preview/production so OTA updates keep flowing to
+the right binaries), manual EAS Build GitHub workflow
+(.github/workflows/eas-build.yml, workflow_dispatch, uses EXPO_TOKEN), and
+mobile/STORE-RELEASE.md — William's registration checklist (Apple $99/yr
+org enrolment, Play $25) + the exact steps after. Android preview APKs are
+buildable TODAY with no store account.
+
+SELLER SIGN-IN (phase 2) — REAL, no backend changes: RN's fetch rides the
+platform cookie jar, so the app signs in against the site's own NextAuth
+(csrf -> credentials callback -> /api/auth/session as the honest success
+check; api.ts). New SignInScreen (kit-styled, show/hide password, honest
+buyer note, apply link). useSession store, restored from the cookie jar on
+cold start (App.tsx). SIGNED-IN MODE lights up: Dash (green LIVE banner,
+real tier/founding badge from /api/seller/subscription, real escrow +
+paid-out from /api/dashboard/payouts, real pipeline from
+/api/dashboard/orders, real listings from /api/dashboard/products; tier
+toggle preview-only; views·7d shows an em dash — no endpoint, no invented
+number), SellerOrders (real order cards, status-bucket filter pills with
+live counts), Payouts (real escrow/paid/history + rail status + hold
+window), NewListing (REAL publish: images as data URLs — the site's own
+Add Product format, base64 from the picker at q0.5 — best-effort parcel
+parse to grams/cm; server enforces caps, ship-from and cert gates; honest
+held-for-certificate message). You page: signed-in state with first name +
+email + sign out, or the seller sign-in door. Claude never touches the
+credentials — sellers type their own, straight to the site over HTTPS.
+
+BUYER PREP (phase 3): the buildable part is done — the sign-in surface,
+session plumbing and honest "passkeys at launch" copy all exist; what
+remains is site-side WebAuthn (separate backend work, William's call when
+to build it).
+
+NOT verified on-device yet: a real sign-in round trip (needs a real seller
+account credential typed by William on his phone). The cookie-jar
+assumption (RN fetch + NextAuth __Secure cookies) is the one live risk —
+if sign-in succeeds but the dashboard stays in preview, check whether the
+session cookie is being persisted/sent (credentials:'include' is set
+everywhere it matters).

@@ -71,3 +71,133 @@ export async function askVelor(messages: AssistMessage[]): Promise<string> {
   if (!res.ok) throw new Error(data?.error || `assistant -> ${res.status}`)
   return data.reply ?? ''
 }
+
+// ---------------------------------------------------------------------------
+// Seller sign-in — against the live site's NextAuth (credentials + JWT).
+// React Native's fetch uses the platform cookie jar, so the session cookie
+// NextAuth sets on sign-in rides along automatically on every later call
+// with credentials:'include'. No backend changes needed.
+// ---------------------------------------------------------------------------
+
+export type SessionUser = {
+  id: string
+  email?: string | null
+  name?: string | null
+  role?: string | null
+  sellerId?: string | null
+}
+
+export async function getSession(): Promise<SessionUser | null> {
+  try {
+    const res = await fetch(`${BASE}/api/auth/session`, {
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    })
+    const data = await res.json().catch(() => null)
+    return data?.user?.id ? (data.user as SessionUser) : null
+  } catch {
+    return null
+  }
+}
+
+export async function signInWithPassword(
+  email: string,
+  password: string
+): Promise<SessionUser | null> {
+  const csrfRes = await fetch(`${BASE}/api/auth/csrf`, { credentials: 'include' })
+  const { csrfToken } = await csrfRes.json()
+  await fetch(`${BASE}/api/auth/callback/credentials`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      csrfToken,
+      email,
+      password,
+      callbackUrl: `${BASE}/`,
+    }).toString(),
+  })
+  // The callback 302s regardless of outcome — the session endpoint is the
+  // only honest success check.
+  return getSession()
+}
+
+export async function signOutRemote(): Promise<void> {
+  try {
+    const csrfRes = await fetch(`${BASE}/api/auth/csrf`, { credentials: 'include' })
+    const { csrfToken } = await csrfRes.json()
+    await fetch(`${BASE}/api/auth/signout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ csrfToken, callbackUrl: `${BASE}/` }).toString(),
+    })
+  } catch {}
+}
+
+async function authedGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  })
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`)
+  return res.json() as Promise<T>
+}
+
+export type SellerPayouts = {
+  payoutRail: string
+  stripeOnboarded: boolean
+  payoneerConfigured: boolean
+  payoneerLinked: boolean
+  pendingEscrow: number
+  pendingOrderCount: number
+  lifetimePaidOut: number
+  isTrusted: boolean
+  holdLabel: string
+  history: { id: string; amount: number; currency: string; status: string; method: string; date: string }[]
+}
+
+export const fetchSellerPayouts = () => authedGet<SellerPayouts>('/api/dashboard/payouts')
+
+export type SellerOrder = {
+  id: string
+  buyerName: string
+  status: string
+  createdAt: string
+  items: { id: string; productId: string; productName: string; productImage: string | null; quantity: number; unitPrice: number; commission: number; payout: number }[]
+  totalRevenue: number
+  totalPayout: number
+}
+
+export const fetchSellerOrders = async (): Promise<SellerOrder[]> =>
+  (await authedGet<{ orders: SellerOrder[] }>('/api/dashboard/orders')).orders ?? []
+
+export type SellerProduct = {
+  id: string
+  name: string
+  title?: string
+  price: number
+  stock: number
+  status: string
+  images?: string[]
+  sales?: number
+  requiresCertificate?: boolean
+}
+
+export const fetchSellerProducts = async (): Promise<SellerProduct[]> =>
+  (await authedGet<{ products: SellerProduct[] }>('/api/dashboard/products')).products ?? []
+
+export type SellerSubscription = { tier: string; [k: string]: unknown }
+
+export const fetchSubscription = () => authedGet<SellerSubscription>('/api/seller/subscription')
+
+export async function createListing(body: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/products`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json().catch(() => ({}))
+  return res.ok ? { ok: true } : { ok: false, error: data?.error ?? `Failed (${res.status})` }
+}

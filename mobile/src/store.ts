@@ -71,3 +71,21 @@ export const useFollows = create<FollowState>((set) => ({
       ids: s.ids.includes(cc) ? s.ids.filter((x) => x !== cc) : [...s.ids, cc],
     })),
 }))
+
+// Seller session — restored from the site's cookie-backed NextAuth session
+// on app start (see App.tsx), set on sign-in, cleared on sign-out.
+import type { SessionUser } from './api'
+
+type SessionState = {
+  user: SessionUser | null
+  ready: boolean
+  set: (u: SessionUser | null) => void
+  markReady: () => void
+}
+
+export const useSession = create<SessionState>((set) => ({
+  user: null,
+  ready: false,
+  set: (user) => set({ user, ready: true }),
+  markReady: () => set({ ready: true }),
+}))

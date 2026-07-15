@@ -8,6 +8,8 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
+import { useSession } from '../store'
+import { createListing } from '../api'
 
 // New listing — plate 30, fully interactive as a PREVIEW: real photo picker
 // (tap a thumb to make it the cover), title, price/stock/parcel, the
@@ -15,10 +17,14 @@ import { Chrome } from '../components/Chrome'
 // story fields, the regulated-materials gate, and the live READY TO PUBLISH
 // checklist that reacts to what you've actually filled in. Publishing
 // itself is gated to an approved seller account — the button says so.
+type Photo = { uri: string; dataUrl: string | null }
+
 export default function NewListingScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
-  const [photos, setPhotos] = useState<string[]>([])
+  const user = useSession((st) => st.user)
+  const live = Boolean(user?.sellerId)
+  const [photos, setPhotos] = useState<Photo[]>([])
   const [cover, setCover] = useState(0)
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
@@ -29,14 +35,26 @@ export default function NewListingScreen() {
   const [regulated, setRegulated] = useState<null | boolean>(null)
   const [certs, setCerts] = useState<string[]>([])
   const [note, setNote] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   async function addPhotos() {
+    // base64 so a signed-in publish can send images as data URLs — the same
+    // format the website's own Add Product form stores (no upload service
+    // needed). quality 0.5 keeps each photo small enough for the API.
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
-      quality: 0.8,
+      quality: 0.5,
+      base64: true,
     })
-    if (!res.canceled) setPhotos((p) => [...p, ...res.assets.map((a) => a.uri)])
+    if (!res.canceled)
+      setPhotos((p) => [
+        ...p,
+        ...res.assets.map((a) => ({
+          uri: a.uri,
+          dataUrl: a.base64 ? `data:image/jpeg;base64,${a.base64}` : null,
+        })),
+      ])
   }
 
   async function addCerts() {
@@ -70,13 +88,55 @@ export default function NewListingScreen() {
   }, [photos.length, title, priceN, desc, story, parcel, regulated, certs.length])
   const ready = checks.every(([, ok]) => ok)
 
-  const publish = () => {
-    setNote(
-      ready
-        ? 'Ready — publishing goes live with your approved seller account. Apply in five minutes and this listing form is the real one.'
-        : 'Not ready yet — clear the amber pills below first. Listings without 3 real photos are auto-rejected.'
-    )
-    setTimeout(() => setNote(null), 3800)
+  async function publish() {
+    if (!ready) {
+      setNote('Not ready yet — clear the amber pills below first. Listings without 3 real photos are auto-rejected.')
+      setTimeout(() => setNote(null), 3800)
+      return
+    }
+    if (!live) {
+      setNote('Ready — publishing goes live with your approved seller account. Sign in from the dashboard, or apply in five minutes.')
+      setTimeout(() => setNote(null), 3800)
+      return
+    }
+    if (busy) return
+    setBusy(true)
+    setNote('Publishing…')
+    // Best-effort parcel parse: "1.2kg · 20×20×15" → grams + cm
+    const kg = parcel.match(/([\d.]+)\s*kg/i)
+    const g = parcel.match(/([\d.]+)\s*g\b/i)
+    const dims = parcel.match(/(\d+)\s*[×x*]\s*(\d+)\s*[×x*]\s*(\d+)/)
+    const res = await createListing({
+      name: title.trim(),
+      description: desc.trim(),
+      price: priceN,
+      stock: Math.max(1, parseInt(stock, 10) || 1),
+      images: photos.map((p) => p.dataUrl).filter(Boolean),
+      makerStory: story.trim(),
+      materials: desc.trim(),
+      isHandmade: true,
+      containsRegulatedMaterial: regulated === true,
+      rulesAccepted: true,
+      weightGrams: kg ? Math.round(parseFloat(kg[1]) * 1000) : g ? Math.round(parseFloat(g[1])) : null,
+      lengthCm: dims ? parseInt(dims[1], 10) : null,
+      widthCm: dims ? parseInt(dims[2], 10) : null,
+      heightCm: dims ? parseInt(dims[3], 10) : null,
+    })
+    setBusy(false)
+    if (res.ok) {
+      setNote(
+        regulated
+          ? 'Published — held for certificate verification, live the moment it clears.'
+          : 'Published — your listing is in review and goes live on approval.'
+      )
+      setTimeout(() => {
+        setNote(null)
+        nav.goBack()
+      }, 2600)
+    } else {
+      setNote(res.error ?? 'Could not publish — try again.')
+      setTimeout(() => setNote(null), 5000)
+    }
   }
 
   return (
@@ -89,7 +149,7 @@ export default function NewListingScreen() {
           {/* Photos — cover + thumbs */}
           <Pressable style={s.cover} onPress={photos.length ? undefined : addPhotos}>
             {photos[cover] ? (
-              <Image source={{ uri: photos[cover] }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <Image source={{ uri: photos[cover].uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
             ) : (
               <View style={s.coverEmpty}>
                 <Ionicons name="camera-outline" size={26} color={C.mut} />
@@ -98,9 +158,9 @@ export default function NewListingScreen() {
             )}
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-            {photos.map((uri, i) => (
-              <Pressable key={`${uri}-${i}`} onPress={() => setCover(i)} style={[s.th, i === cover && s.thOn]}>
-                <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            {photos.map((p, i) => (
+              <Pressable key={`${p.uri}-${i}`} onPress={() => setCover(i)} style={[s.th, i === cover && s.thOn]}>
+                <Image source={{ uri: p.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
               </Pressable>
             ))}
             <Pressable style={s.addTh} onPress={addPhotos}>
@@ -246,7 +306,10 @@ export default function NewListingScreen() {
       </ScrollView>
 
       <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
-        <Btn label={ready ? 'Publish listing' : 'Publish listing — checklist first'} onPress={publish} />
+        <Btn
+          label={busy ? 'Publishing…' : ready ? 'Publish listing' : 'Publish listing — checklist first'}
+          onPress={publish}
+        />
       </View>
       <Chrome back="Dashboard" onBack={() => nav.goBack()} />
     </View>

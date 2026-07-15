@@ -45,6 +45,9 @@ import DashScreen from './src/screens/DashScreen'
 import { SellerOrdersScreen, ApiKeysScreen, PayoutsScreen } from './src/screens/SellerOpsScreens'
 import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
+import SignInScreen from './src/screens/SignInScreen'
+import { useSession } from './src/store'
+import { getSession } from './src/api'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -192,6 +195,16 @@ export default function App() {
     Fraunces_600SemiBold,
   })
   const [splash, setSplash] = React.useState(true)
+  const setSession = useSession((s) => s.set)
+  const markReady = useSession((s) => s.markReady)
+
+  // Restore the seller session from the platform cookie jar on cold start —
+  // if the site's NextAuth cookie survived, the dashboard is live instantly.
+  React.useEffect(() => {
+    getSession()
+      .then((u) => (u ? setSession(u) : markReady()))
+      .catch(() => markReady())
+  }, [setSession, markReady])
 
   if (!loaded) {
     return <View style={{ flex: 1, backgroundColor: '#000000' }} />
@@ -231,6 +244,7 @@ export default function App() {
             <Stack.Screen name="Payouts" component={PayoutsScreen} />
             <Stack.Screen name="NewListing" component={NewListingScreen} />
             <Stack.Screen name="GoLive" component={GoLiveScreen} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
           </Stack.Navigator>
           {splash ? <SplashOverlay onDone={() => setSplash(false)} /> : null}
         </NavigationContainer>

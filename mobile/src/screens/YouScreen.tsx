@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
-import { useFavs, useFollows } from '../store'
+import { useFavs, useFollows, useSession } from '../store'
+import { signOutRemote } from '../api'
 import { Chrome } from '../components/Chrome'
 
 // You — plate 16 + spec/account.txt, exact: YOU kicker, Fraunces 30 name,
@@ -19,6 +20,12 @@ export default function YouScreen() {
   const nav = useNavigation<any>()
   const favs = useFavs((s) => s.ids)
   const follows = useFollows((s) => s.ids)
+  const user = useSession((s) => s.user)
+  const setSession = useSession((s) => s.set)
+
+  const signOut = () => {
+    signOutRemote().finally(() => setSession(null))
+  }
 
   const favSub =
     favs.length || follows.length
@@ -73,8 +80,22 @@ export default function YouScreen() {
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 60 }}>
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.kickDim}>YOU</Text>
-          <Text style={s.h1}>Your Velor.</Text>
-          <Text style={s.passkey}>Passkey sign-in arrives with buyer launch — browse without an account</Text>
+          <Text style={s.h1}>{user?.name ? user.name.split(' ')[0] : 'Your Velor.'}</Text>
+          {user ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+              <Text style={s.passkey}>Signed in · {user.email}</Text>
+              <Pressable onPress={signOut} hitSlop={6}>
+                <Text style={[s.passkey, { color: C.accent }]}>Sign out</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+              <Text style={s.passkey}>Buyer passkeys arrive at launch — sellers can sign in now</Text>
+              <Pressable onPress={() => nav.navigate('SignIn')} hitSlop={6}>
+                <Text style={[s.passkey, { color: C.accent }]}>Seller sign-in</Text>
+              </Pressable>
+            </View>
+          )}
 
           {/* Passport card */}
           <Pressable style={s.passcard} onPress={() => nav.navigate('Passport')}>
