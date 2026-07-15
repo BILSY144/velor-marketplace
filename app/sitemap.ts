@@ -20,7 +20,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // never added here -- they simply postdate this file's last edit.
   // Confirmed each one is a genuinely public, indexable page (not a
   // one-time-token or confirmation page): /contact, /cookies, /live,
-  // /legal/seller-rules, /marketplace, /returns, /seller-agreement, /track.
+  // /legal/seller-rules, /marketplace (later redirected to /shop, see below),
+  // /returns, /seller-agreement, /track.
   // Deliberately NOT added: /apply/verified, which also has a canonical set
   // but is a Stripe Identity `return_url` reached only via a per-applicant
   // `?application=<id>` query string (confirmed via lib/identity.ts) with no
@@ -189,7 +190,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: base, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/apply`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${base}/marketplace`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
+    // /marketplace removed 2026-07-15 (William's call): it now redirects to
+    // /shop (see app/marketplace/page.tsx) instead of rendering its own
+    // duplicate product grid, so it is no longer a real canonical page worth
+    // submitting to search engines.
     { url: `${base}/founding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${base}/origins`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/sell`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
