@@ -724,7 +724,29 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   LI: ['Collectible postage stamps', 'Alpine Pinot Noir & Chardonnay wine', 'Air-dried ham & sausage specialities'],
   NL: ['Delftware pottery', 'Cheese'],
   BE: ['Chocolate', 'Lace'],
-  LU: ['Péckvillercher clay bird whistles'],
+  // Expanded by the standing SEO agent, 2026-07-15 -- Luxembourg had only
+  // the existing Péckvillercher entry (backlog item 25's content-depth
+  // project). Two product-level additions, each multi-source verified this
+  // run, no single-source or AI-content-farm result carried forward.
+  // Considered and deliberately REJECTED first: Villeroy & Boch "Old
+  // Luxembourg" porcelain -- the pattern originates from the Septfontaines,
+  // Luxembourg factory, but Paperjam's own news reporting ("Villeroy & Boch
+  // to close Luxembourg production site") confirms that site's production
+  // has closed, so it is no longer a currently-made Luxembourg product and
+  // was not added. Hand-turned wooden pens & accessories -- Préludes Bois
+  // (maker Luc Guillaume, "Création Artisanale"), confirmed via the
+  // workshop's own site (preludes-bois.lu, describing hand-finished pens,
+  // rollerballs, bottle openers and mills made from European wood species)
+  // and independently listed in Paperjam/Delano's "Ten made-in-Luxembourg
+  // gift ideas" feature. Artisanal handmade chocolates & pralines -- Lola
+  // Valerius, chocolatier in Esch-sur-Alzette, confirmed via the
+  // chocolatier's own site (lolavalerius.com, "creations... faites à la
+  // main" / made by hand), the Gault&Millau Luxembourg guide, the official
+  // Visit Luxembourg tourism site, letzshop.lu's vendor listing, and
+  // independent local press (Le Quotidien's "Made in Luxembourg" feature).
+  // No ivory/coral/shell material, no weapons, no raw-material-only
+  // entries.
+  LU: ['Péckvillercher clay bird whistles', 'Hand-turned wooden pens & accessories', 'Artisanal handmade chocolates & pralines'],
   SE: ['Glassware', 'Dala horses', 'Outdoor knives'],
   FI: ['Puukko knives', 'Design glassware'],
   DK: ['Design furniture', 'Ceramics'],
