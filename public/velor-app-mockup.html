@@ -1114,8 +1114,8 @@ function renderConfirm(){
   var h='<div style="text-align:center;padding:0 30px"><div class="tick"><svg viewBox="0 0 24 24" class="draw"><path d="m5 12.5 5 5L19.5 7"/></svg></div>'
   +'<h1 class="serif" style="font-size:30px;margin-top:22px">'+(ns>1?(NW[ns]||ns)+' orders placed.':'Order placed.')+'</h1>'
   +'<p class="sm mut" style="margin-top:10px;max-width:280px;margin-left:auto;margin-right:auto">'
-  +(ns>1?'One payment, '+ns+' parcels &mdash; each ships on its own, with its own tracking. Your '+gbp(total)+' is held safely until every parcel is delivered.'
-        :'Your '+gbp(total)+' is held safely in escrow until your parcel is delivered.')+'</p></div>';
+  +(ns>1?'One payment, '+ns+' parcels &mdash; each ships on its own, with its own tracking. Each seller&rsquo;s share of your '+gbp(total)+' is held separately in escrow and released only when that parcel&rsquo;s delivery is confirmed.'
+        :'Your '+gbp(total)+' is held safely in escrow, released only when your parcel&rsquo;s delivery is confirmed.')+'</p></div>';
   order.forEach(function(sn,ix){
     var g=groups[sn], first=g.items[0];
     var title=first.t+(g.items.length>1?' +'+(g.items.length-1)+' more':'');
