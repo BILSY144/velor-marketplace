@@ -135,7 +135,39 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   // Cultural Heritage list in 2024, jointly with Afghanistan, Iran, and
   // Uzbekistan (World Music Central).
   TJ: ['Chakan embroidery', 'Suzani wall hangings', 'Zardozi gold & silver thread embroidery', 'Ikat-dyed adras silk textiles', 'Istaravshan Kord knives', 'Hand-carved rubab & dutar instruments'],
-  TM: ['Hand-knotted Turkmen carpets'],
+  // Expanded by the standing SEO agent, 2026-07-15 (backlog item 25's
+  // content-depth floor list) -- Turkmenistan had only 1 item. Five
+  // product-level additions, each multi-source verified this run.
+  // Hand-knotted Turkmen carpets (kept, existing entry) are themselves
+  // UNESCO Intangible Cultural Heritage-inscribed as "Traditional Turkmen
+  // carpet making art in Turkmenistan" (ich.unesco.org), corroborated by
+  // Kalpak Travel's and central-asia.guide's souvenir guides calling
+  // carpets the country's most iconic craft. Turkmen-style needlework
+  // embroidery is separately UNESCO-inscribed ("Turkmen-style needlework
+  // art," ich.unesco.org) -- silk-thread loop-stitch embroidery on
+  // garments and accessories, corroborated by central-asia.guide's
+  // "keteni embroidery" and Kalpak Travel's embroidered-textiles entries.
+  // Keteni silk fabric -- a distinct product from the embroidery applied
+  // to it: a homespun, hand-loomed, naturally-dyed silk cloth with its
+  // own dedicated page in the Encyclopedia of Crafts in the WCC-Asia
+  // Pacific Region, plus independent coverage from Turkmenistan's own
+  // government heritage press (turkmenistan.gov.tm, orient.tm) describing
+  // it as a still-practised women's craft, not a historical curiosity.
+  // Silver jewellery with carnelian & turquoise is documented by the
+  // Metropolitan Museum of Art's own "Turkmen Jewelry" essay and
+  // collection, corroborated by Kalpak Travel and central-asia.guide's
+  // souvenir guides. Telpek sheepskin hats have their own Wikipedia
+  // article and are corroborated as an actively-made, actively-sold craft
+  // by central-asia.guide's souvenir guide and live Etsy listings, not
+  // just a museum piece. Camel wool textiles (weaving of desert-camel
+  // hair into bags, scarves, runners and pillows) are documented by two
+  // independent Smithsonian Institution sources -- the Smithsonian
+  // Center for Folklife and Cultural Heritage's "Camel Craft" feature on
+  // a Turkmen mother-daughter weaving enterprise, and the Smithsonian's
+  // National Museum of Asian Art's own "Turkmen textiles" collection
+  // notes -- not a single-source claim. No shell/ivory/coral/bone
+  // material in any of the six.
+  TM: ['Hand-knotted Turkmen carpets', 'Turkmen-style needlework embroidery', 'Keteni silk fabric', 'Silver jewellery with carnelian & turquoise', 'Telpek sheepskin hats', 'Camel wool textiles'],
   AM: ['Carpets', 'Pomegranate ceramics'],
   AZ: ['Carpets', 'Tea sets'],
   GE: ['Cloisonné jewellery', 'Fermented pantry'],
