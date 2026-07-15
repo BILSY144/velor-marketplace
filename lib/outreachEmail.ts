@@ -103,20 +103,19 @@ function colorBlock(bg: string, extra: string, inner: string): string {
 // only ever reliably aligns inline content, not a nested table.
 const GLOBAL_MARKET_BADGE = `<table role='presentation' align='right' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#1FAE7A' style='background-color:#1FAE7A;background-image:url('https://velorcommerce.store/email-assets/badge-bg.png');background-size:100% 100%;background-repeat:no-repeat;color:#06231A;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:6px 12px;border-radius:100px;'>GLOBAL MARKET</td></tr></table>`
 
-// V2 masthead: centered serif wordmark + GLOBAL MARKET subline + orange
-// hairline with a centered diamond, per William's design. dir stays ltr --
-// a centered wordmark is direction-neutral.
+// V2 masthead, cropped directly from William's template file: the VELOR
+// globe-O wordmark image on black, then the full-width orange rule with a
+// centered diamond. dir stays ltr -- a centered wordmark is direction-neutral.
 const OUTREACH_HEADER = `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' dir='ltr'>
-  <tr><td bgcolor='#0D0D0D' align='center' style='background-color:#0D0D0D;background:#0D0D0D;padding:34px 32px 0;'>
-    <div style='font-family:Georgia,"Times New Roman",serif;color:#FF6B00;font-size:36px;font-weight:700;letter-spacing:12px;line-height:1;'>VEL<span style='color:#FF8A33;'>O</span>R</div>
-    <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:11px;font-weight:400;letter-spacing:7px;padding-top:12px;'>GLOBAL&nbsp;MARKET</div>
+  <tr><td bgcolor='#010101' align='center' style='background-color:#010101;background:#010101;padding:24px 32px 20px;'>
+    <img src='${ASSETS}/masthead.png' width='310' alt='VELOR — GLOBAL MARKET' style='display:block;margin:0 auto;width:310px;height:auto;border:0;'>
   </td></tr>
-  <tr><td align='center' style='padding:22px 0 0;'>
+  <tr><td bgcolor='#010101' style='background-color:#010101;background:#010101;'>
     <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
       <tr>
-        <td style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
-        <td width='30' align='center' style='color:#FF6B00;font-size:11px;line-height:11px;padding:0 4px;transform:translateY(-6px);'>&#9670;</td>
-        <td style='border-top:1px solid #3a2410;font-size:0;line-height:0;'>&nbsp;</td>
+        <td style='border-bottom:1px solid #FF6B00;font-size:0;line-height:0;'>&nbsp;</td>
+        <td width='26' align='center' style='color:#FF6B00;font-size:12px;line-height:12px;padding:0 2px;'>&#9670;</td>
+        <td style='border-bottom:1px solid #FF6B00;font-size:0;line-height:0;'>&nbsp;</td>
       </tr>
     </table>
   </td></tr>
@@ -237,13 +236,13 @@ function buildMultiplierBody(
     // hero band, kicker between hairlines, serif headline with orange accent,
     // centered paragraphs, icon feature grid, full-width pill CTA, tagline.
     const featCell = (icon: string, title: string, note: string, extra: string) =>
-      `<td width='50%' align='center' valign='top' style='padding:22px 14px;${extra}'>
-        <img src='${ASSETS}/icon-${icon}.png' width='40' height='40' alt='' style='display:block;margin:0 auto 10px;width:40px;height:40px;'>
-        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:13px;font-weight:bold;line-height:1.5;'>${title}</div>
-        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:11px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
+      `<td width='25%' align='center' valign='top' style='padding:20px 8px;${extra}'>
+        <img src='${ASSETS}/icon-${icon}.png' width='44' alt='' style='display:block;margin:0 auto 10px;width:44px;height:auto;'>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:12px;font-weight:bold;line-height:1.5;'>${title}</div>
+        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:10.5px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
       </td>`
     return `
-      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;padding:22px 0 0;'>
+      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#010101' style='background-color:#010101;padding:0;'>
         <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
       </td></tr></table>
       <div style='padding:30px 36px 36px;text-align:center;'>
@@ -260,10 +259,8 @@ function buildMultiplierBody(
         <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${c.intro}</p>
         <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:28px 0 0;border:1px solid #2A2A2A;border-radius:14px;'>
           <tr>
-            ${featCell('globe', 'Reach customers around the world', '', 'border-bottom:1px solid #222222;border-right:1px solid #222222;')}
-            ${featCell('live', 'Live selling for your makers', '', 'border-bottom:1px solid #222222;')}
-          </tr>
-          <tr>
+            ${featCell('globe', 'Reach customers around the world', '', 'border-right:1px solid #222222;')}
+            ${featCell('live', 'Live selling for your makers', '', 'border-right:1px solid #222222;')}
             ${featCell('star', 'Founding places for every member', '', 'border-right:1px solid #222222;')}
             ${featCell('pro', 'Free lifetime Pro membership', 'for your member makers', '')}
           </tr>
@@ -398,14 +395,15 @@ ${OUTREACH_HEADER}`
     // is 2x2 (not 4-across like the flat mockup) so localized titles never
     // crush at 600px. The CTA pill is a DIRECT <a> link to /apply/invited.
     const v2 = OUTREACH_V2[lang] || OUTREACH_V2.en
+    // 4-across icon row, per William's design (single row, vertical rules).
     const featCell = (icon: string, title: string, note: string, extra: string) =>
-      `<td width='50%' align='center' valign='top' style='padding:22px 14px;${extra}'>
-        <img src='${ASSETS}/icon-${icon}.png' width='40' height='40' alt='' style='display:block;margin:0 auto 10px;width:40px;height:40px;'>
-        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:13px;font-weight:bold;line-height:1.5;'>${title}</div>
-        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:11px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
+      `<td width='25%' align='center' valign='top' style='padding:20px 8px;${extra}'>
+        <img src='${ASSETS}/icon-${icon}.png' width='44' alt='' style='display:block;margin:0 auto 10px;width:44px;height:auto;'>
+        <div style='font-family:Arial,Helvetica,sans-serif;color:#EAEAEA;font-size:12px;font-weight:bold;line-height:1.5;'>${title}</div>
+        ${note ? `<div style='font-family:Arial,Helvetica,sans-serif;color:#8a8a8a;font-size:10.5px;line-height:1.5;padding-top:3px;'>${note}</div>` : ''}
       </td>`
     body = `
-      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0D0D0D' style='background-color:#0D0D0D;padding:22px 0 0;'>
+      <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#010101' style='background-color:#010101;padding:0;'>
         <img src='${ASSETS}/outreach-hero.jpg' width='600' alt='Velor -- a global network of makers and buyers' style='display:block;width:100%;height:auto;border:0;'>
       </td></tr></table>
       <div style='padding:30px 36px 36px;text-align:center;'>
@@ -424,10 +422,8 @@ ${OUTREACH_HEADER}`
         <p style='font-family:Arial,Helvetica,sans-serif;color:#B9B9B9;font-size:14.5px;line-height:1.75;margin:14px 0 0;'>${v2.p3}</p>
         <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:28px 0 0;border:1px solid #2A2A2A;border-radius:14px;'>
           <tr>
-            ${featCell('globe', v2.feat1, '', 'border-bottom:1px solid #222222;border-right:1px solid #222222;')}
-            ${featCell('live', v2.feat2, '', 'border-bottom:1px solid #222222;')}
-          </tr>
-          <tr>
+            ${featCell('globe', v2.feat1, '', 'border-right:1px solid #222222;')}
+            ${featCell('live', v2.feat2, '', 'border-right:1px solid #222222;')}
             ${featCell('star', v2.feat3, '', 'border-right:1px solid #222222;')}
             ${featCell('pro', v2.feat4, v2.feat4note, '')}
           </tr>
