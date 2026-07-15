@@ -138,7 +138,7 @@ function outreachFooter(name: string, platform: string, unsubUrl: string) {
       </td>
     </tr>
   </table>
-  <div style='border-top:1px solid #222222;margin-top:18px;padding-top:14px;font-family:Arial,Helvetica,sans-serif;color:#666666;font-size:10.5px;letter-spacing:1px;text-align:center;'>VELOR COMMERCE LTD &nbsp;|&nbsp; COMPANY NO. 17268133 &nbsp;|&nbsp; UNITED KINGDOM</div>
+  <div style='border-top:1px solid #222222;margin-top:18px;padding-top:14px;font-family:Arial,Helvetica,sans-serif;color:#666666;font-size:10.5px;letter-spacing:1px;text-align:center;'>VELOR COMMERCE LTD &nbsp;|&nbsp; UNITED KINGDOM</div>
   <p style='font-family:Arial,Helvetica,sans-serif;color:#5a5a5a;font-size:11px;line-height:1.6;margin:12px 0 0;text-align:center;'>You received this because ${h(name)} appeared on a public ${h(platform)} listing. Not interested? <a href='${unsubUrl}' style='color:#FF6B00;text-decoration:underline;'>Unsubscribe</a> &mdash; one click and we will not contact you again.</p>`
   return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'><tr><td bgcolor='#0A0A0A' style='background-color:#0A0A0A;background:#0A0A0A;padding:24px 32px;border-top:1px solid #2A2A2A;' dir='ltr'>${inner}</td></tr></table>`
 }
