@@ -27,6 +27,24 @@ import type { MetadataRoute } from 'next';
 // with a real (if generic) content purpose, and whether login/signup pages
 // should be indexable is a judgment call, not a clear-cut privacy/thin-
 // content case -- flagged in SEO_LOG.md instead of decided here.
+//
+// Extended 2026-07-15 by the standing SEO agent (full-audit re-run): found
+// one more route with the exact same tokenized-private-link profile already
+// established above for `/activate`. `/auth/reset` is a password-reset
+// landing page reached only via a per-user `?token=...` query string that
+// `app/api/auth/forgot/route.ts` mints and emails (`${BASE}/auth/reset?
+// token=${raw}` -- confirmed by reading that route directly); the token is
+// single-use and expires in one hour per the page's own on-screen copy. A
+// repo-wide grep found zero internal `<Link>`/`<a>` anywhere in `app/` or
+// `components/` pointing at `/auth/reset` -- the only other reference in the
+// codebase is the API route building the emailed URL. It was not in
+// `sitemap.xml`, had no per-page `robots: noindex` of its own (`'use
+// client'`, no metadata export, same constraint as `/activate`), and was
+// missing from this disallow list. `/auth/forgot` (the public request form
+// one step before it) is deliberately left alone here, same reasoning as
+// `/auth/sign-in`/`/auth/sign-up` -- it is a public, ungated, real-content
+// form, not a private tokenized link, so it stays a judgment call rather
+// than a clear-cut fix.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -43,6 +61,7 @@ export default function robots(): MetadataRoute.Robots {
           '/messages',
           '/activate',
           '/setup-admin',
+          '/auth/reset',
         ],
       },
     ],
