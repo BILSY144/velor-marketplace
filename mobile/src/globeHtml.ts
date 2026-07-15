@@ -76,7 +76,7 @@ function proj(v,R,cx,cy){
   return [cx+x*R,cy-y*R,z2];
 }
 function frame(){
-  var W=cv.width,H=cv.height,cx=W/2,cy=H*0.44,R=Math.min(W,H)/2-16*DPR;
+  var W=cv.width,H=cv.height,cx=W/2,cy=H*0.47,R=Math.min(W,H)*0.42;
   ctx.clearRect(0,0,W,H);
   /* faint orbit rings, like the mockup */
   ctx.save(); ctx.translate(cx,cy); ctx.rotate(-0.32);

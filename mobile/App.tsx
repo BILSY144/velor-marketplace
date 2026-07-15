@@ -35,6 +35,8 @@ import LegalScreen from './src/screens/LegalScreen'
 import ApplyScreen from './src/screens/ApplyScreen'
 import VerifyScreen from './src/screens/VerifyScreen'
 import CheckoutScreen from './src/screens/CheckoutScreen'
+import MenuScreen from './src/screens/MenuScreen'
+import BellScreen from './src/screens/BellScreen'
 
 const query = new QueryClient()
 const Tab = createBottomTabNavigator()
@@ -121,6 +123,8 @@ export default function App() {
             <Stack.Screen name="Apply" component={ApplyScreen} />
             <Stack.Screen name="Verify" component={VerifyScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="Menu" component={MenuScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Bell" component={BellScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </QueryClientProvider>

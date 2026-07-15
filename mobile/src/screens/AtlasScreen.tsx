@@ -44,6 +44,19 @@ export default function AtlasScreen() {
         }}
       />
 
+      {/* Chrome — search / menu / bell, like the mockup */}
+      <View style={{ position: 'absolute', top: insets.top + 8, right: 14, flexDirection: 'row', gap: 9, zIndex: 6 }}>
+        <Pressable style={s.gbtn} onPress={() => nav.navigate('Search')}>
+          <Ionicons name="search-outline" size={17} color={C.text} />
+        </Pressable>
+        <Pressable style={s.gbtn} onPress={() => nav.navigate('Menu')}>
+          <Ionicons name="menu-outline" size={19} color={C.text} />
+        </Pressable>
+        <Pressable style={s.gbtn} onPress={() => nav.navigate('Bell')}>
+          <Ionicons name="notifications-outline" size={17} color={C.text} />
+        </Pressable>
+      </View>
+
       {/* Hero — exactly the mockup: centered "Shop <rotating word>" */}
       <View pointerEvents="none" style={{ position: 'absolute', top: insets.top + 78, left: 0, right: 0, alignItems: 'center' }}>
         <HeroLine />
@@ -132,6 +145,16 @@ const s = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.4,
     color: C.dim,
+  },
+  gbtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(20,20,26,0.85)',
+    borderWidth: 1,
+    borderColor: C.line,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mode: {
     position: 'absolute',
