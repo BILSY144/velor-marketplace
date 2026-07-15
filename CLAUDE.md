@@ -1511,6 +1511,16 @@ Note for future sessions: this cloud sandbox HAS outbound network in bash (git c
 
 ---
 
+## 2026-07-15 checkpoint — ENTERPRISE TIER RETIRED; live shopping on every tier; Starter cap 10
+
+William's explicit decisions, applied to the FULL production codebase (commit 2c79f75 on main, 60 files, Vercel build verified green on the preview branch first) and the app mockup:
+
+- **Enterprise tier removed completely.** Pro (£49/mo, 4% commission) inherited every Enterprise feature: unlimited listings, Go Live video shopping, the dedicated AI account manager (assistant now gives Pro the full capability set — order lookups, drafting, escalation), full API access, priority support. William explicitly chose Pro KEEPS 4% (does not inherit 0%). Legacy ENTERPRISE rows are treated as PRO everywhere; commission maps alias ENTERPRISE->0.04 so no stray row can ever bill 0%; the Prisma enum value stays only so old rows never break; upgrade_to_enterprise returns a clear 400; /dashboard/upgrade/enterprise deleted.
+- **Live shopping is on EVERY tier now, Starter included** — the standing "live broadcasting is the founding privilege" rule (2026-07-08) is SUPERSEDED by this decision. Founding perk copy is now "the full Pro tier free for life". Rewritten across homepage, /apply, /apply/invited, /founding, /sell, /help.
+- **Starter listing cap 20 -> 10** (creation block, downgrade delisting in the Stripe webhook, and all copy).
+- **Stripe:** Velor Enterprise product prod_UoqXwy4RXYEoFl ARCHIVED in the dashboard (0 subscriptions ever, £0 MRR — verified before archiving). STRIPE_ENTERPRISE_PRICE_ID env var is now unused/inert; William can delete it whenever.
+- Docs updated with retirement notes (SUBSCRIPTION_AND_TIERS.md top note; history sections left as history). NOT re-verified live on production at write time: confirm velorcommerce.store/sell + /dashboard/upgrade render the two-tier scheme after the main deploy goes Ready (the identical code was verified green + rendering on the preview deployment).
+
 ## 2026-07-15 checkpoint — Velor App ("The Atlas"): buyer side COMPLETE in the mockup
 
 A native mobile-app design for the **marketplace** (velorcommerce.store), design-first with William. Full state and every decision: **docs/app-mockup/CHECKPOINT.md on branch app-mockup-preview** (the branch doc is canonical; this is the summary).
