@@ -27,9 +27,9 @@ export async function maybeGrantFoundingPerks(sellerId: string): Promise<void> {
       // "Pro, free for life" -- move them onto the Pro tier's commission and
       // listing limit. This does NOT create a Stripe subscription or charge
       // them: no stripeSubscriptionId is set, so TIER_CONFIG's monthlyFee
-      // for Pro is never actually billed. Never downgrade an Enterprise
-      // seller who happens to also be founding-eligible.
-      tier: seller.tier === 'ENTERPRISE' ? seller.tier : 'PRO',
+      // for Pro is never actually billed. (Enterprise tier retired
+      // 2026-07-15 — Pro carries all its benefits.)
+      tier: 'PRO',
     },
   })
 }

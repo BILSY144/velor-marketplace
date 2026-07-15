@@ -65,9 +65,8 @@ export default function TermsPage() {
           <h3 style={h3Style}>4. Platform Fees &amp; Commission</h3>
           <p style={pStyle}>The Platform charges commission on each sale. Rates depend on your subscription tier:</p>
           <ul style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
-            <li><strong style={{ color: '#FFFFFF' }}>Starter (Free):</strong> 10% commission on GMV. Maximum 20 active listings. Seller dashboard, analytics, and buyer protection on every sale.</li>
-            <li><strong style={{ color: '#FFFFFF' }}>Pro (£49/month):</strong> 4% commission on GMV. Maximum 200 active listings. Full analytics, a free custom storefront, featured listing slots, priority review, discount code tools.</li>
-            <li><strong style={{ color: '#FFFFFF' }}>Enterprise (£99/month, fixed):</strong> 0% commission on GMV. Unlimited listings. All Pro features plus a dedicated account manager, full API access, a free custom storefront, custom reporting, and early feature access. Enterprise pricing is fixed and non-negotiable.</li>
+            <li><strong style={{ color: '#FFFFFF' }}>Starter (Free):</strong> 10% commission on GMV. Maximum 10 active listings. Go Live live shopping, seller dashboard, analytics, and buyer protection on every sale.</li>
+            <li><strong style={{ color: '#FFFFFF' }}>Pro (£49/month):</strong> 4% commission on GMV. Unlimited listings. Go Live live shopping, full analytics, a dedicated AI account manager, full API access, a free custom storefront, featured listing slots, priority review, discount code tools.</li>
           </ul>
           <p style={pStyle}>Commission is deducted from each transaction before payout. Subscription fees are billed monthly via Stripe and are non-refundable except where required by applicable law. Optional add-on features (for example, additional storefront themes or custom branding beyond what your tier includes) may be offered for a separate one-time or recurring fee, disclosed at the point of purchase. The Platform reserves the right to adjust fee structures with 30 days notice.</p>
 

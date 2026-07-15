@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 // route can carry its own metadata instead of inheriting the generic root
 // title/description. Added by the standing SEO agent, 2026-07-12 — see
 // SEO_LOG.md backlog item 1. Copy is drawn from the page's own live stats
-// row (190 countries, 0% listing fees, live broadcasting for founding
+// row (190 countries, 0% listing fees, live broadcasting on every tier
 // sellers) — see the copy-honesty rule at the top of app/sell/page.tsx.
 
 // description trimmed by the standing SEO agent, 2026-07-14 (full audit

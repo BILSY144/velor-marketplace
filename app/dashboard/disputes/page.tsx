@@ -41,7 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function SellerDisputesPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'ENTERPRISE';
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
   const isElevated = tier !== 'STARTER';
 
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -78,7 +78,7 @@ export default function SellerDisputesPage() {
             Priority Handling
           </span>
           <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
-            As an Enterprise seller, open disputes on your account are escalated to Velor admin for priority review.
+            As a Pro seller, open disputes on your account are escalated to Velor admin for priority review.
           </span>
         </div>
       )}

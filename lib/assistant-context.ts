@@ -1,14 +1,14 @@
 import { prisma } from '@/lib/prisma'
 
-export type AssistantTier = 'STARTER' | 'PRO' | 'ENTERPRISE'
+export type AssistantTier = 'STARTER' | 'PRO' // ENTERPRISE retired 2026-07-15; legacy rows normalize to PRO
 
 // Same commission map used by app/api/seller/payouts/route.ts - kept in one
 // place here so the assistant never states a number that could drift from
 // what payouts actually charge.
-export const TIER_COMMISSION: Record<AssistantTier, number> = {
+export const TIER_COMMISSION: Record<string, number> = {
   STARTER: 0.1,
   PRO: 0.04,
-  ENTERPRISE: 0,
+  ENTERPRISE: 0.04, // retired 2026-07-15: legacy rows read as Pro
 }
 
 // Matches docs/PAYOUTS.md "Freeze on issues" section exactly.
@@ -16,18 +16,20 @@ const RESOLVED_RETURN_STATUSES = ['RESOLVED', 'REJECTED', 'CLOSED', 'COMPLETED',
 const RESOLVED_DISPUTE_STATUSES = ['RESOLVED', 'CLOSED', 'WON', 'LOST']
 
 export function capabilitiesForTier(tier: string) {
+  // Enterprise retired 2026-07-15: Pro inherited the full account-manager
+  // capability set (order lookups, drafting, escalation). Legacy ENTERPRISE
+  // rows read as Pro.
   const isPro = tier === 'PRO' || tier === 'ENTERPRISE'
-  const isEnterprise = tier === 'ENTERPRISE'
   return {
     canReadOwnData: isPro,
-    canLookupOrders: isEnterprise,
-    canDraftReplies: isEnterprise,
-    canEscalate: isEnterprise,
+    canLookupOrders: isPro,
+    canDraftReplies: isPro,
+    canEscalate: isPro,
   }
 }
 
 // Builds a plain-text, seller-scoped account snapshot to inject into the
-// system prompt for Pro and Enterprise. Starter gets none of this - it stays
+// system prompt for Pro. Starter gets none of this - it stays
 // on the generic, knowledge-only assistant. Everything here is a real query
 // against that seller's own data, never fabricated and never another
 // seller's data.
@@ -75,7 +77,7 @@ export async function buildAccountSnapshot(sellerId: string, tier: AssistantTier
     lines.push(`This seller currently has ${openDisputes.length} unresolved dispute(s) and ${openReturns.length} unresolved return(s) - any order involved in one of those is frozen for payout regardless of the hold window until it is resolved.`)
   }
 
-  if (tier === 'ENTERPRISE' && orders.length > 0) {
+  if (tier === 'PRO' && orders.length > 0) { // full account-manager snapshot (was Enterprise-only; Pro inherited it 2026-07-15)
     const recent = orders.slice(0, 10).map((o) => {
       const shortId = o.id.slice(-8)
       const placed = o.createdAt.toISOString().slice(0, 10)

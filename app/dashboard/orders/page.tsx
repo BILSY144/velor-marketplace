@@ -83,7 +83,7 @@ export default function DashboardOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const { tier, theme } = useSellerTier()
   const isPro = tier === 'PRO'
-  const isEnterprise = tier === 'ENTERPRISE'
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
   const isElevated = isPro || isEnterprise
 
   useEffect(() => {
@@ -183,7 +183,7 @@ export default function DashboardOrdersPage() {
         )}
       </div>
 
-      {/* Search & filter — Pro and Enterprise only */}
+      {/* Search & filter — Pro only */}
       {isElevated && orders.length > 0 && (
         <div style={tierCardStyle(theme, { padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' })}>
           <input
@@ -204,7 +204,7 @@ export default function DashboardOrdersPage() {
             {Object.keys(STATUS_COLORS).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <span style={{ fontSize: 12, color: theme.headingAccent === 'var(--text)' ? 'var(--muted)' : theme.headingAccent, fontWeight: 700 }}>
-            {isPro ? 'Pro' : 'Enterprise'} search
+            Pro search
           </span>
         </div>
       )}

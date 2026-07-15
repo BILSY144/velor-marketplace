@@ -60,7 +60,7 @@ function randomSuffix() {
 
 export default function DiscountCodesPage() {
   const { tier, theme } = useSellerTier()
-  const isEnterprise = tier === 'ENTERPRISE'
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
   const isElevated = tier !== 'STARTER'
   const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)'
 

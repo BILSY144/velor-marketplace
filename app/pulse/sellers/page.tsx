@@ -116,7 +116,7 @@ export default function PulseSellersPage() {
           <option value="">ALL TIERS</option>
           <option value="STARTER">STARTER</option>
           <option value="PRO">PRO</option>
-          <option value="ENTERPRISE">ENTERPRISE</option>
+          <option value="ENTERPRISE">ENTERPRISE (legacy)</option>
         </FilterSelect>
         <FilterSelect value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}>
           <option value="all">All</option>

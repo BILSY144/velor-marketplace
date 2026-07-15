@@ -20,7 +20,7 @@ interface SupportData {
 
 export default function SupportPage() {
   const { tier, theme } = useSellerTier()
-  const isEnterprise = tier === 'ENTERPRISE'
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
 
   const [data, setData] = useState<SupportData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -99,12 +99,12 @@ export default function SupportPage() {
             Priority Support
           </span>
           <span style={{ color: 'var(--text)', fontSize: 14 }}>
-            As a {tier === 'ENTERPRISE' ? 'Enterprise' : 'Pro'} seller, messages you send here are flagged for priority review by our team - response times under 2 hours.
+            As a Pro seller, messages you send here are flagged for priority review by our team - response times under 2 hours.
           </span>
         </div>
       ) : (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px 20px', marginBottom: 28, color: 'var(--muted)', fontSize: 14 }}>
-          Our team typically responds within 1-2 business days. Pro and Enterprise sellers get priority-flagged support
+          Our team typically responds within 1-2 business days. Pro sellers get priority-flagged support
           <a href="/dashboard/upgrade/pro" style={{ color: 'var(--accent)' }}> - see the Pro plan</a>.
         </div>
       )}

@@ -3,7 +3,7 @@
   import { useState, useRef, useEffect } from 'react'
 
     type ChatMessage = { role: 'user' | 'assistant'; content: string }
-    type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE'
+    type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE' // ENTERPRISE = legacy alias of PRO (tier retired 2026-07-15)
     type Variant = 'buyer' | 'seller'
 
     // Velor's AI assistant persona image (circular, transparent background).
@@ -53,7 +53,7 @@
 
     const GREETINGS: Record<Tier, string> = {
       STARTER: "Hi, I'm Velor's AI Assistant. Ask me about fees, payouts, escrow timing, listing tips, or Velor policies.",
-      PRO: "Hi, I'm your Velor AI Assistant. I can see your own account data now, so ask me about your recent orders, your next payout, or your seller standing, as well as fees and listing tips.",
+      PRO: "Hi, I'm your dedicated Velor AI Account Manager. I can look up your recent orders, explain your payout timing, draft a reply for a buyer or for support, and flag anything urgent straight to our team.",
       ENTERPRISE: "Hi, I'm your dedicated Velor AI Account Manager. I can look up your recent orders, explain your payout timing, draft a reply for a buyer or for support, and flag anything urgent straight to our team.",
     }
 
@@ -61,7 +61,7 @@
 
     const LABELS: Record<Tier, { title: string; subtitle: string; placeholder: string }> = {
       STARTER: { title: 'Velor AI Assistant', subtitle: 'Always-on AI, not a human', placeholder: 'Ask about fees, payouts, listings...' },
-      PRO: { title: 'Velor AI Assistant — Pro', subtitle: 'Grounded in your account data', placeholder: 'Ask about your orders, payouts, or listings...' },
+      PRO: { title: 'Velor AI Account Manager', subtitle: 'Your dedicated AI account manager', placeholder: 'Ask me to look something up, draft a reply, or flag an issue...' },
       ENTERPRISE: { title: 'Velor AI Account Manager', subtitle: 'Your dedicated AI account manager', placeholder: 'Ask me to look something up, draft a reply, or flag an issue...' },
     }
 

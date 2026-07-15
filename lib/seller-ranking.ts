@@ -9,7 +9,7 @@ const BADGE_MIN_ORDERS = 10 // completed (delivered) orders required to unlock a
 // Additive on top of the 0-100 merit score, bounded so a well-performing free
 // seller can still outrank a poorly-performing paid seller. This does NOT affect
 // the buyer-facing sellerScore/sellerBadge fields — those stay pure merit.
-const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 15 }
+const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 8 } // ENTERPRISE retired 2026-07-15: legacy rows boost as Pro
 
 export type ScoreBreakdown = {
   rating: number

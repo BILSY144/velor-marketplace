@@ -29,8 +29,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
     }
 
-  if (seller.tier !== 'ENTERPRISE') {
-    return NextResponse.json({ error: 'API access requires the Enterprise plan' }, { status: 403 })
+  if (seller.tier !== 'PRO' && seller.tier !== 'ENTERPRISE') { // API access is a Pro feature (Enterprise retired 2026-07-15)
+    return NextResponse.json({ error: 'API access requires the Pro plan' }, { status: 403 })
     }
 
   await prisma.apiKey.update({

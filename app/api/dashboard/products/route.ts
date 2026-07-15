@@ -104,8 +104,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Starter: 20 listings. Pro: 200 listings. Enterprise: unlimited.
-  const LISTING_LIMITS: Record<string, number | null> = { STARTER: 20, PRO: 200, ENTERPRISE: null }
+  // Starter: 10 listings. Pro: unlimited (Enterprise retired 2026-07-15 —
+  // Pro inherited its unlimited listings; legacy ENTERPRISE rows read as Pro).
+  const LISTING_LIMITS: Record<string, number | null> = { STARTER: 10, PRO: null, ENTERPRISE: null }
   const sellerTier = (seller as any).tier ?? 'STARTER'
   const listingLimit = LISTING_LIMITS[sellerTier]
   if (listingLimit !== null) {

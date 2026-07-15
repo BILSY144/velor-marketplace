@@ -100,7 +100,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ...baseNavItems.slice(analyticsIdx),
   ].filter((i) => {
     const special = (i as { special?: string }).special;
-    if (special === 'live' || special === 'enterprise') return tier === 'ENTERPRISE';
+    if (special === 'live') return true; // live shopping: every tier (2026-07-15)
+    if (special === 'enterprise') return tier === 'PRO' || tier === 'ENTERPRISE'; // legacy flag name — now means Pro features
     return true;
   });
 

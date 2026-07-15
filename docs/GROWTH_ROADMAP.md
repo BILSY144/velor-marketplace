@@ -1,5 +1,7 @@
 # Velor Marketplace - Growth Roadmap
 
+**2026-07-15 note: the Enterprise tier was retired; Pro inherited all its features and live shopping opened to every tier. Phase history below predates that and is kept as-is.**
+
 This document tracks the phased plan for closing the gap between what Velor's Pro and Enterprise subscription tiers advertise and what the codebase actually delivers, plus the priority build queue that follows. It reflects real, verified state as of 2026-07-05, not aspirational copy.
 
 ## Why this roadmap exists

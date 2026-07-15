@@ -41,7 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function SellerReturnsPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'ENTERPRISE';
+  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
   const isElevated = tier !== 'STARTER';
 
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
@@ -91,7 +91,7 @@ export default function SellerReturnsPage() {
             Priority Handling
           </span>
           <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
-            As an Enterprise seller, your return requests are flagged for priority buyer-side review — faster resolution for your customers.
+            As a Pro seller, your return requests are flagged for priority buyer-side review — faster resolution for your customers.
           </span>
         </div>
       )}

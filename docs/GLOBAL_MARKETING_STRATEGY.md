@@ -20,14 +20,14 @@ The seller pitch writes the buyer pitch: every seller recruited before 6 August 
 
 ### Positioning to sellers
 - "Be live before the buyers arrive": founding-seller framing with the 6 August buyer launch as genuine, honest urgency.
-- Free to start (Starter tier, 20 listings, no listing fees), keep 85%+ of every sale, paid weekly after delivery confirmation.
+- Free to start (Starter tier, 10 listings, no listing fees), keep 90% of every sale, paid weekly after delivery confirmation.
 - Global by default: one listing reaches buyers in nearly every country, with live currency conversion and customs paperwork guidance built in.
 - For artisans and makers specifically: maker story on every listing, origin-country flags, and a marketplace explicitly built to showcase authentic cultural products rather than bury them under mass-produced catalogue (see velor-cultural-marketplace vision).
 
 ### Seller segments and channels
 1. **Artisans, family workshops, cooperatives** (the differentiator): partner-first outreach through artisan cooperatives, fair-trade organisations and export-promotion bodies rather than one-by-one cold email; WhatsApp-friendly first contact where possible; do not assume high digital literacy or English.
 2. **Independent brands already selling online** (Etsy, Instagram, TikTok Shop sellers): direct outreach via the existing scout-sellers -> outreach-auto pipeline (SellerProspect scoring 7+, 3-email sequence day 0/3/7, hard cap 3 emails per seller, unsubscribe honoured).
-3. **Established SMB wholesalers/brands**: formal partnership-tone outreach; Enterprise tier pitch (0% commission, API access, account manager).
+3. **Established SMB wholesalers/brands**: formal partnership-tone outreach; Pro tier pitch (4% commission, unlimited listings, API access, AI account manager). (Enterprise tier retired 2026-07-15.)
 
 ### Email programme (seller side)
 - Sending identity: agent emails from customerservice@velorcommerce.co.uk (established Resend domain); seller support replies via sellers@velorcommerce.store. Verify SPF/DKIM/DMARC on both domains before any volume increase, and ramp send volume gradually (deliverability warm-up) rather than bursting.

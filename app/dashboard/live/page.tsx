@@ -123,13 +123,13 @@ export default function GoLivePage() {
     return (
       <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: '48px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 520, textAlign: 'center', background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 40 }}>
-          <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 12, textTransform: 'uppercase' }}>Enterprise feature</div>
+          <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 12, textTransform: 'uppercase' }}>Live shopping</div>
           <h1 style={{ fontSize: 28, marginBottom: 12 }}>Go Live Shopping</h1>
           <p style={{ color: '#aaa', lineHeight: 1.6, marginBottom: 24 }}>
-            Broadcast live to buyers anywhere in the world and sell in real time, straight from your browser - no app needed. Live Shopping is included with Velor Enterprise.
+            Broadcast live to buyers anywhere in the world and sell in real time, straight from your browser - no app needed. Live Shopping is included with every Velor seller plan.
           </p>
           <a href="/dashboard/settings" style={{ display: 'inline-block', background: accent, color: '#111', padding: '12px 28px', borderRadius: 999, fontWeight: 600, textDecoration: 'none' }}>
-            Upgrade to Enterprise
+            Back to settings
           </a>
         </div>
       </div>

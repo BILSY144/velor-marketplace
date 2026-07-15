@@ -106,7 +106,7 @@ export default function SellerAgreementGate({ children }: { children: React.Reac
             </p>
 
             <GateRule title="Commission & Fees">
-              Velor charges commission on every completed sale, based on your subscription tier: 10% on Starter (free), 4% on Pro (£49/month), 0% on Enterprise (£99/month), applied to the total price including VAT. No listing fees, ever.
+              Velor charges commission on every completed sale, based on your subscription tier: 10% on Starter (free), 4% on Pro (£49/month), applied to the total price including VAT. No listing fees, ever.
             </GateRule>
             <GateRule title="Permitted Categories Only">
               You may list products in any of Velor's current marketplace categories: Electronics, Fashion, Home & Garden, Beauty & Health, Sports & Outdoors, Jewellery & Watches, Toys & Games, Baby & Kids, Pet Supplies, Automotive, Books & Education, Art, Crafts & Handmade, Musical Instruments, Office & Stationery, Travel & Luggage, Specialty & Gourmet Foods, and Fitness & Gym. No age-restricted products.

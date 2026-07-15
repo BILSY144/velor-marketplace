@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 const COMMISSION_RATE: Record<string, number> = {
     STARTER: 0.1,
     PRO: 0.04,
-    ENTERPRISE: 0,
+    ENTERPRISE: 0.04, // retired 2026-07-15: legacy rows read as Pro
 }
 
 function netEarnings(items: { price: number; quantity: number }[], rate: number): number {
@@ -140,7 +140,7 @@ export async function GET() {
                 : null
   }
 
-  if (seller.tier === 'ENTERPRISE') {
+  if (seller.tier === 'PRO' || seller.tier === 'ENTERPRISE') {
         const now = new Date()
         const sixtyDaysAgo = new Date(now)
         sixtyDaysAgo.setDate(now.getDate() - 60)
