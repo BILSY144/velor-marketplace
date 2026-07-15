@@ -16,7 +16,15 @@ Last updated: 2026-07-14 (session with William — country-dive videos).
   row shows the live selection; in-page sample tile converts.
 - Honest failure path: both sources down -> stays in current currency
   with a toast.
-- Commits: fdc461c, 9f37824.
+- REDESIGNED same day (William: "could be so much better... all block
+  looking text"): "Your words. Your money." editorial header; languages
+  as a 2-column card grid in their NATIVE SCRIPTS (serif display face,
+  English lit with accent ring + dot, rest tagged ARRIVING with the
+  English name as subtitle); currencies as 3-column symbol-led cards
+  (big serif symbol, code, real currency name); live-rate bar ("GBP 1 =
+  S$1.7291 - European Central Bank") + specimen row (GBP 54 struck
+  through beside the converted price). Verified live.
+- Commits: fdc461c, 9f37824, 62edfaa.
 
 ## 2026-07-15: Legal rows read in-app (no more browser-tab jumps)
 
