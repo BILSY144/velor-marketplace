@@ -14,7 +14,13 @@ Last updated: 2026-07-14 (session with William — country-dive videos).
   "opening-bell" notification channel with the sound attached. The bell
   sound is RESERVED for channel-opening alerts -- order/parcel updates
   keep the default quiet tone, preserving "quiet by default".
-- Commit fac9a2c.
+- 4-SECOND REAL-BELL VERSION (William, same day): full ring is now a ~4s
+  double-strike (second strike at 0.9s) with cast-bell realism -- ten
+  inharmonic partials (hum/prime/minor-third tierce/quint/nominal +
+  uppers on F=470Hz), every partial a detuned DOUBLET so the ring beats/
+  shimmers like real bronze, filtered-noise clang transient at each
+  strike, compressor guarding levels. Soft follow-preview stays a short
+  single strike. Commits fac9a2c, 520a63c, 75a6a13.
 
 ## 2026-07-15: Orders back button + You sub-pages (no dead rows)
 
