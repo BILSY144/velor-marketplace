@@ -195,6 +195,11 @@ export function buildOutreachEmail(d: {
 
   const cta = (label: string) => ctaButton(inviteUrl, label)
 
+  // One true forward-looking line: the mobile app launches August 2026.
+  // Deliberately text-only -- no store badges, QR codes, or download links
+  // until the App Store / Play listings actually exist (William, 2026-07-15).
+  const appNote = c.appNote || OUTREACH_COPY.en.appNote || ''
+
   // Full HTML document, not a fragment: the two meta tags below stop
   // Gmail/Apple Mail's automatic dark-mode colour inversion from fighting a
   // design that is intentionally, permanently dark rather than adapting to
@@ -236,6 +241,7 @@ ${OUTREACH_HEADER}`
         ${proPlanCard(c)}
         ${cta(c.cta)}
         <p style='color:#888888;font-size:13px;line-height:1.6;margin:18px 0 0;'>${c.ctaNote}</p>
+        ${appNote ? `<p style='color:#B9B9B9;font-size:13px;line-height:1.6;margin:14px 0 0;'>${appNote}</p>` : ''}
         ${languagePanel(c.languagePromise)}
         <p style='color:#B9B9B9;font-size:15px;line-height:1.7;margin:22px 0 0;'>${c.signoff}</p>
       </div>`

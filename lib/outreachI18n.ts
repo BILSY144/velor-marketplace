@@ -76,6 +76,10 @@ export interface OutreachCopy {
   signoff: string
   // The multilingual promise -- the selling point
   languagePromise: string
+  // Mobile-app launch line (2026-07-15, William): one forward-looking sentence
+  // -- the Velor app launches August 2026. No links or store badges until the
+  // listings are live. Optional; English is the fallback.
+  appNote?: string
   // Benefit block (initial email)
   b1t: string; b1b: string
   b2t: string; b2b: string
@@ -112,6 +116,7 @@ export interface OutreachCopy {
 // Only the strings differ per language; the layout is identical everywhere.
 export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
   en: {
+    appNote: 'The Velor mobile app launches this August — putting your products in buyers\' pockets worldwide.',
     subjectInitial: 'A founding seller spot on Velor — free before buyers arrive 6 August',
     subjectFollowup1: 'How Velor protects your sales — and pays you anywhere in the world',
     subjectFollowup2: 'Last note from Velor — buyers arrive 6 August',
@@ -150,6 +155,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Either way, we will not email you again after this.',
   },
   es: {
+    appNote: 'La aplicación móvil de Velor se lanza este agosto: tus productos en el bolsillo de compradores de todo el mundo.',
     subjectInitial: 'Un lugar como vendedor fundador en Velor — gratis antes de que lleguen los compradores el 6 de agosto',
     subjectFollowup1: 'Cómo Velor protege tus ventas y te paga en cualquier parte del mundo',
     subjectFollowup2: 'Última nota de Velor — los compradores llegan el 6 de agosto',
@@ -181,6 +187,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'En cualquier caso, no volveremos a escribirte después de esto.',
   },
   fr: {
+    appNote: 'L\'application mobile Velor sera lancée en août : vos produits dans la poche d\'acheteurs du monde entier.',
     subjectInitial: 'Une place de vendeur fondateur sur Velor — gratuite avant l’arrivée des acheteurs le 6 août',
     subjectFollowup1: 'Comment Velor protège vos ventes et vous paie partout dans le monde',
     subjectFollowup2: 'Dernier message de Velor — les acheteurs arrivent le 6 août',
@@ -212,6 +219,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Dans tous les cas, nous ne vous écrirons plus après ce message.',
   },
   de: {
+    appNote: 'Die Velor Mobile-App erscheint diesen August – Ihre Produkte in den Taschen von Käufern weltweit.',
     subjectInitial: 'Ein Gründungsverkäufer-Platz bei Velor — kostenlos, bevor am 6. August die Käufer kommen',
     subjectFollowup1: 'Wie Velor Ihre Verkäufe schützt — und Sie überall auf der Welt auszahlt',
     subjectFollowup2: 'Letzte Nachricht von Velor — die Käufer kommen am 6. August',
@@ -243,6 +251,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'So oder so schreiben wir Ihnen danach nicht wieder.',
   },
   it: {
+    appNote: 'L\'app mobile Velor arriva questo agosto: i tuoi prodotti in tasca ad acquirenti di tutto il mondo.',
     subjectInitial: 'Un posto da venditore fondatore su Velor — gratis prima che arrivino gli acquirenti il 6 agosto',
     subjectFollowup1: 'Come Velor protegge le tue vendite e ti paga ovunque nel mondo',
     subjectFollowup2: 'Ultimo messaggio da Velor — gli acquirenti arrivano il 6 agosto',
@@ -274,6 +283,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'In ogni caso, dopo questo non ti scriveremo più.',
   },
   pt: {
+    appNote: 'O aplicativo móvel da Velor será lançado em agosto: seus produtos no bolso de compradores do mundo inteiro.',
     subjectInitial: 'Um lugar de vendedor fundador na Velor — grátis antes de os compradores chegarem a 6 de agosto',
     subjectFollowup1: 'Como a Velor protege as suas vendas e paga em qualquer parte do mundo',
     subjectFollowup2: 'Última mensagem da Velor — os compradores chegam a 6 de agosto',
@@ -305,6 +315,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'De qualquer forma, não voltaremos a escrever-lhe depois disto.',
   },
   nl: {
+    appNote: 'De mobiele Velor-app verschijnt deze augustus – uw producten binnen handbereik van kopers wereldwijd.',
     subjectInitial: 'Een plek als oprichtend verkoper op Velor — gratis vóór de kopers komen op 6 augustus',
     subjectFollowup1: 'Hoe Velor je verkopen beschermt — en je overal ter wereld uitbetaalt',
     subjectFollowup2: 'Laatste bericht van Velor — kopers komen op 6 augustus',
@@ -336,6 +347,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Hoe dan ook, hierna mailen we je niet meer.',
   },
   pl: {
+    appNote: 'Aplikacja mobilna Velor rusza w sierpniu — Twoje produkty w kieszeni kupujących na całym świecie.',
     subjectInitial: 'Miejsce sprzedawcy założyciela na Velor — bezpłatnie, zanim 6 sierpnia pojawią się kupujący',
     subjectFollowup1: 'Jak Velor chroni Twoją sprzedaż i wypłaca pieniądze w dowolnym miejscu na świecie',
     subjectFollowup2: 'Ostatnia wiadomość od Velor — kupujący pojawią się 6 sierpnia',
@@ -367,6 +379,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Tak czy inaczej, po tej wiadomości już nie napiszemy.',
   },
   tr: {
+    appNote: 'Velor mobil uygulaması bu ağustos yayında — ürünleriniz dünyanın dört bir yanındaki alıcıların cebinde.',
     subjectInitial: 'Velor’da kurucu satıcı yeri — 6 Ağustos’ta alıcılar gelmeden önce ücretsiz',
     subjectFollowup1: 'Velor satışlarınızı nasıl korur ve dünyanın her yerinde ödemenizi nasıl yapar',
     subjectFollowup2: 'Velor’dan son not — alıcılar 6 Ağustos’ta geliyor',
@@ -398,6 +411,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Her hâlükârda bundan sonra size tekrar e-posta göndermeyeceğiz.',
   },
   ru: {
+    appNote: 'Мобильное приложение Velor выходит в августе — ваши товары в кармане покупателей по всему миру.',
     subjectInitial: 'Место продавца-основателя на Velor — бесплатно до прихода покупателей 6 августа',
     subjectFollowup1: 'Как Velor защищает ваши продажи и платит вам в любой точке мира',
     subjectFollowup2: 'Последнее письмо от Velor — покупатели придут 6 августа',
@@ -429,6 +443,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'В любом случае, после этого письма мы больше не будем вам писать.',
   },
   ar: {
+    appNote: 'تطبيق Velor للهاتف المحمول يُطلق في أغسطس — منتجاتك في جيب المشترين حول العالم.',
     subjectInitial: 'مكان بائع مؤسس في فيلور — مجاناً قبل وصول المشترين في 6 أغسطس',
     subjectFollowup1: 'كيف تحمي فيلور مبيعاتك وتدفع لك في أي مكان في العالم',
     subjectFollowup2: 'آخر رسالة من فيلور — المشترون يصلون في 6 أغسطس',
@@ -460,6 +475,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'في كل الأحوال، لن نراسلك مرة أخرى بعد هذه الرسالة.',
   },
   hi: {
+    appNote: 'Velor मोबाइल ऐप इस अगस्त लॉन्च हो रहा है — आपके उत्पाद दुनिया भर के खरीदारों की जेब में।',
     subjectInitial: 'Velor पर संस्थापक विक्रेता का स्थान — 6 अगस्त को खरीदार आने से पहले नि:शुल्क',
     subjectFollowup1: 'Velor आपकी बिक्री की सुरक्षा कैसे करता है और दुनिया में कहीं भी भुगतान कैसे करता है',
     subjectFollowup2: 'Velor से अंतिम संदेश — खरीदार 6 अगस्त को आ रहे हैं',
@@ -491,6 +507,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'किसी भी स्थिति में, इसके बाद हम आपको दोबारा ईमेल नहीं करेंगे।',
   },
   bn: {
+    appNote: 'Velor মোবাইল অ্যাপ এই আগস্টে আসছে — আপনার পণ্য বিশ্বজুড়ে ক্রেতাদের পকেটে।',
     subjectInitial: 'Velor-এ প্রতিষ্ঠাতা বিক্রেতার স্থান — ৬ আগস্ট ক্রেতারা আসার আগে বিনামূল্যে',
     subjectFollowup1: 'Velor কীভাবে আপনার বিক্রয় সুরক্ষিত রাখে এবং বিশ্বের যেকোনো জায়গায় অর্থ পরিশোধ করে',
     subjectFollowup2: 'Velor থেকে শেষ বার্তা — ক্রেতারা আসছেন ৬ আগস্ট',
@@ -522,6 +539,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'যাই হোক, এরপর আমরা আপনাকে আর ইমেল করব না।',
   },
   vi: {
+    appNote: 'Ứng dụng di động Velor ra mắt vào tháng 8 này — sản phẩm của bạn trong túi người mua trên toàn thế giới.',
     subjectInitial: 'Một vị trí người bán sáng lập trên Velor — miễn phí trước khi người mua đến ngày 6 tháng 8',
     subjectFollowup1: 'Cách Velor bảo vệ doanh số của bạn và thanh toán cho bạn ở bất kỳ đâu trên thế giới',
     subjectFollowup2: 'Thư cuối từ Velor — người mua sẽ đến ngày 6 tháng 8',
@@ -553,6 +571,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Dù thế nào, sau thư này chúng tôi sẽ không gửi email cho bạn nữa.',
   },
   th: {
+    appNote: 'แอปมือถือ Velor เปิดตัวเดือนสิงหาคมนี้ — สินค้าของคุณอยู่ในกระเป๋าของผู้ซื้อทั่วโลก',
     subjectInitial: 'ที่นั่งผู้ขายผู้ก่อตั้งบน Velor — ฟรีก่อนผู้ซื้อจะมาถึงวันที่ 6 สิงหาคม',
     subjectFollowup1: 'Velor ปกป้องยอดขายของคุณอย่างไร และจ่ายเงินให้คุณได้ทุกที่ในโลก',
     subjectFollowup2: 'ข้อความสุดท้ายจาก Velor — ผู้ซื้อจะมาถึงวันที่ 6 สิงหาคม',
@@ -584,6 +603,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'ไม่ว่าอย่างไร เราจะไม่ส่งอีเมลถึงคุณอีกหลังจากนี้',
   },
   id: {
+    appNote: 'Aplikasi seluler Velor diluncurkan Agustus ini — produk Anda di saku pembeli di seluruh dunia.',
     subjectInitial: 'Tempat penjual pendiri di Velor — gratis sebelum pembeli datang 6 Agustus',
     subjectFollowup1: 'Bagaimana Velor melindungi penjualan Anda dan membayar Anda di mana pun di dunia',
     subjectFollowup2: 'Pesan terakhir dari Velor — pembeli datang 6 Agustus',
@@ -615,6 +635,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'Bagaimanapun, setelah ini kami tidak akan mengirim email lagi kepada Anda.',
   },
   zh: {
+    appNote: 'Velor 移动应用将于今年八月上线——让您的商品随时出现在全球买家的口袋里。',
     subjectInitial: 'Velor 创始卖家席位 — 8 月 6 日买家到来之前免费入驻',
     subjectFollowup1: 'Velor 如何保护您的销售，并在世界任何地方向您付款',
     subjectFollowup2: 'Velor 的最后一封信 — 买家将于 8 月 6 日到来',
@@ -646,6 +667,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: '无论如何，此信之后我们不会再给您发邮件。',
   },
   ja: {
+    appNote: 'Velorモバイルアプリは今年8月に登場——世界中のバイヤーのポケットにあなたの商品を。',
     subjectInitial: 'Velor の創設セラー枠 — 8月6日に買い手が来る前なら無料',
     subjectFollowup1: 'Velor があなたの売上を守り、世界中どこにいてもお支払いする仕組み',
     subjectFollowup2: 'Velor からの最後のご連絡 — 買い手は8月6日に訪れます',
@@ -677,6 +699,7 @@ export const OUTREACH_COPY: Record<OutreachLang, OutreachCopy> = {
     f2Note: 'いずれにしても、この後もうメールをお送りすることはありません。',
   },
   ko: {
+    appNote: 'Velor 모바일 앱이 올해 8월 출시됩니다 — 전 세계 구매자의 주머니 속에 당신의 제품을.',
     subjectInitial: 'Velor 창립 판매자 자리 — 8월 6일 구매자가 오기 전까지 무료',
     subjectFollowup1: 'Velor가 판매 대금을 보호하고 전 세계 어디서든 정산해 드리는 방법',
     subjectFollowup2: 'Velor의 마지막 안내 — 구매자는 8월 6일에 찾아옵니다',
