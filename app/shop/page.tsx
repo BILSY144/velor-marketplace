@@ -42,7 +42,7 @@ const slotsCss = `
 .shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.38;filter:grayscale(30%);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);z-index:1}
-.shslots-ribbon{position:absolute;top:24px;left:-36px;width:180px;text-align:center;transform:rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:8.5px;font-weight:700;letter-spacing:.02em;line-height:1.3;padding:4px 0;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
+.shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
 .shslots-card{position:absolute;left:6px;right:6px;bottom:6px;height:0.6in;background:var(--surface-2);border:1px dashed var(--border);border-radius:4px;z-index:2}
 `
 
