@@ -781,7 +781,33 @@ export const CULTURE_HINTS: Record<string, string[]> = {
   HR: ['Lavender & oils', 'Cravats'],
   SI: ['Beehive art', 'Salt pans'],
   UA: ['Vyshyvanka embroidery', 'Ceramics'],
-  BY: ['Linen goods'],
+  // Expanded by the standing SEO agent, 2026-07-16 -- Belarus had only 1
+  // item (SEO_LOG.md backlog item 25's content-depth floor list). Three
+  // product-level additions, each multi-source verified this run, no
+  // single-source or AI-content-farm result carried forward: Straw-woven
+  // crafts (boxes, baskets, headgear, and the diamond-shaped protective
+  // "pawuk" wreaths) -- confirmed via UNESCO's own Intangible Cultural
+  // Heritage listing "Straw weaving in Belarus, art, craft and skills"
+  // (UNESCO's text states artisans "sell their straw products at fairs,
+  // festivals, exhibitions or traditional crafts boutiques" today, not a
+  // historical-only practice), independently corroborated by Belarus's own
+  // UNESCO national commission coverage ("Belarusian Gold. Straw Weaving:
+  // Traditions in Modern Age"). Vytsinanka paper-cut art -- decorative
+  // interior/store-display pieces and event branding cut from paper --
+  // confirmed via the official Belarus.travel tourism site's dedicated
+  // feature (also UNESCO-inscribed as intangible heritage, actively sold
+  // via souvenir production and craft workshops today) and Belarus's UNESCO
+  // national commission's own coverage. Slutsk woven belts -- silk/gold/
+  // silver-thread sashes historically woven in Slutsk, revived as a real
+  // commercial product line since 2012-2013 by a Belarusian state
+  // arts-and-crafts enterprise that "recreated the unique [18th-century]
+  // technology" -- confirmed via the official Belarus.by government
+  // culture site's own dedicated "Slutsk Belts, Belarus' national treasure"
+  // page, which describes exact historical-copy weaving plus souvenir-market
+  // items (panel paintings, book accessories, decor) sold on-site today, not
+  // museum-only pieces. No ivory/coral/shell material, no weapons, no
+  // raw-material-only entries.
+  BY: ['Linen goods', 'Straw-woven crafts', 'Vytsinanka paper-cut art', 'Slutsk woven belts'],
   RU: ['Matryoshka dolls', 'Khokhloma ware'],
   LT: ['Amber jewellery', 'Linen'],
   LV: ['Amber jewellery', 'Wool mittens'],
