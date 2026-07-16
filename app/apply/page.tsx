@@ -92,6 +92,7 @@ const css = `
 .ap-input:focus,.ap-textarea:focus,.ap-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,0,.14)}
 .ap-input::placeholder,.ap-textarea::placeholder{color:#6b6b76}
 .ap-textarea{min-height:120px;resize:vertical;line-height:1.6}
+.ap-hint{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.5}
 .ap-select{appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 21px) 50%,calc(100% - 16px) 50%;background-size:5px 5px;background-repeat:no-repeat}
 .ap-cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .ap-cat{border:1px solid var(--border);border-radius:999px;padding:8px 15px;font-size:13px;color:var(--muted);cursor:pointer;background:var(--surface);font-family:inherit;transition:all .13s}
@@ -175,6 +176,11 @@ export default function ApplyPage() {
       !form.shippingCountry
     ) {
       setError('Please complete your ship-from address (name, street, city, postcode/zip, and country).');
+      return;
+    }
+
+    if (form.storeDescription.trim().length < 20) {
+      setError('Please tell us a little more about what you make or sell (at least 20 characters).');
       return;
     }
 
@@ -314,6 +320,7 @@ export default function ApplyPage() {
                 <textarea className="ap-textarea" value={form.storeDescription}
                   onChange={e => setField('storeDescription', e.target.value)}
                   placeholder="What you sell, how it is made, and why buyers should care..." />
+                <p className="ap-hint">Minimum 20 characters &mdash; a sentence about what you make or sell.</p>
               </div>
 
               <div className="ap-field">
