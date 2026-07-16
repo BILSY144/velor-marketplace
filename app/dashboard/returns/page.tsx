@@ -41,7 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function SellerReturnsPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
+  const isPro = tier === 'PRO';
   const isElevated = tier !== 'STARTER';
 
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
@@ -85,7 +85,7 @@ export default function SellerReturnsPage() {
         <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>Manage buyer return requests for your orders.</p>
       </div>
 
-      {isEnterprise && pending > 0 && (
+      {isPro && pending > 0 && (
         <div style={tierCardStyle(theme, { padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 })}>
           <span style={{ fontSize: 12, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Priority Handling
@@ -106,7 +106,7 @@ export default function SellerReturnsPage() {
           {isElevated && (
             <div style={{
               position: 'absolute', top: 0, left: 0, bottom: 0, width: 3,
-              background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
+              background: isPro ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
             }} />
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>

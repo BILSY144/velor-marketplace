@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { createBroadcasterToken, getWsUrl, liveKitConfigured, makeRoomName } from '@/lib/livekit'
+import { normalizeSellerTier } from '@/lib/tier'
 
 export async function GET() {
   const session = await auth()
@@ -17,7 +18,7 @@ export async function GET() {
   })
 
   return NextResponse.json({
-    tier: seller.tier,
+    tier: normalizeSellerTier(seller.tier),
     canGoLive: true, // live shopping is for every seller tier (William, 2026-07-15)
     liveKitReady: liveKitConfigured(),
     streams,

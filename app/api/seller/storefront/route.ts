@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { canUseTheme, getTheme } from '@/lib/store-themes'
+import { normalizeSellerTier } from '@/lib/tier'
 
 export async function GET() {
   const session = await auth()
@@ -11,7 +12,7 @@ export async function GET() {
   const s = seller as unknown as { tier?: string; storeTheme?: string; storefrontUnlocked?: boolean; storeLogo?: string }
   return NextResponse.json({
     theme: s.storeTheme || 'classic',
-    tier: s.tier || 'STARTER',
+    tier: normalizeSellerTier(s.tier),
     unlocked: s.storefrontUnlocked === true,
     logo: s.storeLogo || null,
   })

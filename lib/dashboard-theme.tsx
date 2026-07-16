@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { normalizeSellerTier } from '@/lib/tier'
 
-export type SellerTier = 'STARTER' | 'PRO' | 'ENTERPRISE'
+// Enterprise was retired 2026-07-15. The type intentionally only has two
+// members now — every API route normalizes any legacy 'ENTERPRISE' seller
+// row to 'PRO' (see lib/tier.ts) before it ever reaches this file, so a
+// three-value type here would just invite dead branches again.
+export type SellerTier = 'STARTER' | 'PRO'
 
 export interface TierTheme {
   tier: SellerTier
@@ -20,9 +25,10 @@ export interface TierTheme {
   rowHoverBg: string
 }
 
-// Single source of truth for how Starter / Pro dashboard pages (ENTERPRISE kept only as a legacy alias)
-// look. Starter stays exactly as the original plain design. Pro layers in a
-// blue accent treatment. Enterprise layers in a gold "premium" treatment.
+// Single source of truth for how Starter / Pro dashboard pages look. Starter
+// stays exactly as the original plain design. Pro layers in a blue accent
+// treatment. (Enterprise used to layer in a separate gold "premium"
+// treatment here; it was retired 2026-07-15 and folded into Pro.)
 // Import this everywhere instead of re-deriving colours per page.
 export const DASHBOARD_TIER_THEME: Record<SellerTier, TierTheme> = {
   STARTER: {
@@ -55,21 +61,6 @@ export const DASHBOARD_TIER_THEME: Record<SellerTier, TierTheme> = {
     chartLine: '#4FC3F7',
     rowHoverBg: 'rgba(79,195,247,0.04)',
   },
-  ENTERPRISE: {
-    tier: 'ENTERPRISE',
-    label: 'Enterprise',
-    badgeColor: '#FFD54A',
-    badgeBg: 'rgba(255,213,74,0.14)',
-    badgeBorder: 'rgba(255,213,74,0.55)',
-    cardBorder: 'rgba(255,213,74,0.32)',
-    cardBg: 'linear-gradient(180deg, rgba(255,180,60,0.08), var(--surface) 55%)',
-    cardGlow: '0 10px 34px rgba(255,180,60,0.14)',
-    headingAccent: '#FFD54A',
-    sectionGradient: 'linear-gradient(135deg, rgba(255,180,60,0.15), transparent 60%)',
-    statValueColor: '#FFD54A',
-    chartLine: '#FFD54A',
-    rowHoverBg: 'rgba(255,213,74,0.05)',
-  },
 }
 
 // Fetches the seller's tier once (from the existing /api/seller/me route)
@@ -84,8 +75,11 @@ export function useSellerTier(): { tier: SellerTier; theme: TierTheme; loading: 
     fetch('/api/seller/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!cancelled && d?.tier && DASHBOARD_TIER_THEME[d.tier as SellerTier]) {
-          setTier(d.tier as SellerTier)
+        // /api/seller/me already normalizes ENTERPRISE -> PRO server-side;
+        // normalize again here defensively so this hook can never end up
+        // trying to look up a theme key that doesn't exist.
+        if (!cancelled && d?.tier) {
+          setTier(normalizeSellerTier(d.tier) as SellerTier)
         }
       })
       .catch(() => {})
@@ -100,11 +94,15 @@ export function useSellerTier(): { tier: SellerTier; theme: TierTheme; loading: 
   return { tier, theme: DASHBOARD_TIER_THEME[tier], loading }
 }
 
-// Small reusable "Pro" / "Enterprise" plan pill for page headers. Starter
-// renders nothing — Starter is the baseline, unbadged experience.
-export function PlanBadge({ tier }: { tier: SellerTier }) {
-  if (tier === 'STARTER') return null
-  const t = DASHBOARD_TIER_THEME[tier]
+// Small reusable "Pro" plan pill for page headers. Starter renders nothing
+// — Starter is the baseline, unbadged experience. Accepts any string (not
+// just SellerTier) so callers passing a raw, not-yet-normalized tier value
+// (e.g. a legacy 'ENTERPRISE' row) still render correctly instead of
+// crashing on a missing theme-table key.
+export function PlanBadge({ tier }: { tier: string }) {
+  const normalized = normalizeSellerTier(tier)
+  if (normalized === 'STARTER') return null
+  const t = DASHBOARD_TIER_THEME[normalized]
   return (
     <span
       style={{
@@ -123,7 +121,6 @@ export function PlanBadge({ tier }: { tier: SellerTier }) {
         whiteSpace: 'nowrap',
       }}
     >
-      {tier === 'ENTERPRISE' ? '★ ' : ''}
       {t.label}
     </span>
   )

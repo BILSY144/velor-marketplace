@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { normalizeSellerTier } from '@/lib/tier'
 
 const COMMISSION_RATE: Record<string, number> = {
     STARTER: 0.1,
@@ -84,7 +85,7 @@ export async function GET() {
       )
 
   const responseBody: Record<string, unknown> = {
-        tier: seller.tier,
+        tier: normalizeSellerTier(seller.tier),
         commissionRate,
         summary: {
                 totalRevenue,

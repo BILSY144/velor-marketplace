@@ -193,9 +193,9 @@ function SavingsCalculator({ tier, accentColor, theme }: { tier: string; accentC
 
 export default function PayoutsPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
+  const isPro = tier === 'PRO';
   const isElevated = tier !== 'STARTER';
-  const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
+  const accentColor = isPro ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
 
   const [data, setData] = useState<PayoutsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -280,11 +280,11 @@ export default function PayoutsPage() {
 
       {isElevated && (
         <div style={tierCardStyle(theme, { padding: '20px 22px', marginBottom: 24, position: 'relative', overflow: 'hidden' })}>
-          {isEnterprise && (
+          {isPro && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
           )}
           <div style={{ fontSize: 12, fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-            {isEnterprise ? 'Our commission rate — lowest tier available' : 'Our commission rate — lower than Starter'}
+            {isPro ? 'Our commission rate — lowest tier available' : 'Our commission rate — lower than Starter'}
           </div>
           <CommissionLadder tier={tier} accentColor={accentColor} />
         </div>
@@ -299,7 +299,7 @@ export default function PayoutsPage() {
       {isElevated ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginBottom: 24 }}>
           <div style={tierCardStyle(theme, { padding: '28px', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' })}>
-            {isEnterprise && (
+            {isPro && (
               <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,213,74,0.18), transparent 70%)' }} />
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>

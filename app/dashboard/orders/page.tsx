@@ -82,9 +82,10 @@ export default function DashboardOrdersPage() {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const { tier, theme } = useSellerTier()
+  // Enterprise retired 2026-07-15 — normalized to PRO before it reaches the
+  // client, so this is a plain two-tier (Starter/Pro) check now.
   const isPro = tier === 'PRO'
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
-  const isElevated = isPro || isEnterprise
+  const isElevated = isPro
 
   useEffect(() => {
     fetch('/api/dashboard/orders')
@@ -169,7 +170,7 @@ export default function DashboardOrdersPage() {
           </h1>
           <PlanBadge tier={tier} />
         </div>
-        {isEnterprise && orders.length > 0 && (
+        {isPro && orders.length > 0 && (
           <button
             onClick={() => exportOrdersCsv(visibleOrders)}
             style={{

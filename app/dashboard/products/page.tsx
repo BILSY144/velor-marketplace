@@ -493,9 +493,9 @@ cursor: certBusy ? 'not-allowed' : 'pointer', alignSelf: 'flex-start',
 
 export default function DashboardProductsPage() {
 const { tier, theme } = useSellerTier()
-const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
+const isPro = tier === 'PRO'
 const isElevated = tier !== 'STARTER'
-const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)'
+const accentColor = isPro ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)'
 
 const [products, setProducts] = useState<Product[]>([])
 const [loading, setLoading] = useState(true)
@@ -689,7 +689,7 @@ Add Product
 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(2px)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
 <div style={tierCardStyle(theme, { padding: '32px', maxWidth: '640px', width: '100%', position: 'relative', overflow: 'hidden' })}>
 {isElevated && (
-<div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isEnterprise ? 'linear-gradient(90deg, #FFD54A, #FF6B00)' : '#4FC3F7' }} />
+<div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isPro ? 'linear-gradient(90deg, #FFD54A, #FF6B00)' : '#4FC3F7' }} />
 )}
 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 <div style={{
@@ -956,7 +956,7 @@ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', positi
 {isElevated && (
 <div style={{
 position: 'absolute', top: 0, left: 0, bottom: 0, width: 3,
-background: isEnterprise ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
+background: isPro ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
 }} />
 )}
 {p.images?.[0] && (
@@ -987,7 +987,7 @@ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, te
 background: p.status === 'APPROVED' ? 'rgba(0,230,118,0.15)' : 'rgba(255,107,0,0.15)',
 color: p.status === 'APPROVED' ? 'var(--green)' : 'var(--accent)',
 }}>{p.status.replace('_', ' ')}</span>
-{isEnterprise && (
+{isPro && (
 <button onClick={() => openDuplicate(p)} title="Create a new listing pre-filled with this product's details" style={{
 padding: '7px 14px', background: 'rgba(255,213,74,0.1)', border: '1px solid rgba(255,213,74,0.4)', borderRadius: '6px',
 color: '#FFD54A', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',

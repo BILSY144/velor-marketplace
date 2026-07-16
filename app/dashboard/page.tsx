@@ -38,14 +38,17 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function DashboardOverview() {
   const { tier, theme } = useSellerTier();
+  // Only two tiers exist now (Enterprise retired 2026-07-15, collapsed into
+  // Pro everywhere upstream) — isPro/isElevated used to be two separate
+  // checks (isPro strictly PRO, isElevated PRO-or-ENTERPRISE) but since
+  // ENTERPRISE can never reach the client anymore they are identical.
   const isPro = tier === 'PRO';
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
-  const isElevated = isPro || isEnterprise;
+  const isElevated = isPro;
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Enterprise gets a soft ambient wash behind the whole page — Pro and Starter don't */}
-      {isEnterprise && (
+      {/* Pro gets a soft ambient wash behind the whole page — Starter doesn't */}
+      {isPro && (
         <div
           aria-hidden
           style={{
@@ -75,10 +78,8 @@ export default function DashboardOverview() {
               <PlanBadge tier={tier} />
             </div>
             <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
-              {isEnterprise
+              {isPro
                 ? 'Welcome back. Your Pro concierge dashboard is live.'
-                : isPro
-                ? 'Welcome back. Here is what is happening with your store.'
                 : 'Welcome back. Here is what is happening with your store.'}
             </p>
           </div>
@@ -92,11 +93,8 @@ export default function DashboardOverview() {
               position: 'relative',
               overflow: 'hidden',
             })}>
-              {isEnterprise && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
-              )}
               {isPro && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
               )}
               <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                 {stat.label}
@@ -116,8 +114,8 @@ export default function DashboardOverview() {
           ))}
         </div>
 
-        {/* Enterprise concierge strip */}
-        {isEnterprise && (
+        {/* Pro concierge strip */}
+        {isPro && (
           <div style={tierCardStyle(theme, {
             padding: '18px 24px',
             marginBottom: 24,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { normalizeSellerTier } from '@/lib/tier'
 
 export async function GET() {
   const session = await auth()
@@ -12,5 +13,5 @@ export async function GET() {
   })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
 
-  return NextResponse.json({ id: seller.id, approved: seller.approved, tier: seller.tier })
+  return NextResponse.json({ id: seller.id, approved: seller.approved, tier: normalizeSellerTier(seller.tier) })
 }

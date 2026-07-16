@@ -97,7 +97,7 @@ export default function PayoneerSetupPage() {
             <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>How payouts work</h3>
             {[
               { step: '1', text: 'A customer purchases your product' },
-              { step: '2', text: "Velor deducts your tier's commission (10% Starter, 4% Pro, 0% Enterprise)" },
+              { step: '2', text: "Velor deducts your tier's commission (10% Starter, 4% Pro)" },
               { step: '3', text: 'Funds are held safely until the buyer confirms delivery' },
               { step: '4', text: 'Your share is released to your Payoneer account -- within 15 days for new sellers, 72 hours once trusted' },
             ].map(item => (

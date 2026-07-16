@@ -14,7 +14,13 @@ interface OrderItem {
 
 interface Order {
   id: string
-  total: number
+  // 2026-07-16 readiness audit fix: this was named `total`, but the Order
+  // Prisma model (prisma/schema.prisma) has no `total` field -- it stores
+  // the seller's full order amount (subtotal + shipping + duties, see
+  // lib/orders.ts) under `subtotal`. /api/account/orders returns the raw
+  // Prisma row, so order.total was always undefined here and every price
+  // on this page rendered as "£NaN" once a real order existed.
+  subtotal: number
   currency: string
   status: string
   createdAt: string
@@ -241,7 +247,7 @@ export default function AccountPage() {
                         {order.status}
                       </span>
                       <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '16px' }}>
-                        {fmtMoney(order.total, order.currency)}
+                        {fmtMoney(order.subtotal, order.currency)}
                       </span>
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2"
                         style={{ color: 'var(--muted)', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
@@ -281,7 +287,7 @@ export default function AccountPage() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                           <span style={{ color: 'var(--muted)', fontSize: '13px' }}>Order total</span>
-                          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '18px' }}>{fmtMoney(order.total, order.currency)}</span>
+                          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '18px' }}>{fmtMoney(order.subtotal, order.currency)}</span>
                         </div>
                       </div>
                     </div>

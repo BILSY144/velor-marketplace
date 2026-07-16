@@ -32,9 +32,9 @@ interface Message {
 
 export default function DashboardMessagesPage() {
   const { tier, theme } = useSellerTier();
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE';
+  const isPro = tier === 'PRO';
   const isElevated = tier !== 'STARTER';
-  const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
+  const accentColor = isPro ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)';
 
   const [conversations, setConversations] = useState<ConversationEntry[]>([]);
   const [selected, setSelected] = useState<ConversationEntry | null>(null);
@@ -129,7 +129,7 @@ export default function DashboardMessagesPage() {
         <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Inbox</h2>
           {totalUnread > 0 && (
-            <span style={{ background: accentColor, color: isEnterprise ? '#111' : '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
+            <span style={{ background: accentColor, color: isPro ? '#111' : '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
           )}
           <PlanBadge tier={tier} />
         </div>
@@ -196,7 +196,7 @@ export default function DashboardMessagesPage() {
           <>
             {/* Thread header */}
             <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-              {isEnterprise && (
+              {isPro && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
               )}
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: accentColor }}>
@@ -229,7 +229,7 @@ export default function DashboardMessagesPage() {
                             padding: '10px 14px',
                             borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                             background: isMine ? accentColor : 'var(--surface)',
-                            color: isMine ? (isEnterprise ? '#111' : '#000') : 'var(--text)',
+                            color: isMine ? (isPro ? '#111' : '#000') : 'var(--text)',
                             fontSize: 14,
                             lineHeight: 1.5,
                             border: isMine ? 'none' : '1px solid var(--border)',
@@ -275,7 +275,7 @@ export default function DashboardMessagesPage() {
                 disabled={sending || !draft.trim()}
                 style={{
                   background: accentColor,
-                  color: isEnterprise ? '#111' : '#000',
+                  color: isPro ? '#111' : '#000',
                   border: 'none',
                   borderRadius: 10,
                   padding: '10px 20px',

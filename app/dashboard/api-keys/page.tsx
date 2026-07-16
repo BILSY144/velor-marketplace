@@ -26,7 +26,7 @@ const goldCard: React.CSSProperties = {
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<ApiKeyRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [isEnterprise, setIsEnterprise] = useState(true)
+  const [hasApiAccess, setHasApiAccess] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
@@ -42,9 +42,9 @@ export default function ApiKeysPage() {
       const res = await fetch('/api/dashboard/api-keys')
       const data = await res.json()
       if (res.status === 403) {
-        setIsEnterprise(false)
+        setHasApiAccess(false)
       } else if (res.ok) {
-        setIsEnterprise(true)
+        setHasApiAccess(true)
         setKeys(data.keys || [])
       }
     } catch {
@@ -93,7 +93,7 @@ export default function ApiKeysPage() {
     return <div style={{ padding: '48px', color: 'var(--muted)' }}>Loading...</div>
   }
 
-  if (!isEnterprise) {
+  if (!hasApiAccess) {
     return (
       <div style={{ padding: '48px', maxWidth: '640px' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text)', fontSize: '28px', marginBottom: '16px' }}>API Access</h1>
@@ -115,7 +115,7 @@ export default function ApiKeysPage() {
     <div style={{ padding: '48px', maxWidth: '800px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '8px' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text)', fontSize: '28px', margin: 0 }}>API Access</h1>
-        <PlanBadge tier="ENTERPRISE" />
+        <PlanBadge tier="PRO" />
       </div>
       <p style={{ color: 'var(--muted)', marginBottom: '32px' }}>
         Generate API keys to read your products programmatically. Keys are shown once at creation, so store them securely.

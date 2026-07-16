@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import VelorAssistant from '@/components/VelorAssistant';
+import { normalizeSellerTier } from '@/lib/tier';
 
 const baseNavItems = [
   { href: '/dashboard', label: 'Overview', icon: 'OV' },
@@ -21,8 +22,12 @@ const baseNavItems = [
   { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK', special: 'enterprise' },
 ];
 
-type Tier = 'STARTER' | 'PRO' | 'ENTERPRISE';
+type Tier = 'STARTER' | 'PRO';
 
+// NOTE: ENTERPRISE was retired 2026-07-15. There is intentionally no
+// ENTERPRISE entry below — any legacy 'ENTERPRISE' value coming back from
+// the API is normalized to 'PRO' via normalizeSellerTier() before it ever
+// reaches this map, so every seller always resolves to a real theme.
 const TIER_THEME: Record<Tier, {
   label: string;
   badgeColor: string;
@@ -53,16 +58,6 @@ const TIER_THEME: Record<Tier, {
     activeGlow: '0 0 14px rgba(79,195,247,0.30)',
     avatarRing: '0 0 0 2px rgba(79,195,247,0.6)',
   },
-  ENTERPRISE: {
-    label: 'Enterprise',
-    badgeColor: '#FFD54A',
-    badgeBg: 'rgba(255,213,74,0.14)',
-    badgeBorder: 'rgba(255,213,74,0.55)',
-    sidebarGradient: 'linear-gradient(180deg, rgba(255,150,40,0.14), transparent 50%)',
-    glow: 'rgba(255,180,60,0.45)',
-    activeGlow: '0 0 20px rgba(255,150,40,0.40)',
-    avatarRing: '0 0 0 2px #FFD54A, 0 0 14px rgba(255,213,74,0.55)',
-  },
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -76,7 +71,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.id) setSellerId(d.id);
-        if (d?.tier) setTier(d.tier);
+        // /api/seller/me already normalizes ENTERPRISE -> PRO server-side,
+        // but normalize again here defensively in case this layout is ever
+        // fed tier data from another, unnormalized source.
+        if (d?.tier) setTier(normalizeSellerTier(d.tier) as Tier);
       })
       .catch(() => {});
 
@@ -101,7 +99,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ].filter((i) => {
     const special = (i as { special?: string }).special;
     if (special === 'live') return true; // live shopping: every tier (2026-07-15)
-    if (special === 'enterprise') return tier === 'PRO' || tier === 'ENTERPRISE'; // legacy flag name — now means Pro features
+    if (special === 'enterprise') return tier === 'PRO'; // legacy flag name — now means Pro features
     return true;
   });
 

@@ -239,12 +239,22 @@ export default function AnalyticsPage() {
     }
 
   const { summary, dailyRevenue, topProducts, productsByStatus } = data
-    const tier = (data.tier as SellerTier) in DASHBOARD_TIER_THEME ? (data.tier as SellerTier) : 'STARTER'
+    // 2026-07-16 readiness audit fix: `tier` used to stay 'ENTERPRISE'
+    // verbatim whenever a legacy seller row had that value, picking the
+    // gold DASHBOARD_TIER_THEME.ENTERPRISE theme instead of Pro's blue one
+    // -- Enterprise no longer exists as a distinct plan, so this normalizes
+    // it the same way /api/dashboard/analytics now does server-side.
+    // isEnterprise used to be defined as the exact same expression as
+    // isPro (copy/paste bug) -- that made every "Enterprise-only" gold
+    // accent below fire for every Pro seller, and the intended Pro-only
+    // blue accent (old line: isPro && !isEnterprise) dead code that could
+    // never run. Collapsed to a single isPro flag.
+    const rawTier = data.tier === 'ENTERPRISE' ? 'PRO' : (data.tier as SellerTier)
+    const tier = rawTier in DASHBOARD_TIER_THEME ? rawTier : 'STARTER'
     const theme = DASHBOARD_TIER_THEME[tier]
-    const isPro = data.tier === 'PRO' || data.tier === 'ENTERPRISE'
-    const isEnterprise = data.tier === 'PRO' || data.tier === 'ENTERPRISE'
+    const isPro = tier === 'PRO'
     const tCard = (extra?: React.CSSProperties) => tierCardStyle(theme, { padding: '24px', ...extra })
-    const forecast = isEnterprise ? forecastNext30(dailyRevenue) : null
+    const forecast = isPro ? forecastNext30(dailyRevenue) : null
 
   const statCards = [
     { label: 'Total Revenue', value: fmt(summary.totalRevenue), sub: 'Gross all time' },
@@ -285,7 +295,7 @@ export default function AnalyticsPage() {
                                             Track your store performance
                                 </p>
                       </div>
-                {isEnterprise && data.canExport && (
+                {isPro && data.canExport && (
                     <button
                                   onClick={() => exportCsv(data)}
                                   style={{
@@ -304,12 +314,11 @@ export default function AnalyticsPage() {
                       )}
               </div>
 
-          {/* Stat cards get a coloured top accent for Pro/Enterprise */}
+          {/* Stat cards get a coloured top accent for Pro sellers */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
             {statCards.map((s, i) => (
               <div key={s.label} style={tCard({ position: 'relative', overflow: 'hidden', padding: '20px 22px' })}>
-                {isEnterprise && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />}
-                {isPro && !isEnterprise && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />}
+                {isPro && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />}
                 <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
                   {s.label}
                 </div>
@@ -321,7 +330,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
-          {isEnterprise && forecast && (
+          {isPro && forecast && (
                   <div style={tCard({ marginBottom: '24px', position: 'relative', overflow: 'hidden' })}>
                       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -383,7 +392,7 @@ export default function AnalyticsPage() {
                   </div>
               )}
 
-          {isEnterprise && data.previousPeriod && (
+          {isPro && data.previousPeriod && (
                   <div style={{ ...tCard(), marginBottom: '24px' }}>
                               <h2
                                             style={{

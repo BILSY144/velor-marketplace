@@ -60,9 +60,9 @@ function randomSuffix() {
 
 export default function DiscountCodesPage() {
   const { tier, theme } = useSellerTier()
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
+  const isPro = tier === 'PRO'
   const isElevated = tier !== 'STARTER'
-  const accentColor = isEnterprise ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)'
+  const accentColor = isPro ? '#FFD54A' : isElevated ? '#4FC3F7' : 'var(--accent)'
 
   const [codes, setCodes] = useState<DiscountCode[]>([])
   const [loading, setLoading] = useState(true)
@@ -242,7 +242,7 @@ export default function DiscountCodesPage() {
 
       {isElevated && (
         <div style={tierCardStyle(theme, { padding: '16px 20px', marginBottom: 24, position: 'relative', overflow: 'hidden' })}>
-          {isEnterprise && (
+          {isPro && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
           )}
           <div style={{ fontSize: 12, fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>

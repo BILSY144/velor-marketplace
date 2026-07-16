@@ -148,7 +148,7 @@ export default function GoLivePage() {
   return (
     <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 24px' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 8, textTransform: 'uppercase' }}>Enterprise - Live Shopping</div>
+        <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 8, textTransform: 'uppercase' }}>Live Shopping</div>
         <h1 style={{ fontSize: 30, marginBottom: 24 }}>Go Live</h1>
 
         {error && (

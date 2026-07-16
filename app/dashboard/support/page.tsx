@@ -20,7 +20,6 @@ interface SupportData {
 
 export default function SupportPage() {
   const { tier, theme } = useSellerTier()
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
 
   const [data, setData] = useState<SupportData | null>(null)
   const [loading, setLoading] = useState(true)

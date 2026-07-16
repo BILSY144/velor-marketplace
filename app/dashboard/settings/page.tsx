@@ -172,9 +172,10 @@ export default function SettingsPage() {
     )
   }
 
-  const isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'
+  // Enterprise retired 2026-07-15 and is normalized to PRO before this page
+  // ever sees it, so this is a plain two-tier check now.
   const isPro = tier === 'PRO'
-  const nextTier = tier === 'STARTER' ? 'PRO' : null // Enterprise retired 2026-07-15
+  const nextTier = tier === 'STARTER' ? 'PRO' : null
 
   return (
     <div style={{ maxWidth: '680px' }}>
@@ -197,11 +198,8 @@ export default function SettingsPage() {
 
       {/* Your Plan — shown first so sellers see exactly what their subscription buys them */}
       <div style={tierCardStyle(theme, { padding: '28px 32px', marginBottom: '24px', position: 'relative', overflow: 'hidden' })}>
-        {isEnterprise && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
-        )}
         {isPro && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#4FC3F7' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
@@ -213,11 +211,11 @@ export default function SettingsPage() {
                 fontFamily: 'var(--font-display)',
                 fontSize: 24,
                 fontWeight: 800,
-                color: isEnterprise ? '#FFD54A' : isPro ? '#4FC3F7' : 'var(--text)',
+                color: isPro ? '#FFD54A' : 'var(--text)',
                 marginBottom: 12,
               }}
             >
-              {isEnterprise ? '★ Enterprise' : isPro ? 'Pro' : 'Starter'}
+              {isPro ? '★ Pro' : 'Starter'}
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {PLAN_FEATURES[tier].map((f) => (
@@ -245,7 +243,7 @@ export default function SettingsPage() {
               Upgrade to {DASHBOARD_TIER_THEME[nextTier].label}
             </Link>
           )}
-          {isEnterprise && (
+          {isPro && (
             <span style={{ flexShrink: 0, color: '#FFD54A', fontWeight: 700, fontSize: 13 }}>
               You&apos;re on our top plan
             </span>

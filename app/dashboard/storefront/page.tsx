@@ -30,7 +30,8 @@ function Preview({ t }: { t: StoreTheme }) {
 
 export default function StorefrontDesign() {
   const { tier: sellerTier, theme } = useSellerTier()
-  const isEnterprise = sellerTier === 'PRO' || sellerTier === 'ENTERPRISE'
+  // Enterprise retired 2026-07-15 and is normalized to PRO before it ever
+  // reaches the client, so this is now a plain two-tier check.
   const isPro = sellerTier === 'PRO'
 
   const [active, setActive] = useState('classic')
@@ -178,8 +179,8 @@ export default function StorefrontDesign() {
     }
   }
 
-  const canAll = tier === 'PRO' || tier === 'ENTERPRISE' || unlocked
-  const accentColor = isEnterprise ? '#FFD54A' : isPro ? '#4FC3F7' : 'var(--accent)'
+  const canAll = tier === 'PRO' || unlocked
+  const accentColor = isPro ? '#FFD54A' : 'var(--accent)'
 
   return (
     <div style={{ padding: '32px 28px', maxWidth: 1200, margin: '0 auto', fontFamily: 'var(--font-body)', color: 'var(--text)' }}>
@@ -191,8 +192,8 @@ export default function StorefrontDesign() {
         Choose how your store looks to buyers. Preview any design — apply it in one click.
       </p>
       {canAll ? (
-        <p style={{ color: isPro || isEnterprise ? accentColor : 'var(--green)', fontSize: 13.5, fontWeight: 700, margin: '0 0 24px' }}>
-          {tier === 'PRO' || tier === 'ENTERPRISE'
+        <p style={{ color: isPro ? accentColor : 'var(--green)', fontSize: 13.5, fontWeight: 700, margin: '0 0 24px' }}>
+          {tier === 'PRO'
             ? `Every design is included with your Pro plan.`
             : 'You have unlocked every design.'}
         </p>
@@ -203,11 +204,8 @@ export default function StorefrontDesign() {
       )}
 
       <div style={tierCardStyle(theme, { padding: 18, margin: '0 0 24px', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' })}>
-        {isEnterprise && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
-        )}
         {isPro && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: '#4FC3F7' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
         )}
         <div style={{ width: 64, height: 64, borderRadius: 14, background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
           {logo ? (
@@ -275,7 +273,7 @@ export default function StorefrontDesign() {
                     <div style={{ color: 'var(--muted)', fontSize: 12.5 }}>{t.tagline}</div>
                   </div>
                   {isActive ? (
-                    <span style={{ background: accentColor, color: isEnterprise ? '#111' : '#000', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Active</span>
+                    <span style={{ background: accentColor, color: isPro ? '#111' : '#000', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Active</span>
                   ) : locked ? (
                     <span style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>Preview</span>
                   ) : (

@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { normalizeSellerTier } from '@/lib/tier'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -18,7 +19,7 @@ export async function GET() {
   })
 
   return NextResponse.json({
-        tier: seller.tier,
+        tier: normalizeSellerTier(seller.tier),
         isPriority: seller.tier === 'ENTERPRISE' || seller.tier === 'PRO',
         tickets,
   })
