@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
 import { computeListingDiscount } from '@/lib/discount'
+import { isValidSpeciality } from '@/lib/specialities'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') ?? '24', 10)
   const category = searchParams.get('category')
   const origin = searchParams.get('origin')
+  const speciality = searchParams.get('speciality')
   const sort = searchParams.get('sort') ?? 'recommended'
   const search = searchParams.get('search')
   const minPrice = searchParams.get('minPrice')
@@ -18,6 +20,12 @@ export async function GET(request: Request) {
 
   if (category) where.category = category
   if (origin) where.originCountry = origin
+  // Closed-vocabulary speciality filter (lib/specialities.ts) — Product.specialities
+  // is a String[] (max 2 terms per listing, see prisma/schema.prisma), so this is
+  // an array-contains match, not an equality match. Validated against the closed
+  // vocabulary (isValidSpeciality) so a garbage ?speciality= value falls through to
+  // the unfiltered catalogue instead of a silently-always-empty result.
+  if (speciality && isValidSpeciality(speciality)) where.specialities = { has: speciality }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },

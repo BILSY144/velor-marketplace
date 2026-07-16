@@ -56,7 +56,9 @@ const css = `
 .ocp-status.seat{color:var(--accent)}
 .ocp-hints{font-size:15px;color:var(--muted);line-height:1.6;margin-top:14px;max-width:60ch}
 .ocp-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.ocp-tag{font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:6px 13px}
+.ocp-tag{font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:6px 13px;text-decoration:none;display:inline-flex;transition:border-color .15s,color .15s}
+.ocp-tag:hover{border-color:#3d3d46;color:var(--text)}
+.ocp-tag.claimed{color:var(--accent);border-color:var(--accent)}
 .ocp-sec{padding:36px 0 70px;border-top:1px solid var(--border)}
 .ocp-shead{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
 .ocp-shead h2{font-size:22px}
@@ -95,6 +97,7 @@ export default function OriginCountryPage() {
   const [productCount, setProductCount] = useState<number | null>(null)
   const [pending, setPending] = useState(true)
   const [products, setProducts] = useState<PreviewProduct[]>([])
+  const [specStats, setSpecStats] = useState<Record<string, { countries: number; products: number }>>({})
 
   useEffect(() => {
     if (!country) { setPending(false); return }
@@ -102,10 +105,11 @@ export default function OriginCountryPage() {
     setPending(true)
     fetch('/api/lattice')
       .then(r => (r.ok ? r.json() : null))
-      .then((d: { countries?: { code: string; products: number }[] } | null) => {
+      .then((d: { countries?: { code: string; products: number }[]; specialities?: Record<string, { countries: number; products: number }> } | null) => {
         if (cancelled || !d) return
         const match = (d.countries ?? []).find(c => c.code === country.code)
         setProductCount(match ? match.products : 0)
+        setSpecStats(d.specialities ?? {})
       })
       .catch(() => { if (!cancelled) setProductCount(0) })
       .finally(() => { if (!cancelled) setPending(false) })
@@ -164,9 +168,20 @@ export default function OriginCountryPage() {
             )}
             {specialities.length > 0 && (
               <div className="ocp-tags">
-                {specialities.slice(0, 8).map(s => (
-                  <span className="ocp-tag" key={s.term}>{buyerLabel(s.term)}</span>
-                ))}
+                {specialities.slice(0, 8).map(s => {
+                  const st = specStats[s.term]
+                  const claimed = !!st && st.products > 0
+                  return (
+                    <Link
+                      key={s.term}
+                      className={'ocp-tag' + (claimed ? ' claimed' : '')}
+                      href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                      title={s.line}
+                    >
+                      {buyerLabel(s.term)}
+                    </Link>
+                  )
+                })}
               </div>
             )}
             <div className="ocp-pills">

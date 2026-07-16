@@ -8,6 +8,7 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
 import { countryImages } from '@/lib/countryImagery'
+import { buyerLabel } from '@/lib/specialities'
 
 // Full-bleed "open product slots" grid shown only on origin-filtered shop
 // pages (i.e. the pages Velor's flag strip in GlobalHeader actually links
@@ -128,6 +129,7 @@ function ShopContent() {
   const origin = searchParams.get('origin') || ''
   const originCountry = origin ? WORLD_COUNTRIES.find((c) => c.code === origin.toUpperCase()) : null
   const slotImages = originCountry ? countryImages(originCountry.code, 400) : []
+  const speciality = searchParams.get('speciality') || ''
   const search = searchParams.get('search') || ''
   const page = parseInt(searchParams.get('page') || '1')
 
@@ -138,6 +140,7 @@ function ShopContent() {
       if (category) params.set('category', category)
       if (search) params.set('search', search)
       if (origin) params.set('origin', origin)
+      if (speciality) params.set('speciality', speciality)
       params.set('page', String(page))
       const res = await fetch(`/api/shop/products?${params}`)
       if (!res.ok) throw new Error('Failed')
@@ -150,7 +153,7 @@ function ShopContent() {
     } finally {
       setLoading(false)
     }
-  }, [category, search, page, origin])
+  }, [category, search, page, origin, speciality])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
   useEffect(() => { setSearchInput(search) }, [search])
@@ -215,6 +218,11 @@ function ShopContent() {
             {originCountry && (
               <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>
                 from {originCountry.name} &middot; <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Clear origin filter</Link>
+              </span>
+            )}
+            {speciality && (
+              <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>
+                in {buyerLabel(speciality)} &middot; <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Clear speciality filter</Link>
               </span>
             )}
           </h1>
