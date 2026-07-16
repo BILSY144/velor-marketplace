@@ -92,14 +92,18 @@ const css = `
 .vf-rhead h3{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .vf-rline{flex:1;height:1px;background:var(--border)}
 .vf-rn{font-size:12.5px;color:var(--muted)}
-.vf-clist{columns:3;column-gap:44px}
-.vf-ci{break-inside:avoid;display:block;padding:11px 0;border-bottom:1px solid var(--border)}
+.vf-clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.vf-ci{display:block;border:1px solid var(--border);border-top:3px solid var(--border);border-radius:14px;background:var(--surface);padding:16px 18px 15px;transition:border-color .15s,transform .15s,background .15s}
+.vf-ci:hover{transform:translateY(-2px);border-color:#3d3d46;background:var(--surface-2)}
+.vf-ci.live{border-top-color:var(--green)}
+.vf-ci.seat{border-top-color:var(--accent)}
+.vf-ci.hold{border-top-color:var(--amber)}
 .vf-ci:hover .vf-cn{color:var(--accent)}
 .vf-citop{display:flex;align-items:center;gap:11px}
-.vf-cn{font-family:var(--font-display);font-size:19px;font-weight:500;transition:color .12s}
+.vf-cn{font-family:var(--font-display);font-size:18px;font-weight:500;transition:color .12s;line-height:1.25}
 .vf-fl{display:flex;align-items:center;justify-content:center;width:26px;height:19px;font-size:13px;line-height:1;border-radius:3px;flex:0 0 auto;margin-left:auto;border:1px solid var(--border);background:var(--surface-2)}
-.vf-k{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
-.vf-st{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:5px;font-weight:600}
+.vf-k{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.4;min-height:17px}
+.vf-st{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid var(--border)}
 .vf-st.live{color:var(--green)}.vf-st.hold{color:var(--amber)}
 .vf-empty{padding:70px 0;text-align:center;color:var(--muted);font-size:15px}
 .vf-band{border:1px solid rgba(255,107,0,.32);border-radius:18px;padding:44px 48px;background:var(--surface);margin:50px 0 80px;display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap}
@@ -110,9 +114,9 @@ const css = `
 .vf-hero{grid-template-columns:1fr;gap:36px;padding:44px 0 30px}
 .vf-hero h1{font-size:36px}
 .vf-spot{grid-template-columns:1fr}
-.vf-clist{columns:2}
+.vf-clist{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 }
-@media(max-width:640px){.vf-clist{columns:1}.vf-bigno{font-size:44px}}
+@media(max-width:640px){.vf-clist{grid-template-columns:1fr 1fr;gap:10px}.vf-bigno{font-size:44px}}
 `
 
 export default function FoundingPage() {
@@ -262,7 +266,7 @@ export default function FoundingPage() {
                   const st = status(c.code)
                   const products = liveCodes.get(c.code)
                   return (
-                    <Link className="vf-ci" href="/apply" key={c.code}>
+                    <Link className={'vf-ci ' + st} href="/apply" key={c.code}>
                       <div className="vf-citop">
                         <span className="vf-cn">{c.name}</span>
                         <span className="vf-fl" title={c.code}>{flag(c.code)}</span>
