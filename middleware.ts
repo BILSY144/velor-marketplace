@@ -24,7 +24,7 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
   const limits: Record<string, [number, number]> = {
     '/api/chat': [20, 60_000],
     '/api/contact': [5, 60_000],
-    '/api/checkout': [10, 60_000],
+    '/api/stripe/payment-intent': [10, 60_000],
   }
   for (const [route, [max, win]] of Object.entries(limits)) {
     if (pathname.startsWith(route)) {
@@ -69,5 +69,5 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
 })
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/admin/:path*', '/api/chat/:path*', '/api/contact/:path*', '/api/checkout/:path*'],
+  matcher: ['/dashboard/:path*', '/api/admin/:path*', '/api/chat/:path*', '/api/contact/:path*', '/api/stripe/payment-intent'],
 }
