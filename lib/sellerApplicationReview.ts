@@ -19,9 +19,6 @@ export const APPLICATION_SLA_HOURS = 24
 /** Escalate to a human at this age, so a person still has time to act. */
 export const APPLICATION_ESCALATE_AFTER_HOURS = 12
 
-/** Minimum product photos an application must supply to be auto-approved. */
-export const MIN_SAMPLE_IMAGES = 3
-
 /** Minimum characters of store description for the listing to be reviewable. */
 export const MIN_DESCRIPTION_CHARS = 40
 
@@ -93,12 +90,12 @@ export function screenApplication(app: ScreenableApplication): ScreenResult {
   if (!app.productCategories?.length) {
     return { verdict: 'reject', reason: 'Your application did not select any product categories.' }
   }
-  if ((app.sampleImages?.length ?? 0) < MIN_SAMPLE_IMAGES) {
-    return {
-      verdict: 'reject',
-      reason: `Velor needs at least ${MIN_SAMPLE_IMAGES} clear product photos to review a store. Your application included ${app.sampleImages?.length ?? 0}.`,
-    }
-  }
+  // Sample photos are deliberately NOT required at application time (William,
+  // 2026-07-16): the public /apply form does not collect photos, so the old
+  // 3-photo check here auto-rejected every real applicant. Photo minimums are
+  // a LISTING rule, enforced at product creation (3+ images, see
+  // app/api/dashboard/products) -- and every seller passes Stripe Identity
+  // verification before approval, which is the actual signup gate.
   if ((app.storeDescription ?? '').trim().length < MIN_DESCRIPTION_CHARS) {
     return {
       verdict: 'reject',
