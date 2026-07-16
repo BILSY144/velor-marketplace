@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
   // TierUpgradeView), but this endpoint must refuse it too -- a founding
   // seller must never be able to create a real, chargeable Stripe
   // subscription for a tier they already have free.
-  if (action === 'upgrade_to_pro' && (seller as any).foundingBadge && (seller as any).tier === 'PRO') {
+  if (action === 'upgrade_to_pro' && ((seller as any).foundingEligible || (seller as any).foundingBadge)) {
     return NextResponse.json(
-      { error: 'You already have Pro free as a founding seller — nothing to pay for.' },
+      { error: 'Founding sellers never pay for Pro. If your badge has not unlocked yet, list your first product and Pro is yours free, for life.' },
       { status: 400 }
     )
   }
