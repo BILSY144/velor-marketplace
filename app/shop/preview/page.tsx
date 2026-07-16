@@ -24,7 +24,7 @@
 // image. Thumbnails are inline SVG data URIs (no real photography implied)
 // so this page has zero dependency on external image hosting.
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
@@ -45,6 +45,21 @@ export default function ShopPreviewPage() {
   const { symbol } = useCurrencyDisplay()
   const [mainImage, setMainImage] = useState(0)
   const [qty, setQty] = useState(1)
+  // 2026-07-16: these action buttons used to be plain `disabled` elements,
+  // which are honest about not doing anything but give a visitor ZERO
+  // feedback on click -- from a prospective seller's (or reporter's) point
+  // of view that reads as "the button is broken," not "this is a preview."
+  // William was explicit: nothing should look broken, even on a page that's
+  // deliberately non-transactional. Buttons are no longer `disabled` --
+  // they're clickable and explain themselves via this inline notice instead
+  // of silently swallowing the click.
+  const [noticeVisible, setNoticeVisible] = useState(false)
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  function showPreviewNotice() {
+    setNoticeVisible(true)
+    if (noticeTimer.current) clearTimeout(noticeTimer.current)
+    noticeTimer.current = setTimeout(() => setNoticeVisible(false), 3500)
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
@@ -107,18 +122,23 @@ export default function ShopPreviewPage() {
             </div>
           </div>
 
-          <button disabled style={{ width: '100%', padding: '16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'not-allowed', marginBottom: '10px', opacity: .85 }}>
+          <button onClick={showPreviewNotice} style={{ width: '100%', padding: '16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', marginBottom: '10px', opacity: .85 }}>
             Add to Cart
           </button>
-          <button disabled style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'not-allowed', marginBottom: '16px', opacity: .85 }}>
+          <button onClick={showPreviewNotice} style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', marginBottom: '16px', opacity: .85 }}>
             Buy Now
           </button>
-          <button disabled style={{ width: '100%', padding: '12px', background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
+          <button onClick={showPreviewNotice} style={{ width: '100%', padding: '12px', background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
             <span style={{ fontSize: '18px' }}>♡</span> Save to Wishlist
           </button>
-          <button disabled style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
+          <button onClick={showPreviewNotice} style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
             <span style={{ fontSize: '16px' }}>&#9993;</span> Contact Seller
           </button>
+          {noticeVisible && (
+            <div style={{ marginTop: '2px', marginBottom: '4px', padding: '10px 14px', background: 'rgba(255,107,0,0.1)', border: '1px solid var(--accent)', borderRadius: '8px', color: 'var(--accent)', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
+              This is a preview, not a real listing — <Link href="/sell" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>list your own goods</Link> to enable real buying.
+            </div>
+          )}
 
           <div style={{ marginTop: '20px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)' }}>
             Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>Example Seller Co.</span>
