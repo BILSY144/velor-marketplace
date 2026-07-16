@@ -41,7 +41,7 @@ const slotsCss = `
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
-.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:0;width:100%}
+.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:8px;width:100%}
 .shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
@@ -170,7 +170,7 @@ function ShopContent() {
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '24px', letterSpacing: '-0.5px' }}>VELOR</Link>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px', color: 'var(--text)' }}>
-            {category || 'All Products'}
+            {category || 'All Goods'}
             {total > 0 && <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>{total} items</span>}
             {originCountry && (
               <span style={{ fontSize: '16px', fontWeight: 400, color: 'var(--muted)', marginLeft: '12px' }}>
@@ -183,7 +183,7 @@ function ShopContent() {
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search products..."
+              placeholder="Search goods..."
               onKeyDown={e => { if (e.key === 'Enter') navigate({ search: searchInput }) }}
               style={{ flex: 1, background: '#111', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none', maxWidth: '400px' }}
             />
@@ -217,10 +217,10 @@ function ShopContent() {
       {originCountry && (
         <div className="shslots">
           <div className="shslots-head">
-            <h2>200 seats open for {originCountry.name} products</h2>
+            <h2>200 seats open for {originCountry.name} goods</h2>
             <p>
-              Every box below is an open product slot, not a listing — nothing is for sale here yet.
-              The moment a verified seller from {originCountry.name} lists a product, one box fills in
+              Every box below is an open goods slot, not a listing — nothing is for sale here yet.
+              The moment a verified seller from {originCountry.name} lists their goods, one box fills in
               with its photo, name, and price.
             </p>
           </div>
@@ -231,7 +231,7 @@ function ShopContent() {
                 <div className="shslots-box" key={i}>
                   {img && <img className="shslots-img" src={img.url} alt="" loading="lazy" decoding="async" />}
                   <div className="shslots-scrim" />
-                  <div className="shslots-ribbon">Your products here</div>
+                  <div className="shslots-ribbon">Your goods here</div>
                   <div className="shslots-card" />
                 </div>
               )
@@ -266,7 +266,7 @@ function ShopContent() {
               </h2>
               <p style={{ fontSize: 15.5, color: 'var(--muted)', lineHeight: 1.65, maxWidth: '52ch', margin: '0 auto 34px' }}>
                 Velor opens with founding sellers from around the world — real makers, identity-verified,
-                with the country and the maker on every listing. No filler stock, no placeholder products.
+                with the country and the maker on every listing. No filler stock, no placeholder goods.
                 What appears here first will have earned its place.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>

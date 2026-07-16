@@ -194,7 +194,7 @@ export default function ProductPageClient() {
   if (notFound || !product) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-        <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, color: 'var(--text)' }}>Product not found</div>
+        <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, color: 'var(--text)' }}>Goods not found</div>
         <Link href="/shop" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Back to Shop</Link>
       </div>
     )
@@ -426,7 +426,7 @@ export default function ProductPageClient() {
             </button>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Contact Seller</h2>
             <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '0 0 24px' }}>
-              Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span> about this product
+              Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span> about these goods
             </p>
             {contactSent ? (
               <div style={{ padding: '20px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '10px', color: 'var(--green)', fontWeight: 600, textAlign: 'center', fontSize: '15px' }}>

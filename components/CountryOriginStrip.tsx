@@ -183,7 +183,7 @@ export default function CountryOriginStrip() {
             key={c.code}
             type="button"
             title={c.name}
-            aria-label={`Shop products from ${c.name}`}
+            aria-label={`Shop goods from ${c.name}`}
             data-country-code={c.code}
             onClick={() => handleFlagClick(c.code)}
             style={{

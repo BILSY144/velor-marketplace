@@ -267,7 +267,7 @@ export default function AccountPage() {
                                   {item.product.name}
                                 </Link>
                               ) : (
-                                <span style={{ color: 'var(--muted)', fontSize: '14px' }}>Product no longer available</span>
+                                <span style={{ color: 'var(--muted)', fontSize: '14px' }}>Goods no longer available</span>
                               )}
                               <span style={{ color: 'var(--muted)', fontSize: '12px' }}>Qty: {item.quantity}</span>
                             </div>

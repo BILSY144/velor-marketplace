@@ -265,7 +265,7 @@ export default async function SellerProfilePage({
                     />
                   </span>
                 )}
-                <span>{seller.products.length} products</span>
+                <span>{seller.products.length} goods</span>
                 <span>Member since {memberSince}</span>
               </div>
 

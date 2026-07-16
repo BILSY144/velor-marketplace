@@ -193,7 +193,7 @@ export default function OriginsIndexPage() {
             keeps for life by opening one that doesn&apos;t yet.</p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link className="og-btn2" href="/shop">Browse all products</Link>
+            <Link className="og-btn2" href="/shop">Browse all goods</Link>
             <Link className="og-btn" href="/founding">See the founding atlas</Link>
           </div>
         </div>

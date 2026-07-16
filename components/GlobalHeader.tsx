@@ -244,8 +244,8 @@ export default function GlobalHeader() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search products, brands and sellers"
-                aria-label="Search products, brands and sellers"
+                placeholder="Search goods, brands and sellers"
+                aria-label="Search goods, brands and sellers"
                 style={{
                   flex: 1,
                   minWidth: 0,
