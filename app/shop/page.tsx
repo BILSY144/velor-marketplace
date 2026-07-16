@@ -503,4 +503,3 @@ export default function ShopPage() {
     </Suspense>
   )
 }
-// Deploy note: webhook missed 74ca14b (grid at 160px + visible Founding Seller chip); this commit re-triggers the build.
