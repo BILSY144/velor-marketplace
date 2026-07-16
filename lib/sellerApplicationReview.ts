@@ -20,7 +20,7 @@ export const APPLICATION_SLA_HOURS = 24
 export const APPLICATION_ESCALATE_AFTER_HOURS = 12
 
 /** Minimum characters of store description for the listing to be reviewable. */
-export const MIN_DESCRIPTION_CHARS = 40
+export const MIN_DESCRIPTION_CHARS = 20
 
 // Hard rejects. These are never a judgement call.
 const PROHIBITED_PATTERNS: { pattern: RegExp; reason: string }[] = [
