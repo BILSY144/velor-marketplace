@@ -106,7 +106,7 @@ export default function ProductPageClient() {
 
   async function toggleWishlist() {
     if (!session) {
-      router.push(`/auth/signin?callbackUrl=/shop/${productId}`)
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
       return
     }
     setWishlistLoading(true)
@@ -124,7 +124,7 @@ export default function ProductPageClient() {
 
   async function handleContactSeller() {
     if (!session) {
-      router.push(`/auth/signin?callbackUrl=/shop/${productId}`)
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
       return
     }
     if (!contactMessage.trim() || !product) return
@@ -347,7 +347,7 @@ export default function ProductPageClient() {
           <button
             onClick={() => {
               if (!session) {
-                router.push(`/auth/signin?callbackUrl=/shop/${productId}`)
+                router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
                 return
               }
               setShowContactModal(true)

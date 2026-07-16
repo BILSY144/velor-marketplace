@@ -36,7 +36,7 @@ export default function WishlistPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.replace('/auth/signin?callbackUrl=/account/wishlist')
+      router.replace('/auth/sign-in?callbackUrl=/account/wishlist')
       return
     }
     if (status !== 'authenticated') return

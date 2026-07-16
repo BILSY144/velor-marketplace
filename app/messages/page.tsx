@@ -101,7 +101,7 @@ export default function MessagesPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/auth/signin')
+    if (status === 'unauthenticated') router.push('/auth/sign-in')
   }, [status, router])
 
   const myId = (session?.user as { id?: string } | undefined)?.id ?? ''

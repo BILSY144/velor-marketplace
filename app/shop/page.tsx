@@ -170,7 +170,7 @@ function ShopContent() {
     e.preventDefault()
     e.stopPropagation()
     if (!session) {
-      router.push('/auth/signin?callbackUrl=/shop')
+      router.push('/auth/sign-in?callbackUrl=/shop')
       return
     }
     setWishlistPending(productId)

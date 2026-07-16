@@ -28,6 +28,19 @@ const TABS = [
   { label: 'All', value: 'ALL' },
 ]
 
+// The badge className/label logic below used to hand-map three cases
+// ('Approved' / 'Rejected' / 'Pending') that didn't match any of the
+// adm-badge-PENDING_REVIEW / APPROVED / REJECTED / DELISTED CSS classes
+// defined above -- so every badge silently rendered with NO status color,
+// and DELISTED products were mislabeled "Pending". Fixed in the 2026-07-16
+// readiness audit by keying directly off the real status value.
+const STATUS_LABELS: Record<ProductStatus, string> = {
+  PENDING_REVIEW: 'Pending Review',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  DELISTED: 'Delisted',
+}
+
 const css = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   .adm-page { min-height: 100vh; background: #0D0D0D; color: #fff; font-family: Inter, sans-serif; padding: 40px 32px; }
@@ -92,10 +105,20 @@ export default function AdminProductsPage() {
     }
   }, [status, session, router])
 
+  // middleware.ts requires an 'Authorization: Bearer <ADMIN_SECRET>' header
+  // on every /api/admin/* request -- this page had none until the
+  // 2026-07-16 readiness audit caught it, so every fetch here silently
+  // 401'd. Token is entered once via /admin/dashboard or /admin/sellers and
+  // cached in localStorage under 'velor_admin_secret'.
+  const adminAuthHeader = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : ''
+    return token ? { Authorization: 'Bearer ' + token } : {}
+  }
+
   const fetchProducts = async (tab: string) => {
     setLoading(true)
     try {
-      const r = await fetch(`/api/admin/products?status=${tab}`)
+      const r = await fetch(`/api/admin/products?status=${tab}`, { headers: adminAuthHeader() })
       const data = await r.json()
       setProducts(Array.isArray(data) ? data : [])
     } catch {
@@ -114,7 +137,7 @@ export default function AdminProductsPage() {
     setActionLoading(productId)
     await fetch('/api/admin/products', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...adminAuthHeader() },
       body: JSON.stringify({ productId, action, note }),
     })
     setActionLoading(null)
@@ -178,12 +201,12 @@ export default function AdminProductsPage() {
                     <b>{product.seller.storeName}</b> &mdash; {product.seller.user.email} &mdash; {product.category}
                   </div>
                   <div className="adm-desc">{product.description}</div>
-                  <div className="adm-price">ÃÂÃÂ£{Number(product.price).toFixed(2)}</div>
+                  <div className="adm-price">£{Number(product.price).toFixed(2)}</div>
                 </div>
 
                 <div className="adm-side">
-                  <span className={`adm-badge adm-badge-${product.status === 'APPROVED' ? 'Approved' : product.status === 'REJECTED' ? 'Rejected' : 'Pending'}`}>
-                    {product.status === 'APPROVED' ? 'Approved' : product.status === 'REJECTED' ? 'Rejected' : 'Pending'.replace('_', ' ')}
+                  <span className={`adm-badge adm-badge-${product.status}`}>
+                    {STATUS_LABELS[product.status]}
                   </span>
 
                   {activeTab === 'PENDING_REVIEW' && (

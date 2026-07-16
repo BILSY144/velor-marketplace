@@ -68,6 +68,16 @@ export default function AdminOrdersPage() {
     }
   }, [session, status, router])
 
+  // middleware.ts requires an 'Authorization: Bearer <ADMIN_SECRET>' header
+  // on every /api/admin/* request -- this page had none until the
+  // 2026-07-16 readiness audit caught it, so this always 401'd ("Request
+  // failed (401)"). Token is entered once via /admin/dashboard or
+  // /admin/sellers and cached in localStorage under 'velor_admin_secret'.
+  const adminAuthHeader = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : ''
+    return token ? { Authorization: 'Bearer ' + token } : {}
+  }
+
   const loadOrders = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
@@ -75,7 +85,7 @@ export default function AdminOrdersPage() {
       const params = new URLSearchParams()
       if (activeTab !== 'ALL') params.set('status', activeTab)
       if (query.trim()) params.set('q', query.trim())
-      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      const res = await fetch(`/api/admin/orders?${params.toString()}`, { headers: adminAuthHeader() })
       const data = await res.json()
       if (!res.ok) {
         setLoadError(data.error || `Request failed (${res.status})`)

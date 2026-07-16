@@ -63,15 +63,29 @@ export default function AdminDashboard() {
     }
   }, [status, role, router])
 
+  // middleware.ts requires 'Authorization: Bearer <ADMIN_SECRET>' on every
+  // /api/admin/* request regardless of NextAuth session -- this page's
+  // fetches had no such header at all until 2026-07-16's readiness audit
+  // caught it (every call here was silently 401'ing, so Approve/Reject did
+  // nothing). Token is entered once via /admin/dashboard or /admin/sellers
+  // and cached in localStorage under 'velor_admin_secret'; reused here.
+  const [tokenMissing, setTokenMissing] = useState(false)
+  const adminAuthHeader = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : ''
+    return token ? { Authorization: 'Bearer ' + token } : {}
+  }
+
   useEffect(() => {
     if (role !== 'ADMIN') return
-    fetch('/api/admin/stats')
-      .then(r => r.json())
+    const authHeader = adminAuthHeader()
+    if (!authHeader.Authorization) { setTokenMissing(true); setLoadingStats(false); setLoadingSellers(false); return }
+    fetch('/api/admin/stats', { headers: authHeader })
+      .then(r => { if (r.status === 401) setTokenMissing(true); return r.json() })
       .then(d => { setStats(d); setLoadingStats(false) })
       .catch(() => setLoadingStats(false))
 
-    fetch('/api/admin/sellers?status=PENDING')
-      .then(r => r.json())
+    fetch('/api/admin/sellers?status=PENDING', { headers: authHeader })
+      .then(r => { if (r.status === 401) setTokenMissing(true); return r.json() })
       .then(d => { setSellers(d.sellers || []); setLoadingSellers(false) })
       .catch(() => setLoadingSellers(false))
   }, [role])
@@ -86,7 +100,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/admin/sellers', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...adminAuthHeader() },
         body: JSON.stringify({ sellerId, action }),
       })
       if (!res.ok) throw new Error('Failed')
@@ -103,6 +117,18 @@ export default function AdminDashboard() {
     return (
       <div style={{ background: '#0D0D0D', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: '#999999', fontFamily: 'Inter, sans-serif' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  if (tokenMissing) {
+    return (
+      <div style={{ background: '#0D0D0D', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '20px', textAlign: 'center' }}>
+        <div style={{ color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: 600 }}>Admin token needed</div>
+        <div style={{ color: '#999999', fontFamily: 'Inter, sans-serif', fontSize: '14px', maxWidth: '360px' }}>
+          This dashboard needs your admin secret to call the API. Enter it once on the{' '}
+          <a href="/admin/dashboard" style={{ color: '#FF6B00' }}>Admin Dashboard</a> page and it'll be remembered here too.
+        </div>
       </div>
     )
   }

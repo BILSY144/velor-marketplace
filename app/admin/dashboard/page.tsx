@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status === 'loading') return
     if (status === 'unauthenticated') {
-      router.push('/auth/login')
+      router.push('/auth/sign-in')
       return
     }
     const role = (session?.user as { role?: string })?.role
