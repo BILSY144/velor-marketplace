@@ -46,7 +46,7 @@ const slotsCss = `
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
 .shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
-.shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:var(--surface-2);border-top:1px dashed var(--border);border-radius:0;z-index:2}
+.shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:#d8d8d8;border-top:1px dashed #9a9a9a;border-radius:0;z-index:2}
 `
 
 interface Product {
