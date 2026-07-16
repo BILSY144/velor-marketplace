@@ -45,6 +45,23 @@ import type { MetadataRoute } from 'next';
 // `/auth/sign-in`/`/auth/sign-up` -- it is a public, ungated, real-content
 // form, not a private tokenized link, so it stays a judgment call rather
 // than a clear-cut fix.
+//
+// Extended 2026-07-16 by the standing SEO agent (backlog cycle, not a full
+// audit -- found while checking routes added since the prior full audit).
+// `app/auth/error/page.tsx` was added the same day (commit 52b601ab, "Site-
+// wide readiness fixes") to give NextAuth's `pages: { error: '/auth/error' }`
+// config (confirmed in `auth.ts`) a real page instead of a default 404 --
+// it only exists as a landing spot for a failed sign-in redirect. Same
+// profile already established above for `/activate` and `/auth/reset`:
+// `'use client'`, no metadata export, zero internal `<Link>`/`<a>` anywhere
+// in `app/` or `components/` pointing at it (confirmed via repo-wide grep --
+// the only other reference in the codebase is `auth.ts`'s own config), not
+// in `sitemap.xml`, and not previously in this disallow list. Unlike
+// `/auth/sign-in`/`/auth/sign-up`/`/auth/forgot` (public, ungated forms with
+// real content, left as judgment calls above), this page has no independent
+// content purpose for an organic visitor to land on -- it exists purely to
+// catch an auth-flow failure state, the same "reached only via a flow
+// redirect, nothing for a crawler to do here" reasoning as `/auth/reset`.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -62,6 +79,7 @@ export default function robots(): MetadataRoute.Robots {
           '/activate',
           '/setup-admin',
           '/auth/reset',
+          '/auth/error',
         ],
       },
     ],
