@@ -81,7 +81,7 @@ const TIERS: Record<TierId, TierDef> = {
       'Priority placement in search',
       'Smart listing optimisation',
       'Advanced sales analytics',
-      'Priority support',
+      'Priority support', 'Early access to new features',
     ],
     steps: [
       'Click "Upgrade to Pro" below',
@@ -108,6 +108,7 @@ function CompareModal({ onClose }: { onClose: () => void }) {
     ['Search placement', 'Standard', 'Priority'],
     ['AI account manager', '—', 'Dedicated'],
     ['API access', '—', 'Full'],
+    ['Early feature access', '—', 'Included'],
   ]
   return (
     <div
