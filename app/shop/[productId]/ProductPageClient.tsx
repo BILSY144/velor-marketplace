@@ -81,6 +81,16 @@ export default function ProductPageClient() {
   const [contactSent, setContactSent] = useState(false)
   const [contactError, setContactError] = useState('')
 
+  // Review submission -- 2026-07-16 readiness audit finding: app/api/reviews
+  // (purchase-gated, one-review-per-buyer, Prisma-backed) already existed
+  // and worked, but nothing in the UI ever called it. This wires it up.
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewHoverRating, setReviewHoverRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSubmitted, setReviewSubmitted] = useState(false)
+
   useEffect(() => {
     if (!productId) return
     fetch(`/api/shop/products/${productId}`)
@@ -146,6 +156,45 @@ export default function ProductPageClient() {
     }
   }
 
+
+  async function submitReview() {
+    if (!session) {
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+      return
+    }
+    if (!reviewRating || !product) return
+    setReviewSubmitting(true)
+    setReviewError('')
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, rating: reviewRating, comment: reviewComment.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        // The API itself decides eligibility (purchased? already reviewed?)
+        // -- surface its real reason rather than a generic failure message.
+        setReviewError(data.error || 'Could not submit your review. Please try again.')
+        return
+      }
+      // Re-fetch the product from the source of truth rather than
+      // constructing a fake local review object -- keeps avgRating/count and
+      // the displayed name consistent with what everyone else will see.
+      const refreshed = await fetch(`/api/shop/products/${productId}`)
+      if (refreshed.ok) {
+        const fresh = await refreshed.json()
+        setProduct(fresh)
+      }
+      setReviewSubmitted(true)
+      setReviewRating(0)
+      setReviewComment('')
+    } catch {
+      setReviewError('Could not submit your review. Please try again.')
+    } finally {
+      setReviewSubmitting(false)
+    }
+  }
   // Cart items store the ORIGINAL price, never the discounted one â the
   // automatic discount is recomputed server-side at checkout from the
   // seller's live discount codes, so the buyer is always charged against
@@ -388,25 +437,85 @@ export default function ProductPageClient() {
           )}
         </div>
 
-        {product.reviews.length > 0 && (
+        {(product.reviews.length > 0 || session) && (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '24px' }}>
-              Reviews
-              {(product.avgRating ?? 0) != null && (
-                <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} â</span>
-              )}
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {product.reviews.map(r => (
-                <div key={r.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '14px' }}>{r.user.name}</span>
-                    <span style={{ color: 'var(--accent)', fontSize: '13px' }}>{'â'.repeat(r.rating)}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: '12px' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
-                  </div>
-                  <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
+            {product.reviews.length > 0 && (
+              <>
+                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '24px' }}>
+                  Reviews
+                  {(product.avgRating ?? 0) != null && (
+                    <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} ★</span>
+                  )}
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px' }}>
+                  {product.reviews.map(r => (
+                    <div key={r.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '14px' }}>{r.user.name}</span>
+                        <span style={{ color: 'var(--accent)', fontSize: '13px' }}>{'★'.repeat(r.rating)}</span>
+                        <span style={{ color: 'var(--muted)', fontSize: '12px' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
+                      </div>
+                      <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </>
+            )}
+
+            {/* Write a review -- 2026-07-16 readiness audit: /api/reviews already
+                existed (purchase-gated via order status, one review per buyer)
+                but nothing in the UI ever called it. Shown to any signed-in
+                user; the API itself is the source of truth on eligibility --
+                someone who hasn't bought this product gets an honest 403
+                surfaced below rather than a form that pretends to work. */}
+            <div style={{ borderTop: product.reviews.length > 0 ? '1px solid var(--border)' : 'none', paddingTop: product.reviews.length > 0 ? '24px' : '0' }}>
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '17px', fontWeight: 700, marginBottom: '14px' }}>Write a Review</h3>
+              {!session ? (
+                <p style={{ color: 'var(--muted)', fontSize: '14px', margin: 0 }}>
+                  <Link href={`/auth/sign-in?callbackUrl=/shop/${productId}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Sign in</Link>
+                  {' '}to write a review. Only buyers who have purchased this item can leave one.
+                </p>
+              ) : reviewSubmitted ? (
+                <div style={{ padding: '14px 16px', background: 'rgba(0,230,118,0.08)', border: '1px solid var(--green)', borderRadius: '10px', color: 'var(--green)', fontWeight: 600, fontSize: '14px' }}>
+                  Thanks -- your review has been posted.
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setReviewHoverRating(star)}
+                        onMouseLeave={() => setReviewHoverRating(0)}
+                        aria-label={`Rate ${star} out of 5 stars`}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '26px', lineHeight: 1, color: star <= (reviewHoverRating || reviewRating) ? 'var(--accent)' : 'var(--border)' }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={reviewComment}
+                    onChange={e => setReviewComment(e.target.value)}
+                    placeholder="Share your experience with this item (optional)"
+                    rows={4}
+                    style={{ width: '100%', padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', fontFamily: 'Inter, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '12px' }}
+                  />
+                  {reviewError && (
+                    <p style={{ color: 'var(--red)', fontSize: '13px', margin: '0 0 12px' }}>{reviewError}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={submitReview}
+                    disabled={reviewSubmitting || reviewRating === 0}
+                    style={{ padding: '12px 24px', background: reviewSubmitting || reviewRating === 0 ? 'var(--border)' : 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: reviewSubmitting || reviewRating === 0 ? 'not-allowed' : 'pointer' }}
+                  >
+                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -155,12 +155,25 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
 }
 
 export default function CheckoutPage() {
-  const { items, removeItem: removeCartItem } = useCart()
+  const { items, removeItem: removeCartItem, updateQuantity: updateCartQuantity } = useCart()
   const handleRemoveItem = (productId: string) => {
     removeCartItem(productId)
     // If a Stripe PaymentIntent was already created, its amount is now stale.
     // Invalidate it and send the buyer back to shipping so the total is re-quoted
     // fresh before any payment can be submitted.
+    if (clientSecret || confirmed) {
+      setClientSecret('')
+      setConfirmed(null)
+      setStep('shipping')
+    }
+  }
+  // 2026-07-16 readiness audit finding: lib/cart.ts already exported
+  // updateQuantity but nothing in checkout ever called it -- there was no
+  // way to change an item's quantity after adding it to the cart short of
+  // removing it and re-adding from the product page. Same stale-quote
+  // invalidation as remove above, since a quantity change changes the total.
+  const handleQuantityChange = (lineId: string, delta: number) => {
+    updateCartQuantity(lineId, delta)
     if (clientSecret || confirmed) {
       setClientSecret('')
       setConfirmed(null)
@@ -653,7 +666,39 @@ export default function CheckoutPage() {
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{item.name}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
+                  {creatingIntent ? (
+                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Qty {item.quantity}</div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(item.id || item.productId, -1)}
+                        disabled={item.quantity <= 1}
+                        aria-label={`Decrease quantity of ${item.name}`}
+                        style={{
+                          width: '20px', height: '20px', borderRadius: '4px', border: '1px solid var(--border)',
+                          background: 'var(--bg)', color: 'var(--text)', fontSize: '13px', lineHeight: 1,
+                          cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer', opacity: item.quantity <= 1 ? 0.4 : 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        }}
+                      >
+                        −
+                      </button>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(item.id || item.productId, 1)}
+                        aria-label={`Increase quantity of ${item.name}`}
+                        style={{
+                          width: '20px', height: '20px', borderRadius: '4px', border: '1px solid var(--border)',
+                          background: 'var(--bg)', color: 'var(--text)', fontSize: '13px', lineHeight: 1,
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{confirmed && productSubtotal > 0 ? fmtConfirmed((item.price * item.quantity / productSubtotal) * (confirmed.productSubtotal + confirmed.discountAmount)) : fmtRaw(item.price * item.quantity, itemCurrencies[item.productId] || 'GBP')}</div>
                 {!creatingIntent && (

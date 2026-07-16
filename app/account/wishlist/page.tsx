@@ -21,7 +21,12 @@ interface WishlistProduct {
 }
 
 interface WishlistItem {
-  wishlistItemId: string
+  // 2026-07-16 readiness audit fix: this was named wishlistItemId, but
+  // /api/wishlist's GET response (app/api/wishlist/route.ts) actually
+  // returns the field as `id` -- every card below was rendering with
+  // key={undefined}, which React silently tolerates but which breaks list
+  // reconciliation (duplicate-key warnings, potential stale DOM on reorder).
+  id: string
   addedAt: string
   product: WishlistProduct
 }
@@ -123,7 +128,7 @@ export default function WishlistPage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
             {items.map(item => (
-              <div key={item.wishlistItemId} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div key={item.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <Link href={`/shop/${item.product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <div style={{ aspectRatio: '1', background: '#222', overflow: 'hidden' }}>
                     {item.product.images[0]
