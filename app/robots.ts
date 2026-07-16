@@ -62,6 +62,40 @@ import type { MetadataRoute } from 'next';
 // content purpose for an organic visitor to land on -- it exists purely to
 // catch an auth-flow failure state, the same "reached only via a flow
 // redirect, nothing for a crawler to do here" reasoning as `/auth/reset`.
+//
+// Extended 2026-07-16 (later cycle) by the standing SEO agent: found that
+// `/dashboard/`, `/admin/`, and `/checkout/` -- three of this file's own
+// original rules, present since before any SEO-agent involvement -- were
+// written WITH a trailing slash, unlike every rule added since (`/orders`,
+// `/account`, `/messages`, `/activate`, `/setup-admin`, `/auth/reset`,
+// `/auth/error`), which this file's own 2026-07-14 comment above already
+// documents as deliberately trailing-slash-free "so each rule also blocks
+// its own bare path... not just nested paths." Standard robots.txt matching
+// is prefix-based on the literal string: a rule of `/dashboard/` matches
+// `/dashboard/orders` etc. but does NOT match the bare path `/dashboard`
+// itself, since `/dashboard` (9 chars) cannot have the 10-char string
+// `/dashboard/` as a prefix. Confirmed this is a real, live gap, not a
+// theoretical one: `app/dashboard/page.tsx` (the seller dashboard home) and
+// `app/admin/page.tsx` (the admin home) both exist as real routes at the
+// exact bare paths `/dashboard` and `/admin`, and neither they nor their
+// respective `layout.tsx` files export any metadata (`'use client'`, no
+// `export const metadata`/`generateMetadata` in either layout -- confirmed
+// by grep) -- so unlike e.g. `/pulse` (which carries its own
+// `robots: { index: false, follow: false }` on `app/pulse/layout.tsx`,
+// inherited by every `/pulse/*` subpage), these two bare private pages have
+// *zero* indexing protection today beyond this file's own rule, and that
+// rule's trailing slash means it doesn't actually cover them. Same for
+// `/checkout` (`app/checkout/page.tsx`, the live Stripe Elements payment
+// page) -- also `'use client'`, also no metadata anywhere under
+// `app/checkout/`, also only nominally covered by a trailing-slash rule
+// that in fact only blocks its child `/checkout/confirmation`, not itself.
+// Confirmed via a full `find app -name page.tsx` route dump that no other
+// route in the codebase begins with the literal strings `dashboard`,
+// `admin`, or `checkout`, so dropping the trailing slash on these three
+// (making them prefix-match their own bare path plus every subroute, same
+// as `/orders`) cannot over-block any unrelated page. Fixed by removing the
+// trailing slash from all three, bringing them in line with the convention
+// every rule added since 2026-07-14 already follows.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -70,9 +104,9 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',
-          '/dashboard/',
-          '/admin/',
-          '/checkout/',
+          '/dashboard',
+          '/admin',
+          '/checkout',
           '/orders',
           '/account',
           '/messages',
