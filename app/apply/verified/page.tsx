@@ -29,6 +29,18 @@ export const metadata = {
   },
 };
 
+// Fixed by the standing SEO agent, 2026-07-16 -- the "Questions?" support
+// link at the bottom of this page pointed at
+// customerservice@velorcommerce.co.uk, the separate, unrelated
+// velorcommerce.co.uk dropshipping business's domain (same conflation bug,
+// same fix, as this run's app/press/page.tsx change -- see that file's own
+// comment for the full citation trail). This is a live, indexable page a
+// real applicant lands on right after Stripe Identity verification, so
+// pointing them at the wrong company's inbox is a real defect. Swapped to
+// support@velorcommerce.store, the already-verified live Velor Marketplace
+// support address (see app/contact/page.tsx, app/contact/layout.tsx, and
+// app/layout.tsx's Organization JSON-LD).
+//
 // Where Stripe Identity sends a seller after they finish (or abandon) the
 // hosted document check. See return_url in lib/identity.ts.
 //
@@ -162,8 +174,8 @@ export default function VerificationSubmittedPage() {
 
           <p style={{ color: 'var(--muted)', fontSize: 13, margin: '24px 0 0' }}>
             Questions? Email{' '}
-            <a href="mailto:customerservice@velorcommerce.co.uk" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-              customerservice@velorcommerce.co.uk
+            <a href="mailto:support@velorcommerce.store" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+              support@velorcommerce.store
             </a>
           </p>
         </div>

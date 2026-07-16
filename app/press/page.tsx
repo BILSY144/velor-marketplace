@@ -30,6 +30,27 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 // outreach; William reviews and sends every message himself. That
 // precision is the point: a journalist who asks "so does the AI email
 // people without you seeing it?" gets the same answer this page gives.
+//
+// Fixed by the standing SEO agent, 2026-07-16 -- this page's four mailto
+// links and its "Media contact" body text all pointed journalists at
+// hello@velorcommerce.co.uk, the separate, unrelated velorcommerce.co.uk
+// dropshipping business's domain (see CLAUDE.md's standing instruction to
+// never conflate the two -- the same class of bug a prior SEO-agent run
+// already fixed for title brand suffixes, 2026-07-14). This page (built
+// 2026-07-15, after that prior conflation fix) is Velor Marketplace's own
+// live press kit, so sending a reporter to the wrong company's inbox is a
+// real, live defect, not a stylistic nit. Swapped to
+// support@velorcommerce.store -- the one Velor Marketplace contact address
+// already independently verified live elsewhere in this codebase
+// (app/contact/page.tsx and app/contact/layout.tsx's metadata both state
+// it "reaches [the team]... we reply within one business day", and it is
+// already the Organization.email / Organization.contactPoint.email in
+// app/layout.tsx's own JSON-LD, added by an earlier SEO-agent pass) --
+// not a new, unverified address invented for this fix. Also added
+// descriptive alt text to the two media-kit logo download images below,
+// which had alt="" despite being the actual subject of that section (a
+// press/media-kit page's own logo files are a plausible Google Images
+// target, unlike purely decorative UI chrome elsewhere in the app).
 export const metadata = {
   title: 'Press — Velor',
   description:
@@ -250,18 +271,18 @@ export default function PressPage() {
           </div>
           <div className="pr-kit">
             <a className="pr-kitcard" href="/velor-logo-2026.png" download>
-              <img src="/velor-logo-2026.png" alt="" />
+              <img src="/velor-logo-2026.png" alt="Velor logo — primary wordmark (PNG), as shown in the live site header" />
               <div className="t">Primary logo (PNG)</div>
               <div className="d">The current live wordmark, as shown in the site header.</div>
             </a>
             <a className="pr-kitcard" href="/brand/velor-logo-master.png" download>
-              <img src="/brand/velor-logo-master.png" alt="" />
+              <img src="/brand/velor-logo-master.png" alt="Velor logo — master high-resolution file (PNG) for print or large formats" />
               <div className="t">Master logo file (PNG)</div>
               <div className="d">Higher-resolution source file for print or large formats.</div>
             </a>
-            <a className="pr-kitcard" href="mailto:hello@velorcommerce.co.uk?subject=Media%20kit%20request">
+            <a className="pr-kitcard" href="mailto:support@velorcommerce.store?subject=Media%20kit%20request">
               <div className="t">Need something else?</div>
-              <div className="d">Email hello@velorcommerce.co.uk and we&apos;ll send it over directly.</div>
+              <div className="d">Email support@velorcommerce.store and we&apos;ll send it over directly.</div>
             </a>
           </div>
         </section>
@@ -272,14 +293,14 @@ export default function PressPage() {
               <h2>Media contact</h2>
               <p>
                 William Sinclair, Founder<br />
-                hello@velorcommerce.co.uk<br />
+                support@velorcommerce.store<br />
                 velorcommerce.store
               </p>
               <p style={{ marginTop: 10, fontSize: 12.5 }}>
                 Velor Commerce Ltd (company no. 17268133), registered in England and Wales.
               </p>
             </div>
-            <a className="pr-btn pr-btn-p" href="mailto:hello@velorcommerce.co.uk">Get in touch</a>
+            <a className="pr-btn pr-btn-p" href="mailto:support@velorcommerce.store">Get in touch</a>
           </div>
         </section>
       </div>
