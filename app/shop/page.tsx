@@ -27,9 +27,12 @@ import { countryImages } from '@/lib/countryImagery'
 // so adjacent boxes never repeat the same photo. This is what naturally
 // varies box art from one flag page to the next (Armenia's boxes use
 // Armenia's photos, Japan's use Japan's) without a separate manual mapping.
-// Deliberately NOT full-strength product photography: heavily dimmed +
-// desaturated (opacity .38, grayscale 30%, dark scrim on top) so a box
-// reads as decorative placeholder texture, not an actual listing with a
+// Deliberately NOT full-strength product photography, but William asked
+// for better definition (2026-07-16) than the original near-invisible
+// treatment, so this is a lighter touch: opacity .72, only 8% grayscale, a
+// slight contrast boost, and a scrim that's nearly clear at the top and
+// only darkens toward the bottom where it meets the ribbon/card. A box
+// still reads as decorative placeholder texture, not an actual listing with a
 // name/price. Never implies real inventory — the intro copy, the muted
 // treatment, and the empty dashed card together make clear these are open
 // slots, not listings, per LAW #1.
@@ -40,8 +43,8 @@ const slotsCss = `
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
 .shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:0;width:100%}
 .shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
-.shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.38;filter:grayscale(30%);z-index:0}
-.shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);z-index:1}
+.shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
+.shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
 .shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
 .shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:var(--surface-2);border-top:1px dashed var(--border);border-radius:0;z-index:2}
 `
