@@ -42,7 +42,7 @@ const slotsCss = `
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
 .shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:8px;width:100%}
-.shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
+.shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
 .shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
