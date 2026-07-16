@@ -144,6 +144,9 @@ export default function CountryScreen() {
                     {'£'}{(p.discountedPrice ?? p.price).toFixed(2)}
                     {p.sellerName ? ` · ${p.sellerName}` : ''}
                   </Dim>
+                  {p.sellerFounding ? (
+                    <Text style={s.foundingTag}>{'①'} FOUNDING SELLER</Text>
+                  ) : null}
                   <Pressable style={s.addBtn} onPress={() => add(p)}>
                     <Body style={{ fontFamily: F.display, fontSize: 10, color: '#0b0b0e' }}>ADD TO BASKET</Body>
                   </Pressable>
@@ -166,7 +169,7 @@ export default function CountryScreen() {
         {/* BE THE FIRST — founding spotlight (plate 02), only while nobody sells */}
         {!trading && !products.isLoading ? (
           <View style={s.found}>
-            <Text style={s.foundK}>BE THE FIRST</Text>
+            <Text style={s.foundK}>THE FOUNDING SEAT {'·'} No. 001</Text>
             <Text style={s.foundT}>Open {name}'s{'\n'}channel.</Text>
             <Dim style={{ marginTop: 9, lineHeight: 18 }}>
               Nobody sells from {name} yet. Its first verified seller keeps the founding
@@ -278,12 +281,12 @@ const s = StyleSheet.create({
     marginTop: 30,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,107,0,0.3)',
-    backgroundColor: 'rgba(255,107,0,0.10)',
+    borderColor: 'rgba(185,138,47,0.6)',
+    backgroundColor: 'rgba(93,69,16,0.22)',
     padding: 20,
     overflow: 'hidden',
   },
-  foundK: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: C.accent },
+  foundK: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: '#E9C46A' },
   foundT: { fontFamily: F.serifLight, fontSize: 29, lineHeight: 33, color: C.text, marginTop: 11 },
   passtie: {
     flexDirection: 'row',
@@ -321,6 +324,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: C.text,
   },
+  foundingTag: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 1.2, color: '#E9C46A', marginTop: 3 },
   prodCard: { width: 150 },
   prodImg: { width: 150, height: 150, borderRadius: 16 },
   addBtn: {
