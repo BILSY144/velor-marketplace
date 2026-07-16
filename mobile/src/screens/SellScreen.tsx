@@ -10,7 +10,7 @@ import { Chrome } from '../components/Chrome'
 
 const PERKS: [string, string][] = [
   ['Founding badge, permanent', 'On your store and every listing, forever.'],
-  ['The full Pro tier, free for life', 'Unlimited listings, Go Live, your AI account manager — £49/mo at £0 while your subscription runs. 4% commission.'],
+  ['The full Pro tier, free for life', 'Unlimited listings, Go Live, your AI account manager, full API access, free custom storefront, priority search, advanced analytics and early feature access — £49/mo at £0 while your subscription runs. 4% commission.'],
   ['The homepage showreel slot', 'Your film, on the front page of the world’s shopping channel.'],
   ['Your country’s page, alone', 'You open the channel and are credited as the seller who opened it.'],
 ]
