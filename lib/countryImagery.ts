@@ -84,7 +84,7 @@ const RAW: Record<string, { n: string; i: number; s: string | null }[]> = {
   HK: [{n:'Neon-sign craft',i:33647477,s:null}, {n:'Milk-tea culture',i:27779483,s:null}, {n:'Dim sum steamers',i:28235503,s:null}],
   SG: [{n:'Tailoring',i:6764997,s:null}, {n:'Orchid & botanical scents',i:6427699,s:null}, {n:'Peranakan ceramics & tiles',i:32862829,s:null}, {n:'Batik & sarong craft',i:37854210,s:null}],
   MO: [{n:'Hand-painted azulejo motifs',i:34930570,s:null}, {n:'Jerky (bak kwa)',i:8250275,s:null}, {n:'Almond cookies',i:36086682,s:null}, {n:'Portuguese-style egg tarts',i:9633530,s:null}, {n:'Pastelaria pantry',i:31449850,s:null}],
-  BN: [{n:'Woven baskets',i:29193598,s:null}, {n:'Kris daggers',i:28217945,s:null}, {n:'Woodcraft',i:15772950,s:null}, {n:'Songket brocade',i:35336191,s:null}, {n:'Silverwork & brass',i:33873052,s:null}],
+  BN: [{n:'Woven baskets',i:29193598,s:null}, {n:'Woodcraft',i:15772950,s:null}, {n:'Songket brocade',i:35336191,s:null}, {n:'Silverwork & brass',i:33873052,s:null}],
   BT: [{n:'Handwoven textiles (kira)',i:36163753,s:null}, {n:'Silver jewellery',i:11385489,s:null}, {n:'Wood carving',i:37747847,s:null}, {n:'Thangka painting',i:11429488,s:null}],
   MV: [{n:'Lacquer boxes (liye laa jehun)',i:34217384,s:null}, {n:'Coir rope craft',i:33053216,s:null}, {n:'Woven mats (thundu kunaa)',i:30688221,s:null}],
   TL: [{n:'Tais handwoven textiles',i:34343819,s:null}, {n:'Woven baskets',i:29193598,s:null}, {n:'Wood carving',i:36076202,s:null}, {n:'Single-origin coffee',i:29269646,s:null}],
