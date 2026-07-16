@@ -281,7 +281,7 @@ function ShopContent() {
                   key={i}
                   href="/shop/preview"
                 >
-                  {img && <img className="shslots-img" src={img.url} alt="" loading="lazy" decoding="async" />}
+                  {img && <img className="shslots-img" src={img.url} alt={img.name} loading="lazy" decoding="async" />}
                   <div className="shslots-scrim" />
                   <div className="shslots-ribbon">Your goods here</div>
                   <div className="shslots-card">
