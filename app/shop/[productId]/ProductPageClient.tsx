@@ -216,7 +216,7 @@ export default function ProductPageClient() {
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ width: '100%', maxWidth: '420px', maxHeight: '420px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative', margin: '0 auto' }}>
+          <div style={{ width: '100%', maxWidth: '420px', maxHeight: '420px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}>
             <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
