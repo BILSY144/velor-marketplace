@@ -426,7 +426,7 @@ export default function ApplyPage() {
             <p className="ap-legal">
               By submitting this application you agree to the{' '}
               <a href="/legal/seller-agreement">Seller Agreement</a>{' '}and the{' '}
-              <a href="/legal/seller-rules">Seller Rules and Product Compliance Policy</a>.
+              <a href="/legal/seller-rules">Seller Rules and Product Compliance Policy</a>.</p><p className="ap-legal">Prefer to apply by message? <a href="https://wa.me/447404014621?text=Hello%20Velor%2C%20I%20would%20like%20to%20apply%20to%20sell.%0AMy%20name%3A%0AMy%20country%3A%0AWhat%20I%20make%3A">Chat with us on WhatsApp</a> &mdash; write in any language.
             </p>
           </div>
         </form>
