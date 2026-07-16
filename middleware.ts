@@ -55,7 +55,7 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
     // route handler (needs to work from a plain browser URL, so it can't rely
     // on a custom Authorization header). Exempt it from the generic
     // ADMIN_SECRET/header check below.
-    if (pathname === '/api/admin/set-tier') {
+    if (pathname === '/api/admin/set-tier' || pathname === '/api/admin/products/auto-moderate') {
       return NextResponse.next()
     }
     const secret = process.env.ADMIN_SECRET
