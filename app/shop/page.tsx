@@ -84,10 +84,10 @@ const slotsCss = `
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
 .shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
-.shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:#6f6f6f;border-top:1px dashed #454545;border-radius:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 8px;text-align:center}
-.shslots-card-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:13px;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.shslots-card-price{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:700;font-size:16.5px;color:var(--text)}
-.shslots-card-seller{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:11px;color:var(--text);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shslots-card{position:absolute;left:0;right:0;bottom:0;height:auto;min-height:0.6in;background:#6f6f6f;border-top:1px dashed #454545;border-radius:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 8px;text-align:center}
+.shslots-card-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:13px;line-height:1.15;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shslots-card-price{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:700;font-size:16.5px;line-height:1.15;color:var(--text)}
+.shslots-card-seller{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:11px;line-height:1.15;color:var(--text);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 `
 
 interface Product {
