@@ -313,7 +313,7 @@ export default function ApplyPage() {
               <div className="ap-bignum">02</div>
               <div className="ap-steplbl">Your store</div>
               <h2 className="ap-h2">What do you make or sell?</h2>
-              <p className="ap-sub">Tell us in your own words &mdash; what you sell, where it comes from, and what makes it worth crossing a border for.</p>
+              <p className="ap-sub">Tell us in your own words &mdash; what you sell, where it comes from, and what makes it worth crossing a border for. Write in your own language &mdash; English is not required &mdash; and cooperatives or artisan groups are welcome to apply as one store. Escriba en su idioma &middot; Écrivez dans votre langue &middot; اكتب بلغتك &middot; अपनी भाषा में लिखें &middot; Tulis dalam bahasa Anda &middot; 用您的语言填写 &middot; Andika kwa lugha yako</p>
 
               <div className="ap-field">
                 <label className="ap-label">Store description</label>
