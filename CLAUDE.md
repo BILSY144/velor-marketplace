@@ -18,6 +18,102 @@ This law outranks every other instruction in this file, including deadlines.
 
 ---
 
+## OUTSTANDING -- MESSAGE SELLER / BUYER-SELLER MESSAGING: RULES NEEDED (raised 2026-07-16, still open)
+
+William asked to lay down the rules for buyer-seller messaging before this
+feature is touched again ("remind me to come back to message seller topic
+as we need to lay down rules for this function"). **Standing instruction for
+every session:** if asked to connect buttons, fix bugs, or do a full site
+wiring pass, do NOT fix or reconnect the Contact Seller / Message Seller
+path until William has explicitly given the rules below. If William starts a
+session and doesn't bring this up himself, re-raise it -- don't let it go
+quiet just because it isn't blocking anything else.
+
+**Current state, verified live in code 2026-07-16 (not gated, actually
+broken end to end -- no buyer can send a first message today, by two
+independent bugs):**
+1. `app/shop/[productId]/ProductPageClient.tsx`'s "Contact Seller" button
+   sends `sellerId` (a `Seller.id`), but `app/api/messages/route.ts` expects
+   `receiverId` (a `User.id`) -- always returns 400.
+2. The buyer inbox at `/messages` expects the messages API to return an
+   array; `GET /api/messages` actually returns
+   `{ currentUserId, conversations }`, an object -- `Array.isArray(data)` is
+   always false, so no thread ever renders even if one existed.
+
+There is no rate limiting (`/api/messages` is not in `middleware.ts`'s
+route matcher), no profanity/abuse filter, no contact-info detection, and no
+escrow-circumvention prevention anywhere in the messaging code path --
+confirmed absent by an exhaustive search, not just unfound. A second,
+better-validated route (`app/api/dashboard/messages/route.ts`, 2000-char
+cap + self-message block) exists but is dead code -- nothing in the app
+calls it.
+
+**Why this is not a "just fix the two bugs" task:** fixing those two bugs in
+isolation would instantly turn on a fully unmoderated, un-rate-limited
+message channel between any two strangers on the site, with zero protection
+against sellers/buyers exchanging contact details to route payment around
+Velor's escrow (the core of Velor's trust model), spam, or abuse.
+
+**Rules to get from William before touching this again:**
+- Should messages be scanned/blocked for emails, phone numbers, or
+  off-platform payment requests (the obvious first-order defense against
+  escrow circumvention)?
+- Rate limits per user/per day.
+- Profanity/abuse filtering -- automatic, user-reported, or both?
+- Who can initiate a thread: buyer only, or can a seller message a buyer
+  first (marketing/spam risk)?
+- Does a thread require a real order/purchase first, or can anyone message
+  any seller pre-purchase (e.g. product questions)?
+- Reporting/blocking mechanism for abusive messages.
+- Any response-time expectation communicated to buyers?
+
+**Once rules exist:** fix the two bugs above, decide whether to keep
+`app/api/messages/route.ts` or migrate to the better-validated
+`app/api/dashboard/messages/route.ts`, and build the agreed
+moderation/rate-limiting layer BEFORE reconnecting the buyer-facing button
+-- not after.
+
+---
+
+## OUTSTANDING -- SELLER USERNAME AT SIGNUP: BUYERS SHOULD ONLY EVER SEE THAT (raised 2026-07-16, not yet scoped or built)
+
+William's instruction, to pick up next session: **every seller must create a
+username at signup, and that username -- only the username -- is what
+buyers see on the seller's file/profile.** Read as: buyers should never be
+shown the seller's real personal name anywhere on the buyer-facing site.
+
+**What exists today (quick-checked this session, not a full audit):**
+- The application form (`app/apply/page.tsx`) collects `businessName` and
+  `contactName` -- there is no distinct "username" field or concept
+  anywhere in the signup flow.
+- `Seller.storeName` (`prisma/schema.prisma:102`) is the field actually
+  shown to buyers today (storefront, product cards, dashboard "Store Name"
+  setting in `app/dashboard/settings/page.tsx`). It is editable later in
+  Settings, but not framed as a required "pick your public username" step
+  at signup, and nothing currently stops a sole-trader seller from putting
+  their real name into `businessName` -> `storeName`, which would then be
+  shown to buyers as-is.
+- Reviews on `app/shop/[productId]/ProductPageClient.tsx:454` show
+  `r.user.name` -- that is the *reviewer's* (buyer's) name on their own
+  review, a different and separate concern from seller identity, but worth
+  keeping in mind if William's "buyers should only see a username" intent
+  turns out to extend to how buyers themselves are displayed too. Ask
+  before assuming that's in scope -- he only mentioned sellers.
+
+**Next session, before building anything:** confirm with William whether
+this means (a) formalize `storeName` as a required, validated "username"
+step added to the signup/application flow, with real name collected
+separately for KYC/Stripe Identity/payouts only and never surfaced to
+buyers, or (b) something more -- e.g. uniqueness rules, allowed
+characters, can it be changed later, does it need to be distinct from the
+already-existing storefront theme's display of `storeName`. Then audit
+every buyer-facing surface (storefront, product cards/pages, order
+confirmation emails sent to buyers, and the still-broken messaging feature
+above once it's rebuilt) to confirm none of them leak `contactName` /
+`businessName` / the underlying `User.name` to a buyer.
+
+---
+
 ## SCOPE â WHAT THIS FILE COVERS
 
 This file is about **Velor Marketplace** only.
@@ -332,6 +428,12 @@ Written plainly, per LAW #1.
    CJ Dropshipping has NOTHING to do with this marketplace -- confirmed by a
    repo-wide code search showing zero remaining `cj`-prefixed identifiers or
    `lib/cj` imports outside this file's own history notes.
+9. **Buyer-seller messaging is broken end to end and deliberately not
+   fixed.** See the OUTSTANDING section at the very top of this file for the
+   full detail and the rules that must come from William first. Short
+   version: two independent bugs mean no buyer can currently send a message
+   to a seller through any UI path, and there is zero moderation/rate
+   limiting in the code path underneath, so this is not a safe "quick fix."
 
 ---
 
@@ -1682,3 +1784,132 @@ William's directive: "get the word out... global reach... recruit sellers... no 
 3. When real per-country product data exists, the empty `.ocp-slot-card` divs are where it should render (currently just a dashed empty placeholder) -- the natural follow-up is wiring the first N real products (from the same `/api/shop/products?origin=CODE` call already used lower on the page) into the first N slot-cards, so slots "fill in" live as sellers list, exactly as the intro copy promises.
 4. The still-open gallery-level-duplicate item above (point 3) is separate and unrelated to the 200-box feature -- don't conflate the two if resuming either one.
 5. Reminder for any session working in this file concurrently: the autonomous SEO agent commits to this same repo/branch throughout the day -- always `git fetch origin main` and rebase immediately before pushing, never assume `origin/main` is where you left it.
+
+## 2026-07-16 checkpoint (continued) -- Full site wiring pass, real live bugs fixed, Enterprise tier fully retired, mojibake email corruption fixed
+
+William's directive this session: "no stone unturned" -- connect every
+button/flow site-wide, defer only Message Seller until rules exist (see the
+OUTSTANDING section at the top of this file). Commits below are all on
+`main`, confirmed Ready/Production on Vercel via the deployments page
+(`prisma generate` is still blocked in this sandbox -- verified with
+`esbuild` syntax checks per file, same limitation as every prior session).
+
+**Readiness audit + payment/checkout trust (commits 52b601a, 97565b8):**
+added the missing `/auth/error` page; fixed broken links and silent admin
+401s; the shipping/duties calculation on `app/api/stripe/payment-intent`
+no longer trusts client-supplied shipping amounts -- it now re-fetches the
+authoritative rate from Shippo (`lib/shippo.ts getRate()`) server-side and
+recomputes duties via `lib/duty-rates`; the order-confirmation page no
+longer fabricates an order number (`'VLR-' + Date.now()`) and instead waits
+for the real one from `/api/orders`; fixed a discount-code
+double-increment bug on Stripe webhook retries.
+
+**Connect remaining buttons/flows (commits 00ff8ad, f131a28):** cart
+quantity +/- controls on the checkout Order Summary (with stale-intent
+invalidation), a wishlist key bug (`wishlistItemId` vs the API's actual
+`id` field), and a real review-submission UI on the product page. Verified
+LIVE via browser, not just deployed -- William caught that my earlier "all
+connected" claim was wrong ("buy now buttons still dont work, add to cart
+dont work review click dont work"); root cause was that zero real product
+listings existed, so the only reachable "product page" was the
+intentionally-disabled `/shop/preview` mockup. Changed that page's four
+action buttons from silently-disabled to an honest inline notice
+explaining it's a preview, not a real listing, linking to `/sell`.
+
+**Live bug found and fixed while testing (not something William
+reported):** `app/account/page.tsx` order history was reading a
+non-existent `total` field (the real Prisma field is `subtotal`), showing
+"£NaN" on every real order in a signed-in buyer's history.
+
+**Enterprise seller tier fully retired (commit 655a97c) --** William:
+"imsigned into tester account, why does my dashboard say enterprise when
+we removed that tier completly." Root cause was systemic, not one label:
+several seller-facing API routes (`seller/me`, `seller/storefront`,
+`dashboard/support`, `dashboard/live`, `dashboard/analytics`) were
+returning the raw unnormalized `seller.tier` straight from the database,
+and about ten dashboard subpages each had a boolean
+`isEnterprise = tier === 'PRO' || tier === 'ENTERPRISE'` that was
+identical to `isPro` post-retirement, which in every ternary/JSX-order
+comparison against a separate `isPro` check meant "Enterprise" always won
+and "Pro" was permanently dead code -- the same copy/paste-bug shape as an
+`isPro`/`isEnterprise` mixup already fixed earlier in
+`dashboard/analytics/page.tsx` this session. That surfaced as real bugs:
+Settings showed "★ Enterprise" as the plan name for every Pro seller, and
+Go Live read "Enterprise - Live Shopping" even though Live Shopping is
+explicitly open to every tier. Added `lib/tier.ts` (`normalizeSellerTier`)
+as the one place that collapses any legacy `'ENTERPRISE'` value to
+`'PRO'`, applied at every API boundary above, removed the ENTERPRISE
+entries from both client-side theme tables (`lib/dashboard-theme.tsx`,
+`app/dashboard/layout.tsx` -- now real two-tier Starter/Pro types), deduped
+the `isPro`/`isEnterprise` booleans across all ten dashboard pages, and
+fixed two double-stacked accent-bar render bugs (Overview and Storefront
+pages were rendering a gold bar and a blue bar on top of each other for
+every Pro seller). Verified live in the browser afterward, signed in as
+the test seller: sidebar reads "PRO PLAN," Settings reads "★ Pro," Go Live
+reads "Live Shopping," API Access reads "PRO."
+
+**Mojibake email corruption fixed (commit af8c1b2) --** William forwarded
+the actual seller-approval email he received, which read "Great news
+Ã¢Â€Â"" instead of "Great news --". This repo has picked up double- and
+even triple-encoded UTF-8 mojibake over time in several places (bytes
+re-interpreted as Latin-1 and re-encoded, sometimes twice); each instance
+was fixed by reading the exact raw bytes and reversing the specific number
+of encoding passes, not a blanket text replace (a plain string-replace of
+"--" would not have matched the corrupted bytes). Fixed: the seller-
+approval email body (the reported bug); the daily briefing email's subject
+line, a section header, and a flagged-issue string (all sent to
+william); product-page star ratings (were rendering a garbled character
+instead of star glyphs); two "discount applied automatically" notes; the
+admin "Invalid secret" error message; and a real functional bug, not just
+cosmetic, in `app/api/cron/scout-sellers/route.ts` -- title-parsing logic
+was doing `.split('a-circumflex')` instead of `.split('en dash')`, so
+scraped candidate seller names likely were not being cleaned up as
+intended. Left untouched: mojibake em dashes that exist only inside code
+comments in this same cron file and a couple of `lib/` files -- not shipped
+to any user or email, no functional impact, lower priority than the
+user-facing instances above. **If new "Ã¢..." garbage appears anywhere
+else, this is the signature to grep for** -- it has now shown up in five
+unrelated files, so something upstream in the workflow may still be
+introducing it.
+
+**Still open, explicitly deferred, not touched this session:**
+1. Message Seller / buyer-seller messaging rules -- see the OUTSTANDING
+   section at the top of this file.
+2. Seller username-at-signup requirement -- see the OUTSTANDING section at
+   the top of this file (raised by William at the very end of this
+   session, not yet scoped).
+3. **The original "click through the whole buyer journey" verification
+   task is still not done.** William approved "create one real test
+   listing" as the plan (chosen over alternatives) specifically so the
+   Add to Cart -> Buy Now -> checkout -> review flow could be proven working
+   end to end with screenshots, not just claimed working from code
+   inspection -- this is the same lesson from the "buy now buttons still
+   dont work" correction above, applied proactively this time instead of
+   reactively. William is signed into the pre-existing "Test Storefront
+   Preview" seller account (already approved this session via the admin
+   panel) -- next session should: sign in as that seller, list one real
+   product through the seller dashboard (now unblocked -- Products page
+   Enterprise-tier bugs above are fixed), then as a buyer click through
+   Add to Cart, Buy Now, checkout with a real Stripe test card, and the new
+   review-submission UI, taking screenshots at each step. Do not claim any
+   step works without that live proof, per the pattern above.
+
+**Suggested next steps, in order:**
+1. Finish the test-listing + full buyer-journey verification (item 3
+   above) -- this is the direct continuation of what William asked for
+   before this session's detours into the Enterprise-tier and mojibake
+   bugs, and it is the best remaining check that checkout/payments/reviews
+   genuinely work for a real seller+buyer, not just in isolated code
+   review.
+2. When William is back and ready: walk him through the Message Seller
+   question list in the OUTSTANDING section and get explicit answers
+   before writing any code for it.
+3. Scope the seller-username requirement with William (also in
+   OUTSTANDING) -- likely a small, well-contained change (a required field
+   in `app/apply/page.tsx` plus confirming `storeName` is truly the only
+   thing ever shown to buyers) but needs his decision on the open questions
+   before starting.
+4. Given mojibake has now appeared in five unrelated files across multiple
+   sessions, worth a five-minute repo-wide grep for the `Ã` signature next
+   time anyone is in this file for an unrelated reason, purely as a cheap
+   periodic check -- it costs nothing to look and it keeps recurring.
