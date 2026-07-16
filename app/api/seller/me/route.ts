@@ -9,9 +9,9 @@ export async function GET() {
 
   const seller = await prisma.seller.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, approved: true, tier: true },
+    select: { id: true, approved: true, tier: true, foundingBadge: true },
   })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
 
-  return NextResponse.json({ id: seller.id, approved: seller.approved, tier: normalizeSellerTier(seller.tier) })
+  return NextResponse.json({ id: seller.id, approved: seller.approved, tier: normalizeSellerTier(seller.tier), foundingBadge: seller.foundingBadge ?? false })
 }
