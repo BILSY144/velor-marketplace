@@ -37,7 +37,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function DashboardOverview() {
-  const { tier, theme } = useSellerTier();
+  const { tier, theme, founding } = useSellerTier();
   // Only two tiers exist now (Enterprise retired 2026-07-15, collapsed into
   // Pro everywhere upstream) — isPro/isElevated used to be two separate
   // checks (isPro strictly PRO, isElevated PRO-or-ENTERPRISE) but since
@@ -75,7 +75,7 @@ export default function DashboardOverview() {
               }}>
                 Overview
               </h1>
-              <PlanBadge tier={tier} />
+              <PlanBadge tier={tier} founding={founding} />
             </div>
             <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
               {isPro
