@@ -79,15 +79,7 @@ const slotsCss = `
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
-.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:8px;width:100%}
-.shslots-box{display:block;width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-decoration:none;color:inherit;cursor:pointer}
-.shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
-.shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
-.shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
-.shslots-card{position:absolute;left:0;right:0;bottom:0;height:auto;min-height:0.6in;background:#6f6f6f;border-top:1px dashed #454545;border-radius:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 8px;text-align:center}
-.shslots-card-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:13px;line-height:1.15;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.shslots-card-price{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:700;font-size:16.5px;line-height:1.15;color:var(--text)}
-.shslots-card-seller{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:11px;line-height:1.15;color:var(--text);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;max-width:1400px;margin:0 auto;padding:0 40px 36px}
 `
 
 interface Product {
@@ -105,6 +97,7 @@ interface Product {
   discountedPrice: number | null
   percentOff: number | null
   isHandmade: boolean
+  sellerFounding?: boolean
 }
 
 // The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
@@ -206,6 +199,101 @@ function ShopContent() {
 
   const sym = (c: string) => c === 'GBP' ? '£' : c + ' '
 
+  const renderProductCard = (p: Product) => {
+              const onSale = p.discountedPrice !== null && p.discountedPrice < p.price
+              return (
+              <div key={p.id} style={{ position: 'relative' }}>
+                <Link href={`/shop/${p.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                  <div style={{ background: 'var(--surface)', border: onSale ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                    <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
+                      {p.images[0]
+                        ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: p.stock <= 0 ? 0.45 : 1 }} />
+                        : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '13px' }}>No image</div>
+                      }
+                      {onSale && (
+                        <div style={{ position: 'absolute', top: 10, left: 10, background: 'var(--accent)', color: '#000', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '4px', letterSpacing: '0.3px' }}>
+                          {p.percentOff}% OFF
+                        </div>
+                      )}
+                      {p.isHandmade && (
+                        <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'var(--surface)', color: 'var(--text)', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.3px', border: '1px solid var(--accent)' }}>
+                          HANDMADE
+                        </div>
+                      )}
+                      {p.stock <= 0 && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ background: '#000', color: '#fff', fontSize: '13px', fontWeight: 800, padding: '6px 18px', borderRadius: '4px', letterSpacing: '1.5px', border: '1px solid #fff' }}>
+                            SOLD OUT
+                          </span>
+                        </div>
+                      )}
+                      {p.stock > 0 && p.stock < 5 && (
+                        <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
+                          ONLY {p.stock} LEFT
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '14px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                      {(p.avgRating ?? 0) !== null && (
+                        <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
+                          Rating: {'★'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
+                          <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
+                          {onSale ? (
+                            <>
+                              <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--accent)' }}>
+                                {symbol}{convert(p.discountedPrice as number, p.currency).toFixed(2)}
+                              </span>
+                              <span style={{ fontSize: '13px', color: 'var(--muted)', textDecoration: 'line-through' }}>
+                                {symbol}{convert(p.price, p.currency).toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
+                          )}
+                        </span>
+                        <span title={p.sellerFounding ? 'Founding Seller' : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: p.sellerFounding ? '#E9C46A' : 'var(--muted)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerFounding && (<svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" style={{ flexShrink: 0 }}><circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" /><text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text></svg>)}{p.sellerName}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                <button
+                  onClick={e => toggleWishlist(e, p.id)}
+                  disabled={wishlistPending === p.id}
+                  title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: onSale ? undefined : '10px',
+                    right: onSale ? '10px' : undefined,
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: 'rgba(13,13,13,0.78)',
+                    border: 'none',
+                    cursor: wishlistPending === p.id ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '17px',
+                    color: wishlistIds.has(p.id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
+                    backdropFilter: 'blur(4px)',
+                    transition: 'color 0.15s',
+                    zIndex: 1,
+                    lineHeight: 1,
+                  }}
+                >
+                  {wishlistIds.has(p.id) ? '♥' : '♡'}
+                </button>
+              </div>
+              )
+            }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
       {originCountry && <style dangerouslySetInnerHTML={{ __html: slotsCss }} />}
@@ -265,29 +353,61 @@ function ShopContent() {
       {originCountry && (
         <div className="shslots">
           <div className="shslots-head">
-            <h2>200 seats open for {originCountry.name} goods</h2>
+            <h2>{products.length > 0 ? String(products.length) + ' of 200 seats filled for ' + originCountry.name + ' goods' : '200 seats open for ' + originCountry.name + ' goods'}</h2>
             <p>
-              Every box below is an open goods slot, not a listing — nothing is for sale here yet.
-              The moment a verified seller from {originCountry.name} lists their goods, one box fills in
-              with its photo, name, and price.
+              {products.length > 0
+                ? 'The filled boxes are real listings from verified ' + originCountry.name + ' sellers. Every dashed box is still an open seat — the moment another verified seller lists, it fills in with their photo, name, and price.'
+                : 'Every box below is an open goods slot, not a listing — nothing is for sale here yet. The gold box is the founding seat. The moment a verified seller from ' + originCountry.name + ' lists their goods, one box fills in with its photo, name, and price.'}
             </p>
           </div>
           <div className="shslots-grid">
-            {Array.from({ length: 200 }).map((_, i) => {
+            {products.map(renderProductCard)}
+            {products.length === 0 && (
+              <Link key="founding-seat" href="/apply" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                <div style={{ background: 'var(--surface)', border: '1px dashed #B98A2F', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                  <div style={{ aspectRatio: '1', background: 'linear-gradient(160deg, #241a08, #120d04)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="58%" height="58%" viewBox="0 0 200 200" aria-hidden="true">
+                      <circle cx="100" cy="100" r="96" fill="none" stroke="#E9C46A" strokeWidth="2.5" />
+                      <circle cx="100" cy="100" r="88" fill="none" stroke="#E9C46A" strokeWidth="1" opacity="0.6" />
+                      <g stroke="#E9C46A" strokeWidth="2" fill="none" strokeLinecap="round" transform="translate(-9,0)">
+                        <path d="M52 128 q-10 -22 2 -44" /><path d="M54 124 q-8 -4 -14 -1 q4 -8 14 -6" /><path d="M52 108 q-8 -4 -14 -1 q4 -8 14 -6" /><path d="M52 92 q-7 -5 -13 -3 q3 -8 13 -5" />
+                      </g>
+                      <g stroke="#E9C46A" strokeWidth="2" fill="none" strokeLinecap="round" transform="translate(9,0)">
+                        <path d="M148 128 q10 -22 -2 -44" /><path d="M146 124 q8 -4 14 -1 q-4 -8 -14 -6" /><path d="M148 108 q8 -4 14 -1 q-4 -8 -14 -6" /><path d="M148 92 q7 -5 13 -3 q-3 -8 -13 -5" />
+                      </g>
+                      <text x="100" y="90" textAnchor="middle" fontSize="12" letterSpacing="2.5" fill="#E9C46A" fontWeight="600">VELOR</text>
+                      <text x="100" y="119" textAnchor="middle" fontSize="26" fontWeight="800" letterSpacing="1" fill="#E9C46A">No. 001</text>
+                      <text x="100" y="138" textAnchor="middle" fontSize="9.5" letterSpacing="2.6" fill="#E9C46A" opacity="0.85">EST. 2026</text>
+                    </svg>
+                  </div>
+                  <div style={{ padding: '14px' }}>
+                    <div style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>The founding seat</div>
+                    <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px' }}>The first {originCountry.name} listing goes here</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: '#E9C46A' }}>Pro free for life</span>
+                      <span style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>No. 001</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )}
+            {Array.from({ length: Math.max(0, 200 - products.length - (products.length === 0 ? 1 : 0)) }).map((_, i) => {
               const img = slotImages.length > 0 ? slotImages[i % slotImages.length] : null
               return (
-                <Link
-                  className="shslots-box"
-                  key={i}
-                  href="/shop/preview"
-                >
-                  {img && <img className="shslots-img" src={img.url} alt={img.name} loading="lazy" decoding="async" />}
-                  <div className="shslots-scrim" />
-                  <div className="shslots-ribbon">Your goods here</div>
-                  <div className="shslots-card">
-                    <span className="shslots-card-name">Goods name</span>
-                    <span className="shslots-card-price">{symbol}0.00</span>
-                    <span className="shslots-card-seller">Seller name</span>
+                <Link key={'seat-' + i} href="/shop/preview" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                  <div style={{ background: 'var(--surface)', border: '1px dashed var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                    <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
+                      {img && <img src={img.url} alt={img.name} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45, filter: 'grayscale(20%)' }} />}
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', width: '150%', textAlign: 'center', transform: 'translate(-50%,-50%) rotate(-45deg)', background: 'var(--accent)', color: '#160a00', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.3, padding: '6px 0', borderTop: '1.5px solid #160a00', borderBottom: '1.5px solid #160a00', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Your goods here</div>
+                    </div>
+                    <div style={{ padding: '14px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Your craft</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', color: 'var(--muted)' }}>Goods name</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--muted)' }}>{symbol}0.00</span>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Seller name</span>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               )
@@ -296,7 +416,7 @@ function ShopContent() {
         </div>
       )}
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 40px' }}>
+      {!originCountry && (<div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 40px' }}>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
             {Array.from({ length: 8 }).map((_, i) => (
@@ -340,100 +460,7 @@ function ShopContent() {
           )
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-            {products.map(p => {
-              const onSale = p.discountedPrice !== null && p.discountedPrice < p.price
-              return (
-              <div key={p.id} style={{ position: 'relative' }}>
-                <Link href={`/shop/${p.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                  <div style={{ background: 'var(--surface)', border: onSale ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
-                    <div style={{ aspectRatio: '1', background: '#222', position: 'relative', overflow: 'hidden' }}>
-                      {p.images[0]
-                        ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: p.stock <= 0 ? 0.45 : 1 }} />
-                        : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '13px' }}>No image</div>
-                      }
-                      {onSale && (
-                        <div style={{ position: 'absolute', top: 10, left: 10, background: 'var(--accent)', color: '#000', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '4px', letterSpacing: '0.3px' }}>
-                          {p.percentOff}% OFF
-                        </div>
-                      )}
-                      {p.isHandmade && (
-                        <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'var(--surface)', color: 'var(--text)', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.3px', border: '1px solid var(--accent)' }}>
-                          HANDMADE
-                        </div>
-                      )}
-                      {p.stock <= 0 && (
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ background: '#000', color: '#fff', fontSize: '13px', fontWeight: 800, padding: '6px 18px', borderRadius: '4px', letterSpacing: '1.5px', border: '1px solid #fff' }}>
-                            SOLD OUT
-                          </span>
-                        </div>
-                      )}
-                      {p.stock > 0 && p.stock < 5 && (
-                        <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
-                          ONLY {p.stock} LEFT
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding: '14px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
-                      {(p.avgRating ?? 0) !== null && (
-                        <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
-                          Rating: {'★'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
-                          <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
-                          {onSale ? (
-                            <>
-                              <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--accent)' }}>
-                                {symbol}{convert(p.discountedPrice as number, p.currency).toFixed(2)}
-                              </span>
-                              <span style={{ fontSize: '13px', color: 'var(--muted)', textDecoration: 'line-through' }}>
-                                {symbol}{convert(p.price, p.currency).toFixed(2)}
-                              </span>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
-                          )}
-                        </span>
-                        <span style={{ fontSize: '11px', color: 'var(--muted)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-                <button
-                  onClick={e => toggleWishlist(e, p.id)}
-                  disabled={wishlistPending === p.id}
-                  title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: onSale ? undefined : '10px',
-                    right: onSale ? '10px' : undefined,
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    background: 'rgba(13,13,13,0.78)',
-                    border: 'none',
-                    cursor: wishlistPending === p.id ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '17px',
-                    color: wishlistIds.has(p.id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
-                    backdropFilter: 'blur(4px)',
-                    transition: 'color 0.15s',
-                    zIndex: 1,
-                    lineHeight: 1,
-                  }}
-                >
-                  {wishlistIds.has(p.id) ? '♥' : '♡'}
-                </button>
-              </div>
-              )
-            })}
+            {products.map(renderProductCard)}
           </div>
         )}
 
@@ -458,7 +485,7 @@ function ShopContent() {
             )}
           </div>
         )}
-      </div>
+      </div>)}
     </div>
   )
 }
