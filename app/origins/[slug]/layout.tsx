@@ -60,6 +60,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     hints.length > 0
       ? `Shop authentic products from ${country.name} on Velor — known for ${hints.slice(0, 4).join(', ')}. Every listing carries its maker and its origin.`
       : `Shop authentic products from ${country.name} on Velor, the global marketplace for culture and heritage. Every listing carries its maker and its origin.`
+  // Per-country share image (opengraph-image.tsx, added by the standing SEO
+  // agent 2026-07-16, same directory as this layout) -- replaces the
+  // generic sitewide homepage card every /origins/[slug] page previously
+  // shared for openGraph/twitter, using only the same real country name +
+  // cultureHints data already used above, nothing new authored.
+  const ogImageUrl = `${url}/opengraph-image`
 
   return {
     title,
@@ -72,13 +78,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Velor',
       locale: 'en_GB',
       type: 'website',
-      images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${country.name} — Shop by Origin, Velor` }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://velorcommerce.store/opengraph-image'],
+      images: [ogImageUrl],
     },
   }
 }
