@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCronSecret } from '@/lib/cronAuth'
 
 const FORBIDDEN_PATTERNS = [
   /weapon|gun|knife|blade|explosive|bomb/i,
@@ -85,11 +86,9 @@ function moderateProduct(product: {
 }
 
 export async function POST(request: NextRequest) {
-  const secret = request.headers.get('x-cron-secret') || request.nextUrl.searchParams.get('secret')
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  try {
+  const authError = requireCronSecret(request)
+    if (authError) return authError
+      try {
     const pending = await prisma.product.findMany({
       where: { status: 'PENDING_REVIEW' },
       select: {
