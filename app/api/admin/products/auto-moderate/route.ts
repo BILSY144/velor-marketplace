@@ -85,7 +85,7 @@ function moderateProduct(product: {
   return { verdict: 'approve' }
 }
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const authError = requireCronSecret(request)
     if (authError) return authError
       try {
