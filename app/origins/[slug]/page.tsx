@@ -84,6 +84,11 @@ const css = `
 .ocp-gitem{border-radius:12px;overflow:hidden;position:relative;aspect-ratio:1;background:var(--surface-2)}
 .ocp-gitem img{width:100%;height:100%;object-fit:cover;display:block}
 .ocp-gcap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:11.5px;color:#fff;line-height:1.3;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.8) 100%)}
+.ocp-slots-intro{font-size:14px;color:var(--muted);line-height:1.6;max-width:70ch;margin:-8px 0 22px}
+.ocp-slots-grid{display:grid;grid-template-columns:repeat(auto-fill,1in);gap:10px;justify-content:start}
+.ocp-slot{width:1in;height:1.5in;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:var(--surface);flex:0 0 auto}
+.ocp-slot-ribbon{position:absolute;top:16px;left:-32px;width:150px;text-align:center;transform:rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:7.5px;font-weight:700;letter-spacing:.02em;line-height:1.3;padding:3px 0;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ocp-slot-card{position:absolute;left:4px;right:4px;bottom:4px;height:0.42in;background:var(--surface-2);border:1px dashed var(--border);border-radius:4px}
 `
 
 export default function OriginCountryPage() {
@@ -173,6 +178,25 @@ export default function OriginCountryPage() {
               <Link className="ocp-pill ocp-pill-primary" href={`/apply?country=${country.code}`}>Claim your country</Link>
               <Link className="ocp-pill" href="/sell">Become a seller</Link>
             </div>
+          </div>
+        </div>
+
+        <div className="ocp-sec">
+          <div className="ocp-shead">
+            <h2>200 seats open for {country.name} products</h2>
+          </div>
+          <p className="ocp-slots-intro">
+            Every box below is an open product slot, not a listing — nothing is for sale here yet.
+            The moment a verified seller from {country.name} lists a product, one box fills in with
+            its photo, name, and price.
+          </p>
+          <div className="ocp-slots-grid">
+            {Array.from({ length: 200 }).map((_, i) => (
+              <div className="ocp-slot" key={i}>
+                <div className="ocp-slot-ribbon">Your products here</div>
+                <div className="ocp-slot-card" />
+              </div>
+            ))}
           </div>
         </div>
 
