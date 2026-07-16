@@ -11,20 +11,23 @@ import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
 // Full-bleed "open product slots" grid shown only on origin-filtered shop
 // pages (i.e. the pages Velor's flag strip in GlobalHeader actually links
 // to — /shop?origin=CODE — not /origins/[slug], which is a separate page).
-// Boxes are real-world-sized (1.5in wide x 2in tall) via CSS inches, tiled
-// edge-to-edge left-to-right across the full page width with zero gap so
-// the row is genuinely filled, not centered/narrow. Shown regardless of
-// whether the country already has real listings (same "every country page"
-// rule as the founding atlas). Never implies real inventory — the intro
-// copy and the empty dashed card make clear these are open slots, not
-// listings, per LAW #1.
+// Boxes are 2in tall (fixed) and at least 1.5in wide, but each column
+// STRETCHES (minmax(1.5in,1fr)) to fill whatever row width is left over —
+// William asked for the grid wall-to-wall with no ragged right edge, and
+// said box width can flex to make that true, so width is not a fixed
+// real-world inch on every screen the way height is. Tiled left-to-right
+// with zero gap across the full page width, not centered/narrow. Shown
+// regardless of whether the country already has real listings (same
+// "every country page" rule as the founding atlas). Never implies real
+// inventory — the intro copy and the empty dashed card make clear these
+// are open slots, not listings, per LAW #1.
 const slotsCss = `
 .shslots{width:100%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0 0;margin-bottom:8px}
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
-.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,1.5in);grid-auto-rows:2in;gap:0;width:100%}
-.shslots-box{width:1.5in;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
+.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:0;width:100%}
+.shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
 .shslots-ribbon{position:absolute;top:24px;left:-36px;width:180px;text-align:center;transform:rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:8.5px;font-weight:700;letter-spacing:.02em;line-height:1.3;padding:4px 0;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .shslots-card{position:absolute;left:6px;right:6px;bottom:6px;height:0.6in;background:var(--surface-2);border:1px dashed var(--border);border-radius:4px}
 `
