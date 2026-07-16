@@ -60,20 +60,31 @@ import { countryImages } from '@/lib/countryImagery'
 // own fixed #6f6f6f background, so it would be nearly invisible. Hierarchy
 // between the three lines is done with size/weight/caps instead of opacity,
 // so contrast against the fixed grey card stays solid in both themes.
+//
+// Click target (2026-07-16, William, confirmed via clarifying question):
+// each box links to the SAME /shop/[productId] template real listings use
+// (app/shop/[productId]/page.tsx), with an obviously-fake id
+// ("reserved-{countryCode}-{index}") rather than the id of a real listing.
+// Since no product with that id exists, the page's own server-side prisma
+// lookup returns nothing and Next's notFound() renders the site's generic
+// "Page Not Found" screen (app/not-found.tsx) — never a fabricated product
+// page. This was a deliberate choice over linking to /sell: William asked
+// specifically for the product-page template, understanding it 404s until
+// a real seller fills the slot, per LAW #1 (never imply fake inventory).
 const slotsCss = `
 .shslots{width:100%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0 0;margin-bottom:8px}
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
 .shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(1.5in,1fr));grid-auto-rows:2in;gap:8px;width:100%}
-.shslots-box{width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.shslots-box{display:block;width:100%;height:2in;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-decoration:none;color:inherit;cursor:pointer}
 .shslots-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;filter:grayscale(8%) contrast(1.05);z-index:0}
 .shslots-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.3) 100%);z-index:1}
 .shslots-ribbon{position:absolute;top:50%;left:50%;width:150%;text-align:center;transform:translate(-50%,-50%) rotate(-45deg);transform-origin:center;background:var(--accent);color:#160a00;font-size:9px;font-weight:700;letter-spacing:.03em;line-height:1.3;padding:5px 0;border-top:1.5px solid #160a00;border-bottom:1.5px solid #160a00;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2}
-.shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:#6f6f6f;border-top:1px dashed #454545;border-radius:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 10px;text-align:center}
-.shslots-card-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:10.5px;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.shslots-card-price{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:700;font-size:13.5px;color:var(--text)}
-.shslots-card-seller{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:8.5px;color:var(--text);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shslots-card{position:absolute;left:0;right:0;bottom:0;height:0.6in;background:#6f6f6f;border-top:1px dashed #454545;border-radius:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 8px;text-align:center}
+.shslots-card-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:13px;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shslots-card-price{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:700;font-size:16.5px;color:var(--text)}
+.shslots-card-seller{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:11px;color:var(--text);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 `
 
 interface Product {
@@ -255,7 +266,11 @@ function ShopContent() {
             {Array.from({ length: 200 }).map((_, i) => {
               const img = slotImages.length > 0 ? slotImages[i % slotImages.length] : null
               return (
-                <div className="shslots-box" key={i}>
+                <Link
+                  className="shslots-box"
+                  key={i}
+                  href={`/shop/reserved-${(originCountry.code || 'xx').toLowerCase()}-${i}`}
+                >
                   {img && <img className="shslots-img" src={img.url} alt="" loading="lazy" decoding="async" />}
                   <div className="shslots-scrim" />
                   <div className="shslots-ribbon">Your goods here</div>
@@ -264,7 +279,7 @@ function ShopContent() {
                     <span className="shslots-card-price">{symbol}0.00</span>
                     <span className="shslots-card-seller">Seller name</span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
