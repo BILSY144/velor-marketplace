@@ -104,7 +104,7 @@ export default function AdminDashboard() {
       if (d.error === 'Unauthorized') {
         localStorage.removeItem('velor_admin_secret')
         setNeedsToken(true)
-        setError('Invalid secret â please re-enter.')
+        setError('Invalid secret — please re-enter.')
         return
       }
       if (d.error) { setError(d.error); return }

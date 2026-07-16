@@ -72,7 +72,7 @@ async function generateAndSend() {
   if (pendingProducts.status === 'fulfilled' && pendingProducts.value > 0)
     flagIssues.push(`${pendingProducts.value} product(s) awaiting approval`)
   if (shippoMode === 'TEST')
-    flagIssues.push('Shippo still on TEST key Ã¢ÂÂ request live key via portal Intercom')
+    flagIssues.push('Shippo still on TEST key — request live key via portal Intercom')
 
   const flagHtml = flagIssues.length > 0
     ? `<h2>Flags Requiring Attention</h2><ul>${flagIssues.map(f => `<li>${f}</li>`).join('')}</ul>`
@@ -137,7 +137,7 @@ async function generateAndSend() {
 
   <tr><td colspan="2" style="padding:0;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:24px;background:#0d0d1a;">
-      <tr><td style="color:#a78bfa;font-size:15px;font-weight:700;padding:14px 20px;letter-spacing:1px;border-top:2px solid #a78bfa;">SUBAGENT ACTIVITY â LAST 24H</td></tr>
+      <tr><td style="color:#a78bfa;font-size:15px;font-weight:700;padding:14px 20px;letter-spacing:1px;border-top:2px solid #a78bfa;">SUBAGENT ACTIVITY — LAST 24H</td></tr>
       <tr><td>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           <tr>
@@ -155,7 +155,7 @@ async function generateAndSend() {
   return resend.emails.send({
     from: 'Velor AI Director <noreply@velorcommerce.co.uk>',
     to: ['willsinclair144@gmail.com'],
-    subject: `Velor Daily Briefing Ã¢ÂÂ ${dateStr}`,
+    subject: `Velor Daily Briefing — ${dateStr}`,
     html,
   })
 }

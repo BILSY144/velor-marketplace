@@ -448,7 +448,7 @@ async function scoutGoogle(
         const domain = item.displayLink?.replace(/^www\./, '');
         if (!domain || seenDomains.has(domain) || isExcluded(item.displayLink)) continue;
         seenDomains.add(domain);
-        const name = (item.title?.split('|')[0]?.split('â')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
+        const name = (item.title?.split('|')[0]?.split('–')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
         candidates.push({
           name,
           platform: 'independent',
@@ -494,7 +494,7 @@ async function scoutBing(
         const domain = displayLink.replace(/^www\./, '');
         if (!domain || seenDomains.has(domain) || isExcluded(displayLink)) continue;
         seenDomains.add(domain);
-        const name = (page.name?.split('|')[0]?.split('â')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
+        const name = (page.name?.split('|')[0]?.split('–')[0]?.split('-')[0]?.trim() ?? domain).slice(0, 100);
         candidates.push({
           name,
           platform: 'independent',

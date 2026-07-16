@@ -214,7 +214,7 @@ export default function ProductDetail({ id }: { id: string }) {
                     <span className="pd-price-was">{symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}</span>
                     <span className="pd-save-chip">SAVE {product.percentOff}%</span>
                   </div>
-                  <div className="pd-auto-note">Discount applied automatically â no code needed. Carries through to cart and checkout.</div>
+                  <div className="pd-auto-note">Discount applied automatically — no code needed. Carries through to cart and checkout.</div>
                 </>
               ) : (
                 <div className="pd-price">{symbol}{convert(product.price, product.seller?.currency || 'GBP').toFixed(2)}</div>

@@ -76,7 +76,7 @@ export async function PATCH(request: NextRequest) {
         ? `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
 <h1 style="color:#FF6B00;font-size:24px;margin-bottom:16px">You're approved!</h1>
 <p style="color:#cccccc;font-size:15px;line-height:1.6">Hi ${sellerName},</p>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Great news Ã¢ÂÂ your Velor seller account has been approved. You can now list products, manage orders, and receive payouts through your seller dashboard.</p>
+<p style="color:#cccccc;font-size:15px;line-height:1.6">Great news — your Velor seller account has been approved. You can now list products, manage orders, and receive payouts through your seller dashboard.</p>
 <a href="https://velorcommerce.store/dashboard" style="display:inline-block;margin-top:24px;background:#FF6B00;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">Go to Dashboard</a>
 <p style="color:#666666;font-size:13px;margin-top:40px">The Velor Team</p>
 </div>`

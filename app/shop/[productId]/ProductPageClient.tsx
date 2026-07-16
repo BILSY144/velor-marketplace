@@ -303,7 +303,7 @@ export default function ProductPageClient() {
 
           {(product.avgRating ?? 0) != null && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'â'.repeat(Math.round(product.avgRating ?? 0))}</span>
+              <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
               <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
               <span style={{ color: 'var(--muted)', fontSize: '14px' }}>({product.reviewCount} reviews)</span>
             </div>
@@ -330,7 +330,7 @@ export default function ProductPageClient() {
           </div>
           {onSale && (
             <div style={{ marginTop: '-14px', marginBottom: '20px', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
-              Discount applied automatically â no code needed. It will carry through to your cart and checkout.
+              Discount applied automatically — no code needed. It will carry through to your cart and checkout.
             </div>
           )}
 
