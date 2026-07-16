@@ -236,12 +236,46 @@ const jsonLd = {
       // app/press/page.tsx, app/apply/verified/page.tsx, app/contact/*, and
       // app/help/*.
       email: 'customerservice@velorcommerce.co.uk',
-      contactPoint: {
-        '@type': 'ContactPoint',
-        contactType: 'customer support',
-        email: 'customerservice@velorcommerce.co.uk',
-        availableLanguage: ['English'],
-      },
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          email: 'customerservice@velorcommerce.co.uk',
+          availableLanguage: ['English'],
+        },
+        // Second ContactPoint added by the standing SEO agent, 2026-07-16
+        // (full-audit cycle) -- schema.org's `contactPoint` property accepts
+        // an array of ContactPoint nodes (confirmed against schema.org's own
+        // Organization/ContactPoint docs before adding), and this Organization
+        // node previously only described the generic support-email channel
+        // even though a second, real, live contact channel exists: the
+        // Apply-by-WhatsApp link (`https://wa.me/447404014621`) added to
+        // app/apply/page.tsx by a separate session 2026-07-16 (commit
+        // e466261b) and already reflected in public/llms.txt ("Applicants
+        // who prefer not to use the web form can apply by WhatsApp message
+        // instead, in any language" -- added by this agent 2026-07-16,
+        // commit 9da39b96). `contactType: 'sales'` is used rather than an
+        // invented "seller applications" value, since 'sales' is one of
+        // Google's documented valid contactType values
+        // (developers.google.com/search/docs/appearance/structured-data/organization)
+        // and is the closest standard fit for "become a seller" inbound
+        // contact. `url` (not `contactOption`, which schema.org restricts
+        // to a fixed enum like "TollFree"/"HearingImpairedSupported" -- a
+        // wa.me link doesn't fit that enum) links straight to the real,
+        // live WhatsApp deep link. `availableLanguage` is deliberately
+        // omitted here rather than fabricated: the real, live claim on
+        // /apply is "write in any language" over WhatsApp, not an
+        // enumerable list of specific languages, and schema.org's
+        // `availableLanguage` property expects actual language values, not
+        // a vague placeholder -- per LAW #1, a claim structured data can't
+        // accurately represent is worse left out than approximated.
+        {
+          '@type': 'ContactPoint',
+          contactType: 'sales',
+          telephone: '+447404014621',
+          url: 'https://wa.me/447404014621',
+        },
+      ],
     },
     {
       '@type': 'WebSite',
