@@ -13,9 +13,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
 import { cultureHints } from '@/lib/cultureHints'
+import { countryImage } from '@/lib/countryImagery'
 
 type LatticeSummary = {
   trading: number
@@ -93,16 +94,20 @@ const css = `
 .vf-rline{flex:1;height:1px;background:var(--border)}
 .vf-rn{font-size:12.5px;color:var(--muted)}
 .vf-clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-.vf-ci{display:block;border:1px solid var(--border);border-top:3px solid var(--border);border-radius:14px;background:var(--surface);padding:16px 18px 15px;transition:border-color .15s,transform .15s,background .15s}
+.vf-ci{display:block;border:1px solid var(--border);border-top:3px solid var(--border);border-radius:14px;background:var(--surface);padding:0 0 15px;overflow:hidden;transition:border-color .15s,transform .15s,background .15s}
 .vf-ci:hover{transform:translateY(-2px);border-color:#3d3d46;background:var(--surface-2)}
 .vf-ci.live{border-top-color:var(--green)}
 .vf-ci.seat{border-top-color:var(--accent)}
 .vf-ci.hold{border-top-color:var(--amber)}
 .vf-ci:hover .vf-cn{color:var(--accent)}
-.vf-citop{display:flex;align-items:center;gap:11px}
+.vf-cimg{width:100%;aspect-ratio:16/10;background:var(--surface-2);overflow:hidden}
+.vf-cimg img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.vf-ci:hover .vf-cimg img{transform:scale(1.05)}
+.vf-citop{display:flex;align-items:center;gap:11px;padding:14px 18px 0}
+.vf-ci .vf-k,.vf-ci .vf-st{padding-left:18px;padding-right:18px}
 .vf-cn{font-family:var(--font-display);font-size:18px;font-weight:500;transition:color .12s;line-height:1.25}
 .vf-fl{display:flex;align-items:center;justify-content:center;width:26px;height:19px;font-size:13px;line-height:1;border-radius:3px;flex:0 0 auto;margin-left:auto;border:1px solid var(--border);background:var(--surface-2)}
-.vf-k{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.4;min-height:17px}
+.vf-k{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45;min-height:34px}
 .vf-st{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid var(--border)}
 .vf-st.live{color:var(--green)}.vf-st.hold{color:var(--amber)}
 .vf-empty{padding:70px 0;text-align:center;color:var(--muted);font-size:15px}
@@ -265,13 +270,19 @@ export default function FoundingPage() {
                 {r.items.map(c => {
                   const st = status(c.code)
                   const products = liveCodes.get(c.code)
+                  const img = countryImage(c.code)
                   return (
-                    <Link className={'vf-ci ' + st} href="/apply" key={c.code}>
+                    <Link className={'vf-ci ' + st} href={`/origins/${countrySlug(c)}`} key={c.code}>
+                      {img && (
+                        <div className="vf-cimg">
+                          <img src={img.url} alt={img.name} loading="lazy" />
+                        </div>
+                      )}
                       <div className="vf-citop">
                         <span className="vf-cn">{c.name}</span>
                         <span className="vf-fl" title={c.code}>{flag(c.code)}</span>
                       </div>
-                      {cultureHints(c.code).length > 0 && <div className="vf-k">{cultureHints(c.code).slice(0, 4).join(' · ')}</div>}
+                      {cultureHints(c.code).length > 0 && <div className="vf-k">{cultureHints(c.code).slice(0, 8).join(' · ')}</div>}
                       <div className={'vf-st ' + st}>
                         {st === 'live' ? `${products} product${products === 1 ? '' : 's'} · trading`
                           : st === 'hold' ? 'Verification pending'

@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { findCountryBySlug, type WorldCountry } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
 import { cultureHints } from '@/lib/cultureHints'
+import { countryImages } from '@/lib/countryImagery'
 import { SPECIALITIES, buyerLabel } from '@/lib/specialities'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
@@ -74,6 +75,15 @@ const css = `
 .ocp-btn{border-radius:10px;padding:14px 26px;font-size:15px;font-weight:600;display:inline-block;background:var(--accent);color:#160a00 !important;text-decoration:none}
 .ocp-btn2{border-radius:10px;padding:14px 26px;font-size:15px;font-weight:600;display:inline-block;border:1px solid var(--border);color:var(--text) !important;text-decoration:none}
 .ocp-404{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:40px 20px}
+.ocp-pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.ocp-pill{display:inline-flex;align-items:center;font-size:13px;font-weight:600;border-radius:999px;padding:10px 20px;text-decoration:none !important;border:1px solid var(--border);color:var(--text) !important;transition:border-color .15s,opacity .15s}
+.ocp-pill:hover{border-color:#3d3d46}
+.ocp-pill-primary{background:var(--accent);border-color:var(--accent);color:#160a00 !important}
+.ocp-pill-primary:hover{opacity:.9}
+.ocp-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.ocp-gitem{border-radius:12px;overflow:hidden;position:relative;aspect-ratio:1;background:var(--surface-2)}
+.ocp-gitem img{width:100%;height:100%;object-fit:cover;display:block}
+.ocp-gcap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:11.5px;color:#fff;line-height:1.3;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.8) 100%)}
 `
 
 export default function OriginCountryPage() {
@@ -130,6 +140,7 @@ export default function OriginCountryPage() {
   const status: 'live' | 'hold' | 'seat' = isTrading ? 'live' : isHold ? 'hold' : 'seat'
   const hints = cultureHints(country.code)
   const specialities = SPECIALITIES.filter(s => s.associated.includes(country.code))
+  const images = countryImages(country.code)
 
   return (
     <div className="ocp">
@@ -149,7 +160,7 @@ export default function OriginCountryPage() {
                 : 'No seller yet — the seat is open'}
             </div>
             {hints.length > 0 && (
-              <p className="ocp-hints">Known for: {hints.slice(0, 6).join(' · ')}</p>
+              <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
             )}
             {specialities.length > 0 && (
               <div className="ocp-tags">
@@ -158,8 +169,28 @@ export default function OriginCountryPage() {
                 ))}
               </div>
             )}
+            <div className="ocp-pills">
+              <Link className="ocp-pill ocp-pill-primary" href={`/apply?country=${country.code}`}>Claim your country</Link>
+              <Link className="ocp-pill" href="/sell">Become a seller</Link>
+            </div>
           </div>
         </div>
+
+        {images.length > 0 && (
+          <div className="ocp-sec">
+            <div className="ocp-shead">
+              <h2>What {country.name} is known for</h2>
+            </div>
+            <div className="ocp-gallery">
+              {images.slice(0, 12).map(img => (
+                <div className="ocp-gitem" key={img.id}>
+                  <img src={img.url} alt={img.name} loading="lazy" />
+                  <span className="ocp-gcap">{img.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isTrading ? (
           <div className="ocp-sec">
