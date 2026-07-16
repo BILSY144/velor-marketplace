@@ -38,6 +38,10 @@ export type ShopProduct = {
   images?: string[]
   originCountry?: string
   sellerName?: string
+  // True when this listing belongs to the country's founding seller — drives
+  // the gold Founding Seller hallmark tag on listing cards (web parity,
+  // /api/shop/products returns it explicitly).
+  sellerFounding?: boolean
   discountedPrice?: number | null
   percentOff?: number | null
   rating?: number | null
