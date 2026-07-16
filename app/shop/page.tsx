@@ -79,7 +79,7 @@ const slotsCss = `
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
 .shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
 .shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
-.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;max-width:1400px;margin:0 auto;padding:0 40px 36px}
+.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;max-width:1400px;margin:0 auto;padding:0 40px 36px}
 `
 
 interface Product {
@@ -259,6 +259,12 @@ function ShopContent() {
                         </span>
                         <span title={p.sellerFounding ? 'Founding Seller' : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: p.sellerFounding ? '#E9C46A' : 'var(--muted)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerFounding && (<svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" style={{ flexShrink: 0 }}><circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" /><text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text></svg>)}{p.sellerName}</span>
                       </div>
+                      {p.sellerFounding && (
+                        <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px 3px 6px', borderRadius: 999, fontSize: '9px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#E9C46A', background: 'linear-gradient(135deg, rgba(93,69,16,0.55), rgba(41,29,8,0.55))', border: '1px solid rgba(185,138,47,0.75)', whiteSpace: 'nowrap' }}>
+                          <svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" /><text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text></svg>
+                          Founding Seller
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
