@@ -217,23 +217,29 @@ const jsonLd = {
       // schema.org/email confirms Organization (alongside ContactPoint and
       // Person) is a valid domain for a top-level `email` property, checked
       // against schema.org's own docs before adding rather than assumed.
-      // Reuses the exact same already-verified live support address as
-      // `contactPoint.email` below (app/contact/page.tsx,
-      // app/contact/layout.tsx) rather than a second hand-typed copy, so the
-      // two can never drift apart. This is a duplicate of an already-live,
-      // already-verified fact in a second schema.org-recognized location,
-      // not a new claim.
-      email: 'support@velorcommerce.store',
-      // Added by the standing SEO agent, 2026-07-13 -- contactPoint email is
-      // the real, live support address, verified directly against
-      // app/contact/page.tsx ("support@velorcommerce.store" reaches the
-      // team) and app/contact/layout.tsx's metadata description. Not
-      // invented; no phone number or hoursAvailable added since neither is
-      // published anywhere on the live site to verify against.
+      // Reuses the exact same address as `contactPoint.email` below rather
+      // than a second hand-typed copy, so the two can never drift apart.
+      //
+      // CORRECTED 2026-07-16 (later same-day SEO-agent run) -- this was
+      // support@velorcommerce.store, added 2026-07-13 on the belief it was
+      // "the real, live support address" verified against app/contact and
+      // app/help. That belief was wrong: CLAUDE.md's own dated checkpoint
+      // ("2026-07-13 checkpoint (continued 4)") records the GoDaddy
+      // dashboard for velorcommerce.store showing email as an unactivated
+      // placeholder, and says outright "do not assume replies to any
+      // @velorcommerce.store address reach anyone." Swapped to
+      // customerservice@velorcommerce.co.uk, Velor Marketplace's own real,
+      // working GoDaddy Microsoft 365 mailbox and already-verified Resend
+      // sending domain (confirmed live via app/api/contact/route.ts's own
+      // FROM address) -- the same address lib/email.ts's REPLY_TO already
+      // uses for this exact reason, and the same fix applied this run to
+      // app/press/page.tsx, app/apply/verified/page.tsx, app/contact/*, and
+      // app/help/*.
+      email: 'customerservice@velorcommerce.co.uk',
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'support@velorcommerce.store',
+        email: 'customerservice@velorcommerce.co.uk',
         availableLanguage: ['English'],
       },
     },

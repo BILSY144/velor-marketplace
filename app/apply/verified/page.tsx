@@ -29,17 +29,19 @@ export const metadata = {
   },
 };
 
-// Fixed by the standing SEO agent, 2026-07-16 -- the "Questions?" support
-// link at the bottom of this page pointed at
-// customerservice@velorcommerce.co.uk, the separate, unrelated
-// velorcommerce.co.uk dropshipping business's domain (same conflation bug,
-// same fix, as this run's app/press/page.tsx change -- see that file's own
-// comment for the full citation trail). This is a live, indexable page a
-// real applicant lands on right after Stripe Identity verification, so
-// pointing them at the wrong company's inbox is a real defect. Swapped to
-// support@velorcommerce.store, the already-verified live Velor Marketplace
-// support address (see app/contact/page.tsx, app/contact/layout.tsx, and
-// app/layout.tsx's Organization JSON-LD).
+// Fixed by the standing SEO agent, 2026-07-16 09:xx UTC -- the "Questions?"
+// support link at the bottom of this page pointed at
+// customerservice@velorcommerce.co.uk, which that run swapped to
+// support@velorcommerce.store on the theory that .co.uk was the separate,
+// unrelated dropshipping business's domain being conflated in.
+//
+// CORRECTED by a later same-day SEO-agent run, 2026-07-16 -- reverted back
+// to customerservice@velorcommerce.co.uk. See app/press/page.tsx's own
+// comment (fixed in the same run) for the full citation trail: per
+// CLAUDE.md's dated checkpoints, velorcommerce.co.uk is Velor Marketplace's
+// own real, working, Resend-verified mailbox, while velorcommerce.store has
+// no real inbox activated at all -- the 09:xx fix had the two domains'
+// roles backwards.
 //
 // Where Stripe Identity sends a seller after they finish (or abandon) the
 // hosted document check. See return_url in lib/identity.ts.
@@ -174,8 +176,8 @@ export default function VerificationSubmittedPage() {
 
           <p style={{ color: 'var(--muted)', fontSize: 13, margin: '24px 0 0' }}>
             Questions? Email{' '}
-            <a href="mailto:support@velorcommerce.store" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-              support@velorcommerce.store
+            <a href="mailto:customerservice@velorcommerce.co.uk" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+              customerservice@velorcommerce.co.uk
             </a>
           </p>
         </div>

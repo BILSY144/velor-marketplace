@@ -11,7 +11,7 @@ import type { Metadata } from 'next'
 
 const title = 'Contact Velor — Talk to Us'
 const description =
-  'Get in touch with Velor Marketplace. Send a message through the contact form or email support@velorcommerce.store — we reply within one business day.'
+  'Get in touch with Velor Marketplace. Send a message through the contact form or email customerservice@velorcommerce.co.uk — we reply within one business day.'
 
 export const metadata: Metadata = {
   title,

@@ -131,7 +131,7 @@ export default function ContactPage() {
             <div className="vc-card">
               <h2>Email, if you prefer</h2>
               <p>
-                <a href="mailto:support@velorcommerce.store">support@velorcommerce.store</a> reaches
+                <a href="mailto:customerservice@velorcommerce.co.uk">customerservice@velorcommerce.co.uk</a> reaches
                 the same team. Velor Commerce Ltd (company no. 17268133) is registered in England and Wales, registered office 49 Station Road, Polegate, East Sussex, BN26 6EA.
               </p>
             </div>

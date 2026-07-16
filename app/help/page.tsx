@@ -51,7 +51,7 @@ const FAQS: { category: string; blurb: string; items: { q: string; a: string }[]
     items: [
       { q: 'How do I create an account?', a: 'Click Sign in at the top of any page and follow the prompts — an email address is all you need to start.' },
       { q: 'I forgot my password — how do I reset it?', a: 'Click Sign in, then Forgot password, and a reset link goes to your email.' },
-      { q: 'How do I contact Velor?', a: 'Use the contact page or email support@velorcommerce.store — we reply within one business day.' },
+      { q: 'How do I contact Velor?', a: 'Use the contact page or email customerservice@velorcommerce.co.uk — we reply within one business day.' },
     ],
   },
 ]
