@@ -151,6 +151,30 @@ export async function createShippoShipment(params: {
   return res.json()
 }
 
+// Server-side re-verification of a rate a buyer selected at checkout.
+// app/api/shipping/rates/route.ts hands the browser a list of live Shippo
+// rates; until the 2026-07-16 readiness audit, app/api/stripe/payment-intent
+// simply trusted whatever shippingAmount the client sent back for that
+// rateId, with no check that the two ever matched -- a tampered request
+// could set shippingAmount to anything (including 0) while keeping a real
+// rateId. Shippo rate objects stay retrievable by id for a window after
+// they're quoted (they're only consumed by an actual label purchase, which
+// Velor never does -- see purchaseLabel below), so GET /rates/{id}/ is the
+// authoritative source of truth for what a rate actually costs. Throws if
+// the rate can't be found/has expired -- callers should treat that as "ask
+// the buyer to reselect shipping," never as license to fall back to the
+// client-supplied amount.
+export async function getRate(rateId: string): Promise<ShippoRate> {
+  const res = await fetch(SHIPPO_BASE + '/rates/' + encodeURIComponent(rateId) + '/', {
+    headers: shippoHeaders(),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error('Shippo /rates/' + rateId + ' error ' + res.status + ': ' + err)
+  }
+  return res.json()
+}
+
 // NOT CALLED ANYWHERE as of 2026-07-06 (William's decision: Velor is a pure
 // platform and never spends its own money on shipping). Kept only for
 // reference / possible future opt-in (e.g. a seller-funded label-purchase

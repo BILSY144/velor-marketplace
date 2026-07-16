@@ -44,18 +44,29 @@ export async function POST(request: Request): Promise<NextResponse> {
       // that accelerator already created the order, this is a no-op.
       // Returning a non-2xx here makes Stripe retry automatically, so a
       // transient DB blip can never silently lose an order.
+      let newOrderCount = 0;
       try {
-        await createOrderFromPaymentIntent(pi);
+        const result = await createOrderFromPaymentIntent(pi);
+        newOrderCount = result.newOrderCount;
       } catch (err) {
         console.error('[webhook] order creation failed for', pi.id, err);
         return NextResponse.json({ error: 'Order creation failed' }, { status: 500 });
       }
 
+      // Stripe delivers payment_intent.succeeded "at least once" -- a retry
+      // of an already-processed event must not increment discount usage
+      // again. newOrderCount is 0 on a pure retry (every seller's order
+      // already existed from an earlier delivery or the checkout-
+      // confirmation accelerator), so gating on it here means a
+      // usage-limited discount code's count is only ever credited once per
+      // real order, not once per webhook delivery (2026-07-16 readiness
+      // audit finding -- this used to run unconditionally and could
+      // prematurely exhaust a code's usage limit on retries).
       const discountIds = (pi.metadata?.discountIds ?? '')
       .split(',')
       .map((id) => id.trim())
       .filter(Boolean);
-      if (discountIds.length > 0) {
+      if (discountIds.length > 0 && newOrderCount > 0) {
         try {
           await prisma.discountCode.updateMany({
             where: { id: { in: discountIds } },
@@ -198,6 +209,17 @@ export async function POST(request: Request): Promise<NextResponse> {
           html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#f8f8f8;margin:0;padding:40px 20px;"><div style="max-width:560px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;"><div style="background:#0f0f0f;padding:32px 40px;"><p style="color:white;font-size:22px;font-weight:700;margin:0;">Velor Marketplace</p></div><div style="padding:40px;"><h1 style="font-size:20px;font-weight:700;color:#111;margin:0 0 16px;">Your Pro subscription is back on</h1><p style="color:#555;line-height:1.6;margin:0 0 20px;">Hi ${sellerName},</p><p style="color:#555;line-height:1.6;margin:0 0 20px;">Your payment was successfully processed and your Velor Pro subscription is now active again. All your listings and seller features are fully restored.</p><p style="color:#555;line-height:1.6;margin:0 0 28px;">Thank you for resolving this.</p><p style="color:#999;font-size:12px;margin-top:32px;">Velor Marketplace &mdash; customerservice@velorcommerce.co.uk</p></div></div></body></html>`,
         });
       }
+      break;
+    }
+
+    case 'payment_intent.payment_failed': {
+      // No order should be (and isn't) created here -- this case exists
+      // purely so a failed charge leaves a trace in logs instead of
+      // silently falling into the default no-op below (2026-07-16
+      // readiness audit finding: zero visibility into failed charges makes
+      // fraud patterns and payment-provider issues hard to spot).
+      const pi = event.data.object as Stripe.PaymentIntent;
+      console.warn('[webhook] payment_intent.payment_failed', pi.id, pi.last_payment_error?.message ?? 'no error message');
       break;
     }
 

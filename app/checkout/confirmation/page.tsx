@@ -26,7 +26,11 @@ interface CartItem {
 }
 
 interface StoredOrder {
-  orderNumber: string
+  // No longer set by app/checkout/page.tsx (was a fabricated client-side
+  // string, never persisted -- see the 2026-07-16 readiness audit note
+  // there). Kept optional only so any already-in-flight localStorage entry
+  // from before this fix doesn't crash the page.
+  orderNumber?: string
   paymentIntentId?: string
   items: CartItem[]
   shipping: ShippingForm
@@ -59,6 +63,13 @@ function ConfirmationContent() {
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<StoredOrder | null>(null)
   const [saved, setSaved] = useState(false)
+  // The REAL order id, fetched from /api/orders below -- replaces the old
+  // fabricated 'VLR-'+Date.now() string that was never persisted anywhere
+  // (2026-07-16 readiness audit finding: a buyer or reporter quoting that
+  // "order number" to support would hit a dead end). Formatted the same
+  // way /orders lists it: '#' + first 8 chars of the real id, uppercased.
+  const [realOrderNumber, setRealOrderNumber] = useState('')
+  const [orderNumberFailed, setOrderNumberFailed] = useState(false)
 
   useEffect(() => {
     const param = searchParams.get('order')
@@ -71,12 +82,14 @@ function ConfirmationContent() {
     }
   }, [searchParams])
 
-  // Nudge order creation on mount — fire-and-forget, idempotent, and safe:
-  // this no longer sends any price/total/item data. It only tells the server
-  // which PaymentIntent to look up; app/api/orders (and independently, the
+  // Nudge order creation on mount — idempotent and safe: this no longer
+  // sends any price/total/item data. It only tells the server which
+  // PaymentIntent to look up; app/api/orders (and independently, the
   // Stripe webhook) build the actual order from trusted, server-side
   // PaymentIntent metadata. If this call never fires (closed tab, dropped
-  // connection) the webhook still creates the order on its own.
+  // connection) the webhook still creates the order on its own -- the ONLY
+  // thing this page can't do in that case is show the real order number
+  // immediately, which is why the rest of the UI never depends on it.
   useEffect(() => {
     if (!order || saved || !order.paymentIntentId) return
     setSaved(true)
@@ -85,7 +98,15 @@ function ConfirmationContent() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentIntentId: order.paymentIntentId }),
-    }).catch(() => {}) // Non-blocking — confirmation UI never depends on this
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('order lookup failed')
+        const data = await res.json()
+        const firstId = Array.isArray(data.orderIds) ? data.orderIds[0] : null
+        if (firstId) setRealOrderNumber('#' + String(firstId).slice(0, 8).toUpperCase())
+        else setOrderNumberFailed(true)
+      })
+      .catch(() => setOrderNumberFailed(true))
   }, [order, saved])
 
   if (!order) {
@@ -139,9 +160,18 @@ function ConfirmationContent() {
         }}>
           <div>
             <p style={{ fontSize: 11, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Order Number</p>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 22, fontWeight: 800, margin: 0, color: '#FF6B00' }}>
-              {order.orderNumber}
-            </p>
+            {realOrderNumber ? (
+              <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 22, fontWeight: 800, margin: 0, color: '#FF6B00' }}>
+                {realOrderNumber}
+              </p>
+            ) : orderNumberFailed ? (
+              <p style={{ fontSize: 13, color: '#999999', margin: 0, lineHeight: 1.5 }}>
+                Your payment succeeded -- your order number will appear on{' '}
+                <a href="/orders" style={{ color: '#FF6B00' }}>My Orders</a> shortly.
+              </p>
+            ) : (
+              <p style={{ fontSize: 13, color: '#999999', margin: 0 }}>Confirming order number...</p>
+            )}
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: 11, color: '#999999', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Est. Delivery</p>

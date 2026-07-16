@@ -4,6 +4,8 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { convert } from '@/lib/fx'
 import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
+import { getRate } from '@/lib/shippo'
+import { calculateLandedCost } from '@/lib/duty-rates'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,15 +36,30 @@ function round2(n: number) {
 
 interface SellerShippingInput {
   sellerId: string
-  shippingAmount: number
-  shippingCurrency: string
-  dutiesAmountGBP: number
+  rateId: string
+  // shippingAmount/shippingCurrency/dutiesAmountGBP are still accepted from
+  // the client but are NO LONGER TRUSTED as of the 2026-07-16 readiness
+  // audit -- see the re-verification block below. Kept in the type only
+  // because older cached client bundles may still send them.
+  shippingAmount?: number
+  shippingCurrency?: string
+  dutiesAmountGBP?: number
 }
+
+// Known non-Shippo rate ids -- see app/api/shipping/rates/route.ts's
+// FALLBACK_QUOTE_RATE ('quote-required') and the SHIPPO_API_KEY-not-set
+// placeholder ('pending-standard'). Both are always quoted at a fixed
+// 0.00 GBP ("contact seller for a quote" / "pending"), so there is nothing
+// for Shippo to re-verify -- the fix is to force the server-side amount to
+// 0 for these instead of trusting whatever the client claims.
+const FALLBACK_RATE_IDS = new Set(['quote-required', 'pending-standard'])
 
 interface SellerGroup {
   sellerId: string
   tier: string | null
-  items: { productId: string; quantity: number; priceGBP: number }[]
+  shippingProfileCountry: string | null
+  handlingFeeGBP: number
+  items: { productId: string; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null }[]
   subtotalGBP: number
 }
 
@@ -84,7 +101,23 @@ export async function POST(request: NextRequest) {
         price: true,
         stock: true,
         title: true,
-        seller: { select: { id: true, currency: true, tier: true } },
+        hsCode: true,
+        originCountry: true,
+        seller: {
+          select: {
+            id: true,
+            currency: true,
+            tier: true,
+            // Needed to recompute duties AND re-verify shipping server-side
+            // (see calculateLandedCost / getRate below) -- a seller's
+            // dispatch country is the "originCountry" for customs purposes,
+            // and handlingFeeGBP is the same packaging/rate-drift buffer
+            // app/api/shipping/rates/route.ts adds on top of every live
+            // carrier quote, needed here to reconstruct the exact amount the
+            // buyer was quoted.
+            shippingProfile: { select: { country: true, handlingFeeGBP: true } },
+          },
+        },
       },
     })
     const productMap = new Map(products.map((p) => [p.id, p]))
@@ -127,28 +160,36 @@ export async function POST(request: NextRequest) {
 
       let group = groups.get(product.seller.id)
       if (!group) {
-        group = { sellerId: product.seller.id, tier: (product.seller.tier as unknown as string) ?? null, items: [], subtotalGBP: 0 }
+        group = {
+          sellerId: product.seller.id,
+          tier: (product.seller.tier as unknown as string) ?? null,
+          shippingProfileCountry: product.seller.shippingProfile?.country ?? null,
+          handlingFeeGBP: Math.min(Math.max(Number(product.seller.shippingProfile?.handlingFeeGBP) || 0, 0), 25),
+          items: [],
+          subtotalGBP: 0,
+        }
         groups.set(product.seller.id, group)
       }
-      group.items.push({ productId: item.productId, quantity: qty, priceGBP: unitGBP })
+      group.items.push({
+        productId: item.productId,
+        quantity: qty,
+        priceGBP: unitGBP,
+        hsCode: product.hsCode ?? null,
+        originCountry: product.originCountry ?? null,
+      })
       group.subtotalGBP += lineGBP
     }
 
     // Every seller present in the cart must have a chosen shipping option --
     // see app/checkout/page.tsx, which requires one selected rate per seller
-    // group before "Continue to Payment" is even enabled. This is a
-    // presence check only (same trust model as the old single-seller
-    // shippingAmount/dutiesAmountGBP fields, which were always client-
-    // supplied without server recomputation) -- it just makes sure no
-    // seller's parcel silently gets charged 0 shipping because the client
-    // forgot to send an entry for them.
+    // group before "Continue to Payment" is even enabled.
     const shippingBySeller = new Map<string, SellerShippingInput>(
       (Array.isArray(sellerShipping) ? sellerShipping : []).map((s: SellerShippingInput) => [s.sellerId, s])
     )
-    const missingShipping = [...groups.keys()].filter((id) => !shippingBySeller.has(id))
+    const missingShipping = [...groups.keys()].filter((id) => !shippingBySeller.has(id) || !shippingBySeller.get(id)!.rateId)
     if (missingShipping.length > 0) {
       return NextResponse.json(
-        { error: 'Shipping has not been selected for every seller in this cart.' },
+        { error: 'Shipping has not been selected for every seller in this cart. Please reselect shipping and try again.' },
         { status: 400 }
       )
     }
@@ -178,11 +219,55 @@ export async function POST(request: NextRequest) {
       const discountedSubtotalGBP = Math.max(0, group.subtotalGBP - totalDiscountGBP)
 
       const shipEntry = shippingBySeller.get(group.sellerId)!
-      const shipCurrency = String(shipEntry.shippingCurrency || 'GBP').toUpperCase()
-      const shippingGBP = shipCurrency === 'GBP'
-        ? Number(shipEntry.shippingAmount) || 0
-        : await convert(Number(shipEntry.shippingAmount) || 0, shipCurrency, 'GBP')
-      const dutiesGBP = Number(shipEntry.dutiesAmountGBP) || 0
+
+      // Re-verify shipping server-side instead of trusting the client's
+      // shippingAmount (2026-07-16 readiness audit finding: a tampered
+      // request could previously set shippingAmount to anything, including
+      // 0, for a real rateId -- shorting the seller on shipping
+      // reimbursement and letting the buyer dodge DDP duties). The two
+      // known fallback rate ids ('quote-required' / 'pending-standard')
+      // are always quoted at a fixed 0.00 by app/api/shipping/rates, so
+      // there's nothing to verify against Shippo -- force them to 0 rather
+      // than trusting the client either way.
+      let shippingGBP = 0
+      if (!FALLBACK_RATE_IDS.has(shipEntry.rateId)) {
+        let verifiedRate
+        try {
+          verifiedRate = await getRate(shipEntry.rateId)
+        } catch (err) {
+          console.error('[payment-intent] shipping rate verification failed for seller', group.sellerId, shipEntry.rateId, err)
+          return NextResponse.json(
+            { error: 'Your shipping rate has expired. Please reselect shipping and try again.' },
+            { status: 409 }
+          )
+        }
+        const rateCurrency = String(verifiedRate.currency || 'GBP').toUpperCase()
+        const rateAmountGBP = rateCurrency === 'GBP'
+          ? parseFloat(verifiedRate.amount) || 0
+          : await convert(parseFloat(verifiedRate.amount) || 0, rateCurrency, 'GBP')
+        // Add back the seller's same packaging/rate-drift buffer that
+        // app/api/shipping/rates/route.ts adds on top of every raw Shippo
+        // quote before showing it to the buyer -- so this matches exactly
+        // what the buyer was actually quoted, not the bare carrier rate.
+        shippingGBP = rateAmountGBP + group.handlingFeeGBP
+      }
+
+      // Duties/VAT recomputed entirely server-side via the same pure,
+      // deterministic calculateLandedCost() that app/api/shipping/landed-cost
+      // uses to quote the buyer -- never trusted from the client. Uses the
+      // pre-discount subtotal (matching that route's own declaredValueGBP)
+      // and a representative HS code (first item that has one), the same
+      // "one customs declaration per parcel" approach used at quote time.
+      const destinationCountry = String(shippingAddress?.country || '').toUpperCase()
+      const representativeHsCode = group.items.find((i) => i.hsCode)?.hsCode ?? null
+      const landedCost = calculateLandedCost({
+        hsCode: representativeHsCode,
+        originCountry: group.shippingProfileCountry || 'GB',
+        destinationCountry,
+        declaredValueGBP: group.subtotalGBP,
+        shippingCostGBP: shippingGBP,
+      })
+      const dutiesGBP = landedCost.totalTaxGBP
 
       const commissionRate = TIER_COMMISSION[group.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
       const sellerTotalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP

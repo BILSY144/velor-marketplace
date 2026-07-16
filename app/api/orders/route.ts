@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   try {
     // One PaymentIntent can produce multiple orders -- one per seller in
     // the cart. See lib/orders.ts.
-    const orders = await createOrderFromPaymentIntent(pi)
+    const { orders } = await createOrderFromPaymentIntent(pi)
     return NextResponse.json({ orderIds: orders.map((o) => o.id) }, { status: 201 })
   } catch (err: unknown) {
     console.error('[POST /api/orders]', err)

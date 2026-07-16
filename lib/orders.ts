@@ -110,6 +110,16 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
   const existingBySeller = new Map(existingOrders.map((o) => [o.sellerId, o]))
 
   const orders: Order[] = [...existingOrders]
+  // Tracks which orders THIS call actually created, as opposed to ones that
+  // already existed from an earlier call (webhook vs. the checkout-
+  // confirmation accelerator racing, or a retried Stripe webhook delivery).
+  // Added in the 2026-07-16 readiness audit: the discount usedCount
+  // increment in app/api/stripe/webhook/route.ts used to run unconditionally
+  // on every payment_intent.succeeded delivery, so a Stripe retry of the
+  // same event could inflate a usage-limited discount code's count and
+  // prematurely lock out real future customers. Callers should only credit
+  // side effects (like discount usage) for genuinely new orders.
+  const newlyCreatedCount = { value: 0 }
   const failedSellerIds: string[] = []
 
   for (const sb of sellerBreakdown) {
@@ -187,6 +197,7 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
     }
 
     orders.push(order)
+    newlyCreatedCount.value += 1
 
     // Order confirmation email -- best-effort, one per seller-order. Reached
     // exactly once per genuinely NEW order (existingBySeller already
@@ -229,5 +240,9 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
     )
   }
 
-  return orders
+  // newOrderCount is 0 on a pure retry/race (every seller's order already
+  // existed) -- callers use this to gate one-time side effects like
+  // discount-usage increments so a retried Stripe webhook delivery can't
+  // apply them twice for the same PaymentIntent.
+  return { orders, newOrderCount: newlyCreatedCount.value }
 }

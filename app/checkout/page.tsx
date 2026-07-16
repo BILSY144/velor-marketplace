@@ -350,8 +350,14 @@ export default function CheckoutPage() {
     setCreatingIntent(true)
     setPaymentSetupError('')
     try {
+      // shippingAmount/dutiesAmountGBP below are display-only leftovers from
+      // before the 2026-07-16 readiness audit -- the server now
+      // re-verifies the real shipping cost against Shippo by rateId and
+      // recomputes duties itself (see app/api/stripe/payment-intent),
+      // never trusting these numbers. rateId is what actually matters.
       const sellerShipping = sellerGroups.map(g => ({
         sellerId: g.sellerId,
+        rateId: selectedRates[g.sellerId]?.rateId || '',
         shippingAmount: Number(selectedRates[g.sellerId]?.amount) || 0,
         shippingCurrency: selectedRates[g.sellerId]?.currency || 'GBP',
         dutiesAmountGBP: sellerDuties[g.sellerId]?.totalTaxGBP ?? 0,
@@ -391,7 +397,12 @@ export default function CheckoutPage() {
         if (data.breakdown) setConfirmed(data.breakdown)
         const piId = (data.clientSecret as string).split('_secret_')[0]
         localStorage.setItem('velor-last-order', JSON.stringify({
-          orderNumber: 'VLR-' + Date.now(),
+          // No client-fabricated order number here -- the 2026-07-16
+          // readiness audit found this used to be a bare 'VLR-'+Date.now()
+          // string that was never persisted anywhere and didn't match the
+          // real order id shown on /orders, so quoting it to support would
+          // hit a dead end. The confirmation page now fetches the REAL
+          // order id from /api/orders once the order exists.
           paymentIntentId: piId,
           items,
           shipping: {
