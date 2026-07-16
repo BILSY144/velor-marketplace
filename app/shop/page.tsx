@@ -61,16 +61,18 @@ import { countryImages } from '@/lib/countryImagery'
 // between the three lines is done with size/weight/caps instead of opacity,
 // so contrast against the fixed grey card stays solid in both themes.
 //
-// Click target (2026-07-16, William, confirmed via clarifying question):
-// each box links to the SAME /shop/[productId] template real listings use
-// (app/shop/[productId]/page.tsx), with an obviously-fake id
-// ("reserved-{countryCode}-{index}") rather than the id of a real listing.
-// Since no product with that id exists, the page's own server-side prisma
-// lookup returns nothing and Next's notFound() renders the site's generic
-// "Page Not Found" screen (app/not-found.tsx) — never a fabricated product
-// page. This was a deliberate choice over linking to /sell: William asked
-// specifically for the product-page template, understanding it 404s until
-// a real seller fills the slot, per LAW #1 (never imply fake inventory).
+// Click target (updated 2026-07-16, William): every box links to
+// /shop/preview (app/shop/preview/page.tsx), a static seller-facing
+// preview of the real product-page template populated with clearly
+// labelled example content — NOT the real /shop/[productId] template with
+// a fake id, which is what this originally did and just 404'd (see git
+// history on this file for that first version). William's goal here is
+// for a prospective seller clicking an open box to see exactly how their
+// goods will be presented once they list, as a recruiting tool for the
+// open seats — a dead-end 404 didn't serve that. /shop/preview mirrors
+// ProductPageClient's layout/styles closely and is unambiguously marked
+// as an example at the top, so it never implies fabricated real
+// inventory, per LAW #1.
 const slotsCss = `
 .shslots{width:100%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0 0;margin-bottom:8px}
 .shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
@@ -269,7 +271,7 @@ function ShopContent() {
                 <Link
                   className="shslots-box"
                   key={i}
-                  href={`/shop/reserved-${(originCountry.code || 'xx').toLowerCase()}-${i}`}
+                  href="/shop/preview"
                 >
                   {img && <img className="shslots-img" src={img.url} alt="" loading="lazy" decoding="async" />}
                   <div className="shslots-scrim" />
