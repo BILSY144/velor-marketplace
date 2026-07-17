@@ -496,6 +496,8 @@ William's directive (2026-07-17, continuing a session that died mid-research): e
 
 Also still owed from the 2026-07-16/17 session: full Hallmark seal on the seller's public storefront profile page (the one remaining badge placement); 10 seller outreach drafts awaiting William's review; buyer test still queued.
 
+**Same day, later (all live-verified in Chrome):** (1) Film seats got verified poster frames -- a no-autoplay video paints NOTHING in Chromium, which read as "15 missing tiles"; posters fixed it, films still only download/play on scroll-in. (2) Dead CDN link on the tea reel's "The coffee ceremony" (30937097) replaced with 38519856 -- same dead ID the founding atlas fixed 2026-07-16; the homepage copy had been missed. (3) SITE TYPOGRAPHY CHANGE (William): all site headers now use the app's Fraunces serif -- global h1-h6 rule in globals.css with deliberate !important to outrank ~40 inline var(--font-display) heading styles; kickers/buttons/labels keep Space Grotesk; ID-card name lines (homepage reels, shop seat grid, listing cards) also Fraunces. The old "display font Space Grotesk" line in STANDING DIRECTIVES now applies to non-heading display text only. (4) Origins header dropdown rebuilt: all 190 countries as mini shopping-channel boxes (countryImagery photo cover into black, orange SHOPPING CHANNEL kicker, Fraunces name), lazy-loaded, rendered only while open. Commits 92ca199, 3f78bd8, 5238016, 42fffdb.
+
 ---
 
 ## SELLER ACQUISITION PLAN (2026-07-09 â under 4 weeks to 6 August launch)
