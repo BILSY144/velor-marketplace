@@ -279,6 +279,26 @@ export default function GlobalHeader() {
                   fontFamily: 'var(--font-body)',
                 }}
               />
+              {/* Clickable submit (William, 2026-07-17) -- Enter still works too */}
+              <button
+                type="submit"
+                aria-label="Search"
+                style={{
+                  background: 'var(--accent)',
+                  color: '#160a00',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '5px 14px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-display)',
+                  flexShrink: 0,
+                  margin: '-4px -8px -4px 0',
+                }}
+              >
+                Search
+              </button>
             </div>
           </form>
 
