@@ -3,6 +3,7 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ConditionalLayout from '@/components/ConditionalLayout'
 import AnalyticsTracker from '@/components/AnalyticsTracker'
+import ServiceWorkerCleanup from '@/components/ServiceWorkerCleanup'
 import ThemePreview from '@/components/ThemePreview'
 
 // Homepage title/description rewritten by the standing SEO agent,
@@ -324,6 +325,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Providers>
         <AnalyticsTracker />
+        {/* Kills the zombie June service worker still cached on visitors'
+            devices -- see components/ServiceWorkerCleanup.tsx and public/sw.js. */}
+        <ServiceWorkerCleanup />
           <ConditionalLayout>{children}</ConditionalLayout>
           <ThemePreview />
         </Providers>
