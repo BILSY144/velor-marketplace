@@ -27,7 +27,10 @@ export async function POST(request: Request) {
   const purchased = await prisma.orderItem.findFirst({
     where: {
       productId,
-      order: { customerEmail: session.user.email, status: { in: ['PROCESSING', 'SHIPPED', 'DELIVERED'] } }
+      // 'PAID' is what createOrderFromPaymentIntent actually writes -- without it
+      // in this list, NO real buyer could ever review anything (found live in
+      // William's first end-to-end test purchase, 2026-07-17)
+      order: { customerEmail: session.user.email, status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } }
     }
   })
   if (!purchased) {
