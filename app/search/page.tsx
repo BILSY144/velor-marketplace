@@ -8,6 +8,8 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
+import { countryImage } from '@/lib/countryImagery'
 
 interface SearchResult {
   id: string
@@ -51,6 +53,39 @@ const css = `
 @media(max-width:720px){.vsr h1{font-size:32px}.vsr-bar{flex-direction:column}.vsr-btn{padding:15px 0}}
 `
 
+// Common ways people actually type countries -- "uk" should find the
+// United Kingdom channel (William, 2026-07-17: "if you type in a country
+// it doesnt work").
+const COUNTRY_ALIASES: Record<string, string> = {
+  'uk': 'GB', 'britain': 'GB', 'great britain': 'GB', 'england': 'GB', 'scotland': 'GB', 'wales': 'GB',
+  'usa': 'US', 'america': 'US', 'united states': 'US', 'us': 'US',
+  'uae': 'AE', 'emirates': 'AE', 'holland': 'NL', 'czechia': 'CZ', 'burma': 'MM',
+}
+
+function flagOfCode(code: string): string {
+  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
+
+function matchCountries(q: string): { code: string; name: string }[] {
+  const t = q.trim().toLowerCase()
+  if (t.length < 2) return []
+  const alias = COUNTRY_ALIASES[t]
+  const out: { code: string; name: string }[] = []
+  if (alias) {
+    const c = WORLD_COUNTRIES.find((w) => w.code === alias)
+    if (c) out.push(c)
+  }
+  for (const c of WORLD_COUNTRIES) {
+    if (out.some((x) => x.code === c.code)) continue
+    const n = c.name.toLowerCase()
+    if (t.length === 2 ? n.startsWith(t) : (n.includes(t) || t.includes(n))) out.push(c)
+    if (out.length >= 4) break
+  }
+  return out
+}
+
+type OriginProduct = { id: string; name?: string; title?: string; price: number; currency?: string; images?: string[]; sellerName?: string; seller?: { storeName?: string; currency?: string } }
+
 function SearchContent() {
   const { symbol, convert } = useCurrencyDisplay()
   const searchParams = useSearchParams()
@@ -58,6 +93,8 @@ function SearchContent() {
   const q = searchParams.get('q') ?? ''
   const [query, setQuery] = useState(q)
   const [results, setResults] = useState<SearchResult[]>([])
+  const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
+  const [originGoods, setOriginGoods] = useState<{ country: { code: string; name: string }; products: OriginProduct[] } | null>(null)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -74,10 +111,22 @@ function SearchContent() {
     if (term.length < 2) return
     setLoading(true)
     setSearched(true)
+    // country channels match instantly, no network
+    const hits = matchCountries(term)
+    setCountryHits(hits)
+    setOriginGoods(null)
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`)
+      const [res, originRes] = await Promise.all([
+        fetch(`/api/search?q=${encodeURIComponent(term)}`),
+        hits.length > 0 ? fetch(`/api/shop/products?origin=${hits[0].code}`) : Promise.resolve(null),
+      ])
       const data = await res.json()
       setResults(data.results ?? [])
+      if (originRes && originRes.ok) {
+        const od = await originRes.json()
+        const list: OriginProduct[] = od?.products ?? od?.results ?? (Array.isArray(od) ? od : [])
+        if (list.length > 0) setOriginGoods({ country: hits[0], products: list.slice(0, 8) })
+      }
     } catch {
       setResults([])
     } finally {
@@ -116,7 +165,56 @@ function SearchContent() {
 
         {loading && <p className="vsr-note">Searching...</p>}
 
-        {!loading && searched && results.length === 0 && (
+        {!loading && countryHits.length > 0 && (
+          <>
+            <p className="vsr-note">Channel{countryHits.length !== 1 ? 's' : ''} matching &ldquo;{q}&rdquo;</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 34 }}>
+              {countryHits.map((c) => {
+                const im = countryImage(c.code, 500)
+                return (
+                  <Link key={c.code} href={`/origins/${slugifyCountryName(c.name)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                    {im && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={im.url} alt={c.name} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,8,11,0) 25%, rgba(8,8,11,0.95) 100%)' }} />
+                    <div style={{ position: 'absolute', left: 14, right: 14, bottom: 11 }}>
+                      <div style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{flagOfCode(c.code)} SHOPPING CHANNEL</div>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 19, color: '#fff', lineHeight: 1.15, marginTop: 3 }}>{c.name}</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {!loading && originGoods && (
+          <>
+            <p className="vsr-note">Goods from {originGoods.country.name}</p>
+            <div className="vsr-grid" style={{ marginBottom: 34 }}>
+              {originGoods.products.map((item) => (
+                <Link key={item.id} className="vsr-card" href={`/shop/${item.id}`}>
+                  <div className="vsr-img">
+                    {(item.images && item.images[0]) ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={item.images[0]} alt={item.name ?? item.title ?? ''} />
+                    ) : (
+                      <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
+                    )}
+                  </div>
+                  <div className="vsr-body">
+                    <p className="vsr-name">{item.name ?? item.title}</p>
+                    <p className="vsr-seller">by {item.sellerName ?? item.seller?.storeName ?? ''}</p>
+                    <p className="vsr-price">{symbol}{convert(item.price, item.currency ?? item.seller?.currency ?? 'GBP').toFixed(2)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!loading && searched && results.length === 0 && countryHits.length === 0 && (
           <div className="vsr-empty">
             <h2>Nothing for &ldquo;{q}&rdquo; — yet.</h2>
             <p>
@@ -138,7 +236,7 @@ function SearchContent() {
             </p>
             <div className="vsr-grid">
               {results.map(item => (
-                <Link key={item.id} className="vsr-card" href={`/marketplace/${item.id}`}>
+                <Link key={item.id} className="vsr-card" href={`/shop/${item.id}`}>
                   <div className="vsr-img">
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
