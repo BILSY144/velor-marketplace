@@ -17,7 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { getDisplayLanguage } from '@/lib/language'
+import { getDisplayLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'SELECT', 'OPTION', 'CODE', 'PRE'])
 const NO_LETTERS = /^[^A-Za-z]*$/
@@ -29,6 +29,7 @@ export default function LanguageTranslator() {
   const busy = useRef(false)
   const queued = useRef(false)
   const observer = useRef<MutationObserver | null>(null)
+  const prefetched = useRef(new Set<string>()) // pathname|lang pairs already prefetched
   const timer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function LanguageTranslator() {
       try {
         const d = dict.current.get(lang)
         if (!d) return
-        const entries = [...d.entries()].slice(-4000)
+        const entries = [...d.entries()].slice(-2000)
         window.localStorage.setItem('velor_tx_' + lang, JSON.stringify(entries))
       } catch {}
     }
@@ -104,6 +105,7 @@ export default function LanguageTranslator() {
       const lang = getDisplayLanguage()
       if (lang === 'en') {
         restoreEnglish()
+        window.setTimeout(() => { void prefetchAll() }, 2500)
         return
       }
       if (busy.current) {
@@ -162,7 +164,45 @@ export default function LanguageTranslator() {
           // direct call, not schedule(): background tabs throttle timers,
           // and the queued pass usually only needs to paint from the dict
           void translatePage()
+        } else {
+          window.setTimeout(() => { void prefetchAll() }, 1500)
         }
+      }
+    }
+
+    // Background prefetch: once the page is settled, pull this page's
+    // strings in EVERY language into memory (cache-warmed languages are one
+    // cheap DB round trip each) -- so switching language is instant, no
+    // network on the click. Runs once per page per language.
+    const prefetchAll = async () => {
+      const current = getDisplayLanguage()
+      const nodes = collectNodes()
+      const texts = [...new Set(
+        nodes
+          .map((n) => (originals.current.get(n) ?? n.nodeValue ?? '').trim())
+          .filter((t) => t.length >= 2 && !NO_LETTERS.test(t))
+      )]
+      if (texts.length === 0) return
+      const langs = SUPPORTED_LANGUAGES.map((l) => l.code).filter((c) => c !== 'en' && c !== current && !prefetched.current.has(pathname + '|' + c))
+      for (const l of langs) {
+        prefetched.current.add(pathname + '|' + l)
+        const d = langDict(l)
+        const missing = texts.filter((t) => !d.has(t))
+        if (missing.length === 0) continue
+        const chunks: string[][] = []
+        for (let i = 0; i < missing.length && chunks.length < 14; i += 150) chunks.push(missing.slice(i, i + 150))
+        try {
+          await Promise.all(chunks.map(async (chunk) => {
+            const res = await fetch('/api/translate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: l, texts: chunk }) })
+            if (res.ok) {
+              const { translations } = await res.json()
+              chunk.forEach((src, i) => d.set(src, translations[i]))
+            }
+          }))
+          saveDict(l)
+        } catch {}
+        // if the user switched TO this language while it prefetched, paint it
+        if (getDisplayLanguage() === l) applyDict(collectNodes(), d)
       }
     }
 
