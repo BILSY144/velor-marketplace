@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     if (total > 30000) return NextResponse.json({ error: 'payload too large' }, { status: 400 })
     texts.push(s)
   }
-  const translations = await translateBatch(lang, texts)
-  return NextResponse.json({ translations })
+  const debug = body && (body as Record<string, unknown>).debug === true
+  const result = await translateBatch(lang, texts, debug)
+  return NextResponse.json(debug ? result : { translations: result.translations })
 }

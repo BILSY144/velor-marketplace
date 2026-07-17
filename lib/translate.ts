@@ -61,7 +61,7 @@ async function modelTranslate(lang: string, texts: string[]): Promise<string[]> 
 
 // Returns translations aligned to `texts`. Untranslatable/failed entries
 // fall back to the source string -- the page must never lose text.
-export async function translateBatch(lang: string, texts: string[]): Promise<string[]> {
+export async function translateBatch(lang: string, texts: string[], debug = false): Promise<{ translations: string[]; error?: string }> {
   const hashes = texts.map(hashText)
   const cached = await prisma.translationCache.findMany({
     where: { lang, hash: { in: [...new Set(hashes)] } },
@@ -79,6 +79,7 @@ export async function translateBatch(lang: string, texts: string[]): Promise<str
     }
   })
 
+  let lastError: string | undefined
   // translate missing in model-call chunks (~50 strings / ~6k chars each)
   for (let i = 0; i < missing.length; ) {
     const chunk: typeof missing = []
@@ -95,10 +96,13 @@ export async function translateBatch(lang: string, texts: string[]): Promise<str
         skipDuplicates: true,
       })
       chunk.forEach((c, j) => byHash.set(c.hash, out[j]))
-    } catch {
+    } catch (e) {
       // fail-safe: leave this chunk untranslated (sources returned below)
+      lastError = e instanceof Error ? e.message : String(e)
+      console.error('translateBatch chunk failed:', lastError)
+      if (debug) break
     }
   }
 
-  return texts.map((t, i) => byHash.get(hashes[i]) ?? t)
+  return { translations: texts.map((t, i) => byHash.get(hashes[i]) ?? t), error: lastError }
 }
