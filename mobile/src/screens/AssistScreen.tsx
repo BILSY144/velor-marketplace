@@ -1,13 +1,6 @@
 import React, { useRef, useState } from 'react'
-import {
-  View,
-  FlatList,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native'
+import { View, FlatList, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native'
+import { TextInput } from '../ui/TI'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'

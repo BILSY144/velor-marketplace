@@ -17,7 +17,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from '@expo-google-fonts/inter'
-import { onI18n, initPrefs } from './src/i18n'
+import { onI18n, initPrefs, T as tr } from './src/i18n'
 import { Fraunces_400Regular, Fraunces_500Medium_Italic, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
@@ -74,6 +74,11 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 function Tabs() {
   const count = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0))
+  // Tab labels are drawn by react-navigation's own Text, which the ui/T
+  // wrapper never touches -- translate them here and re-evaluate on every
+  // language tick (the subscription forces screenOptions to recompute).
+  const [, tabTick] = React.useState(0)
+  React.useEffect(() => onI18n(() => tabTick((t) => t + 1)), [])
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -85,6 +90,7 @@ function Tabs() {
         tabBarActiveTintColor: C.accent,
         tabBarInactiveTintColor: C.mut,
         tabBarLabelStyle: { fontFamily: F.displayMed, fontSize: 9.5 },
+        tabBarLabel: tr(route.name === 'MenuTab' ? 'Menu' : route.name),
         tabBarIcon: ({ color, size }) => (
           <Ionicons name={ICONS[route.name]} size={size - 2} color={color} />
         ),
@@ -100,7 +106,6 @@ function Tabs() {
       <Tab.Screen
         name="MenuTab"
         component={YouScreen}
-        options={{ tabBarLabel: 'Menu' }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault()

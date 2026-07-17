@@ -78,6 +78,9 @@ export async function initPrefs() {
   } catch {}
   emit()
   void loadRates()
+  // Cold start with a stored language: pull the whole dictionary now so the
+  // first screens the user opens paint translated, not batch-by-batch.
+  if (LANG !== 'en') void prefetchAll(LANG)
 }
 
 export function setAppLanguage(code: string) {
@@ -85,6 +88,11 @@ export function setAppLanguage(code: string) {
   LANG = code
   SecureStore.setItemAsync('velor_lang', code).catch(() => {})
   emit()
+  // v4 (William: "it needs instant conversion"): don't wait for screens to
+  // queue their own strings -- pull the ENTIRE app dictionary the moment the
+  // language is picked. Server cache is warm, so this is DB reads, not model
+  // calls; batches land in parallel and each one repaints as it arrives.
+  if (code !== 'en') void prefetchAll(code)
 }
 
 export function setAppCurrency(code: string) {
@@ -134,7 +142,9 @@ export function T(s: string): string {
   const hit = d.get(t)
   if (hit !== undefined) return hit === t ? s : s.replace(t, hit)
   pending.add(t.slice(0, 600))
-  if (!flushTimer) flushTimer = setTimeout(() => { void flush() }, 600)
+  // 120ms (was 600): long enough to batch one render pass, short enough
+  // that a missed-by-the-manifest string still swaps in near-instantly.
+  if (!flushTimer) flushTimer = setTimeout(() => { void flush() }, 120)
   return s
 }
 
@@ -143,7 +153,57 @@ export function T(s: string): string {
 let lastFlush = 'no batch sent yet'
 export function i18nDiag(): string {
   const d = dicts[LANG]
-  return `engine v3 · lang ${LANG} · cached ${d ? d.size : 0} · queued ${pending.size} · last: ${lastFlush}`
+  return `engine v4 · lang ${LANG} · cached ${d ? d.size : 0} · queued ${pending.size} · last: ${lastFlush}`
+}
+
+// v4: whole-dictionary prefetch. The manifest is every display string in the
+// app (AST-extracted at build time). Chunks fetch with limited concurrency;
+// each landed chunk emits, so the UI fills in progressively and is fully
+// translated in a couple of seconds against the warmed server cache.
+const PREFETCH_CHUNK = 150
+const PREFETCH_CONCURRENCY = 4
+let prefetchedFor = ''
+
+async function prefetchAll(lang: string) {
+  if (prefetchedFor === lang) return
+  prefetchedFor = lang
+  let manifest: string[]
+  try {
+    manifest = require('./i18n-manifest').I18N_MANIFEST
+  } catch {
+    return
+  }
+  const d = dicts[lang] || (dicts[lang] = new Map())
+  const todo = manifest.filter((t) => !d.has(t))
+  if (todo.length === 0) return
+  const chunks: string[][] = []
+  for (let i = 0; i < todo.length; i += PREFETCH_CHUNK) chunks.push(todo.slice(i, i + PREFETCH_CHUNK))
+  let next = 0
+  const worker = async () => {
+    while (next < chunks.length && LANG === lang) {
+      const chunk = chunks[next++]
+      try {
+        const r = await fetch(API, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ lang, texts: chunk }),
+        })
+        if (r.ok) {
+          const { translations } = await r.json()
+          chunk.forEach((t, i) => {
+            if (typeof translations?.[i] === 'string') d.set(t, translations[i])
+          })
+          lastFlush = `prefetch ${d.size}/${manifest.length}`
+          emit()
+        }
+      } catch {
+        // A failed chunk is retried on the next prefetch call; per-screen
+        // flush() still covers anything a user actually looks at.
+        prefetchedFor = ''
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: PREFETCH_CONCURRENCY }, worker))
 }
 
 let failures = 0
