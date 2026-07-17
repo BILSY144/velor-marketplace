@@ -152,7 +152,7 @@ export default function GlobalHeader() {
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
         Verified &amp; ranked sellers
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
-        Secure Stripe checkout
+        Secure Stripe checkout &middot; Payouts by Stripe &amp; Payoneer
         <span style={{ opacity: 0.4, margin: '0 10px' }}>|</span>
         Global marketplace — prices convert live, reconfirmed at checkout
               </div>

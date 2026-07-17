@@ -78,7 +78,7 @@ export default function GlobalFooter() {
           {[
             ['Buyer protection', 'Your payment is held safely until delivery is confirmed.'],
             ['Verified & ranked sellers', 'Every seller is checked and scored on real delivery performance.'],
-            ['Secure Stripe checkout', 'Card details are handled by Stripe — Velor never sees them.'],
+            ['Secure Stripe checkout · Payouts by Stripe & Payoneer', 'Card details are handled by Stripe — Velor never sees them. Seller earnings are paid out via Stripe, or Payoneer where Stripe is unavailable.'],
             ['A global marketplace', 'One account to buy from independent sellers worldwide.'],
           ].map(([t, d]) => (
             <div key={t}>

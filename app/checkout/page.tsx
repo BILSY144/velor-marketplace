@@ -150,6 +150,9 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
       <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
         Duties and taxes are included in your total. Velor is a global marketplace, so this was reconfirmed at today's exchange rate right before you paid — you will not be charged anything extra on delivery.
       </p>
+      <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5, marginTop: '-10px' }}>
+        Secure Stripe checkout &middot; Payouts by Stripe &amp; Payoneer
+      </p>
     </form>
   )
 }
