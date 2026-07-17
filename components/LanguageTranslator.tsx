@@ -50,7 +50,7 @@ export default function LanguageTranslator() {
       try {
         const d = dict.current.get(lang)
         if (!d) return
-        const entries = [...d.entries()].slice(-1500)
+        const entries = [...d.entries()].slice(-4000)
         window.sessionStorage.setItem('velor_tx_' + lang, JSON.stringify(entries))
       } catch {}
     }
@@ -123,7 +123,7 @@ export default function LanguageTranslator() {
           nodes
             .map((n) => (originals.current.get(n) ?? n.nodeValue ?? '').trim())
             .filter((t) => t.length >= 2 && !NO_LETTERS.test(t) && !d.has(t))
-        )].slice(0, 400)
+        )].slice(0, 150)
         if (pending.length > 0) {
           const res = await fetch('/api/translate', {
             method: 'POST',
