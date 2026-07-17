@@ -64,6 +64,7 @@ const CULTURE_REELS: {
     title: 'Ceramics & porcelain',
     line: 'Fired in the cities that invented firing.',
     tiles: [
+      { name: 'Thrown on the wheel', code: '', img: vp('12681572/pictures/preview-0.jpeg'), video: vf('12681572/12681572-hd_1920_1080_24fps.mp4') },
       { name: 'Talavera pottery', code: 'MX', img: px(36103768, 'free-photo-of-colorful-mexican-talavera-pottery-display') },
       { name: 'Porcelain tea sets', code: 'CN', img: px(36253267, 'free-photo-of-elegant-tea-set-on-traditional-chinese-table') },
       { name: 'Souk ceramics', code: 'MA', img: px(37484909, 'free-photo-of-colorful-market-display-of-moroccan-ceramics') },
@@ -83,13 +84,13 @@ const CULTURE_REELS: {
       { name: 'Onggi jars', code: 'KR', img: px(34416819) },
       { name: 'Bukhara ceramics', code: 'UZ', img: px(29475568) },
       { name: 'Barro negro', code: 'MX', img: px(33701615) },
-      { name: 'Thrown on the wheel', code: '', img: vp('12681572/pictures/preview-0.jpeg'), video: vf('12681572/12681572-hd_1920_1080_24fps.mp4') },
     ],
   },
   {
     title: 'Rugs, cloth & thread',
     line: 'Patterns you can read like a language.',
     tiles: [
+      { name: 'On the loom', code: '', img: vp('32655899/alpaca-alpaca-loom-alpaca-wool-animal-farm-32655899.jpeg'), video: vf('32655899/13923463_1280_720_25fps.mp4') },
       { name: 'Kilim rugs', code: 'TR', img: px(33653647, 'free-photo-of-colorful-traditional-turkish-kilim-pattern') },
       { name: 'Kente cloth', code: 'GH', img: px(30929475, 'free-photo-of-portrait-of-a-man-in-traditional-ghanaian-kente-cloth') },
       { name: 'Andean weaving', code: 'PE', img: px(24645287, 'free-photo-of-elderly-person-holding-embroidered-blankets') },
@@ -109,13 +110,13 @@ const CULTURE_REELS: {
       { name: 'Alpaca of the Andes', code: 'PE', img: px(35729525) },
       { name: 'Suzani embroidery', code: 'UZ', img: px(29475576) },
       { name: 'Otavalo textiles', code: 'EC', img: px(18425673) },
-      { name: 'On the loom', code: '', img: vp('32655899/alpaca-alpaca-loom-alpaca-wool-animal-farm-32655899.jpeg'), video: vf('32655899/13923463_1280_720_25fps.mp4') },
     ],
   },
   {
     title: "The world's kitchen",
     line: 'Tools that have cooked a thousand years of dinners.',
     tiles: [
+      { name: 'The wok, live', code: '', img: vp('34711974/pexels-photo-34711974.jpeg'), video: vf('34711974/14713477_720_1280_30fps.mp4') },
       { name: 'Hand-forged knives', code: 'JP', img: px(23436813, 'free-photo-of-man-holding-a-japanese-knife') },
       { name: 'Copper cezves', code: 'TR', img: px(31330206, 'free-photo-of-traditional-turkish-coffee-prepared-outdoors') },
       { name: 'Cast-iron teapots', code: 'JP', img: px(14563207) },
@@ -135,13 +136,13 @@ const CULTURE_REELS: {
       { name: 'Olive-wood boards', code: 'TN', img: px(38368132) },
       { name: 'Karahi cookware', code: 'PK', img: px(33617984) },
       { name: 'Dallah coffee pots', code: 'SA', img: px(38036783) },
-      { name: 'The wok, live', code: '', img: vp('34711974/pexels-photo-34711974.jpeg'), video: vf('34711974/14713477_720_1280_30fps.mp4') },
     ],
   },
   {
     title: 'Adornment',
     line: "Amber, jade, beadwork — worn the way it's always been worn.",
     tiles: [
+      { name: "The goldsmith's bench", code: '', img: vp('35822699/pexels-photo-35822699.jpeg'), video: vf('35822699/15189596_1280_720_25fps.mp4') },
       { name: 'Amber rings', code: 'PL', img: px(28856507) },
       { name: 'Jade & stone', code: 'CN', img: px(10961447) },
       { name: 'Maasai beadwork', code: 'KE', img: px(29828564) },
@@ -161,13 +162,13 @@ const CULTURE_REELS: {
       { name: 'Mompox filigree', code: 'CO', img: px(15955332) },
       { name: 'Turquoise & silver', code: 'US', img: px(33737462) },
       { name: 'Komboloi beads', code: 'GR', img: px(11591685) },
-      { name: "The goldsmith's bench", code: '', img: vp('35822699/pexels-photo-35822699.jpeg'), video: vf('35822699/15189596_1280_720_25fps.mp4') },
     ],
   },
   {
     title: 'Tea, coffee & pantry',
     line: "The world's larder, from where it actually grows.",
     tiles: [
+      { name: 'The pour', code: '', img: vp('8507896/pictures/preview-0.jpeg'), video: vf('8507896/8507896-hd_1080_1920_25fps.mp4') },
       { name: 'Matcha', code: 'JP', img: px(8330375) },
       { name: 'The coffee ceremony', code: 'ET', img: px(38519856) },
       { name: 'Turkish delight', code: 'TR', img: px(36207188) },
@@ -187,13 +188,13 @@ const CULTURE_REELS: {
       { name: 'High-mountain oolong', code: 'TW', img: px(6545351) },
       { name: 'Colombian coffee', code: 'CO', img: px(33220155) },
       { name: 'Cacao ceremony', code: 'GT', img: px(23511143) },
-      { name: 'The pour', code: '', img: vp('8507896/pictures/preview-0.jpeg'), video: vf('8507896/8507896-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
     title: 'Light, scent & self',
     line: 'Lanterns, incense, and ten-step skincare.',
     tiles: [
+      { name: 'Candle making', code: '', img: vp('6748677/candle-candle-light-candle-wax-handmade-6748677.jpeg'), video: vf('6748677/6748677-hd_1920_1080_25fps.mp4') },
       { name: 'Moroccan lanterns', code: 'MA', img: px(30208535) },
       { name: 'Temple incense', code: 'IN', img: px(20599556) },
       { name: 'Paper lanterns', code: 'CN', img: px(2161693) },
@@ -213,13 +214,13 @@ const CULTURE_REELS: {
       { name: 'Beeswax candles', code: 'PL', img: px(18921271) },
       { name: 'Diya lamps', code: 'IN', img: px(34431714) },
       { name: 'Hanji lanterns', code: 'KR', img: px(34569756) },
-      { name: 'Candle making', code: '', img: vp('6748677/candle-candle-light-candle-wax-handmade-6748677.jpeg'), video: vf('6748677/6748677-hd_1920_1080_25fps.mp4') },
     ],
   },
   {
     title: 'Leather goods',
     line: 'Tanned, cut and stitched the way it always has been.',
     tiles: [
+      { name: 'Saddle stitch', code: '', img: vp('34740027/2025-november-34740027.jpeg'), video: vf('34740027/14727180_1280_720_30fps.mp4') },
       { name: 'Fez tanneries', code: 'MA', img: px(38112321) },
       { name: 'Leather bags of the souk', code: 'MA', img: px(21326994) },
       { name: 'Babouche slippers', code: 'MA', img: px(18767555) },
@@ -239,13 +240,13 @@ const CULTURE_REELS: {
       { name: 'Handmade shoes', code: 'ES', img: px(37165708) },
       { name: 'Western bootmakers', code: 'US', img: px(19750710) },
       { name: 'Leather ateliers', code: 'JP', img: px(33102790) },
-      { name: 'Saddle stitch', code: '', img: vp('34740027/2025-november-34740027.jpeg'), video: vf('34740027/14727180_1280_720_30fps.mp4') },
     ],
   },
   {
     title: 'Glass & marble',
     line: 'Blown, cut and carved by hand since before the wheel had spokes.',
     tiles: [
+      { name: 'Glass, blown', code: '', img: vp('7519297/pictures/preview-0.jpeg'), video: vf('7519297/7519297-hd_720_1366_25fps.mp4') },
       { name: 'Murano glassworks', code: 'IT', img: px(12954040) },
       { name: 'Murano ateliers', code: 'IT', img: px(29893067) },
       { name: 'Bohemian crystal', code: 'CZ', img: px(30132508) },
@@ -265,13 +266,13 @@ const CULTURE_REELS: {
       { name: 'Cut crystal', code: 'IE', img: px(20531140) },
       { name: 'Crystal chandeliers', code: 'AT', img: px(12024171) },
       { name: 'Glass studios', code: 'JP', img: px(33013269) },
-      { name: 'Glass, blown', code: '', img: vp('7519297/pictures/preview-0.jpeg'), video: vf('7519297/7519297-hd_720_1366_25fps.mp4') },
     ],
   },
   {
     title: 'Furniture & woodcraft',
     line: 'No nails, no glue, no gap.',
     tiles: [
+      { name: 'Carved by hand', code: '', img: vp('37789666/pexels-photo-37789666.jpeg'), video: vf('37789666/16029515_1280_720_59fps.mp4') },
       { name: 'Kyoto joinery', code: 'JP', img: px(18848781) },
       { name: 'Japanese hand planes', code: 'JP', img: px(30907889) },
       { name: 'Danish design', code: 'DK', img: px(32392318) },
@@ -291,13 +292,13 @@ const CULTURE_REELS: {
       { name: 'Oak workshops', code: 'GB', img: px(37358117) },
       { name: 'Thuya marquetry', code: 'MA', img: px(33395644) },
       { name: 'Porch rockers', code: 'US', img: px(20778163) },
-      { name: 'Carved by hand', code: '', img: vp('37789666/pexels-photo-37789666.jpeg'), video: vf('37789666/16029515_1280_720_59fps.mp4') },
     ],
   },
   {
     title: 'Metalware',
     line: 'Iron, steel and brass, worked by hand.',
     tiles: [
+      { name: 'The forge, live', code: '', img: vp('31638148/pexels-photo-31638148.jpeg'), video: vf('31638148/13478949_1280_720_24fps.mp4') },
       { name: 'Village forge iron', code: 'IN', img: px(34495354) },
       { name: 'Anvil work', code: 'JP', img: px(31004832) },
       { name: 'Workshop ironwork', code: 'CN', img: px(34116083) },
@@ -317,13 +318,13 @@ const CULTURE_REELS: {
       { name: 'Cowbells', code: 'CH', img: px(28615960) },
       { name: 'Singing bowls', code: 'NP', img: px(3544322) },
       { name: 'Silverwork', code: 'PE', img: px(33834689) },
-      { name: 'The forge, live', code: '', img: vp('31638148/pexels-photo-31638148.jpeg'), video: vf('31638148/13478949_1280_720_24fps.mp4') },
     ],
   },
   {
     title: 'Paper & stationery',
     line: 'Notebooks and paper treated as a craft, not a surface.',
     tiles: [
+      { name: 'Ink & nib', code: '', img: vp('7344854/pictures/preview-0.jpeg'), video: vf('7344854/7344854-hd_1080_1920_25fps.mp4') },
       { name: 'Handmade paper', code: 'NP', img: px(10373241) },
       { name: 'Cork oak forest', code: 'PT', img: px(36627495) },
       { name: 'Cork stoppers', code: 'PT', img: px(33054271) },
@@ -343,13 +344,13 @@ const CULTURE_REELS: {
       { name: 'Wycinanki cutouts', code: 'PL', img: px(8879956) },
       { name: 'Papel picado', code: 'MX', img: px(29298480) },
       { name: 'Paper umbrellas', code: 'TH', img: px(28516216) },
-      { name: 'Ink & nib', code: '', img: vp('7344854/pictures/preview-0.jpeg'), video: vf('7344854/7344854-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
     title: 'Spice & pantry staples',
     line: 'The souk, the terrace and the season, sold by the kilo.',
     tiles: [
+      { name: 'The spice souk', code: '', img: vp('36147273/2026-36147273.jpeg'), video: vf('36147273/15329473_1280_720_25fps.mp4') },
       { name: 'Dried chilli market', code: 'IN', img: px(30387987) },
       { name: 'Chilli stalls', code: 'MX', img: px(37829754) },
       { name: 'Salt harvest', code: 'FR', img: px(2132048) },
@@ -369,13 +370,13 @@ const CULTURE_REELS: {
       { name: 'Turmeric', code: 'IN', img: px(6808985) },
       { name: 'Paprika', code: 'HU', img: px(5769805) },
       { name: 'Ras el hanout', code: 'MA', img: px(35659931) },
-      { name: 'The spice souk', code: '', img: vp('36147273/2026-36147273.jpeg'), video: vf('36147273/15329473_1280_720_25fps.mp4') },
     ],
   },
   {
     title: 'Instruments & music',
     line: 'Built where the music comes from.',
     tiles: [
+      { name: 'The luthier', code: '', img: vp('37864529/luthier-work-37864529.jpeg'), video: vf('37864529/16064058_1366_720_50fps.mp4') },
       { name: 'Instrument workshop', code: 'IN', img: px(31508160) },
       { name: 'Drum making', code: 'ML', img: px(35488978) },
       { name: 'Violin craft', code: 'ES', img: px(3853198) },
@@ -395,13 +396,13 @@ const CULTURE_REELS: {
       { name: 'Handpan', code: 'CH', img: px(7970276) },
       { name: 'Irish harps', code: 'IE', img: px(33605476) },
       { name: 'Accordions', code: 'DE', img: px(8520168) },
-      { name: 'The luthier', code: '', img: vp('37864529/luthier-work-37864529.jpeg'), video: vf('37864529/16064058_1366_720_50fps.mp4') },
     ],
   },
   {
     title: 'Rituals & celebrations',
     line: 'What a culture wears and lights on its biggest days.',
     tiles: [
+      { name: 'Lantern night', code: '', img: vp('28987854/asian-lanterns-festival-mood-lanterns-lit-lanterns-28987854.jpeg'), video: vf('28987854/12538074_1280_720_24fps.mp4') },
       { name: 'Wedding henna', code: 'IN', img: px(32315685) },
       { name: 'Wedding attire', code: 'NG', img: px(37939838) },
       { name: 'New year lanterns', code: 'CN', img: px(30569671) },
@@ -421,13 +422,13 @@ const CULTURE_REELS: {
       { name: 'Semana Santa', code: 'ES', img: px(31715522) },
       { name: 'Maori heritage', code: 'NZ', img: px(6492113) },
       { name: 'Oktoberfest', code: 'DE', img: px(34071574) },
-      { name: 'Lantern night', code: '', img: vp('28987854/asian-lanterns-festival-mood-lanterns-lit-lanterns-28987854.jpeg'), video: vf('28987854/12538074_1280_720_24fps.mp4') },
     ],
   },
   {
     title: 'Precision craft',
     line: 'Ground, timed and cut to tolerances you cannot see.',
     tiles: [
+      { name: 'The watchmaker', code: '', img: vp('8322334/pictures/preview-0.jpeg'), video: vf('8322334/8322334-hd_1366_720_25fps.mp4') },
       { name: 'Watch repair', code: 'CH', img: px(8327524) },
       { name: 'Precision timing', code: 'DE', img: px(8327755) },
       { name: 'Lens grinding', code: 'JP', img: px(5715881) },
@@ -447,7 +448,6 @@ const CULTURE_REELS: {
       { name: 'Semiconductors', code: 'TW', img: px(37052613) },
       { name: 'Robotics', code: 'KR', img: px(36564994) },
       { name: 'Camera & lens craft', code: 'SE', img: px(29293968) },
-      { name: 'The watchmaker', code: '', img: vp('8322334/pictures/preview-0.jpeg'), video: vf('8322334/8322334-hd_1366_720_25fps.mp4') },
     ],
   },
 ]
