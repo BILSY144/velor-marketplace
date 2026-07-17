@@ -660,3 +660,15 @@ model TranslationCache {
 
   @@unique([hash, lang])
 }
+
+// Per-IP daily counter of NEW (cache-miss, model-translated) strings --
+// the anti-abuse budget on /api/translate (2026-07-17, William: protect
+// translation spend). Cached strings are served freely and never counted.
+model TranslationIpDaily {
+  id    String @id @default(cuid())
+  ip    String
+  day   String // YYYY-MM-DD (UTC)
+  count Int    @default(0)
+
+  @@unique([ip, day])
+}

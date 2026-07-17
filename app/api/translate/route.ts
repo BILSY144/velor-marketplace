@@ -8,12 +8,42 @@
 // CLAUDE.md rather than silently assumed unnecessary.
 
 import { NextResponse } from 'next/server'
-import { isTranslatableLang, translateBatch } from '@/lib/translate'
+import { isTranslatableLang, translateBatch, countMisses, allowNewTranslations } from '@/lib/translate'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
+// Anti-abuse (2026-07-17, William: protect translation spend). The endpoint
+// stays public -- anonymous buyers must read the site in their language, and
+// cached translations are free to serve. What's bounded is NEW model
+// translations: browser calls must come from our own origin, and every
+// caller has a per-IP daily budget plus a global daily ceiling. Over-budget
+// callers get cache-only service (never an error page).
+const OWN_HOSTS = ['velorcommerce.store', 'www.velorcommerce.store', 'localhost']
+
+function browserOriginAllowed(req: Request): boolean {
+  const raw = req.headers.get('origin') || req.headers.get('referer')
+  // Native app / server callers send no Origin or Referer -- allowed, the
+  // budgets below still bound them. (A forged no-Origin script is bounded
+  // the same way, which is the point: the wall is the budget, not the header.)
+  if (!raw) return true
+  try {
+    const host = new URL(raw).hostname
+    return OWN_HOSTS.includes(host) || host.endsWith('.vercel.app')
+  } catch {
+    return false
+  }
+}
+
+function callerIp(req: Request): string {
+  const fwd = req.headers.get('x-forwarded-for')
+  return (fwd ? fwd.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown').slice(0, 64)
+}
+
 export async function POST(req: Request) {
+  if (!browserOriginAllowed(req)) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
   let body: { lang?: string; texts?: unknown }
   try {
     body = await req.json()
@@ -37,6 +67,17 @@ export async function POST(req: Request) {
     texts.push(s)
   }
   const debug = body && (body as Record<string, unknown>).debug === true
-  const result = await translateBatch(lang, texts, debug)
-  return NextResponse.json(debug ? result : { translations: result.translations })
+
+  // Budget gate: only NEW (cache-miss) strings cost model spend, so only
+  // they are counted. All-cached requests -- the overwhelming majority now
+  // that every language is warmed -- skip the gate entirely.
+  let cacheOnly = false
+  const misses = await countMisses(lang, texts)
+  if (misses > 0) {
+    const verdict = await allowNewTranslations(callerIp(req), misses)
+    cacheOnly = !verdict.allowed
+  }
+
+  const result = await translateBatch(lang, texts, debug, cacheOnly)
+  return NextResponse.json(debug ? { ...result, cacheOnly } : { translations: result.translations })
 }
