@@ -4,6 +4,7 @@ import GlobalHeader from './GlobalHeader'
 import GlobalFooter from './GlobalFooter'
 import CountryOriginStrip from './CountryOriginStrip'
 import VelorAssistant from './VelorAssistant'
+import LanguageTranslator from './LanguageTranslator'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -21,6 +22,8 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
           The seller dashboard mounts its own instance via app/dashboard/layout.tsx,
           so it is excluded here to avoid a duplicate widget. */}
       {isPublic && <VelorAssistant variant="buyer" />}
+      {/* Whole-page live translation for the 19 languages -- see LanguageTranslator. */}
+      {isPublic && <LanguageTranslator />}
     </>
   )
 }

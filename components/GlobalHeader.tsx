@@ -83,7 +83,7 @@ export default function GlobalHeader() {
     if (l && value !== 'en') {
       // Honest, same as the app's Language screen: Velor speaks all 19 with
       // sellers today; the buyer-facing site ships English-first until launch.
-      setLangNote(`Saved. Velor speaks ${l.native} with its sellers today — the site in ${l.native} arrives with the buyer launch.`)
+      setLangNote(`Translating Velor into ${l.native} — a page's first visit takes a few seconds, then it's instant.`)
       window.setTimeout(() => setLangNote(null), 7000)
     } else {
       setLangNote(null)
@@ -323,7 +323,7 @@ export default function GlobalHeader() {
                 honest note explains, mirroring the app's Language screen. */}
             <div className="velor-currency" style={{ ...navLink, display: 'flex', alignItems: 'center', position: 'relative' }}>
               <select
-                title="Velor speaks 19 languages. Your sellers can already write to Velor in theirs — the full site in your language arrives with the buyer launch."
+                title="Velor speaks 19 languages. Pick yours and every page translates as you browse."
                 aria-label="Language"
                 value={language}
                 onChange={(e) => changeLanguage(e.target.value)}

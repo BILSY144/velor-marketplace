@@ -646,3 +646,17 @@ model PushToken {
 
   @@index([userId])
 }
+
+// On-demand page-translation cache -- one row per (source string, language).
+// Written by app/api/translate; each unique string is translated by the
+// Anthropic API exactly once per language, then served from here forever.
+model TranslationCache {
+  id         String   @id @default(cuid())
+  hash       String
+  lang       String
+  source     String
+  translated String
+  createdAt  DateTime @default(now())
+
+  @@unique([hash, lang])
+}
