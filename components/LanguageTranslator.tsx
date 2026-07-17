@@ -27,6 +27,8 @@ export default function LanguageTranslator() {
   const originals = useRef(new WeakMap<Text, string>())
   const dict = useRef(new Map<string, Map<string, string>>()) // lang -> src -> dst
   const busy = useRef(false)
+  const queued = useRef(false)
+  const gen = useRef(0)
   const observer = useRef<MutationObserver | null>(null)
   const timer = useRef<number | null>(null)
 
@@ -101,11 +103,18 @@ export default function LanguageTranslator() {
 
     const translatePage = async () => {
       const lang = getDisplayLanguage()
+      const myGen = ++gen.current
       if (lang === 'en') {
         restoreEnglish()
         return
       }
-      if (busy.current) return
+      if (busy.current) {
+        // a run is in flight for a possibly different language -- queue a
+        // fresh pass instead of silently dropping this one (the bug that
+        // left the page in the PREVIOUS language after a quick switch)
+        queued.current = true
+        return
+      }
       busy.current = true
       try {
         document.documentElement.lang = lang
@@ -127,13 +136,22 @@ export default function LanguageTranslator() {
             const { translations } = await res.json()
             pending.forEach((src, i) => d.set(src, translations[i]))
             saveDict(lang)
-            applyDict(collectNodes(), d)
+            // stale-run guard: if the user switched language while this
+            // batch was in flight, do NOT paint the old language over the
+            // page -- the queued re-run handles the new one
+            if (gen.current === myGen && getDisplayLanguage() === lang) {
+              applyDict(collectNodes(), d)
+            }
           }
         }
       } catch {
         // fail-safe: page stays in English rather than half-broken
       } finally {
         busy.current = false
+        if (queued.current) {
+          queued.current = false
+          schedule()
+        }
       }
     }
 
