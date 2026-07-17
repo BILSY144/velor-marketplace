@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { clearCart } from '@/lib/cart'
 
 interface ShippingForm {
   firstName: string
@@ -72,6 +73,10 @@ function ConfirmationContent() {
   const [orderNumberFailed, setOrderNumberFailed] = useState(false)
 
   useEffect(() => {
+    // Payment succeeded to reach this page -- empty the basket so the header
+    // badge clears (William, 2026-07-17: "once order has been successful in
+    // checkout the cart icon should disappear but its still there").
+    clearCart()
     const param = searchParams.get('order')
     if (param) {
       try { setOrder(JSON.parse(decodeURIComponent(param))); return } catch {}
