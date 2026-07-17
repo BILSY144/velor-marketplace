@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { View, Pressable, StyleSheet, ScrollView, Animated } from 'react-native'
 import { Text } from '../ui/T'
+import { T as tr } from '../i18n'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'
@@ -132,8 +133,11 @@ function HeroLine() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
       <Text style={s.heroBase}>Shop </Text>
+      {/* Animated.Text bypasses the ui/T wrapper, so translate the word
+          directly -- the 2.4s word-cycle interval re-renders this component
+          anyway, so dictionary hits appear without an extra subscription. */}
       <Animated.Text style={[s.heroWord, { opacity: fade, transform: [{ translateY: shift }] }]}>
-        {HERO_WORDS[i]}
+        {tr(HERO_WORDS[i])}
       </Animated.Text>
     </View>
   )

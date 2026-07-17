@@ -14,6 +14,10 @@
 // listing price input) stays GBP deliberately: payouts ARE GBP.
 
 import * as SecureStore from 'expo-secure-store'
+// Legacy API on SDK 54: documentDirectory + read/writeAsStringAsync. Used
+// to persist each language's dictionary on-device (v4), so a cold start
+// paints translated from disk instantly instead of refetching every open.
+import * as FileSystem from 'expo-file-system/legacy'
 
 const API = 'https://velorcommerce.store/api/translate'
 
@@ -67,6 +71,36 @@ export function onI18n(fn: () => void): () => void {
 export function getLang(): string { return LANG }
 export function getCurrency(): string { return CUR }
 
+// ---- On-device dictionary persistence (v4) -------------------------------
+const dictPath = (lang: string) => `${FileSystem.documentDirectory}velor-i18n-${lang}.json`
+const loadedFromDisk = new Set<string>()
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+async function loadDict(lang: string) {
+  if (lang === 'en' || loadedFromDisk.has(lang)) return
+  loadedFromDisk.add(lang)
+  try {
+    const raw = await FileSystem.readAsStringAsync(dictPath(lang))
+    const obj: Record<string, string> = JSON.parse(raw)
+    const d = dicts[lang] || (dicts[lang] = new Map())
+    for (const k of Object.keys(obj)) if (!d.has(k)) d.set(k, obj[k])
+    if (d.size > 0) emit()
+  } catch {} // first run for this language, or FS unavailable -- fine
+}
+
+function scheduleSaveDict(lang: string) {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    const d = dicts[lang]
+    if (!d || d.size === 0) return
+    const obj: Record<string, string> = {}
+    d.forEach((v, k) => { obj[k] = v })
+    FileSystem.writeAsStringAsync(dictPath(lang), JSON.stringify(obj)).catch(() => {})
+  }, 1500)
+}
+// --------------------------------------------------------------------------
+
 export async function initPrefs() {
   try {
     const l = await SecureStore.getItemAsync('velor_lang')
@@ -78,9 +112,12 @@ export async function initPrefs() {
   } catch {}
   emit()
   void loadRates()
-  // Cold start with a stored language: pull the whole dictionary now so the
-  // first screens the user opens paint translated, not batch-by-batch.
-  if (LANG !== 'en') void prefetchAll(LANG)
+  // Cold start with a stored language: paint from the on-disk dictionary
+  // immediately, then pull anything missing from the warmed server cache.
+  if (LANG !== 'en') {
+    const lang = LANG
+    void loadDict(lang).then(() => prefetchAll(lang))
+  }
 }
 
 export function setAppLanguage(code: string) {
@@ -89,10 +126,9 @@ export function setAppLanguage(code: string) {
   SecureStore.setItemAsync('velor_lang', code).catch(() => {})
   emit()
   // v4 (William: "it needs instant conversion"): don't wait for screens to
-  // queue their own strings -- pull the ENTIRE app dictionary the moment the
-  // language is picked. Server cache is warm, so this is DB reads, not model
-  // calls; batches land in parallel and each one repaints as it arrives.
-  if (code !== 'en') void prefetchAll(code)
+  // queue their own strings -- disk dictionary first (instant), then the
+  // ENTIRE app dictionary from the warmed server cache in parallel chunks.
+  if (code !== 'en') void loadDict(code).then(() => prefetchAll(code))
 }
 
 export function setAppCurrency(code: string) {
@@ -195,6 +231,7 @@ async function prefetchAll(lang: string) {
           })
           lastFlush = `prefetch ${d.size}/${manifest.length}`
           emit()
+          scheduleSaveDict(lang)
         }
       } catch {
         // A failed chunk is retried on the next prefetch call; per-screen
@@ -235,6 +272,7 @@ async function flush() {
       failures = 0
       lastFlush = `ok ${texts.length} in ${((Date.now() - t0) / 1000).toFixed(1)}s`
       emit()
+      scheduleSaveDict(lang)
     } else {
       failures += 1
       lastFlush = `HTTP ${r.status} after ${((Date.now() - t0) / 1000).toFixed(1)}s`
