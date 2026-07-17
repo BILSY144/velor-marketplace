@@ -652,6 +652,15 @@ on it as the acquisition dashboard for this push.
 
 ## TOOLING TRAPS (each of these cost real time)
 
+- **PREVIEW BUILDS USED TO DROP PRODUCTION TABLES (fixed 2026-07-17, commit ec8b850).**
+  The build script ran `prisma db push --accept-data-loss` on EVERY Vercel build,
+  including Preview builds of the mobile-app branch -- whose stale schema silently
+  DROPPED TranslationCache (and its whole cache) from the LIVE database minutes
+  after it was created. db push is now guarded to `VERCEL_ENV "production" production`
+  in package.json, and mobile-app carries a synced schema + the same guard. If a
+  table ever vanishes again: check which branch deployed last and what its
+  schema file contains. NEVER remove the guard.
+
 - **`raw.githubusercontent.com/.../main/...` serves stale content**, sometimes
   days old. Always resolve the latest SHA via
   `api.github.com/repos/.../commits?path=...` and fetch by SHA.
