@@ -75,6 +75,21 @@ moderation/rate-limiting layer BEFORE reconnecting the buyer-facing button
 
 ---
 
+## 2026-07-17 checkpoint (3) -- FULL BUYER JOURNEY VERIFIED END TO END WITH REAL MONEY (the queue-topping task since 2026-07-16 -- DONE)
+
+William bought his own store's listing ("hand made toys", GBP 1.00, seller williams workshop, the No.001 GB founding seller) as buyer willsinclair144@gmail.com, real card, live Stripe. Every step verified live in the browser:
+
+- Listing -> PDP -> cart -> checkout: real per-seller Shippo rates quoted live (GBP 2.71 selected, DPD GBP 5.79 offered), "Domestic -- no import duties" correct, total GBP 3.71.
+- Payment succeeded (pi_3Tu3E4DB5eA3Wfmu1tt4lnSd). Order cmrofh22i0003us8cygn8tbf5 PAID: platformFee GBP 0.04 = exactly 4% of the item (founding seller on free-for-life Pro), shipping passed through commission-free, sellerEarnings GBP 3.67 held in escrow. Buyer confirmation email RECEIVED (first real fire of buildOrderConfirmationEmail on a fresh order).
+- Buyer order history renders correctly (no GBP-NaN). Stock 1 -> 0, SOLD OUT badge live on /shop?origin=GB. Admin /api/admin/orders returns the full order.
+- Review SUBMITTED AND LIVE (5-star) -- after fixing a launch-blocking bug found by this very test: the review purchase-gate only accepted PROCESSING/SHIPPED/DELIVERED but real orders are written as PAID, so NO buyer could ever have reviewed anything (fix: PAID added, commit ab9252d).
+
+Bugs fixed during the test: cart badge not clearing after successful checkout (confirmation page now empties the basket, commit 91753ab); the review gate above. Also shipped same evening: country-aware search -- typing a country (incl. aliases uk/usa/holland) surfaces its shopping-channel box + that country's real goods; result cards now link to /shop/{id} not legacy /marketplace (commit be9a04d, NOT yet live-verified with a click-through).
+
+STILL UNVERIFIED downstream (needs future events, not code): seller-side order view under the williams workshop ACCOUNT (buyer account correctly sees "No orders yet" in ITS dashboard -- different account; William to check when signed in as the seller); tracking self-report; payout release after DELIVERED + hold window (watch /api/cron/release-payouts for the first real release -- the sellerBreakdown fix has never fired on a real order).
+
+Privacy observations for the seller-username work: the PDP maker line shows "william sinclair is the maker" (real name, buyer-facing) and the posted review displays the buyer's full name -- both exactly the surfaces the OUTSTANDING seller-username item needs to cover.
+
 ## OUTSTANDING -- APP LANGUAGE PICKER DOES NOT ACTUALLY TRANSLATE (parked 2026-07-17, William: "set a reminder")
 
 The app's Language & currency screen now lets you pick a language (commit 83a7354, mobile-app), but William confirmed on-device that NOTHING actually converts. Most likely cause, flagged as a risk when built: the App.tsx patch hooks `Text.render`, which no-ops silently if RN/SDK 54's Text is not a forwardRef component exposing `.render` (guarded by a typeof check -- degrades to English rather than crashing, which matches exactly what William sees). Next session: verify whether `(Text as any).render` exists in this RN version; if not, switch approach -- either a custom TX component swept across screens, or patch at `TextAncestor`/`createElement` level, or proper i18n dictionaries. Also verify the currency picker DID work (it uses plain state + fmt(), independent of the Text patch) -- William's report only confirmed language broken. The website translation is fully working and warmed; this is app-only.
