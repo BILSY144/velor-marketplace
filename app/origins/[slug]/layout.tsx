@@ -56,10 +56,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hints = cultureHints(country.code)
   const url = `https://velorcommerce.store/origins/${slug}`
   const title = `${country.name} | Shop by Origin — Velor`
+  // Description shortened by the standing SEO agent, 2026-07-17 -- a
+  // programmatic length check across all 190 real WORLD_COUNTRIES x
+  // lib/cultureHints.ts entries (not eyeballed) found every single one of
+  // the 190 live /origins/[slug] descriptions exceeded Google's practical
+  // ~155-160 char SERP display limit (min 178, max 219 chars, worst case
+  // "St Vincent and the Grenadines" at 219 -- the previous template used
+  // 4 joined hints plus a closing "Every listing carries its maker and its
+  // origin." clause). That closing clause is also redundant here: the
+  // parent /origins index page (app/origins/layout.tsx) already states
+  // "every listing carries its maker and origin" once for the whole
+  // section, the same redundant-clause-cutting reasoning already applied
+  // to /shop's description (2026-07-14 full audit). Cut to 3 joined hints
+  // (still the same real, already-verified cultureHints.ts data, nothing
+  // new invented) and dropped the redundant closing clause. Re-checked
+  // programmatically after the edit: max is now 158 chars (same country),
+  // min 109 -- all 190 now sit under the 160-char limit. The zero-hints
+  // fallback branch below (currently unreachable -- all 190 real countries
+  // have a cultureHints.ts entry per backlog item 25/22 -- but fixed too
+  // for consistency and in case a future country is ever added without
+  // hints yet) was also over the limit for the longest country names (165
+  // chars for the same worst-case name) and is shortened the same way.
   const description =
     hints.length > 0
-      ? `Shop authentic products from ${country.name} on Velor — known for ${hints.slice(0, 4).join(', ')}. Every listing carries its maker and its origin.`
-      : `Shop authentic products from ${country.name} on Velor, the global marketplace for culture and heritage. Every listing carries its maker and its origin.`
+      ? `Shop authentic products from ${country.name} on Velor — known for ${hints.slice(0, 3).join(', ')}, and more.`
+      : `Shop authentic products from ${country.name} on Velor, the global marketplace for culture and heritage.`
   // Per-country share image (opengraph-image.tsx, added by the standing SEO
   // agent 2026-07-16, same directory as this layout) -- replaces the
   // generic sitewide homepage card every /origins/[slug] page previously
