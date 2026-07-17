@@ -174,7 +174,7 @@ export default function GlobalHeader() {
             height: 68,
             display: 'flex',
             alignItems: 'center',
-            gap: 24,
+            gap: 14,
           }}
         >
           {/* Logo */}
@@ -249,7 +249,7 @@ export default function GlobalHeader() {
           </nav>
 
           {/* Search. On phones this wraps onto its own full-width row. */}
-          <form onSubmit={submitSearch} className="velor-searchform" style={{ flex: 1, maxWidth: 460, marginLeft: 'auto' }}>
+          <form onSubmit={submitSearch} className="velor-searchform" style={{ flex: '0 1 340px', minWidth: 150 }}>
             <div
               style={{
                 display: 'flex',
@@ -454,6 +454,7 @@ export default function GlobalHeader() {
               }}
               className="velor-desktop-nav"
               style={{
+                marginLeft: 'auto',
                 background: 'transparent',
                 color: 'var(--accent)',
                 fontWeight: 700,
