@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text, Platform } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Platform } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { View, Pressable, StyleSheet, ScrollView, Animated, Text } from 'react-native'
+import { View, Pressable, StyleSheet, ScrollView, Animated } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'

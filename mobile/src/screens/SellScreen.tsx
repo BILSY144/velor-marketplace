@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text, PanResponder } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, PanResponder } from 'react-native'
+import { Text } from '../ui/T'
 import { useNavigation } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'

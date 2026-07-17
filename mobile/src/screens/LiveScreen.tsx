@@ -1,13 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react'
-import {
-  View,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  ViewToken,
-} from 'react-native'
+import { View, FlatList, Pressable, StyleSheet, useWindowDimensions, ViewToken } from 'react-native'
+import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'

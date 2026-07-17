@@ -1,12 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import {
-  View,
-  TextInput,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-} from 'react-native'
+import { View, TextInput, FlatList, Pressable, StyleSheet } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'

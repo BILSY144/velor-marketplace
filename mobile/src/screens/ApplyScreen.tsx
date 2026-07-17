@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, Pressable, StyleSheet, Alert, Modal, FlatList, Text } from 'react-native'
+import { View, ScrollView, TextInput, Pressable, StyleSheet, Alert, Modal, FlatList } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'

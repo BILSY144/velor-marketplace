@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, Pressable, StyleSheet, Text } from 'react-native'
+import { View, ScrollView, TextInput, Pressable, StyleSheet } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { Image } from 'expo-image'

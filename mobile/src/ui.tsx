@@ -1,5 +1,6 @@
 import React from 'react'
-import { Text, TextProps, View, Pressable, StyleSheet, ViewStyle } from 'react-native'
+import { TextProps, View, Pressable, StyleSheet, ViewStyle } from 'react-native'
+import { Text } from './ui/T'
 import { C, F } from './theme'
 
 export function Kicker({ children, style, ...rest }: TextProps) {

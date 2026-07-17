@@ -1,14 +1,6 @@
 import React, { useRef, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
+import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
