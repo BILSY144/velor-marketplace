@@ -381,13 +381,18 @@ const css = `
 .vh-tile .meta .t{font-size:13.5px;font-weight:500;line-height:1.3;margin-bottom:5px}
 .vh-tile .meta .s{font-size:11.5px;color:#c6c6cf}
 .vh-swipehint{font-size:12px;color:var(--muted);margin-top:12px}
-.vh-ct{position:relative;flex:0 0 216px;aspect-ratio:3/4;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2);transition:transform .18s,border-color .18s}
+.vh-ct{position:relative;flex:0 0 216px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);transition:transform .18s,border-color .18s;text-decoration:none;color:inherit}
 .vh-ct:hover{transform:translateY(-3px);border-color:rgba(255,107,0,.5)}
-.vh-ct img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
-.vh-ct:hover img{transform:scale(1.045)}
-.vh-ct .meta{position:absolute;left:14px;right:14px;bottom:13px}
-.vh-ct .meta .t{font-size:14.5px;font-weight:500;line-height:1.3;text-shadow:0 1px 8px rgba(0,0,0,.6)}
-.vh-ct .meta .c{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#d9d9df;margin-top:4px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vh-ct .ph{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2)}
+.vh-ct .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.vh-ct:hover .ph img{transform:scale(1.045)}
+.vh-ct .ph .ribbon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);background:var(--accent);color:#160a00;font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 64px;white-space:nowrap}
+.vh-ct .cap{padding:12px 14px}
+.vh-ct .cap .k{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.vh-ct .cap .t{font-size:14px;font-weight:600;line-height:1.3}
+.vh-ct .cap .pr{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.vh-ct .cap .p{font-size:15px;font-weight:700;font-family:Space Grotesk,sans-serif;color:var(--muted)}
+.vh-ct .cap .s{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .vh-ccard{flex:0 0 272px;border:1px solid rgba(255,107,0,.32);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
 .vh-ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
 .vh-ccard.live{border-color:rgba(46,204,113,.32)}
@@ -449,11 +454,20 @@ export default function HomePage() {
     const cleanups: (() => void)[] = []
     root.querySelectorAll<HTMLElement>('.vh-drag').forEach(reel => {
       let down = false, startX = 0, startScroll = 0, moved = 0
-      const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft; reel.setPointerCapture(e.pointerId) }
+      // Deferred capture (2026-07-17, same permanent dead-tap fix as
+      // CountryOriginStrip): capturing on pointerdown makes the browser
+      // retarget the click away from the tile's link, so taps intermittently
+      // opened nothing -- worst on touch, where finger wobble past the old
+      // 6px threshold silently turned taps into drags. Capture only once a
+      // real drag has started; a plain tap keeps its fully native click.
+      const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft }
       const onMove = (e: PointerEvent) => {
         if (!down) return
         const dx = e.clientX - startX
-        if (Math.abs(dx) > 6) { reel.classList.add('dragging'); moved = Math.abs(dx) }
+        const threshold = e.pointerType === 'mouse' ? 6 : 14
+        if (moved === 0 && Math.abs(dx) <= threshold) return
+        if (moved === 0) { reel.classList.add('dragging'); try { reel.setPointerCapture(e.pointerId) } catch {} }
+        moved = Math.abs(dx)
         reel.scrollLeft = startScroll - dx
       }
       const onUp = (e: PointerEvent) => { if (!down) return; down = false; reel.classList.remove('dragging'); try { reel.releasePointerCapture(e.pointerId) } catch {} }
@@ -571,17 +585,24 @@ export default function HomePage() {
             <div className="vh-drag">
               {reel.tiles.map(t => (
                 <Link className="vh-ct" href="/founding" key={t.name + t.code}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={t.img}
-                    alt={t.name}
-                    loading="lazy"
-                    onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
-                  />
-                  <div className="vh-scrim" />
-                  <div className="meta">
+                  {/* ID-card layout (William, 2026-07-17): same framed card as the
+                      country-page seat grid -- image pane with the "Your goods
+                      here" ribbon, then a caption block. These stay examples
+                      until real sellers claim the seats. */}
+                  <div className="ph">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={t.img}
+                      alt={t.name}
+                      loading="lazy"
+                      onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                    />
+                    <div className="ribbon">Your goods here</div>
+                  </div>
+                  <div className="cap">
+                    <div className="k">{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</div>
                     <div className="t">{t.name}</div>
-                    <div className="c">{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</div>
+                    <div className="pr"><span className="p">£0.00</span><span className="s">Seller name</span></div>
                   </div>
                 </Link>
               ))}
