@@ -38,7 +38,7 @@ export default function LanguageTranslator() {
         d = new Map()
         // session cache survives navigations without re-hitting the API
         try {
-          const raw = window.sessionStorage.getItem('velor_tx_' + lang)
+          const raw = window.localStorage.getItem('velor_tx_' + lang)
           if (raw) for (const [k, v] of JSON.parse(raw)) d.set(k, v)
         } catch {}
         dict.current.set(lang, d)
@@ -51,7 +51,7 @@ export default function LanguageTranslator() {
         const d = dict.current.get(lang)
         if (!d) return
         const entries = [...d.entries()].slice(-4000)
-        window.sessionStorage.setItem('velor_tx_' + lang, JSON.stringify(entries))
+        window.localStorage.setItem('velor_tx_' + lang, JSON.stringify(entries))
       } catch {}
     }
 
@@ -123,23 +123,35 @@ export default function LanguageTranslator() {
           nodes
             .map((n) => (originals.current.get(n) ?? n.nodeValue ?? '').trim())
             .filter((t) => t.length >= 2 && !NO_LETTERS.test(t) && !d.has(t))
-        )].slice(0, 150)
+        )]
         if (pending.length > 0) {
-          const res = await fetch('/api/translate', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ lang, texts: pending }),
-          })
-          if (res.ok) {
-            const { translations } = await res.json()
-            pending.forEach((src, i) => d.set(src, translations[i]))
-            saveDict(lang)
-            // stale-run guard: only paint if the user is still on the
-            // language this batch was fetched for
-            if (getDisplayLanguage() === lang) {
-              applyDict(collectNodes(), d)
-            }
+          // ALL pending strings at once, in parallel 150-string requests,
+          // painting as each chunk returns -- no sequential pass crawl.
+          // Cached strings resolve in one fast DB round trip; only strings
+          // never seen before in this language cost model time.
+          const chunks: string[][] = []
+          for (let i = 0; i < pending.length && chunks.length < 14; i += 150) {
+            chunks.push(pending.slice(i, i + 150))
           }
+          await Promise.all(chunks.map(async (chunk) => {
+            try {
+              const res = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ lang, texts: chunk }),
+              })
+              if (res.ok) {
+                const { translations } = await res.json()
+                chunk.forEach((src, i) => d.set(src, translations[i]))
+                // stale-run guard: only paint if the user is still on the
+                // language this batch was fetched for
+                if (getDisplayLanguage() === lang) {
+                  applyDict(collectNodes(), d)
+                }
+              }
+            } catch {}
+          }))
+          saveDict(lang)
         }
       } catch {
         // fail-safe: page stays in English rather than half-broken
