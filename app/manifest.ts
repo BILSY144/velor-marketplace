@@ -31,7 +31,10 @@ import type { MetadataRoute } from 'next';
 //   placeholder. Resized to the two standard PWA manifest sizes (192x192,
 //   512x512) with Pillow (Lanczos resample, FastOctree-quantized to keep
 //   payload weight reasonable -- 512px is ~65KB, 192px is ~12KB), same
-//   method the favicon fix already used for app/icon.png/apple-touch-icon.png.
+//   method the favicon fix already used for app/icon.png/apple-icon.png
+//   (renamed from app/apple-touch-icon.png 2026-07-17 -- see that file's
+//   own history in SEO_LOG.md backlog item 12 and the 2026-07-17 19:xx UTC
+//   completed-log entry for why).
 //   Verified both output files are valid PNGs at the correct dimensions
 //   before committing.
 // - display/start_url: 'standalone' and '/' are the conventional, safest
