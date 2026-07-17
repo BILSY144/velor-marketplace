@@ -29,11 +29,23 @@ import { permanentRedirect } from 'next/navigation'
 // given to the codebase's other stray/unused components (Navigation.tsx,
 // Footer.tsx; see SEO_LOG.md items 9/16).
 //
-// Deliberately NOT touched by this change: /marketplace/[id] (the
-// per-product detail page one level down) -- app/search/page.tsx actively
-// links search results to /marketplace/${id}, so that route stays live and
-// is out of scope for this fix. /api/marketplace/products also stays, since
-// ProductDetail.tsx (rendered by /marketplace/[id]) still calls it.
+// Not touched by this change: /marketplace/[id] (the per-product detail
+// page one level down) still exists and still works -- at the time this
+// redirect shipped, app/search/page.tsx actively linked search results to
+// /marketplace/${id}, so that route stayed live and was out of scope here.
+// CORRECTION (standing SEO agent, 2026-07-17): that premise is no longer
+// true. A later, unrelated commit changed both of app/search/page.tsx's
+// result-card branches to link to /shop/${item.id} instead, so
+// /marketplace/[id] is now fully orphaned -- confirmed via a repo-wide grep
+// finding zero remaining internal links to it anywhere outside its own
+// unimported sibling (MarketplaceGrid.tsx) and its own self-referential
+// "Back to Marketplace" links (which point at this now-redirecting page).
+// The route itself is untouched and still works if hit directly, but is
+// now noindex/nofollow (see app/marketplace/[id]/page.tsx's own header
+// comment for the full reasoning) rather than left silently indexable
+// under the wrong, inherited root metadata. /api/marketplace/products also
+// stays, since ProductDetail.tsx (rendered by /marketplace/[id]) still
+// calls it.
 export default function MarketplacePage() {
   permanentRedirect('/shop')
 }
