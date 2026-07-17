@@ -313,6 +313,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Preconnect added by the standing SEO agent, 2026-07-17 20:xx UTC cycle.
+            The Google Fonts stylesheet below was already loaded with the correct
+            font-display=swap (avoids invisible-text-on-load), but the connection
+            to fonts.googleapis.com/fonts.gstatic.com itself was not warmed ahead
+            of time, costing an avoidable DNS+TLS round trip before the font CSS
+            (and, after that, the actual font files from fonts.gstatic.com) can
+            start downloading -- a real, if small, hit to First Contentful Paint /
+            Largest Contentful Paint, both confirmed Core Web Vitals ranking
+            signals. This is Google's own documented fix for exactly this pattern
+            (web.dev/articles/font-best-practices: "use rel=preconnect to set up
+            early connections to important third-party origins" for Google
+            Fonts specifically). crossOrigin is required on the gstatic
+            preconnect because font files are fetched anonymous-CORS even on a
+            same-site page -- without it the browser opens a second, wasted
+            connection when the actual @font-face request fires (same doc).
+            Purely additive: two <link> tags, no existing tag changed, cannot
+            alter rendering or break any existing functionality. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,400;1,600&family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&display=swap"
           rel="stylesheet"
