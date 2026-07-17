@@ -75,6 +75,10 @@ moderation/rate-limiting layer BEFORE reconnecting the buyer-facing button
 
 ---
 
+## OUTSTANDING -- APP LANGUAGE PICKER DOES NOT ACTUALLY TRANSLATE (parked 2026-07-17, William: "set a reminder")
+
+The app's Language & currency screen now lets you pick a language (commit 83a7354, mobile-app), but William confirmed on-device that NOTHING actually converts. Most likely cause, flagged as a risk when built: the App.tsx patch hooks `Text.render`, which no-ops silently if RN/SDK 54's Text is not a forwardRef component exposing `.render` (guarded by a typeof check -- degrades to English rather than crashing, which matches exactly what William sees). Next session: verify whether `(Text as any).render` exists in this RN version; if not, switch approach -- either a custom TX component swept across screens, or patch at `TextAncestor`/`createElement` level, or proper i18n dictionaries. Also verify the currency picker DID work (it uses plain state + fmt(), independent of the Text patch) -- William's report only confirmed language broken. The website translation is fully working and warmed; this is app-only.
+
 ## OUTSTANDING -- SELLER USERNAME AT SIGNUP: BUYERS SHOULD ONLY EVER SEE THAT (raised 2026-07-16, not yet scoped or built)
 
 William's instruction, to pick up next session: **every seller must create a
