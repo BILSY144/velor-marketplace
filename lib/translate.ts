@@ -48,7 +48,12 @@ async function modelTranslate(lang: string, texts: string[]): Promise<string[]> 
     throw new Error(`Anthropic API ${res.status}: ${body.slice(0, 200)}`)
   }
   const data = await res.json()
-  const raw: string = data?.content?.[0]?.text ?? ''
+  // claude-sonnet-5 can return thinking blocks before the text block --
+  // read EVERY text block, same fix the assistant needed (commit 6ad3a35).
+  const raw: string = (Array.isArray(data?.content) ? data.content : [])
+    .filter((b: { type?: string }) => b?.type === 'text')
+    .map((b: { text?: string }) => b?.text ?? '')
+    .join('')
   const start = raw.indexOf('[')
   const end = raw.lastIndexOf(']')
   if (start < 0 || end < start) throw new Error('translator returned no JSON array')
