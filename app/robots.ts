@@ -96,6 +96,52 @@ import type { MetadataRoute } from 'next';
 // as `/orders`) cannot over-block any unrelated page. Fixed by removing the
 // trailing slash from all three, bringing them in line with the convention
 // every rule added since 2026-07-14 already follows.
+//
+// Extended 2026-07-17 by the standing SEO agent (backlog cycle, not a full
+// audit -- a genuinely new finding, not a pre-existing backlog item).
+// `/shop` (`app/shop/page.tsx`, `'use client'`) reads five filter params via
+// `searchParams.get(...)`: `category`, `origin`, `speciality`, `search`, and
+// `page`. Because `app/shop/layout.tsx`'s `metadata` export is static (Next's
+// App Router does not pass `searchParams` to `layout.tsx`, only to
+// `page.tsx`, and `page.tsx` here is a client component so it cannot export
+// `generateMetadata` either), every one of these query-string combinations
+// serves the exact same `<title>`/meta description as bare `/shop`, with no
+// `alternates.canonical` pointing them back to it (deliberately omitted
+// site-wide on this layout -- see the backlog's `/shop/[productId]`
+// per-product-metadata item -- since `/shop/[productId]` also inherits this
+// same layout and a canonical here would wrongly claim every future product
+// page is really just `/shop`). Confirmed this is not a theoretical risk:
+// `app/origins/[slug]/page.tsx` (~145-190 live, sitemap-indexed, real-content
+// country pages) contains a genuine `<Link href={\`/shop?origin=${code}\`}>`
+// on every one of them -- a real, crawlable, non-JS-only anchor, distinct
+// from `components/CountryOriginStrip.tsx`'s own onClick-only flag buttons
+// already flagged separately in SEO_LOG.md backlog item 34 as NOT reliably
+// crawlable. So Googlebot has a real, standard-link path to discover up to
+// ~190 near-duplicate `/shop?origin=<code>` URLs today, each currently
+// rendering the 200 empty "open goods slot" placeholder boxes rather than
+// real per-origin products (catalogue confirmed still near-empty per
+// CLAUDE.md), all sharing byte-identical title/description with each other
+// and with bare `/shop` -- the same duplicate/thin-content shape this file's
+// own `/search` handling (see `app/search/layout.tsx`,
+// `robots: { index: false, follow: true }`) already treats as standard,
+// uncontroversial technical SEO practice rather than a business judgment
+// call: internal filter/search result variations that share generic,
+// non-unique metadata should not compete against the real canonical pages
+// for the same query. `/origins/[slug]` and (once built) a dedicated
+// `/specialities/[term]` landing page (see backlog item 33) are the correct
+// long-term indexable homes for country- and speciality-first queries, not
+// `/shop`'s own filtered views. Fixed the only way available without a
+// larger architectural change (converting `/shop` to a server component
+// with `generateMetadata` reading `searchParams` is a bigger, riskier change
+// than this single-cycle safe-additive lane allows): added `/shop?` to this
+// disallow list. This blocks every `/shop?...` query-string URL (any
+// parameter, present or future) from being crawled/indexed while leaving
+// the bare `/shop` page (no `?`) and `/shop/[productId]` (a different
+// literal path prefix, `/shop/`, untouched by a `/shop?` rule) fully
+// indexable exactly as before. Purely a crawl/index signal -- changes
+// nothing about how real users filter or browse `/shop`, and does not
+// remove any existing sitemap entry (no `/shop?...` URL was ever in
+// `sitemap.xml` to begin with -- confirmed by grep).
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -114,6 +160,7 @@ export default function robots(): MetadataRoute.Robots {
           '/setup-admin',
           '/auth/reset',
           '/auth/error',
+          '/shop?',
         ],
       },
     ],
