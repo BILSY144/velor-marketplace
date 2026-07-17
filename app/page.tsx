@@ -541,7 +541,6 @@ const css = `
 .vh-ct .ph{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2)}
 .vh-ct .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
 .vh-ct .ph video{width:100%;height:100%;object-fit:cover;display:block}
-.vh-top20{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:4px;font-weight:700}
 .vh-ct:hover .ph img{transform:scale(1.045)}
 .vh-ct .ph .ribbon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);background:var(--accent);color:#160a00;font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 64px;white-space:nowrap}
 .vh-ct .cap{padding:12px 14px}
@@ -737,7 +736,6 @@ export default function HomePage() {
               <div>
                 <h2>{reel.title}</h2>
                 <p className="sub">{reel.line}</p>
-                <p className="vh-top20">20 seats &middot; reserved for the top-performing sellers</p>
               </div>
               <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
             </div>
