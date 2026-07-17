@@ -5,6 +5,7 @@ import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { useCart } from '../store'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
@@ -77,13 +78,13 @@ export default function CheckoutScreen() {
 
           <Text style={s.label}>SUMMARY</Text>
           <View style={[s.card, { gap: 9 }]}>
-            <Row l={`Items (${nItems})`} r={`£${total().toFixed(2)}`} />
+            <Row l={`Items (${nItems})`} r={fmt(total())} />
             <Row l="Delivery" r="at payment" dimR />
             <Row l="Import duty · est." r="at payment" dimR />
             <View style={s.hr} />
             <View style={s.rowLine}>
               <Text style={s.totL}>Total</Text>
-              <Text style={s.totR}>{'£'}{total().toFixed(2)} + delivery</Text>
+              <Text style={s.totR}>{fmt(total())} + delivery</Text>
             </View>
           </View>
 
@@ -129,7 +130,7 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
-        <Btn label={`Pay securely · £${total().toFixed(2)} + delivery`} onPress={gate} />
+        <Btn label={`Pay securely · ${fmt(total())} + delivery`} onPress={gate} />
       </View>
       <Chrome back="Basket" onBack={() => nav.goBack()} />
     </View>

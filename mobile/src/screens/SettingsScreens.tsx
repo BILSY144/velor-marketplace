@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Text, Platform } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
+import { APP_LANGS, getLang, getCurrency, setAppLanguage, setAppCurrency, onI18n } from '../i18n'
 import { Chrome } from '../components/Chrome'
 
 // Addresses (plate 17), Payment methods (plate 18) and Language & currency
@@ -136,47 +137,49 @@ const CURRENCIES: [string, string, string][] = [
 
 export function LangCurScreen() {
   const [note, setNote] = useState<string | null>(null)
+  const [, setTick] = useState(0)
+  useEffect(() => onI18n(() => setTick((t) => t + 1)), [])
+  const activeLang = getLang()
+  const activeCur = getCurrency()
   return (
     <Shell title="Your words. Your money." kicker="YOUR VELOR">
       <Text style={[s.kickDim, { marginTop: 26 }]}>LANGUAGE</Text>
       <Text style={s.footDimTight}>
-        Velor already speaks all nineteen to its sellers — the buyer app ships English-first.
+        Velor speaks all nineteen. Pick yours — the app translates as you browse.
       </Text>
       <View style={{ marginTop: 6 }}>
-        {LANGS.map(([native, en], i) => (
+        {APP_LANGS.map((l) => (
           <Pressable
-            key={en}
+            key={l.code}
             style={s.langRow}
-            onPress={() =>
-              setNote(i === 0 ? 'English is live' : `${en} arrives with the buyer app launch`)
-            }
+            onPress={() => {
+              setAppLanguage(l.code)
+              setNote(l.code === 'en' ? 'English' : `${l.english} — translating as you browse`)
+            }}
           >
-            <Text style={s.langNative}>{native}</Text>
-            <Text style={s.langEn}>{en}</Text>
-            {i === 0 ? (
-              <Text style={s.live}>LIVE</Text>
-            ) : (
-              <Text style={s.arriving}>ARRIVING</Text>
-            )}
+            <Text style={s.langNative}>{l.native}</Text>
+            <Text style={s.langEn}>{l.english}</Text>
+            {activeLang === l.code ? <Text style={s.live}>LIVE</Text> : null}
           </Pressable>
         ))}
       </View>
 
       <Text style={[s.kickDim, { marginTop: 30 }]}>CURRENCY</Text>
       <Text style={s.footDimTight}>
-        Prices show — and you are charged — in your own money at launch. Live European Central
-        Bank rate, the same source checkout uses. GBP is live in the preview.
+        Prices display in your money at a live exchange rate. Checkout charges in your currency
+        at launch; the rate is reconfirmed at payment.
       </Text>
       <View style={s.curGrid}>
         {CURRENCIES.map(([sym, code, label]) => (
           <Pressable
             key={code}
-            style={[s.curCell, code === 'GBP' && s.curCellOn]}
-            onPress={() =>
-              setNote(code === 'GBP' ? 'GBP is live' : `${code} arrives with the buyer launch`)
-            }
+            style={[s.curCell, code === activeCur && s.curCellOn]}
+            onPress={() => {
+              setAppCurrency(code)
+              setNote(code + ' — prices now display in ' + label)
+            }}
           >
-            <Text style={[s.curSym, code === 'GBP' && { color: C.accent }]}>{sym}</Text>
+            <Text style={[s.curSym, code === activeCur && { color: C.accent }]}>{sym}</Text>
             <Text style={s.curCode}>{code}</Text>
             <Text style={s.curLabel} numberOfLines={1}>
               {label}

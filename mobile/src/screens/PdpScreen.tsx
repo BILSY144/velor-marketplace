@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl, pexels } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import type { ShopProduct } from '../api'
 import { useCart, useFavs } from '../store'
@@ -125,7 +126,7 @@ export default function PdpScreen() {
 
           {/* Price + delivery row */}
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-            <Text style={s.price}>{'£'}{price.toFixed(2)}</Text>
+            <Text style={s.price}>{fmt(price)}</Text>
             <Text style={s.deliver}>
               Delivery quoted live at checkout · ships from {name || 'origin'}
             </Text>

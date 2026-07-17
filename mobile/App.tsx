@@ -16,6 +16,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from '@expo-google-fonts/inter'
+import { T as velorT, onI18n, initPrefs } from './src/i18n'
 import { Fraunces_400Regular, Fraunces_500Medium_Italic, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
@@ -282,6 +283,26 @@ const lk = StyleSheet.create({
   },
 })
 
+// LIVE TRANSLATION AT THE TEXT LAYER (William, 2026-07-17): every string
+// child of every <Text> in the app runs through T() -- the same cached
+// /api/translate engine as the website -- so the whole app converts to the
+// chosen language without rewriting each screen. Strings render English
+// until their batch lands, then the root tick below repaints.
+const TextAny = Text as unknown as { render?: (...a: unknown[]) => unknown; __velorI18n?: boolean }
+if (!TextAny.__velorI18n && typeof TextAny.render === 'function') {
+  TextAny.__velorI18n = true
+  const origRender = TextAny.render
+  const tx = (c: unknown): unknown =>
+    typeof c === 'string' ? velorT(c) : Array.isArray(c) ? c.map(tx) : c
+  TextAny.render = function (...args: unknown[]) {
+    const props = args[0] as { children?: unknown } | undefined
+    if (props && props.children !== undefined) {
+      args[0] = { ...props, children: tx(props.children) }
+    }
+    return origRender.apply(this, args)
+  }
+}
+
 export default function App() {
   const [loaded] = useFonts({
     SpaceGrotesk_600SemiBold,
@@ -294,6 +315,11 @@ export default function App() {
     Fraunces_600SemiBold,
   })
   const [splash, setSplash] = React.useState(true)
+  const [, setI18nTick] = React.useState(0)
+  React.useEffect(() => {
+    void initPrefs()
+    return onI18n(() => setI18nTick((t) => t + 1))
+  }, [])
   const [locked, setLocked] = React.useState(false)
   const setSession = useSession((s) => s.set)
   const markReady = useSession((s) => s.markReady)

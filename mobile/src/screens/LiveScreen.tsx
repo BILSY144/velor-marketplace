@@ -15,6 +15,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { FILMS, countryName, Film } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { useCart, useFavs } from '../store'
@@ -218,7 +219,7 @@ function FilmPage({
                 {listing.name ?? listing.title}
               </Text>
               <Text style={s.stripP}>
-                {'£'}{(listing.discountedPrice ?? listing.price).toFixed(0)}
+                {fmt(listing.discountedPrice ?? listing.price, 0)}
               </Text>
               <Image source={{ uri: flagUrl(film.c) }} style={{ width: 15, height: 11, borderRadius: 2 }} />
             </View>

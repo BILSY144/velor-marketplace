@@ -5,6 +5,7 @@ import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { useCart, CartItem } from '../store'
 import { countryName } from '../data'
 import { Dim, Btn, Empty } from '../ui'
@@ -93,7 +94,7 @@ export default function BasketScreen() {
                         {item.product.name ?? item.product.title}
                       </Text>
                       <Text style={s.pr}>
-                        {'£'}{(item.product.discountedPrice ?? item.product.price).toFixed(2)}
+                        {fmt(item.product.discountedPrice ?? item.product.price)}
                       </Text>
                     </View>
                     <View style={s.qtyRow}>
@@ -124,13 +125,13 @@ export default function BasketScreen() {
 
             {/* Summary */}
             <View style={s.summary}>
-              <Row l="Items" r={`£${total().toFixed(2)}`} />
+              <Row l="Items" r={fmt(total())} />
               <Row l={`Delivery · ${n} parcel${n === 1 ? '' : 's'}`} r="at checkout" dimR />
               <Row l="Import duty · est." r="at checkout" dimR />
               <View style={s.hr} />
               <View style={s.rowLine}>
                 <Text style={s.totL}>Total</Text>
-                <Text style={s.totR}>{'£'}{total().toFixed(2)} + delivery</Text>
+                <Text style={s.totR}>{fmt(total())} + delivery</Text>
               </View>
             </View>
             <Dim style={{ paddingHorizontal: 20, marginTop: 14, fontSize: 11.5, lineHeight: 17 }}>
@@ -143,7 +144,7 @@ export default function BasketScreen() {
 
       {items.length > 0 && (
         <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
-          <Btn label={`Checkout · £${total().toFixed(2)} + delivery`} onPress={() => nav.navigate('Checkout')} />
+          <Btn label={`Checkout · ${fmt(total())} + delivery`} onPress={() => nav.navigate('Checkout')} />
         </View>
       )}
       <Chrome />

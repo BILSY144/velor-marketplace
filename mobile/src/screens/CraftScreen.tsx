@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -79,7 +80,7 @@ export default function CraftScreen() {
                     {p.sellerName ?? 'Verified seller'}
                   </Dim>
                   <Body style={{ fontFamily: F.bodySemi, fontSize: 14, marginTop: 4 }}>
-                    {'£'}{(p.discountedPrice ?? p.price).toFixed(2)}
+                    {fmt(p.discountedPrice ?? p.price)}
                   </Body>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color={C.mut} />

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels, flagUrl } from '../theme'
+import { fmt, onI18n } from '../i18n'
 import { countryName, HINTS, IMAGERY, STORIES, filmsFor } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -141,7 +142,7 @@ export default function CountryScreen() {
                     {p.name ?? p.title}
                   </Body>
                   <Dim style={{ fontSize: 11 }}>
-                    {'£'}{(p.discountedPrice ?? p.price).toFixed(2)}
+                    {fmt(p.discountedPrice ?? p.price)}
                     {p.sellerName ? ` · ${p.sellerName}` : ''}
                   </Dim>
                   <Pressable style={s.addBtn} onPress={() => add(p)}>
