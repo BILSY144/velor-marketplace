@@ -122,6 +122,10 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
+          <Text style={[s.orTx, { textAlign: 'center', marginTop: 10 }]}>
+            Secure Stripe checkout · Payouts by Stripe & Payoneer
+          </Text>
+
           {note ? (
             <View style={s.noteBub}>
               <Text style={s.noteTx}>{note}</Text>

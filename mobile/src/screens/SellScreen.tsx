@@ -96,8 +96,9 @@ export default function SellScreen() {
             ))}
           </View>
           <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>
-            0% listing fees on every plan. Paid out after each delivery is confirmed. Every seller
-            starts free — upgrade to Pro any time from your dashboard.
+            0% listing fees on every plan. Paid out after each delivery is confirmed — payouts by
+            Stripe & Payoneer. Every seller starts free — upgrade to Pro any time from your
+            dashboard.
           </Dim>
         </View>
 
