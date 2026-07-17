@@ -46,12 +46,15 @@ const px = (id: number, slug?: string) =>
     ? `https://images.pexels.com/photos/${id}/pexels-photo-${id}/${slug}.jpeg?auto=compress&cs=tinysrgb&w=800`
     : `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`
 
+// HD craft films for the one PREVIEW FILM seat on each 20-seat rail.
+const vf = (path: string) => `https://videos.pexels.com/video-files/${path}`
+
 // The culture reels — each tile is a real cultural item with its country.
 // Stock photography stands in until real listings replace it, tile by tile.
 const CULTURE_REELS: {
   title: string
   line: string
-  tiles: { name: string; code: string; img: string }[]
+  tiles: { name: string; code: string; img: string; video?: string }[]
 }[] = [
   {
     title: 'Ceramics & porcelain',
@@ -73,6 +76,10 @@ const CULTURE_REELS: {
       { name: 'Terracotta', code: 'IN', img: px(9412408) },
       { name: 'Andalusian tiles', code: 'ES', img: px(36342685) },
       { name: 'Blue-and-white vases', code: 'CN', img: px(33393570) },
+      { name: 'Onggi jars', code: 'KR', img: px(34416819) },
+      { name: 'Bukhara ceramics', code: 'UZ', img: px(29475568) },
+      { name: 'Barro negro', code: 'MX', img: px(33701615) },
+      { name: 'Thrown on the wheel', code: '', img: '', video: vf('12681572/12681572-hd_1920_1080_24fps.mp4') },
     ],
   },
   {
@@ -96,6 +103,9 @@ const CULTURE_REELS: {
       { name: 'Embroidered dresses', code: 'MX', img: px(35526860) },
       { name: 'Aran knitwear', code: 'IE', img: px(33865626) },
       { name: 'Alpaca of the Andes', code: 'PE', img: px(35729525) },
+      { name: 'Suzani embroidery', code: 'UZ', img: px(29475576) },
+      { name: 'Otavalo textiles', code: 'EC', img: px(18425673) },
+      { name: 'On the loom', code: '', img: '', video: vf('32655899/13923463_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -118,6 +128,10 @@ const CULTURE_REELS: {
       { name: 'Tortilla presses', code: 'MX', img: px(5737823) },
       { name: 'Beer steins', code: 'DE', img: px(28702296) },
       { name: 'Clay chai cups', code: 'IN', img: px(10377676) },
+      { name: 'Olive-wood boards', code: 'TN', img: px(38368132) },
+      { name: 'Karahi cookware', code: 'PK', img: px(33617984) },
+      { name: 'Dallah coffee pots', code: 'SA', img: px(38036783) },
+      { name: 'The wok, live', code: '', img: '', video: vf('34711974/14713477_720_1280_30fps.mp4') },
     ],
   },
   {
@@ -139,6 +153,11 @@ const CULTURE_REELS: {
       { name: 'Beadwork of Accra', code: 'GH', img: px(20618742) },
       { name: 'Thai gold', code: 'TH', img: px(16853521) },
       { name: 'Taxco silver', code: 'MX', img: px(14579309) },
+      { name: 'Zulu beadwork', code: 'ZA', img: px(11712568) },
+      { name: 'Mompox filigree', code: 'CO', img: px(15955332) },
+      { name: 'Turquoise & silver', code: 'US', img: px(33737462) },
+      { name: 'Komboloi beads', code: 'GR', img: px(11591685) },
+      { name: "The goldsmith's bench", code: '', img: '', video: vf('35822699/15189596_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -161,6 +180,10 @@ const CULTURE_REELS: {
       { name: 'Deglet Nour dates', code: 'DZ', img: px(17877978) },
       { name: 'Ceylon tea', code: 'LK', img: px(30204867) },
       { name: 'Mint tea', code: 'MA', img: px(36157389) },
+      { name: 'High-mountain oolong', code: 'TW', img: px(6545351) },
+      { name: 'Colombian coffee', code: 'CO', img: px(33220155) },
+      { name: 'Cacao ceremony', code: 'GT', img: px(23511143) },
+      { name: 'The pour', code: '', img: '', video: vf('8507896/8507896-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
@@ -183,6 +206,10 @@ const CULTURE_REELS: {
       { name: 'Murano chandeliers', code: 'IT', img: px(35687707) },
       { name: 'Oud & attar', code: 'AE', img: px(36389331) },
       { name: 'Rose oil', code: 'BG', img: px(18745781) },
+      { name: 'Beeswax candles', code: 'PL', img: px(18921271) },
+      { name: 'Diya lamps', code: 'IN', img: px(34431714) },
+      { name: 'Hanji lanterns', code: 'KR', img: px(34569756) },
+      { name: 'Candle making', code: '', img: '', video: vf('6748677/6748677-hd_1920_1080_25fps.mp4') },
     ],
   },
   {
@@ -199,6 +226,16 @@ const CULTURE_REELS: {
       { name: 'Milan workshops', code: 'IT', img: px(33495913) },
       { name: 'Gaucho leatherwork', code: 'AR', img: px(28806552) },
       { name: 'Pampas saddlery', code: 'AR', img: px(29145580) },
+      { name: 'Huaraches', code: 'MX', img: px(17994477) },
+      { name: 'Grand Bazaar leather', code: 'TR', img: px(32398231) },
+      { name: 'Jutti slippers', code: 'IN', img: px(14940419) },
+      { name: 'Saddlery', code: 'GB', img: px(36744643) },
+      { name: 'Boot makers', code: 'BR', img: px(6316211) },
+      { name: 'Lisbon glovers', code: 'PT', img: px(17721873) },
+      { name: 'Handmade shoes', code: 'ES', img: px(37165708) },
+      { name: 'Western bootmakers', code: 'US', img: px(19750710) },
+      { name: 'Leather ateliers', code: 'JP', img: px(33102790) },
+      { name: 'Saddle stitch', code: '', img: '', video: vf('34740027/14727180_1280_720_30fps.mp4') },
     ],
   },
   {
@@ -215,6 +252,16 @@ const CULTURE_REELS: {
       { name: 'Grand Bazaar lamps', code: 'TR', img: px(37497154) },
       { name: 'Cairo glass lanterns', code: 'EG', img: px(11350804) },
       { name: 'Athens marble', code: 'GR', img: px(17311595) },
+      { name: 'Stained glass', code: 'FR', img: px(5712135) },
+      { name: 'Blown glass', code: 'MX', img: px(38037223) },
+      { name: 'Marble inlay of Agra', code: 'IN', img: px(35961605) },
+      { name: 'Venetian mirrors', code: 'IT', img: px(32156881) },
+      { name: 'Onyx ware', code: 'PK', img: px(6207347) },
+      { name: 'Krobo beads', code: 'GH', img: px(7585691) },
+      { name: 'Cut crystal', code: 'IE', img: px(20531140) },
+      { name: 'Crystal chandeliers', code: 'AT', img: px(12024171) },
+      { name: 'Glass studios', code: 'JP', img: px(33013269) },
+      { name: 'Glass, blown', code: '', img: '', video: vf('7519297/7519297-hd_720_1366_25fps.mp4') },
     ],
   },
   {
@@ -231,6 +278,16 @@ const CULTURE_REELS: {
       { name: 'Aleppo inlay boxes', code: 'SY', img: px(37178485) },
       { name: 'Versailles marquetry', code: 'FR', img: px(7873602) },
       { name: 'German joinery', code: 'DE', img: px(5974413) },
+      { name: 'Norse woodcarving', code: 'SE', img: px(37258076) },
+      { name: 'Rattan weave', code: 'PH', img: px(6594391) },
+      { name: 'Teak carving', code: 'TH', img: px(36492217) },
+      { name: 'Zanzibar doors', code: 'TZ', img: px(16520657) },
+      { name: 'Alebrijes', code: 'MX', img: px(29243522) },
+      { name: 'Walnut carving of Kashmir', code: 'IN', img: px(36971734) },
+      { name: 'Oak workshops', code: 'GB', img: px(37358117) },
+      { name: 'Thuya marquetry', code: 'MA', img: px(33395644) },
+      { name: 'Porch rockers', code: 'US', img: px(20778163) },
+      { name: 'Carved by hand', code: '', img: '', video: vf('37789666/16029515_1280_720_59fps.mp4') },
     ],
   },
   {
@@ -245,6 +302,18 @@ const CULTURE_REELS: {
       { name: 'Hammered brass bowl', code: 'IN', img: px(19408700) },
       { name: 'Brass artistry', code: 'TR', img: px(18711727) },
       { name: 'Brass workshop', code: 'EG', img: px(34204855) },
+      { name: 'Copper of Santa Clara', code: 'MX', img: px(9362579) },
+      { name: 'Coppersmiths of Gaziantep', code: 'TR', img: px(34534188) },
+      { name: 'Pewter', code: 'MY', img: px(34969871) },
+      { name: 'Engraved brass', code: 'IN', img: px(35226350) },
+      { name: 'Bronzeware', code: 'TH', img: px(7001922) },
+      { name: 'Wrought iron', code: 'ES', img: px(32185454) },
+      { name: 'The forge', code: 'GB', img: px(34503350) },
+      { name: 'Axe & anvil', code: 'SE', img: px(33305598) },
+      { name: 'Cowbells', code: 'CH', img: px(28615960) },
+      { name: 'Singing bowls', code: 'NP', img: px(3544322) },
+      { name: 'Silverwork', code: 'PE', img: px(33834689) },
+      { name: 'The forge, live', code: '', img: '', video: vf('31638148/13478949_1280_720_24fps.mp4') },
     ],
   },
   {
@@ -257,6 +326,20 @@ const CULTURE_REELS: {
       { name: 'Red paper craft', code: 'CN', img: px(20541865) },
       { name: 'Leather journal', code: 'IT', img: px(35810927) },
       { name: 'Notebook binding', code: 'DE', img: px(30804551) },
+      { name: 'Washi', code: 'JP', img: px(8280873) },
+      { name: 'Papyrus', code: 'EG', img: px(15850552) },
+      { name: 'Ebru marbling', code: 'TR', img: px(36849960) },
+      { name: 'Florentine paper', code: 'IT', img: px(31624717) },
+      { name: 'Letterpress', code: 'GB', img: px(4140908) },
+      { name: 'Calligraphy brushes', code: 'CN', img: px(36171312) },
+      { name: 'Printing blocks', code: 'IN', img: px(34112721) },
+      { name: 'Quills & inks', code: 'FR', img: px(17280214) },
+      { name: 'Wax seals', code: 'AT', img: px(36824939) },
+      { name: 'Origami', code: 'JP', img: px(36324637) },
+      { name: 'Wycinanki cutouts', code: 'PL', img: px(8879956) },
+      { name: 'Papel picado', code: 'MX', img: px(29298480) },
+      { name: 'Paper umbrellas', code: 'TH', img: px(28516216) },
+      { name: 'Ink & nib', code: '', img: '', video: vf('7344854/7344854-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
@@ -273,6 +356,16 @@ const CULTURE_REELS: {
       { name: 'Rice terraces', code: 'TH', img: px(36388173) },
       { name: 'Fermented onggi', code: 'KR', img: px(37427960) },
       { name: 'Preserves & pickles', code: 'FR', img: px(28645473) },
+      { name: 'Ceylon cinnamon', code: 'LK', img: px(5475175) },
+      { name: 'Kampot pepper', code: 'KH', img: px(36292680) },
+      { name: 'Harissa', code: 'TN', img: px(37461272) },
+      { name: "Za'atar", code: 'LB', img: px(35514632) },
+      { name: 'Sichuan pepper', code: 'CN', img: px(4160104) },
+      { name: 'Miso & soy barrels', code: 'JP', img: px(6711649) },
+      { name: 'Turmeric', code: 'IN', img: px(6808985) },
+      { name: 'Paprika', code: 'HU', img: px(5769805) },
+      { name: 'Ras el hanout', code: 'MA', img: px(35659931) },
+      { name: 'The spice souk', code: '', img: '', video: vf('36147273/15329473_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -285,6 +378,20 @@ const CULTURE_REELS: {
       { name: 'Luthier studio', code: 'BR', img: px(19585038) },
       { name: 'Drum craftsman', code: 'IE', img: px(32357220) },
       { name: 'Guitar making', code: 'PT', img: px(3853207) },
+      { name: 'Cremona violins', code: 'IT', img: px(15058936) },
+      { name: 'Kora', code: 'SN', img: px(36150845) },
+      { name: 'Taiko drums', code: 'JP', img: px(30642901) },
+      { name: 'Bagpipes', code: 'GB', img: px(32511793) },
+      { name: 'Oud making', code: 'TR', img: px(35259636) },
+      { name: 'Steelpan', code: 'TT', img: px(8866164) },
+      { name: 'Didgeridoo', code: 'AU', img: px(31597128) },
+      { name: 'Andean panpipes', code: 'PE', img: px(31843111) },
+      { name: 'Gamelan', code: 'ID', img: px(37076115) },
+      { name: 'Mbira', code: 'ZW', img: px(6252130) },
+      { name: 'Handpan', code: 'CH', img: px(7970276) },
+      { name: 'Irish harps', code: 'IE', img: px(33605476) },
+      { name: 'Accordions', code: 'DE', img: px(8520168) },
+      { name: 'The luthier', code: '', img: '', video: vf('37864529/16064058_1366_720_50fps.mp4') },
     ],
   },
   {
@@ -297,6 +404,20 @@ const CULTURE_REELS: {
       { name: 'Lantern festival', code: 'CN', img: px(30704392) },
       { name: 'Tea by the glass', code: 'TR', img: px(31564199) },
       { name: 'Afternoon coffee', code: 'IT', img: px(36674526) },
+      { name: 'Dia de Muertos', code: 'MX', img: px(18950636) },
+      { name: 'Holi pigments', code: 'IN', img: px(36425051) },
+      { name: 'Hanami', code: 'JP', img: px(12527586) },
+      { name: 'Carnival', code: 'BR', img: px(36304748) },
+      { name: 'Venetian masks', code: 'IT', img: px(30926717) },
+      { name: 'Ramadan lanterns', code: 'EG', img: px(2233416) },
+      { name: 'Midsummer wreaths', code: 'SE', img: px(17661191) },
+      { name: 'Nowruz table', code: 'IR', img: px(7157630) },
+      { name: 'Festivals of Cape Coast', code: 'GH', img: px(33798119) },
+      { name: 'Wayang kulit', code: 'ID', img: px(37659947) },
+      { name: 'Semana Santa', code: 'ES', img: px(31715522) },
+      { name: 'Maori heritage', code: 'NZ', img: px(6492113) },
+      { name: 'Oktoberfest', code: 'DE', img: px(34071574) },
+      { name: 'Lantern night', code: '', img: '', video: vf('28987854/12538074_1280_720_24fps.mp4') },
     ],
   },
   {
@@ -311,6 +432,18 @@ const CULTURE_REELS: {
       { name: 'Circuit assembly', code: 'JP', img: px(37426135) },
       { name: 'Bespoke tailoring', code: 'IT', img: px(6764997) },
       { name: 'Savile Row fitting', code: 'GB', img: px(6766284) },
+      { name: 'Globe makers', code: 'GB', img: px(36109366) },
+      { name: 'Watch movements', code: 'CH', img: px(34182730) },
+      { name: "Navigators' instruments", code: 'PT', img: px(19954149) },
+      { name: 'Diamond cutters', code: 'BE', img: px(13648409) },
+      { name: 'Piano tuners', code: 'AT', img: px(29039292) },
+      { name: 'Kintsugi', code: 'JP', img: px(38045469) },
+      { name: 'Couture ateliers', code: 'FR', img: px(18181981) },
+      { name: '3D printing', code: 'US', img: px(30658383) },
+      { name: 'Semiconductors', code: 'TW', img: px(37052613) },
+      { name: 'Robotics', code: 'KR', img: px(36564994) },
+      { name: 'Camera & lens craft', code: 'SE', img: px(29293968) },
+      { name: 'The watchmaker', code: '', img: '', video: vf('8322334/8322334-hd_1366_720_25fps.mp4') },
     ],
   },
 ]
@@ -385,6 +518,8 @@ const css = `
 .vh-ct:hover{transform:translateY(-3px);border-color:rgba(255,107,0,.5)}
 .vh-ct .ph{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2)}
 .vh-ct .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.vh-ct .ph video{width:100%;height:100%;object-fit:cover;display:block}
+.vh-top20{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:4px;font-weight:700}
 .vh-ct:hover .ph img{transform:scale(1.045)}
 .vh-ct .ph .ribbon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);background:var(--accent);color:#160a00;font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 64px;white-space:nowrap}
 .vh-ct .cap{padding:12px 14px}
@@ -499,7 +634,7 @@ export default function HomePage() {
         else v.pause()
       })
     }, { rootMargin: '120px' })
-    document.querySelectorAll('.vh-tile').forEach(el => io.observe(el))
+    document.querySelectorAll('.vh-tile, .vh-film').forEach(el => io.observe(el))
     return () => io.disconnect()
   }, [streams.length])
 
@@ -579,28 +714,36 @@ export default function HomePage() {
               <div>
                 <h2>{reel.title}</h2>
                 <p className="sub">{reel.line}</p>
+                <p className="vh-top20">20 seats &middot; reserved for the top-performing sellers</p>
               </div>
               <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
             </div>
             <div className="vh-drag">
               {reel.tiles.map(t => (
-                <Link className="vh-ct" href="/founding" key={t.name + t.code}>
+                <Link className={'vh-ct' + (t.video ? ' vh-film' : '')} href="/founding" key={t.name + t.code}>
                   {/* ID-card layout (William, 2026-07-17): same framed card as the
                       country-page seat grid -- image pane with the "Your goods
                       here" ribbon, then a caption block. These stay examples
-                      until real sellers claim the seats. */}
+                      until real sellers claim the seats. Each rail is exactly 20
+                      seats (William, 2026-07-17) -- reserved for the top 20
+                      performing sellers; the film seat is labelled PREVIEW FILM
+                      with no country claim (footage is craft-generic, LAW #1). */}
                   <div className="ph">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={t.img}
-                      alt={t.name}
-                      loading="lazy"
-                      onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
-                    />
-                    <div className="ribbon">Your goods here</div>
+                    {t.video ? (
+                      <video src={t.video} muted loop playsInline preload="metadata" />
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={t.img}
+                        alt={t.name}
+                        loading="lazy"
+                        onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                      />
+                    )}
+                    <div className="ribbon">{t.video ? 'Preview' : 'Your goods here'}</div>
                   </div>
                   <div className="cap">
-                    <div className="k">{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</div>
+                    <div className="k">{t.video ? 'PREVIEW FILM' : <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</>}</div>
                     <div className="t">{t.name}</div>
                     <div className="pr"><span className="p">£0.00</span><span className="s">Seller name</span></div>
                   </div>

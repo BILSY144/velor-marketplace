@@ -482,6 +482,20 @@ condensed action order.
 9. Optional cleanup: cancel/delete the test order against the REJECTED
    bracelet product, then hard-delete that last product row.
 
+
+## 2026-07-17 checkpoint -- Homepage reels: 20 seats per rail (top-20 performers), HD craft films added
+
+William's directive (2026-07-17, continuing a session that died mid-research): every homepage culture reel is exactly 20 boxes, reserved for the marketplace's top 20 performing sellers, including video seats, all HD, same ID-card look. The prior session's 7 research agents died with that session -- nothing had landed; rebuilt from scratch this session.
+
+- All 15 reels now hold exactly 20 tiles (was 6-17): 115 new image tiles researched via same-origin Pexels search in-browser, every ID load-tested against images.pexels.com (130 candidates checked, 0 failures; dupes vs existing homepage IDs and within the new set: 0). w=800 tinysrgb, ~4x the 216px tile width.
+- One PREVIEW FILM seat per rail: 15 HD craft films (720p-1080p variants chosen deliberately over QHD -- tile is 216px, QHD wastes buyer bandwidth), all range-fetch verified on videos.pexels.com. Film seats carry kicker PREVIEW FILM and ribbon "Preview", NO country flag -- footage is craft-generic and claiming an origin would violate LAW #1. Films do NOT autoplay on load; the existing IntersectionObserver (now observing .vh-tile, .vh-film) plays them on scroll-in, pauses off-screen.
+- "20 seats - reserved for the top-performing sellers" line added under every reel header (.vh-top20).
+- NOTE: backend does not yet rank sellers into these seats -- the tiles remain editorial placeholders until a real top-20 performer mechanism exists. That mechanism is NOT built; do not claim it is.
+
+**PARKED -- REVISIT SOON (William, 2026-07-17): mobile flag-hop issue.** After the service-worker zombie fix (self-destructing SW, commits 87a79c0/792f182/c0754d8), William's phone STILL shows the same issue on country pages. Marked "revisit the issue soon" -- not forgotten. Next debugging step should assume it is NOT the stale-cache zombie (that is cured and proven on desktop) and look for a genuine mobile-specific bug in the flag strip / CountryOriginStrip touch handling.
+
+Also still owed from the 2026-07-16/17 session: full Hallmark seal on the seller's public storefront profile page (the one remaining badge placement); 10 seller outreach drafts awaiting William's review; buyer test still queued.
+
 ---
 
 ## SELLER ACQUISITION PLAN (2026-07-09 â under 4 weeks to 6 August launch)
