@@ -138,13 +138,23 @@ export function T(s: string): string {
   return s
 }
 
+// On-screen diagnostics (v3): the Language screen shows this so a failed
+// stage is visible on-device instead of silently leaving the app English.
+let lastFlush = 'no batch sent yet'
+export function i18nDiag(): string {
+  const d = dicts[LANG]
+  return `engine v3 · lang ${LANG} · cached ${d ? d.size : 0} · queued ${pending.size} · last: ${lastFlush}`
+}
+
+let failures = 0
+
 async function flush() {
   flushTimer = null
   const lang = LANG
   if (lang === 'en') { pending.clear(); return }
   const texts = [...pending].slice(0, 150)
-  texts.forEach((t) => pending.delete(t))
   if (texts.length === 0) return
+  const t0 = Date.now()
   try {
     const r = await fetch(API, {
       method: 'POST',
@@ -154,9 +164,30 @@ async function flush() {
     if (r.ok) {
       const { translations } = await r.json()
       const d = dicts[lang] || (dicts[lang] = new Map())
-      texts.forEach((t, i) => d.set(t, translations[i]))
+      texts.forEach((t, i) => {
+        if (typeof translations?.[i] === 'string') d.set(t, translations[i])
+      })
+      // Only strings that actually got a translation leave the queue -- a
+      // failed or partial batch is retried, never silently dropped (the v2
+      // engine deleted texts from pending BEFORE the fetch, so one network
+      // error left the whole visible screen English forever).
+      texts.forEach((t) => { if (d.has(t)) pending.delete(t) })
+      failures = 0
+      lastFlush = `ok ${texts.length} in ${((Date.now() - t0) / 1000).toFixed(1)}s`
+      emit()
+    } else {
+      failures += 1
+      lastFlush = `HTTP ${r.status} after ${((Date.now() - t0) / 1000).toFixed(1)}s`
       emit()
     }
-  } catch {}
-  if (pending.size > 0 && !flushTimer) flushTimer = setTimeout(() => { void flush() }, 500)
+  } catch (e) {
+    failures += 1
+    lastFlush = `network error: ${e instanceof Error ? e.message.slice(0, 60) : 'unknown'}`
+    emit()
+  }
+  if (pending.size > 0 && !flushTimer) {
+    // Backoff on repeated failures so a dead network doesn't hot-loop.
+    const delay = failures === 0 ? 500 : Math.min(15000, 1000 * 2 ** failures)
+    flushTimer = setTimeout(() => { void flush() }, delay)
+  }
 }

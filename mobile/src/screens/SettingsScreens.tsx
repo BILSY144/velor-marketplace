@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Platform } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Platform, Text as RNText } from 'react-native'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
-import { APP_LANGS, getLang, getCurrency, setAppLanguage, setAppCurrency, onI18n } from '../i18n'
+import { APP_LANGS, getLang, getCurrency, setAppLanguage, setAppCurrency, onI18n, i18nDiag } from '../i18n'
 import { Chrome } from '../components/Chrome'
 
 // Addresses (plate 17), Payment methods (plate 18) and Language & currency
@@ -164,6 +164,12 @@ export function LangCurScreen() {
           </Pressable>
         ))}
       </View>
+      {activeLang !== 'en' ? (
+        // Deliberately a raw RN Text: the diagnostic must never itself be
+        // translated (or queue itself), and must render even if the engine
+        // is broken -- it exists to show WHICH stage failed on-device.
+        <RNText style={[s.footDimTight, { marginTop: 8, fontSize: 10 }]}>{i18nDiag()}</RNText>
+      ) : null}
 
       <Text style={[s.kickDim, { marginTop: 30 }]}>CURRENCY</Text>
       <Text style={s.footDimTight}>
