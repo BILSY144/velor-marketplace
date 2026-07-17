@@ -138,8 +138,30 @@ export default function CountryOriginStrip() {
       // drag.current.suppressClick stays true just long enough to swallow
       // the click event the browser fires after this pointerup; it is
       // consumed (or expires) in onClickCapture below.
+      return
     }
-  }, [runMomentum])
+    // TAP-ON-POINTERUP (2026-07-17, William: flags still dead on his phone
+    // after the deferred-capture rewrite). Mobile WebKit decides for itself
+    // when a touch on a pan-x scroller becomes a scroll, and when it does it
+    // simply never delivers the button's click -- our 14px threshold never
+    // enters into it. So a clean tap must not depend on the browser's click
+    // at all: if the pointer never crossed OUR drag threshold, navigate
+    // right here on pointerup (which HAS been delivered, or we would not be
+    // in this handler), and swallow the trailing click so it cannot fire a
+    // second navigation. Keyboard users still navigate via the button's own
+    // onClick -- Enter/Space produce no pointer events, so nothing here
+    // interferes with that path.
+    const flag = (e.target as HTMLElement).closest?.('button[data-country-code]') as HTMLElement | null
+    const code = flag?.getAttribute('data-country-code')
+    if (code) {
+      drag.current.suppressClick = true
+      // If WebKit never delivers the trailing click, don't leave the
+      // suppression armed to swallow an unrelated future click (e.g. a
+      // keyboard activation, which has no pointerdown to reset it).
+      setTimeout(() => { drag.current.suppressClick = false }, 400)
+      router.push(`/shop?origin=${code}`)
+    }
+  }, [runMomentum, router])
 
   // Swallows exactly one click after a real drag, so releasing a spin over
   // a flag doesn't navigate. Plain taps never set suppressClick, so their
