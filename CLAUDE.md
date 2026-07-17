@@ -496,6 +496,19 @@ William's directive (2026-07-17, continuing a session that died mid-research): e
 
 Also still owed from the 2026-07-16/17 session: full Hallmark seal on the seller's public storefront profile page (the one remaining badge placement); 10 seller outreach drafts awaiting William's review; buyer test still queued.
 
+## 2026-07-17 checkpoint (2) -- Live whole-page translation in 19 languages; header language pickers; homepage currency fix
+
+William: "we promote our self that any user can use their own languages... once they choose the language, the whole page they visit turns the text into their language." Built and LIVE-VERIFIED (watched William cycle Turkish and Polish on the production homepage with zero English left):
+
+- **lib/language.ts** -- the same 19-language list as the app's Language screen; stored pref + velor-language-changed event, mirroring lib/currency.
+- **Header language picker** (GlobalHeader, desktop + phone panel) beside the currency picker, native names.
+- **Whole-page translation**: `TranslationCache` Prisma model (unique [hash, lang]) -- every unique string is model-translated ONCE per language via the existing Anthropic key, then served from Postgres forever; spend is bounded by site copy, not traffic. `/api/translate` (POST, capped 400 strings/30k chars, 18 langs, maxDuration 60). `components/LanguageTranslator.tsx` mounted on public pages: walks text nodes, swaps cached translations, MutationObserver catches client-rendered content, English restores instantly; selects/options, prices, numbers, [data-no-translate] skipped.
+- **Bugs found while shipping** (all fixed same session): claude-sonnet-5 leads with thinking blocks so content[0].text was empty -- read every text block (same as assistant fix 6ad3a35); a language switch mid-run was silently dropped by the busy guard (page stuck in the PREVIOUS language); an observer-bumped generation counter skipped every final paint -- guard by language equality only; request batch 400->150 so no request risks the route's 60s cap.
+- **Homepage currency bug fixed** (William's report): reel ID-card prices were hardcoded GBP -- now follow useCurrencyDisplay live.
+- **App**: globe button added to Chrome header -> existing LangCur screen (mobile-app commit a91d4eb, Expo publish auto-fired). The APP is still English-first -- its language screen says so honestly; full in-app translation is separate, unbuilt work.
+
+**Open/watch:** /api/translate is public behind size/lang caps -- if Anthropic spend ever looks wrong, add an origin check + per-IP budget. Arabic translates but the layout does NOT flip RTL (unbuilt). Dashboard/admin/auth/pulse pages deliberately untranslated. First visit per page per language takes a few seconds per 150-string batch; cached thereafter.
+
 **Same day, later (all live-verified in Chrome):** (1) Film seats got verified poster frames -- a no-autoplay video paints NOTHING in Chromium, which read as "15 missing tiles"; posters fixed it, films still only download/play on scroll-in. (2) Dead CDN link on the tea reel's "The coffee ceremony" (30937097) replaced with 38519856 -- same dead ID the founding atlas fixed 2026-07-16; the homepage copy had been missed. (3) SITE TYPOGRAPHY CHANGE (William): all site headers now use the app's Fraunces serif -- global h1-h6 rule in globals.css with deliberate !important to outrank ~40 inline var(--font-display) heading styles; kickers/buttons/labels keep Space Grotesk; ID-card name lines (homepage reels, shop seat grid, listing cards) also Fraunces. The old "display font Space Grotesk" line in STANDING DIRECTIVES now applies to non-heading display text only. (4) Origins header dropdown rebuilt: all 190 countries as mini shopping-channel boxes (countryImagery photo cover into black, orange SHOPPING CHANNEL kicker, Fraunces name), lazy-loaded, rendered only while open. Commits 92ca199, 3f78bd8, 5238016, 42fffdb.
 
 ---
