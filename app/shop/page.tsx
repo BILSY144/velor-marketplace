@@ -227,6 +227,23 @@ function ShopContent() {
                           </span>
                         </div>
                       )}
+                      {p.sellerFounding && (
+                        <div title="Founding Seller — the first verified seller from this country" style={{ position: 'absolute', bottom: 10, right: 10, width: '54px', height: '54px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(30,22,7,0.95), rgba(15,11,3,0.95))', border: '1px solid rgba(185,138,47,0.5)', boxShadow: '0 2px 10px rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="46" height="46" viewBox="0 0 200 200" aria-hidden="true">
+                            <circle cx="100" cy="100" r="96" fill="none" stroke="#E9C46A" strokeWidth="3" />
+                            <circle cx="100" cy="100" r="86" fill="none" stroke="#E9C46A" strokeWidth="1" opacity="0.6" />
+                            <g stroke="#E9C46A" strokeWidth="3" fill="none" strokeLinecap="round" transform="translate(-9,0)">
+                              <path d="M52 128 q-10 -22 2 -44" /><path d="M54 124 q-8 -4 -14 -1 q4 -8 14 -6" /><path d="M52 108 q-8 -4 -14 -1 q4 -8 14 -6" /><path d="M52 92 q-7 -5 -13 -3 q3 -8 13 -5" />
+                            </g>
+                            <g stroke="#E9C46A" strokeWidth="3" fill="none" strokeLinecap="round" transform="translate(9,0)">
+                              <path d="M148 128 q10 -22 -2 -44" /><path d="M146 124 q8 -4 14 -1 q-4 -8 -14 -6" /><path d="M148 108 q8 -4 14 -1 q-4 -8 -14 -6" /><path d="M148 92 q7 -5 13 -3 q-3 -8 -13 -5" />
+                            </g>
+                            <text x="100" y="88" textAnchor="middle" fontSize="22" letterSpacing="2" fill="#E9C46A" fontWeight="700">VELOR</text>
+                            <text x="100" y="122" textAnchor="middle" fontSize="32" fontWeight="800" fill="#E9C46A">No. 001</text>
+                            <text x="100" y="146" textAnchor="middle" fontSize="16" letterSpacing="1.5" fill="#E9C46A" opacity="0.85">EST. 2026</text>
+                          </svg>
+                        </div>
+                      )}
                       {p.stock > 0 && p.stock < 5 && (
                         <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
                           ONLY {p.stock} LEFT
