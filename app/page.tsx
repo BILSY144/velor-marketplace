@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel } from '@/lib/specialities'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 type LatticeSummary = {
   totalCountries: number
@@ -576,6 +577,7 @@ const css = `
 `
 
 export default function HomePage() {
+  const { symbol } = useCurrencyDisplay()
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
   const [streams, setStreams] = useState<LiveStream[]>([])
   const rootRef = useRef<HTMLDivElement>(null)
@@ -748,7 +750,7 @@ export default function HomePage() {
                   <div className="cap">
                     <div className="k">{t.video ? 'PREVIEW FILM' : <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</>}</div>
                     <div className="t">{t.name}</div>
-                    <div className="pr"><span className="p">£0.00</span><span className="s">Seller name</span></div>
+                    <div className="pr"><span className="p">{symbol}0.00</span><span className="s">Seller name</span></div>
                   </div>
                 </Link>
               ))}

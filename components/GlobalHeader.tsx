@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
+import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 import { useCart } from '@/lib/cart'
 import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage } from '@/lib/countryImagery'
@@ -30,9 +31,12 @@ export default function GlobalHeader() {
   const [acctOpen, setAcctOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [currency, setCurrency] = useState('GBP')
+  const [language, setLanguage] = useState('en')
+  const [langNote, setLangNote] = useState<string | null>(null)
 
   useEffect(() => {
     setCurrency(getDisplayCurrency())
+    setLanguage(getDisplayLanguage())
     const onCurrencyChange = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail
       if (detail) setCurrency(detail)
@@ -70,6 +74,20 @@ export default function GlobalHeader() {
     e.preventDefault()
     const q = query.trim()
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/shop')
+  }
+
+  const changeLanguage = (value: string) => {
+    setLanguage(value)
+    setStoredLanguage(value)
+    const l = SUPPORTED_LANGUAGES.find((x) => x.code === value)
+    if (l && value !== 'en') {
+      // Honest, same as the app's Language screen: Velor speaks all 19 with
+      // sellers today; the buyer-facing site ships English-first until launch.
+      setLangNote(`Saved. Velor speaks ${l.native} with its sellers today — the site in ${l.native} arrives with the buyer launch.`)
+      window.setTimeout(() => setLangNote(null), 7000)
+    } else {
+      setLangNote(null)
+    }
   }
 
   const changeCurrency = (value: string) => {
@@ -300,6 +318,30 @@ export default function GlobalHeader() {
               )}
             </Link>
 
+            {/* Language switcher — the 19 languages Velor speaks. Site UI is
+                English-first until buyer launch; the choice is stored and an
+                honest note explains, mirroring the app's Language screen. */}
+            <div className="velor-currency" style={{ ...navLink, display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <select
+                title="Velor speaks 19 languages. Your sellers can already write to Velor in theirs — the full site in your language arrives with the buyer launch."
+                aria-label="Language"
+                value={language}
+                onChange={(e) => changeLanguage(e.target.value)}
+                style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', maxWidth: 110 }}
+              >
+                {SUPPORTED_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code} style={{ color: '#000' }}>
+                    {l.native}
+                  </option>
+                ))}
+              </select>
+              {langNote && (
+                <div style={{ position: 'absolute', top: 42, right: 0, width: 280, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', fontSize: 12, lineHeight: 1.5, color: 'var(--text)', boxShadow: '0 16px 40px rgba(0,0,0,0.5)', zIndex: 60 }}>
+                  {langNote}
+                </div>
+              )}
+            </div>
+
             {/* Currency switcher (moves into the mobile panel on phones) */}
             <div className="velor-currency" style={{ ...navLink, display: 'flex', alignItems: 'center' }}>
               <select
@@ -472,7 +514,34 @@ export default function GlobalHeader() {
           <Link href="/messages" style={menuItem}>Messages</Link>
           <Link href="/account/wishlist" style={menuItem}>Wishlist</Link>
 
-          {/* Currency lives here on phones, where the header row has no space. */}
+          {/* Language + currency live here on phones, where the header row has no space. */}
+          <div style={{ ...menuItem, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ color: 'var(--muted)' }}>Language</span>
+            <select
+              aria-label="Language"
+              value={language}
+              onChange={(e) => changeLanguage(e.target.value)}
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                color: 'var(--text)',
+                font: 'inherit',
+                padding: '8px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code} style={{ color: '#000' }}>
+                  {l.native}
+                </option>
+              ))}
+            </select>
+          </div>
+          {langNote && (
+            <div style={{ padding: '4px 14px 10px', fontSize: 12, lineHeight: 1.5, color: 'var(--muted)' }}>{langNote}</div>
+          )}
+
           <div style={{ ...menuItem, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ color: 'var(--muted)' }}>Currency</span>
             <select
