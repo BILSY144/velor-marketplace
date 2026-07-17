@@ -4,15 +4,34 @@
 // header on every public page. Buyers press the mouse (or touch) and drag
 // to "spin" through flags -- releasing lets it glide to a stop with
 // momentum, like flicking a reel -- then click a flag to browse products
-// whose Origin Country matches it (?origin=<ISO2> on /shop). A plain click
-// (no drag) always still works since we only treat it as a drag once the
-// pointer has moved a few pixels.
+// whose Origin Country matches it (?origin=<ISO2> on /shop).
+//
+// TAP RELIABILITY (rewritten 2026-07-17, William's bug report): the old
+// version called setPointerCapture on EVERY pointerdown, which makes the
+// browser retarget pointerup/click to the track div -- so the flag button's
+// own onClick never fired, and navigation depended on a manual
+// getBoundingClientRect hit-test at release time. That hit-test silently
+// missed whenever layout was shifting (lazy images, scroll restoration),
+// and on touch any finger wobble past the 6px threshold turned a tap into
+// a "drag" that navigated nowhere. Result: intermittent dead taps, worst
+// on mobile, and buyers stuck on one country page.
+//
+// New model: capture is DEFERRED. Pointerdown only records the start
+// point; nothing is captured, so a plain tap keeps fully native click
+// behaviour on the button (100% reliable). Only once the pointer has
+// actually moved past the drag threshold do we take capture and start
+// scrolling the reel -- and after a real drag we suppress the one click
+// that follows it so releasing a spin never accidentally opens a country.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
-const DRAG_THRESHOLD_PX = 6
+// Touch needs a bigger dead-zone than a mouse: fingertips wobble several
+// pixels during a deliberate tap, and treating that as a drag is exactly
+// the dead-tap bug this rewrite removes.
+const DRAG_THRESHOLD_MOUSE_PX = 6
+const DRAG_THRESHOLD_TOUCH_PX = 14
 const FRICTION = 0.94
 const MIN_VELOCITY = 0.05
 
@@ -26,7 +45,9 @@ export default function CountryOriginStrip() {
     pointerId: -1,
     startX: 0,
     startScrollLeft: 0,
-    moved: false,
+    dragging: false,
+    suppressClick: false,
+    threshold: DRAG_THRESHOLD_MOUSE_PX,
     lastX: 0,
     lastT: 0,
     velocity: 0,
@@ -59,24 +80,42 @@ export default function CountryOriginStrip() {
     const track = trackRef.current
     if (!track) return
     stopMomentum()
-    setIsDragging(true)
+    // Deliberately NO setPointerCapture here -- see header comment. A tap
+    // that never crosses the threshold stays a completely native click.
     drag.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
       startScrollLeft: track.scrollLeft,
-      moved: false,
+      dragging: false,
+      suppressClick: false,
+      threshold: e.pointerType === 'mouse' ? DRAG_THRESHOLD_MOUSE_PX : DRAG_THRESHOLD_TOUCH_PX,
       lastX: e.clientX,
       lastT: performance.now(),
       velocity: 0,
     }
-    track.setPointerCapture(e.pointerId)
   }, [stopMomentum])
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     const track = trackRef.current
     if (!track || drag.current.pointerId !== e.pointerId) return
     const dx = e.clientX - drag.current.startX
-    if (Math.abs(dx) > DRAG_THRESHOLD_PX) drag.current.moved = true
+
+    if (!drag.current.dragging) {
+      if (Math.abs(dx) <= drag.current.threshold) return
+      // The pointer has genuinely started dragging: only NOW take capture
+      // (so the drag keeps tracking outside the strip) and mark the next
+      // click for suppression.
+      drag.current.dragging = true
+      drag.current.suppressClick = true
+      setIsDragging(true)
+      try {
+        track.setPointerCapture(e.pointerId)
+      } catch {
+        // Capture can fail if the pointer was released mid-frame; the drag
+        // still works for movement inside the strip, so ignore.
+      }
+    }
+
     track.scrollLeft = drag.current.startScrollLeft - dx
 
     const now = performance.now()
@@ -91,49 +130,35 @@ export default function CountryOriginStrip() {
 
   const endDrag = useCallback((e: React.PointerEvent) => {
     if (drag.current.pointerId !== e.pointerId) return
-    setIsDragging(false)
     drag.current.pointerId = -1
-    if (Math.abs(drag.current.velocity) > MIN_VELOCITY) runMomentum()
-
-    // Pointer capture (set in onPointerDown, needed for the drag/momentum
-    // mechanism) causes the browser to swallow the native "click" event on
-    // the flag button underneath the pointer -- a real mouse or touch tap
-    // never reaches the button's onClick handler. Detect a genuine tap
-    // ourselves instead: if the pointer never moved past the drag
-    // threshold, hit-test the release point directly and navigate from
-    // here rather than relying on the (unreliable) native click.
-    if (!drag.current.moved) {
-      // Don't use document.elementFromPoint here -- the flag buttons are
-      // set to pointer-events: none while isDragging is true, and
-      // setIsDragging(false) above is an async React state update, so the
-      // DOM still has that style applied at this exact synchronous point,
-      // meaning the browser's hit-test would skip the button entirely and
-      // return the track div instead. Do the containment check ourselves
-      // against each button's real bounding rect so it's independent of
-      // that CSS state.
-      const track = trackRef.current
-      const buttons = track?.querySelectorAll<HTMLElement>('[data-country-code]')
-      if (buttons) {
-        for (const btn of buttons) {
-          const r = btn.getBoundingClientRect()
-          if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
-            router.push(`/shop?origin=${btn.dataset.countryCode}`)
-            break
-          }
-        }
-      }
+    if (drag.current.dragging) {
+      setIsDragging(false)
+      drag.current.dragging = false
+      if (Math.abs(drag.current.velocity) > MIN_VELOCITY) runMomentum()
+      // drag.current.suppressClick stays true just long enough to swallow
+      // the click event the browser fires after this pointerup; it is
+      // consumed (or expires) in onClickCapture below.
     }
-  }, [runMomentum, router])
+  }, [runMomentum])
+
+  // Swallows exactly one click after a real drag, so releasing a spin over
+  // a flag doesn't navigate. Plain taps never set suppressClick, so their
+  // clicks pass straight through to the flag button's onClick.
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if (drag.current.suppressClick) {
+      drag.current.suppressClick = false
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }, [])
 
   useEffect(() => stopMomentum, [stopMomentum])
 
   const handleFlagClick = (code: string) => {
     // Takes buyers straight to products whose Origin Country matches the
-    // flag they picked. The /shop search bar still works on top of this
-    // filter, so a buyer can narrow further by keyword within that country's
-    // listings. NOTE (2026-07-07): every live product currently has
-    // originCountry unset, so this filter shows zero results until sellers'
-    // products get a real origin country recorded -- see William re: backfill plan.
+    // flag they picked -- from ANY page, including another country's page
+    // (/shop?origin=X to /shop?origin=Y is a query-only navigation; the
+    // shop page derives everything from useSearchParams so it re-fetches).
     router.push(`/shop?origin=${code}`)
   }
 
@@ -150,6 +175,7 @@ export default function CountryOriginStrip() {
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
         className="velor-origin-strip"
         style={{
           display: 'flex',
@@ -195,7 +221,7 @@ export default function CountryOriginStrip() {
               overflow: 'hidden',
               border: '1px solid var(--border)',
               background: 'var(--bg)',
-              pointerEvents: isDragging ? 'none' : 'auto',
+              cursor: 'pointer',
             }}
           >
             <img
@@ -203,7 +229,7 @@ export default function CountryOriginStrip() {
               alt=""
               draggable={false}
               loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
             />
           </button>
         ))}
