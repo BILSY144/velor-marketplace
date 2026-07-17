@@ -17,6 +17,7 @@
   --red: #e24b4a;
   --amber: #EF9F27;
   --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -61,8 +62,11 @@ button {
   background: none;
 }
 
+/* All headers site-wide use the app's Fraunces serif (William, 2026-07-17).
+   !important deliberately outranks the ~40 inline var(--font-display) heading
+   styles left across pages -- kickers/buttons/labels keep Space Grotesk. */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display), system-ui, sans-serif;
+  font-family: var(--font-serif), Georgia, serif !important;
   line-height: 1.15;
 }
 

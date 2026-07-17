@@ -6,15 +6,9 @@ import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
 import { useCart } from '@/lib/cart'
-import { cultureHints } from '@/lib/cultureHints'
-import { slugifyCountryName } from '@/lib/worldCountries'
+import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { countryImage } from '@/lib/countryImagery'
 
-const NAV_ORIGINS: { code: string; name: string }[] = [
-  { code: 'CN', name: 'China' }, { code: 'JP', name: 'Japan' }, { code: 'MA', name: 'Morocco' },
-  { code: 'TR', name: 'Turkey' }, { code: 'IN', name: 'India' }, { code: 'PE', name: 'Peru' },
-  { code: 'MX', name: 'Mexico' }, { code: 'IT', name: 'Italy' }, { code: 'KR', name: 'South Korea' },
-  { code: 'GH', name: 'Ghana' },
-]
 function navFlag(code: string): string {
   return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
 }
@@ -190,7 +184,7 @@ export default function GlobalHeader() {
                     position: 'absolute',
                     top: 40,
                     left: 0,
-                    width: 480,
+                    width: 'min(720px, calc(100vw - 40px))',
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 14,
@@ -198,26 +192,35 @@ export default function GlobalHeader() {
                     boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
                   }}
                 >
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                    {NAV_ORIGINS.map((o) => (
-                      <Link
-                        key={o.code}
-                        href={`/origins/${slugifyCountryName(o.name)}`}
-                        style={{ ...menuItem, borderRadius: 9, fontSize: 13, display: 'flex', alignItems: 'center', gap: 9 }}
-                      >
-                        <span style={{ fontSize: 15 }}>{navFlag(o.code)}</span>
-                        <span>
-                          {o.name}
-                          <span style={{ display: 'block', fontSize: 10.5, color: 'var(--muted)', marginTop: 1 }}>
-                            {cultureHints(o.code).slice(0, 2).join(' · ')}
-                          </span>
-                        </span>
-                      </Link>
-                    ))}
+                  {/* All 190 countries as mini shopping-channel boxes -- the app's
+                      Sell-hero design (photo cover melting into black, orange
+                      kicker, Fraunces name), William 2026-07-17. Rendered only
+                      while open; images lazy-load as the grid scrolls. */}
+                  <div style={{ maxHeight: '64vh', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingRight: 4 }}>
+                    {WORLD_COUNTRIES.map((o) => {
+                      const im = countryImage(o.code, 400)
+                      return (
+                        <Link
+                          key={o.code}
+                          href={`/origins/${slugifyCountryName(o.name)}`}
+                          style={{ position: 'relative', display: 'block', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/11', background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+                        >
+                          {im && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={im.url} alt={o.name} loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )}
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,8,11,0) 28%, rgba(8,8,11,0.94) 100%)' }} />
+                          <div style={{ position: 'absolute', left: 10, right: 10, bottom: 8 }}>
+                            <div style={{ fontSize: 8.5, letterSpacing: '0.18em', color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{navFlag(o.code)} SHOPPING CHANNEL</div>
+                            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, color: '#fff', lineHeight: 1.15, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.name}</div>
+                          </div>
+                        </Link>
+                      )
+                    })}
                   </div>
                   <Link
                     href="/origins"
-                    style={{ ...menuItem, borderRadius: 9, fontSize: 12.5, marginTop: 6, display: 'block', textAlign: 'center', color: 'var(--accent)', borderTop: '1px solid var(--border)', paddingTop: 12 }}
+                    style={{ ...menuItem, borderRadius: 9, fontSize: 12.5, marginTop: 8, display: 'block', textAlign: 'center', color: 'var(--accent)', borderTop: '1px solid var(--border)', paddingTop: 12 }}
                   >
                     All 190 countries &rarr;
                   </Link>

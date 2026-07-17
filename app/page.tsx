@@ -527,7 +527,7 @@ const css = `
 .vh-ct .ph .ribbon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);background:var(--accent);color:#160a00;font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 64px;white-space:nowrap}
 .vh-ct .cap{padding:12px 14px}
 .vh-ct .cap .k{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
-.vh-ct .cap .t{font-size:14px;font-weight:600;line-height:1.3}
+.vh-ct .cap .t{font-family:var(--font-serif);font-size:14px;font-weight:600;line-height:1.3}
 .vh-ct .cap .pr{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .vh-ct .cap .p{font-size:15px;font-weight:700;font-family:Space Grotesk,sans-serif;color:var(--muted)}
 .vh-ct .cap .s{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}

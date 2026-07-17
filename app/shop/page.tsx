@@ -252,7 +252,7 @@ function ShopContent() {
                     </div>
                     <div style={{ padding: '14px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
                       {(p.avgRating ?? 0) !== null && (
                         <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
                           Rating: {'★'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
@@ -405,7 +405,7 @@ function ShopContent() {
                   </div>
                   <div style={{ padding: '14px' }}>
                     <div style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>The founding seat</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px' }}>The first {originCountry.name} listing goes here</div>
+                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px' }}>The first {originCountry.name} listing goes here</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: '#E9C46A' }}>Pro free for life</span>
                       <span style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>No. 001</span>
@@ -425,7 +425,7 @@ function ShopContent() {
                     </div>
                     <div style={{ padding: '14px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Your craft</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', color: 'var(--muted)' }}>Goods name</div>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', color: 'var(--muted)' }}>Goods name</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--muted)' }}>{symbol}0.00</span>
                         <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Seller name</span>
