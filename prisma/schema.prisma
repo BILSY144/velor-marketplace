@@ -619,3 +619,44 @@ model ProductCertificate {
   @@index([productId])
   @@index([status])
 }
+
+// Password reset — email-verified, one-hour tokens (William's standing
+// requirement, 2026-07-15). Token stored as a SHA-256 hash; the raw value
+// only ever exists inside the emailed link.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Expo push tokens — one row per device, so launch events (opening bells,
+// order updates) can notify the Velor app with the bell chime.
+model PushToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  platform   String
+  userId     String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// On-demand page-translation cache -- one row per (source string, language).
+// Written by app/api/translate; each unique string is translated by the
+// Anthropic API exactly once per language, then served from here forever.
+model TranslationCache {
+  id         String   @id @default(cuid())
+  hash       String
+  lang       String
+  source     String
+  translated String
+  createdAt  DateTime @default(now())
+
+  @@unique([hash, lang])
+}
