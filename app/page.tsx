@@ -165,7 +165,7 @@ const CULTURE_REELS: {
     line: "The world's larder, from where it actually grows.",
     tiles: [
       { name: 'Matcha', code: 'JP', img: px(8330375) },
-      { name: 'The coffee ceremony', code: 'ET', img: px(30937097) },
+      { name: 'The coffee ceremony', code: 'ET', img: px(38519856) },
       { name: 'Turkish delight', code: 'TR', img: px(36207188) },
       { name: 'Spice markets', code: 'IN', img: px(17870116) },
       { name: 'Olive oil', code: 'GR', img: px(25745504) },
