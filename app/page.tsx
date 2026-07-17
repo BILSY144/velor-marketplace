@@ -48,6 +48,9 @@ const px = (id: number, slug?: string) =>
 
 // HD craft films for the one PREVIEW FILM seat on each 20-seat rail.
 const vf = (path: string) => `https://videos.pexels.com/video-files/${path}`
+// Poster frame for a film seat -- paints instantly; the film itself only
+// plays (and downloads) when the IntersectionObserver scrolls it into view.
+const vp = (path: string) => `https://images.pexels.com/videos/${path}?auto=compress&cs=tinysrgb&w=800`
 
 // The culture reels — each tile is a real cultural item with its country.
 // Stock photography stands in until real listings replace it, tile by tile.
@@ -79,7 +82,7 @@ const CULTURE_REELS: {
       { name: 'Onggi jars', code: 'KR', img: px(34416819) },
       { name: 'Bukhara ceramics', code: 'UZ', img: px(29475568) },
       { name: 'Barro negro', code: 'MX', img: px(33701615) },
-      { name: 'Thrown on the wheel', code: '', img: '', video: vf('12681572/12681572-hd_1920_1080_24fps.mp4') },
+      { name: 'Thrown on the wheel', code: '', img: vp('12681572/pictures/preview-0.jpeg'), video: vf('12681572/12681572-hd_1920_1080_24fps.mp4') },
     ],
   },
   {
@@ -105,7 +108,7 @@ const CULTURE_REELS: {
       { name: 'Alpaca of the Andes', code: 'PE', img: px(35729525) },
       { name: 'Suzani embroidery', code: 'UZ', img: px(29475576) },
       { name: 'Otavalo textiles', code: 'EC', img: px(18425673) },
-      { name: 'On the loom', code: '', img: '', video: vf('32655899/13923463_1280_720_25fps.mp4') },
+      { name: 'On the loom', code: '', img: vp('32655899/alpaca-alpaca-loom-alpaca-wool-animal-farm-32655899.jpeg'), video: vf('32655899/13923463_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -131,7 +134,7 @@ const CULTURE_REELS: {
       { name: 'Olive-wood boards', code: 'TN', img: px(38368132) },
       { name: 'Karahi cookware', code: 'PK', img: px(33617984) },
       { name: 'Dallah coffee pots', code: 'SA', img: px(38036783) },
-      { name: 'The wok, live', code: '', img: '', video: vf('34711974/14713477_720_1280_30fps.mp4') },
+      { name: 'The wok, live', code: '', img: vp('34711974/pexels-photo-34711974.jpeg'), video: vf('34711974/14713477_720_1280_30fps.mp4') },
     ],
   },
   {
@@ -157,7 +160,7 @@ const CULTURE_REELS: {
       { name: 'Mompox filigree', code: 'CO', img: px(15955332) },
       { name: 'Turquoise & silver', code: 'US', img: px(33737462) },
       { name: 'Komboloi beads', code: 'GR', img: px(11591685) },
-      { name: "The goldsmith's bench", code: '', img: '', video: vf('35822699/15189596_1280_720_25fps.mp4') },
+      { name: "The goldsmith's bench", code: '', img: vp('35822699/pexels-photo-35822699.jpeg'), video: vf('35822699/15189596_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -183,7 +186,7 @@ const CULTURE_REELS: {
       { name: 'High-mountain oolong', code: 'TW', img: px(6545351) },
       { name: 'Colombian coffee', code: 'CO', img: px(33220155) },
       { name: 'Cacao ceremony', code: 'GT', img: px(23511143) },
-      { name: 'The pour', code: '', img: '', video: vf('8507896/8507896-hd_1080_1920_25fps.mp4') },
+      { name: 'The pour', code: '', img: vp('8507896/pictures/preview-0.jpeg'), video: vf('8507896/8507896-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
@@ -209,7 +212,7 @@ const CULTURE_REELS: {
       { name: 'Beeswax candles', code: 'PL', img: px(18921271) },
       { name: 'Diya lamps', code: 'IN', img: px(34431714) },
       { name: 'Hanji lanterns', code: 'KR', img: px(34569756) },
-      { name: 'Candle making', code: '', img: '', video: vf('6748677/6748677-hd_1920_1080_25fps.mp4') },
+      { name: 'Candle making', code: '', img: vp('6748677/candle-candle-light-candle-wax-handmade-6748677.jpeg'), video: vf('6748677/6748677-hd_1920_1080_25fps.mp4') },
     ],
   },
   {
@@ -235,7 +238,7 @@ const CULTURE_REELS: {
       { name: 'Handmade shoes', code: 'ES', img: px(37165708) },
       { name: 'Western bootmakers', code: 'US', img: px(19750710) },
       { name: 'Leather ateliers', code: 'JP', img: px(33102790) },
-      { name: 'Saddle stitch', code: '', img: '', video: vf('34740027/14727180_1280_720_30fps.mp4') },
+      { name: 'Saddle stitch', code: '', img: vp('34740027/2025-november-34740027.jpeg'), video: vf('34740027/14727180_1280_720_30fps.mp4') },
     ],
   },
   {
@@ -261,7 +264,7 @@ const CULTURE_REELS: {
       { name: 'Cut crystal', code: 'IE', img: px(20531140) },
       { name: 'Crystal chandeliers', code: 'AT', img: px(12024171) },
       { name: 'Glass studios', code: 'JP', img: px(33013269) },
-      { name: 'Glass, blown', code: '', img: '', video: vf('7519297/7519297-hd_720_1366_25fps.mp4') },
+      { name: 'Glass, blown', code: '', img: vp('7519297/pictures/preview-0.jpeg'), video: vf('7519297/7519297-hd_720_1366_25fps.mp4') },
     ],
   },
   {
@@ -287,7 +290,7 @@ const CULTURE_REELS: {
       { name: 'Oak workshops', code: 'GB', img: px(37358117) },
       { name: 'Thuya marquetry', code: 'MA', img: px(33395644) },
       { name: 'Porch rockers', code: 'US', img: px(20778163) },
-      { name: 'Carved by hand', code: '', img: '', video: vf('37789666/16029515_1280_720_59fps.mp4') },
+      { name: 'Carved by hand', code: '', img: vp('37789666/pexels-photo-37789666.jpeg'), video: vf('37789666/16029515_1280_720_59fps.mp4') },
     ],
   },
   {
@@ -313,7 +316,7 @@ const CULTURE_REELS: {
       { name: 'Cowbells', code: 'CH', img: px(28615960) },
       { name: 'Singing bowls', code: 'NP', img: px(3544322) },
       { name: 'Silverwork', code: 'PE', img: px(33834689) },
-      { name: 'The forge, live', code: '', img: '', video: vf('31638148/13478949_1280_720_24fps.mp4') },
+      { name: 'The forge, live', code: '', img: vp('31638148/pexels-photo-31638148.jpeg'), video: vf('31638148/13478949_1280_720_24fps.mp4') },
     ],
   },
   {
@@ -339,7 +342,7 @@ const CULTURE_REELS: {
       { name: 'Wycinanki cutouts', code: 'PL', img: px(8879956) },
       { name: 'Papel picado', code: 'MX', img: px(29298480) },
       { name: 'Paper umbrellas', code: 'TH', img: px(28516216) },
-      { name: 'Ink & nib', code: '', img: '', video: vf('7344854/7344854-hd_1080_1920_25fps.mp4') },
+      { name: 'Ink & nib', code: '', img: vp('7344854/pictures/preview-0.jpeg'), video: vf('7344854/7344854-hd_1080_1920_25fps.mp4') },
     ],
   },
   {
@@ -365,7 +368,7 @@ const CULTURE_REELS: {
       { name: 'Turmeric', code: 'IN', img: px(6808985) },
       { name: 'Paprika', code: 'HU', img: px(5769805) },
       { name: 'Ras el hanout', code: 'MA', img: px(35659931) },
-      { name: 'The spice souk', code: '', img: '', video: vf('36147273/15329473_1280_720_25fps.mp4') },
+      { name: 'The spice souk', code: '', img: vp('36147273/2026-36147273.jpeg'), video: vf('36147273/15329473_1280_720_25fps.mp4') },
     ],
   },
   {
@@ -391,7 +394,7 @@ const CULTURE_REELS: {
       { name: 'Handpan', code: 'CH', img: px(7970276) },
       { name: 'Irish harps', code: 'IE', img: px(33605476) },
       { name: 'Accordions', code: 'DE', img: px(8520168) },
-      { name: 'The luthier', code: '', img: '', video: vf('37864529/16064058_1366_720_50fps.mp4') },
+      { name: 'The luthier', code: '', img: vp('37864529/luthier-work-37864529.jpeg'), video: vf('37864529/16064058_1366_720_50fps.mp4') },
     ],
   },
   {
@@ -417,7 +420,7 @@ const CULTURE_REELS: {
       { name: 'Semana Santa', code: 'ES', img: px(31715522) },
       { name: 'Maori heritage', code: 'NZ', img: px(6492113) },
       { name: 'Oktoberfest', code: 'DE', img: px(34071574) },
-      { name: 'Lantern night', code: '', img: '', video: vf('28987854/12538074_1280_720_24fps.mp4') },
+      { name: 'Lantern night', code: '', img: vp('28987854/asian-lanterns-festival-mood-lanterns-lit-lanterns-28987854.jpeg'), video: vf('28987854/12538074_1280_720_24fps.mp4') },
     ],
   },
   {
@@ -443,7 +446,7 @@ const CULTURE_REELS: {
       { name: 'Semiconductors', code: 'TW', img: px(37052613) },
       { name: 'Robotics', code: 'KR', img: px(36564994) },
       { name: 'Camera & lens craft', code: 'SE', img: px(29293968) },
-      { name: 'The watchmaker', code: '', img: '', video: vf('8322334/8322334-hd_1366_720_25fps.mp4') },
+      { name: 'The watchmaker', code: '', img: vp('8322334/pictures/preview-0.jpeg'), video: vf('8322334/8322334-hd_1366_720_25fps.mp4') },
     ],
   },
 ]
@@ -730,7 +733,7 @@ export default function HomePage() {
                       with no country claim (footage is craft-generic, LAW #1). */}
                   <div className="ph">
                     {t.video ? (
-                      <video src={t.video} muted loop playsInline preload="metadata" />
+                      <video src={t.video} poster={t.img} muted loop playsInline preload="none" />
                     ) : (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
