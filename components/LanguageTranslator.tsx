@@ -28,7 +28,6 @@ export default function LanguageTranslator() {
   const dict = useRef(new Map<string, Map<string, string>>()) // lang -> src -> dst
   const busy = useRef(false)
   const queued = useRef(false)
-  const gen = useRef(0)
   const observer = useRef<MutationObserver | null>(null)
   const timer = useRef<number | null>(null)
 
@@ -103,7 +102,6 @@ export default function LanguageTranslator() {
 
     const translatePage = async () => {
       const lang = getDisplayLanguage()
-      const myGen = ++gen.current
       if (lang === 'en') {
         restoreEnglish()
         return
@@ -136,10 +134,9 @@ export default function LanguageTranslator() {
             const { translations } = await res.json()
             pending.forEach((src, i) => d.set(src, translations[i]))
             saveDict(lang)
-            // stale-run guard: if the user switched language while this
-            // batch was in flight, do NOT paint the old language over the
-            // page -- the queued re-run handles the new one
-            if (gen.current === myGen && getDisplayLanguage() === lang) {
+            // stale-run guard: only paint if the user is still on the
+            // language this batch was fetched for
+            if (getDisplayLanguage() === lang) {
               applyDict(collectNodes(), d)
             }
           }
@@ -150,7 +147,9 @@ export default function LanguageTranslator() {
         busy.current = false
         if (queued.current) {
           queued.current = false
-          schedule()
+          // direct call, not schedule(): background tabs throttle timers,
+          // and the queued pass usually only needs to paint from the dict
+          void translatePage()
         }
       }
     }
