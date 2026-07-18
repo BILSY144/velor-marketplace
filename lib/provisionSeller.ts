@@ -152,7 +152,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         // real payee -- but a Payoneer-country seller sitting on a wrong
         // "STRIPE" label before their first visit was invisible to the
         // admin activation route and could trip a false watchdog alert.
-        payoutRail: getPayoutRail(application.country),
+        payoutRail: getPayoutRail(application.shippingCountry),
       },
     })
     await provisionSellerShippingProfile(seller.id, application)
@@ -180,7 +180,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
             identityVerified: application.verificationStatus === 'VERIFIED',
             // Same reasoning as the branch above: resolve the real rail now
             // rather than relying on a later dashboard visit.
-            payoutRail: getPayoutRail(application.country),
+            payoutRail: getPayoutRail(application.shippingCountry),
           },
         },
       },
