@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { checkMessageContent } from '@/lib/messageFilter';
 
 // GET /api/dashboard/messages Ã¢ÂÂ returns all message threads for the logged-in seller
 export async function GET(req: NextRequest) {
@@ -103,6 +104,11 @@ export async function POST(req: NextRequest) {
 
     if (receiverId === session.user.id) {
       return NextResponse.json({ error: 'Cannot send a message to yourself' }, { status: 400 });
+    }
+
+    const check = checkMessageContent(content);
+    if (check.blocked) {
+      return NextResponse.json({ error: check.reason, violations: check.violations }, { status: 400 });
     }
 
     const message = await prisma.message.create({
