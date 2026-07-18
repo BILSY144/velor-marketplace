@@ -182,6 +182,24 @@ const jsonLd = {
       // marketplace... buy from independent sellers worldwide"). schema.org
       // confirms Organization is a valid domain for areaServed.
       areaServed: 'Worldwide',
+      // foundingDate added by the standing SEO agent, 2026-07-18 (18:xx UTC
+      // cycle) -- schema.org/Organization lists foundingDate as a valid Date
+      // property (checked against schema.org's own docs before adding, same
+      // verification bar as every other field in this node). Not a guess:
+      // CLAUDE.md's own 2026-07-18 "CHANNELX / CHRIS DAWSON PRESS OUTREACH"
+      // checkpoint records an independent, live Companies House lookup this
+      // same day confirming "Company number 17268133 (VELOR COMMERCE LTD)
+      // confirmed live on Companies House: active, private limited company,
+      // incorporated 8 June 2026, matches exactly" -- the same company
+      // number already used for this node's own `legalName` field above.
+      // Cross-corroborated by a second, independent reference elsewhere in
+      // CLAUDE.md (the Google Play org-verification checkpoint, which cites
+      // the uploaded "Companies House incorporation bundle
+      // 17268133_newinc_2026-06-08.pdf") -- two separately-dated checkpoints
+      // agree on the same 2026-06-08 date, not one single source repeated.
+      // ISO 8601 date format, per schema.org's own Date-type convention.
+      // Purely additive: one new field, nothing else in this node touched.
+      foundingDate: '2026-06-08',
       // address added by the standing SEO agent, 2026-07-13 (sixth pass) --
       // a prior pass (2026-07-13, third pass log entry) explicitly
       // considered and ruled OUT an Organization.address, on the stated
