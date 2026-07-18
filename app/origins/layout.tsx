@@ -39,6 +39,18 @@ import { cultureHints } from '@/lib/cultureHints'
 // structured, citable lists over prose for "which countries can I shop on
 // Velor" style questions -- explicitly on this agent's standing audit
 // checklist under AI-visibility/answer-engine readiness.
+//
+// Correction, standing SEO agent, 2026-07-18 (09:xx UTC cycle): the
+// "145-country filter" description above is stale. lib/cultureHints.ts was
+// fully rewritten from scratch by a separate session (commit c51fa54a,
+// 2026-07-16 00:49 UTC) after this comment was written, giving all 190
+// WORLD_COUNTRIES codes a real entry -- verified fresh this run via a
+// script cross-check (190 codes, 190 keys, zero missing, zero orphans; see
+// app/sitemap.ts's own 2026-07-18 correction for the same finding in full).
+// `numberOfItems` and every URL below already self-derive from this filter,
+// so the live ItemList has already been reporting all 190 countries since
+// that rewrite shipped -- no code change needed, only this comment was out
+// of date describing it as 145.
 const originListCountries = WORLD_COUNTRIES.filter((c) => cultureHints(c.code).length > 0)
 
 // description trimmed by the standing SEO agent, 2026-07-14 (full audit

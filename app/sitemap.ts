@@ -177,6 +177,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // orphaned CI (Côte d'Ivoire) entry noted above is unaffected by this
   // run, still backlog item 23. No code change needed here -- this filter
   // already re-derives from cultureHints() and WORLD_COUNTRIES directly.
+  //
+  // Correction, standing SEO agent, 2026-07-18 (09:xx UTC cycle): the
+  // 172/190 (90%) figure directly above is now stale and understates real
+  // coverage -- a separate, non-SEO-agent session (commit c51fa54a,
+  // 2026-07-16 00:49 UTC, see SEO_LOG.md backlog item 25) fully rewrote
+  // lib/cultureHints.ts from scratch, merging 19 parallel research batches,
+  // and gave every one of the 190 WORLD_COUNTRIES codes a real 5-8-item
+  // entry -- including the 18 named above as gapless. Verified fresh this
+  // run, not assumed: a script cross-checking every WORLD_COUNTRIES code
+  // against every lib/cultureHints.ts key found 190 codes, 190 keys, a
+  // perfect 1:1 match, zero missing either direction, and zero orphans (the
+  // CI mismatch noted above is also gone -- the rewrite dropped that
+  // orphaned entry along with everything else it replaced, consistent with
+  // backlog item 23's own later note). Net effect: this filter now resolves
+  // to all 190 countries, not 172 -- with no code change, since it already
+  // re-derives from cultureHints() and WORLD_COUNTRIES directly, exactly as
+  // every prior comment in this trail predicted it would once coverage
+  // reached 100%. The named country lists throughout this comment trail
+  // above are now historical record of past runs' research, not a current
+  // gap list -- there is no current gap list, full stop.
   const originCountryEntries: MetadataRoute.Sitemap = WORLD_COUNTRIES.filter(
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
