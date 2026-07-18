@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { checkMessageContent } from '@/lib/messageFilter';
 
 export async function GET() {
   const session = await auth();
@@ -69,6 +70,11 @@ export async function POST(req: Request) {
 
   const receiver = await prisma.user.findUnique({ where: { id: receiverId } });
   if (!receiver) return NextResponse.json({ error: 'Receiver not found' }, { status: 404 });
+
+  const check = checkMessageContent(content);
+  if (check.blocked) {
+    return NextResponse.json({ error: check.reason, violations: check.violations }, { status: 400 });
+  }
 
   const message = await prisma.message.create({
     data: {
