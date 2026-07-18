@@ -712,6 +712,16 @@ background: isElevated ? `${accentColor}18` : 'var(--bg)', border: `1px solid ${
 </div>
 </div>
 <div style={{ height: 1, background: 'var(--border)', margin: '20px 0 22px' }} />
+<div style={{
+  background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8,
+  padding: '14px 16px', marginBottom: 18, fontSize: '13px', lineHeight: 1.5, color: 'var(--text)',
+}}>
+  <strong>Before you list:</strong> Velor only allows newly made cultural and artisan goods. Genuine antiques, artifacts, and items presented as historically or archaeologically significant are never allowed, regardless of value or how they were acquired -- see our{' '}
+  <a href="/legal/seller-rules" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>
+    Seller Rules and Product Compliance Policy
+  </a>{' '}
+  for the full list of prohibited items (including ivory, tortoiseshell, and protected bird feathers). Listings that violate this policy are blocked automatically.
+</div>
 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 <div>
 <label style={labelStyle}>Name *</label>
