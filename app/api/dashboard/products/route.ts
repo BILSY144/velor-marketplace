@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
+import { checkMessageContent } from '@/lib/messageFilter'
 
 export async function GET() {
   const session = await auth()
@@ -145,6 +146,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: prohibitedListingReason(prohibitedOnCreate) }, { status: 400 })
   }
 
+  // Velor is the platform -- sellers promote through Velor, not their own
+  // business or contact details. Reuses the same email/phone/social
+  // detector that guards buyer<->seller messages (lib/messageFilter.ts) and
+  // seller settings (app/api/dashboard/settings/route.ts), since a listing
+  // is exactly as public as either of those once it is live on /shop/[id].
+  const contactOnCreate = checkMessageContent(`${name} ${description || ''} ${makerStory || ''} ${materials || ''}`)
+  if (contactOnCreate.blocked) {
+    return NextResponse.json(
+      { error: "Listings can't include email addresses, phone numbers, or social/messaging handles -- Velor is the platform, sellers promote through Velor, not their own contact details." },
+      { status: 400 }
+    )
+  }
+
   // originCountry is mandatory -- it is what routes this listing onto the
   // correct country/culture page (see CountryFounder in prisma/schema.prisma
   // and grantCountryFounderIfFirst in lib/founding.ts). A listing with no
@@ -229,6 +243,16 @@ export async function PATCH(req: NextRequest) {
   const prohibitedOnEdit = checkProhibitedListingContent(name, description, materials, makerStory)
   if (prohibitedOnEdit.blocked) {
     return NextResponse.json({ error: prohibitedListingReason(prohibitedOnEdit) }, { status: 400 })
+  }
+
+  // See the matching check in POST above -- Velor is the platform, sellers
+  // promote through Velor, not their own business or contact details.
+  const contactOnEdit = checkMessageContent(`${name} ${description || ''} ${makerStory || ''} ${materials || ''}`)
+  if (contactOnEdit.blocked) {
+    return NextResponse.json(
+      { error: "Listings can't include email addresses, phone numbers, or social/messaging handles -- Velor is the platform, sellers promote through Velor, not their own contact details." },
+      { status: 400 }
+    )
   }
 
   // originCountry is mandatory here too -- see the matching check in POST
