@@ -1980,3 +1980,18 @@ introducing it.
    sessions, worth a five-minute repo-wide grep for the `Ã` signature next
    time anyone is in this file for an unrelated reason, purely as a cheap
    periodic check -- it costs nothing to look and it keeps recurring.
+
+
+---
+
+2026-07-18 checkpoint -- CHANNELX / CHRIS DAWSON PRESS OUTREACH: VERIFIED, NOT CHANGED (DONE)
+
+William asked for the live Outlook thread with chris@channelx.world (Chris Dawson, Editor in Chief, ChannelX) to be checked end to end. This was a verification pass only -- no code changed, no new email sent.
+
+Sequence confirmed correct, nothing missing or out of order: outreach sent 2026-07-15 23:26, Chris replied 2026-07-16 08:38 asking for the release "under embargo", William's reply went out 2026-07-17 00:43 with the full press release attached inline, embargo dropped ("no embargo, you're free to publish the moment it lands").
+
+Two facts in the release were independently verified against live sources, not just trusted from the email text. Company number 17268133 (VELOR COMMERCE LTD) confirmed live on Companies House: active, private limited company, incorporated 8 June 2026, matches exactly. Pricing quoted in the release (Starter: free, 10% commission, 10 listing cap; Pro: GBP 49/month, 4% commission, unlimited listings) confirmed against the LIVE TIER_CONFIG in app/api/seller/subscription/route.ts, not against this file. Note: the older "Seller tiers" line earlier in this file (12%/8%/5%, citing commit ee7683e) is now stale -- Enterprise was retired 2026-07-15 and Pro absorbed everything it offered, per the comment at the top of route.ts. That line already told readers not to trust it alone; this entry is the live-verified correction.
+
+Three judgment calls in the release were flagged to William directly in chat and confirmed TRUE and deliberate by him on 2026-07-18. First, the release states "William Sinclair, whose physical disability rules out manual work, built the 190-country marketplace from a laptop in a shed" -- not documented anywhere else in this file before now; William confirmed this is accurate and was his approved detail. Second, the media contact listed is support@velorcommerce.store, not customerservice@velorcommerce.co.uk (the address this file's email-routing rule names as the catch-all elsewhere); William confirmed support@velorcommerce.store is a real, monitored inbox. Third, Chris asked to publish "under embargo" and the reply dropped the embargo entirely; William confirmed this was his deliberate choice, faster founding-seller recruitment prioritised over an exclusive embargo, not an oversight.
+
+No outstanding action from this checkpoint. If a future session sees a follow-up from chris@channelx.world, this is the context.
