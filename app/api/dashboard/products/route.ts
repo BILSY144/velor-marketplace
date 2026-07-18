@@ -1,7 +1,6 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { maybeGrantFoundingPerks } from '@/lib/founding'
 import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
 
 export async function GET() {
@@ -146,8 +145,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: prohibitedListingReason(prohibitedOnCreate) }, { status: 400 })
   }
 
-  if (!name || !category || price === null) {
-    return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
+  // originCountry is mandatory -- it is what routes this listing onto the
+  // correct country/culture page (see CountryFounder in prisma/schema.prisma
+  // and grantCountryFounderIfFirst in lib/founding.ts). A listing with no
+  // declared origin can't be placed on any country page at all.
+  if (!name || !category || price === null || !originCountry) {
+    return NextResponse.json({ error: 'name, category, price, and origin country are required' }, { status: 400 })
   }
 
   const parsedPrice = parseFloat(String(price))
@@ -189,11 +192,6 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  // Founding-seller perks only activate once a seller lists their first
-  // product -- being approved and eligible is not enough on its own. No-ops
-  // for anyone not founding-eligible or already granted.
-  await maybeGrantFoundingPerks(seller.id)
-
   return NextResponse.json({ product }, { status: 201 })
 }
 
@@ -233,8 +231,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: prohibitedListingReason(prohibitedOnEdit) }, { status: 400 })
   }
 
-  if (!name || !category || price === null) {
-    return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
+  // originCountry is mandatory here too -- see the matching check in POST
+  // above; an edit cannot clear the origin country any more than a new
+  // listing can be created without one.
+  if (!name || !category || price === null || !originCountry) {
+    return NextResponse.json({ error: 'name, category, price, and origin country are required' }, { status: 400 })
   }
 
   const parsedPrice = parseFloat(String(price))
