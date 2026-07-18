@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { SUPPORTED_CURRENCIES } from '@/lib/fx'
+import { checkMessageContent } from '@/lib/messageFilter'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -41,6 +42,20 @@ export async function PATCH(request: Request) {
 
   if (typeof storeName === 'string' && storeName.trim().length < 2) {
     return NextResponse.json({ error: 'Business name must be at least 2 characters' }, { status: 400 })
+  }
+
+  // Velor is the platform -- sellers promote through Velor, not their own
+  // business or contact details. Reuses the same email/phone/social
+  // detector that guards buyer<->seller messages (lib/messageFilter.ts) and
+  // product listings (app/api/dashboard/products/route.ts), since a store
+  // name or bio is exactly as public as either of those once it is live on
+  // /seller/[sellerId].
+  const contactCheck = checkMessageContent(`${storeName || ''} ${description || ''}`)
+  if (contactCheck.blocked) {
+    return NextResponse.json(
+      { error: "Your store name and bio can't include email addresses, phone numbers, or social/messaging handles -- Velor is the platform, sellers promote through Velor, not their own contact details." },
+      { status: 400 }
+    )
   }
 
   if (
