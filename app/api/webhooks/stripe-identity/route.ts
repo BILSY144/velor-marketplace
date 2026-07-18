@@ -88,12 +88,46 @@ await prisma.agentLog.create({
 // never look at an already-APPROVED row again -- so tell the director
 // directly instead of relying on the cron to notice.
 if (status === 'VERIFIED' && application.status === 'APPROVED') {
+  // Unblock payouts: release-payouts only pays a seller whose Seller row has
+  // identityVerified === true. Approval and verification are decoupled (a
+  // human can approve before verification finishes -- see provisionSeller.ts)
+  // so this is the only place that closes the loop for a seller who was
+  // approved first and verified later.
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: application.contactEmail },
+      include: { seller: true },
+    });
+    if (user?.seller && !user.seller.identityVerified) {
+      await prisma.seller.update({
+        where: { id: user.seller.id },
+        data: { identityVerified: true },
+      });
+    }
+  } catch {
+    // Best-effort; if this fails, release-payouts simply keeps holding funds
+    // for this seller (safe) rather than releasing to an unverified one.
+  }
+
+  try {
+    await sendEmail({
+      to: application.contactEmail,
+      from: 'Velor Seller Team <sellers@velorcommerce.store>',
+      subject: `You are verified – list your first item on Velor`,
+      html: `<p>Hi ${application.contactName},</p>
+      <p>Your identity has been verified. ${application.businessName} is now fully cleared to sell on Velor – including receiving payouts, which were on hold until this finished.</p>
+      <p><a href="https://velorcommerce.store/dashboard/products" style="display:inline-block;background:#FF6B00;color:#000;font-weight:800;text-decoration:none;padding:14px 30px;border-radius:8px;">List your first item</a></p>`,
+    });
+  } catch {
+    // Best-effort notification; never fail the webhook over an email error.
+  }
+
   try {
     await sendEmail({
       to: 'willsinclair144@gmail.com',
       subject: `Identity verified: ${application.businessName}`,
       html: `<p>${application.businessName} (${application.contactEmail}) has now completed Stripe identity verification.</p>
-      <p>This seller was approved on ${application.reviewedAt ? new Date(application.reviewedAt).toLocaleString('en-GB') : 'an earlier date'} before their verification finished. Their identity is now confirmed.</p>`,
+      <p>This seller was approved on ${application.reviewedAt ? new Date(application.reviewedAt).toLocaleString('en-GB') : 'an earlier date'} before their verification finished. Their identity is now confirmed and payouts are no longer held.</p>`,
     });
   } catch {
     // Best-effort notification; never fail the webhook over an email error.
