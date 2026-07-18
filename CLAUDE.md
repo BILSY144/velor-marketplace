@@ -264,10 +264,7 @@ Dropping a column drops its data â be careful.
 - Rail is resolved per seller country by `lib/payoutRail.ts`: Stripe Connect
   where supported, Payoneer everywhere else. **The rules are identical on both
   rails** â same delivery requirement, same holds, same dispute freeze.
-- Seller tiers: Starter free / 12% commission, Pro Â£49 / 8%, Enterprise Â£99 / 5%
-  (changed from 15% and Â£199, commit ee7683e, 2026-07-09 â verify against
-  `TIER_CONFIG` in `app/api/seller/subscription/route.ts` before quoting a
-  figure, do not trust this line alone).
+- Seller tiers (corrected 2026-07-18 by the SEO agent — this line was stale; see live `TIER_CONFIG` in `app/api/seller/subscription/route.ts`, matching the public `/sell` page, and already independently verified by the 2026-07-18 press-release checkpoint further down this file): **Starter** free / 10% commission (10 listings), **Pro** £49/mo / 4% commission (unlimited listings). Enterprise was retired 2026-07-15 — Pro absorbed everything it offered. The commit-ee7683e figures this line previously carried (12%/8%/5%, Enterprise £99) are historical only, not current.
 
 ---
 
