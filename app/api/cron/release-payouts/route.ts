@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
   let waiting = 0
   let heldForPayoneer = 0
   let skipped = 0
+  let heldUnverified = 0
 
   for (const o of candidates) {
     try {
@@ -111,9 +112,21 @@ export async function GET(req: NextRequest) {
       // down only for the Payoneer branch.
       const sellerRow = await prisma.seller.findUnique({
         where: { id: o.sellerId },
-        select: { stripeAccountId: true, payoutRail: true, payoneerPayeeId: true },
+        select: { stripeAccountId: true, payoutRail: true, payoneerPayeeId: true, identityVerified: true },
       })
       const sellerAccountId = sellerRow?.stripeAccountId || ''
+
+      // LAW: never release a payout -- on either rail -- to a seller whose
+      // identity is not Stripe-verified. Approval and verification are
+      // decoupled (a human can approve before verification finishes, see
+      // provisionSeller.ts), so this is the backstop that keeps that gap from
+      // ever reaching real money. Funds stay safely in escrow and this order
+      // is retried on every run once the seller verifies (see the Stripe
+      // Identity webhook, which flips identityVerified to true).
+      if (!sellerRow?.identityVerified) {
+        heldUnverified++
+        continue
+      }
 
       if (sellerAccountId) {
         // STRIPE rail. Idempotency key keyed on the order guarantees we never
@@ -186,6 +199,7 @@ export async function GET(req: NextRequest) {
     heldOpen,
     waiting,
     heldForPayoneer,
+    heldUnverified,
     skipped,
   })
 }
