@@ -134,6 +134,7 @@ model Seller {
   storeLogo                     String?
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
+  identityVerified               Boolean   @default(false)
   // Founding-seller programme. foundingEligible is decided once, at approval
   // (lib/provisionSeller.ts): true only for the first approved seller from
   // a given country. It does NOT grant the perks by itself -- perks
@@ -375,6 +376,8 @@ model SellerApplication {
   verificationSessionId String?   @unique
   verifiedAt            DateTime?
   verificationNotes     String?   @db.Text
+  verificationRemindersSent      Int       @default(0)
+  verificationReminderLastSentAt DateTime?
   status            String    @default("PENDING")
   reviewedAt        DateTime?
   reviewedBy        String?
