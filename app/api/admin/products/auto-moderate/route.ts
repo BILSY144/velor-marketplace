@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireCronSecret } from '@/lib/cronAuth'
 import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
+import { grantCountryFounderIfFirst } from '@/lib/founding'
 
 const FORBIDDEN_PATTERNS = [
   /weapon|gun|knife|blade|explosive|bomb/i,
@@ -92,6 +93,8 @@ export async function GET(request: NextRequest) {
         price: true,
         images: true,
         materials: true,
+        sellerId: true,
+        originCountry: true,
         requiresCertificate: true,
       },
     })
@@ -123,6 +126,7 @@ export async function GET(request: NextRequest) {
         })
         if (verdict === 'approve') {
           results.approved++
+          await grantCountryFounderIfFirst(product.sellerId, product.id, product.originCountry)
         } else {
           results.rejected++
           console.log(`Auto-rejected product ${product.id}: ${reason}`)
