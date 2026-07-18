@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        seller: { select: { id: true, storeName: true, tier: true, sellerScore: true, sellerBadge: true, currency: true, country: true, foundingBadge: true } },
+        seller: { select: { id: true, storeName: true, tier: true, sellerScore: true, sellerBadge: true, currency: true, country: true, foundingBadge: true, countryFounded: { select: { countryName: true } } } },
         reviews: { select: { rating: true } },
         _count: { select: { reviews: true } },
       },
@@ -91,7 +91,8 @@ export async function GET(request: Request) {
       name: p.title,
       sellerId: p.seller.id,
       sellerName: p.seller.storeName,
-      sellerFounding: (p.seller as { foundingBadge?: boolean }).foundingBadge ?? false,
+      sellerFounding: !!(p.seller as { countryFounded?: { countryName: string } | null }).countryFounded,
+      sellerFoundingCountry: (p.seller as { countryFounded?: { countryName: string } | null }).countryFounded?.countryName ?? null,
       currency: p.seller.currency || 'GBP',
       avgRating: avgRating !== null ? Math.round(avgRating * 10) / 10 : null,
       reviewCount: p._count.reviews,
