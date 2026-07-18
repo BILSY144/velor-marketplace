@@ -297,7 +297,7 @@ export default function ApplyPage() {
                     placeholder="https://yourstore.com" />
                 </div>
                 <div className="ap-field">
-                  <label className="ap-label">Country</label>
+                  <label className="ap-label">Business / Cultural Country</label>
                   <select className="ap-select" value={form.country}
                     onChange={e => setCountry(e.target.value)}>
                     <option value="">Select country</option>
@@ -305,6 +305,7 @@ export default function ApplyPage() {
                       <option key={c.code} value={c.name}>{c.name}</option>
                     ))}
                   </select>
+                  <p className="ap-hint">Where your business is based, or the culture your products represent. It does not decide which country page a listing appears on, or who gets founding credit for a country -- that is set per product, by the origin country you choose for each listing after you are approved.</p>
                 </div>
               </div>
             </div>
