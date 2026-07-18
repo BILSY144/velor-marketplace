@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { maybeGrantFoundingPerks } from '@/lib/founding'
+import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
 
 export async function GET() {
   const session = await auth()
@@ -136,7 +137,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'You must confirm this listing complies with the Seller Rules and Product Compliance Policy.' }, { status: 400 })
   }
 
-  if (!name || !category || price == null) {
+  // Immediate hard-reject check for antiques/artifacts and CITES-adjacent
+  // materials, shared with the auto-moderate cron (lib/prohibitedListingContent.ts)
+  // -- gives the seller a specific reason right away instead of finding out
+  // up to 5 minutes later that their listing silently disappeared.
+  const prohibitedOnCreate = checkProhibitedListingContent(name, description, materials, makerStory)
+  if (prohibitedOnCreate.blocked) {
+    return NextResponse.json({ error: prohibitedListingReason(prohibitedOnCreate) }, { status: 400 })
+  }
+
+  if (!name || !category || price === null) {
     return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
   }
 
@@ -163,10 +173,10 @@ export async function POST(req: NextRequest) {
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
       status: 'PENDING_REVIEW',
-      weightGrams: weightGrams != null ? Number(weightGrams) : null,
-      lengthCm: lengthCm != null ? Number(lengthCm) : null,
-      widthCm: widthCm != null ? Number(widthCm) : null,
-      heightCm: heightCm != null ? Number(heightCm) : null,
+      weightGrams: weightGrams !== null ? Number(weightGrams) : null,
+      lengthCm: lengthCm !== null ? Number(lengthCm) : null,
+      widthCm: widthCm !== null ? Number(widthCm) : null,
+      heightCm: heightCm !== null ? Number(heightCm) : null,
       hsCode: hsCode || null,
       originCountry: originCountry || null,
       isHandmade: !!isHandmade,
@@ -215,7 +225,15 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'You must confirm this listing complies with the Seller Rules and Product Compliance Policy.' }, { status: 400 })
   }
 
-  if (!name || !category || price == null) {
+  // Immediate hard-reject check for antiques/artifacts and CITES-adjacent
+  // materials -- see the matching check in POST above for why this is
+  // enforced at submission time as well as in the auto-moderate cron.
+  const prohibitedOnEdit = checkProhibitedListingContent(name, description, materials, makerStory)
+  if (prohibitedOnEdit.blocked) {
+    return NextResponse.json({ error: prohibitedListingReason(prohibitedOnEdit) }, { status: 400 })
+  }
+
+  if (!name || !category || price === null) {
     return NextResponse.json({ error: 'name, category, and price are required' }, { status: 400 })
   }
 
@@ -241,10 +259,10 @@ export async function PATCH(req: NextRequest) {
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
-      weightGrams: weightGrams != null ? Number(weightGrams) : null,
-      lengthCm: lengthCm != null ? Number(lengthCm) : null,
-      widthCm: widthCm != null ? Number(widthCm) : null,
-      heightCm: heightCm != null ? Number(heightCm) : null,
+      weightGrams: weightGrams !== null ? Number(weightGrams) : null,
+      lengthCm: lengthCm !== null ? Number(lengthCm) : null,
+      widthCm: widthCm !== null ? Number(widthCm) : null,
+      heightCm: heightCm !== null ? Number(heightCm) : null,
       hsCode: hsCode || null,
       originCountry: originCountry || null,
       isHandmade: !!isHandmade,
