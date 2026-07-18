@@ -13,7 +13,7 @@ const FOOTER = `<div style="background:#111;padding:20px 32px;border-top:1px sol
   </p>
 </div>`;
 
-const WRAP_OPEN = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0D0D0D;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+const WRAP_OPEN = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#0D0D0D;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 <div style="max-width:600px;margin:32px auto;background:#1A1A1A;border-radius:10px;overflow:hidden;border:1px solid #2A2A2A">
 ${LOGO}<div style="padding:32px">`;
 
