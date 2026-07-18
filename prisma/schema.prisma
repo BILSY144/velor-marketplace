@@ -124,6 +124,7 @@ model Seller {
   supportTickets                SupportTicket[]
   apiKeys                       ApiKey[]
   liveStreams                   LiveStream[]
+  countryFounded                 CountryFounder?
   sellerScore                   Float     @default(0)
   sellerBadge                   String?
   sellerScoreUpdatedAt          DateTime?
@@ -135,7 +136,13 @@ model Seller {
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
   identityVerified               Boolean   @default(false)
-  // Founding-seller programme. foundingEligible is decided once, at approval
+    // DEPRECATED (2026-07-18): foundingEligible/foundingPerksGrantedAt/
+  // foundingBadge below were driven by SellerApplication.country, which
+  // conflated the seller's registered business country with the culture
+  // they sell -- see CountryFounder at the end of this file, which is the
+  // live mechanism now. These fields are kept only so already-approved
+  // rows don't break; nothing grants perks off them anymore.
+// Founding-seller programme. foundingEligible is decided once, at approval
   // (lib/provisionSeller.ts): true only for the first approved seller from
   // a given country. It does NOT grant the perks by itself -- perks
   // (Pro tier at no charge, the founding badge) activate only once the
@@ -674,4 +681,26 @@ model TranslationIpDaily {
   count Int    @default(0)
 
   @@unique([ip, day])
+}
+
+
+// Founding credit is tied to the ORIGIN of the product a seller lists, not
+// to where the seller's business is registered (Seller.country) -- a
+// single seller may sell goods from several cultures, so credit is earned
+// per listing's actual origin, not claimed at application time. Both
+// countryCode and sellerId are unique: one founder per country, and each
+// seller may found at most one country page (William, 2026-07-18). First
+// APPROVED product from that origin wins the row; the unique constraints
+// make a race between two sellers resolve safely with no extra locking.
+// Written by lib/founding.ts's grantCountryFounderIfFirst(), called from
+// the auto-moderate cron and the manual admin approval route -- the only
+// two places a product actually transitions into APPROVED status.
+model CountryFounder {
+  id          String   @id @default(cuid())
+  countryCode String   @unique
+  countryName String
+  sellerId    String   @unique
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  productId   String
+  grantedAt   DateTime @default(now())
 }
