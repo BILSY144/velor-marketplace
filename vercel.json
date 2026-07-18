@@ -47,6 +47,10 @@
     {
       "path": "/api/cron/agent-watchdog",
       "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/verification-reminders",
+      "schedule": "45 * * * *"
     }
   ]
 }
