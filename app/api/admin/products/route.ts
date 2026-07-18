@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { grantCountryFounderIfFirst } from '@/lib/founding'
 
 async function sendEmail(payload: object) {
   return fetch('https://api.resend.com/emails', {
@@ -103,6 +104,7 @@ export async function PATCH(req: NextRequest) {
   const storeName = product.seller.storeName
 
   if (action === 'approve') {
+      await grantCountryFounderIfFirst(product.sellerId, product.id, product.originCountry)
     await sendEmail({
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
       reply_to: 'support@velorcommerce.store',
