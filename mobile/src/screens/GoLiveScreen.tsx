@@ -8,24 +8,33 @@ import { C, F } from '../theme'
 import { FILMS } from '../data'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
+import { useQuery } from '@tanstack/react-query'
+import { useSession } from '../store'
+import { fetchSubscription } from '../api'
 
 // Go live — plate 32's setup stage as an honest PREVIEW. The stage shows a
 // real preview film still (the plate's own note: "Preview uses a sample
 // film"), broadcast title and pinned-listings controls are live, and the
-// Go live button explains the gate: real broadcasting opens with an
-// approved seller account — on every plan, Starter included. The plate's
-// LIVE/ended stages carry SIMULATED viewer counts; those are not rendered
-// (no fake counts, ever).
+// Go live button explains the gate. Live broadcasting is the FOUNDING
+// seller's privilege — standing rule (2026-07-08): never pitch it as
+// available to all sellers. The plate's LIVE/ended stages carry SIMULATED
+// viewer counts; those are not rendered (no fake counts, ever).
 export default function GoLiveScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [title, setTitle] = useState('')
   const [note, setNote] = useState<string | null>(null)
   const film = FILMS[1] ?? FILMS[0]
+  const user = useSession((s) => s.user)
+  const live = Boolean(user?.sellerId)
+  const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription, enabled: live })
+  const founding = live && Boolean((sub.data as any)?.foundingBadge)
 
   const gate = () => {
     setNote(
-      'Real broadcasting opens with your approved seller account — every plan includes Go Live, Starter included. Followers of your channel and country are notified the moment you go on air.'
+      founding
+        ? 'Your founding privilege is confirmed — real broadcasting switches on with the live infrastructure at launch. Followers of your channel and country are notified the moment you go on air.'
+        : "Live broadcasting is the founding seller's privilege — the first verified seller from each country broadcasts on Velor Live, free for life. No standard plan includes it."
     )
     setTimeout(() => setNote(null), 3800)
   }
@@ -74,8 +83,8 @@ export default function GoLiveScreen() {
             <Btn label="Go live" onPress={gate} />
           </View>
           <Dim style={{ textAlign: 'center', marginTop: 10, fontSize: 11, lineHeight: 16 }}>
-            Every plan can broadcast — Starter included. Your country's followers hear the
-            opening bell.
+            Broadcasting on Velor Live is the founding seller's privilege, held for life. Your
+            country's followers hear the opening bell.
           </Dim>
 
           {note ? (

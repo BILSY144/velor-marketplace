@@ -596,11 +596,14 @@ function SellerChannel() {
         ? `${nListings} of ${listingLimit} listings used — add another`
         : `${nListings} live listing${nListings === 1 ? '' : 's'} — add another`
 
+  const pro = founding || tier === 'PRO'
+
   const studio: {
     icon: keyof typeof Ionicons.glyphMap
     title: string
     sub: string
     route: string
+    locked?: boolean
   }[] = [
     {
       icon: 'stats-chart-outline',
@@ -633,14 +636,16 @@ function SellerChannel() {
       title: 'Go live',
       sub: founding
         ? 'Your founding privilege — broadcast on your country’s channel'
-        : 'Live broadcasting is a founding-seller privilege',
+        : 'Founding-seller privilege — not part of any standard plan',
       route: 'GoLive',
+      locked: !founding,
     },
     {
       icon: 'key-outline',
       title: 'API keys',
-      sub: 'Connect your own tools to your store',
+      sub: pro ? 'Connect your own tools to your store' : 'Pro tool — upgrade to unlock',
       route: 'ApiKeys',
+      locked: !pro,
     },
   ]
 
@@ -690,8 +695,8 @@ function SellerChannel() {
       <View style={{ marginTop: 4 }}>
         {studio.map((r) => (
           <Pressable key={r.title} style={sc.row} onPress={() => nav.navigate(r.route)}>
-            <View style={sc.rowIcon}>
-              <Ionicons name={r.icon} size={17} color={C.accent} />
+            <View style={[sc.rowIcon, r.locked && { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+              <Ionicons name={r.icon} size={17} color={r.locked ? C.mut : C.accent} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={sc.rowT}>{r.title}</Text>
@@ -699,7 +704,11 @@ function SellerChannel() {
                 {r.sub}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={C.dim} />
+            <Ionicons
+              name={r.locked ? 'lock-closed' : 'chevron-forward'}
+              size={r.locked ? 14 : 16}
+              color={C.dim}
+            />
           </Pressable>
         ))}
       </View>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Text, Linking } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
@@ -9,7 +9,7 @@ import { C, F } from '../theme'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
-import { fetchSellerOrders, fetchSellerPayouts, SellerOrder } from '../api'
+import { fetchSellerOrders, fetchSellerPayouts, fetchSubscription, startProUpgrade, SellerOrder } from '../api'
 
 // Seller orders (plate 28), API access (plate 29) and Payouts (plate 31) —
 // the plates' exact structure as honest PREVIEWS, same pattern as the
@@ -128,6 +128,23 @@ export function ApiKeysScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const [note, setNote] = useState(false)
+  const user = useSession((s) => s.user)
+  const live = Boolean(user?.sellerId)
+  const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription, enabled: live })
+  const pro = live && (sub.data?.tier as string) === 'PRO'
+  const [upBusy, setUpBusy] = useState(false)
+
+  // Starter sellers do not get Pro tools — the door here is the upgrade,
+  // which opens Stripe's hosted checkout in the browser.
+  const upgrade = async () => {
+    if (upBusy) return
+    setUpBusy(true)
+    try {
+      const r = await startProUpgrade()
+      if (r.checkoutUrl) await Linking.openURL(r.checkoutUrl)
+    } catch {}
+    setUpBusy(false)
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -151,11 +168,28 @@ export function ApiKeysScreen() {
             </Text>
           </View>
 
-          <View style={{ marginTop: 14 }}>
-            <Btn label="Create a new key" onPress={() => setNote(true)} />
-          </View>
+          {live && !pro ? (
+            <View style={{ marginTop: 14 }}>
+              <Btn
+                label={upBusy ? 'Opening secure checkout…' : 'Pro-only — Upgrade to Pro'}
+                onPress={upgrade}
+              />
+              <Dim style={{ fontSize: 10.5, lineHeight: 15, marginTop: 8, textAlign: 'center' }}>
+                API access is a Pro tool. Checkout opens in your browser — payment details go to
+                Stripe, never to the app.
+              </Dim>
+            </View>
+          ) : (
+            <View style={{ marginTop: 14 }}>
+              <Btn label="Create a new key" onPress={() => setNote(true)} />
+            </View>
+          )}
           {note ? (
-            <Text style={s.noteTx}>Keys are issued on your approved Pro account — apply first.</Text>
+            <Text style={s.noteTx}>
+              {live
+                ? 'Key issuance switches on with the public API at launch.'
+                : 'Keys are issued on your approved Pro account — apply first.'}
+            </Text>
           ) : null}
 
           <Text style={s.kickDim}>WHAT KEYS CAN DO</Text>
