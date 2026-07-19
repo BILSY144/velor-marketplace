@@ -1,0 +1,24 @@
+name: Download APK via URL
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Presigned APK download URL (from Expo build page, valid ~15 min)"
+        required: true
+        type: string
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK from provided URL
+        run: |
+          curl -v -fSL -o app.apk "$DOWNLOAD_URL"
+          ls -la app.apk
+        env:
+          DOWNLOAD_URL: ${{ inputs.url }}
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: velor-preview-apk
+          path: app.apk
+          retention-days: 7
