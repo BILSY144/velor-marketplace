@@ -345,7 +345,7 @@ function ShopContent() {
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Search goods..."
               onKeyDown={e => { if (e.key === 'Enter') navigate({ search: searchInput }) }}
-              style={{ flex: 1, background: '#111', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none', maxWidth: '400px' }}
+                            style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none', maxWidth: '400px' }}
             />
             <button
               onClick={() => navigate({ search: searchInput })}
