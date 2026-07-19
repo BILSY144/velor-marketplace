@@ -9,7 +9,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
-import { countryImage } from '@/lib/countryImagery'
+import { countryImage, pexelsUrl } from '@/lib/countryImagery'
+import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 
 interface SearchResult {
   id: string
@@ -94,6 +95,7 @@ function SearchContent() {
   const [query, setQuery] = useState(q)
   const [results, setResults] = useState<SearchResult[]>([])
   const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
+  const [categoryHits, setCategoryHits] = useState<typeof CATEGORY_DEFS>([])
   const [originGoods, setOriginGoods] = useState<{ country: { code: string; name: string }; products: OriginProduct[] } | null>(null)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -111,9 +113,14 @@ function SearchContent() {
     if (term.length < 2) return
     setLoading(true)
     setSearched(true)
-    // country channels match instantly, no network
+    // country and category channels match instantly, no network -- a
+    // category name (e.g. "ceramics") must resolve even when zero real
+    // products exist yet to match against in /api/search's product-only
+    // query (William, 2026-07-19: "it needs full optimization no gaps at
+    // all" -- category matching was missing here, same gap as the header).
     const hits = matchCountries(term)
     setCountryHits(hits)
+    setCategoryHits(CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(term.trim().toLowerCase())).slice(0, 6))
     setOriginGoods(null)
     try {
       const [res, originRes] = await Promise.all([
@@ -189,6 +196,30 @@ function SearchContent() {
           </>
         )}
 
+        {!loading && categoryHits.length > 0 && (
+          <>
+            <p className="vsr-note">Categor{categoryHits.length !== 1 ? 'ies' : 'y'} matching &ldquo;{q}&rdquo;</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 34 }}>
+              {categoryHits.map((cat) => {
+                const imgUrl = cat.image ? pexelsUrl(cat.image.id, cat.image.slug, 500) : null
+                return (
+                  <Link key={cat.slug} href={`/shop?category=${encodeURIComponent(cat.name)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: imgUrl ? 'var(--surface-2)' : 'linear-gradient(160deg, var(--surface-2), var(--surface))', border: '1px solid var(--border)' }}>
+                    {imgUrl && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={imgUrl} alt={cat.name} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,8,11,0) 25%, rgba(8,8,11,0.95) 100%)' }} />
+                    <div style={{ position: 'absolute', left: 14, right: 14, bottom: 11 }}>
+                      <div style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)' }}>CATEGORY</div>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 19, color: '#fff', lineHeight: 1.15, marginTop: 3 }}>{cat.name}</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </>
+        )}
+
         {!loading && originGoods && (
           <>
             <p className="vsr-note">Goods from {originGoods.country.name}</p>
@@ -214,7 +245,7 @@ function SearchContent() {
           </>
         )}
 
-        {!loading && searched && results.length === 0 && countryHits.length === 0 && (
+        {!loading && searched && results.length === 0 && countryHits.length === 0 && categoryHits.length === 0 && (
           <div className="vsr-empty">
             <h2>Nothing for &ldquo;{q}&rdquo; — yet.</h2>
             <p>
