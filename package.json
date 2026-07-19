@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && (if [ \"$VERCEL_ENV\" = \"production\" ]; then prisma db push --accept-data-loss; fi) && next build",
+    "build": "prisma generate && (if [ \"$VERCEL_ENV\" = \"production\" ]; then prisma db push --accept-data-loss && node scripts/migrate-categories.mjs; fi) && next build",    "start": "next start",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push --accept-data-loss",
