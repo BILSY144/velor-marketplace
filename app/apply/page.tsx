@@ -21,8 +21,16 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
 type FormState = {
   businessName: string;
+  // Legal trader-status disclosure -- Velor is open to anyone, not just
+  // registered businesses, but the Seller Rules page has always promised
+  // buyers this is shown, because it changes their statutory consumer
+  // rights depending on whether they're buying from a business/trader or a
+  // private individual (William, 2026-07-19). '' | 'individual' | 'business'.
+  sellerType: string;
   contactName: string;
   contactEmail: string;
+  password: string;
+  confirmPassword: string;
   website: string;
   country: string;
   storeDescription: string;
@@ -43,8 +51,11 @@ type FormState = {
 
 const initialForm: FormState = {
   businessName: '',
+  sellerType: '',
   contactName: '',
   contactEmail: '',
+  password: '',
+  confirmPassword: '',
   website: '',
   country: '',
   storeDescription: '',
@@ -164,7 +175,22 @@ export default function ApplyPage() {
     setError(null);
 
     if (!form.businessName.trim() || !form.contactName.trim() || !form.contactEmail.trim()) {
-      setError('Business name, contact name, and email are required.');
+      setError('Store name, contact name, and email are required.');
+      return;
+    }
+
+    if (form.sellerType !== 'individual' && form.sellerType !== 'business') {
+      setError("Please select whether you're selling as an individual or as a registered business.");
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setError('Please choose a password of at least 8 characters -- this is what you will use to sign in to your seller dashboard once approved.');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
@@ -186,14 +212,19 @@ export default function ApplyPage() {
 
     setSubmitting(true);
     try {
+      // confirmPassword never leaves the browser -- it only exists to catch
+      // typos client-side; the server only needs the one password.
+      const { confirmPassword: _confirmPassword, ...payload } = form;
       const res = await fetch('/api/seller/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Submission failed');
       setApplicationId(data.applicationId);
+      // Clear credentials from memory now that submission succeeded.
+      setForm(prev => ({ ...prev, password: '', confirmPassword: '' }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
@@ -263,15 +294,32 @@ export default function ApplyPage() {
 
             <div className="ap-sec">
               <div className="ap-bignum">01</div>
-              <div className="ap-steplbl">Your business</div>
+              <div className="ap-steplbl">About you</div>
               <h2 className="ap-h2">Who are you?</h2>
-              <p className="ap-sub">Real details only &mdash; every application is reviewed, and every seller verifies a government ID before their store opens.</p>
+              <p className="ap-sub">Velor is open to anyone — independent makers and private sellers as well as registered businesses. Real details only: every application is reviewed, and every seller verifies a government ID before their store opens.</p>
 
               <div className="ap-field">
-                <label className="ap-label">Business name <span className="ap-req">*</span></label>
+                <label className="ap-label">How are you selling? <span className="ap-req">*</span></label>
+                <div className="ap-cats">
+                  <button type="button"
+                    className={'ap-cat' + (form.sellerType === 'individual' ? ' on' : '')}
+                    onClick={() => setField('sellerType', 'individual')}>
+                    As an individual
+                  </button>
+                  <button type="button"
+                    className={'ap-cat' + (form.sellerType === 'business' ? ' on' : '')}
+                    onClick={() => setField('sellerType', 'business')}>
+                    As a registered business
+                  </button>
+                </div>
+                <p className="ap-hint">Shown to buyers on your store — it affects their consumer rights, so we&apos;re required to ask.</p>
+              </div>
+
+              <div className="ap-field">
+                <label className="ap-label">Store name <span className="ap-req">*</span></label>
                 <input className="ap-input" type="text" value={form.businessName}
                   onChange={e => setField('businessName', e.target.value)}
-                  placeholder="Your company or brand name" required />
+                  placeholder="Your store, brand, or your own name" required />
               </div>
 
               <div className="ap-row">
@@ -291,13 +339,30 @@ export default function ApplyPage() {
 
               <div className="ap-row">
                 <div className="ap-field">
-                  <label className="ap-label">Website or store link</label>
-                  <input className="ap-input" type="url" value={form.website}
-                    onChange={e => setField('website', e.target.value)}
-                    placeholder="https://yourstore.com" />
+                  <label className="ap-label">Create a password <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="password" value={form.password}
+                    onChange={e => setField('password', e.target.value)}
+                    placeholder="At least 8 characters" autoComplete="new-password" required />
+                  <p className="ap-hint">This signs you into your seller dashboard the moment you&apos;re approved — no separate activation step.</p>
                 </div>
                 <div className="ap-field">
-                  <label className="ap-label">Business / Cultural Country</label>
+                  <label className="ap-label">Confirm password <span className="ap-req">*</span></label>
+                  <input className="ap-input" type="password" value={form.confirmPassword}
+                    onChange={e => setField('confirmPassword', e.target.value)}
+                    placeholder="Re-enter your password" autoComplete="new-password" required />
+                </div>
+              </div>
+
+              <div className="ap-row">
+                <div className="ap-field">
+                  <label className="ap-label">Website or store link</label>
+                  <input className="ap-input" type="text" value={form.website}
+                    onChange={e => setField('website', e.target.value)}
+                    placeholder="yourstore.com" />
+                  <p className="ap-hint">Just the address — no need to type https://</p>
+                </div>
+                <div className="ap-field">
+                  <label className="ap-label">Country</label>
                   <select className="ap-select" value={form.country}
                     onChange={e => setCountry(e.target.value)}>
                     <option value="">Select country</option>
@@ -305,7 +370,7 @@ export default function ApplyPage() {
                       <option key={c.code} value={c.name}>{c.name}</option>
                     ))}
                   </select>
-                  <p className="ap-hint">Where your business is based, or the culture your products represent. It does not decide which country page a listing appears on, or who gets founding credit for a country -- that is set per product, by the origin country you choose for each listing after you are approved.</p>
+                  <p className="ap-hint">Where you&apos;re based, or the culture your products represent. It does not decide which country page a listing appears on, or who gets founding credit for a country -- that is set per product, by the origin country you choose for each listing after you are approved.</p>
                 </div>
               </div>
             </div>
@@ -314,14 +379,14 @@ export default function ApplyPage() {
               <div className="ap-bignum">02</div>
               <div className="ap-steplbl">Your store</div>
               <h2 className="ap-h2">What do you make or sell?</h2>
-              <p className="ap-sub">Tell us in your own words &mdash; what you sell, where it comes from, and what makes it worth crossing a border for. Write in your own language &mdash; English is not required &mdash; and cooperatives or artisan groups are welcome to apply as one store. Escriba en su idioma &middot; Écrivez dans votre langue &middot; اكتب بلغتك &middot; अपनी भाषा में लिखें &middot; Tulis dalam bahasa Anda &middot; 用您的语言填写 &middot; Andika kwa lugha yako</p>
+              <p className="ap-sub">Tell us in your own words — what you sell, where it comes from, and what makes it worth crossing a border for. Write in your own language — English is not required — and cooperatives or artisan groups are welcome to apply as one store. Escriba en su idioma · Écrivez dans votre langue · اكتب بلغتك · अपनी भाषा में लिखें · Tulis dalam bahasa Anda · 用您的语言填写 · Andika kwa lugha yako</p>
 
               <div className="ap-field">
                 <label className="ap-label">Store description</label>
                 <textarea className="ap-textarea" value={form.storeDescription}
                   onChange={e => setField('storeDescription', e.target.value)}
                   placeholder="What you sell, how it is made, and why buyers should care..." />
-                <p className="ap-hint">Minimum 20 characters &mdash; a sentence about what you make or sell.</p>
+                <p className="ap-hint">Minimum 20 characters — a sentence about what you make or sell.</p>
               </div>
 
               <div className="ap-field">
@@ -344,7 +409,7 @@ export default function ApplyPage() {
               <h2 className="ap-h2">Where do your parcels dispatch from?</h2>
               <p className="ap-sub">
                 This sets up your account&apos;s shipping automatically, so real shipping rates are
-                ready the moment your first listing goes live &mdash; no separate setup step later.
+                ready the moment your first listing goes live — no separate setup step later.
                 It appears on shipping labels and customs declarations, so it must be a real address
                 where you can send and receive parcels.
               </p>
@@ -427,7 +492,7 @@ export default function ApplyPage() {
             <p className="ap-legal">
               By submitting this application you agree to the{' '}
               <a href="/legal/seller-agreement">Seller Agreement</a>{' '}and the{' '}
-              <a href="/legal/seller-rules">Seller Rules and Product Compliance Policy</a>.</p><p className="ap-legal">Prefer to apply by message? <a href="https://wa.me/447404014621?text=Hello%20Velor%2C%20I%20would%20like%20to%20apply%20to%20sell.%0AMy%20name%3A%0AMy%20country%3A%0AWhat%20I%20make%3A">Chat with us on WhatsApp</a> &mdash; write in any language.
+              <a href="/legal/seller-rules">Seller Rules and Product Compliance Policy</a>.</p><p className="ap-legal">Prefer to apply by message? <a href="https://wa.me/447404014621?text=Hello%20Velor%2C%20I%20would%20like%20to%20apply%20to%20sell.%0AMy%20name%3A%0AMy%20country%3A%0AWhat%20I%20make%3A">Chat with us on WhatsApp</a> — write in any language.
             </p>
           </div>
         </form>
