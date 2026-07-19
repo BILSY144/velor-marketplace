@@ -98,13 +98,21 @@ const css = `
 .ocp-gitem{border-radius:12px;overflow:hidden;position:relative;aspect-ratio:1;background:var(--surface-2)}
 .ocp-gitem img{width:100%;height:100%;object-fit:cover;display:block}
 .ocp-gcap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:11.5px;color:#fff;line-height:1.3;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.8) 100%)}
-.ocp-opener{position:relative;width:100%;height:66vh;min-height:460px;max-height:760px;overflow:hidden;background:var(--surface-2)}
-.ocp-opener img{width:100%;height:100%;object-fit:cover;display:block}
-.ocp-opener-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,11,0) 0%,rgba(8,8,11,0) 66%,rgba(8,8,11,0.82) 90%,var(--bg) 100%)}
-.ocp-opener-text{position:absolute;left:32px;right:32px;bottom:28px;max-width:1036px;margin:0 auto}
+.ocp-opener{position:relative;width:100%;overflow:hidden;background:var(--surface-2);min-height:560px}
+.ocp-opener img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ocp-opener-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,11,0) 0px,rgba(8,8,11,0) 170px,rgba(8,8,11,0.55) 300px,rgba(8,8,11,0.9) 460px,var(--bg) 100%)}
+.ocp-opener-inner{position:relative;z-index:1;padding-top:16px;padding-bottom:44px}
+.ocp-opener-inner .ocp-back{color:rgba(255,255,255,0.85)}
+.ocp-opener-text{margin-top:170px;max-width:1036px;margin-left:auto;margin-right:auto}
 .ocp-opener-kick{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:700}
 .ocp-opener-title{font-family:var(--font-serif);font-weight:500;font-size:44px;line-height:1.1;color:#fff;margin-top:8px}
-@media(max-width:720px){.ocp-opener{height:55vh;min-height:360px;max-height:520px}.ocp-opener-title{font-size:30px}}
+.ocp-hero-onimage h1{color:#fff}
+.ocp-hero-onimage .ocp-fl{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.35);color:#fff}
+.ocp-hero-onimage .ocp-hints{color:rgba(255,255,255,0.78)}
+.ocp-hero-onimage .ocp-tag:not(.claimed){color:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.4)}
+.ocp-hero-onimage .ocp-tag:not(.claimed):hover{border-color:#fff;color:#fff}
+.ocp-hero-onimage .ocp-pill:not(.ocp-pill-primary){color:#fff !important;border-color:rgba(255,255,255,0.45)}
+@media(max-width:720px){.ocp-opener{min-height:460px}.ocp-opener-text{margin-top:110px}.ocp-opener-title{font-size:30px}}
 `
 
 function OriginCountryContent() {
@@ -179,60 +187,114 @@ function OriginCountryContent() {
     <div className="ocp">
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {craftImage && (
+      {craftImage ? (
         <div className="ocp-opener">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={craftImage.url} alt={craftParam} />
           <div className="ocp-opener-scrim" />
-          <div className="ocp-opener-text">
-            <div className="ocp-opener-kick">{country.name.toUpperCase()} &times; SIGNATURE CRAFT</div>
-            <div className="ocp-opener-title">{craftParam}</div>
+          {/* Hero (name, status, hints, tags, and the "Claim your country" pill)
+              lives INSIDE the image block here, not below it -- William,
+              2026-07-19: "the image needs to cover from the hero text down
+              past claim your country pill, so all text and pill sits inside
+              the image". The scrim is dark enough by the time it reaches this
+              content that the normal (light-theme) text colors would lose
+              contrast, so .ocp-hero-onimage re-colors title/hints/tags/the
+              secondary pill for legibility over a photo -- the primary pill
+              keeps its own solid accent background and is unaffected. */}
+          <div className="ocp-wrap ocp-opener-inner">
+            <Link className="ocp-back" href="/origins">&larr; All countries</Link>
+
+            <div className="ocp-opener-text">
+              <div className="ocp-opener-kick">{country.name.toUpperCase()} &times; SIGNATURE CRAFT</div>
+              <div className="ocp-opener-title">{craftParam}</div>
+            </div>
+
+            <div className="ocp-hero ocp-hero-onimage">
+              <div className="ocp-fl">{flag(country.code)}</div>
+              <div>
+                <div className="ocp-eyebrow"><span className="ocp-dot" /> Origin</div>
+                <h1>{country.name}</h1>
+                <div className={'ocp-status ' + status}>
+                  {pending ? 'Checking...'
+                    : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
+                    : status === 'hold' ? 'Identity verification not yet available here'
+                    : 'No seller yet — the seat is open'}
+                </div>
+                {hints.length > 0 && (
+                  <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
+                )}
+                {specialities.length > 0 && (
+                  <div className="ocp-tags">
+                    {specialities.slice(0, 8).map(s => {
+                      const st = specStats[s.term]
+                      const claimed = !!st && st.products > 0
+                      return (
+                        <Link
+                          key={s.term}
+                          className={'ocp-tag' + (claimed ? ' claimed' : '')}
+                          href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                          title={s.line}
+                        >
+                          {buyerLabel(s.term)}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+                <div className="ocp-pills">
+                  <Link className="ocp-pill ocp-pill-primary" href={`/apply?country=${country.code}`}>Claim your country</Link>
+                  <Link className="ocp-pill" href="/sell">Become a seller</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="ocp-wrap">
+          <Link className="ocp-back" href="/origins">&larr; All countries</Link>
+
+          <div className="ocp-hero">
+            <div className="ocp-fl">{flag(country.code)}</div>
+            <div>
+              <div className="ocp-eyebrow"><span className="ocp-dot" /> Origin</div>
+              <h1>{country.name}</h1>
+              <div className={'ocp-status ' + status}>
+                {pending ? 'Checking...'
+                  : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
+                  : status === 'hold' ? 'Identity verification not yet available here'
+                  : 'No seller yet — the seat is open'}
+              </div>
+              {hints.length > 0 && (
+                <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
+              )}
+              {specialities.length > 0 && (
+                <div className="ocp-tags">
+                  {specialities.slice(0, 8).map(s => {
+                    const st = specStats[s.term]
+                    const claimed = !!st && st.products > 0
+                    return (
+                      <Link
+                        key={s.term}
+                        className={'ocp-tag' + (claimed ? ' claimed' : '')}
+                        href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                        title={s.line}
+                      >
+                        {buyerLabel(s.term)}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+              <div className="ocp-pills">
+                <Link className="ocp-pill ocp-pill-primary" href={`/apply?country=${country.code}`}>Claim your country</Link>
+                <Link className="ocp-pill" href="/sell">Become a seller</Link>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       <div className="ocp-wrap">
-        <Link className="ocp-back" href="/origins">&larr; All countries</Link>
-
-        <div className="ocp-hero">
-          <div className="ocp-fl">{flag(country.code)}</div>
-          <div>
-            <div className="ocp-eyebrow"><span className="ocp-dot" /> Origin</div>
-            <h1>{country.name}</h1>
-            <div className={'ocp-status ' + status}>
-              {pending ? 'Checking...'
-                : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
-                : status === 'hold' ? 'Identity verification not yet available here'
-                : 'No seller yet — the seat is open'}
-            </div>
-            {hints.length > 0 && (
-              <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
-            )}
-            {specialities.length > 0 && (
-              <div className="ocp-tags">
-                {specialities.slice(0, 8).map(s => {
-                  const st = specStats[s.term]
-                  const claimed = !!st && st.products > 0
-                  return (
-                    <Link
-                      key={s.term}
-                      className={'ocp-tag' + (claimed ? ' claimed' : '')}
-                      href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
-                      title={s.line}
-                    >
-                      {buyerLabel(s.term)}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-            <div className="ocp-pills">
-              <Link className="ocp-pill ocp-pill-primary" href={`/apply?country=${country.code}`}>Claim your country</Link>
-              <Link className="ocp-pill" href="/sell">Become a seller</Link>
-            </div>
-          </div>
-        </div>
-
         {images.length > 0 && (
           <div className="ocp-sec">
             <div className="ocp-shead">
