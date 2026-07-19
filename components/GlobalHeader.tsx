@@ -8,7 +8,8 @@ import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/l
 import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 import { useCart } from '@/lib/cart'
 import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
-import { countryImage } from '@/lib/countryImagery'
+import { countryImage, pexelsUrl } from '@/lib/countryImagery'
+import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 function navFlag(code: string): string {
@@ -85,6 +86,16 @@ export default function GlobalHeader() {
   const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
   const searchWrapRef = useRef<HTMLDivElement>(null)
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Category hits are a plain filter over CATEGORY_DEFS -- no network round
+  // trip, so a category name (e.g. "ceramics") shows up instantly even
+  // pre-launch, when zero real products exist to match against in
+  // /api/search's product-only query (William, 2026-07-19: typed "ceramics"
+  // and got "Nothing by that name -- yet." -- the header only matched
+  // countries and existing products, never categories themselves).
+  const categoryHits = query.trim().length >= 2
+    ? CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 4)
+    : []
 
   useEffect(() => {
     const q = query.trim()
@@ -167,7 +178,7 @@ export default function GlobalHeader() {
   }
 
   const showDropdown = searchOpen && query.trim().length >= 2
-  const hasHits = countryHits.length > 0 || searchResults.length > 0
+  const hasHits = countryHits.length > 0 || categoryHits.length > 0 || searchResults.length > 0
 
   const changeLanguage = (value: string) => {
     setLanguage(value)
@@ -450,6 +461,34 @@ export default function GlobalHeader() {
                     >
                       Browse the shop &rarr;
                     </Link>
+                  </div>
+                )}
+
+                {categoryHits.length > 0 && (
+                  <div style={{ marginBottom: (countryHits.length > 0 || searchResults.length > 0) ? 6 : 0 }}>
+                    <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '6px 10px 4px' }}>
+                      Categories
+                    </div>
+                    {categoryHits.map((cat) => {
+                      const imgUrl = cat.image ? pexelsUrl(cat.image.id, cat.image.slug, 80) : null
+                      return (
+                        <Link
+                          key={cat.slug}
+                          href={`/shop?category=${encodeURIComponent(cat.name)}`}
+                          onClick={() => setSearchOpen(false)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
+                        >
+                          <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
+                            {imgUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={imgUrl} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                          </span>
+                          <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600 }}>{cat.name}</span>
+                          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Category &rarr;</span>
+                        </Link>
+                      )
+                    })}
                   </div>
                 )}
 
