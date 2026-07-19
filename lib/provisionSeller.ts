@@ -18,6 +18,20 @@ import { getPayoutRail } from '@/lib/payoutRail'
 const DIRECTOR_EMAIL = 'willsinclair144@gmail.com'
 const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
+/**
+ * Strip the applicant's bcrypt password hash before a SellerApplication row
+ * goes into any API response. It is only ever needed internally, to seed
+ * the new User row on approval (see the brand-new-account branch below) --
+ * no admin UI (Pulse or otherwise) has a reason to receive it, hashed or
+ * not. Call this at every route that JSON-serializes a raw application row.
+ */
+export function redactApplication<T extends { passwordHash?: string | null }>(
+  app: T
+): Omit<T, 'passwordHash'> {
+  const { passwordHash: _passwordHash, ...rest } = app
+  return rest
+}
+
 interface ApplicationRow {
   id: string
   businessName: string
@@ -42,6 +56,10 @@ interface ApplicationRow {
   shippingZip?: string | null
   shippingCountry?: string | null
   shippingPhone?: string | null
+  // Bcrypt hash captured at application time (app/api/seller/apply/route.ts).
+  // Optional only to tolerate applications submitted before the /apply form
+  // asked for a password -- see the branch below.
+  passwordHash?: string | null
 }
 
 /**
@@ -160,16 +178,22 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
     alertStoreName = seller.storeName
     alertSignedUpAt = seller.createdAt
   } else {
-    // Brand new account. No password yet -- send a one-time activation link.
-    const setupToken = randomBytes(32).toString('hex')
+    // Brand new account. If the applicant set a password on the /apply form
+    // (true for every application submitted since 2026-07-19), use it
+    // directly -- they can sign in the moment this approval email lands, no
+    // separate activation step. Older PENDING applications submitted before
+    // that field existed have no passwordHash, so they still fall back to
+    // the one-time activation link, same as before this change.
+    const usePassword = Boolean(application.passwordHash)
+    const setupToken = usePassword ? undefined : randomBytes(32).toString('hex')
     const created = await prisma.user.create({
       data: {
         name: application.contactName,
         email: application.contactEmail,
-        password: null,
+        password: usePassword ? application.passwordHash : null,
         role: 'SELLER',
-        setupToken,
-        setupTokenExpiresAt: new Date(now.getTime() + ACTIVATION_WINDOW_MS),
+        setupToken: setupToken ?? null,
+        setupTokenExpiresAt: setupToken ? new Date(now.getTime() + ACTIVATION_WINDOW_MS) : null,
         seller: {
           create: {
             storeName: application.businessName,
@@ -189,7 +213,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
     if (created.seller) {
       await provisionSellerShippingProfile(created.seller.id, application)
     }
-    activationLink = `https://velorcommerce.store/activate?token=${setupToken}`
+    activationLink = setupToken ? `https://velorcommerce.store/activate?token=${setupToken}` : undefined
     alertTier = created.seller?.tier ?? 'STARTER'
     alertStoreName = created.seller?.storeName ?? application.businessName
     alertSignedUpAt = created.seller?.createdAt ?? now
