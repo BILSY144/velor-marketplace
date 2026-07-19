@@ -214,12 +214,13 @@ function OriginCountryContent() {
               <div>
                 <div className="ocp-eyebrow"><span className="ocp-dot" /> Origin</div>
                 <h1>{country.name}</h1>
-                <div className={'ocp-status ' + status}>
-                  {pending ? 'Checking...'
-                    : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
-                    : status === 'hold' ? 'Identity verification not yet available here'
-                    : 'No seller yet — the seat is open'}
-                </div>
+                {!(status === 'hold' && !pending) && (
+                  <div className={'ocp-status ' + status}>
+                    {pending ? 'Checking...'
+                      : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
+                      : 'No seller yet — the seat is open'}
+                  </div>
+                )}
                 {hints.length > 0 && (
                   <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
                 )}
@@ -258,12 +259,13 @@ function OriginCountryContent() {
             <div>
               <div className="ocp-eyebrow"><span className="ocp-dot" /> Origin</div>
               <h1>{country.name}</h1>
-              <div className={'ocp-status ' + status}>
-                {pending ? 'Checking...'
-                  : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
-                  : status === 'hold' ? 'Identity verification not yet available here'
-                  : 'No seller yet — the seat is open'}
-              </div>
+              {!(status === 'hold' && !pending) && (
+                <div className={'ocp-status ' + status}>
+                  {pending ? 'Checking...'
+                    : status === 'live' ? `${productCount} product${productCount === 1 ? '' : 's'} trading`
+                    : 'No seller yet — the seat is open'}
+                </div>
+              )}
               {hints.length > 0 && (
                 <p className="ocp-hints">Known for: {hints.slice(0, 8).join(' · ')}</p>
               )}
