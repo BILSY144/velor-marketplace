@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       contactEmail,
       contactName,
       password,
+      sellerType,
       storeDescription,
       website,
       productCategories,
@@ -77,6 +78,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Legal disclosure -- Velor's Seller Rules page tells buyers this is
+    // always shown, because it changes their statutory consumer-protection
+    // rights depending on whether they're buying from a business/trader or
+    // a private individual. Required for every new application; see the
+    // schema comment on Seller.sellerType for the full reasoning.
+    if (sellerType !== 'individual' && sellerType !== 'business') {
+      return NextResponse.json(
+        { error: "Please select whether you're selling as an individual or as a registered business." },
+        { status: 400 }
+      );
+    }
+
     // Hashed immediately, never held in a variable longer than needed and
     // never written to `application` as plaintext -- lib/provisionSeller.ts
     // copies this hash straight onto the User row it creates on approval.
@@ -88,6 +101,7 @@ export async function POST(request: NextRequest) {
         contactEmail,
         contactName,
         passwordHash,
+        sellerType,
         storeDescription: storeDescription ?? null,
         website: normalizeWebsite(website),
         productCategories,
