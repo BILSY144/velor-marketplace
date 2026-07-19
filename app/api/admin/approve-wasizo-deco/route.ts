@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
 import { prisma } from '@/lib/prisma'
-import { approveApplication } from '@/lib/provisionSeller'
+import { approveApplication, redactApplication } from '@/lib/provisionSeller'
 
 // One-off admin endpoint: reopens and approves the Wasizo deco application
 // (id cmrh3jw5t0001dmkse6q035ux -- Santoz nugroz, nugrahamedia@gmail.com,
@@ -54,5 +54,5 @@ export async function POST(req: NextRequest) {
     'admin (pulse) -- William, reopened from REJECTED (0-photos auto-reject overridden) 2026-07-18'
   )
 
-  return NextResponse.json({ ok: true, application: result })
+  return NextResponse.json({ ok: true, application: redactApplication(result) })
 }
