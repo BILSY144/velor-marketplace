@@ -45,6 +45,9 @@
 // homepage (app/page.tsx's `px` helper): Pexels serves the same photo at a
 // stable ID-based URL whether or not the SEO slug is included.
 
+import { WORLD_COUNTRIES } from './worldCountries'
+import { CULTURE_HINTS } from './cultureHints'
+
 export type CountryImage = { name: string; id: number; slug: string | null; url: string }
 
 const RAW: Record<string, { n: string; i: number; s: string | null }[]> = {
@@ -264,4 +267,59 @@ export function countryImages(code: string, width = 800): CountryImage[] {
 export function countryImage(code: string, width = 800): CountryImage | null {
   const raw = RAW[code]?.[0]
   return raw ? { name: raw.n, id: raw.i, slug: raw.s, url: pexelsUrl(raw.i, raw.s, width) } : null
+}
+
+export interface CraftMatch {
+  code: string
+  name: string
+  term: string
+  image: CountryImage | null
+}
+
+// Matches a query against every country's craft vocabulary -- first this
+// file's own per-craft photography (RAW, ~1,200 named images, each with its
+// own real, verified Pexels photo), then lib/cultureHints.ts's broader
+// "top 8 most iconic" buyer-facing terms for anything RAW doesn't cover by
+// name. This mirrors the mobile app's SearchScreen/AtlasScreen, which
+// searches its IMAGERY dataset (an export of this same RAW data) and then
+// its HINTS dataset the same way, and it means every hit carries a real
+// photo, never a fabricated one: a term matched via RAW carries its own
+// dedicated photo; a term that only exists in cultureHints.ts falls back to
+// the country's lead photo rather than showing no image at all (William,
+// 2026-07-19: "the app offers such a large product search some that are
+// not even on the website" / "cultural hints with the imagery like app").
+//
+// One canonical implementation, imported by every website search bar
+// (GlobalHeader, /search, /shop) rather than reimplemented per call site --
+// see lib/categories.ts's standing warning about drifted duplicate copies.
+export function matchCraftImagery(query: string, limit = 4): CraftMatch[] {
+  const q = query.trim().toLowerCase()
+  if (q.length < 2) return []
+  const out: CraftMatch[] = []
+  const seen = new Set<string>()
+  const countryName = (code: string) => WORLD_COUNTRIES.find((c) => c.code === code)?.name ?? code
+
+  for (const code of Object.keys(RAW)) {
+    for (const r of RAW[code]) {
+      if (r.n.toLowerCase().includes(q)) {
+        const key = code + '|' + r.n.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ code, name: countryName(code), term: r.n, image: { name: r.n, id: r.i, slug: r.s, url: pexelsUrl(r.i, r.s, 500) } })
+        if (out.length >= limit) return out
+      }
+    }
+  }
+  for (const code of Object.keys(CULTURE_HINTS)) {
+    for (const term of CULTURE_HINTS[code]) {
+      if (term.toLowerCase().includes(q)) {
+        const key = code + '|' + term.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ code, name: countryName(code), term, image: countryImage(code, 500) })
+        if (out.length >= limit) return out
+      }
+    }
+  }
+  return out
 }
