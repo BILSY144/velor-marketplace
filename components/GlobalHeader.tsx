@@ -9,9 +9,49 @@ import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/li
 import { useCart } from '@/lib/cart'
 import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage } from '@/lib/countryImagery'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 function navFlag(code: string): string {
   return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
+
+// Live inline search -- matches the app's Atlas/Search screens (always-open
+// results as you type, no page reload needed to see a match). Country
+// matching is instant and client-side (same alias table as /search); the
+// same alias set is duplicated here rather than imported so this component
+// has no dependency on the /search route existing -- if /search is ever
+// removed or redesigned, the header's live results still work standalone.
+const HEADER_COUNTRY_ALIASES: Record<string, string> = {
+  'uk': 'GB', 'britain': 'GB', 'great britain': 'GB', 'england': 'GB', 'scotland': 'GB', 'wales': 'GB',
+  'usa': 'US', 'america': 'US', 'united states': 'US', 'us': 'US',
+  'uae': 'AE', 'emirates': 'AE', 'holland': 'NL', 'czechia': 'CZ', 'burma': 'MM',
+}
+
+function matchHeaderCountries(q: string): { code: string; name: string }[] {
+  const t = q.trim().toLowerCase()
+  if (t.length < 2) return []
+  const alias = HEADER_COUNTRY_ALIASES[t]
+  const out: { code: string; name: string }[] = []
+  if (alias) {
+    const c = WORLD_COUNTRIES.find((w) => w.code === alias)
+    if (c) out.push(c)
+  }
+  for (const c of WORLD_COUNTRIES) {
+    if (out.some((x) => x.code === c.code)) continue
+    const n = c.name.toLowerCase()
+    if (t.length === 2 ? n.startsWith(t) : (n.includes(t) || t.includes(n))) out.push(c)
+    if (out.length >= 4) break
+  }
+  return out
+}
+
+interface HeaderSearchHit {
+  id: string
+  name: string
+  price: number
+  currency: string
+  image: string | null
+  category: string
 }
 
 // Mobile behaviour lives in the responsive layer of app/globals.css, keyed on
@@ -23,8 +63,9 @@ export default function GlobalHeader() {
   const { data: session } = useSession()
   const pathname = usePathname()
   const router = useRouter()
+  const { symbol, convert } = useCurrencyDisplay()
 
-  
+
   const { count: cartCount } = useCart()
   const [query, setQuery] = useState('')
   const [catsOpen, setCatsOpen] = useState(false)
@@ -33,6 +74,45 @@ export default function GlobalHeader() {
   const [currency, setCurrency] = useState('GBP')
   const [language, setLanguage] = useState('en')
   const [langNote, setLangNote] = useState<string | null>(null)
+
+  // Live search dropdown -- always-visible inline results, matching the
+  // app's Atlas/Search screens. Debounced so every keystroke doesn't hit
+  // the network, but results appear without leaving the page or pressing
+  // Enter; Enter/submit still works and goes to the full /search page.
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchResults, setSearchResults] = useState<HeaderSearchHit[]>([])
+  const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
+  const searchWrapRef = useRef<HTMLDivElement>(null)
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) {
+      setSearchResults([])
+      setCountryHits([])
+      setSearchLoading(false)
+      if (searchDebounce.current) clearTimeout(searchDebounce.current)
+      return
+    }
+    setSearchLoading(true)
+    if (searchDebounce.current) clearTimeout(searchDebounce.current)
+    searchDebounce.current = setTimeout(async () => {
+      setCountryHits(matchHeaderCountries(q))
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`)
+        const data = await res.json()
+        setSearchResults((data.results ?? []).slice(0, 6))
+      } catch {
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 260)
+    return () => {
+      if (searchDebounce.current) clearTimeout(searchDebounce.current)
+    }
+  }, [query])
 
   useEffect(() => {
     setCurrency(getDisplayCurrency())
@@ -59,22 +139,35 @@ export default function GlobalHeader() {
     setCatsOpen(false)
     setAcctOpen(false)
     setMobileOpen(false)
+    setSearchOpen(false)
   }, [pathname])
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (catsRef.current && !catsRef.current.contains(e.target as Node)) setCatsOpen(false)
       if (acctRef.current && !acctRef.current.contains(e.target as Node)) setAcctOpen(false)
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) setSearchOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSearchOpen(false)
     }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const q = query.trim()
+    setSearchOpen(false)
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/shop')
   }
+
+  const showDropdown = searchOpen && query.trim().length >= 2
+  const hasHits = countryHits.length > 0 || searchResults.length > 0
 
   const changeLanguage = (value: string) => {
     setLanguage(value)
@@ -248,59 +341,182 @@ export default function GlobalHeader() {
             <Link href="/about" style={navLink}>How it works</Link>
           </nav>
 
-          {/* Search. On phones this wraps onto its own full-width row. */}
-          <form onSubmit={submitSearch} className="velor-searchform" style={{ flex: '0 1 340px', minWidth: 150 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: 999,
-                padding: '9px 16px',
-              }}
-            >
-              <span style={{ color: 'var(--muted)', fontSize: 14 }}>⌕</span>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search goods, brands and sellers"
-                aria-label="Search goods, brands and sellers"
+          {/* Search. On phones this wraps onto its own full-width row.
+              Live/inline: results appear below as you type (Atlas-style),
+              matching the app -- no need to press Enter or leave the page
+              to see a match. Enter/submit still works and opens /search. */}
+          <div ref={searchWrapRef} className="velor-searchform" style={{ position: 'relative', flex: '0 1 340px', minWidth: 150 }}>
+            <form onSubmit={submitSearch}>
+              <div
                 style={{
-                  flex: 1,
-                  minWidth: 0,
-                  background: 'none',
-                  border: 'none',
-                  outline: 'none',
-                  color: 'var(--text)',
-                  /* 16px stops iOS Safari zooming the page on focus. */
-                  fontSize: 16,
-                  fontFamily: 'var(--font-body)',
-                }}
-              />
-              {/* Clickable submit (William, 2026-07-17) -- Enter still works too */}
-              <button
-                type="submit"
-                aria-label="Search"
-                style={{
-                  background: 'var(--accent)',
-                  color: '#160a00',
-                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 999,
-                  padding: '5px 14px',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-display)',
-                  flexShrink: 0,
-                  margin: '-4px -8px -4px 0',
+                  padding: '9px 16px',
                 }}
               >
-                Search
-              </button>
-            </div>
-          </form>
+                <span style={{ color: 'var(--muted)', fontSize: 14 }}>⌕</span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  placeholder="Search goods, brands and sellers"
+                  aria-label="Search goods, brands and sellers"
+                  autoComplete="off"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    background: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'var(--text)',
+                    /* 16px stops iOS Safari zooming the page on focus. */
+                    fontSize: 16,
+                    fontFamily: 'var(--font-body)',
+                  }}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={() => { setQuery(''); setSearchResults([]); setCountryHits([]) }}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 15, padding: 0, flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
+                )}
+                {/* Clickable submit (William, 2026-07-17) -- Enter still works too */}
+                <button
+                  type="submit"
+                  aria-label="Search"
+                  style={{
+                    background: 'var(--accent)',
+                    color: '#160a00',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-display)',
+                    flexShrink: 0,
+                    margin: '-4px -8px -4px 0',
+                  }}
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+
+            {/* Live results dropdown -- never a dead end: loading, hits, and
+                a designed empty state (no bare "no results" flash). */}
+            {showDropdown && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 48,
+                  left: 0,
+                  right: 0,
+                  minWidth: 320,
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 14,
+                  padding: 8,
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                  zIndex: 60,
+                }}
+              >
+                {searchLoading && !hasHits && (
+                  <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--muted)' }}>Searching...</div>
+                )}
+
+                {!searchLoading && !hasHits && (
+                  <div style={{ padding: '22px 16px', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>
+                      Nothing by that name -- yet.
+                    </div>
+                    <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 12 }}>
+                      Try a country&apos;s name, or a craft -- weaving, ceramics, leather&hellip;
+                    </div>
+                    <Link
+                      href="/shop"
+                      onClick={() => setSearchOpen(false)}
+                      style={{ display: 'inline-block', fontSize: 12.5, fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}
+                    >
+                      Browse the shop &rarr;
+                    </Link>
+                  </div>
+                )}
+
+                {countryHits.length > 0 && (
+                  <div style={{ marginBottom: searchResults.length > 0 ? 6 : 0 }}>
+                    <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '6px 10px 4px' }}>
+                      Shopping channels
+                    </div>
+                    {countryHits.map((c) => (
+                      <Link
+                        key={c.code}
+                        href={`/origins/${slugifyCountryName(c.name)}`}
+                        onClick={() => setSearchOpen(false)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
+                      >
+                        <span style={{ fontSize: 18, width: 26, textAlign: 'center', flexShrink: 0 }}>{navFlag(c.code)}</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600 }}>{c.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Channel &rarr;</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {searchResults.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '6px 10px 4px' }}>
+                      Goods
+                    </div>
+                    {searchResults.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/shop/${item.id}`}
+                        onClick={() => setSearchOpen(false)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
+                      >
+                        <span style={{ width: 38, height: 38, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: 9, color: 'var(--muted)' }}>No image</span>
+                          )}
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{item.category}</span>
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>
+                          {symbol}{convert(item.price, item.currency).toFixed(2)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {hasHits && (
+                  <Link
+                    href={`/search?q=${encodeURIComponent(query.trim())}`}
+                    onClick={() => setSearchOpen(false)}
+                    style={{ display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--accent)', textDecoration: 'none', padding: '10px 10px 6px', marginTop: 4, borderTop: '1px solid var(--border)' }}
+                  >
+                    See all results for &ldquo;{query.trim()}&rdquo; &rarr;
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Right cluster */}
           <div className="velor-right" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
