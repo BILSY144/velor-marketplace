@@ -254,7 +254,17 @@ export function PulseShell({
         background: PULSE.bgGradient,
         color: PULSE.text,
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-        padding: `18px 16px ${bottomNav ? 88 : 40}px`,
+        // Bottom padding must clear the FIXED BottomNav, which is taller
+        // than its own base height on any phone with a home-indicator safe
+        // area (BottomNav pads itself by env(safe-area-inset-bottom), so a
+        // plain fixed px number here under-reserves on exactly those
+        // phones). Without the safe-area term the last section of every
+        // page under a bottomNav -- e.g. the Accept/Deny buttons on
+        // /pulse/applications/[id] -- sits partly behind the nav with no
+        // way to scroll it fully into view (William, 2026-07-19, iPhone).
+        padding: bottomNav
+          ? `18px 16px calc(88px + env(safe-area-inset-bottom))`
+          : `18px 16px calc(40px + env(safe-area-inset-bottom))`,
       }}
     >
       <GlobalPulseStyle />
