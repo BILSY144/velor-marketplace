@@ -8,7 +8,7 @@ import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/l
 import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 import { useCart } from '@/lib/cart'
 import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
-import { countryImage, pexelsUrl } from '@/lib/countryImagery'
+import { countryImage, pexelsUrl, matchCraftImagery } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
@@ -97,6 +97,15 @@ export default function GlobalHeader() {
     ? CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 4)
     : []
 
+  // Craft hits match specific product terms (e.g. "kintsugi", "washi") against
+  // lib/countryImagery.ts's per-craft photography (falling back to
+  // lib/cultureHints.ts's broader term list) -- the same depth the app's
+  // Atlas/Search screens already search, each hit carrying its own real photo
+  // (William, 2026-07-19: "the app offers such a large product search some
+  // that are not even on the website" / "cultural hints with the imagery
+  // like app"). Instant like categoryHits: a plain in-memory filter.
+  const craftHits = query.trim().length >= 2 ? matchCraftImagery(query.trim(), 4) : []
+
   useEffect(() => {
     const q = query.trim()
     if (q.length < 2) {
@@ -178,7 +187,7 @@ export default function GlobalHeader() {
   }
 
   const showDropdown = searchOpen && query.trim().length >= 2
-  const hasHits = countryHits.length > 0 || categoryHits.length > 0 || searchResults.length > 0
+  const hasHits = countryHits.length > 0 || categoryHits.length > 0 || craftHits.length > 0 || searchResults.length > 0
 
   const changeLanguage = (value: string) => {
     setLanguage(value)
@@ -465,7 +474,7 @@ export default function GlobalHeader() {
                 )}
 
                 {categoryHits.length > 0 && (
-                  <div style={{ marginBottom: (countryHits.length > 0 || searchResults.length > 0) ? 6 : 0 }}>
+                  <div style={{ marginBottom: (craftHits.length > 0 || countryHits.length > 0 || searchResults.length > 0) ? 6 : 0 }}>
                     <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '6px 10px 4px' }}>
                       Categories
                     </div>
@@ -489,6 +498,34 @@ export default function GlobalHeader() {
                         </Link>
                       )
                     })}
+                  </div>
+                )}
+
+                {craftHits.length > 0 && (
+                  <div style={{ marginBottom: (countryHits.length > 0 || searchResults.length > 0) ? 6 : 0 }}>
+                    <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '6px 10px 4px' }}>
+                      Crafts
+                    </div>
+                    {craftHits.map((h) => (
+                      <Link
+                        key={h.code + h.term}
+                        href={`/origins/${slugifyCountryName(h.name)}`}
+                        onClick={() => setSearchOpen(false)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
+                      >
+                        <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
+                          {h.image && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={h.image.url} alt={h.term} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )}
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.term}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{navFlag(h.code)} {h.name}</span>
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Craft &rarr;</span>
+                      </Link>
+                    ))}
                   </div>
                 )}
 
