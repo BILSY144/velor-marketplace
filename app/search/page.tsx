@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
-import { countryImage, pexelsUrl } from '@/lib/countryImagery'
+import { countryImage, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 
 interface SearchResult {
@@ -96,6 +96,7 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
   const [categoryHits, setCategoryHits] = useState<typeof CATEGORY_DEFS>([])
+  const [craftHits, setCraftHits] = useState<CraftMatch[]>([])
   const [originGoods, setOriginGoods] = useState<{ country: { code: string; name: string }; products: OriginProduct[] } | null>(null)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -121,6 +122,14 @@ function SearchContent() {
     const hits = matchCountries(term)
     setCountryHits(hits)
     setCategoryHits(CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(term.trim().toLowerCase())).slice(0, 6))
+    // Craft hits match specific product terms (e.g. "kintsugi", "washi")
+    // against lib/countryImagery.ts's per-craft photography (falling back to
+    // lib/cultureHints.ts's broader term list) -- the same depth the mobile
+    // app's search already reaches, each hit carrying its own real photo
+    // (William, 2026-07-19: "the app offers such a large product search some
+    // that are not even on the website" / "cultural hints with the imagery
+    // like app"). Also instant, no network round trip.
+    setCraftHits(matchCraftImagery(term, 6))
     setOriginGoods(null)
     try {
       const [res, originRes] = await Promise.all([
@@ -220,6 +229,29 @@ function SearchContent() {
           </>
         )}
 
+        {!loading && craftHits.length > 0 && (
+          <>
+            <p className="vsr-note">Craft{craftHits.length !== 1 ? 's' : ''} matching &ldquo;{q}&rdquo;</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 34 }}>
+              {craftHits.map((h) => {
+                return (
+                  <Link key={h.code + h.term} href={`/origins/${slugifyCountryName(h.name)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                    {h.image && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={h.image.url} alt={h.term} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,8,11,0) 25%, rgba(8,8,11,0.95) 100%)' }} />
+                    <div style={{ position: 'absolute', left: 14, right: 14, bottom: 11 }}>
+                      <div style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{flagOfCode(h.code)} {h.name.toUpperCase()}</div>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 19, color: '#fff', lineHeight: 1.15, marginTop: 3 }}>{h.term}</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </>
+        )}
+
         {!loading && originGoods && (
           <>
             <p className="vsr-note">Goods from {originGoods.country.name}</p>
@@ -245,7 +277,7 @@ function SearchContent() {
           </>
         )}
 
-        {!loading && searched && results.length === 0 && countryHits.length === 0 && categoryHits.length === 0 && (
+        {!loading && searched && results.length === 0 && countryHits.length === 0 && categoryHits.length === 0 && craftHits.length === 0 && (
           <div className="vsr-empty">
             <h2>Nothing for &ldquo;{q}&rdquo; — yet.</h2>
             <p>
