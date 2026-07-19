@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
 import { CATEGORY_NAMES as CATEGORIES, CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
-import { countryImages, pexelsUrl } from '@/lib/countryImagery'
+import { countryImages, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
 
 // Live search helpers (William, 2026-07-19: "every search bar on the
@@ -225,6 +225,17 @@ function ShopContent() {
   // (no debounce) alongside the debounced country/product hits below.
   const categoryHits = searchInput.trim().length >= 2
     ? CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(searchInput.trim().toLowerCase())).slice(0, 4)
+    : []
+
+  // Craft hits match specific product terms (e.g. "kintsugi", "washi") against
+  // lib/countryImagery.ts's per-craft photography (falling back to
+  // lib/cultureHints.ts's broader term list) -- the same depth the app's
+  // Atlas/Search screens already search, each hit carrying its own real photo
+  // (William, 2026-07-19: "the app offers such a large product search some
+  // that are not even on the website" / "cultural hints with the imagery
+  // like app"). Instant like categoryHits: a plain in-memory filter.
+  const craftHits: CraftMatch[] = searchInput.trim().length >= 2
+    ? matchCraftImagery(searchInput.trim(), 4)
     : []
 
   useEffect(() => {
@@ -570,11 +581,11 @@ function ShopContent() {
                 place, never a mismatched or fabricated image (LAW #1). */}
             {searchOpen && searchInput.trim().length >= 2 && (
               <div className="shsdrop">
-                {searchLoading && countryHits.length === 0 && categoryHits.length === 0 && liveHits.length === 0 && (
+                {searchLoading && countryHits.length === 0 && categoryHits.length === 0 && craftHits.length === 0 && liveHits.length === 0 && (
                   <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--muted)' }}>Searching...</div>
                 )}
 
-                {!searchLoading && countryHits.length === 0 && categoryHits.length === 0 && liveHits.length === 0 && (
+                {!searchLoading && countryHits.length === 0 && categoryHits.length === 0 && craftHits.length === 0 && liveHits.length === 0 && (
                   <div style={{ padding: '22px 16px', textAlign: 'center' }}>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>
                       Nothing by that name -- yet.
@@ -606,6 +617,31 @@ function ShopContent() {
                         </button>
                       )
                     })}
+                  </div>
+                )}
+
+                {craftHits.length > 0 && (
+                  <div>
+                    <div className="shsdrop-lbl">Crafts</div>
+                    {craftHits.map(h => (
+                      <Link
+                        key={h.code + h.term}
+                        className="shsdrop-row"
+                        href={`/origins/${slugifyCountryName(h.name)}`}
+                        onClick={() => setSearchOpen(false)}
+                      >
+                        <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
+                          {h.image && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={h.image.url} alt={h.term} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )}
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.term}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{shopFlagOf(h.code)} {h.name}</span>
+                        </span>
+                      </Link>
+                    ))}
                   </div>
                 )}
 
@@ -656,7 +692,7 @@ function ShopContent() {
                   </div>
                 )}
 
-                {(countryHits.length > 0 || categoryHits.length > 0 || liveHits.length > 0) && (
+                {(countryHits.length > 0 || categoryHits.length > 0 || craftHits.length > 0 || liveHits.length > 0) && (
                   <button
                     className="shsdrop-row"
                     style={{ justifyContent: 'center', color: 'var(--accent)', fontWeight: 700, fontSize: 12, borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 10 }}
