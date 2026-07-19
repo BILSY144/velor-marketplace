@@ -18,11 +18,11 @@ import {
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 
-// Seller sign-in — the same account as the website (NextAuth credentials),
-// so an approved seller's dashboard, orders, payouts and listings go live
-// in the app. Honest scope: this is the SELLER door; buyer passkey sign-in
-// arrives with the 6 August launch. Claude never handles these credentials
-// — the seller types their own, straight to the site over HTTPS.
+// Sign-in — the same account as the website (NextAuth credentials), one
+// door for BOTH sides of the counter (William, 2026-07-19): buyers get
+// buyer access, approved sellers additionally get their dashboard, orders,
+// payouts and listings. Claude never handles these credentials — the
+// account holder types their own, straight to the site over HTTPS.
 export default function SignInScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
@@ -100,11 +100,11 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ paddingHorizontal: 20 }}>
-          <Text style={s.kick}>YOUR CHANNEL</Text>
+          <Text style={s.kick}>ONE ACCOUNT</Text>
           <Text style={s.h1}>Sign in.</Text>
           <Dim style={{ marginTop: 8, lineHeight: 18 }}>
-            The same account as velorcommerce.store — your dashboard, orders, payouts and
-            listings, live in the app.
+            The same account as velorcommerce.store — buying or selling, everything goes live
+            in the app. Sellers get their dashboard, orders and payouts on top.
           </Dim>
 
           <Text style={s.label}>EMAIL</Text>
@@ -219,8 +219,8 @@ export default function SignInScreen() {
           <View style={s.buyerNote}>
             <Ionicons name="finger-print-outline" size={15} color={C.mut} />
             <Dim style={{ flex: 1, fontSize: 11.5, lineHeight: 17 }}>
-              Buying an account? Buyer sign-in arrives with launch on 6 August — passkeys, no
-              password at all. This door is for approved sellers.
+              New to Velor? A buyer account is created with your first order — the activation
+              link arrives by email. No separate signup needed.
             </Dim>
           </View>
 
