@@ -235,7 +235,7 @@ function SearchContent() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 34 }}>
               {craftHits.map((h) => {
                 return (
-                  <Link key={h.code + h.term} href={`/origins/${slugifyCountryName(h.name)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <Link key={h.code + h.term} href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     {h.image && (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={h.image.url} alt={h.term} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
