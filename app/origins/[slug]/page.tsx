@@ -100,7 +100,7 @@ const css = `
 .ocp-gcap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:11.5px;color:#fff;line-height:1.3;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.8) 100%)}
 .ocp-opener{position:relative;width:100%;height:400px;overflow:hidden;background:var(--surface-2)}
 .ocp-opener img{width:100%;height:100%;object-fit:cover;display:block}
-.ocp-opener-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,11,0.1) 0%,rgba(8,8,11,0.6) 60%,var(--bg) 100%)}
+.ocp-opener-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,11,0) 0%,rgba(8,8,11,0) 66%,rgba(8,8,11,0.82) 90%,var(--bg) 100%)}
 .ocp-opener-text{position:absolute;left:32px;right:32px;bottom:28px;max-width:1036px;margin:0 auto}
 .ocp-opener-kick{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:700}
 .ocp-opener-title{font-family:var(--font-serif);font-weight:500;font-size:44px;line-height:1.1;color:#fff;margin-top:8px}
