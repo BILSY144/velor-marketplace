@@ -509,7 +509,7 @@ export default function GlobalHeader() {
                     {craftHits.map((h) => (
                       <Link
                         key={h.code + h.term}
-                        href={`/origins/${slugifyCountryName(h.name)}`}
+                        href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`}
                         onClick={() => setSearchOpen(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
                       >
