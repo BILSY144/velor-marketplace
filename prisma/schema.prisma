@@ -101,6 +101,15 @@ model Seller {
   user                          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   storeName                     String
   description                   String?   @db.Text
+  // Legal trader-status disclosure (William, 2026-07-19 -- Velor is open to
+  // anyone, not just registered businesses, but the Seller Rules page has
+  // always promised buyers this is shown because it affects their statutory
+  // rights: consumer law gives buyers different protections when they buy
+  // from a business/trader vs. a private individual). Carried over from
+  // SellerApplication.sellerType at approval time in lib/provisionSeller.ts.
+  // "individual" | "business". Nullable to tolerate sellers approved before
+  // this field existed.
+  sellerType                    String?
   country                       String?
   currency                      String    @default("GBP")
   stripeAccountId               String?   @unique
@@ -359,6 +368,12 @@ model SellerApplication {
 // existed still approve fine, just via the old one-time activation-link
 // path in lib/provisionSeller.ts.
 passwordHash      String?
+  // Legal trader-status disclosure captured on the /apply form (William,
+  // 2026-07-19). "individual" | "business" -- see the matching field on
+  // Seller for why this exists. Nullable so applications submitted before
+  // this field existed still approve fine (lib/provisionSeller.ts just
+  // carries over whatever is here, including null/undefined).
+  sellerType        String?
   productCategories String[]
   sampleImages      String[]
   country           String?
