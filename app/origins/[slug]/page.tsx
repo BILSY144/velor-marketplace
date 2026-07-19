@@ -14,9 +14,21 @@
 //
 // Flags are derived from ISO codes at runtime (String.fromCodePoint) — never
 // write flag emoji into source (content-filter incident, 2026-07-08).
+//
+// Craft opener (William, 2026-07-19: "add the imagery to the page as a
+// opener like the app does for each craft"): when a visitor arrives via a
+// specific craft search hit (?craft=<term>, set by GlobalHeader/search/shop's
+// Crafts sections), this page opens with a full-bleed cover of that craft
+// the way the mobile app's CraftScreen opens each craft -- own cover photo,
+// "COUNTRY x SIGNATURE CRAFT" kicker, craft name as the headline. If the
+// term has no dedicated photo of its own (came from lib/cultureHints.ts
+// rather than lib/countryImagery.ts's named RAW entries), it falls back to
+// the country's own lead photo rather than showing no image at all -- same
+// honest-fallback rule as matchCraftImagery. Wrapped in Suspense because
+// useSearchParams requires it (see app/search/page.tsx for the same pattern).
 
-import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useMemo, useState, Suspense } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { findCountryBySlug, type WorldCountry } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
@@ -86,13 +98,22 @@ const css = `
 .ocp-gitem{border-radius:12px;overflow:hidden;position:relative;aspect-ratio:1;background:var(--surface-2)}
 .ocp-gitem img{width:100%;height:100%;object-fit:cover;display:block}
 .ocp-gcap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:11.5px;color:#fff;line-height:1.3;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.8) 100%)}
+.ocp-opener{position:relative;width:100%;height:400px;overflow:hidden;background:var(--surface-2)}
+.ocp-opener img{width:100%;height:100%;object-fit:cover;display:block}
+.ocp-opener-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,11,0.1) 0%,rgba(8,8,11,0.6) 60%,var(--bg) 100%)}
+.ocp-opener-text{position:absolute;left:32px;right:32px;bottom:28px;max-width:1036px;margin:0 auto}
+.ocp-opener-kick{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:700}
+.ocp-opener-title{font-family:var(--font-serif);font-weight:500;font-size:44px;line-height:1.1;color:#fff;margin-top:8px}
+@media(max-width:720px){.ocp-opener{height:280px}.ocp-opener-title{font-size:30px}}
 `
 
-export default function OriginCountryPage() {
+function OriginCountryContent() {
   const params = useParams<{ slug: string }>()
   const slug = params.slug as string
   const country: WorldCountry | undefined = useMemo(() => findCountryBySlug(slug), [slug])
   const { symbol, convert } = useCurrencyDisplay()
+  const searchParams = useSearchParams()
+  const craftParam = searchParams.get('craft') ?? ''
 
   const [productCount, setProductCount] = useState<number | null>(null)
   const [pending, setPending] = useState(true)
@@ -146,9 +167,30 @@ export default function OriginCountryPage() {
   const specialities = SPECIALITIES.filter(s => s.associated.includes(country.code))
   const images = countryImages(country.code)
 
+  // Exact-match the craft's own dedicated photo when it has one; otherwise
+  // fall back to the country's lead photo (images[0]) rather than showing
+  // no opener at all -- the same honest fallback matchCraftImagery already
+  // applies when the term only exists in cultureHints.ts, not RAW.
+  const craftImage = craftParam
+    ? (images.find(im => im.name.toLowerCase() === craftParam.toLowerCase()) ?? images[0] ?? null)
+    : null
+
   return (
     <div className="ocp">
       <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      {craftImage && (
+        <div className="ocp-opener">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={craftImage.url} alt={craftParam} />
+          <div className="ocp-opener-scrim" />
+          <div className="ocp-opener-text">
+            <div className="ocp-opener-kick">{country.name.toUpperCase()} &times; SIGNATURE CRAFT</div>
+            <div className="ocp-opener-title">{craftParam}</div>
+          </div>
+        </div>
+      )}
+
       <div className="ocp-wrap">
         <Link className="ocp-back" href="/origins">&larr; All countries</Link>
 
@@ -250,5 +292,15 @@ export default function OriginCountryPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function OriginCountryPage() {
+  // Inline styles, not the .ocp class -- its rules come from the <style>
+  // tag OriginCountryContent injects, which hasn't rendered yet here.
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg)' }} />}>
+      <OriginCountryContent />
+    </Suspense>
   )
 }
