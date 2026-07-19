@@ -627,7 +627,7 @@ function ShopContent() {
                       <Link
                         key={h.code + h.term}
                         className="shsdrop-row"
-                        href={`/origins/${slugifyCountryName(h.name)}`}
+                        href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`}
                         onClick={() => setSearchOpen(false)}
                       >
                         <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
