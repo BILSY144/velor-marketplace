@@ -6,7 +6,7 @@ import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
-import { fmt, onI18n } from '../i18n'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { useCart } from '../store'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
@@ -20,6 +20,7 @@ import { Chrome } from '../components/Chrome'
 // per-parcel prices read "quoted live" until the address exists; and every
 // pay control carries the 6-August gate — Velor never fakes an order.
 export default function CheckoutScreen() {
+  useI18nTick()
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const { items, total } = useCart()

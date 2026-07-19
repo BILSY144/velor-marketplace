@@ -1,3 +1,4 @@
+import React from 'react'
 // Live language + currency for the Velor app (William, 2026-07-17: the app
 // must convert languages and currency like the website).
 //
@@ -164,6 +165,16 @@ export function fmt(gbp: number, decimals = 2): string {
   if (CUR === 'GBP' || !rate) return '£' + gbp.toFixed(decimals)
   const zeroDec = CUR === 'JPY' || CUR === 'KRW' || CUR === 'VND'
   return (SYMBOLS[CUR] || CUR + ' ') + (gbp * rate).toFixed(zeroDec ? 0 : decimals)
+}
+
+// Subscribe a component to i18n/currency ticks. Any component that renders
+// fmt() prices MUST call this, or a currency change (or the async arrival
+// of rates on cold start) leaves its prices painted in stale GBP — the
+// exact "currency conversion does not work" bug William hit on-device
+// (2026-07-19): every price screen imported onI18n and none subscribed.
+export function useI18nTick(): void {
+  const [, set] = React.useState(0)
+  React.useEffect(() => onI18n(() => set((t) => t + 1)), [])
 }
 
 const HAS_LETTER = /[A-Za-z]/

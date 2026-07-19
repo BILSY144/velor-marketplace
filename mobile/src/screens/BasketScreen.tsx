@@ -6,7 +6,7 @@ import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
-import { fmt, onI18n } from '../i18n'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { useCart, CartItem } from '../store'
 import { countryName } from '../data'
 import { Dim, Btn, Empty } from '../ui'
@@ -20,6 +20,7 @@ import { Chrome } from '../components/Chrome'
 // checkout from each seller's real dispatch address, so the basket says
 // exactly that instead of inventing a figure.
 export default function BasketScreen() {
+  useI18nTick()
   const nav = useNavigation<any>()
   const insets = useSafeAreaInsets()
   const { items, setQty, remove, total } = useCart()

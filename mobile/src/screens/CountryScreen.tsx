@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels, flagUrl } from '../theme'
-import { fmt, onI18n } from '../i18n'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, HINTS, IMAGERY, STORIES, filmsFor } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -22,6 +22,7 @@ import { useCart, useFollows } from '../store'
 const TRAVEL_ON = ['MX', 'IT', 'UZ', 'GH', 'ET', 'PT', 'JP']
 
 export default function CountryScreen() {
+  useI18nTick()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const cc: string = route.params?.cc ?? 'JP'

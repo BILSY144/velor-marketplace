@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl, pexels } from '../theme'
-import { fmt, onI18n } from '../i18n'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import type { ShopProduct } from '../api'
 import { useCart, useFavs } from '../store'
@@ -24,6 +24,7 @@ import { Kicker, Body, Dim, Btn } from '../ui'
 // FOUNDING badge only when the seller really holds the founding seat (no
 // such field in the API yet, so it is not shown).
 export default function PdpScreen() {
+  useI18nTick()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const { width } = useWindowDimensions()
@@ -236,7 +237,7 @@ export default function PdpScreen() {
           </Pressable>
         </View>
         <Btn
-          label={added ? 'Added to basket ✓' : `Add · £${(price * qty).toFixed(2)}`}
+          label={added ? 'Added to basket ✓' : `Add · ${fmt(price * qty)}`}
           onPress={onAdd}
           style={{ flex: 1 }}
         />

@@ -634,11 +634,8 @@ function SellerChannel() {
     {
       icon: 'videocam-outline',
       title: 'Go live',
-      sub: founding
-        ? 'Your founding privilege — broadcast on your country’s channel'
-        : 'Founding-seller privilege — not part of any standard plan',
+      sub: 'Broadcast on your country’s channel — followers hear the bell',
       route: 'GoLive',
-      locked: !founding,
     },
     {
       icon: 'key-outline',

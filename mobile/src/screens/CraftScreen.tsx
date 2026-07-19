@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels } from '../theme'
-import { fmt, onI18n } from '../i18n'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -18,6 +18,7 @@ import { Kicker, Body, Dim, Btn, Empty } from '../ui'
 // (REAL listings only — the mockup's SAMPLE rows are replaced by the honest
 // zero state until real sellers list), then MORE FROM {COUNTRY} craft rail.
 export default function CraftScreen() {
+  useI18nTick()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const cc: string = route.params?.cc ?? 'JP'
