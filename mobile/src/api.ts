@@ -191,6 +191,23 @@ export type SellerSubscription = { tier: string; [k: string]: unknown }
 
 export const fetchSubscription = () => authedGet<SellerSubscription>('/api/seller/subscription')
 
+// Upgrade to Pro — asks the site for a Stripe Checkout session for the
+// PRO subscription (POST /api/seller/subscription, action upgrade_to_pro).
+// The returned URL is Stripe's own hosted page: the seller enters their
+// payment details there, never in the app, and the existing Stripe webhook
+// flips the tier to PRO on completion.
+export async function startProUpgrade(): Promise<{ checkoutUrl?: string; error?: string }> {
+  const res = await fetch(`${BASE}/api/seller/subscription`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'upgrade_to_pro' }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) return { error: data?.error ?? `Upgrade failed (${res.status})` }
+  return { checkoutUrl: data.checkoutUrl }
+}
+
 export async function createListing(body: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch(`${BASE}/api/dashboard/products`, {
     method: 'POST',

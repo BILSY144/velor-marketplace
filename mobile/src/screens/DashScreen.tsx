@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -15,6 +15,7 @@ import {
   fetchSellerOrders,
   fetchSellerProducts,
   fetchSubscription,
+  startProUpgrade,
 } from '../api'
 
 // Seller dashboard — plate 27's structure, in TWO honest modes:
@@ -35,6 +36,25 @@ export default function DashScreen() {
   const user = useSession((s) => s.user)
   const live = Boolean(user?.sellerId)
   const [previewTier, setPreviewTier] = useState<Tier>('STARTER')
+  const [upBusy, setUpBusy] = useState(false)
+  const [upError, setUpError] = useState<string | null>(null)
+
+  // Upgrade to Pro — Stripe's hosted checkout opens in the browser; the
+  // seller adds their payment details with Stripe, never inside the app.
+  const upgrade = async () => {
+    if (upBusy) return
+    setUpBusy(true)
+    setUpError(null)
+    try {
+      const r = await startProUpgrade()
+      if (r.checkoutUrl) await Linking.openURL(r.checkoutUrl)
+      else setUpError(r.error ?? 'Could not start the upgrade — try again.')
+    } catch {
+      setUpError('Could not reach Velor — check your connection and try again.')
+    } finally {
+      setUpBusy(false)
+    }
+  }
 
   const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription, enabled: live })
   const payouts = useQuery({ queryKey: ['sellerPayouts'], queryFn: fetchSellerPayouts, enabled: live })
@@ -125,6 +145,31 @@ export default function DashScreen() {
               </Pressable>
             ))}
           </View>
+
+          {/* Upgrade to Pro — live Starter sellers only. Founding sellers
+              never see this: they already hold Pro free for life. */}
+          {live && !pro ? (
+            <View style={s.upCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={s.upKick}>UPGRADE</Text>
+                <Text style={s.upPrice}>{'\u00a3'}49/month</Text>
+              </View>
+              <Text style={s.upT}>Go Pro. Keep 6% more of every sale.</Text>
+              <Text style={s.upS}>
+                4% commission instead of 10%, unlimited listings instead of 10, and your AI
+                account manager watching the channel around the clock.
+              </Text>
+              {upError ? <Text style={s.upErr}>{upError}</Text> : null}
+              <Pressable style={[s.upBtn, upBusy && { opacity: 0.7 }]} onPress={upgrade}>
+                <Text style={s.upBtnTx}>{upBusy ? 'Opening secure checkout\u2026' : 'Upgrade to Pro'}</Text>
+                <Ionicons name="arrow-forward" size={15} color="#160a00" />
+              </Pressable>
+              <Text style={s.upNote}>
+                Checkout opens in your browser — payment details go to Stripe, never to the
+                app. Your plan switches the moment payment completes.
+              </Text>
+            </View>
+          ) : null}
 
           {/* Revenue */}
           <View style={s.card}>
@@ -394,6 +439,31 @@ const s = StyleSheet.create({
   fd: { fontFamily: F.bodySemi, fontSize: 13.5, color: C.text },
   smdim: { fontFamily: F.body, fontSize: 11.5, lineHeight: 16, color: C.dim, marginTop: 2 },
   aitip: { fontFamily: F.body, fontSize: 12, lineHeight: 18, color: '#d8d7d3' },
+  upCard: {
+    marginTop: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.35)',
+    backgroundColor: 'rgba(255,107,0,0.07)',
+    padding: 16,
+  },
+  upKick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.accent },
+  upPrice: { fontFamily: F.display, fontSize: 12, color: C.accent },
+  upT: { fontFamily: F.serifLight, fontSize: 19, color: C.text, marginTop: 10 },
+  upS: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: C.mut, marginTop: 8 },
+  upErr: { fontFamily: F.body, fontSize: 11.5, lineHeight: 16, color: C.red, marginTop: 10 },
+  upBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    marginTop: 14,
+    backgroundColor: C.accent,
+    borderRadius: 999,
+    paddingVertical: 14,
+  },
+  upBtnTx: { fontFamily: F.display, fontSize: 13, color: '#160a00' },
+  upNote: { fontFamily: F.body, fontSize: 10, lineHeight: 14, color: C.dim, marginTop: 10 },
   lineBtn: {
     alignSelf: 'flex-start',
     borderWidth: 1,
