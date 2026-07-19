@@ -60,6 +60,10 @@ interface ApplicationRow {
   // Optional only to tolerate applications submitted before the /apply form
   // asked for a password -- see the branch below.
   passwordHash?: string | null
+  // Legal trader-status disclosure ("individual" | "business") -- see the
+  // schema comment on Seller.sellerType for why this exists. Optional only
+  // to tolerate applications submitted before the /apply form asked for it.
+  sellerType?: string | null
 }
 
 /**
@@ -144,7 +148,11 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
     if (!existingUser.seller.approved) {
       await prisma.seller.update({
         where: { id: existingUser.seller.id },
-        data: { approved: true, identityVerified: application.verificationStatus === 'VERIFIED' },
+        data: {
+            approved: true,
+            identityVerified: application.verificationStatus === 'VERIFIED',
+            sellerType: existingUser.seller.sellerType ?? application.sellerType ?? undefined,
+          },
       })
     }
     await provisionSellerShippingProfile(existingUser.seller.id, application)
@@ -159,6 +167,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         storeName: application.businessName,
         description: application.storeDescription ?? undefined,
         country: application.country ?? undefined,
+          sellerType: application.sellerType ?? undefined,
         approved: true,
         foundingEligible,
         identityVerified: application.verificationStatus === 'VERIFIED',
@@ -199,6 +208,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
             storeName: application.businessName,
             description: application.storeDescription ?? undefined,
             country: application.country ?? undefined,
+            sellerType: application.sellerType ?? undefined,
             approved: true,
             foundingEligible,
             identityVerified: application.verificationStatus === 'VERIFIED',
