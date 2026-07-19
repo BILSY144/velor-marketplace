@@ -4,7 +4,24 @@ import { cultureHints } from '@/lib/cultureHints';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://velorcommerce.store';
-  const now = new Date();
+  // Removed 2026-07-19 by the standing SEO agent: every entry below used to
+  // carry `lastModified: now`, i.e. the exact moment this function last ran
+  // (build time / request time for a dynamic route), on every single URL --
+  // 20 static entries plus all 190 /origins/[slug] entries. That is not a
+  // real "this page last changed on this date" signal, it is just "the
+  // sitemap was generated now," and Google has said directly (Gary Illyes,
+  // Search Off the Record, reported July 2026 by Search Engine Roundtable
+  // and Digital Applied -- see SEO_LOG.md for citations) that a <lastmod>
+  // Google can't trust as accurate is worse than no <lastmod> at all: it
+  // trains Google to start ignoring the field for the whole site rather
+  // than just discounting the one bad date. This codebase has no per-page
+  // last-real-content-change tracking (no CMS timestamps, no git-derived
+  // per-route dates wired into these objects), so there is no honest value
+  // to put here -- omitting the field entirely (it's optional on
+  // MetadataRoute.Sitemap) is the accurate choice, not a placeholder swap.
+  // If real per-page modification timestamps become available later (e.g.
+  // from a CMS or a tracked `updatedAt` column once the catalogue is real),
+  // re-add `lastModified` sourced from that real data, not from `Date.now()`.
   // Fixed 2026-07-12 by the standing SEO agent: the previous list pointed
   // search engines at /sellers (no such route -- 404 live) and
   // /sell-on-velor (a redirect stub, not the canonical page), while omitting
@@ -201,35 +218,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
     (c) => cultureHints(c.code).length > 0
   ).map((c) => ({
     url: `${base}/origins/${countrySlug(c)}`,
-    lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.5,
   }));
 
   return [
-    { url: base, lastModified: now, changeFrequency: 'daily', priority: 1 },
-    { url: `${base}/apply`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${base}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: base, changeFrequency: 'daily', priority: 1 },
+    { url: `${base}/apply`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/shop`, changeFrequency: 'daily', priority: 0.9 },
     // /marketplace removed 2026-07-15 (William's call): it now redirects to
     // /shop (see app/marketplace/page.tsx) instead of rendering its own
     // duplicate product grid, so it is no longer a real canonical page worth
     // submitting to search engines.
-    { url: `${base}/founding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
-    { url: `${base}/origins`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${base}/sell`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
-    { url: `${base}/live`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
-    { url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${base}/help`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${base}/press`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${base}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${base}/track`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
-    { url: `${base}/legal/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/legal/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/legal/seller-agreement`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/legal/seller-rules`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/seller-agreement`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/returns`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${base}/cookies`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/founding`, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${base}/origins`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
+    { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/help`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/press`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${base}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${base}/track`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/legal/terms`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/legal/privacy`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/legal/seller-agreement`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/legal/seller-rules`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/seller-agreement`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/returns`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
     ...originCountryEntries,
   ];
 }
