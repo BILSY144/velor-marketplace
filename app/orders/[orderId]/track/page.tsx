@@ -13,7 +13,7 @@ interface Shipment {
   events: TrackingEvent[];
 }
 interface TrackingData {
-  orderId: string; status: string; carrier: string | null; shipments: Shipment[];
+  orderId: string; status: string; shipment: Shipment | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -81,10 +81,16 @@ export default function TrackOrderPage() {
 
   if (!data) return null
 
-  const allEvents = data.shipments.flatMap(s => s.events)
+  // The schema gives every Order at most one Shipment (Order.shipment
+  // Shipment?), so the API returns it singular -- this used to read
+  // data.shipments (a plural array) that the route never sent, which threw
+  // on every real order ("Cannot read properties of undefined (reading
+  // 'flatMap')"). Fixed to match the actual API contract.
+  const allEvents = (data.shipment?.events ?? [])
+    .slice()
     .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
 
-  const latestShipment = data.shipments[0]
+  const latestShipment = data.shipment
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px 80px', fontFamily: 'var(--font-body)' }}>
