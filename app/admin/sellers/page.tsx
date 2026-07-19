@@ -202,7 +202,7 @@ export default function AdminSellersPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#111111' }}>
-              {['Business Name', 'Owner', 'Email', 'Applied', 'Status', 'Actions'].map(h => (
+              {['Store Name', 'Owner', 'Email', 'Applied', 'Status', 'Actions'].map(h => (
                 <th key={h} style={{
                   padding: '12px 16px', textAlign: 'left', fontSize: 12,
                   fontWeight: 600, color: '#999999', textTransform: 'uppercase',
