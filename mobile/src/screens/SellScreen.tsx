@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text, PanResponder } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, PanResponder } from 'react-native'
+import { Text } from '../ui/T'
 import { useNavigation } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -10,7 +11,7 @@ import { Chrome } from '../components/Chrome'
 
 const PERKS: [string, string][] = [
   ['Founding badge, permanent', 'On your store and every listing, forever.'],
-  ['The full Pro tier, free for life', 'Unlimited listings, Go Live, your AI account manager, full API access, free custom storefront, priority search, advanced analytics and early feature access — £49/mo at £0 while your subscription runs. 4% commission.'],
+  ['The full Pro tier, free for life', 'Unlimited listings, Go Live, your AI account manager — £49/mo at £0 while your subscription runs. 4% commission.'],
   ['The homepage showreel slot', 'Your film, on the front page of the world’s shopping channel.'],
   ['Your country’s page, alone', 'You open the channel and are credited as the seller who opened it.'],
 ]
@@ -95,8 +96,9 @@ export default function SellScreen() {
             ))}
           </View>
           <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>
-            0% listing fees on every plan. Paid out after each delivery is confirmed. Every seller
-            starts free — upgrade to Pro any time from your dashboard.
+            0% listing fees on every plan. Paid out after each delivery is confirmed — payouts by
+            Stripe & Payoneer. Every seller starts free — upgrade to Pro any time from your
+            dashboard.
           </Dim>
         </View>
 

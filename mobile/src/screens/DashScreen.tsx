@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text, Linking } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'

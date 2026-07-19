@@ -2,13 +2,13 @@ import React from 'react'
 import {
   View,
   ScrollView,
-  TextInput,
   Pressable,
   StyleSheet,
-  Text,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
+import { Text } from '../ui/T'
+import { TextInput } from '../ui/TI'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
@@ -634,11 +634,8 @@ function SellerChannel() {
     {
       icon: 'videocam-outline',
       title: 'Go live',
-      sub: founding
-        ? 'Your founding privilege — broadcast on your country’s channel'
-        : 'Founding-seller privilege — not part of any standard plan',
+      sub: 'Broadcast on your country’s channel — followers hear the bell',
       route: 'GoLive',
-      locked: !founding,
     },
     {
       icon: 'key-outline',

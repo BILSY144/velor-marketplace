@@ -1119,8 +1119,8 @@ export default function HomePage() {
               <h2>Sell it live. List it always.</h2>
               <p>Velor is a shopping channel &mdash; and sellers are the broadcasters. The first
               verified seller from each country opens it &mdash; keeping the founding badge, Pro free
-              for life — every Pro benefit, permanently, including Velor Live broadcasting.
-              Decision within 24 hours of your verification.</p>
+              for life — every Pro benefit, permanently. Velor Live broadcasting is open to
+              every seller, on every tier. Decision within 24 hours of your verification.</p>
             </div>
             <Link className="vh-btn" href="/apply">Apply to sell</Link>
           </div>

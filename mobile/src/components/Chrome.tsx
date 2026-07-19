@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Pressable, StyleSheet, Text } from 'react-native'
+import { View, Pressable, StyleSheet } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -21,6 +22,12 @@ export function Chrome({ back, onBack }: { back?: string; onBack?: () => void })
         <View />
       )}
       <View style={{ flexDirection: 'row', gap: 9 }}>
+        {/* Language — the 19 Velor speaks, same honest screen as You > Language
+            & currency (English live, the rest arrive with the buyer launch).
+            Mirrors the website's header language picker (William, 2026-07-17). */}
+        <Pressable style={s.gbtn} onPress={() => nav.navigate('LangCur')}>
+          <Ionicons name="globe-outline" size={17} color={C.text} />
+        </Pressable>
         <Pressable style={s.gbtn} onPress={() => nav.navigate('Tabs', { screen: 'Search' })}>
           <Ionicons name="search-outline" size={17} color={C.text} />
         </Pressable>

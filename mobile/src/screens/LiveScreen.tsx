@@ -1,13 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react'
-import {
-  View,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  ViewToken,
-} from 'react-native'
+import { View, FlatList, Pressable, StyleSheet, useWindowDimensions, ViewToken } from 'react-native'
+import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -15,6 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { FILMS, countryName, Film } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { useCart, useFavs } from '../store'
@@ -28,6 +22,7 @@ import { useCart, useFavs } from '../store'
 // broadcasts; the product strip only appears when a real listing exists for
 // the film's country; no viewer counts anywhere (CAP/ASA rule).
 export default function LiveScreen() {
+  useI18nTick()
   const { height, width } = useWindowDimensions()
   const route = useRoute<any>()
   // The Atlas reel deep-links here with { start } — open the feed AT that
@@ -218,7 +213,7 @@ function FilmPage({
                 {listing.name ?? listing.title}
               </Text>
               <Text style={s.stripP}>
-                {'£'}{(listing.discountedPrice ?? listing.price).toFixed(0)}
+                {fmt(listing.discountedPrice ?? listing.price, 0)}
               </Text>
               <Image source={{ uri: flagUrl(film.c) }} style={{ width: 15, height: 11, borderRadius: 2 }} />
             </View>

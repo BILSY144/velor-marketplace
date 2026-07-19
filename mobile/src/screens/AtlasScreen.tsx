@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { View, Pressable, StyleSheet, ScrollView, Animated, Text, TextInput, Keyboard } from 'react-native'
+import { View, Pressable, StyleSheet, ScrollView, Animated, Keyboard } from 'react-native'
+import { Text } from '../ui/T'
+import { TextInput } from '../ui/TI'
+import { T as tr } from '../i18n'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { WebView } from 'react-native-webview'
@@ -21,7 +24,9 @@ import { Kicker, Display, Body, Dim } from '../ui'
 // right here that shows live inline results as you type (same matching
 // logic as SearchScreen.tsx: country names, then IMAGERY craft names, then
 // culture HINTS), so you can search and tap straight into a country or
-// craft page without ever losing the globe underneath.
+// craft page without ever losing the globe underneath. Uses the ui/T and
+// ui/TI translating wrappers, same as every other screen post-i18n (engine
+// v4) -- the placeholder and result labels translate like everything else.
 type Hit = { cc: string; name: string; craft?: string; img?: number }
 
 export default function AtlasScreen() {
@@ -256,8 +261,11 @@ function HeroLine() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
       <Text style={s.heroBase}>Shop </Text>
+      {/* Animated.Text bypasses the ui/T wrapper, so translate the word
+          directly -- the 2.4s word-cycle interval re-renders this component
+          anyway, so dictionary hits appear without an extra subscription. */}
       <Animated.Text style={[s.heroWord, { opacity: fade, transform: [{ translateY: shift }] }]}>
-        {HERO_WORDS[i]}
+        {tr(HERO_WORDS[i])}
       </Animated.Text>
     </View>
   )

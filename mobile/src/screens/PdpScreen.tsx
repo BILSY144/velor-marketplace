@@ -1,20 +1,13 @@
 import React, { useRef, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
+import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl, pexels } from '../theme'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import type { ShopProduct } from '../api'
 import { useCart, useFavs } from '../store'
@@ -31,6 +24,7 @@ import { Kicker, Body, Dim, Btn } from '../ui'
 // FOUNDING badge only when the seller really holds the founding seat (no
 // such field in the API yet, so it is not shown).
 export default function PdpScreen() {
+  useI18nTick()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const { width } = useWindowDimensions()
@@ -125,7 +119,7 @@ export default function PdpScreen() {
 
           {/* Price + delivery row */}
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-            <Text style={s.price}>{'£'}{price.toFixed(2)}</Text>
+            <Text style={s.price}>{fmt(price)}</Text>
             <Text style={s.deliver}>
               Delivery quoted live at checkout · ships from {name || 'origin'}
             </Text>
@@ -243,7 +237,7 @@ export default function PdpScreen() {
           </Pressable>
         </View>
         <Btn
-          label={added ? 'Added to basket ✓' : `Add · £${(price * qty).toFixed(2)}`}
+          label={added ? 'Added to basket ✓' : `Add · ${fmt(price * qty)}`}
           onPress={onAdd}
           style={{ flex: 1 }}
         />

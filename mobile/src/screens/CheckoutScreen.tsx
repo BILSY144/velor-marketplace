@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { useCart } from '../store'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
@@ -18,6 +20,7 @@ import { Chrome } from '../components/Chrome'
 // per-parcel prices read "quoted live" until the address exists; and every
 // pay control carries the 6-August gate — Velor never fakes an order.
 export default function CheckoutScreen() {
+  useI18nTick()
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const { items, total } = useCart()
@@ -77,13 +80,13 @@ export default function CheckoutScreen() {
 
           <Text style={s.label}>SUMMARY</Text>
           <View style={[s.card, { gap: 9 }]}>
-            <Row l={`Items (${nItems})`} r={`£${total().toFixed(2)}`} />
+            <Row l={`Items (${nItems})`} r={fmt(total())} />
             <Row l="Delivery" r="at payment" dimR />
             <Row l="Import duty · est." r="at payment" dimR />
             <View style={s.hr} />
             <View style={s.rowLine}>
               <Text style={s.totL}>Total</Text>
-              <Text style={s.totR}>{'£'}{total().toFixed(2)} + delivery</Text>
+              <Text style={s.totR}>{fmt(total())} + delivery</Text>
             </View>
           </View>
 
@@ -120,6 +123,10 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
+          <Text style={[s.orTx, { textAlign: 'center', marginTop: 10 }]}>
+            Secure Stripe checkout · Payouts by Stripe & Payoneer
+          </Text>
+
           {note ? (
             <View style={s.noteBub}>
               <Text style={s.noteTx}>{note}</Text>
@@ -129,7 +136,7 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
-        <Btn label={`Pay securely · £${total().toFixed(2)} + delivery`} onPress={gate} />
+        <Btn label={`Pay securely · ${fmt(total())} + delivery`} onPress={gate} />
       </View>
       <Chrome back="Basket" onBack={() => nav.goBack()} />
     </View>

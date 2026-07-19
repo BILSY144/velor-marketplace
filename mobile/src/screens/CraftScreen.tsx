@@ -1,11 +1,13 @@
 import React from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Text } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels } from '../theme'
+import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
@@ -16,6 +18,7 @@ import { Kicker, Body, Dim, Btn, Empty } from '../ui'
 // (REAL listings only — the mockup's SAMPLE rows are replaced by the honest
 // zero state until real sellers list), then MORE FROM {COUNTRY} craft rail.
 export default function CraftScreen() {
+  useI18nTick()
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const cc: string = route.params?.cc ?? 'JP'
@@ -79,7 +82,7 @@ export default function CraftScreen() {
                     {p.sellerName ?? 'Verified seller'}
                   </Dim>
                   <Body style={{ fontFamily: F.bodySemi, fontSize: 14, marginTop: 4 }}>
-                    {'£'}{(p.discountedPrice ?? p.price).toFixed(2)}
+                    {fmt(p.discountedPrice ?? p.price)}
                   </Body>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color={C.mut} />
