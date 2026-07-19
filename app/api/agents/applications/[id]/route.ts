@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { isAuthorizedAdmin } from '@/lib/adminAuth';
-import { approveApplication, rejectApplication } from '@/lib/provisionSeller';
+import { approveApplication, rejectApplication, redactApplication } from '@/lib/provisionSeller';
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +20,7 @@ if (!application) {
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
 
-return NextResponse.json({ application });
+return NextResponse.json({ application: redactApplication(application) });
 }
 
 export async function PATCH(
@@ -72,7 +72,7 @@ try {
     action === 'approve'
   ? await approveApplication(application, reviewerEmail)
     : await rejectApplication(application, String(reason), reviewerEmail);
-  return NextResponse.json({ application: updated });
+  return NextResponse.json({ application: redactApplication(updated) });
 } catch (err) {
   return NextResponse.json(
     { error: err instanceof Error ? err.message : 'Review failed' },
