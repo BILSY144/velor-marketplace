@@ -1,14 +1,63 @@
 'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
-import { WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
 import { CATEGORY_NAMES as CATEGORIES, CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { countryImages, pexelsUrl } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
+
+// Live search helpers (William, 2026-07-19: "every search bar on the
+// website a full optimization search bar, country, category, product...
+// and it takes you to the correct images"). Same country-alias table and
+// matching logic as GlobalHeader.tsx and /search -- duplicated rather than
+// imported so this page has no dependency on either of those, matching the
+// pattern already established for header/search parity. Category matching
+// is new here: it searches CATEGORY_DEFS directly, so a hit always carries
+// that category's own real, verified image (never a fabricated one).
+const SHOP_SEARCH_COUNTRY_ALIASES: Record<string, string> = {
+  'uk': 'GB', 'britain': 'GB', 'great britain': 'GB', 'england': 'GB', 'scotland': 'GB', 'wales': 'GB',
+  'usa': 'US', 'america': 'US', 'united states': 'US', 'us': 'US',
+  'uae': 'AE', 'emirates': 'AE', 'holland': 'NL', 'czechia': 'CZ', 'burma': 'MM',
+}
+
+function shopFlagOf(code: string): string {
+  return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
+}
+
+function matchShopCountries(q: string): { code: string; name: string }[] {
+  const t = q.trim().toLowerCase()
+  if (t.length < 2) return []
+  const alias = SHOP_SEARCH_COUNTRY_ALIASES[t]
+  const out: { code: string; name: string }[] = []
+  if (alias) {
+    const c = WORLD_COUNTRIES.find((w) => w.code === alias)
+    if (c) out.push(c)
+  }
+  for (const c of WORLD_COUNTRIES) {
+    if (out.some((x) => x.code === c.code)) continue
+    const n = c.name.toLowerCase()
+    if (t.length === 2 ? n.startsWith(t) : (n.includes(t) || t.includes(n))) out.push(c)
+    if (out.length >= 4) break
+  }
+  return out
+}
+
+// Live search UI chrome -- same visual language as GlobalHeader's dropdown
+// (dark surface, rounded, boxed shadow) and the always-swipeable reels
+// (.shrail mirrors the homepage's .vh-drag deferred-capture drag pattern).
+const shopSearchCss = `
+.shrail{cursor:grab}
+.shrail.dragging{cursor:grabbing}
+.shrail.dragging *{pointer-events:none}
+.shsdrop{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:400px;max-height:70vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,0.5);z-index:30}
+.shsdrop-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px 10px 4px}
+.shsdrop-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;text-decoration:none;color:var(--text);cursor:pointer;background:none;border:none;width:100%;text-align:left;font:inherit}
+.shsdrop-row:hover{background:var(--surface-2)}
+`
 
 // Full-bleed "open product slots" grid shown only on origin-filtered shop
 // pages (i.e. the pages Velor's flag strip in GlobalHeader actually links
@@ -101,6 +150,15 @@ interface Product {
   sellerFoundingCountry?: string | null
 }
 
+interface ShopSearchHit {
+  id: string
+  name: string
+  price: number
+  currency: string
+  image: string | null
+  category: string
+}
+
 // The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
 // and the Category dropdown on the seller's Add Product form exactly). This
 // list is used directly as the value stored on Product.category, so a
@@ -118,6 +176,16 @@ function ShopContent() {
   const [searchInput, setSearchInput] = useState('')
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [wishlistPending, setWishlistPending] = useState<string | null>(null)
+
+  // Live search dropdown state -- always-visible inline results as you
+  // type, matching GlobalHeader's Atlas-style search (William, 2026-07-19).
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [liveHits, setLiveHits] = useState<ShopSearchHit[]>([])
+  const [countryHits, setCountryHits] = useState<{ code: string; name: string }[]>([])
+  const searchWrapRef = useRef<HTMLDivElement>(null)
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const railRef = useRef<HTMLDivElement>(null)
 
   const category = searchParams.get('category') || ''
   const origin = searchParams.get('origin') || ''
@@ -151,6 +219,91 @@ function ShopContent() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
   useEffect(() => { setSearchInput(search) }, [search])
+
+  // Category hits are a plain filter over the already-loaded CATEGORY_DEFS
+  // constant -- no network round trip needed, so these appear instantly
+  // (no debounce) alongside the debounced country/product hits below.
+  const categoryHits = searchInput.trim().length >= 2
+    ? CATEGORY_DEFS.filter((c) => c.name.toLowerCase().includes(searchInput.trim().toLowerCase())).slice(0, 4)
+    : []
+
+  useEffect(() => {
+    const q = searchInput.trim()
+    if (q.length < 2) {
+      setLiveHits([])
+      setCountryHits([])
+      setSearchLoading(false)
+      if (searchDebounce.current) clearTimeout(searchDebounce.current)
+      return
+    }
+    setSearchLoading(true)
+    if (searchDebounce.current) clearTimeout(searchDebounce.current)
+    searchDebounce.current = setTimeout(async () => {
+      setCountryHits(matchShopCountries(q))
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`)
+        const data = await res.json()
+        setLiveHits((data.results ?? []).slice(0, 6))
+      } catch {
+        setLiveHits([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 260)
+    return () => {
+      if (searchDebounce.current) clearTimeout(searchDebounce.current)
+    }
+  }, [searchInput])
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) setSearchOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSearchOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [])
+
+  // Pointer-drag scroll for the category rail, matching the homepage
+  // reels' swipe behaviour (William, 2026-07-19: "shop reel does not swipe
+  // like other reels"). Same deferred-capture pattern as page.tsx's
+  // .vh-drag rails and CountryOriginStrip's dead-tap fix -- capture is only
+  // taken once a real drag starts, so a plain tap keeps native click.
+  useEffect(() => {
+    const reel = railRef.current
+    if (!reel) return
+    let down = false, startX = 0, startScroll = 0, moved = 0
+    const onDown = (e: PointerEvent) => { down = true; moved = 0; startX = e.clientX; startScroll = reel.scrollLeft }
+    const onMove = (e: PointerEvent) => {
+      if (!down) return
+      const dx = e.clientX - startX
+      const threshold = e.pointerType === 'mouse' ? 6 : 14
+      if (moved === 0 && Math.abs(dx) <= threshold) return
+      if (moved === 0) { reel.classList.add('dragging'); try { reel.setPointerCapture(e.pointerId) } catch {} }
+      moved = Math.abs(dx)
+      reel.scrollLeft = startScroll - dx
+    }
+    const onUp = (e: PointerEvent) => { if (!down) return; down = false; reel.classList.remove('dragging'); try { reel.releasePointerCapture(e.pointerId) } catch {} }
+    const onClick = (e: MouseEvent) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); moved = 0 } }
+    reel.addEventListener('pointerdown', onDown)
+    reel.addEventListener('pointermove', onMove)
+    reel.addEventListener('pointerup', onUp)
+    reel.addEventListener('pointercancel', onUp)
+    reel.addEventListener('click', onClick, true)
+    return () => {
+      reel.removeEventListener('pointerdown', onDown)
+      reel.removeEventListener('pointermove', onMove)
+      reel.removeEventListener('pointerup', onUp)
+      reel.removeEventListener('pointercancel', onUp)
+      reel.removeEventListener('click', onClick, true)
+    }
+  }, [])
 
   useEffect(() => {
     if (!session) return
@@ -320,6 +473,7 @@ function ShopContent() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+      <style dangerouslySetInnerHTML={{ __html: shopSearchCss }} />
       {originCountry && <style dangerouslySetInnerHTML={{ __html: slotsCss }} />}
       <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -347,7 +501,7 @@ function ShopContent() {
               pill row breaks. Categories with no verified photo (currently
               only Artisan Pet Goods) get an honest gradient tile instead of
               a fabricated or mismatched image. */}
-          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '14px', marginBottom: '18px', scrollbarWidth: 'thin' }}>
+          <div ref={railRef} className="shrail" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '14px', marginBottom: '18px', scrollbarWidth: 'thin' }}>
             {CATEGORY_DEFS.map(cat => {
               const active = category === cat.name
               const imgUrl = cat.image ? pexelsUrl(cat.image.id, cat.image.slug, 340) : null
@@ -394,21 +548,125 @@ function ShopContent() {
             })}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+          <div ref={searchWrapRef} style={{ position: 'relative', display: 'flex', gap: '12px', marginBottom: '16px', maxWidth: '400px' }}>
             <input
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search goods..."
-              onKeyDown={e => { if (e.key === 'Enter') navigate({ search: searchInput }) }}
-                            style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none', maxWidth: '400px' }}
+              onFocus={() => setSearchOpen(true)}
+              placeholder="Search goods, countries, categories..."
+              onKeyDown={e => { if (e.key === 'Enter') { navigate({ search: searchInput }); setSearchOpen(false) } }}
+              style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none' }}
             />
             <button
-              onClick={() => navigate({ search: searchInput })}
+              onClick={() => { navigate({ search: searchInput }); setSearchOpen(false) }}
               style={{ background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: 700, cursor: 'pointer', fontSize: '15px' }}
             >
               Search
             </button>
+
+            {/* Live results -- country channels, category shortcuts and real
+                product hits, each linking (or filtering) to the correct
+                place, never a mismatched or fabricated image (LAW #1). */}
+            {searchOpen && searchInput.trim().length >= 2 && (
+              <div className="shsdrop">
+                {searchLoading && countryHits.length === 0 && categoryHits.length === 0 && liveHits.length === 0 && (
+                  <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--muted)' }}>Searching...</div>
+                )}
+
+                {!searchLoading && countryHits.length === 0 && categoryHits.length === 0 && liveHits.length === 0 && (
+                  <div style={{ padding: '22px 16px', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>
+                      Nothing by that name -- yet.
+                    </div>
+                    <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.5 }}>
+                      Try a country&apos;s name, a category, or a craft.
+                    </div>
+                  </div>
+                )}
+
+                {categoryHits.length > 0 && (
+                  <div>
+                    <div className="shsdrop-lbl">Categories</div>
+                    {categoryHits.map(cat => {
+                      const imgUrl = cat.image ? pexelsUrl(cat.image.id, cat.image.slug, 80) : null
+                      return (
+                        <button
+                          key={cat.slug}
+                          className="shsdrop-row"
+                          onClick={() => { navigate({ category: cat.name }); setSearchOpen(false) }}
+                        >
+                          <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
+                            {imgUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={imgUrl} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                          </span>
+                          <span style={{ fontSize: 13.5, fontWeight: 600 }}>{cat.name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {countryHits.length > 0 && (
+                  <div>
+                    <div className="shsdrop-lbl">Shopping channels</div>
+                    {countryHits.map(c => (
+                      <Link
+                        key={c.code}
+                        className="shsdrop-row"
+                        href={`/origins/${slugifyCountryName(c.name)}`}
+                        onClick={() => setSearchOpen(false)}
+                      >
+                        <span style={{ fontSize: 18, width: 26, textAlign: 'center', flexShrink: 0 }}>{shopFlagOf(c.code)}</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600 }}>{c.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {liveHits.length > 0 && (
+                  <div>
+                    <div className="shsdrop-lbl">Goods</div>
+                    {liveHits.map(item => (
+                      <Link
+                        key={item.id}
+                        className="shsdrop-row"
+                        href={`/shop/${item.id}`}
+                        onClick={() => setSearchOpen(false)}
+                      >
+                        <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: 8, color: 'var(--muted)' }}>No image</span>
+                          )}
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{item.category}</span>
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>
+                          {symbol}{convert(item.price, item.currency).toFixed(2)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {(countryHits.length > 0 || categoryHits.length > 0 || liveHits.length > 0) && (
+                  <button
+                    className="shsdrop-row"
+                    style={{ justifyContent: 'center', color: 'var(--accent)', fontWeight: 700, fontSize: 12, borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 10 }}
+                    onClick={() => { navigate({ search: searchInput }); setSearchOpen(false) }}
+                  >
+                    See all results for &ldquo;{searchInput.trim()}&rdquo; &rarr;
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
