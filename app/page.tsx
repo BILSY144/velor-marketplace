@@ -59,6 +59,7 @@ const CULTURE_REELS: {
   title: string
   line: string
   tiles: { name: string; code: string; img: string; video?: string }[]
+  comingSoon?: boolean
 }[] = [
   {
     title: 'Ceramics & porcelain',
@@ -498,6 +499,21 @@ const CULTURE_REELS: {
     ],
   },
   {
+    // 2026-07-19 (William, "there is 24 categories but only 23 reels"):
+    // Artisan Pet Goods has no reel of real tiles because the verified
+    // Pexels dataset (lib/countryImagery.ts) has essentially one genuine
+    // handmade-pet-goods photo in it -- nowhere near the 20 honest,
+    // on-theme, country-specific photos every other reel gets. Padding it
+    // out with a woven basket or a wool blanket relabelled as a pet product
+    // would break LAW #1 (never a fabricated caption). Rather than a dead
+    // gap, this renders as an honest "opening soon" band instead of a tile
+    // rail -- see the `comingSoon` branch below.
+    title: 'Artisan Pet Goods',
+    line: "Handmade collars, beds and goods for cats, dogs and other companions -- crafted, not stamped out.",
+    comingSoon: true,
+    tiles: [],
+  },
+  {
     title: 'Basketry & Woven Goods',
     line: 'Rattan, bamboo and raffia, worked into something that holds its shape.',
     tiles: [
@@ -783,6 +799,11 @@ const css = `
 .vh-sellband h2{font-size:20px;margin:0 0 6px}
 .vh-sellband p{font-size:13.5px;color:var(--muted);line-height:1.55;margin:0;max-width:56ch}
 .vh-btn{border-radius:10px;padding:13px 24px;font-size:14px;font-weight:600;display:inline-block;background:var(--accent);color:#160a00 !important;white-space:nowrap}
+.vh-comingsoon{border:1px dashed var(--border);border-radius:14px;padding:32px 30px;display:flex;align-items:center;justify-content:space-between;gap:24px;background:var(--surface);flex-wrap:wrap}
+.vh-comingsoon .txt{flex:1;min-width:240px}
+.vh-comingsoon .badge{display:inline-block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);border:1px solid rgba(255,107,0,.4);border-radius:999px;padding:5px 12px;margin-bottom:12px}
+.vh-comingsoon h3{font-size:16px;margin:0 0 6px}
+.vh-comingsoon p{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0;max-width:58ch}
 @media(max-width:960px){
 .vh-livehead h1{font-size:32px}
 .vh-tile{flex:0 0 168px}
@@ -927,7 +948,31 @@ export default function HomePage() {
       </div>
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
-      {CULTURE_REELS.map((reel, ri) => (
+      {CULTURE_REELS.map((reel, ri) => reel.comingSoon ? (
+        <section key={reel.title} style={{ paddingTop: 6, paddingBottom: 0 }}>
+          <div className="vh-wrap">
+            <div className="vh-shead">
+              <div>
+                <h2>{reel.title}</h2>
+                <p className="sub">{reel.line}</p>
+              </div>
+            </div>
+            {/* No tile rail here on purpose (William, 2026-07-19): we only
+                show real, verified photography on this page, and we don't
+                have enough of it for this category to fill a shelf
+                honestly yet. An honest "opening soon" band beats either a
+                blank gap or twenty photos that don't actually match. */}
+            <div className="vh-comingsoon">
+              <div className="txt">
+                <span className="badge">Opening soon</span>
+                <h3>The first seller to list here claims the shelf</h3>
+                <p>We only show real, verified photography on Velor -- and we don&apos;t have enough of it for this category yet to fill it honestly. The moment a seller lists handmade pet goods, this becomes a real reel.</p>
+              </div>
+              <Link className="vh-btn" href="/apply">Sell in this category &rarr;</Link>
+            </div>
+          </div>
+        </section>
+      ) : (
         <section key={reel.title} style={{ paddingTop: 6, paddingBottom: 0 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
