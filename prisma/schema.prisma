@@ -351,6 +351,14 @@ model SellerApplication {
   contactName       String
   storeDescription  String?   @db.Text
   website           String?
+// Bcrypt hash of the password the applicant chose on the /apply form
+// (2026-07-19, William: he had to reset his password after self-approving
+// because the application never asked for one). Never store the plaintext
+// password anywhere -- app/api/seller/apply/route.ts hashes it before this
+// row is written. Nullable so applications submitted before this field
+// existed still approve fine, just via the old one-time activation-link
+// path in lib/provisionSeller.ts.
+passwordHash      String?
   productCategories String[]
   sampleImages      String[]
   country           String?
