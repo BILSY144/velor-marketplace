@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
-import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories'
-import { countryImages } from '@/lib/countryImagery'
+import { CATEGORY_NAMES as CATEGORIES, CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
+import { countryImages, pexelsUrl } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
 
 // Full-bleed "open product slots" grid shown only on origin-filtered shop
@@ -338,6 +338,62 @@ function ShopContent() {
               </span>
             )}
           </h1>
+
+          {/* Browse by category -- real photography per category, matching
+              the app's card-grid quality instead of a plain text pill list.
+              Still sets the same `category` filter the pills below use, so
+              clicking a card and clicking a pill do the same thing; this is
+              additive, not a replacement, so nothing that depended on the
+              pill row breaks. Categories with no verified photo (currently
+              only Artisan Pet Goods) get an honest gradient tile instead of
+              a fabricated or mismatched image. */}
+          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '14px', marginBottom: '18px', scrollbarWidth: 'thin' }}>
+            {CATEGORY_DEFS.map(cat => {
+              const active = category === cat.name
+              const imgUrl = cat.image ? pexelsUrl(cat.image.id, cat.image.slug, 340) : null
+              return (
+                <button
+                  key={cat.slug}
+                  onClick={() => navigate({ category: active ? '' : cat.name })}
+                  title={cat.description}
+                  style={{
+                    position: 'relative',
+                    flex: '0 0 auto',
+                    width: '128px',
+                    height: '156px',
+                    borderRadius: '14px',
+                    overflow: 'hidden',
+                    border: active ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    padding: 0,
+                    cursor: 'pointer',
+                    background: imgUrl ? 'var(--surface-2)' : 'linear-gradient(160deg, var(--surface-2), var(--surface))',
+                  }}
+                >
+                  {imgUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={imgUrl} alt={cat.name} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,8,11,0) 35%, rgba(8,8,11,0.92) 100%)' }} />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      left: 10,
+                      right: 10,
+                      bottom: 10,
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      lineHeight: 1.25,
+                      color: '#fff',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {cat.name}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
           <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
             <input
               type="text"
@@ -455,14 +511,18 @@ function ShopContent() {
             </div>
           ) : (
             /* Zero-catalogue state: the shelves are real and empty, and that is
-               the story — honest, and pointed at the founding moment. */
+               the story — honest, and pointed at the founding moment. When a
+               category is selected the copy names it, so a new category
+               (like the four just added) never reads as a broken/dead page —
+               it reads as "not filled yet", same honest framing as everywhere
+               else pre-launch. */
             <div style={{ maxWidth: 760, margin: '0 auto', padding: '70px 20px 90px', textAlign: 'center' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, fontSize: 12, letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 600, marginBottom: 22 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
                 Buyers arrive 6 August
               </div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 38, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 18px' }}>
-                The shelves are built.<br />The world is on its way.
+                {category ? <>No {category} listings yet.<br />This shelf is next.</> : <>The shelves are built.<br />The world is on its way.</>}
               </h2>
               <p style={{ fontSize: 15.5, color: 'var(--muted)', lineHeight: 1.65, maxWidth: '52ch', margin: '0 auto 34px' }}>
                 Velor opens with founding sellers from around the world — real makers, identity-verified,
@@ -470,7 +530,12 @@ function ShopContent() {
                 What appears here first will have earned its place.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link href="/founding" style={{ background: 'var(--accent)', color: '#160a00', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                {category && (
+                  <Link href="/shop" style={{ background: 'var(--accent)', color: '#160a00', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                    Browse all categories
+                  </Link>
+                )}
+                <Link href="/founding" style={{ background: category ? 'transparent' : 'var(--accent)', color: category ? 'var(--text)' : '#160a00', border: category ? '1px solid var(--border)' : 'none', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
                   See which countries open first
                 </Link>
                 <Link href="/#specialities" style={{ border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
