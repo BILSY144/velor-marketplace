@@ -304,7 +304,7 @@ export default function SettingsPage() {
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={label}>Business name</label>
+            <label style={label}>Store name</label>
             <input
               style={inputStyle()}
               value={form.storeName}
