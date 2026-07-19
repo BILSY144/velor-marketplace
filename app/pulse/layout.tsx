@@ -4,6 +4,10 @@ export const metadata: Metadata = {
   title: 'Velor Pulse',
   description: 'Private live operations dashboard',
   manifest: '/pulse-manifest.json',
+  icons: {
+    icon: '/pulse-icon-192.png',
+    apple: '/pulse-icon-180.png',
+  },
   robots: {
     index: false,
     follow: false,
