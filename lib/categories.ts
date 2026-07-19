@@ -32,6 +32,13 @@
 // equivalent in that dataset, so its image is left null rather than force a
 // mismatched photo -- callers must handle a null image, same as
 // lib/countryImagery.ts's countryImage() already requires.
+//
+// 2026-07-19 (William, same day, "add clothing, beverages... give them a
+// cultural sounding name like garments"): added Garments and Libations.
+// This knowingly reverses this file's own prior standing rule against
+// clothing in the catalogue -- an explicit, live instruction from William,
+// not a silent change (flagged to him at the time). Both given real,
+// verified images from lib/countryImagery.ts under the same honesty rule.
 
 export interface CategoryImage {
   id: number
@@ -68,6 +75,8 @@ export const CATEGORIES: CategoryDef[] = [
   { name: 'Stone & Gem Carving', slug: 'stone-gem-carving', description: 'Cut, carved and polished -- jade, soapstone, onyx and gemstone work from the hands that read the stone', image: { id: 34675316, slug: null } },
   { name: 'Folk Art, Painting & Calligraphy', slug: 'folk-art-painting-calligraphy', description: "Painted, brushed and inked by hand -- folk art, fine painting and calligraphy carrying a culture's eye and hand", image: { id: 37584993, slug: null } },
   { name: 'Handcrafted Toys, Dolls & Puppets', slug: 'handcrafted-toys-dolls-puppets', description: 'Carved, sewn and painted for play -- dolls, puppets and toys made the way they were before a factory could', image: { id: 31268099, slug: null } },
+  { name: 'Garments', slug: 'garments', description: 'Cut, woven and embroidered by hand -- clothing carrying the weight of the place that made it', image: { id: 17038246, slug: null } },
+  { name: 'Libations', slug: 'libations', description: 'Wine, beer and spirits from the growers, brewers and distillers who have always made them -- poured with an origin, not a label', image: { id: 5272997, slug: null } },
 ]
 
 export const CATEGORY_NAMES: string[] = CATEGORIES.map((c) => c.name)
