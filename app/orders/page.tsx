@@ -22,12 +22,20 @@ interface Order {
   items: OrderItem[]
 }
 
+// Real OrderStatus enum values (prisma/schema.prisma): PENDING, PAID,
+// PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED, DISPUTED. This map
+// used to be missing PROCESSING/SHIPPED/DELIVERED/DISPUTED and had a
+// FULFILLED entry that isn't a real status at all -- every one of those
+// four real statuses silently fell back to the generic grey PENDING style.
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  PENDING:   { bg: 'rgba(153,153,153,0.12)', color: '#999999' },
-  PAID:      { bg: 'rgba(255,107,0,0.12)',   color: '#FF6B00' },
-  FULFILLED: { bg: 'rgba(0,230,118,0.12)',   color: '#00E676' },
-  REFUNDED:  { bg: 'rgba(255,23,68,0.12)',   color: '#FF1744' },
-  CANCELLED: { bg: 'rgba(255,23,68,0.12)',   color: '#FF1744' },
+  PENDING:    { bg: 'rgba(153,153,153,0.12)', color: '#999999' },
+  PAID:       { bg: 'rgba(255,107,0,0.12)',   color: '#FF6B00' },
+  PROCESSING: { bg: 'rgba(255,107,0,0.12)',   color: '#FF6B00' },
+  SHIPPED:    { bg: 'rgba(41,121,255,0.12)',  color: '#2979FF' },
+  DELIVERED:  { bg: 'rgba(0,230,118,0.12)',   color: '#00E676' },
+  REFUNDED:   { bg: 'rgba(255,23,68,0.12)',   color: '#FF1744' },
+  CANCELLED:  { bg: 'rgba(255,23,68,0.12)',   color: '#FF1744' },
+  DISPUTED:   { bg: 'rgba(255,23,68,0.12)',   color: '#FF1744' },
 }
 
 function fmt(amount: number, currency: string) {
@@ -190,6 +198,19 @@ export default function OrdersPage() {
                   </span>
                 </div>
               )}
+
+              {/* /track promises "each order shows... a tracking link" but this
+                  page never had one -- the only way in was typing the URL by
+                  hand. Always shown: /orders/[id]/track itself handles the
+                  no-shipment-yet state honestly ("No tracking events yet"). */}
+              <div style={{ padding: '10px 20px', borderTop: '1px solid #2A2A2A' }}>
+                <a
+                  href={`/orders/${order.id}/track?email=${encodeURIComponent(order.customerEmail)}`}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#FF6B00', textDecoration: 'none' }}
+                >
+                  Track order &rarr;
+                </a>
+              </div>
             </div>
           )
         })}
