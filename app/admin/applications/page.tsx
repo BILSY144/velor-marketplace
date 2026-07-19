@@ -205,7 +205,7 @@ export default function AdminApplicationsPage() {
                        e('table', { style: { width: '100%', borderCollapse: 'collapse' } },
                                  e('thead', null,
                                              e('tr', { style: { background: '#111111' } },
-                                                           ['Business', 'Country', 'Categories', 'Verification', 'Applied', 'Status', 'Actions'].map(function (h) {
+                                                           ['Store', 'Country', 'Categories', 'Verification', 'Applied', 'Status', 'Actions'].map(function (h) {
                                                                            return e('th', {
                                                                                              key: h,
                                                                                              style: {
