@@ -48,6 +48,7 @@ import { SellerOrdersScreen, ApiKeysScreen, PayoutsScreen } from './src/screens/
 import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
 import SignInScreen from './src/screens/SignInScreen'
+import { pingInstall } from './src/installPing'
 import { useSession } from './src/store'
 import { getSession, signOutRemote, signInWithPassword } from './src/api'
 import {
@@ -329,6 +330,13 @@ export default function App() {
       }
     })
     return () => sub.remove()
+  }, [])
+
+  // Install/usage ping -- fire-and-forget, 3s after boot so language and
+  // currency prefs have restored and the boot path stays clear.
+  React.useEffect(() => {
+    const t = setTimeout(() => { void pingInstall() }, 3000)
+    return () => clearTimeout(t)
   }, [])
 
   // Restore the seller session from the platform cookie jar on cold start —

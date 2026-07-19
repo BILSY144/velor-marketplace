@@ -65,6 +65,7 @@ type PulseData = {
     pendingCertificates: number
   }
   liveNow: { streamsLive: number }
+  app?: { installsTotal: number; installsToday: number; installs7d: number; activeToday: number }
 }
 
 type LatticeSummary = { trading: number; totalCountries: number }
@@ -171,6 +172,7 @@ export default function PulsePage() {
         <KpiCard href="/pulse/sellers" label="Sellers" value={data.signups.sellers.totalSellers} accent={PULSE.purple} delta={`${data.signups.sellers.pendingApproval} pending`} deltaGood={data.signups.sellers.pendingApproval === 0} />
         <KpiCard href="/pulse/live" label="Live now" value={data.liveNow.streamsLive} accent={PULSE.red} delta={data.liveNow.streamsLive > 0 ? 'Broadcasting' : 'Nothing live'} deltaGood={data.liveNow.streamsLive > 0} />
         <KpiCard href="/pulse/origins" label="Origins trading" value={lattice ? `${lattice.trading}/${lattice.totalCountries}` : '—'} accent={PULSE.amber} />
+        <KpiCard href="/pulse/app" label="App installs" value={compactNumber(data.app?.installsTotal ?? 0)} accent={PULSE.green} delta={`${data.app?.activeToday ?? 0} active today`} deltaGood={(data.app?.activeToday ?? 0) > 0} />
       </div>
 
       {/* Every business area, one tap away */}

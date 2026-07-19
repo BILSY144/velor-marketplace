@@ -727,3 +727,23 @@ model CountryFounder {
   productId   String
   grantedAt   DateTime @default(now())
 }
+
+// Mobile app install & usage telemetry (2026-07-19). One row per install --
+// the app generates an anonymous random installId on first launch and pings
+// /api/app/install on every cold start (creates the row once, then bumps
+// lastSeenAt). Country is derived server-side from Vercel's request geo
+// header, same as PageView -- nothing extra is read from the device. Covered
+// by the Play Data safety declaration ("Device or other IDs", app
+// functionality + fraud prevention). No age or personal data is collected.
+model AppInstall {
+  id         String   @id @default(cuid())
+  installId  String   @unique
+  platform   String
+  osVersion  String?
+  appVersion String?
+  country    String?
+  language   String?
+  currency   String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+}

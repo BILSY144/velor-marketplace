@@ -108,6 +108,10 @@ export async function GET(request: NextRequest) {
         pendingCertificatesCount,
         liveNowCount,
         overdueApplicationsCount,
+        appInstallsTotal,
+        appInstallsToday,
+        appInstalls7d,
+        appActive1d,
   ] = await Promise.all([
           prisma.pageView.count({ where: { createdAt: { gte: hourAgo } } }),
       prisma.pageView.count({ where: { createdAt: { gte: midnightUTC } } }),
@@ -248,6 +252,12 @@ export async function GET(request: NextRequest) {
         prisma.productCertificate.count({ where: { status: 'PENDING' } }),
         prisma.liveStream.count({ where: { status: 'LIVE' } }),
         prisma.sellerApplication.count({ where: { status: 'PENDING', createdAt: { lt: day1 } } }),
+        // -- Mobile app telemetry (2026-07-19): activated installs reported
+        // by the app's own first-launch ping (see /api/app/install).
+        prisma.appInstall.count(),
+        prisma.appInstall.count({ where: { createdAt: { gte: midnightUTC } } }),
+        prisma.appInstall.count({ where: { createdAt: { gte: day7 } } }),
+        prisma.appInstall.count({ where: { lastSeenAt: { gte: day1 } } }),
       ])
 
   let gmv30dGBP = 0
@@ -459,6 +469,12 @@ export async function GET(request: NextRequest) {
         },
         liveNow: {
                 streamsLive: liveNowCount,
+        },
+        app: {
+                installsTotal: appInstallsTotal,
+                installsToday: appInstallsToday,
+                installs7d: appInstalls7d,
+                activeToday: appActive1d,
         },
   }
 
