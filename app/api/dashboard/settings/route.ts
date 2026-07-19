@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
   const { name, storeName, description, country, currency } = body
 
   if (typeof storeName === 'string' && storeName.trim().length < 2) {
-    return NextResponse.json({ error: 'Business name must be at least 2 characters' }, { status: 400 })
+    return NextResponse.json({ error: 'Store name must be at least 2 characters' }, { status: 400 })
   }
 
   // Velor is the platform -- sellers promote through Velor, not their own
