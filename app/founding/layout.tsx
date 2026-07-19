@@ -16,9 +16,22 @@ import type { Metadata } from 'next'
 // life, permanent Velor Live access) and only tightened the phrasing --
 // "as the seller who opened your country" was cut as restating what "be
 // first from yours" already says, not a fact removed.
+//
+// description corrected by the standing SEO agent, 2026-07-19 22:xx UTC --
+// "permanent Velor Live access" was a founding-exclusive claim that went
+// stale the same day: commit 000c4c52 ("Go Live record set straight
+// site-wide, per William") opened Velor Live broadcasting to every seller
+// on every tier, and updated app/founding/page.tsx's own visible body copy
+// accordingly ("Velor Live broadcasting is open to every seller, on every
+// tier") -- but this file's separate, hand-written meta description was not
+// part of that commit's diff and kept the old founding-exclusive framing,
+// leaving a canonical, indexed <meta description> actively contradicting
+// the page it describes. Swapped the stale claim for a real, still-current
+// founding-exclusive perk already on the live page: the showreel slot
+// ("The showreel slot. Your film, on the homepage." -- app/founding/page.tsx).
 const title = 'Founding Sellers | One Seat Per Country — Velor'
 const description =
-  '190 countries, one founding seller each. Be first from yours and keep the founding badge, Pro free for life, and permanent Velor Live access.'
+  '190 countries, one founding seller each. Be first from yours and keep the founding badge, Pro free for life, and the homepage showreel slot.'
 
 export const metadata: Metadata = {
   title,
