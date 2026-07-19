@@ -22,3 +22,15 @@ jobs:
           name: velor-preview-apk
           path: app.apk
           retention-days: 7
+      - name: Upload APK to Appetize
+        run: |
+          curl -sS -X POST https://api.appetize.io/v1/apps -H "X-API-KEY: $APPETIZE_API_KEY" -F file=@app.apk -F platform=android -o appetize-response.json
+          cat appetize-response.json
+        env:
+          APPETIZE_API_KEY: ${{ secrets.APPETIZE_API_KEY }}
+      - name: Upload Appetize response as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appetize-response
+          path: appetize-response.json
+          retention-days: 7
