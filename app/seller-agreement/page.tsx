@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CATEGORY_NAMES } from '@/lib/categories';
 
 export const metadata = {
   title: 'Seller Agreement — Velor Marketplace',
@@ -98,11 +99,9 @@ export default function SellerAgreementPage() {
           <AgreementSection num="3" title="Permitted Product Categories">
             <p style={{ marginBottom: '12px' }}>Velor accepts products across its full marketplace catalogue, including:</p>
             <ul>
-              <li>Electronics, Fashion, Home &amp; Garden, Beauty &amp; Health</li>
-              <li>Sports &amp; Outdoors, Fitness &amp; Gym, Jewellery &amp; Watches</li>
-              <li>Toys &amp; Games, Baby &amp; Kids, Pet Supplies, Automotive</li>
-              <li>Books &amp; Education, Art, Crafts &amp; Handmade, Musical Instruments</li>
-              <li>Office &amp; Stationery, Travel &amp; Luggage, Specialty &amp; Gourmet Foods</li>
+              {CATEGORY_NAMES.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
             </ul>
             <p style={{ marginTop: '12px', color: '#999999', fontSize: '14px' }}>Some categories carry additional requirements (for example, food and regulated materials) — see the Seller Rules and Product Compliance Policy. Products listed in the wrong category may be recategorised or removed.</p>
           </AgreementSection>

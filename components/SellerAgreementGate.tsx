@@ -2,6 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CATEGORY_NAMES } from '@/lib/categories';
+
+// Natural-language "a, b, and c" join of the real, current category list --
+// kept as a formatted sentence (rather than a raw list) to match this
+// component's existing prose style. Reads from lib/categories.ts, the single
+// source of truth (see that file's own header comment), so this can't drift
+// out of sync with the real taxonomy the way the old hardcoded string did.
+const PERMITTED_CATEGORIES_TEXT =
+  CATEGORY_NAMES.length > 1
+    ? `${CATEGORY_NAMES.slice(0, -1).join(', ')}, and ${CATEGORY_NAMES[CATEGORY_NAMES.length - 1]}`
+    : CATEGORY_NAMES.join(', ');
 
 export default function SellerAgreementGate({ children }: { children: React.ReactNode }) {
   const [accepted, setAccepted] = useState<boolean | null>(null);
@@ -109,7 +120,7 @@ export default function SellerAgreementGate({ children }: { children: React.Reac
               Velor charges commission on every completed sale, based on your subscription tier: 10% on Starter (free), 4% on Pro (£49/month), applied to the total price including VAT. No listing fees, ever.
             </GateRule>
             <GateRule title="Permitted Categories Only">
-              You may list products in any of Velor's current marketplace categories: Electronics, Fashion, Home & Garden, Beauty & Health, Sports & Outdoors, Jewellery & Watches, Toys & Games, Baby & Kids, Pet Supplies, Automotive, Books & Education, Art, Crafts & Handmade, Musical Instruments, Office & Stationery, Travel & Luggage, Specialty & Gourmet Foods, and Fitness & Gym. No age-restricted products.
+              You may list products in any of Velor's current marketplace categories: {PERMITTED_CATEGORIES_TEXT}. No age-restricted products.
             </GateRule>
             <GateRule title="Prohibited Items — Strict Policy">
               Prohibited: clothing, shoes, supplements, counterfeit goods, products without UK CE/UKCA marking, weapons, adult content, or any item illegal in the UK. Violations result in immediate removal and may cause permanent account suspension.
