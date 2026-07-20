@@ -188,6 +188,28 @@ export default function GoLivePage() {
     setChatDraft('')
   }
 
+  // startStream()/goLiveFromSchedule() flip the stream to LIVE in the database
+  // (via the POST to /api/dashboard/live or .../start) *before* grabbing the
+  // camera. If createLocalTracks()/publishTrack() then throws, the seller was
+  // otherwise left stuck on the LIVE view -- black video, "End stream" button
+  // -- with no way back to a fresh Go Live form except manually ending it.
+  // This rolls that back: disconnect any partial room, tell the backend to
+  // end the stream, and clear activeStream so the UI drops back to the form.
+  async function rollbackFailedStart(streamId: string) {
+    try {
+      await roomRef.current?.disconnect()
+    } catch {
+      // best effort
+    }
+    roomRef.current = null
+    try {
+      await fetch(`/api/dashboard/live/${streamId}/end`, { method: 'POST' })
+    } catch {
+      // best effort -- the error banner already tells the seller what to fix
+    }
+    setActiveStream(null)
+  }
+
   async function startStream() {
     setError('')
     if (!title.trim()) { setError('Give your stream a title.'); return }
@@ -207,6 +229,7 @@ export default function GoLivePage() {
     }
 
     setConnecting(true)
+    let startedStreamId: string | undefined
     try {
       const res = await fetch('/api/dashboard/live', {
         method: 'POST',
@@ -223,6 +246,7 @@ export default function GoLivePage() {
       if (!res.ok) { setError(data.error || 'Could not start stream.'); setConnecting(false); return }
 
       setActiveStream(data.stream)
+      startedStreamId = data.stream.id
       setPinnedId(null)
       pinnedIdRef.current = null
       setChat([])
@@ -244,6 +268,7 @@ export default function GoLivePage() {
       }
     } catch (e: unknown) {
       setError(friendlyMediaError(e))
+      if (startedStreamId) await rollbackFailedStart(startedStreamId)
     } finally {
       setConnecting(false)
     }
@@ -253,12 +278,14 @@ export default function GoLivePage() {
     if (!activeStream) return
     setError('')
     setStarting(true)
+    let startedStreamId: string | undefined
     try {
       const res = await fetch(`/api/dashboard/live/${activeStream.id}/start`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Could not go live.'); setStarting(false); return }
 
       setActiveStream(data.stream)
+      startedStreamId = data.stream.id
       setPinnedId(null)
       pinnedIdRef.current = null
       setChat([])
@@ -273,6 +300,7 @@ export default function GoLivePage() {
       }
     } catch (e: unknown) {
       setError(friendlyMediaError(e))
+      if (startedStreamId) await rollbackFailedStart(startedStreamId)
     } finally {
       setStarting(false)
     }
