@@ -13,7 +13,7 @@
 // alternative of contact info slipping through. Sellers can always resend
 // a message with the flagged part rephrased.
 
-export type MessageViolation = 'email' | 'phone' | 'social'
+export type MessageViolation = 'email' | 'phone' | 'social' | 'link'
 
 export interface MessageCheckResult {
   blocked: boolean
@@ -29,6 +29,16 @@ const EMAIL_RE = /[a-z0-9._%+-]+\s*(?:@|\(at\)|\[at\]|\bat\b)\s*[a-z0-9.-]+\s*(?
 // conversation off-platform without tripping the email or phone checks.
 const SOCIAL_RE = /\b(whatsapp|whats app|telegram|wechat|we chat|snapchat|snap chat|instagram|insta\s*:|facebook|fb\s*:|skype|kik|line\s*id|wa\.me|t\.me)\b/i
 
+// Website links -- a seller pointing a buyer at their own shop ("just order
+// direct from my site") is the same off-platform leak as an email address.
+// Catches explicit URLs (http/https/www) and bare domains with a common TLD,
+// plus ' dot com'-style obfuscation.
+// The plain-dot branch allows no spaces around the dot (otherwise ordinary
+// sentences like "thanks. it arrived" would false-positive on short TLDs);
+// spaced-out evasion like "velor . com" is caught by the compact-text pass.
+const URL_RE = /\b(?:https?:\/\/|www\.)\S+/i
+const DOMAIN_RE = /\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:\.|\s*(?:\(dot\)|\[dot\]|\bdot\b)\s*)(?:com|net|org|io|shop|store|site|online|app|info|biz|xyz|co\.uk|uk)\b/i
+
 // A run of digits, allowing the usual phone punctuation between them.
 const DIGIT_RUN_RE = /(\+?\d[\d .\-()]{5,}\d)/g
 
@@ -41,7 +51,7 @@ function hasLongDigitRun(s: string): boolean {
 }
 
 const REASON =
-  "Messages can't include email addresses, phone numbers, or social/messaging handles " +
+  "Messages can't include email addresses, phone numbers, website links, or social/messaging handles " +
   "-- keep the conversation on Velor so orders stay covered by buyer and seller protection."
 
 export function checkMessageContent(raw: string): MessageCheckResult {
@@ -54,6 +64,7 @@ export function checkMessageContent(raw: string): MessageCheckResult {
   if (EMAIL_RE.test(text) || EMAIL_RE.test(compact)) violations.push('email')
   if (hasLongDigitRun(text) || /\d{7,}/.test(compact)) violations.push('phone')
   if (SOCIAL_RE.test(text)) violations.push('social')
+  if (URL_RE.test(text) || DOMAIN_RE.test(text) || DOMAIN_RE.test(compact)) violations.push('link')
 
   const blocked = violations.length > 0
   return {
