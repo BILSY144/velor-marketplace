@@ -521,10 +521,15 @@ export default function LiveViewerPage() {
           </div>
         )}
 
-        {/* Title + description, directly on the video -- no separate box */}
-        <div style={{ padding: '0 66px 8px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{stream?.title}</div>
-          {stream?.description && <div style={{ fontSize: 12.5, opacity: 0.85, lineHeight: 1.4 }}>{stream.description}</div>}
+        {/* Title + description -- given its own grounded pill, like the pin
+            tray and "Now showing" card next to it, instead of plain white
+            text floating loose on the video (William: "the title is
+            floating in the middle of the screen and the title text is
+            white and boring"). Velor's own Fraunces serif + an accent rule
+            in place of generic bold system text. */}
+        <div style={{ margin: '0 66px 10px 14px', background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '10px 12px', borderLeft: `3px solid ${accent}` }}>
+          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, fontStyle: 'italic', fontSize: 17, lineHeight: 1.25, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{stream?.title}</div>
+          {stream?.description && <div style={{ fontSize: 12.5, opacity: 0.85, lineHeight: 1.4, marginTop: 4, color: '#eee' }}>{stream.description}</div>}
         </div>
 
         {/* Chat feed, newest at the bottom, fading upward into the video -- TikTok-style rounded bubbles */}
