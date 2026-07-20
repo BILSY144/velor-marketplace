@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { createBroadcasterToken, getWsUrl, liveKitConfigured, makeRoomName } from '@/lib/livekit'
 import { normalizeSellerTier } from '@/lib/tier'
+import { createLiveOffer, parseLiveOfferPercent } from '@/lib/liveOffer'
 
 export async function GET() {
   const session = await auth()
@@ -22,6 +23,7 @@ export async function GET() {
     canGoLive: true, // live shopping is for every seller tier (William, 2026-07-15)
     liveKitReady: liveKitConfigured(),
     streams,
+    storeName: seller.storeName,
   })
 }
 
@@ -45,6 +47,29 @@ export async function POST(req: Request) {
   const description = typeof body.description === 'string' ? body.description.trim().slice(0, 2000) : null
   const productIds = Array.isArray(body.productIds) ? body.productIds.filter((x: unknown) => typeof x === 'string').slice(0, 12) : []
 
+  // Optional scheduling (2026-07-20): a future date creates a SCHEDULED
+  // stream buyers can see on /live and ask to be notified about; the seller
+  // starts it later via /api/dashboard/live/[id]/start.
+  let scheduledFor: Date | null = null
+  if (body.scheduledFor) {
+    const d = new Date(String(body.scheduledFor))
+    if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid schedule date' }, { status: 400 })
+    if (d.getTime() < Date.now() + 5 * 60000) return NextResponse.json({ error: 'Schedule at least 5 minutes ahead' }, { status: 400 })
+    if (d.getTime() > Date.now() + 30 * 86400000) return NextResponse.json({ error: 'Schedule within the next 30 days' }, { status: 400 })
+    scheduledFor = d
+  }
+
+  // Optional live-only offer (5-50% off featured products, only while the
+  // stream is live) — implemented as an ordinary automatic DiscountCode so
+  // listings and checkout charge exactly what the stream shows.
+  const liveOfferPercent = body.liveOfferPercent != null ? parseLiveOfferPercent(body.liveOfferPercent) : null
+  if (body.liveOfferPercent != null && liveOfferPercent === null) {
+    return NextResponse.json({ error: 'Live offer must be between 5 and 50 percent' }, { status: 400 })
+  }
+  if (liveOfferPercent !== null && productIds.length === 0) {
+    return NextResponse.json({ error: 'A live offer needs at least one featured product' }, { status: 400 })
+  }
+
   if (!title) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
 
   if (productIds.length > 0) {
@@ -66,10 +91,25 @@ export async function POST(req: Request) {
       description,
       roomName,
       productIds,
-      status: 'LIVE',
-      startedAt: new Date(),
+      status: scheduledFor ? 'SCHEDULED' : 'LIVE',
+      scheduledFor,
+      startedAt: scheduledFor ? null : new Date(),
     },
   })
+
+  if (liveOfferPercent !== null) {
+    // Active immediately for an instant stream; created dormant for a
+    // scheduled one and switched on by the start route.
+    try {
+      await createLiveOffer(seller.id, roomName, liveOfferPercent, productIds, !scheduledFor)
+    } catch (err) {
+      console.warn('[dashboard/live] live offer creation failed (non-blocking):', err)
+    }
+  }
+
+  if (scheduledFor) {
+    return NextResponse.json({ stream })
+  }
 
   const identity = `seller-${seller.id}`
   const token = await createBroadcasterToken(roomName, identity, seller.storeName)
