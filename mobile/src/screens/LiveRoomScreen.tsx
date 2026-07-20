@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Animated, Share } from 'react-native'
 import { Text } from '../ui/T'
 import { TextInput } from '../ui/TI'
 import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -209,6 +210,16 @@ function ViewerView({
   const [chatDraft, setChatDraft] = useState('')
   const [chatError, setChatError] = useState('')
   const [note, setNote] = useState<string | null>(null)
+  // TikTok LIVE parity, same shared model the website viewer page now uses
+  // (William, 2026-07-20): a real LiveKit-reported viewer count -- other
+  // remote participants in this same room, not invented -- and a local
+  // tap-to-like counter with a floating heart, the same "no server-side
+  // like field on LiveStream" caveat as the web version: this is in-the-
+  // moment feedback for this viewer only, never presented as a shared total.
+  const [viewerCount, setViewerCount] = useState(0)
+  const [likeCount, setLikeCount] = useState(0)
+  const [hearts, setHearts] = useState<{ id: string; anim: Animated.Value; x: number }[]>([])
+  const lastTapRef = useRef(0)
 
   useEffect(() => {
     AudioSession.startAudioSession()
@@ -226,9 +237,46 @@ function ViewerView({
         setPinnedId(msg.productId)
       }
     }
+    const syncViewerCount = () => setViewerCount(room.remoteParticipants.size)
     room.on(RoomEvent.DataReceived, onData)
-    return () => { room.off(RoomEvent.DataReceived, onData) }
+    room.on(RoomEvent.ParticipantConnected, syncViewerCount)
+    room.on(RoomEvent.ParticipantDisconnected, syncViewerCount)
+    syncViewerCount()
+    return () => {
+      room.off(RoomEvent.DataReceived, onData)
+      room.off(RoomEvent.ParticipantConnected, syncViewerCount)
+      room.off(RoomEvent.ParticipantDisconnected, syncViewerCount)
+    }
   }, [room])
+
+  function sendHeart() {
+    setLikeCount((c) => c + 1)
+    const id = `${Date.now()}-${Math.random()}`
+    const anim = new Animated.Value(0)
+    const x = Math.random() * 30 - 15
+    setHearts((prev) => [...prev.slice(-13), { id, anim, x }])
+    Animated.timing(anim, { toValue: 1, duration: 1500, useNativeDriver: true }).start(() => {
+      setHearts((prev) => prev.filter((h) => h.id !== id))
+    })
+  }
+
+  // Double-tap-on-video-to-like -- RN has no native onDoubleClick, so a
+  // single Pressable on the video layer measures the gap between taps.
+  function onVideoTap() {
+    const now = Date.now()
+    if (now - lastTapRef.current < 300) sendHeart()
+    lastTapRef.current = now
+  }
+
+  async function shareStream() {
+    try {
+      await Share.share({
+        message: `Watch ${data.stream.seller.storeName} live on Velor: https://velorcommerce.store/live/${data.stream.roomName}`,
+      })
+    } catch {
+      // user dismissed the native share sheet -- not an error
+    }
+  }
 
   function offerApplies(p: LiveRoomProduct) {
     return !!data.liveOffer && (data.liveOffer.productIds.length === 0 || data.liveOffer.productIds.includes(p.id))
@@ -278,31 +326,53 @@ function ViewerView({
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
       {remoteTrack && isTrackReference(remoteTrack) ? (
-        <VideoTrack trackRef={remoteTrack} style={StyleSheet.absoluteFill} />
+        <Pressable onPress={onVideoTap} style={StyleSheet.absoluteFill}>
+          <VideoTrack trackRef={remoteTrack} style={StyleSheet.absoluteFill} />
+        </Pressable>
       ) : (
         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }]}>
           <Dim>Connecting to the broadcast…</Dim>
         </View>
       )}
 
-      <View style={{ position: 'absolute', top: insetsTop + 14, left: 14, right: 14, flexDirection: 'row', alignItems: 'center' }}>
+      <LinearGradient colors={['rgba(0,0,0,0.75)', 'transparent']} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insetsTop + 90 }} pointerEvents="none" />
+
+      {/* Identity chip -- avatar (real storeLogo when the seller has set
+          one, initial-letter fallback otherwise) + name + LIVE, matching
+          the website viewer's top-left exactly. Back arrow moved next to it
+          rather than the old dedicated circle button, viewer count now real
+          (LiveKit remoteParticipants), Report kept as its own icon -- RN has
+          no equivalent to the web's "..." overflow affordance worth adding
+          just for one action. */}
+      <View style={{ position: 'absolute', top: insetsTop + 14, left: 14, right: 14, flexDirection: 'row', alignItems: 'center', zIndex: 3 }}>
         <Pressable style={s.gbtn} onPress={onBack}>
           <Ionicons name="chevron-back" size={18} color={C.text} />
         </Pressable>
-        <View style={s.liveChip}>
-          <View style={s.redDot} />
-          <Text style={s.checkTx}>LIVE</Text>
+        {data.stream.seller.storeLogo ? (
+          <Image source={{ uri: data.stream.seller.storeLogo }} style={s.avatar} contentFit="cover" />
+        ) : (
+          <View style={s.avatarFallback}>
+            <Text style={{ color: '#111', fontFamily: F.display, fontSize: 13 }}>{(data.stream.seller.storeName || 'V').charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
+        <View style={{ marginLeft: 8, flex: 1, minWidth: 0 }}>
+          <Text style={{ color: '#fff', fontSize: 13.5, fontFamily: F.bodySemi }} numberOfLines={1}>{data.stream.seller.storeName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={s.redDot} />
+            <Text style={s.checkTx}>LIVE</Text>
+          </View>
         </View>
-        <Text style={{ color: '#fff', marginLeft: 10, fontSize: 12.5, flex: 1 }} numberOfLines={1}>
-          {data.stream.seller.storeName}
-        </Text>
+        <View style={s.viewerPill}>
+          <Ionicons name="eye-outline" size={12} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 11.5, fontFamily: F.bodySemi, marginLeft: 3 }}>{viewerCount}</Text>
+        </View>
         <Pressable style={s.gbtn} onPress={onReport}>
           <Ionicons name="flag-outline" size={16} color={C.text} />
         </Pressable>
       </View>
 
       {data.liveOffer && (
-        <View style={{ position: 'absolute', top: insetsTop + 60, left: 14 }}>
+        <View style={{ position: 'absolute', top: insetsTop + 62, left: 14, zIndex: 3 }}>
           <View style={s.offerBadge}>
             <Text style={{ color: '#160a00', fontFamily: F.displayMed, fontSize: 11 }}>
               Live price: {data.liveOffer.percent}% off featured items
@@ -312,10 +382,60 @@ function ViewerView({
       )}
 
       {note ? (
-        <View style={{ position: 'absolute', top: insetsTop + 96, left: 14 }}>
+        <View style={{ position: 'absolute', top: insetsTop + 98, left: 14, zIndex: 3 }}>
           <View style={s.noteBub}><Text style={{ color: C.text, fontSize: 12 }}>{note}</Text></View>
         </View>
       ) : null}
+
+      {/* Right action rail -- like (tap or double-tap-on-video, floating
+          heart burst) and share, the same TikTok-parity pair the website
+          viewer got; no bag icon here since the pinned/tray strip below is
+          already always visible on this smaller screen, unlike the site's
+          collapsible desktop-width version. Positioned by a fixed offset
+          below the header rather than anchored to the bottom stack, so it
+          never collides with the pinned card + tray, which vary in height
+          with how many products a seller has featured. */}
+      <View style={{ position: 'absolute', right: 10, top: insetsTop + 110, zIndex: 3, alignItems: 'center', gap: 20 }}>
+        <View style={{ alignItems: 'center' }}>
+          <Pressable style={s.railBtn} onPress={sendHeart}>
+            <View style={s.railCircle}>
+              <Ionicons name={likeCount > 0 ? 'heart' : 'heart-outline'} size={20} color={likeCount > 0 ? C.accent : '#fff'} />
+            </View>
+            <Text style={s.railTx}>{likeCount}</Text>
+          </Pressable>
+          {hearts.map((h) => (
+            <Animated.View
+              key={h.id}
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 34,
+                left: 15 + h.x,
+                opacity: h.anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 0] }),
+                transform: [
+                  { translateY: h.anim.interpolate({ inputRange: [0, 1], outputRange: [0, -190] }) },
+                  { scale: h.anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0.6, 1, 1.05] }) },
+                ],
+              }}
+            >
+              <Ionicons name="heart" size={20} color={C.accent} />
+            </Animated.View>
+          ))}
+        </View>
+        <Pressable style={s.railBtn} onPress={shareStream}>
+          <View style={s.railCircle}>
+            <Ionicons name="share-social-outline" size={19} color="#fff" />
+          </View>
+          <Text style={s.railTx}>Share</Text>
+        </Pressable>
+      </View>
+
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.9)']}
+        locations={[0, 0.35, 1]}
+        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 340 }}
+        pointerEvents="none"
+      />
 
       <View style={{ position: 'absolute', left: 14, right: 14, bottom: 210 }}>
         {pinned && (
@@ -363,10 +483,12 @@ function ViewerView({
 
       <View style={s.chatPanel} pointerEvents="none">
         {chat.slice(-4).map((m) => (
-          <Text key={m.id} style={{ color: '#fff', fontSize: 12, marginBottom: 3 }} numberOfLines={1}>
-            <Text style={{ color: C.accent, fontFamily: F.bodySemi }}>{m.name}: </Text>
-            {m.text}
-          </Text>
+          <View key={m.id} style={s.chatBubble}>
+            <Text style={{ color: '#fff', fontSize: 12 }} numberOfLines={1}>
+              <Text style={{ color: C.accent, fontFamily: F.bodySemi }}>{m.name}: </Text>
+              {m.text}
+            </Text>
+          </View>
         ))}
         {chatError ? <Text style={{ color: C.red, fontSize: 11, marginBottom: 4 }}>{chatError}</Text> : null}
       </View>
@@ -409,10 +531,36 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  redDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.red },
+  // Matches the accent color rather than C.red -- this dot is the LIVE
+  // pulse indicator (same one the website viewer pulses in accent orange),
+  // not an alert/error state, so it should read as "on air", not "warning".
+  redDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.accent },
   checkTx: { fontFamily: F.display, fontSize: 9, letterSpacing: 1.2, color: C.accent },
   offerBadge: { backgroundColor: C.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   noteBub: { backgroundColor: 'rgba(20,20,26,0.9)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  avatar: { width: 32, height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.85)' },
+  avatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: C.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.85)',
+  },
+  viewerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  railBtn: { alignItems: 'center', gap: 3 },
+  railCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  railTx: { color: '#fff', fontSize: 10.5, fontFamily: F.bodySemi, textShadowColor: 'rgba(0,0,0,0.9)', textShadowRadius: 3 },
   pinnedCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -427,7 +575,16 @@ const s = StyleSheet.create({
   addBtn: { backgroundColor: C.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
   trayCard: { width: 84 },
   trayImg: { width: 84, height: 84, borderRadius: 12 },
-  chatPanel: { position: 'absolute', left: 14, right: 14, bottom: 76, maxHeight: 100 },
+  chatPanel: { position: 'absolute', left: 14, right: 14, bottom: 76, maxHeight: 130 },
+  chatBubble: {
+    alignSelf: 'flex-start',
+    maxWidth: '92%',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 14,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    marginBottom: 5,
+  },
   chatInputRow: { position: 'absolute', left: 14, right: 14, bottom: 26, flexDirection: 'row', gap: 8 },
   chatIn: {
     flex: 1,

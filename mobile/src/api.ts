@@ -295,7 +295,13 @@ export type LiveRoomData = {
     status: LiveStatus
     scheduledFor: string | null
     startedAt: string | null
-    seller: { id: string; storeName: string; currency: string }
+    // storeLogo added 2026-07-20 alongside the website's TikTok-style live
+    // redesign (app/api/live/[room]/route.ts now selects it) -- same shared
+    // /api/live/[room] endpoint this screen already calls, so this was
+    // already coming back in the response; the type just didn't list it and
+    // the UI didn't use it yet. Real data when a seller has set a logo,
+    // null otherwise -- never a placeholder image.
+    seller: { id: string; storeName: string; currency: string; storeLogo: string | null }
   }
   products: LiveRoomProduct[]
   liveOffer: LiveOffer | null
