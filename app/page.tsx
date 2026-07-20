@@ -228,7 +228,7 @@ const CULTURE_REELS: {
       { name: 'Chouara dye pits', code: 'MA', img: px(37357057) },
       { name: 'Madrid ateliers', code: 'ES', img: px(37076986) },
       { name: 'Italian loafers', code: 'IT', img: px(20763458) },
-      { name: 'Florence belts', code: 'IT', img: px(31367060) },
+      { name: 'Florence belts', code: 'IT', img: px(31367059) },
       { name: 'Milan workshops', code: 'IT', img: px(33495913) },
       { name: 'Gaucho leatherwork', code: 'AR', img: px(28806552) },
       { name: 'Pampas saddlery', code: 'AR', img: px(29145580) },
