@@ -16,6 +16,7 @@ Buyer protection: payment is held by Velor in escrow and released to the seller 
 - [Sell on Velor](https://velorcommerce.store/sell): Seller pricing, tiers, and payout policy.
 - [Founding Sellers](https://velorcommerce.store/founding): The 190-country founding-seat programme.
 - [Shop by Origin](https://velorcommerce.store/origins): Browse by country of origin across all 190 countries; each country page shows what it's known for and whether its founding seller seat is still open.
+- [Shop by Speciality](https://velorcommerce.store/specialities): Browse by craft and material across 59 specialities in six families (Materials, Consumables, Techniques, Modern industry, Forms, Rituals); each speciality page shows real trading listings where they exist, or an honest not-yet-open state where they don't.
 - [Shop](https://velorcommerce.store/shop): Browse the catalogue by country or speciality.
 - [How Velor works](https://velorcommerce.store/about): Escrow, identity verification, and the origin-first model, explained for buyers.
 - [Help Centre](https://velorcommerce.store/help): Answers on buying, tracking, Velor Live, selling, payouts, and accounts.
