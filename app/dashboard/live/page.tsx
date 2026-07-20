@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Room, RoomEvent, Track, createLocalTracks } from 'livekit-client'
+import { Room, RoomEvent, Track, createLocalTracks, ConnectionQuality } from 'livekit-client'
 import type { LocalTrack } from 'livekit-client'
 import { checkMessageContent } from '@/lib/messageFilter'
 
-type Product = { id: string; title: string; price: number; stock: number; status: string }
+type Product = { id: string; title: string; price: number; stock: number; status: string; images?: string[] }
 type Stream = {
   id: string
   title: string
@@ -102,6 +102,110 @@ export default function GoLivePage() {
 
   const sellerNameRef = useRef('Seller')
 
+  // Advanced Go Live setup (William, 2026-07-20: "the sellers dashboard/go
+  // live page looks absolutely prehistoric... needs an advanced go live
+  // page not blocked boxes... every angle covered"). A real self-view
+  // camera/mic check before going live -- genuinely useful, the same thing
+  // every professional streaming tool (StreamYard, OBS, TikTok LIVE Studio)
+  // opens with -- plus device selection when a seller has more than one
+  // camera or microphone. This preview is a *separate* getUserMedia call
+  // from the one createLocalTracks() makes when actually going live; it is
+  // stopped and released the moment the seller goes live or leaves the
+  // page, so the browser's camera indicator doesn't stay on for no reason.
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null)
+  const previewStreamRef = useRef<MediaStream | null>(null)
+  const [previewState, setPreviewState] = useState<'idle' | 'starting' | 'ready' | 'denied' | 'error'>('idle')
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([])
+  const [selectedVideoId, setSelectedVideoId] = useState<string>('')
+  const [selectedAudioId, setSelectedAudioId] = useState<string>('')
+
+  // Real viewer count while broadcasting -- every other participant in this
+  // same LiveKit room is a genuine connected viewer, not invented.
+  const [viewerCount, setViewerCount] = useState(0)
+  // Real connection quality while broadcasting, from LiveKit's own
+  // ConnectionQualityChanged event on the local participant -- not a
+  // decorative signal-bars icon, an actual read of the publish connection.
+  const [connQuality, setConnQuality] = useState<ConnectionQuality>(ConnectionQuality.Unknown)
+
+  // Live mic level meter during the preview -- Web Audio API reading the
+  // same preview stream, a genuine level (not decorative), so a seller can
+  // tell before going live whether their mic is actually picking up sound.
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const levelRafRef = useRef<number | null>(null)
+  const [micLevel, setMicLevel] = useState(0)
+
+  function stopPreview() {
+    previewStreamRef.current?.getTracks().forEach((t) => t.stop())
+    previewStreamRef.current = null
+    if (levelRafRef.current) cancelAnimationFrame(levelRafRef.current)
+    levelRafRef.current = null
+    audioCtxRef.current?.close().catch(() => {})
+    audioCtxRef.current = null
+    analyserRef.current = null
+    setMicLevel(0)
+    setPreviewState('idle')
+  }
+
+  function startLevelMeter(stream: MediaStream) {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      const audioCtx = new AudioCtx()
+      const source = audioCtx.createMediaStreamSource(stream)
+      const analyser = audioCtx.createAnalyser()
+      analyser.fftSize = 256
+      source.connect(analyser)
+      audioCtxRef.current = audioCtx
+      analyserRef.current = analyser
+      const data = new Uint8Array(analyser.frequencyBinCount)
+      const tick = () => {
+        analyser.getByteFrequencyData(data)
+        const avg = data.reduce((a, b) => a + b, 0) / data.length
+        setMicLevel(Math.min(1, avg / 90))
+        levelRafRef.current = requestAnimationFrame(tick)
+      }
+      tick()
+    } catch {
+      // the level meter is a nice-to-have -- a browser without AudioContext
+      // support still gets a working camera preview, just no meter
+    }
+  }
+
+  async function startPreview(videoId?: string, audioId?: string) {
+    stopPreview()
+    setPreviewState('starting')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: videoId ? { deviceId: { exact: videoId } } : true,
+        audio: audioId ? { deviceId: { exact: audioId } } : true,
+      })
+      previewStreamRef.current = stream
+      if (previewVideoRef.current) previewVideoRef.current.srcObject = stream
+      setPreviewState('ready')
+      startLevelMeter(stream)
+
+      // Device labels are only populated by the browser once permission has
+      // been granted at least once -- (re-)enumerate now that it has.
+      const all = await navigator.mediaDevices.enumerateDevices()
+      const vids = all.filter((d) => d.kind === 'videoinput')
+      const auds = all.filter((d) => d.kind === 'audioinput')
+      setVideoDevices(vids)
+      setAudioDevices(auds)
+      const activeVideoTrack = stream.getVideoTracks()[0]
+      const activeAudioTrack = stream.getAudioTracks()[0]
+      if (activeVideoTrack) setSelectedVideoId(activeVideoTrack.getSettings().deviceId || vids[0]?.deviceId || '')
+      if (activeAudioTrack) setSelectedAudioId(activeAudioTrack.getSettings().deviceId || auds[0]?.deviceId || '')
+    } catch (e: unknown) {
+      const name = e instanceof DOMException ? e.name : ''
+      setPreviewState(name === 'NotAllowedError' || name === 'PermissionDeniedError' ? 'denied' : 'error')
+    }
+  }
+
+  useEffect(() => {
+    return () => stopPreview()
+  }, [])
+
   useEffect(() => {
     async function load() {
       try {
@@ -156,12 +260,18 @@ export default function GoLivePage() {
     const room = new Room()
     room.on(RoomEvent.DataReceived, (payload) => handleData(payload))
     if (publish) {
+      const syncViewerCount = () => setViewerCount(room.remoteParticipants.size)
       room.on(RoomEvent.ParticipantConnected, () => {
         // Re-broadcast the current pin so a viewer who joins mid-stream
         // still sees whatever is currently featured. Reads from a ref, not
         // the pinnedId state captured when this listener was registered,
         // since togglePin() can run long after connectRoom() returns.
         publishPinState(pinnedIdRef.current)
+        syncViewerCount()
+      })
+      room.on(RoomEvent.ParticipantDisconnected, syncViewerCount)
+      room.on(RoomEvent.ConnectionQualityChanged, (quality, participant) => {
+        if (participant.isLocal) setConnQuality(quality)
       })
     }
     await room.connect(wsUrl, token)
@@ -273,7 +383,15 @@ export default function GoLivePage() {
         return
       }
 
-      const tracks: LocalTrack[] = await createLocalTracks({ audio: true, video: true })
+      // Release the setup-form preview's camera/mic before requesting the
+      // real broadcast tracks -- some browsers/OSes refuse a second
+      // concurrent open of the same physical device and would otherwise
+      // surface a confusing NotReadableError right as the seller goes live.
+      stopPreview()
+      const tracks: LocalTrack[] = await createLocalTracks({
+        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
+        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
+      })
       const room = await connectRoom(data.wsUrl, data.token, true)
       for (const track of tracks) {
         await room.localParticipant.publishTrack(track)
@@ -305,7 +423,11 @@ export default function GoLivePage() {
       pinnedIdRef.current = null
       setChat([])
 
-      const tracks: LocalTrack[] = await createLocalTracks({ audio: true, video: true })
+      stopPreview()
+      const tracks: LocalTrack[] = await createLocalTracks({
+        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
+        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
+      })
       const room = await connectRoom(data.wsUrl, data.token, true)
       for (const track of tracks) {
         await room.localParticipant.publishTrack(track)
@@ -347,6 +469,8 @@ export default function GoLivePage() {
       setPinnedId(null)
       pinnedIdRef.current = null
       setChat([])
+      setViewerCount(0)
+      setConnQuality(ConnectionQuality.Unknown)
     } catch (e) {
       setError('Could not end stream cleanly - it may still show as live for a moment.')
     }
@@ -388,6 +512,10 @@ export default function GoLivePage() {
   }
 
   const streamProducts = activeStream ? products.filter((p) => activeStream.productIds.includes(p.id)) : []
+  // First selected product, used to drive the "how buyers will see it" mock
+  // preview card in the setup form -- real product data (title, image,
+  // price), not a placeholder, just not pinned to a live room yet.
+  const mockPinnedProduct = products.find((p) => p.id === selectedProductIds[0]) ?? null
 
   return (
     <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 24px' }}>
@@ -444,6 +572,10 @@ export default function GoLivePage() {
                 <span className="velor-live-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
                 <strong>LIVE</strong>
                 <span style={{ color: '#aaa' }}>{activeStream.title}</span>
+                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <ViewerCountBadge count={viewerCount} border={border} />
+                  <ConnQualityBadge quality={connQuality} />
+                </span>
               </div>
             )}
 
@@ -460,6 +592,8 @@ export default function GoLivePage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span className="velor-live-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
                     <strong style={{ color: '#fff' }}>LIVE</strong>
+                    <ViewerCountBadge count={viewerCount} border="rgba(255,255,255,0.25)" dark />
+                    <ConnQualityBadge quality={connQuality} dark />
                   </div>
                   <button onClick={endStream} style={{ background: '#ff3b3b', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 999, fontWeight: 700, cursor: 'pointer' }}>
                     End stream
@@ -477,12 +611,17 @@ export default function GoLivePage() {
                           key={p.id}
                           onClick={() => togglePin(p.id)}
                           style={{
-                            flexShrink: 0, textAlign: 'left', padding: '8px 12px', borderRadius: 10, cursor: 'pointer',
+                            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, textAlign: 'left', padding: '5px 12px 5px 5px', borderRadius: 999, cursor: 'pointer',
                             background: isPinned ? 'rgba(255,107,0,0.25)' : 'rgba(0,0,0,0.55)',
                             border: `1px solid ${isPinned ? accent : 'rgba(255,255,255,0.25)'}`, color: '#fff', fontSize: 12, whiteSpace: 'nowrap',
                           }}
                         >
-                          {isPinned ? `Now showing: ${p.title}` : p.title}
+                          {p.images?.[0] ? (
+                            <img src={p.images[0]} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          ) : (
+                            <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#2a2a2a', flexShrink: 0 }} />
+                          )}
+                          <span>{isPinned ? `Now showing: ${p.title}` : p.title}</span>
                         </button>
                       )
                     })}
@@ -507,7 +646,7 @@ export default function GoLivePage() {
                   <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
                     {chat.map((m) => (
-                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
+                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '6px 10px', alignSelf: 'flex-start', maxWidth: '92%' }}>
                         <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
                         <span style={{ color: '#eee' }}>{m.text}</span>
                       </div>
@@ -545,7 +684,7 @@ export default function GoLivePage() {
                   {streamProducts.length > 0 && (
                     <div style={{ marginTop: 20 }}>
                       <div style={{ color: '#ccc', fontSize: 14, marginBottom: 8 }}>Tap a product to pin it as &quot;Now showing&quot; for viewers</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
                         {streamProducts.map((p) => {
                           const isPinned = pinnedId === p.id
                           return (
@@ -553,13 +692,25 @@ export default function GoLivePage() {
                               key={p.id}
                               onClick={() => togglePin(p.id)}
                               style={{
-                                textAlign: 'left', padding: 10, borderRadius: 10, cursor: 'pointer',
-                                background: isPinned ? '#2a1a0a' : '#0d0d0d',
-                                border: `1px solid ${isPinned ? accent : border}`, color: '#fff', fontSize: 13,
+                                textAlign: 'left', padding: 0, borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
+                                background: '#0d0d0d', border: `2px solid ${isPinned ? accent : border}`,
+                                boxShadow: isPinned ? '0 0 0 3px rgba(255,107,0,0.18)' : 'none', color: '#fff', fontSize: 13,
                               }}
                             >
-                              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isPinned ? 700 : 400 }}>{p.title}</div>
-                              <div style={{ color: isPinned ? accent : '#888', fontSize: 12, marginTop: 4 }}>{isPinned ? 'Now showing' : 'Pin'}</div>
+                              <div style={{ width: '100%', aspectRatio: '1 / 1', position: 'relative', background: '#161616' }}>
+                                {p.images?.[0] ? (
+                                  <img src={p.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2a2a2a,#141414)' }} />
+                                )}
+                                {isPinned && (
+                                  <span style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: accent, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>✓</span>
+                                )}
+                              </div>
+                              <div style={{ padding: '8px 10px' }}>
+                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isPinned ? 700 : 400, fontSize: 12.5 }}>{p.title}</div>
+                                <div style={{ color: isPinned ? accent : '#888', fontSize: 11.5, marginTop: 3, fontWeight: 600 }}>{isPinned ? 'Now showing' : 'Tap to pin'}</div>
+                              </div>
                             </button>
                           )
                         })}
@@ -573,7 +724,7 @@ export default function GoLivePage() {
                   <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
                     {chat.map((m) => (
-                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
+                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '6px 10px', alignSelf: 'flex-start', maxWidth: '92%' }}>
                         <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
                         <span style={{ color: '#eee' }}>{m.text}</span>
                       </div>
@@ -598,88 +749,278 @@ export default function GoLivePage() {
             )}
           </div>
         ) : (
-          <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
-            <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 14 }}>Stream title</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. New autumn collection - live first look"
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', marginBottom: 16 }}
-            />
-            <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 14 }}>Description (optional)</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', marginBottom: 16, resize: 'vertical' }}
-            />
-            <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 14 }}>Feature products (up to 12)</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 20, maxHeight: 260, overflowY: 'auto' }}>
-              {products.map((p) => {
-                const checked = selectedProductIds.includes(p.id)
-                return (
-                  <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 10, borderRadius: 10, border: `1px solid ${checked ? accent : border}`, cursor: 'pointer', fontSize: 13 }}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {
-                        setSelectedProductIds((prev) =>
-                          checked ? prev.filter((id) => id !== p.id) : prev.length >= 12 ? prev : [...prev, p.id]
-                        )
-                      }}
-                    />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
-                  </label>
-                )
-              })}
-              {products.length === 0 && <span style={{ color: '#666', fontSize: 13 }}>Add products to your store to feature them in a stream.</span>}
-            </div>
-
-            <div style={{ border: `1px solid ${border}`, borderRadius: 10, padding: 14, marginBottom: 16 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#ccc', cursor: 'pointer' }}>
-                <input type="checkbox" checked={scheduleEnabled} onChange={(e) => setScheduleEnabled(e.target.checked)} />
-                Schedule for later instead of going live now
-              </label>
-              {scheduleEnabled && (
-                <input
-                  type="datetime-local"
-                  value={scheduledFor}
-                  onChange={(e) => setScheduledFor(e.target.value)}
-                  style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
-                />
-              )}
-            </div>
-
-            <div style={{ border: `1px solid ${border}`, borderRadius: 10, padding: 14, marginBottom: 20 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#ccc', cursor: 'pointer' }}>
-                <input type="checkbox" checked={offerEnabled} onChange={(e) => setOfferEnabled(e.target.checked)} />
-                Run a live-only discount on featured products
-              </label>
-              {offerEnabled && (
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="number"
-                    min={5}
-                    max={50}
-                    value={offerPercent}
-                    onChange={(e) => setOfferPercent(e.target.value)}
-                    style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 340px) 1fr', gap: 20, alignItems: 'start' }}>
+            {/* Left column: real camera/mic self-check + a live mockup of what buyers will actually see */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 18 }}>
+                <SectionHeading icon="camera" title="Camera & mic check" />
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '9 / 12', borderRadius: 12, overflow: 'hidden', background: '#000', marginTop: 12 }}>
+                  <video
+                    ref={previewVideoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', display: previewState === 'ready' ? 'block' : 'none' }}
                   />
-                  <span style={{ color: '#aaa', fontSize: 13 }}>% off, live only -- the price reverts the moment the stream ends</span>
+                  {previewState !== 'ready' && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, textAlign: 'center', gap: 12 }}>
+                      {previewState === 'starting' ? (
+                        <span style={{ color: '#aaa', fontSize: 13 }}>Starting camera...</span>
+                      ) : previewState === 'denied' ? (
+                        <>
+                          <span style={{ color: '#ffb4b4', fontSize: 12.5, lineHeight: 1.5 }}>Camera access blocked. Allow it for velorcommerce.store in your browser's address bar, then retry.</span>
+                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, border)}>Retry</button>
+                        </>
+                      ) : previewState === 'error' ? (
+                        <>
+                          <span style={{ color: '#ffb4b4', fontSize: 12.5 }}>Couldn't reach a camera or mic.</span>
+                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, border)}>Retry</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ width: 46, height: 46, borderRadius: '50%', border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                            <Icon name="camera" size={20} />
+                          </span>
+                          <span style={{ color: '#999', fontSize: 12.5, lineHeight: 1.5 }}>See yourself before you go live -- this preview isn't visible to buyers.</span>
+                          <button onClick={() => startPreview()} style={{ background: accent, color: '#111', border: 'none', padding: '10px 20px', borderRadius: 999, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                            Enable camera preview
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {previewState === 'ready' && (
+                    <span style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.6)', color: '#ccc', fontSize: 10.5, fontWeight: 600, padding: '4px 9px', borderRadius: 999, letterSpacing: 0.3 }}>
+                      PREVIEW · not visible to buyers
+                    </span>
+                  )}
                 </div>
-              )}
+
+                {previewState === 'ready' && (
+                  <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <DeviceSelect
+                      icon="camera"
+                      value={selectedVideoId}
+                      devices={videoDevices}
+                      fallbackLabel="Camera"
+                      border={border}
+                      onChange={(id) => { setSelectedVideoId(id); startPreview(id, selectedAudioId) }}
+                    />
+                    <DeviceSelect
+                      icon="mic"
+                      value={selectedAudioId}
+                      devices={audioDevices}
+                      fallbackLabel="Microphone"
+                      border={border}
+                      onChange={(id) => { setSelectedAudioId(id); startPreview(selectedVideoId, id) }}
+                    />
+                    {/* Real mic level meter (Web Audio AnalyserNode on the
+                        preview stream) -- lets a seller confirm their mic is
+                        actually picking up sound before going live, not a
+                        decorative animation. */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 2px 0' }}>
+                      <span style={{ color: '#666', fontSize: 11 }}>Mic level</span>
+                      <div style={{ flex: 1, display: 'flex', gap: 2, height: 14, alignItems: 'flex-end' }}>
+                        {Array.from({ length: 20 }).map((_, i) => {
+                          const lit = micLevel * 20 > i
+                          const hot = i > 15
+                          return (
+                            <span
+                              key={i}
+                              style={{
+                                flex: 1, borderRadius: 1,
+                                height: lit ? `${40 + i * 3}%` : '30%',
+                                background: lit ? (hot ? '#ff5a52' : accent) : '#2a2a2a',
+                                transition: 'height 0.05s linear',
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* How buyers will actually see it -- the same TikTok-style pinned
+                  card from the public /live/[room] page, mirrored live from the
+                  title/product/offer fields as the seller fills them in. */}
+              <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 18 }}>
+                <SectionHeading icon="eye" title="How buyers will see it" />
+                <div style={{ marginTop: 12, borderRadius: 14, overflow: 'hidden', border: `1px solid ${border}`, background: '#000', position: 'relative', aspectRatio: '9 / 14' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 20%, rgba(255,140,60,0.16), transparent 55%), linear-gradient(200deg, #241b12 0%, #100d0a 55%, #000 100%)' }} />
+                  <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: accent, color: '#111', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {sellerNameRef.current.charAt(0).toUpperCase()}
+                    </span>
+                    <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{sellerNameRef.current}</span>
+                    <span className="velor-live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: accent, marginLeft: 2 }} />
+                  </div>
+                  {mockPinnedProduct && (
+                    <div style={{ position: 'absolute', left: 10, right: 10, bottom: 46, background: 'rgba(20,20,20,0.8)', border: `1px solid ${accent}`, borderRadius: 10, padding: 7, display: 'flex', gap: 7, alignItems: 'center' }}>
+                      {mockPinnedProduct.images?.[0] ? (
+                        <img src={mockPinnedProduct.images[0]} alt="" style={{ width: 30, height: 30, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 30, height: 30, borderRadius: 6, background: 'linear-gradient(135deg,#7a5230,#3c2814)', flexShrink: 0 }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 8, color: accent, textTransform: 'uppercase', letterSpacing: 0.4 }}>Now showing</div>
+                        <div style={{ fontSize: 10.5, color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mockPinnedProduct.title}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700 }}>
+                          {offerEnabled ? (
+                            <>
+                              <span style={{ color: accent }}>{fmtPrice(mockPinnedProduct.price * (1 - (Number(offerPercent) || 0) / 100))}</span>
+                              <span style={{ color: '#999', textDecoration: 'line-through', marginLeft: 4, fontSize: 9 }}>{fmtPrice(mockPinnedProduct.price)}</span>
+                            </>
+                          ) : (
+                            <span style={{ color: accent }}>{fmtPrice(mockPinnedProduct.price)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span style={{ background: accent, color: '#111', borderRadius: 999, padding: '5px 9px', fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap' }}>Buy now</span>
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10 }}>
+                    <div style={{ color: '#fff', fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {title.trim() || 'Your stream title appears here'}
+                    </div>
+                  </div>
+                </div>
+                <p style={{ color: '#666', fontSize: 11, marginTop: 10, lineHeight: 1.5 }}>
+                  A mockup of your live page -- updates as you fill in the details on the right.
+                </p>
+              </div>
             </div>
 
-            <button
-              onClick={startStream}
-              disabled={connecting}
-              style={{ background: accent, color: '#111', border: 'none', padding: '14px 32px', borderRadius: 999, fontWeight: 700, cursor: connecting ? 'default' : 'pointer', opacity: connecting ? 0.6 : 1 }}
-            >
-              {connecting ? (scheduleEnabled ? 'Scheduling...' : 'Going live...') : scheduleEnabled ? 'Schedule Stream' : 'Go Live Now'}
-            </button>
-            <p style={{ color: '#666', fontSize: 12, marginTop: 12 }}>
-              Your browser will ask for camera and microphone access when you go live. Buyers check out the same way they always do - nothing changes there.
-            </p>
+            {/* Right column: the actual form */}
+            <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
+              <SectionHeading icon="info" title="Stream details" />
+              <div style={{ marginTop: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ color: '#ccc', fontSize: 14 }}>Stream title</label>
+                  <span style={{ color: title.length > 70 ? '#ffb4b4' : '#555', fontSize: 11.5 }}>{title.length}/80</span>
+                </div>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                  placeholder="e.g. New autumn collection - live first look"
+                  style={fieldInputStyle(border)}
+                />
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 14 }}>Description (optional)</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  style={{ ...fieldInputStyle(border), resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <SectionHeading icon="grid" title={`Feature products (${selectedProductIds.length}/12)`} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 12, maxHeight: 340, overflowY: 'auto', paddingRight: 4 }}>
+                  {products.map((p) => {
+                    const checked = selectedProductIds.includes(p.id)
+                    const atLimit = !checked && selectedProductIds.length >= 12
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        disabled={atLimit}
+                        onClick={() =>
+                          setSelectedProductIds((prev) =>
+                            checked ? prev.filter((id) => id !== p.id) : prev.length >= 12 ? prev : [...prev, p.id]
+                          )
+                        }
+                        style={{
+                          position: 'relative', textAlign: 'left', padding: 0, borderRadius: 12, overflow: 'hidden', cursor: atLimit ? 'default' : 'pointer',
+                          border: `2px solid ${checked ? accent : border}`, background: '#0d0d0d', opacity: atLimit ? 0.4 : 1,
+                          boxShadow: checked ? '0 0 0 3px rgba(255,107,0,0.18)' : 'none', transition: 'all 0.15s',
+                        }}
+                      >
+                        <div style={{ width: '100%', aspectRatio: '1 / 1', position: 'relative', background: '#161616' }}>
+                          {p.images?.[0] ? (
+                            <img src={p.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2a2a2a,#141414)' }} />
+                          )}
+                          {checked && (
+                            <span style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: accent, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>✓</span>
+                          )}
+                          {p.stock <= 0 && (
+                            <span style={{ position: 'absolute', bottom: 6, left: 6, background: 'rgba(0,0,0,0.7)', color: '#ffb4b4', fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999 }}>Sold out</span>
+                          )}
+                        </div>
+                        <div style={{ padding: '8px 10px' }}>
+                          <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                          <div style={{ color: accent, fontSize: 12, fontWeight: 700, marginTop: 2 }}>{fmtPrice(p.price)}</div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                  {products.length === 0 && (
+                    <span style={{ color: '#666', fontSize: 13, gridColumn: '1 / -1' }}>Add products to your store to feature them in a stream.</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <FeatureToggle
+                  icon="calendar"
+                  title="Schedule for later"
+                  description="Buyers who tap Notify me get a push the moment you go live."
+                  checked={scheduleEnabled}
+                  onChange={setScheduleEnabled}
+                  border={border}
+                  accent={accent}
+                >
+                  {scheduleEnabled && (
+                    <input
+                      type="datetime-local"
+                      value={scheduledFor}
+                      onChange={(e) => setScheduledFor(e.target.value)}
+                      style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
+                    />
+                  )}
+                </FeatureToggle>
+
+                <FeatureToggle
+                  icon="percent"
+                  title="Live-only discount"
+                  description="A limited-time price on featured products, live only -- reverts the moment the stream ends."
+                  checked={offerEnabled}
+                  onChange={setOfferEnabled}
+                  border={border}
+                  accent={accent}
+                >
+                  {offerEnabled && (
+                    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input
+                        type="number"
+                        min={5}
+                        max={50}
+                        value={offerPercent}
+                        onChange={(e) => setOfferPercent(e.target.value)}
+                        style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
+                      />
+                      <span style={{ color: '#aaa', fontSize: 13 }}>% off featured products</span>
+                    </div>
+                  )}
+                </FeatureToggle>
+              </div>
+
+              <button
+                onClick={startStream}
+                disabled={connecting}
+                style={{ marginTop: 24, width: '100%', background: accent, color: '#111', border: 'none', padding: '15px 32px', borderRadius: 999, fontWeight: 700, fontSize: 15, cursor: connecting ? 'default' : 'pointer', opacity: connecting ? 0.6 : 1 }}
+              >
+                {connecting ? (scheduleEnabled ? 'Scheduling...' : 'Going live...') : scheduleEnabled ? 'Schedule Stream' : 'Go Live Now'}
+              </button>
+              <p style={{ color: '#666', fontSize: 12, marginTop: 12, textAlign: 'center' }}>
+                Your browser will ask for camera and microphone access when you go live. Buyers check out the same way they always do - nothing changes there.
+              </p>
+            </div>
           </div>
         )}
 
@@ -698,5 +1039,192 @@ export default function GoLivePage() {
         )}
       </div>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Shared helpers for the redesigned Go Live setup flow (William, 2026-07-20).
+// GBP formatting follows the same convention already established elsewhere
+// in this dashboard (app/dashboard/analytics/page.tsx's own fmt()) rather
+// than inventing a new one -- GBP is the platform's real base currency
+// (lib/currency.ts's own fallback), not a guess.
+// ---------------------------------------------------------------------------
+
+function fmtPrice(amount: number): string {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount)
+}
+
+function fieldInputStyle(border: string): React.CSSProperties {
+  return {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: 10,
+    border: `1px solid ${border}`,
+    background: '#0d0d0d',
+    color: '#fff',
+    fontSize: 14,
+  }
+}
+
+function ghostBtnStyle(accent: string, border: string): React.CSSProperties {
+  return {
+    background: 'transparent',
+    color: accent,
+    border: `1px solid ${border}`,
+    padding: '8px 18px',
+    borderRadius: 999,
+    fontWeight: 600,
+    fontSize: 12.5,
+    cursor: 'pointer',
+  }
+}
+
+type IconName = 'camera' | 'mic' | 'eye' | 'info' | 'grid' | 'calendar' | 'percent'
+
+function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  switch (name) {
+    case 'camera':
+      return <svg {...common}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" /><circle cx="12" cy="13" r="4" /></svg>
+    case 'mic':
+      return <svg {...common}><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2" /><path d="M12 19v3" /></svg>
+    case 'eye':
+      return <svg {...common}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+    case 'info':
+      return <svg {...common}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+    case 'grid':
+      return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+    case 'calendar':
+      return <svg {...common}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+    case 'percent':
+      return <svg {...common}><path d="M19 5 5 19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></svg>
+    default:
+      return null
+  }
+}
+
+function SectionHeading({ icon, title }: { icon: IconName; title: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(255,107,0,0.12)', color: '#FF6B00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon name={icon} size={14} />
+      </span>
+      <span style={{ fontSize: 13.5, fontWeight: 700, color: '#eee' }}>{title}</span>
+    </div>
+  )
+}
+
+function DeviceSelect({
+  icon,
+  value,
+  devices,
+  fallbackLabel,
+  border,
+  onChange,
+}: {
+  icon: IconName
+  value: string
+  devices: MediaDeviceInfo[]
+  fallbackLabel: string
+  border: string
+  onChange: (id: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0d0d0d', border: `1px solid ${border}`, borderRadius: 8, padding: '8px 10px' }}>
+      <span style={{ color: '#888', flexShrink: 0 }}><Icon name={icon} size={14} /></span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ flex: 1, background: 'transparent', color: '#fff', border: 'none', fontSize: 12.5, outline: 'none' }}
+      >
+        {devices.length === 0 && <option value="">{fallbackLabel} unavailable</option>}
+        {devices.map((d, i) => (
+          <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#111' }}>
+            {d.label || `${fallbackLabel} ${i + 1}`}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function FeatureToggle({
+  icon,
+  title,
+  description,
+  checked,
+  onChange,
+  border,
+  accent,
+  children,
+}: {
+  icon: IconName
+  title: string
+  description: string
+  checked: boolean
+  onChange: (v: boolean) => void
+  border: string
+  accent: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div style={{ border: `1px solid ${checked ? accent : border}`, borderRadius: 12, padding: 14, background: checked ? 'rgba(255,107,0,0.06)' : 'transparent', transition: 'all 0.15s' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <Icon name={icon} size={15} />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{title}</div>
+          <div style={{ color: '#888', fontSize: 12, marginTop: 2, lineHeight: 1.4 }}>{description}</div>
+        </div>
+        {/* Pill switch -- a real checkbox underneath for accessibility/keyboard
+            support, visually rendered as the toggle track+thumb. */}
+        <label style={{ position: 'relative', width: 40, height: 22, flexShrink: 0, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onChange(e.target.checked)}
+            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0, cursor: 'pointer' }}
+          />
+          <span style={{ position: 'absolute', inset: 0, borderRadius: 999, background: checked ? accent : '#333', transition: 'background 0.15s' }} />
+          <span style={{ position: 'absolute', top: 2, left: checked ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.15s' }} />
+        </label>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function ViewerCountBadge({ count, border, dark }: { count: number; border: string; dark?: boolean }) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : `1px solid ${border}`, borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : '#aaa', fontSize: 12 }}>
+      <Icon name="eye" size={13} />
+      {count}
+    </span>
+  )
+}
+
+const CONN_QUALITY_META: Record<ConnectionQuality, { label: string; color: string }> = {
+  [ConnectionQuality.Excellent]: { label: 'Excellent connection', color: '#3ddc84' },
+  [ConnectionQuality.Good]: { label: 'Good connection', color: '#e8c34a' },
+  [ConnectionQuality.Poor]: { label: 'Weak connection', color: '#ff5a52' },
+  [ConnectionQuality.Lost]: { label: 'Connection lost', color: '#ff5a52' },
+  [ConnectionQuality.Unknown]: { label: 'Checking connection…', color: '#666' },
+}
+
+function ConnQualityBadge({ quality, dark }: { quality: ConnectionQuality; dark?: boolean }) {
+  const meta = CONN_QUALITY_META[quality] ?? CONN_QUALITY_META[ConnectionQuality.Unknown]
+  return (
+    <span
+      title={meta.label}
+      style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : '1px solid #2A2A2A', borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : '#aaa', fontSize: 12 }}
+    >
+      <span style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 10 }}>
+        {[4, 7, 10].map((h, i) => (
+          <span key={i} style={{ width: 3, height: h, borderRadius: 1, background: i < (quality === 'excellent' ? 3 : quality === 'good' ? 2 : quality === 'poor' || quality === 'lost' ? 1 : 0) ? meta.color : '#3a3a3a' }} />
+        ))}
+      </span>
+      {meta.label}
+    </span>
   )
 }
