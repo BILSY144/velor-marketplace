@@ -72,6 +72,36 @@ const inputStyle: CSSProperties = {
   borderRadius: 6, padding: '9px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
 }
 
+// Velor dispatch promise (William, 2026-07-20): every order must be
+// dispatched within 7 days of purchase. These helpers drive the pill on the
+// order row and the polite reminder inside the tracking form.
+const DISPATCH_WINDOW_DAYS = 7
+
+function daysSinceOrder(createdAt: string): number {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000)
+}
+
+function dispatchDaysLeft(createdAt: string): number {
+  return DISPATCH_WINDOW_DAYS - daysSinceOrder(createdAt)
+}
+
+function dispatchDueDate(createdAt: string): string {
+  const due = new Date(new Date(createdAt).getTime() + DISPATCH_WINDOW_DAYS * 86400000)
+  return due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+function dispatchPillColor(daysLeft: number): string {
+  if (daysLeft <= 0) return '#FF1744'
+  if (daysLeft <= 2) return '#FF6B00'
+  return 'var(--accent)'
+}
+
+function dispatchPillLabel(daysLeft: number): string {
+  if (daysLeft <= 0) return 'Add tracking - dispatch overdue'
+  if (daysLeft === 1) return 'Add tracking - 1 day left'
+  return `Add tracking - ${daysLeft} days left`
+}
+
 export default function DashboardOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -259,15 +289,48 @@ export default function DashboardOrdersPage() {
                     </div>
                     {statusBadge(order.status)}
                   </div>
-                  <div style={{ fontSize: '18px', color: 'var(--muted)' }}>{isExpanded ? '▲' : '▼'}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    {canShip && !hasShipment && (() => {
+                      const daysLeft = dispatchDaysLeft(order.createdAt)
+                      const pillColor = dispatchPillColor(daysLeft)
+                      return (
+                        <button
+                          onClick={e => { e.stopPropagation(); setExpandedOrder(order.id) }}
+                          style={{
+                            padding: '7px 16px', borderRadius: 999,
+                            background: pillColor + '18', border: `1px solid ${pillColor}`,
+                            color: pillColor, fontFamily: 'var(--font-body)',
+                            fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {dispatchPillLabel(daysLeft)}
+                        </button>
+                      )
+                    })()}
+                    <div style={{ fontSize: '18px', color: 'var(--muted)' }}>{isExpanded ? '▲' : '▼'}</div>
+                  </div>
                 </div>
 
                 {isExpanded && (
                   <div style={{ borderTop: '1px solid var(--border)', padding: '20px 24px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '20px' }}>
                       <div>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: 10 }}>
                           Ship To
+                          <button
+                            onClick={() => {
+                              const text = [addr?.name, addr?.line1, addr?.line2, `${addr?.city ?? ''}${addr?.state ? ', ' + addr.state : ''} ${addr?.postal_code ?? ''}`.trim(), addr?.country].filter(Boolean).join('\n')
+                              void navigator.clipboard?.writeText(text)
+                            }}
+                            style={{
+                              padding: '3px 12px', borderRadius: 999, background: 'var(--surface)',
+                              border: '1px solid var(--border)', color: 'var(--muted)',
+                              fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600,
+                              cursor: 'pointer', textTransform: 'none', letterSpacing: 'normal',
+                            }}
+                          >
+                            Copy address
+                          </button>
                         </div>
                         <div style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.7 }}>
                           {addr?.name}<br />
@@ -341,6 +404,23 @@ export default function DashboardOrdersPage() {
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
                           Mark as Shipped
                         </div>
+                        {(() => {
+                          const daysLeft = dispatchDaysLeft(order.createdAt)
+                          const noteColor = dispatchPillColor(daysLeft)
+                          return (
+                            <div style={{
+                              padding: '12px 16px', marginBottom: '14px', borderRadius: '8px',
+                              background: noteColor + '12', border: `1px solid ${noteColor}44`,
+                              fontSize: '12.5px', color: 'var(--text)', lineHeight: 1.6,
+                            }}>
+                              {daysLeft > 0 ? (
+                                <>A friendly reminder: items on Velor must be dispatched within 7 days of purchase, so this order should be on its way by <strong>{dispatchDueDate(order.createdAt)}</strong>. Once it is posted, add the tracking details below so your buyer can follow it. Thank you for keeping Velor deliveries reliable.</>
+                              ) : (
+                                <>This order has passed its 7-day dispatch window. Please post it as soon as you can and add the tracking details below — your buyer is waiting to see it on its way. If something is preventing dispatch, message the buyer to let them know.</>
+                              )}
+                            </div>
+                          )
+                        })()}
                         <p style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.6, marginTop: 0, marginBottom: '14px' }}>
                           Ship this order yourself with your own carrier account, then enter the tracking details below so your buyer can follow it. Your shipping payment from the buyer is included in your normal payout after delivery is confirmed and the hold window passes — same as your product proceeds.
                         </p>
@@ -382,8 +462,8 @@ export default function DashboardOrdersPage() {
                           onClick={() => markShipped(order.id)}
                           disabled={shipLoading[order.id]}
                           style={{
-                            padding: '10px 22px', background: shipLoading[order.id] ? 'var(--border)' : 'var(--accent)',
-                            color: '#fff', border: 'none', borderRadius: '6px',
+                            padding: '10px 24px', background: shipLoading[order.id] ? 'var(--border)' : 'var(--accent)',
+                            color: '#fff', border: 'none', borderRadius: 999,
                             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px',
                             cursor: shipLoading[order.id] ? 'not-allowed' : 'pointer',
                           }}
