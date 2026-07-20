@@ -1,3 +1,13 @@
+import { registerGlobals } from '@livekit/react-native'
+// LiveKit requires this once, before any LiveKit component mounts, to wire
+// up the native WebRTC globals (2026-07-20). It only works in a custom
+// dev-client / EAS build — LiveKit's native code is not present in Expo Go,
+// so Go Live and Live viewing will not connect there. Run:
+//   npx expo install @livekit/react-native @livekit/react-native-webrtc livekit-client @livekit/react-native-expo-plugin @config-plugins/react-native-webrtc expo-dev-client
+// then `eas build --profile development` (or `npx expo run:ios` / `run:android`)
+// to get a build that can actually open a live room.
+registerGlobals()
+
 import React from 'react'
 import { View, Image, Pressable, StyleSheet, Animated, AppState } from 'react-native'
 import { Text } from './src/ui/T'
@@ -47,6 +57,7 @@ import DashScreen from './src/screens/DashScreen'
 import { SellerOrdersScreen, ApiKeysScreen, PayoutsScreen } from './src/screens/SellerOpsScreens'
 import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
+import LiveRoomScreen from './src/screens/LiveRoomScreen'
 import SignInScreen from './src/screens/SignInScreen'
 import { pingInstall } from './src/installPing'
 import { useSession } from './src/store'
@@ -385,6 +396,7 @@ export default function App() {
             <Stack.Screen name="Payouts" component={PayoutsScreen} />
             <Stack.Screen name="NewListing" component={NewListingScreen} />
             <Stack.Screen name="GoLive" component={GoLiveScreen} />
+            <Stack.Screen name="LiveRoom" component={LiveRoomScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
           </Stack.Navigator>
           {locked ? (

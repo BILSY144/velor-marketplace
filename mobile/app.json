@@ -10,7 +10,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "store.velorcommerce.app",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Velor uses Face ID to unlock the app and sign you in to your account."
+        "NSFaceIDUsageDescription": "Velor uses Face ID to unlock the app and sign you in to your account.",
+        "NSCameraUsageDescription": "Velor needs your camera to broadcast Live Shopping streams.",
+        "NSMicrophoneUsageDescription": "Velor needs your microphone to broadcast Live Shopping streams."
       }
     },
     "android": {
@@ -21,8 +23,13 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "store.velorcommerce.app"
+      "package": "store.velorcommerce.app",
+      "permissions": ["CAMERA", "RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"]
     },
+    "plugins": [
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },
