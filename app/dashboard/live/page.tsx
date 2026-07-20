@@ -78,6 +78,32 @@ export default function GoLivePage() {
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // Fix: the mobile full-screen broadcaster view sized itself with the CSS
+  // `100dvh` unit, which does not reliably shrink when the on-screen
+  // keyboard opens across mobile browsers (Safari overlays the keyboard
+  // without resizing `dvh` at all in some versions; Android Chrome's
+  // handling has also been inconsistent build to build). The visible
+  // symptom William hit repeatedly: tapping the chat box looked like the
+  // screen "expanding" and cropping the video, and it never reliably
+  // settled back to normal. `window.visualViewport` is the one API every
+  // mobile browser keeps accurate for the keyboard-open height, so track
+  // it directly and use it instead of trusting any viewport-height CSS
+  // unit for this specific full-screen overlay.
+  const [viewportH, setViewportH] = useState<number | null>(null)
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    const update = () => setViewportH(vv.height)
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
+
   // Scheduling (2026-07-20)
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduledFor, setScheduledFor] = useState('')
@@ -581,7 +607,7 @@ export default function GoLivePage() {
               // a toggled drawer that eats half the picture (William:
               // "the live chat box needs to be single file box as it takes
               // up the screen once opened").
-              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100dvh', background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: viewportH ? `${viewportH}px` : '100dvh', background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
                 <video ref={videoRef} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
 
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>

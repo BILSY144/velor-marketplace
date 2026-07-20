@@ -61,6 +61,26 @@ export default function LiveViewerPage() {
   const [shopOpen, setShopOpen] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
 
+  // Fix: `100dvh` does not reliably shrink when the on-screen keyboard
+  // opens across mobile browsers, which looked like the video "expanding"
+  // and getting cropped when the chat input was focused, and not settling
+  // back afterward. `window.visualViewport` is the API every mobile
+  // browser keeps accurate for the keyboard-open height, so track it and
+  // use it for this full-screen frame instead of trusting `dvh`.
+  const [viewportH, setViewportH] = useState<number | null>(null)
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    const update = () => setViewportH(vv.height)
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
+
   const handleData = useCallback((payload: Uint8Array) => {
     try {
       const msg = JSON.parse(decoder.decode(payload)) as { t?: string; name?: string; text?: string; productId?: string | null }
@@ -308,7 +328,7 @@ export default function LiveViewerPage() {
   )
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100dvh', background: '#000', color: '#fff', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: viewportH ? `${viewportH}px` : '100dvh', background: '#000', color: '#fff', overflow: 'hidden' }}>
       <style>{`
         @keyframes velorLivePulse { 0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); } 70% { box-shadow: 0 0 0 6px rgba(255,107,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); } }
         .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
