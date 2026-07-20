@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { maskPersonalName } from '@/lib/messageIdentity'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -12,7 +13,10 @@ export async function GET(request: Request) {
     orderBy: { createdAt: 'desc' }
   })
   const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
-  return NextResponse.json({ reviews, avgRating, count: reviews.length })
+  // Buyer privacy (2026-07-20): reviews are public, so show the reviewer as
+  // "First L." rather than their full sign-up name.
+  const masked = reviews.map((r) => ({ ...r, user: { name: maskPersonalName(r.user.name) } }))
+  return NextResponse.json({ reviews: masked, avgRating, count: reviews.length })
 }
 
 export async function POST(request: Request) {
