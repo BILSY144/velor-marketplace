@@ -149,6 +149,33 @@ export function getSpeciality(term: string): Speciality | undefined {
   return byTerm.get(term)
 }
 
+// Lowercase, hyphenated slug for a speciality term -- used by
+// /specialities/[term] (e.g. "Tea ceremony" -> "tea-ceremony", "The bath
+// house" -> "the-bath-house"). Same pattern as slugifyCountryName in
+// lib/worldCountries.ts. Added by the standing SEO agent, 2026-07-20, to
+// build the individual speciality pages that resolve backlog item 33's
+// remaining "59 pages unbuilt" half. Verified programmatically against all
+// 59 current SPECIALITIES entries: every slug is unique, no collisions.
+export function slugifySpecialityTerm(term: string): string {
+  return term
+    .toLowerCase()
+    .replace(/'/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+const bySlug = new Map(SPECIALITIES.map((s) => [slugifySpecialityTerm(s.term), s]))
+
+// Resolves a URL slug back to its Speciality. Slug-only (unlike
+// findCountryBySlug, there is no equivalent short "code" to also accept).
+export function findSpecialityBySlug(slug: string): Speciality | undefined {
+  return bySlug.get(slug.toLowerCase())
+}
+
+export function specialitySlug(s: Speciality): string {
+  return slugifySpecialityTerm(s.term)
+}
+
 export function isValidSpeciality(term: string): boolean {
   return byTerm.has(term)
 }

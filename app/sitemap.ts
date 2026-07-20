@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries';
 import { cultureHints } from '@/lib/cultureHints';
+import { SPECIALITIES, specialitySlug } from '@/lib/specialities';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://velorcommerce.store';
@@ -222,6 +223,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
+  // Added 2026-07-20 (later same-day run) by the standing SEO agent,
+  // alongside app/specialities/[term]/layout.tsx and page.tsx -- the
+  // speciality-side analogue of originCountryEntries directly above. Unlike
+  // the country side, there is no content-depth filter here: all 59
+  // SPECIALITIES entries are the closed, fully real vocabulary itself
+  // (William signed off 2026-07-08, velor-speciality-vocabulary-v2.md,
+  // same source app/specialities/page.tsx and layout.tsx already render
+  // from) -- there is no thin-content subset to withhold the way 40+
+  // /origins/[slug] pages once had to wait on lib/cultureHints.ts research
+  // (see the long comment trail above). Every one of the 59 pages this
+  // resolves to has the same real term, family, standfirst line and
+  // associated-countries list live today, regardless of catalogue state.
+  const specialityEntries: MetadataRoute.Sitemap = SPECIALITIES.map((s) => ({
+    url: `${base}/specialities/${specialitySlug(s)}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.5,
+  }));
+
   return [
     { url: base, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/apply`, changeFrequency: 'daily', priority: 0.9 },
@@ -256,5 +275,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/returns`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
     ...originCountryEntries,
+    ...specialityEntries,
   ];
 }

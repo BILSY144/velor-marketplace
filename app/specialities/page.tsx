@@ -11,19 +11,28 @@
 // Live trading state (which specialities have at least one real APPROVED
 // listing) comes from /api/lattice, the same source /origins and /founding
 // already use -- never hand-typed, same "never imply a seller exists where
-// one doesn't" rule those pages already follow. A speciality with zero live
-// products links to /founding (become the first to open it) instead of a
-// /shop?speciality= filter that would show nothing -- the identical
-// "claimed" pattern already shipped on app/origins/[slug]/page.tsx's own
-// speciality tags, reused here rather than re-invented.
+// one doesn't" rule those pages already follow. The live/not-yet-opened
+// badge below is purely a display state now (not a link-routing decision --
+// see the next paragraph).
 //
 // Buyer-facing labels (e.g. "Clay" -> "Ceramics & porcelain") come from
 // lib/specialities.ts's buyerLabel() -- the same real, already-signed-off
 // mapping used everywhere else specialities are shown to buyers.
+//
+// Updated 2026-07-20 (later same-day run) by the standing SEO agent: every
+// term card now links to its own /specialities/[term] landing page (new
+// this run -- see app/specialities/[term]/layout.tsx and page.tsx) instead
+// of branching straight to /shop?speciality= or /founding depending on
+// claimed state. This closes the remaining half of backlog item 33 and
+// matches app/origins/page.tsx's own pattern exactly (it links every
+// country to /origins/[slug] regardless of trading status, not straight to
+// /shop or /apply) -- the individual term page itself now handles both the
+// trading and not-yet-opened states, same honest zero-state pattern as
+// /origins/[slug].
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel, type SpecialityKind } from '@/lib/specialities'
+import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel, specialitySlug, type SpecialityKind } from '@/lib/specialities'
 
 type LatticeSummary = {
   specialities: Record<string, { countries: number; products: number }>
@@ -131,7 +140,7 @@ export default function SpecialitiesIndexPage() {
                 return (
                   <Link
                     className="sp-ci"
-                    href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                    href={`/specialities/${specialitySlug(s)}`}
                     key={s.term}
                     title={s.line}
                   >
