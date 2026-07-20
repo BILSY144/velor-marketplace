@@ -437,7 +437,11 @@ function ViewerView({
         pointerEvents="none"
       />
 
-      <View style={{ position: 'absolute', left: 14, right: 14, bottom: 210 }}>
+      {/* Now-showing card + tray -- directly above the composer (William:
+          "it needs to be just above the text box because the card will
+          take up the screen"), not floating high above the chat feed
+          where it used to sit. */}
+      <View style={{ position: 'absolute', left: 14, right: 14, bottom: 78 }}>
         {pinned && (
           <View style={s.pinnedCard}>
             {pinned.images?.[0] ? (
@@ -575,7 +579,9 @@ const s = StyleSheet.create({
   addBtn: { backgroundColor: C.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
   trayCard: { width: 84 },
   trayImg: { width: 84, height: 84, borderRadius: 12 },
-  chatPanel: { position: 'absolute', left: 14, right: 14, bottom: 76, maxHeight: 130 },
+  // Sits above the now-showing card/tray reserved at the bottom (see the
+  // render below) rather than overlapping it.
+  chatPanel: { position: 'absolute', left: 14, right: 14, bottom: 210, maxHeight: 100 },
   chatBubble: {
     alignSelf: 'flex-start',
     maxWidth: '92%',

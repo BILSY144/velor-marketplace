@@ -435,35 +435,13 @@ export default function LiveViewerPage() {
         </div>
       )}
 
-      {/* Bottom scrim stack: now-showing card, caption, chat feed, composer */}
+      {/* Bottom scrim stack: tray, caption, chat feed, now-showing card,
+          composer -- the pinned card sits directly above the text box
+          (William: "it needs to be just above the text box because the
+          card will take up the screen"), not stacked way above the chat
+          feed where it and the tray+caption together ate a lot of the
+          video before a viewer even reached the input. */}
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, transparent 100%)', paddingTop: 60, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {shopOpen && pinned && status === 'connected' && (
-          <div style={{ margin: '0 66px 10px 14px', background: 'rgba(20,20,20,0.72)', border: `1px solid ${accent}`, borderRadius: 14, padding: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
-            {pinned.images[0] && <img src={pinned.images[0]} alt="" style={{ width: 46, height: 46, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: accent, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Now showing</div>
-              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pinned.title}</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>
-                {offerApplies(pinned) ? (
-                  <>
-                    <span style={{ color: accent }}>{sym}{offerPrice(pinned).toFixed(2)}</span>
-                    <span style={{ color: '#999', textDecoration: 'line-through', marginLeft: 6, fontSize: 11 }}>{sym}{pinned.price.toFixed(2)}</span>
-                  </>
-                ) : (
-                  <span style={{ color: accent }}>{sym}{pinned.price.toFixed(2)}</span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => buyNow(pinned)}
-              disabled={pinned.stock <= 0}
-              style={{ background: pinned.stock <= 0 ? '#333' : accent, color: pinned.stock <= 0 ? '#888' : '#111', border: 'none', padding: '9px 16px', borderRadius: 999, fontWeight: 700, fontSize: 12, cursor: pinned.stock <= 0 ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
-            >
-              {addedId === pinned.id ? 'Added' : pinned.stock <= 0 ? 'Sold out' : 'Buy now'}
-            </button>
-          </div>
-        )}
-
         {shopOpen && trayProducts.length > 0 && status === 'connected' && (
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 66px 10px 14px' }}>
             {trayProducts.map((p) => (
@@ -505,6 +483,35 @@ export default function LiveViewerPage() {
         )}
 
         {chatError && <div style={{ padding: '0 14px 4px', color: '#ffb4b4', fontSize: 12, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{chatError}</div>}
+
+        {/* Now-showing card -- directly above the composer, one compact
+            row, so it never grows the overlay beyond this fixed slot. */}
+        {shopOpen && pinned && status === 'connected' && (
+          <div style={{ margin: '0 66px 8px 14px', background: 'rgba(20,20,20,0.72)', border: `1px solid ${accent}`, borderRadius: 12, padding: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+            {pinned.images[0] && <img src={pinned.images[0]} alt="" style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 7, flexShrink: 0 }} />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 9.5, color: accent, textTransform: 'uppercase', letterSpacing: 0.5 }}>Now showing</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pinned.title}</div>
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, flexShrink: 0 }}>
+              {offerApplies(pinned) ? (
+                <>
+                  <span style={{ color: accent }}>{sym}{offerPrice(pinned).toFixed(2)}</span>
+                  <span style={{ color: '#999', textDecoration: 'line-through', marginLeft: 5, fontSize: 10.5 }}>{sym}{pinned.price.toFixed(2)}</span>
+                </>
+              ) : (
+                <span style={{ color: accent }}>{sym}{pinned.price.toFixed(2)}</span>
+              )}
+            </div>
+            <button
+              onClick={() => buyNow(pinned)}
+              disabled={pinned.stock <= 0}
+              style={{ background: pinned.stock <= 0 ? '#333' : accent, color: pinned.stock <= 0 ? '#888' : '#111', border: 'none', padding: '8px 14px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, cursor: pinned.stock <= 0 ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              {addedId === pinned.id ? 'Added' : pinned.stock <= 0 ? 'Sold out' : 'Buy now'}
+            </button>
+          </div>
+        )}
 
         {/* Composer, pinned at the very bottom of the frame */}
         <div style={{ display: 'flex', gap: 8, padding: '10px 14px 14px' }}>
