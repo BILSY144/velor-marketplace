@@ -9,7 +9,7 @@ export async function GET(
   const { room } = await params
   const stream = await prisma.liveStream.findUnique({
     where: { roomName: room },
-    include: { seller: { select: { id: true, storeName: true, currency: true } } },
+    include: { seller: { select: { id: true, storeName: true, currency: true, storeLogo: true } } },
   })
   if (!stream) return NextResponse.json({ error: 'Stream not found' }, { status: 404 })
 

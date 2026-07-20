@@ -4,6 +4,7 @@ import { checkMessageContent } from '@/lib/messageFilter'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Room, RoomEvent, Track } from 'livekit-client'
 import type { RemoteTrack } from 'livekit-client'
@@ -15,7 +16,7 @@ type StreamInfo = {
   description: string | null
   status: string
   scheduledFor: string | null
-  seller: { id: string; storeName: string; currency: string }
+  seller: { id: string; storeName: string; currency: string; storeLogo: string | null }
 }
 type LiveOffer = { percent: number; productIds: string[] }
 type ChatMsg = { id: string; name: string; text: string }
@@ -45,16 +46,20 @@ export default function LiveViewerPage() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatError, setChatError] = useState('')
   const [status, setStatus] = useState<'loading' | 'connecting' | 'connected' | 'ended' | 'scheduled' | 'notfound' | 'error'>('loading')
-  // Sellers often broadcast from a phone held upright, which publishes a
-  // portrait (taller-than-wide) video track. A fixed 16/9 box with
-  // objectFit: 'contain' was squeezing that into a narrow vertical strip
-  // with large black bars either side -- reported as "only a narrow box
-  // with visual". Track the video's real aspect ratio once its metadata
-  // loads and size the frame to match instead of forcing widescreen.
-  const [videoAspect, setVideoAspect] = useState<number | null>(null)
   const [reported, setReported] = useState(false)
   const [notifyState, setNotifyState] = useState<'idle' | 'saved' | 'signin'>('idle')
   const [addedId, setAddedId] = useState<string | null>(null)
+  // TikTok LIVE parity (William, 2026-07-20): a real, LiveKit-reported
+  // viewer count (room.remoteParticipants -- genuine connected viewers, not
+  // invented), a local tap-to-like counter with a floating heart burst like
+  // TikTok's double-tap gesture, a collapsible shop rail so the video can go
+  // fully edge-to-edge, and a "more" menu that tucks Report behind the same
+  // overflow affordance TikTok uses instead of a permanent floating button.
+  const [viewerCount, setViewerCount] = useState(0)
+  const [likeCount, setLikeCount] = useState(0)
+  const [hearts, setHearts] = useState<{ id: string; x: number }[]>([])
+  const [shopOpen, setShopOpen] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleData = useCallback((payload: Uint8Array) => {
     try {
@@ -126,10 +131,18 @@ export default function LiveViewerPage() {
         })
         r.on(RoomEvent.DataReceived, (payload: Uint8Array) => handleData(payload))
         r.on(RoomEvent.Disconnected, () => { if (!cancelled) setStatus('ended') })
+        // Real viewer count -- every other viewer connected to this same
+        // LiveKit room is a remote participant; the broadcaster publishes
+        // but is not counted as a "viewer" of themselves. Kept in sync via
+        // the same connect/disconnect events LiveKit already fires, so this
+        // never drifts from who is actually in the room.
+        const syncViewerCount = () => { if (!cancelled) setViewerCount(r.remoteParticipants.size) }
+        r.on(RoomEvent.ParticipantConnected, syncViewerCount)
+        r.on(RoomEvent.ParticipantDisconnected, syncViewerCount)
 
         await r.connect(tokenData.wsUrl, tokenData.token)
         roomRef.current = r
-        if (!cancelled) setStatus('connected')
+        if (!cancelled) { setStatus('connected'); syncViewerCount() }
       } catch (e) {
         if (!cancelled) setStatus('error')
       }
@@ -204,6 +217,35 @@ export default function LiveViewerPage() {
     }
   }
 
+  // TikTok-style tap/double-tap-to-like: a floating heart drifts up and
+  // fades, same gesture TikTok uses on both regular videos and LIVE. This is
+  // a local engagement gesture only -- there is no like-count field on
+  // LiveStream to persist it against, so it is never presented as a
+  // server-tracked total, only as in-the-moment feedback for this viewer.
+  function sendHeart() {
+    setLikeCount((c) => c + 1)
+    const id = Math.random().toString(36).slice(2)
+    const x = 50 + (Math.random() * 40 - 20)
+    setHearts((prev) => [...prev.slice(-14), { id, x }])
+    setTimeout(() => setHearts((prev) => prev.filter((h) => h.id !== id)), 1600)
+  }
+
+  async function shareStream() {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const shareData = { title: stream?.title || 'Velor Live', text: `Watch ${stream?.seller?.storeName || 'this seller'} live on Velor`, url }
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        setChatError('Link copied.')
+        setTimeout(() => setChatError(''), 2000)
+      }
+    } catch {
+      // user cancelled the native share sheet -- not an error
+    }
+  }
+
   const dark = '#111111'
   const panel = '#1A1A1A'
   const border = '#2A2A2A'
@@ -250,141 +292,225 @@ export default function LiveViewerPage() {
     )
   }
 
+  // TikTok Live model (William, 2026-07-20 -- refined same day per "make it
+  // exactly like tiktoks set up all but name"): full-bleed edge-to-edge
+  // video with every control laid over it exactly where TikTok LIVE puts
+  // it -- avatar + name top-left, eye/viewer-count + overflow menu + close
+  // top-right, a vertical action rail (like / share / shop) on the right
+  // edge, and comments + composer along the bottom. Only Velor's own name,
+  // products and data replace TikTok's -- the arrangement is theirs.
+  const avatarNode = stream?.seller?.storeLogo ? (
+    <img src={stream.seller.storeLogo} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.85)' }} />
+  ) : (
+    <span style={{ width: 32, height: 32, borderRadius: '50%', background: accent, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, border: '1.5px solid rgba(255,255,255,0.85)' }}>
+      {(stream?.seller?.storeName || 'V').charAt(0).toUpperCase()}
+    </span>
+  )
+
   return (
-    <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)', gap: 24 }}>
-        <div>
-          <div style={{ position: 'relative', background: '#000', borderRadius: 16, overflow: 'hidden', aspectRatio: videoAspect ? String(videoAspect) : '16/9', maxHeight: '80vh', maxWidth: videoAspect && videoAspect < 1 ? 'min(100%, 480px)' : '100%', margin: videoAspect && videoAspect < 1 ? '0 auto' : undefined }}>
-            {status === 'connected' ? (
-              <video
-                ref={setVideoRef}
-                autoPlay
-                playsInline
-                onLoadedMetadata={(e) => {
-                  const v = e.currentTarget
-                  if (v.videoWidth && v.videoHeight) setVideoAspect(v.videoWidth / v.videoHeight)
-                }}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-                {status === 'connecting' && 'Connecting...'}
-                {status === 'ended' && 'This stream has ended.'}
-                {status === 'error' && 'Could not connect - try refreshing.'}
-                {status === 'loading' && 'Loading...'}
-              </div>
-            )}
+    <div style={{ position: 'relative', width: '100%', height: '100dvh', background: '#000', color: '#fff', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes velorLivePulse { 0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); } 70% { box-shadow: 0 0 0 6px rgba(255,107,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); } }
+        .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
+        @keyframes velorHeartFloat {
+          0% { transform: translate(0, 0) scale(0.6) rotate(0deg); opacity: 0; }
+          15% { opacity: 1; transform: translate(0, -10px) scale(1) rotate(-4deg); }
+          100% { transform: translate(var(--drift, 12px), -230px) scale(1.05) rotate(6deg); opacity: 0; }
+        }
+        .velor-heart { animation: velorHeartFloat 1.6s ease-out forwards; }
+        .velor-rail-btn { background: none; border: none; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+      `}</style>
+
+      {status === 'connected' ? (
+        <video
+          ref={setVideoRef}
+          autoPlay
+          playsInline
+          onDoubleClick={sendHeart}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', textAlign: 'center', padding: 24 }}>
+          {status === 'connecting' && 'Connecting...'}
+          {status === 'ended' && 'This stream has ended.'}
+          {status === 'error' && 'Could not connect - try refreshing.'}
+          {status === 'loading' && 'Loading...'}
+          {status === 'notfound' && 'Stream not found.'}
+        </div>
+      )}
+
+      {/* Top scrim: avatar + name (links to storefront) left, viewer count / overflow / close right */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'max(14px, env(safe-area-inset-top)) 12px 40px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)' }}>
+        <Link href={stream ? `/seller/${stream.seller.id}` : '/live'} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#fff', minWidth: 0 }}>
+          {avatarNode}
+          <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, textShadow: '0 1px 3px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{stream?.seller?.storeName}</span>
             {status === 'connected' && (
-              <span style={{ position: 'absolute', top: 12, left: 12, background: accent, color: '#111', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>LIVE</span>
-            )}
-            {liveOffer && status === 'connected' && (
-              <span style={{ position: 'absolute', top: 12, right: 12, background: '#111c', border: `1px solid ${accent}`, color: accent, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>
-                Live price: {liveOffer.percent}% off featured items
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                <span className="velor-live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: accent, display: 'inline-block' }} />
+                Live
               </span>
             )}
-          </div>
+          </span>
+        </Link>
 
-          {/* Pinned hero product — what the seller is showing right now */}
-          {pinned && status === 'connected' && (
-            <div style={{ marginTop: 14, background: panel, border: `1px solid ${accent}`, borderRadius: 14, padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
-              {pinned.images[0] && <img src={pinned.images[0]} alt="" style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10 }} />}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: accent, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Now showing</div>
-                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>{pinned.title}</div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>
-                  {offerApplies(pinned) ? (
-                    <>
-                      <span style={{ color: accent }}>{sym}{offerPrice(pinned).toFixed(2)}</span>
-                      <span style={{ color: '#777', textDecoration: 'line-through', marginLeft: 8, fontSize: 13 }}>{sym}{pinned.price.toFixed(2)}</span>
-                    </>
-                  ) : (
-                    <span style={{ color: accent }}>{sym}{pinned.price.toFixed(2)}</span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => buyNow(pinned)}
-                disabled={pinned.stock <= 0}
-                style={{ background: pinned.stock <= 0 ? '#333' : accent, color: pinned.stock <= 0 ? '#888' : '#111', border: 'none', padding: '12px 24px', borderRadius: 999, fontWeight: 700, fontSize: 14, cursor: pinned.stock <= 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}
-              >
-                {addedId === pinned.id ? 'Added' : pinned.stock <= 0 ? 'Sold out' : 'Buy now'}
-              </button>
-            </div>
-          )}
-
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 13, color: accent, marginBottom: 4 }}>{stream?.seller?.storeName}</div>
-            <h1 style={{ fontSize: 22, marginBottom: 8 }}>{stream?.title}</h1>
-            {stream?.description && <p style={{ color: '#aaa', lineHeight: 1.6 }}>{stream.description}</p>}
-            <button onClick={reportStream} style={{ marginTop: 16, background: 'transparent', border: `1px solid ${border}`, color: '#888', fontSize: 12, padding: '6px 14px', borderRadius: 999, cursor: reported ? 'default' : 'pointer' }}>
-              {reported ? 'Reported - thank you' : 'Report this stream'}
-            </button>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Live chat */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           {status === 'connected' && (
-            <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', height: 340 }}>
-              <div style={{ padding: '10px 14px', borderBottom: `1px solid ${border}`, fontSize: 13, color: '#ccc', textTransform: 'uppercase', letterSpacing: 0.5 }}>Live chat</div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {chat.length === 0 && <div style={{ color: '#666', fontSize: 13 }}>Say hello — ask the seller anything about what they are showing.</div>}
-                {chat.map((m) => (
-                  <div key={m.id} style={{ fontSize: 13, lineHeight: 1.5, wordBreak: 'break-word' }}>
-                    <span style={{ color: accent, fontWeight: 600 }}>{m.name}</span>{' '}
-                    <span style={{ color: '#ddd' }}>{m.text}</span>
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-              {chatError && <div style={{ padding: '6px 14px', color: '#ffb4b4', fontSize: 12 }}>{chatError}</div>}
-              <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
-                <input
-                  value={chatDraft}
-                  onChange={(e) => setChatDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
-                  placeholder="Ask a question..."
-                  maxLength={300}
-                  style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', fontSize: 13 }}
-                />
-                <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                  Send
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.45)', borderRadius: 999, padding: '5px 10px', fontSize: 12, fontWeight: 600 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+              {viewerCount}
+            </span>
+          )}
+          <button onClick={() => setMenuOpen((v) => !v)} aria-label="More" style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', lineHeight: 1, letterSpacing: 1 }}>
+            &#8226;&#8226;&#8226;
+          </button>
+          <button onClick={() => router.push('/live')} aria-label="Close" style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
+            &times;
+          </button>
+
+          {menuOpen && (
+            <>
+              <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 3 }} />
+              <div style={{ position: 'absolute', top: 36, right: 0, zIndex: 4, background: '#1a1a1aee', border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', minWidth: 140, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+                <button
+                  onClick={() => { reportStream(); setMenuOpen(false) }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: reported ? '#888' : '#ffb4b4', padding: '10px 14px', fontSize: 13, cursor: reported ? 'default' : 'pointer' }}
+                >
+                  {reported ? 'Reported' : 'Report stream'}
                 </button>
               </div>
-            </div>
+            </>
           )}
+        </div>
+      </div>
 
-          <div>
-            <h2 style={{ fontSize: 15, color: '#ccc', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Featured products</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {trayProducts.map((p) => (
-                <div key={p.id} style={{ background: panel, border: `1px solid ${border}`, borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
-                  {p.images[0] && <img src={p.images[0]} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8 }} />}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {offerApplies(p) ? (
-                        <>
-                          <span style={{ color: accent }}>{sym}{offerPrice(p).toFixed(2)}</span>
-                          <span style={{ color: '#777', textDecoration: 'line-through', marginLeft: 6, fontSize: 12 }}>{sym}{p.price.toFixed(2)}</span>
-                        </>
-                      ) : (
-                        <span style={{ color: accent }}>{sym}{p.price.toFixed(2)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => buyNow(p)}
-                    disabled={p.stock <= 0}
-                    style={{ background: p.stock <= 0 ? '#333' : accent, color: p.stock <= 0 ? '#888' : '#111', border: 'none', padding: '8px 14px', borderRadius: 999, fontWeight: 700, fontSize: 12, cursor: p.stock <= 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}
-                  >
-                    {addedId === p.id ? 'Added' : p.stock <= 0 ? 'Sold out' : 'Buy now'}
-                  </button>
-                </div>
+      {liveOffer && status === 'connected' && (
+        <span style={{ position: 'absolute', top: 62, left: 14, zIndex: 2, background: '#111c', border: `1px solid ${accent}`, color: accent, fontSize: 10.5, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>
+          {liveOffer.percent}% off featured items
+        </span>
+      )}
+
+      {/* Right action rail: like, share, shop -- TikTok's vertical icon stack */}
+      {status === 'connected' && (
+        <div style={{ position: 'absolute', right: 10, bottom: 210, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+          <div style={{ position: 'relative' }}>
+            <button className="velor-rail-btn" onClick={sendHeart} aria-label="Like">
+              <span style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={likeCount > 0 ? accent : 'none'} stroke={likeCount > 0 ? accent : '#fff'} strokeWidth="2"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4.5c2.2 0 3.7 1.2 4.5 2.6.8-1.4 2.3-2.6 4.5-2.6 3.6 0 5.5 3.5 4 7.2C19.5 16.4 12 21 12 21Z" /></svg>
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{likeCount}</span>
+            </button>
+            <div style={{ position: 'absolute', bottom: 30, left: '50%', width: 0, height: 0, pointerEvents: 'none' }}>
+              {hearts.map((h) => (
+                <span key={h.id} className="velor-heart" style={{ position: 'absolute', left: h.x - 50, fontSize: 20, '--drift': `${(h.x - 50) * 0.6}px` } as React.CSSProperties}>
+                  &#10084;
+                </span>
               ))}
-              {products.length === 0 && <p style={{ color: '#666', fontSize: 13 }}>No products featured yet.</p>}
             </div>
           </div>
+
+          <button className="velor-rail-btn" onClick={shareStream} aria-label="Share">
+            <span style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v14" /></svg>
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Share</span>
+          </button>
+
+          {products.length > 0 && (
+            <button className="velor-rail-btn" onClick={() => setShopOpen((v) => !v)} aria-label="Shop">
+              <span style={{ width: 42, height: 42, borderRadius: '50%', background: shopOpen ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={shopOpen ? '#111' : '#fff'} strokeWidth="2"><path d="M6 8h12l-1 12H7L6 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{products.length}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Bottom scrim stack: now-showing card, caption, chat feed, composer */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, transparent 100%)', paddingTop: 60, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {shopOpen && pinned && status === 'connected' && (
+          <div style={{ margin: '0 66px 10px 14px', background: 'rgba(20,20,20,0.72)', border: `1px solid ${accent}`, borderRadius: 14, padding: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+            {pinned.images[0] && <img src={pinned.images[0]} alt="" style={{ width: 46, height: 46, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: accent, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Now showing</div>
+              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pinned.title}</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>
+                {offerApplies(pinned) ? (
+                  <>
+                    <span style={{ color: accent }}>{sym}{offerPrice(pinned).toFixed(2)}</span>
+                    <span style={{ color: '#999', textDecoration: 'line-through', marginLeft: 6, fontSize: 11 }}>{sym}{pinned.price.toFixed(2)}</span>
+                  </>
+                ) : (
+                  <span style={{ color: accent }}>{sym}{pinned.price.toFixed(2)}</span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => buyNow(pinned)}
+              disabled={pinned.stock <= 0}
+              style={{ background: pinned.stock <= 0 ? '#333' : accent, color: pinned.stock <= 0 ? '#888' : '#111', border: 'none', padding: '9px 16px', borderRadius: 999, fontWeight: 700, fontSize: 12, cursor: pinned.stock <= 0 ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              {addedId === pinned.id ? 'Added' : pinned.stock <= 0 ? 'Sold out' : 'Buy now'}
+            </button>
+          </div>
+        )}
+
+        {shopOpen && trayProducts.length > 0 && status === 'connected' && (
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 66px 10px 14px' }}>
+            {trayProducts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => buyNow(p)}
+                disabled={p.stock <= 0}
+                style={{
+                  flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, textAlign: 'left', padding: '6px 10px 6px 6px', borderRadius: 999, cursor: p.stock <= 0 ? 'default' : 'pointer',
+                  background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 12, whiteSpace: 'nowrap',
+                }}
+              >
+                {p.images[0] && <img src={p.images[0]} alt="" style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: '50%' }} />}
+                <span>{p.title}</span>
+                <span style={{ color: accent, fontWeight: 700 }}>{addedId === p.id ? 'Added' : p.stock <= 0 ? 'Sold out' : `${sym}${(offerApplies(p) ? offerPrice(p) : p.price).toFixed(2)}`}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Title + description, directly on the video -- no separate box */}
+        <div style={{ padding: '0 66px 8px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{stream?.title}</div>
+          {stream?.description && <div style={{ fontSize: 12.5, opacity: 0.85, lineHeight: 1.4 }}>{stream.description}</div>}
+        </div>
+
+        {/* Chat feed, newest at the bottom, fading upward into the video -- TikTok-style rounded bubbles */}
+        {status === 'connected' && (
+          <div style={{ height: 130, overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse', gap: 6, padding: '0 66px 0 14px', maskImage: 'linear-gradient(to bottom, transparent, black 35%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)' }}>
+            <div ref={chatEndRef} />
+            {chat.length === 0 && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Say hello — ask the seller anything about what they are showing.</div>}
+            {chat.slice(-40).reverse().map((m) => (
+              <div key={m.id} style={{ display: 'inline-flex', alignSelf: 'flex-start', maxWidth: '92%', background: 'rgba(0,0,0,0.38)', borderRadius: 14, padding: '5px 11px', fontSize: 13, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                <span style={{ color: accent, fontWeight: 700, marginRight: 5 }}>{m.name}</span>
+                <span>{m.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {chatError && <div style={{ padding: '0 14px 4px', color: '#ffb4b4', fontSize: 12, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{chatError}</div>}
+
+        {/* Composer, pinned at the very bottom of the frame */}
+        <div style={{ display: 'flex', gap: 8, padding: '10px 14px 14px' }}>
+          <input
+            value={chatDraft}
+            onChange={(e) => setChatDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
+            placeholder="Say something..."
+            maxLength={300}
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13 }}
+          />
+          <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+            Send
+          </button>
         </div>
       </div>
     </div>
