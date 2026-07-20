@@ -15,6 +15,7 @@ import {
   isTrackReference,
 } from '@livekit/react-native'
 import { Room, RoomEvent, Track } from 'livekit-client'
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
 import { C, F } from '../theme'
 import { Dim, Btn } from '../ui'
 import { fmt } from '../i18n'
@@ -30,6 +31,14 @@ import { useCart } from '../store'
 import { checkMessageContent } from '../messageFilter'
 import { decodeLiveData, encodeLiveData, LiveDataMsg } from '../liveData'
 import { enableNotifications } from '../push'
+
+// Same real bell chime as BellScreen's "RING IT" (assets/bell.m4a) -- the
+// action rail's bell button rings this, not a generic UI sound (William,
+// 2026-07-20: "remove the heart and place it with a bell that chimes like
+// mobile app"). Same hard rule as BellScreen after its 2026-07-15
+// black-screen bug: NO native audio call at render time -- the player is
+// created lazily on the first ring, inside try/catch.
+const BELL = require('../../assets/bell.m4a')
 
 // Watch a real live stream (2026-07-20) -- scheduled countdown + notify me,
 // or a real connected LiveKit room with chat, a pinned "now showing"
@@ -212,14 +221,13 @@ function ViewerView({
   const [note, setNote] = useState<string | null>(null)
   // TikTok LIVE parity, same shared model the website viewer page now uses
   // (William, 2026-07-20): a real LiveKit-reported viewer count -- other
-  // remote participants in this same room, not invented -- and a local
-  // tap-to-like counter with a floating heart, the same "no server-side
-  // like field on LiveStream" caveat as the web version: this is in-the-
-  // moment feedback for this viewer only, never presented as a shared total.
+  // remote participants in this same room, not invented.
   const [viewerCount, setViewerCount] = useState(0)
-  const [likeCount, setLikeCount] = useState(0)
-  const [hearts, setHearts] = useState<{ id: string; anim: Animated.Value; x: number }[]>([])
-  const lastTapRef = useRef(0)
+  // Bell, not heart (William, 2026-07-20) -- same real chime + swing as
+  // BellScreen's "RING IT", not a tap-to-like counter.
+  const [ringing, setRinging] = useState(false)
+  const bellPlayerRef = useRef<AudioPlayer | null>(null)
+  const bellSwing = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     AudioSession.startAudioSession()
@@ -249,23 +257,36 @@ function ViewerView({
     }
   }, [room])
 
-  function sendHeart() {
-    setLikeCount((c) => c + 1)
-    const id = `${Date.now()}-${Math.random()}`
-    const anim = new Animated.Value(0)
-    const x = Math.random() * 30 - 15
-    setHearts((prev) => [...prev.slice(-13), { id, anim, x }])
-    Animated.timing(anim, { toValue: 1, duration: 1500, useNativeDriver: true }).start(() => {
-      setHearts((prev) => prev.filter((h) => h.id !== id))
-    })
-  }
+  useEffect(
+    () => () => {
+      try {
+        bellPlayerRef.current?.release()
+      } catch {}
+    },
+    []
+  )
 
-  // Double-tap-on-video-to-like -- RN has no native onDoubleClick, so a
-  // single Pressable on the video layer measures the gap between taps.
-  function onVideoTap() {
-    const now = Date.now()
-    if (now - lastTapRef.current < 300) sendHeart()
-    lastTapRef.current = now
+  function ringBell() {
+    try {
+      if (!bellPlayerRef.current) {
+        // Audible even with the phone's mute switch on -- the seller and
+        // other viewers should genuinely hear this ring, not have it
+        // silently swallowed.
+        setAudioModeAsync({ playsInSilentMode: true }).catch(() => {})
+        bellPlayerRef.current = createAudioPlayer(BELL)
+      }
+      bellPlayerRef.current.seekTo(0)
+      bellPlayerRef.current.play()
+    } catch {}
+    setRinging(true)
+    bellSwing.setValue(0)
+    Animated.sequence([
+      Animated.timing(bellSwing, { toValue: 1, duration: 130, useNativeDriver: true }),
+      Animated.timing(bellSwing, { toValue: -0.8, duration: 240, useNativeDriver: true }),
+      Animated.timing(bellSwing, { toValue: 0.5, duration: 260, useNativeDriver: true }),
+      Animated.timing(bellSwing, { toValue: -0.25, duration: 300, useNativeDriver: true }),
+      Animated.timing(bellSwing, { toValue: 0, duration: 340, useNativeDriver: true }),
+    ]).start(() => setRinging(false))
   }
 
   async function shareStream() {
@@ -326,9 +347,9 @@ function ViewerView({
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
       {remoteTrack && isTrackReference(remoteTrack) ? (
-        <Pressable onPress={onVideoTap} style={StyleSheet.absoluteFill}>
+        <View style={StyleSheet.absoluteFill}>
           <VideoTrack trackRef={remoteTrack} style={StyleSheet.absoluteFill} />
-        </Pressable>
+        </View>
       ) : (
         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }]}>
           <Dim>Connecting to the broadcast…</Dim>
@@ -387,41 +408,32 @@ function ViewerView({
         </View>
       ) : null}
 
-      {/* Right action rail -- like (tap or double-tap-on-video, floating
-          heart burst) and share, the same TikTok-parity pair the website
-          viewer got; no bag icon here since the pinned/tray strip below is
-          already always visible on this smaller screen, unlike the site's
-          collapsible desktop-width version. Positioned by a fixed offset
-          below the header rather than anchored to the bottom stack, so it
-          never collides with the pinned card + tray, which vary in height
-          with how many products a seller has featured. */}
+      {/* Right action rail -- bell (same real chime + swing as BellScreen's
+          "RING IT", William 2026-07-20) and share; no bag icon here since
+          the pinned/tray strip below is already always visible on this
+          smaller screen, unlike the site's collapsible desktop-width
+          version. Positioned by a fixed offset below the header rather than
+          anchored to the bottom stack, so it never collides with the pinned
+          card + tray, which vary in height with how many products a seller
+          has featured. */}
       <View style={{ position: 'absolute', right: 10, top: insetsTop + 110, zIndex: 3, alignItems: 'center', gap: 20 }}>
-        <View style={{ alignItems: 'center' }}>
-          <Pressable style={s.railBtn} onPress={sendHeart}>
-            <View style={s.railCircle}>
-              <Ionicons name={likeCount > 0 ? 'heart' : 'heart-outline'} size={20} color={likeCount > 0 ? C.accent : '#fff'} />
-            </View>
-            <Text style={s.railTx}>{likeCount}</Text>
-          </Pressable>
-          {hearts.map((h) => (
-            <Animated.View
-              key={h.id}
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                bottom: 34,
-                left: 15 + h.x,
-                opacity: h.anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 0] }),
+        <Pressable style={s.railBtn} onPress={ringBell}>
+          <Animated.View
+            style={[
+              s.railCircle,
+              {
                 transform: [
-                  { translateY: h.anim.interpolate({ inputRange: [0, 1], outputRange: [0, -190] }) },
-                  { scale: h.anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0.6, 1, 1.05] }) },
+                  {
+                    rotate: bellSwing.interpolate({ inputRange: [-1, 1], outputRange: ['-24deg', '24deg'] }),
+                  },
                 ],
-              }}
-            >
-              <Ionicons name="heart" size={20} color={C.accent} />
-            </Animated.View>
-          ))}
-        </View>
+              },
+            ]}
+          >
+            <Ionicons name="notifications" size={19} color={ringing ? C.accent : '#fff'} />
+          </Animated.View>
+          <Text style={s.railTx}>Ring</Text>
+        </Pressable>
         <Pressable style={s.railBtn} onPress={shareStream}>
           <View style={s.railCircle}>
             <Ionicons name="share-social-outline" size={19} color="#fff" />

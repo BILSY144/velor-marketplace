@@ -51,13 +51,19 @@ export default function LiveViewerPage() {
   const [addedId, setAddedId] = useState<string | null>(null)
   // TikTok LIVE parity (William, 2026-07-20): a real, LiveKit-reported
   // viewer count (room.remoteParticipants -- genuine connected viewers, not
-  // invented), a local tap-to-like counter with a floating heart burst like
-  // TikTok's double-tap gesture, a collapsible shop rail so the video can go
-  // fully edge-to-edge, and a "more" menu that tucks Report behind the same
+  // invented), a collapsible shop rail so the video can go fully
+  // edge-to-edge, and a "more" menu that tucks Report behind the same
   // overflow affordance TikTok uses instead of a permanent floating button.
   const [viewerCount, setViewerCount] = useState(0)
-  const [likeCount, setLikeCount] = useState(0)
-  const [hearts, setHearts] = useState<{ id: string; x: number }[]>([])
+  // Bell, not heart (William, 2026-07-20): "remove the heart and place it
+  // with a bell that chimes like mobile app" -- the same real bell chime
+  // and swing gesture as the app's own BellScreen (assets/bell.m4a, mirrored
+  // to public/sounds/bell.m4a for the web), not a generic tap-to-like heart.
+  // Same hard rule as the native player: the audio element is created
+  // lazily on the first ring, inside try/catch, so a browser blocking or
+  // failing playback never breaks the rail button itself.
+  const [ringing, setRinging] = useState(false)
+  const bellAudioRef = useRef<HTMLAudioElement | null>(null)
   const [shopOpen, setShopOpen] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -275,17 +281,21 @@ export default function LiveViewerPage() {
     }
   }
 
-  // TikTok-style tap/double-tap-to-like: a floating heart drifts up and
-  // fades, same gesture TikTok uses on both regular videos and LIVE. This is
-  // a local engagement gesture only -- there is no like-count field on
-  // LiveStream to persist it against, so it is never presented as a
-  // server-tracked total, only as in-the-moment feedback for this viewer.
-  function sendHeart() {
-    setLikeCount((c) => c + 1)
-    const id = Math.random().toString(36).slice(2)
-    const x = 50 + (Math.random() * 40 - 20)
-    setHearts((prev) => [...prev.slice(-14), { id, x }])
-    setTimeout(() => setHearts((prev) => prev.filter((h) => h.id !== id)), 1600)
+  function ringBell() {
+    try {
+      if (!bellAudioRef.current) {
+        bellAudioRef.current = new Audio('/sounds/bell.m4a')
+      }
+      const a = bellAudioRef.current
+      a.currentTime = 0
+      void a.play().catch(() => {})
+    } catch {
+      // audio can fail to init/play for all sorts of browser reasons --
+      // the bell should still swing even if it stays silent.
+    }
+    setRinging(false)
+    // Re-trigger the CSS animation even on rapid repeat taps.
+    requestAnimationFrame(() => setRinging(true))
   }
 
   async function shareStream() {
@@ -371,12 +381,18 @@ export default function LiveViewerPage() {
       <style>{`
         @keyframes velorLivePulse { 0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); } 70% { box-shadow: 0 0 0 6px rgba(255,107,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); } }
         .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
-        @keyframes velorHeartFloat {
-          0% { transform: translate(0, 0) scale(0.6) rotate(0deg); opacity: 0; }
-          15% { opacity: 1; transform: translate(0, -10px) scale(1) rotate(-4deg); }
-          100% { transform: translate(var(--drift, 12px), -230px) scale(1.05) rotate(6deg); opacity: 0; }
+        /* Same swing curve as the app's own BellScreen "RING IT" animation
+           (0 -> 24deg -> -19deg -> 12deg -> -6deg -> 0), just expressed as
+           a CSS keyframe instead of an Animated.Value sequence. */
+        @keyframes velorBellSwing {
+          0% { transform: rotate(0deg); }
+          12% { transform: rotate(24deg); }
+          33% { transform: rotate(-19deg); }
+          55% { transform: rotate(12deg); }
+          77% { transform: rotate(-6deg); }
+          100% { transform: rotate(0deg); }
         }
-        .velor-heart { animation: velorHeartFloat 1.6s ease-out forwards; }
+        .velor-bell-swing { animation: velorBellSwing 1.3s ease-in-out; transform-origin: 50% 20%; }
         .velor-rail-btn { background: none; border: none; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
       `}</style>
 
@@ -385,7 +401,6 @@ export default function LiveViewerPage() {
           ref={setVideoRef}
           autoPlay
           playsInline
-          onDoubleClick={sendHeart}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
@@ -457,24 +472,25 @@ export default function LiveViewerPage() {
         </span>
       )}
 
-      {/* Right action rail: like, share, shop -- TikTok's vertical icon stack */}
+      {/* Right action rail: bell, share, shop -- TikTok's vertical icon stack.
+          Bell replaces the old tap-to-like heart (William, 2026-07-20): the
+          same real bell chime and swing gesture as the app's own
+          BellScreen, not a generic like counter. */}
       {status === 'connected' && (
         <div style={{ position: 'absolute', right: 10, bottom: 210, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div style={{ position: 'relative' }}>
-            <button className="velor-rail-btn" onClick={sendHeart} aria-label="Like">
-              <span style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill={likeCount > 0 ? accent : 'none'} stroke={likeCount > 0 ? accent : '#fff'} strokeWidth="2"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4.5c2.2 0 3.7 1.2 4.5 2.6.8-1.4 2.3-2.6 4.5-2.6 3.6 0 5.5 3.5 4 7.2C19.5 16.4 12 21 12 21Z" /></svg>
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{likeCount}</span>
-            </button>
-            <div style={{ position: 'absolute', bottom: 30, left: '50%', width: 0, height: 0, pointerEvents: 'none' }}>
-              {hearts.map((h) => (
-                <span key={h.id} className="velor-heart" style={{ position: 'absolute', left: h.x - 50, fontSize: 20, '--drift': `${(h.x - 50) * 0.6}px` } as React.CSSProperties}>
-                  &#10084;
-                </span>
-              ))}
-            </div>
-          </div>
+          <button className="velor-rail-btn" onClick={ringBell} aria-label="Ring the bell">
+            <span
+              className={ringing ? 'velor-bell-swing' : undefined}
+              onAnimationEnd={() => setRinging(false)}
+              style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ringing ? accent : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Ring</span>
+          </button>
 
           <button className="velor-rail-btn" onClick={shareStream} aria-label="Share">
             <span style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
