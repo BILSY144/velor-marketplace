@@ -832,7 +832,7 @@ function ShopContent() {
                 <Link href="/founding" style={{ background: category ? 'transparent' : 'var(--accent)', color: category ? 'var(--text)' : '#160a00', border: category ? '1px solid var(--border)' : 'none', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
                   See which countries open first
                 </Link>
-                <Link href="/#specialities" style={{ border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                <Link href="/specialities" style={{ border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 10, padding: '14px 26px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
                   Browse the specialities
                 </Link>
               </div>
