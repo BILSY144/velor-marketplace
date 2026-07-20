@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { displayIdentities } from '@/lib/messageIdentity';
+
+// Privacy rule (2026-07-20): never send the other party's email address to
+// the client; names are display identities (store name for sellers, masked
+// "First L." for buyers) resolved via lib/messageIdentity.ts.
 
 export async function GET(
   req: Request,
@@ -32,7 +37,7 @@ export async function GET(
       ...(productId ? { productId } : {}),
     },
     include: {
-      sender: { select: { id: true, name: true, email: true } },
+      sender: { select: { id: true, image: true } },
     },
     orderBy: { createdAt: 'asc' },
   });
@@ -48,10 +53,18 @@ export async function GET(
     data: { isRead: true },
   });
 
-  const otherUser = await prisma.user.findUnique({
-    where: { id: otherUserId },
-    select: { id: true, name: true, email: true },
-  });
+  const names = await displayIdentities([user.id, otherUserId]);
 
-  return NextResponse.json({ messages, currentUserId: user.id, otherUser });
+  return NextResponse.json({
+    messages: messages.map((m) => ({
+      ...m,
+      sender: {
+        id: m.sender.id,
+        name: names.get(m.sender.id) ?? 'Velor member',
+        image: m.sender.image,
+      },
+    })),
+    currentUserId: user.id,
+    otherUser: { id: otherUserId, name: names.get(otherUserId) ?? 'Velor member' },
+  });
 }
