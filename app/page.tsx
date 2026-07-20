@@ -924,9 +924,18 @@ export default function HomePage() {
           <div className="vh-drag">
             {liveOnAir.map(s => (
               <Link key={s.id} className="vh-tile" href={`/live/${s.roomName}`}>
-                {s.products[0]?.images?.[0] && (
+                {s.products[0]?.images?.[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={s.products[0].images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                ) : (
+                  // No featured product photo yet -- this used to render as a
+                  // flat, empty grey box with nothing but the LIVE chip on it.
+                  // Show a broadcast-style placeholder instead of nothing.
+                  <div style={{ width: '100%', height: '100%', background: 'radial-gradient(circle at 50% 35%, #2a1608 0%, #0d0d0d 70%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent)' }} />
+                    </span>
+                  </div>
                 )}
                 <div className="vh-scrim" />
                 <div className="vh-chip islive">LIVE</div>

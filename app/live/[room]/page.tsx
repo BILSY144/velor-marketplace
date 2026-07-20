@@ -45,6 +45,13 @@ export default function LiveViewerPage() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatError, setChatError] = useState('')
   const [status, setStatus] = useState<'loading' | 'connecting' | 'connected' | 'ended' | 'scheduled' | 'notfound' | 'error'>('loading')
+  // Sellers often broadcast from a phone held upright, which publishes a
+  // portrait (taller-than-wide) video track. A fixed 16/9 box with
+  // objectFit: 'contain' was squeezing that into a narrow vertical strip
+  // with large black bars either side -- reported as "only a narrow box
+  // with visual". Track the video's real aspect ratio once its metadata
+  // loads and size the frame to match instead of forcing widescreen.
+  const [videoAspect, setVideoAspect] = useState<number | null>(null)
   const [reported, setReported] = useState(false)
   const [notifyState, setNotifyState] = useState<'idle' | 'saved' | 'signin'>('idle')
   const [addedId, setAddedId] = useState<string | null>(null)
@@ -247,9 +254,18 @@ export default function LiveViewerPage() {
     <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)', gap: 24 }}>
         <div>
-          <div style={{ position: 'relative', background: '#000', borderRadius: 16, overflow: 'hidden', aspectRatio: '16/9' }}>
+          <div style={{ position: 'relative', background: '#000', borderRadius: 16, overflow: 'hidden', aspectRatio: videoAspect ? String(videoAspect) : '16/9', maxHeight: '80vh', maxWidth: videoAspect && videoAspect < 1 ? 'min(100%, 480px)' : '100%', margin: videoAspect && videoAspect < 1 ? '0 auto' : undefined }}>
             {status === 'connected' ? (
-              <video ref={setVideoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <video
+                ref={setVideoRef}
+                autoPlay
+                playsInline
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget
+                  if (v.videoWidth && v.videoHeight) setVideoAspect(v.videoWidth / v.videoHeight)
+                }}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             ) : (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
                 {status === 'connecting' && 'Connecting...'}
