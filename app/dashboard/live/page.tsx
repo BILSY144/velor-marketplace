@@ -104,6 +104,27 @@ export default function GoLivePage() {
     }
   }, [])
 
+  // Belt-and-suspenders against iOS Safari's zoom-on-input-focus (William:
+  // "the screen does not auto resize" -- it expands once and stays
+  // expanded). Every input here is already at the 16px no-zoom threshold,
+  // but the site's shared viewport meta tag still allows pinch-zoom, and
+  // once iOS Safari zooms in for any reason it does NOT automatically zoom
+  // back out on blur -- the page just stays "expanded" until the user
+  // manually pinches back out. Locking the viewport to
+  // maximum-scale=1/user-scalable=no while on this mobile broadcaster page
+  // removes the zoom trigger at the source. Restored on unmount.
+  useEffect(() => {
+    if (!isMobile) return
+    const meta = document.querySelector('meta[name="viewport"]')
+    const prev = meta?.getAttribute('content') ?? null
+    if (meta) {
+      meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+    }
+    return () => {
+      if (meta && prev !== null) meta.setAttribute('content', prev)
+    }
+  }, [isMobile])
+
   // Scheduling (2026-07-20)
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduledFor, setScheduledFor] = useState('')

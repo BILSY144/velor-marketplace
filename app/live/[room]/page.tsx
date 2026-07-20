@@ -81,6 +81,28 @@ export default function LiveViewerPage() {
     }
   }, [])
 
+  // Belt-and-suspenders against iOS Safari's zoom-on-input-focus (William:
+  // "the screen does not auto resize" -- it expands once and stays
+  // expanded). Every input on this page is already at the 16px no-zoom
+  // threshold, but the site's shared viewport meta tag (app/layout.tsx)
+  // still allows pinch-zoom, and once iOS Safari zooms in for any reason it
+  // does NOT automatically zoom back out on blur -- the page just stays
+  // "expanded" until the user manually pinches back out. Locking the
+  // viewport to maximum-scale=1/user-scalable=no while this full-screen,
+  // app-like room is mounted removes the zoom trigger at the source instead
+  // of trying to out-guess every edge case that can cause it. Restored on
+  // unmount so the rest of the site keeps normal pinch-zoom.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]')
+    const prev = meta?.getAttribute('content') ?? null
+    if (meta) {
+      meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+    }
+    return () => {
+      if (meta && prev !== null) meta.setAttribute('content', prev)
+    }
+  }, [])
+
   const handleData = useCallback((payload: Uint8Array) => {
     try {
       const msg = JSON.parse(decoder.decode(payload)) as { t?: string; name?: string; text?: string; productId?: string | null }
