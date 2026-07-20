@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { endLiveKitRoom } from '@/lib/livekit'
+import { deactivateLiveOffer } from '@/lib/liveOffer'
 
 export async function POST(
   req: Request,
@@ -22,6 +23,14 @@ export async function POST(
   }
 
   await endLiveKitRoom(stream.roomName)
+
+  // The live-only offer dies with the stream — the whole point is that the
+  // price is only available while the seller is actually live.
+  try {
+    await deactivateLiveOffer(stream.roomName)
+  } catch (err) {
+    console.warn('[live/end] offer deactivation failed (non-blocking):', err)
+  }
 
   const updated = await prisma.liveStream.update({
     where: { id },
