@@ -667,6 +667,23 @@ model PasswordResetToken {
   @@index([userId])
 }
 
+// "Notify me" for scheduled live streams (2026-07-20). A row means one
+// person asked to be told when this stream goes live. Signed-in users are
+// stored by userId (their registered PushTokens are looked up at send
+// time); app users who are not signed in are stored by their Expo push
+// token directly. No relations declared so LiveStream stays untouched.
+model LiveStreamInterest {
+  id        String   @id @default(cuid())
+  streamId  String
+  userId    String?
+  pushToken String?
+  createdAt DateTime @default(now())
+
+  @@unique([streamId, userId])
+  @@unique([streamId, pushToken])
+  @@index([streamId])
+}
+
 // Expo push tokens — one row per device, so launch events (opening bells,
 // order updates) can notify the Velor app with the bell chime.
 model PushToken {
