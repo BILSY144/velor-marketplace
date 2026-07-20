@@ -60,11 +60,71 @@ const TIER_THEME: Record<Tier, {
   },
 };
 
+const SIDEBAR_COLLAPSE_KEY = 'velor-dashboard-sidebar-collapsed';
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>('STARTER');
   const [payoutReady, setPayoutReady] = useState<boolean | null>(null); useEffect(() => { const prev = document.documentElement.getAttribute('data-theme'); const force = () => { if (document.documentElement.getAttribute('data-theme') !== 'dark') { document.documentElement.setAttribute('data-theme', 'dark') } }; force(); const observer = new MutationObserver(force); observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); return () => { observer.disconnect(); if (prev) { document.documentElement.setAttribute('data-theme', prev) } else { document.documentElement.removeAttribute('data-theme') } } }, [])
+
+  // Collapsible sidebar (William, 2026-07-20 -- "the seller dashboard is
+  // over taken by the left side bar actions, that needs to be collapsable
+  // when not needed so the seller can access full screen"). Two distinct
+  // behaviors depending on viewport, same isMobile breakpoint the Go Live
+  // redesign already established for this dashboard:
+  //  - Desktop: the sidebar stays docked but can collapse to a slim
+  //    icon-only rail (240px -> 64px), reclaiming width for wide tables and
+  //    charts. Preference persists across visits via localStorage.
+  //  - Mobile: the sidebar is off-canvas by default (0 width used) and
+  //    opens as a full overlay drawer over the content -- true full-screen
+  //    by default, the drawer is opt-in rather than always eating space.
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY);
+      if (saved === '1') setCollapsed(true);
+    } catch {
+      // localStorage unavailable (private browsing etc.) -- default to expanded
+    }
+    const checkMobile = () => setIsMobile(window.innerWidth < 900);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Closing the mobile drawer on route change means a seller who taps a nav
+  // link lands on the new page seeing it full-screen, not still under the
+  // drawer they just opened.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  function toggleSidebar() {
+    if (isMobile) {
+      setMobileOpen((v) => !v);
+      return;
+    }
+    setCollapsed((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, next ? '1' : '0');
+      } catch {
+        // ignore -- collapse still works for this session even if it can't persist
+      }
+      return next;
+    });
+  }
+
+  // Icon-rail (label-hiding) mode only applies to the docked desktop
+  // sidebar. The mobile drawer, when open, is always shown at full width
+  // with labels -- there is no reason to save space inside an overlay that
+  // is already opt-in.
+  const railOnly = !isMobile && collapsed;
+  const sidebarWidth = isMobile ? 240 : (collapsed ? 64 : 240);
 
   useEffect(() => {
     fetch('/api/seller/me')
@@ -113,9 +173,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 
+      {/* Backdrop behind the mobile drawer -- tapping it closes the sidebar
+          the same way tapping outside any overlay does elsewhere on Velor. */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{ position: 'fixed', inset: 0, top: '64px', background: 'rgba(0,0,0,0.55)', zIndex: 39 }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
-        width: '240px',
+        width: `${sidebarWidth}px`,
         flexShrink: 0,
         background: '#111111',
         backgroundImage: theme.sidebarGradient,
@@ -125,34 +194,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         left: 0,
         bottom: 0,
         overflowY: 'auto',
+        overflowX: 'hidden',
         zIndex: 40,
+        transition: 'width 0.2s ease, transform 0.2s ease',
+        transform: isMobile && !mobileOpen ? 'translateX(-100%)' : 'translateX(0)',
+        boxShadow: isMobile && mobileOpen ? '8px 0 24px rgba(0,0,0,0.5)' : 'none',
       }}>
-        <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid #2A2A2A' }}>
+        <div style={{ padding: railOnly ? '20px 0 16px' : '24px 20px 16px', borderBottom: '1px solid #2A2A2A', textAlign: railOnly ? 'center' : 'left' }}>
           <Link href="/" style={{
             fontFamily: 'Space Grotesk, sans-serif',
             fontWeight: 800,
-            fontSize: '20px',
+            fontSize: railOnly ? '18px' : '20px',
             color: '#FF6B00',
             textDecoration: 'none',
             letterSpacing: '-0.5px',
           }}>
-            VELOR
+            {railOnly ? 'V' : 'VELOR'}
           </Link>
-          <p style={{ color: '#999999', fontSize: '12px', marginTop: '4px', marginBottom: '10px' }}>Seller Dashboard</p>
-          <span style={{
-            display: 'inline-block',
-            padding: '3px 10px',
-            borderRadius: 999,
-            fontSize: '11px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em',
-            color: theme.badgeColor,
-            background: theme.badgeBg,
-            border: `1px solid ${theme.badgeBorder}`,
-          }}>
-            {theme.label} plan
-          </span>
+          {!railOnly && (
+            <>
+              <p style={{ color: '#999999', fontSize: '12px', marginTop: '4px', marginBottom: '10px' }}>Seller Dashboard</p>
+              <span style={{
+                display: 'inline-block',
+                padding: '3px 10px',
+                borderRadius: 999,
+                fontSize: '11px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                color: theme.badgeColor,
+                background: theme.badgeBg,
+                border: `1px solid ${theme.badgeBorder}`,
+              }}>
+                {theme.label} plan
+              </span>
+            </>
+          )}
         </div>
 
         <nav style={{ padding: '16px 0' }}>
@@ -167,11 +244,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 key={item.href}
                 href={item.href}
                 className="sidebar-nav-link"
+                title={railOnly ? item.label : undefined}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 20px',
+                  gap: railOnly ? 0 : '12px',
+                  justifyContent: railOnly ? 'center' : 'flex-start',
+                  padding: railOnly ? '12px 0' : '12px 20px',
                   textDecoration: 'none',
                   borderLeft: isActive && !isLive ? '3px solid #FF6B00' : '3px solid transparent',
                   background: isLive
@@ -182,6 +261,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   fontWeight: isActive || isLive ? 600 : 400,
                   transition: 'all 0.15s',
                   boxShadow: isActive ? theme.activeGlow : 'none',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
                 }}
               >
                 <span style={{
@@ -200,7 +281,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }}>
                   {item.icon}
                 </span>
-                {item.label}
+                {!railOnly && item.label}
               </Link>
             );
           })}
@@ -230,7 +311,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         padding: '0 24px',
         zIndex: 50,
       }}>
-        <div style={{ width: '200px' }} />
+        <div style={{ width: '200px', display: 'flex', alignItems: 'center' }}>
+          <button
+            onClick={toggleSidebar}
+            aria-label={isMobile ? (mobileOpen ? 'Close menu' : 'Open menu') : (collapsed ? 'Expand sidebar' : 'Collapse sidebar')}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'transparent',
+              border: '1px solid #2A2A2A',
+              color: '#CCCCCC',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {isMobile ? (
+              mobileOpen ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+              )
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}><path d="M15 6l-6 6 6 6" /></svg>
+            )}
+          </button>
+        </div>
         <p style={{
           fontFamily: 'Space Grotesk, sans-serif',
           fontWeight: 700,
@@ -262,12 +370,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      {/* Main content */}
+      {/* Main content -- full-width on mobile (the sidebar is an overlay
+          drawer there, not docked), width tracks the collapse state on
+          desktop so the reclaimed space actually goes to the page. */}
       <main style={{
-        marginLeft: '240px',
+        marginLeft: isMobile ? 0 : `${sidebarWidth}px`,
         marginTop: '64px',
         flex: 1,
         minWidth: 0,
+        transition: 'margin-left 0.2s ease',
       }}>
         {children}
       </main>
