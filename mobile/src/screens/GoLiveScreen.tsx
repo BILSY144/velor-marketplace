@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Platform } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { View, ScrollView, Pressable, StyleSheet, Platform, Switch } from 'react-native'
+import { Image } from 'expo-image'
 import { TextInput } from '../ui/TI'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -13,9 +14,9 @@ import {
   VideoTrack,
   isTrackReference,
 } from '@livekit/react-native'
-import { Room, RoomEvent, Track } from 'livekit-client'
+import { Room, RoomEvent, Track, ConnectionQuality } from 'livekit-client'
 import { C, F } from '../theme'
-import { Dim, Btn } from '../ui'
+import { Dim, Btn, Kicker, Display } from '../ui'
 import { Chrome } from '../components/Chrome'
 import {
   fetchSellerLive,
@@ -26,6 +27,7 @@ import {
   SellerLiveStream,
   SellerProduct,
 } from '../api'
+import { fmt } from '../i18n'
 import { checkMessageContent } from '../messageFilter'
 import { encodeLiveData, decodeLiveData, LiveDataMsg } from '../liveData'
 
@@ -48,6 +50,7 @@ export default function GoLiveScreen() {
   const [error, setError] = useState('')
 
   const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduledFor, setScheduledFor] = useState<Date | null>(null)
@@ -58,6 +61,15 @@ export default function GoLiveScreen() {
   const [connecting, setConnecting] = useState(false)
   const [starting, setStarting] = useState(false)
   const [liveKitCreds, setLiveKitCreds] = useState<{ wsUrl: string; token: string } | null>(null)
+
+  // Live-updating preview of the exact card buyers will see pinned on
+  // screen once this product is featured — mirrors the website setup
+  // page's "How buyers will see it" panel (William: "highly advanced ...
+  // every angle covered").
+  const mockPinnedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductIds[0]) ?? null,
+    [products, selectedProductIds]
+  )
 
   useEffect(() => {
     async function load() {
@@ -109,6 +121,7 @@ export default function GoLiveScreen() {
     try {
       const result = await createLiveStream({
         title,
+        description: description.trim() || undefined,
         productIds: selectedProductIds,
         scheduledFor: scheduleEnabled && scheduledFor ? scheduledFor.toISOString() : null,
         liveOfferPercent,
@@ -149,6 +162,7 @@ export default function GoLiveScreen() {
       setActiveStream(null)
       setLiveKitCreds(null)
       setTitle('')
+      setDescription('')
       setSelectedProductIds([])
     }
   }
@@ -224,108 +238,200 @@ export default function GoLiveScreen() {
   }
 
   // No active stream -- the setup form.
+  const offerPct = Number(offerPercent)
+  const offerValid = Number.isFinite(offerPct) && offerPct >= 5 && offerPct <= 50
+  const previewPrice = mockPinnedProduct?.price ?? 0
+  const previewNowPrice = offerEnabled && offerValid ? previewPrice * (1 - offerPct / 100) : previewPrice
+
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingHorizontal: 20, paddingBottom: 60 }}>
-        <Text style={s.kickDim}>BROADCAST TITLE</Text>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Morning firing — raku, from the kiln"
-          placeholderTextColor={C.dim}
-          style={s.titleIn}
-        />
-
-        <Text style={s.kickDim}>FEATURE PRODUCTS</Text>
-        <Dim style={{ fontSize: 11.5, marginTop: 6, lineHeight: 16 }}>
-          Buyers tap them to buy while you're on air. Tap to select, up to 12.
+        <Kicker>LIVE SHOPPING</Kicker>
+        <Display style={{ marginTop: 4 }}>Go Live</Display>
+        <Dim style={{ marginTop: 6, lineHeight: 18 }}>
+          Every plan can broadcast — Starter included. Set up your stream below, then go live in one tap.
         </Dim>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          {products.map((p) => {
-            const checked = selectedProductIds.includes(p.id)
-            return (
-              <Pressable
-                key={p.id}
-                style={[s.pill, checked && { backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.accent }]}
-                onPress={() =>
-                  setSelectedProductIds((prev) =>
-                    checked ? prev.filter((id) => id !== p.id) : prev.length >= 12 ? prev : [...prev, p.id]
-                  )
-                }
-              >
-                <Text style={[s.pillTx, checked && { color: C.accent }]} numberOfLines={1}>
-                  {p.title ?? p.name}
-                </Text>
-              </Pressable>
-            )
-          })}
-          {products.length === 0 && <Dim style={{ fontSize: 12 }}>Add products to your store to feature them.</Dim>}
+
+        {/* Live buyer-facing preview -- mirrors the pinned card viewers */}
+        {/* actually see, so a seller can check it before ever going live. */}
+        <View style={s.card}>
+          <SectionLabel icon="eye-outline" title="How buyers will see it" />
+          <View style={s.previewStub}>
+            <View style={s.previewTopRow}>
+              <View style={s.previewAvatar}>
+                <Text style={s.previewAvatarTx}>{storeName.slice(0, 1).toUpperCase()}</Text>
+              </View>
+              <Text style={s.previewName} numberOfLines={1}>{storeName}</Text>
+              <View style={s.previewLiveChip}>
+                <View style={s.redDot} />
+                <Text style={s.previewLiveTx}>LIVE</Text>
+              </View>
+            </View>
+            {mockPinnedProduct ? (
+              <View style={s.previewPin}>
+                {mockPinnedProduct.images?.[0] ? (
+                  <Image source={{ uri: mockPinnedProduct.images[0] }} style={s.previewPinImg} contentFit="cover" />
+                ) : (
+                  <View style={[s.previewPinImg, { backgroundColor: C.surf2 }]} />
+                )}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={s.previewKicker}>Now showing</Text>
+                  <Text style={s.previewPinTitle} numberOfLines={1}>{mockPinnedProduct.title ?? mockPinnedProduct.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
+                    <Text style={s.previewPrice}>{fmt(previewNowPrice)}</Text>
+                    {offerEnabled && offerValid && (
+                      <Text style={s.previewWasPrice}>{fmt(previewPrice)}</Text>
+                    )}
+                  </View>
+                </View>
+                <View style={s.previewBuyBtn}>
+                  <Text style={s.previewBuyTx}>Buy now</Text>
+                </View>
+              </View>
+            ) : (
+              <Dim style={{ fontSize: 11.5, marginTop: 10 }}>Feature a product below to preview its live card.</Dim>
+            )}
+            <Text style={s.previewCaption} numberOfLines={1}>{title || 'Your stream title appears here'}</Text>
+          </View>
         </View>
 
-        <Text style={s.kickDim}>SCHEDULE</Text>
-        <Pressable
-          style={[s.toggleRow]}
-          onPress={() => {
-            setScheduleEnabled((v) => !v)
-            if (!scheduleEnabled && !scheduledFor) {
-              const d = new Date(Date.now() + 60 * 60000)
-              setScheduledFor(d)
-            }
-          }}
-        >
-          <Ionicons name={scheduleEnabled ? 'checkbox' : 'square-outline'} size={19} color={scheduleEnabled ? C.accent : C.mut} />
-          <Text style={{ color: C.text, fontSize: 13.5, marginLeft: 8 }}>Schedule for later instead of going live now</Text>
-        </Pressable>
-        {scheduleEnabled && (
-          <>
+        {/* Stream details */}
+        <View style={s.card}>
+          <SectionLabel icon="videocam-outline" title="Stream details" />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
+            <Text style={s.fieldLabel}>Title</Text>
+            <Dim style={{ fontSize: 10.5 }}>{title.length}/80</Dim>
+          </View>
+          <TextInput
+            value={title}
+            onChangeText={(v) => setTitle(v.slice(0, 80))}
+            placeholder="Morning firing — raku, from the kiln"
+            placeholderTextColor={C.dim}
+            style={s.titleIn}
+          />
+          <Text style={[s.fieldLabel, { marginTop: 14 }]}>Description (optional)</Text>
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="What you're making, sourcing, or showing off today"
+            placeholderTextColor={C.dim}
+            multiline
+            style={[s.titleIn, { minHeight: 68, textAlignVertical: 'top', paddingTop: 12 }]}
+          />
+        </View>
+
+        {/* Feature products -- image-card grid */}
+        <View style={s.card}>
+          <SectionLabel icon="grid-outline" title={`Feature products (${selectedProductIds.length}/12)`} />
+          <Dim style={{ fontSize: 11.5, marginTop: 6, lineHeight: 16 }}>
+            Buyers tap them to buy while you're on air.
+          </Dim>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14 }}>
+            {products.map((p) => {
+              const checked = selectedProductIds.includes(p.id)
+              const soldOut = p.stock <= 0
+              const atCap = !checked && selectedProductIds.length >= 12
+              const disabled = soldOut || atCap
+              return (
+                <Pressable
+                  key={p.id}
+                  disabled={disabled}
+                  style={[s.prodCard, checked && s.prodCardOn, disabled && { opacity: 0.4 }]}
+                  onPress={() =>
+                    setSelectedProductIds((prev) =>
+                      checked ? prev.filter((id) => id !== p.id) : prev.length >= 12 ? prev : [...prev, p.id]
+                    )
+                  }
+                >
+                  {p.images?.[0] ? (
+                    <Image source={{ uri: p.images[0] }} style={s.prodImg} contentFit="cover" />
+                  ) : (
+                    <View style={[s.prodImg, { backgroundColor: C.surf2 }]} />
+                  )}
+                  {checked && (
+                    <View style={s.prodCheck}>
+                      <Ionicons name="checkmark" size={12} color="#160a00" />
+                    </View>
+                  )}
+                  {soldOut && (
+                    <View style={s.prodSoldOut}>
+                      <Text style={s.prodSoldOutTx}>Sold out</Text>
+                    </View>
+                  )}
+                  <Text style={s.prodTitle} numberOfLines={1}>{p.title ?? p.name}</Text>
+                  <Text style={s.prodPrice}>{fmt(p.price)}</Text>
+                </Pressable>
+              )
+            })}
+            {products.length === 0 && <Dim style={{ fontSize: 12 }}>Add products to your store to feature them.</Dim>}
+          </View>
+        </View>
+
+        {/* Schedule + live offer -- native switches, not checkboxes */}
+        <View style={s.card}>
+          <FeatureRow
+            icon="calendar-outline"
+            title="Schedule for later"
+            description="Pick a date and time instead of going live now."
+            value={scheduleEnabled}
+            onValueChange={(v) => {
+              setScheduleEnabled(v)
+              if (v && !scheduledFor) setScheduledFor(new Date(Date.now() + 60 * 60000))
+            }}
+          />
+          {scheduleEnabled && (
             <Pressable style={s.dateBtn} onPress={() => setShowPicker(true)}>
               <Ionicons name="calendar-outline" size={16} color={C.text} />
               <Text style={{ color: C.text, fontSize: 13, marginLeft: 8 }}>
                 {scheduledFor ? scheduledFor.toLocaleString() : 'Pick a date and time'}
               </Text>
             </Pressable>
-            {showPicker && (
-              <DateTimePicker
-                value={scheduledFor ?? new Date(Date.now() + 60 * 60000)}
-                mode="datetime"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                minimumDate={new Date(Date.now() + 5 * 60000)}
-                onChange={(_event, date) => {
-                  if (Platform.OS === 'android') setShowPicker(false)
-                  if (date) setScheduledFor(date)
-                }}
-              />
-            )}
-          </>
-        )}
-
-        <Text style={s.kickDim}>LIVE-ONLY OFFER</Text>
-        <Pressable style={s.toggleRow} onPress={() => setOfferEnabled((v) => !v)}>
-          <Ionicons name={offerEnabled ? 'checkbox' : 'square-outline'} size={19} color={offerEnabled ? C.accent : C.mut} />
-          <Text style={{ color: C.text, fontSize: 13.5, marginLeft: 8 }}>Run a discount on featured products, live only</Text>
-        </Pressable>
-        {offerEnabled && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
-            <TextInput
-              value={offerPercent}
-              onChangeText={setOfferPercent}
-              keyboardType="number-pad"
-              style={[s.titleIn, { width: 80, marginTop: 0, textAlign: 'center' }]}
+          )}
+          {showPicker && (
+            <DateTimePicker
+              value={scheduledFor ?? new Date(Date.now() + 60 * 60000)}
+              mode="datetime"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              minimumDate={new Date(Date.now() + 5 * 60000)}
+              onChange={(_event, date) => {
+                if (Platform.OS === 'android') setShowPicker(false)
+                if (date) setScheduledFor(date)
+              }}
             />
-            <Dim style={{ fontSize: 12, flex: 1 }}>% off — the price reverts the moment the stream ends</Dim>
-          </View>
-        )}
+          )}
 
-        {error ? <Text style={{ color: C.red, marginTop: 16 }}>{error}</Text> : null}
+          <View style={s.divider} />
 
-        <View style={{ marginTop: 24 }}>
+          <FeatureRow
+            icon="pricetag-outline"
+            title="Live-only discount"
+            description="Run a discount on featured products — reverts the moment you end."
+            value={offerEnabled}
+            onValueChange={setOfferEnabled}
+          />
+          {offerEnabled && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+              <TextInput
+                value={offerPercent}
+                onChangeText={setOfferPercent}
+                keyboardType="number-pad"
+                style={[s.titleIn, { width: 80, marginTop: 0, textAlign: 'center' }]}
+              />
+              <Dim style={{ fontSize: 12, flex: 1 }}>% off, between 5 and 50</Dim>
+            </View>
+          )}
+        </View>
+
+        {error ? <Text style={{ color: C.red, marginTop: 4, marginBottom: 12 }}>{error}</Text> : null}
+
+        <View style={{ marginTop: 8 }}>
           <Btn
-            label={connecting ? (scheduleEnabled ? 'Scheduling…' : 'Going live…') : scheduleEnabled ? 'Schedule Stream' : 'Go live'}
+            label={connecting ? (scheduleEnabled ? 'Scheduling…' : 'Going live…') : scheduleEnabled ? 'Schedule Stream' : 'Go Live Now'}
             onPress={connecting ? undefined : goLiveNow}
           />
         </View>
         <Dim style={{ textAlign: 'center', marginTop: 10, fontSize: 11, lineHeight: 16 }}>
-          Every plan can broadcast — Starter included. Your browser or device will ask for camera and microphone access.
+          Your device will ask for camera and microphone access when you go live.
         </Dim>
       </ScrollView>
       <Chrome back="Dashboard" onBack={() => nav.goBack()} />
@@ -399,6 +505,9 @@ function BroadcastView({
   const [chat, setChat] = useState<{ id: string; name: string; text: string }[]>([])
   const [chatDraft, setChatDraft] = useState('')
   const [chatError, setChatError] = useState('')
+  const [viewerCount, setViewerCount] = useState(0)
+  const [connQuality, setConnQuality] = useState<ConnectionQuality>(ConnectionQuality.Unknown)
+  const [micLevel, setMicLevel] = useState(0)
 
   useEffect(() => {
     AudioSession.startAudioSession()
@@ -417,10 +526,27 @@ function BroadcastView({
     // Re-broadcast the current pin so a viewer who joins mid-stream still
     // sees whatever is currently featured.
     const onJoin = () => publishPin(pinnedIdRef.current)
+    const syncViewerCount = () => setViewerCount(room.remoteParticipants.size)
     room.on(RoomEvent.ParticipantConnected, onJoin)
+    room.on(RoomEvent.ParticipantConnected, syncViewerCount)
+    room.on(RoomEvent.ParticipantDisconnected, syncViewerCount)
+    const onQuality = (quality: ConnectionQuality, participant: { isLocal: boolean }) => {
+      if (participant.isLocal) setConnQuality(quality)
+    }
+    room.on(RoomEvent.ConnectionQualityChanged, onQuality)
+    const onSpeakers = (speakers: { isLocal: boolean; audioLevel: number }[]) => {
+      const me = speakers.find((p) => p.isLocal)
+      setMicLevel(me ? me.audioLevel : 0)
+    }
+    room.on(RoomEvent.ActiveSpeakersChanged, onSpeakers)
+    syncViewerCount()
     return () => {
       room.off(RoomEvent.DataReceived, onData)
       room.off(RoomEvent.ParticipantConnected, onJoin)
+      room.off(RoomEvent.ParticipantConnected, syncViewerCount)
+      room.off(RoomEvent.ParticipantDisconnected, syncViewerCount)
+      room.off(RoomEvent.ConnectionQualityChanged, onQuality)
+      room.off(RoomEvent.ActiveSpeakersChanged, onSpeakers)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room])
@@ -463,11 +589,18 @@ function BroadcastView({
           <View style={s.redDot} />
           <Text style={s.checkTx}>LIVE</Text>
         </View>
-        <Text style={{ color: '#fff', marginLeft: 10, fontSize: 12.5, flex: 1 }} numberOfLines={1}>{stream.title}</Text>
-        <Pressable style={s.endBtn} onPress={onEnd}>
+        <View style={s.viewerChip}>
+          <Ionicons name="eye-outline" size={11} color="#ddd" />
+          <Text style={s.viewerChipTx}>{viewerCount}</Text>
+        </View>
+        <MicMeter level={micLevel} />
+        <View style={{ flex: 1 }} />
+        <ConnQualityChip quality={connQuality} />
+        <Pressable style={[s.endBtn, { marginLeft: 8 }]} onPress={onEnd}>
           <Text style={{ color: '#fff', fontFamily: F.displayMed, fontSize: 11.5 }}>End</Text>
         </Pressable>
       </View>
+      <Text style={{ position: 'absolute', top: insetsTop + 46, left: 14, right: 14, color: '#fff', fontSize: 12.5 }} numberOfLines={1}>{stream.title}</Text>
 
       {streamProducts.length > 0 && (
         <View style={{ position: 'absolute', left: 14, right: 14, bottom: 220 }}>
@@ -478,9 +611,14 @@ function BroadcastView({
               return (
                 <Pressable
                   key={p.id}
-                  style={[s.pill, { backgroundColor: 'rgba(0,0,0,0.55)' }, isPinned && { borderColor: C.accent, borderWidth: 1 }]}
+                  style={[s.pinChip, isPinned && { borderColor: C.accent, borderWidth: 1 }]}
                   onPress={() => togglePin(p.id)}
                 >
+                  {p.images?.[0] ? (
+                    <Image source={{ uri: p.images[0] }} style={s.pinChipImg} contentFit="cover" />
+                  ) : (
+                    <View style={[s.pinChipImg, { backgroundColor: C.surf2 }]} />
+                  )}
                   <Text style={[s.pillTx, isPinned && { color: C.accent }]} numberOfLines={1}>{p.title ?? p.name}</Text>
                 </Pressable>
               )
@@ -489,13 +627,21 @@ function BroadcastView({
         </View>
       )}
 
-      <View style={s.chatPanel}>
-        {chat.slice(-4).map((m) => (
-          <Text key={m.id} style={{ color: '#fff', fontSize: 12, marginBottom: 3 }} numberOfLines={1}>
-            <Text style={{ color: C.accent, fontFamily: F.bodySemi }}>{m.name}: </Text>
-            {m.text}
-          </Text>
+      {/* Fixed-height chat feed -- always the same size on screen, newest
+          message pushes older ones up and off the top via the fade mask,
+          never expands to cover the picture. */}
+      <View style={s.chatFeed} pointerEvents="none">
+        {chat.slice(-6).reverse().map((m) => (
+          <View key={m.id} style={s.chatBubble}>
+            <Text style={{ color: '#fff', fontSize: 12 }} numberOfLines={2}>
+              <Text style={{ color: C.accent, fontFamily: F.bodySemi }}>{m.name}: </Text>
+              {m.text}
+            </Text>
+          </View>
         ))}
+      </View>
+
+      <View style={s.composerRow}>
         {chatError ? <Text style={{ color: C.red, fontSize: 11, marginBottom: 4 }}>{chatError}</Text> : null}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TextInput
@@ -515,8 +661,191 @@ function BroadcastView({
   )
 }
 
+// A compact live mic-level meter -- 5 bars lit up to `level` (0..1), driven
+// by the room's own ActiveSpeakersChanged event (genuine audio level, not
+// a decorative animation).
+function MicMeter({ level }: { level: number }) {
+  const lit = Math.round(level * 5)
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2, marginLeft: 8, height: 12 }}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <View
+          key={i}
+          style={{
+            width: 3,
+            height: 4 + i * 2,
+            borderRadius: 1,
+            backgroundColor: i < lit ? C.accent : 'rgba(255,255,255,0.25)',
+          }}
+        />
+      ))}
+    </View>
+  )
+}
+
+const CONN_QUALITY_LABEL: Record<ConnectionQuality, string> = {
+  [ConnectionQuality.Excellent]: 'Excellent',
+  [ConnectionQuality.Good]: 'Good',
+  [ConnectionQuality.Poor]: 'Weak',
+  [ConnectionQuality.Lost]: 'Lost',
+  [ConnectionQuality.Unknown]: '',
+}
+
+function ConnQualityChip({ quality }: { quality: ConnectionQuality }) {
+  const label = CONN_QUALITY_LABEL[quality]
+  if (!label) return null
+  const color = quality === ConnectionQuality.Poor || quality === ConnectionQuality.Lost ? C.red : C.green
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 }}>
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
+      <Text style={{ color: '#eee', fontSize: 10.5, fontFamily: F.displayMed }}>{label}</Text>
+    </View>
+  )
+}
+
+type IconName = React.ComponentProps<typeof Ionicons>['name']
+
+function SectionLabel({ icon, title }: { icon: IconName; title: string }) {
+  return (
+    <View style={s.sectionLabelRow}>
+      <Ionicons name={icon} size={14} color={C.accent} />
+      <Text style={s.sectionLabelTx}>{title}</Text>
+    </View>
+  )
+}
+
+function FeatureRow({
+  icon,
+  title,
+  description,
+  value,
+  onValueChange,
+}: {
+  icon: IconName
+  title: string
+  description: string
+  value: boolean
+  onValueChange: (v: boolean) => void
+}) {
+  return (
+    <View style={s.featureRow}>
+      <View style={s.featureRowIcon}>
+        <Ionicons name={icon} size={16} color={value ? C.accent : C.mut} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={s.featureRowTitle}>{title}</Text>
+        <Dim style={{ fontSize: 11, marginTop: 2, lineHeight: 15 }}>{description}</Dim>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: 'rgba(255,255,255,0.15)', true: C.accentSoft }}
+        thumbColor={value ? C.accent : '#8a8a95'}
+        ios_backgroundColor="rgba(255,255,255,0.15)"
+      />
+    </View>
+  )
+}
+
 const s = StyleSheet.create({
   kickDim: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.mut, marginTop: 24 },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 20,
+  },
+  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  sectionLabelTx: { fontFamily: F.displayMed, fontSize: 12.5, color: C.text, letterSpacing: 0.2 },
+  fieldLabel: { fontFamily: F.displayMed, fontSize: 10.5, color: C.mut, letterSpacing: 0.3 },
+  divider: { height: 1, backgroundColor: C.line, marginVertical: 16 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  featureRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureRowTitle: { fontFamily: F.bodySemi, fontSize: 13.5, color: C.text },
+  // Buyer-facing preview stub, mirrors the actual pinned card styling.
+  previewStub: {
+    marginTop: 12,
+    backgroundColor: '#0a0a0d',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: C.line,
+  },
+  previewTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  previewAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: C.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewAvatarTx: { fontFamily: F.display, fontSize: 11, color: '#160a00' },
+  previewName: { fontFamily: F.bodySemi, fontSize: 12.5, color: '#fff', flex: 1 },
+  previewLiveChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  previewLiveTx: { fontFamily: F.display, fontSize: 9, letterSpacing: 1, color: C.accent },
+  previewPin: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+    backgroundColor: 'rgba(20,20,20,0.9)',
+    borderWidth: 1,
+    borderColor: C.accent,
+    borderRadius: 12,
+    padding: 8,
+  },
+  previewPinImg: { width: 40, height: 40, borderRadius: 8 },
+  previewKicker: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 0.5, color: C.accent, textTransform: 'uppercase' },
+  previewPinTitle: { fontFamily: F.bodySemi, fontSize: 12.5, color: '#fff', marginTop: 1 },
+  previewPrice: { fontFamily: F.displayMed, fontSize: 13, color: C.accent },
+  previewWasPrice: { fontFamily: F.body, fontSize: 11, color: '#999', textDecorationLine: 'line-through' },
+  previewBuyBtn: { backgroundColor: C.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  previewBuyTx: { fontFamily: F.displayMed, fontSize: 11, color: '#160a00' },
+  previewCaption: { fontFamily: F.bodySemi, fontSize: 12, color: '#ddd', marginTop: 10 },
+  // Product picker image cards
+  prodCard: {
+    width: '31%',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  prodCardOn: { borderColor: C.accent, backgroundColor: C.accentSoft },
+  prodImg: { width: '100%', aspectRatio: 1, borderRadius: 8 },
+  prodCheck: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: C.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prodSoldOut: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  prodSoldOutTx: { fontFamily: F.displayMed, fontSize: 8.5, color: '#fff' },
+  prodTitle: { fontFamily: F.bodySemi, fontSize: 11, color: C.text, marginTop: 6 },
+  prodPrice: { fontFamily: F.displayMed, fontSize: 11, color: C.accent, marginTop: 2 },
   titleIn: {
     fontFamily: F.bodySemi,
     fontSize: 15,
@@ -560,26 +889,66 @@ const s = StyleSheet.create({
   redDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.red },
   checkTx: { fontFamily: F.display, fontSize: 9, letterSpacing: 1.2, color: C.accent },
   endBtn: { backgroundColor: '#ff3b3b', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
-  chatPanel: {
+  viewerChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  viewerChipTx: { fontFamily: F.displayMed, fontSize: 10.5, color: '#ddd' },
+  pinChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingLeft: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    maxWidth: 220,
+  },
+  pinChipImg: { width: 26, height: 26, borderRadius: 13 },
+  // Fixed-height chat feed: never grows, newest bubble at the bottom,
+  // fading upward -- mirrors the buyer viewer + website broadcaster.
+  chatFeed: {
     position: 'absolute',
     left: 14,
     right: 14,
-    bottom: 26,
-    backgroundColor: 'rgba(10,10,13,0.72)',
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: C.line,
+    bottom: 74,
+    height: 120,
+    overflow: 'hidden',
+    flexDirection: 'column-reverse',
+    gap: 6,
+  },
+  chatBubble: {
+    alignSelf: 'flex-start',
+    maxWidth: '92%',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 14,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+  },
+  composerRow: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 20,
   },
   chatIn: {
     flex: 1,
     fontFamily: F.body,
     fontSize: 13,
     color: '#fff',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   sendBtn: { backgroundColor: C.accent, borderRadius: 999, width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
 })
