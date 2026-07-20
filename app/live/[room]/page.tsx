@@ -61,6 +61,22 @@ export default function LiveViewerPage() {
   const [shopOpen, setShopOpen] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
 
+  // Desktop from a buyer's point of view should not stretch this
+  // phone-style, edge-to-edge overlay across the whole browser window --
+  // William: "the screen has taken the whole page and product card is
+  // going from end to end". Mobile keeps the true full-screen TikTok-style
+  // frame; desktop gets the same frame capped to a phone-like width and
+  // centered, same as TikTok/Instagram Live's own desktop web layout, so
+  // the "Now showing" card (and everything else inside) shrinks down with
+  // it instead of stretching edge to edge.
+  const [isMobile, setIsMobile] = useState(true)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 800)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   // Fix: `100dvh` does not reliably shrink when the on-screen keyboard
   // opens across mobile browsers, which looked like the video "expanding"
   // and getting cropped when the chat input was focused, and not settling
@@ -350,7 +366,8 @@ export default function LiveViewerPage() {
   )
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: viewportH ? `${viewportH}px` : '100dvh', background: '#000', color: '#fff', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: viewportH ? `${viewportH}px` : '100dvh', background: isMobile ? '#000' : '#000000e6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ position: 'relative', width: isMobile ? '100%' : 430, maxWidth: '100%', height: '100%', background: '#000', color: '#fff', overflow: 'hidden', borderRadius: isMobile ? 0 : 18, boxShadow: isMobile ? 'none' : '0 24px 70px rgba(0,0,0,0.55)' }}>
       <style>{`
         @keyframes velorLivePulse { 0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); } 70% { box-shadow: 0 0 0 6px rgba(255,107,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); } }
         .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
@@ -573,6 +590,7 @@ export default function LiveViewerPage() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   )
 }
