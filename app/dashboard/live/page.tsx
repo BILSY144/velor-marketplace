@@ -78,11 +78,6 @@ export default function GoLivePage() {
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
-  // Mobile Go Live redesign: full-screen video with chat as a collapsible
-  // bottom drawer (like Instagram/TikTok Live) instead of a fixed side
-  // panel that used to squeeze the video and hide the End stream button.
-  const [chatOpen, setChatOpen] = useState(false)
-
   // Scheduling (2026-07-20)
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduledFor, setScheduledFor] = useState('')
@@ -580,11 +575,12 @@ export default function GoLivePage() {
             )}
 
             {isMobile ? (
-              // Full-screen broadcaster view: video fills the viewport, controls
-              // float over it, and chat lives in a bottom drawer the seller
-              // opens on demand -- it never permanently covers the picture or
-              // pushes the End stream button off-screen the way the old fixed
-              // two-column layout did.
+              // Full-screen broadcaster view, TikTok/Instagram-Live style:
+              // one always-visible input box pinned at the very bottom, and
+              // messages climb the screen above it as they arrive -- never
+              // a toggled drawer that eats half the picture (William:
+              // "the live chat box needs to be single file box as it takes
+              // up the screen once opened").
               <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100dvh', background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
                 <video ref={videoRef} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
 
@@ -602,7 +598,7 @@ export default function GoLivePage() {
 
                 <div style={{ flex: 1 }} />
 
-                {streamProducts.length > 0 && !chatOpen && (
+                {streamProducts.length > 0 && (
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, overflowX: 'auto', padding: '0 12px 12px' }}>
                     {streamProducts.map((p) => {
                       const isPinned = pinnedId === p.id
@@ -628,44 +624,41 @@ export default function GoLivePage() {
                   </div>
                 )}
 
-                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
-                  <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: '#fff', fontSize: 13, textDecoration: 'underline' }}>
-                    Public page
+                <div style={{ position: 'relative', zIndex: 1, padding: '0 12px 4px' }}>
+                  <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, textDecoration: 'underline' }}>
+                    View public page
                   </a>
-                  <button onClick={() => setChatOpen((o) => !o)} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-                    {chatOpen ? 'Hide chat' : `Chat${chat.length ? ` (${chat.length})` : ''}`}
-                  </button>
                 </div>
 
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: chatOpen ? '55%' : '0', background: panel, borderTop: `1px solid ${border}`, borderRadius: '16px 16px 0 0', overflow: 'hidden', transition: 'height 0.25s ease', display: 'flex', flexDirection: 'column', zIndex: 2, boxShadow: '0 -8px 24px rgba(0,0,0,0.4)' }}>
-                  <div className="velor-drawer-handle" />
-                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#ccc', fontSize: 13, fontWeight: 600 }}>Live chat</span>
-                    <button onClick={() => setChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>&times;</button>
-                  </div>
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
-                    {chat.map((m) => (
-                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '6px 10px', alignSelf: 'flex-start', maxWidth: '92%' }}>
-                        <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
-                        <span style={{ color: '#eee' }}>{m.text}</span>
-                      </div>
-                    ))}
-                    <div ref={chatEndRef} />
-                  </div>
-                  {chatError && <div style={{ color: '#ffb4b4', fontSize: 12, padding: '0 14px 8px' }}>{chatError}</div>}
-                  <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
-                    <input
-                      value={chatDraft}
-                      onChange={(e) => setChatDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
-                      placeholder="Reply to viewers..."
-                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${border}`, background: '#111', color: '#fff', fontSize: 13 }}
-                    />
-                    <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-                      Send
-                    </button>
-                  </div>
+                {/* Chat feed: fixed-height, newest message at the bottom,
+                    fading upward into the video -- never grows or covers
+                    the picture no matter how many messages arrive. */}
+                <div style={{ position: 'relative', zIndex: 1, height: 130, overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse', gap: 6, padding: '0 14px', maskImage: 'linear-gradient(to bottom, transparent, black 35%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)' }}>
+                  <div ref={chatEndRef} />
+                  {chat.length === 0 && <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Messages from viewers will appear here.</div>}
+                  {chat.slice(-40).reverse().map((m) => (
+                    <div key={m.id} style={{ display: 'inline-flex', alignSelf: 'flex-start', maxWidth: '92%', fontSize: 13, lineHeight: 1.4, background: 'rgba(0,0,0,0.4)', borderRadius: 14, padding: '5px 11px', wordBreak: 'break-word' }}>
+                      <span style={{ color: accent, fontWeight: 700, marginRight: 5 }}>{m.name}</span>
+                      <span style={{ color: '#fff' }}>{m.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {chatError && <div style={{ position: 'relative', zIndex: 1, padding: '4px 14px 0', color: '#ffb4b4', fontSize: 12, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{chatError}</div>}
+
+                {/* Single-line composer, always visible -- typing here is */}
+                {/* the only chat action; nothing to open or dismiss. */}
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, padding: '10px 14px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom))', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                  <input
+                    value={chatDraft}
+                    onChange={(e) => setChatDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
+                    placeholder="Reply to viewers..."
+                    style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13 }}
+                  />
+                  <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 700, cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
+                    Send
+                  </button>
                 </div>
               </div>
             ) : (
