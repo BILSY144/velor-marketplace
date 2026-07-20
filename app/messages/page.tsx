@@ -109,7 +109,11 @@ export default function MessagesPage() {
   async function loadMessages() {
     if (!myId) return
     try {
-      const r = await fetch('/api/messages')
+      // format=raw returns the flat message array this page builds threads
+      // from; the parameterless endpoint returns the seller dashboard's
+      // conversation-summary object, which used to leave this inbox
+      // permanently empty (2026-07-20 fix).
+      const r = await fetch('/api/messages?format=raw')
       const data: Msg[] = await r.json()
       if (Array.isArray(data)) setThreads(buildThreads(data, myId))
     } finally {
