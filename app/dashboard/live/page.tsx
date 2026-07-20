@@ -68,6 +68,21 @@ export default function GoLivePage() {
   const roomRef = useRef<Room | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
+  // Mobile-responsive Go Live layout (fix: "End stream" button was
+  // unreachable on narrow viewports because the live grid used a fixed
+  // two-column layout with no responsive breakpoint).
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 800)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  // Mobile Go Live redesign: full-screen video with chat as a collapsible
+  // bottom drawer (like Instagram/TikTok Live) instead of a fixed side
+  // panel that used to squeeze the video and hide the End stream button.
+  const [chatOpen, setChatOpen] = useState(false)
+
   // Scheduling (2026-07-20)
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduledFor, setScheduledFor] = useState('')
@@ -351,7 +366,7 @@ export default function GoLivePage() {
       <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: '48px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 520, textAlign: 'center', background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 40 }}>
           <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 12, textTransform: 'uppercase' }}>Live shopping</div>
-          <h1 style={{ fontSize: 28, marginBottom: 12 }}>Go Live Shopping</h1>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 28, marginBottom: 12 }}>Go Live Shopping</h1>
           <p style={{ color: '#aaa', lineHeight: 1.6, marginBottom: 24 }}>
             Broadcast live to buyers anywhere in the world and sell in real time, straight from your browser - no app needed. Live Shopping is included with every Velor seller plan.
           </p>
@@ -366,7 +381,7 @@ export default function GoLivePage() {
   if (!liveKitReady) {
     return (
       <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: 48, textAlign: 'center' }}>
-        <h1 style={{ fontSize: 24, marginBottom: 12 }}>Live Shopping is almost ready</h1>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 24, marginBottom: 12 }}>Live Shopping is almost ready</h1>
         <p style={{ color: '#aaa' }}>We&apos;re finishing the broadcast infrastructure. Check back shortly.</p>
       </div>
     )
@@ -376,9 +391,18 @@ export default function GoLivePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 24px' }}>
+      <style>{`
+        @keyframes velorLivePulse {
+          0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); }
+          70% { box-shadow: 0 0 0 8px rgba(255,107,0,0); }
+          100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); }
+        }
+        .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
+        .velor-drawer-handle { width: 36px; height: 4px; border-radius: 999px; background: #3a3a3a; margin: 8px auto 0; }
+      `}</style>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 8, textTransform: 'uppercase' }}>Live Shopping</div>
-        <h1 style={{ fontSize: 30, marginBottom: 24 }}>Go Live</h1>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 32, marginBottom: 24 }}>Go Live</h1>
 
         {error && (
           <div style={{ background: '#3a1a1a', border: '1px solid #6b2a2a', color: '#ffb4b4', padding: 14, borderRadius: 10, marginBottom: 20 }}>{error}</div>
@@ -415,77 +439,163 @@ export default function GoLivePage() {
           </div>
         ) : activeStream ? (
           <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
-              <strong>LIVE</strong>
-              <span style={{ color: '#aaa' }}>{activeStream.title}</span>
-            </div>
+            {!isMobile && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span className="velor-live-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
+                <strong>LIVE</strong>
+                <span style={{ color: '#aaa' }}>{activeStream.title}</span>
+              </div>
+            )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 480px) minmax(260px, 340px)', gap: 20, alignItems: 'start' }}>
-              <div>
-                <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', borderRadius: 12, background: '#000' }} />
-                <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: accent, textDecoration: 'underline' }}>
-                    View your public live page
-                  </a>
-                  <button onClick={endStream} style={{ marginLeft: 'auto', background: '#ff3b3b', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 999, fontWeight: 600, cursor: 'pointer' }}>
+            {isMobile ? (
+              // Full-screen broadcaster view: video fills the viewport, controls
+              // float over it, and chat lives in a bottom drawer the seller
+              // opens on demand -- it never permanently covers the picture or
+              // pushes the End stream button off-screen the way the old fixed
+              // two-column layout did.
+              <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 40, display: 'flex', flexDirection: 'column' }}>
+                <video ref={videoRef} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="velor-live-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
+                    <strong style={{ color: '#fff' }}>LIVE</strong>
+                  </div>
+                  <button onClick={endStream} style={{ background: '#ff3b3b', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 999, fontWeight: 700, cursor: 'pointer' }}>
                     End stream
                   </button>
                 </div>
 
-                {streamProducts.length > 0 && (
-                  <div style={{ marginTop: 20 }}>
-                    <div style={{ color: '#ccc', fontSize: 14, marginBottom: 8 }}>Tap a product to pin it as &quot;Now showing&quot; for viewers</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-                      {streamProducts.map((p) => {
-                        const isPinned = pinnedId === p.id
-                        return (
-                          <button
-                            key={p.id}
-                            onClick={() => togglePin(p.id)}
-                            style={{
-                              textAlign: 'left', padding: 10, borderRadius: 10, cursor: 'pointer',
-                              background: isPinned ? '#2a1a0a' : '#0d0d0d',
-                              border: `1px solid ${isPinned ? accent : border}`, color: '#fff', fontSize: 13,
-                            }}
-                          >
-                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isPinned ? 700 : 400 }}>{p.title}</div>
-                            <div style={{ color: isPinned ? accent : '#888', fontSize: 12, marginTop: 4 }}>{isPinned ? 'Now showing' : 'Pin'}</div>
-                          </button>
-                        )
-                      })}
-                    </div>
+                <div style={{ flex: 1 }} />
+
+                {streamProducts.length > 0 && !chatOpen && (
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, overflowX: 'auto', padding: '0 12px 12px' }}>
+                    {streamProducts.map((p) => {
+                      const isPinned = pinnedId === p.id
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => togglePin(p.id)}
+                          style={{
+                            flexShrink: 0, textAlign: 'left', padding: '8px 12px', borderRadius: 10, cursor: 'pointer',
+                            background: isPinned ? 'rgba(255,107,0,0.25)' : 'rgba(0,0,0,0.55)',
+                            border: `1px solid ${isPinned ? accent : 'rgba(255,255,255,0.25)'}`, color: '#fff', fontSize: 12, whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {isPinned ? `Now showing: ${p.title}` : p.title}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
-              </div>
 
-              <div style={{ background: '#0d0d0d', border: `1px solid ${border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', height: 420 }}>
-                <div style={{ padding: '10px 14px', borderBottom: `1px solid ${border}`, color: '#ccc', fontSize: 13, fontWeight: 600 }}>Live chat</div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
-                  {chat.map((m) => (
-                    <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
-                      <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
-                      <span style={{ color: '#eee' }}>{m.text}</span>
-                    </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-                {chatError && <div style={{ color: '#ffb4b4', fontSize: 12, padding: '0 14px 8px' }}>{chatError}</div>}
-                <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
-                  <input
-                    value={chatDraft}
-                    onChange={(e) => setChatDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
-                    placeholder="Reply to viewers..."
-                    style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${border}`, background: '#111', color: '#fff', fontSize: 13 }}
-                  />
-                  <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-                    Send
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                  <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: '#fff', fontSize: 13, textDecoration: 'underline' }}>
+                    Public page
+                  </a>
+                  <button onClick={() => setChatOpen((o) => !o)} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                    {chatOpen ? 'Hide chat' : `Chat${chat.length ? ` (${chat.length})` : ''}`}
                   </button>
                 </div>
+
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: chatOpen ? '55%' : '0', background: panel, borderTop: `1px solid ${border}`, borderRadius: '16px 16px 0 0', overflow: 'hidden', transition: 'height 0.25s ease', display: 'flex', flexDirection: 'column', zIndex: 2, boxShadow: '0 -8px 24px rgba(0,0,0,0.4)' }}>
+                  <div className="velor-drawer-handle" />
+                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#ccc', fontSize: 13, fontWeight: 600 }}>Live chat</span>
+                    <button onClick={() => setChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
+                    {chat.map((m) => (
+                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
+                        <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
+                        <span style={{ color: '#eee' }}>{m.text}</span>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+                  {chatError && <div style={{ color: '#ffb4b4', fontSize: 12, padding: '0 14px 8px' }}>{chatError}</div>}
+                  <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
+                    <input
+                      value={chatDraft}
+                      onChange={(e) => setChatDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
+                      placeholder="Reply to viewers..."
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${border}`, background: '#111', color: '#fff', fontSize: 13 }}
+                    />
+                    <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                      Send
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 480px) minmax(260px, 340px)', gap: 20, alignItems: 'start' }}>
+                <div>
+                  <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', borderRadius: 12, background: '#000' }} />
+                  <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: accent, textDecoration: 'underline' }}>
+                      View your public live page
+                    </a>
+                    <button onClick={endStream} style={{ marginLeft: 'auto', background: '#ff3b3b', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 999, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+                      End stream
+                    </button>
+                  </div>
+
+                  {streamProducts.length > 0 && (
+                    <div style={{ marginTop: 20 }}>
+                      <div style={{ color: '#ccc', fontSize: 14, marginBottom: 8 }}>Tap a product to pin it as &quot;Now showing&quot; for viewers</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                        {streamProducts.map((p) => {
+                          const isPinned = pinnedId === p.id
+                          return (
+                            <button
+                              key={p.id}
+                              onClick={() => togglePin(p.id)}
+                              style={{
+                                textAlign: 'left', padding: 10, borderRadius: 10, cursor: 'pointer',
+                                background: isPinned ? '#2a1a0a' : '#0d0d0d',
+                                border: `1px solid ${isPinned ? accent : border}`, color: '#fff', fontSize: 13,
+                              }}
+                            >
+                              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isPinned ? 700 : 400 }}>{p.title}</div>
+                              <div style={{ color: isPinned ? accent : '#888', fontSize: 12, marginTop: 4 }}>{isPinned ? 'Now showing' : 'Pin'}</div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ background: '#0d0d0d', border: `1px solid ${border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', height: 420 }}>
+                  <div style={{ padding: '10px 14px', borderBottom: `1px solid ${border}`, color: '#ccc', fontSize: 13, fontWeight: 600 }}>Live chat</div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
+                    {chat.map((m) => (
+                      <div key={m.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
+                        <span style={{ color: accent, fontWeight: 600 }}>{m.name}: </span>
+                        <span style={{ color: '#eee' }}>{m.text}</span>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+                  {chatError && <div style={{ color: '#ffb4b4', fontSize: 12, padding: '0 14px 8px' }}>{chatError}</div>}
+                  <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
+                    <input
+                      value={chatDraft}
+                      onChange={(e) => setChatDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
+                      placeholder="Reply to viewers..."
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${border}`, background: '#111', color: '#fff', fontSize: 13 }}
+                    />
+                    <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>

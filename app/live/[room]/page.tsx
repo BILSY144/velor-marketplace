@@ -67,6 +67,25 @@ export default function LiveViewerPage() {
     }
   }, [])
 
+  // Fix: RoomEvent.TrackSubscribed can fire for an already-published video
+  // track before this component has re-rendered into the 'connected' state
+  // (the <video> element, and therefore videoRef.current, doesn't exist yet
+  // at that instant). When that race is lost the video track was silently
+  // dropped forever -- audio has no such guard, which is why viewers heard
+  // sound with no picture. Stash the track and attach it either immediately
+  // (if the element already exists) or via the ref callback once it mounts.
+  const pendingVideoTrackRef = useRef<RemoteTrack | null>(null)
+  const attachVideoIfReady = useCallback(() => {
+    if (pendingVideoTrackRef.current && videoRef.current) {
+      pendingVideoTrackRef.current.attach(videoRef.current)
+      pendingVideoTrackRef.current = null
+    }
+  }, [])
+  const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    attachVideoIfReady()
+  }, [attachVideoIfReady])
+
   useEffect(() => {
     if (!room) return
     let cancelled = false
@@ -91,8 +110,9 @@ export default function LiveViewerPage() {
 
         const r = new Room()
         r.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
-          if (track.kind === Track.Kind.Video && videoRef.current) {
-            track.attach(videoRef.current)
+          if (track.kind === Track.Kind.Video) {
+            pendingVideoTrackRef.current = track
+            attachVideoIfReady()
           } else if (track.kind === Track.Kind.Audio) {
             track.attach()
           }
@@ -229,7 +249,7 @@ export default function LiveViewerPage() {
         <div>
           <div style={{ position: 'relative', background: '#000', borderRadius: 16, overflow: 'hidden', aspectRatio: '16/9' }}>
             {status === 'connected' ? (
-              <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <video ref={setVideoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             ) : (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
                 {status === 'connecting' && 'Connecting...'}
