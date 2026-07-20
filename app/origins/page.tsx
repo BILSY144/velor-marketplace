@@ -194,6 +194,11 @@ export default function OriginsIndexPage() {
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link className="og-btn2" href="/shop">Browse all goods</Link>
+            {/* Added 2026-07-20 by the standing SEO agent: reciprocal link to
+            the new /specialities index (see app/specialities/page.tsx) --
+            the speciality side of the same origins x specialities lattice
+            this page is the country side of. */}
+            <Link className="og-btn2" href="/specialities">Shop by speciality</Link>
             <Link className="og-btn" href="/founding">See the founding atlas</Link>
           </div>
         </div>
