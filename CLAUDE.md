@@ -143,6 +143,52 @@ above once it's rebuilt) to confirm none of them leak `contactName` /
 
 ---
 
+## OUTSTANDING -- SELLER DASHBOARD NEEDS A FULL, FUTURISTIC REDESIGN (raised 2026-07-20, not started)
+
+William's directive, to pick up in a future session -- re-raise this if he
+doesn't bring it up himself: the seller dashboard (`app/dashboard/**`)
+still reads as "boxed"/"block looking," plain bordered panels with no
+distinct visual identity. He wants this treated as genuinely important,
+not cosmetic polish -- **the dashboard is effectively a thank-you to every
+seller for signing up**, so it should give them the best seller dashboard
+experience out there, not a generic admin-panel look. His words: "needs to
+be much more advanced as it is still boxed looking we need to be really
+creative for a futuristic panel, this a thank you to the seller for
+signing up, so we need to make the seller experience out of this world
+giving them the best seller dashboard out there, no more block looking
+designs. the whole seller dashboard needs a redesign like no other."
+
+**Scope:** the seller-facing dashboard as a whole
+(`app/dashboard/*/page.tsx` -- overview, products, orders, live, settings,
+payouts, etc.), not just the Go Live page redesigned in the 2026-07-20
+session below. Nothing has been scoped or built yet -- no wireframes, no
+direction beyond "not boxed, futuristic, creative, best-in-class."
+
+**Before building, get more specific direction from William:**
+- Reference sites/apps he considers futuristic or best-in-class for a
+  seller/creator dashboard (Stripe Dashboard, Linear, Vercel, something
+  else entirely?).
+- Whether this should introduce new visual primitives beyond what the rest
+  of the site currently uses -- glass/blur panels, gradient-mesh
+  backgrounds, non-rectangular card shapes, motion-driven stats -- or stay
+  within the existing dark theme + Fraunces/accent-orange identity, just
+  executed less "boxed."
+- Whether the redesign should happen page-by-page or as one coordinated
+  pass that first establishes a new shared design system for the
+  dashboard specifically, then applies it everywhere.
+
+**Related:** the 2026-07-20 session below redesigned the live-shopping
+flow (`app/dashboard/live/page.tsx`, `app/live/[room]/page.tsx`, and the
+native app's `GoLiveScreen.tsx`/`LiveRoomScreen.tsx`) to a TikTok-style UI.
+William said afterward, once it was all confirmed working: "tomorrow we
+will make it our own design based off these visuals" -- meaning the live
+pages themselves are also expected to get a further, more distinctively-
+Velor branded pass, separate from (but likely informing the visual
+language of) this wider dashboard redesign. Don't start either without
+checking in first on which one William wants to tackle.
+
+---
+
 ## SCOPE â WHAT THIS FILE COVERS
 
 This file is about **Velor Marketplace** only.
@@ -2092,3 +2138,25 @@ Follow-ups: revoke tonight's GitHub PAT (William, reminded in chat); on-device v
 William asked for an app-downloads tracker on Pulse with "all the key details... the more information the better". Built the same night: additive Prisma model AppInstall (anonymous installId, platform, osVersion, appVersion, country from x-vercel-ip-country server-side, language, currency, createdAt, lastSeenAt); public POST /api/app/install (idempotent upsert, validated); admin GET /api/admin/pulse-app (totals, DAU/WAU/MAU from lastSeenAt, 30d sparkline, breakdowns by country/platform/OS/app-version/language/currency); /pulse/app drill page in the house PulseKit style; App installs KPI card on the Pulse hub (pulse-data extended with an `app` section). App side: mobile/src/installPing.ts pings 3s after cold start, fire-and-forget (mobile-app ee6e297f, main e351d2c0, mobile/ in sync).
 
 HONESTY NOTES: (1) AGE IS NOT COLLECTED AND NOT COLLECTIBLE -- only Play Console's aggregate demographics will ever show age, and only at volume. Do not add age collection without re-doing the Data safety declaration. (2) The telemetry is covered by the submitted declaration -- the data_safety_import.csv already declares Device or other IDs (app functionality + fraud prevention), verified line 61/765+. (3) The SUBMITTED store build (5) predates the ping -- store installs will NOT report until either an OTA update is published to the PRODUCTION channel after Google approves (the auto workflow publishes to preview only -- a production `eas update --branch production` is a separate deliberate act) or the next store build. Expo Go (preview channel) has it now. (4) Counts are ACTIVATED installs (first opens), not store downloads -- store download counts stay in Play Console > Statistics.
+
+---
+
+## 2026-07-20 checkpoint -- LIVE SHOPPING POLISH PASS: PIN SYNC CONFIRMED, MOBILE ZOOM FIXED, DESKTOP LAYOUT CAPPED, BELL REPLACES HEART
+
+Continuation of the TikTok-style live-shopping redesign from earlier in the week (seller `app/dashboard/live/page.tsx`, buyer `app/live/[room]/page.tsx`, native `GoLiveScreen.tsx`/`LiveRoomScreen.tsx`). This session was almost entirely William's live, on-device bug reports against the already-shipped redesign, fixed and verified one at a time -- commits `4adf8825`..`f9f14b70` on `main`, all pushed and confirmed both on the remote and (where checked) on William's own screen via the device bridge's read-only screenshot tool.
+
+**False alarm, corrected early:** an unauthenticated `git fetch` at the start of the session showed `origin/main` 13 commits behind local, which looked like the entire prior redesign had never actually been pushed. A fresh *authenticated* fetch showed `origin/main` matched local exactly -- the plain fetch had just failed silently against this sandbox's proxy and returned a stale cached ref. Lesson: don't trust an unauthenticated `git fetch`/`git log origin/main` in this environment as proof of what's live; re-fetch with the PAT before concluding anything is or isn't pushed.
+
+**Bugs found and fixed, in the order William reported them:**
+1. **Buy Now button "absent" / product card looked like "an oval pin, that's all":** not a bug -- confirmed live on William's own screen (desktop Chrome, granted read-only via the device bridge) that pinning a product from the seller's phone correctly promoted it from the plain oval tray chip to the full "Now showing" card with a working Buy Now button on the buyer's desktop session, in real time. The earlier report was simply a moment where nothing was actively pinned yet.
+2. **Mobile "screen expands and doesn't auto-resize" (persisted through two earlier rounds of fixes -- 16px input font-size, then card repositioning):** root cause was iOS Safari's zoom-on-input-focus not being prevented at the source -- the site's shared viewport meta tag still allowed pinch-zoom, and once Safari zooms in for any reason it does NOT automatically zoom back out on blur. Fixed by having both live pages lock the viewport to `maximum-scale=1, user-scalable=no` for as long as they're mounted (restored on unmount so the rest of the site keeps normal pinch-zoom). Also added a `window.visualViewport`-tracking height in place of trusting `100dvh` directly, as a second, independent fix for the same class of symptom. William confirmed fixed after this landed.
+3. **Desktop buyer view "taken the whole page," product card "end to end":** the buyer live viewer had no responsive treatment at all -- always full-bleed edge-to-edge regardless of screen width. Added an `isMobile` check (matching the pattern already used in the seller dashboard page) and capped the desktop frame to ~430px, centered, TikTok/Instagram-Live-desktop-style; mobile is unchanged (still true full-screen). William confirmed "yes thats much better."
+4. **Seller mobile broadcaster pin tray "could put off the seller's view":** moved from directly under the header (floating over the seller's own picture of their video) to directly above the chat composer, matching the buyer-side reposition shipped earlier. The "View public page" link that used to sit in that spot was removed outright at William's request -- "it has no purpose on the video at all."
+5. **Stream title/caption "floating in the middle of the screen," "white and boring":** first attempt gave it a grounded dark-pill background + Velor's Fraunces serif instead of plain white text -- William's next report was that it was now "a long box" still floating, and to remove it completely, since the pinned product card already states what the product is. Removed the title/description block entirely rather than re-styling again.
+6. **Heart -> bell, per William's explicit direction ("remove the heart and place it with a bell that chimes like mobile app"):** discovered mid-task that the app already has a genuine bell chime feature -- `mobile/src/screens/BellScreen.tsx`'s "RING IT" plays a real synthesized cast-bell sound (`mobile/assets/bell.m4a`) with a five-step swing animation, built in an earlier session per William's 2026-07-15 call ("bell notifications need a real bell noise"). Reused that exact asset and swing curve rather than inventing a new sound: mirrored the file to `public/sounds/bell.m4a` for the website, replaced the tap-to-like heart (and its double-tap-on-video gesture, which doesn't map as a sensible "ring a bell" metaphor) with a single rail-button tap that plays the identical chime and swing on both the website (lazily-created `HTMLAudioElement`, try/catch-wrapped) and the native app (`expo-audio`'s `createAudioPlayer`, same lazy-creation/try-catch/release pattern as `BellScreen.tsx`). Both surfaces now sound and animate identically to each other and to the existing BellScreen feature.
+
+**Verification method used throughout:** the user's desktop was screenshotted live via the `mcp__remote-devices__computer_screenshot` tool (read-only Chrome grant) at multiple points to directly confirm rendering state rather than trusting William's text description alone or my own code-reading -- this is what caught that the "Buy Now absent" report was a non-bug, and confirmed the desktop-cap and pin-sync fixes visually rather than by inference. Every push was verified against a fresh `git clone` of the exact commit before considering it done, per LAW #1.
+
+**End state, William's words:** "ok now its perfect. from what i can see its set right now." Session closed on that note, with an explicit plan for **tomorrow**: "we will make it our own design based off these visuals" -- i.e. a further, more distinctively-Velor-branded pass on top of the now-working TikTok-style structure, not a functional redo. See the OUTSTANDING section near the top of this file for the seller dashboard redesign William raised in the same conversation, which is a separate, larger, not-yet-started piece of work.
+
+**Not done this session, still open:** the homepage/home-screen live video embed feature (actual inline live video tiles on the website homepage and the native app's home screen, horizontal row when multiple sellers are live simultaneously, click-through to the full room) -- raised earlier in the week, confirmed still not started, not touched this session either. The GitHub PAT William pasted in chat this session is, per standing practice, flagged again for rotation -- it sat in plain chat text and shell history for the whole session.
