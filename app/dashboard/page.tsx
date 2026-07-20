@@ -1,243 +1,403 @@
 'use client';
 
-import Link from 'next/link';
-import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
+// ============================================================
+// HALO Overview (2026-07-20) — the orbital command page approved
+// from the Halo mockup. EVERY figure is live:
+//   /api/dashboard/analytics -> revenue (30d + all time), orders,
+//                               net earnings, avg order value
+//   /api/dashboard/orders    -> recent orders belt, dispatch count
+//   /api/dashboard/products  -> catalogue count, sold-out count
+//   /api/dashboard/payouts   -> escrow held, hold window label,
+//                               lifetime paid out, payout rail
+// No fabricated numbers anywhere (LAW #1). Escrow copy states the
+// real rule: released after delivery plus the hold window.
+// ============================================================
 
-const stats = [
-  { label: 'Total Revenue', value: '£0.00', sub: 'All time', color: 'var(--accent)' },
-  { label: 'Orders', value: '0', sub: 'All time', color: 'var(--text)' },
-  { label: 'Products', value: '0', sub: 'Listed', color: 'var(--text)' },
-  { label: 'Pending Payout', value: '£0.00', sub: 'Available to withdraw', color: 'var(--green)' },
-];
+import { useEffect, useMemo, useState } from 'react';
+import { useSellerTier } from '@/lib/dashboard-theme';
+import { HALO, Satellite, BeltLabel, HaloButton, glassStyle, formatGBP } from '@/lib/halo';
 
-const recentOrders: { id: string; customer: string; product: string; amount: string; status: string; date: string }[] = [];
+interface OrderRow {
+  id: string;
+  buyerName: string;
+  status: string;
+  createdAt: string;
+  items: { productName: string }[];
+  totalRevenue: number;
+}
 
-function StatusBadge({ status }: { status: string }) {
-  const colours: Record<string, string> = {
-    fulfilled: 'var(--green)',
-    pending: 'var(--accent)',
-    cancelled: 'var(--red)',
-  };
+interface PayoutsData {
+  pendingEscrow: number;
+  pendingOrderCount: number;
+  lifetimePaidOut: number;
+  isTrusted: boolean;
+  holdLabel: string;
+  payoutRail: string | null;
+  stripeOnboarded: boolean;
+  payoneerLinked: boolean;
+}
+
+interface AnalyticsData {
+  totalRevenue: number;
+  totalEarnings: number;
+  totalOrders: number;
+  avgOrderValue: number;
+  dailyRevenue: { date: string; revenue: number }[];
+}
+
+const DISPATCH_STATUSES = new Set(['PAID', 'PROCESSING']);
+
+function statusLabel(status: string): { text: string; color: string; bg: string } {
+  switch (status) {
+    case 'PAID': return { text: 'In escrow', color: '#7A5A14', bg: 'rgba(239,159,39,0.16)' };
+    case 'PROCESSING': return { text: 'Packing', color: HALO.proBlue, bg: 'rgba(75,147,231,0.14)' };
+    case 'SHIPPED': return { text: 'Shipped', color: HALO.proBlue, bg: 'rgba(75,147,231,0.14)' };
+    case 'DELIVERED': return { text: 'Delivered', color: HALO.green, bg: 'rgba(31,160,92,0.12)' };
+    case 'REFUNDED': return { text: 'Refunded', color: HALO.red, bg: 'rgba(226,75,74,0.1)' };
+    case 'CANCELLED': return { text: 'Cancelled', color: HALO.muted, bg: 'rgba(107,107,118,0.1)' };
+    default: return { text: status.toLowerCase(), color: HALO.muted, bg: 'rgba(107,107,118,0.1)' };
+  }
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+const DASH = '—';
+
+export default function DashboardOverview() {
+  const { tier } = useSellerTier();
+  const isPro = tier === 'PRO';
+
+  const [orders, setOrders] = useState<OrderRow[] | null>(null);
+  const [payouts, setPayouts] = useState<PayoutsData | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [productCount, setProductCount] = useState<number | null>(null);
+  const [soldOutCount, setSoldOutCount] = useState<number>(0);
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 1080);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/dashboard/orders')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setOrders(Array.isArray(d?.orders) ? d.orders : []))
+      .catch(() => setOrders([]));
+
+    fetch('/api/dashboard/payouts')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setPayouts(d))
+      .catch(() => {});
+
+    fetch('/api/dashboard/analytics')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setAnalytics(d))
+      .catch(() => {});
+
+    fetch('/api/dashboard/products')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (Array.isArray(d?.products)) {
+          setProductCount(d.products.length);
+          setSoldOutCount(d.products.filter((p: { stock: number }) => p.stock === 0).length);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const dispatchCount = useMemo(
+    () => (orders ? orders.filter((o) => DISPATCH_STATUSES.has(o.status)).length : 0),
+    [orders]
+  );
+  const revenue30 = useMemo(
+    () => (analytics ? analytics.dailyRevenue.reduce((s, d) => s + d.revenue, 0) : null),
+    [analytics]
+  );
+
+  const payoutReady = payouts ? payouts.stripeOnboarded || payouts.payoneerLinked : null;
+  const railLabel = payouts?.payoutRail === 'PAYONEER' ? 'Payoneer' : 'Stripe';
+  const hasOrders = (orders?.length ?? 0) > 0;
+
+  // ---------- satellites (live data) ----------
+  const satellites = (
+    <>
+      <Satellite
+        label="Orders"
+        value={analytics ? analytics.totalOrders : DASH}
+        sub={orders ? `${dispatchCount} awaiting dispatch` : 'loading'}
+        tint="rgba(255,107,0,0.30)"
+        size="lg"
+        actionLabel={dispatchCount > 0 ? 'Dispatch now' : 'View orders'}
+        actionHref="/dashboard/orders"
+        style={isNarrow ? undefined : { position: 'absolute', left: '3%', top: '14%' }}
+      />
+      <Satellite
+        label="In escrow"
+        value={payouts ? formatGBP(payouts.pendingEscrow) : DASH}
+        valueColor={HALO.amber}
+        sub={payouts ? `releases after delivery + ${payouts.holdLabel} hold` : 'loading'}
+        tint="rgba(239,159,39,0.42)"
+        size="lg"
+        style={isNarrow ? undefined : { position: 'absolute', right: '3%', top: '12%' }}
+      />
+      <Satellite
+        label="Paid out"
+        value={payouts ? formatGBP(payouts.lifetimePaidOut) : DASH}
+        valueColor={HALO.green}
+        sub={payouts ? `to date via ${railLabel}` : 'loading'}
+        tint="rgba(31,160,92,0.30)"
+        size="lg"
+        actionLabel="Payout timeline"
+        actionHref="/dashboard/payouts"
+        style={isNarrow ? undefined : { position: 'absolute', right: '7.5%', bottom: '6%' }}
+      />
+      <Satellite
+        label="Products"
+        value={productCount ?? DASH}
+        sub={productCount !== null ? (soldOutCount > 0 ? `listed · ${soldOutCount} sold out` : 'listed') : 'loading'}
+        tint="rgba(255,138,43,0.35)"
+        size="md"
+        actionLabel="Add product"
+        actionHref="/dashboard/products"
+        style={isNarrow ? undefined : { position: 'absolute', left: '8%', bottom: '8%' }}
+      />
+      <Satellite
+        label="Net earnings"
+        value={analytics ? formatGBP(analytics.totalEarnings) : DASH}
+        sub="after commission"
+        tint="rgba(239,159,39,0.32)"
+        size="sm"
+        style={isNarrow ? undefined : { position: 'absolute', left: '26%', top: '0%' }}
+      />
+      <Satellite
+        label="Avg order"
+        value={analytics ? formatGBP(analytics.avgOrderValue) : DASH}
+        sub="all time"
+        tint="rgba(255,107,0,0.24)"
+        size="sm"
+        style={isNarrow ? undefined : { position: 'absolute', right: '26%', top: '0%' }}
+      />
+    </>
+  );
+
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '2px 10px',
-      borderRadius: 4,
-      fontSize: 11,
-      fontWeight: 700,
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-      background: `${colours[status] ?? 'var(--muted)'}22`,
-      color: colours[status] ?? 'var(--muted)',
-      border: `1px solid ${colours[status] ?? 'var(--muted)'}44`,
-    }}>
-      {status}
-    </span>
+    <div style={{ paddingBottom: 60 }}>
+      {/* ---------- orbital stage ---------- */}
+      {isNarrow ? (
+        <div style={{ padding: '10px 16px 0' }}>
+          <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginTop: 20 }}>
+            {satellites}
+          </div>
+        </div>
+      ) : (
+        <div style={{ position: 'relative', zIndex: 3, width: 'min(1720px, 98vw)', height: 560, margin: '0 auto' }}>
+          <svg
+            aria-hidden
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            viewBox="0 0 1600 560"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <defs>
+              <linearGradient id="haloOrb" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#EF9F27" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="800" cy="280" rx="520" ry="215" fill="none" stroke="rgba(26,26,29,0.10)" strokeWidth="1" strokeDasharray="1 7" strokeLinecap="round" />
+            <ellipse cx="800" cy="280" rx="700" ry="258" fill="none" stroke="rgba(26,26,29,0.06)" strokeWidth="1" />
+            <path d="M 800 65 A 520 215 0 0 1 1289 353" fill="none" stroke="url(#haloOrb)" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="1289" cy="353" r="6" fill="#FF6B00" />
+            <circle r="4" fill="#EF9F27">
+              <animateMotion dur="16s" repeatCount="indefinite" path="M 800 22 A 700 258 0 1 1 799 22" />
+            </circle>
+          </svg>
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 310, height: 310, zIndex: 4 }}>
+            <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} inOrbit />
+          </div>
+          {satellites}
+        </div>
+      )}
+
+      {/* ---------- Pro concierge (unchanged rule/copy) ---------- */}
+      {isPro && (
+        <div
+          style={{
+            ...glassStyle('capsule'),
+            position: 'relative', zIndex: 5, width: 'min(1680px, 96vw)', margin: '18px auto 0',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18,
+            padding: '14px 16px 14px 26px', flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ fontSize: 13, color: HALO.inkSoft }}>
+            <b style={{ color: HALO.ink, fontWeight: 700, fontFamily: HALO.fontSerif, fontStyle: 'italic', fontSize: 15, marginRight: 8 }}>
+              Pro Concierge
+            </b>
+            You have a dedicated account manager and priority support {DASH} response times under 2 hours.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <HaloButton variant="ink" href="/dashboard/support">Contact your manager</HaloButton>
+            <HaloButton variant="soft" href="/dashboard/analytics">View analytics</HaloButton>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- orders belt ---------- */}
+      <div style={{ position: 'relative', zIndex: 5, width: 'min(1720px, 97vw)', margin: '26px auto 0' }}>
+        <BeltLabel title="Orders in motion" actionLabel="All orders" actionHref="/dashboard/orders" />
+        {orders === null ? (
+          <div style={{ padding: '10px 20px', color: HALO.muted, fontSize: 13 }}>Loading orders {DASH}</div>
+        ) : orders.length === 0 ? (
+          <div style={{ ...glassStyle('capsule'), margin: '0 20px', padding: '18px 26px', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontSize: 16, color: HALO.inkSoft }}>
+              No orders yet {DASH} they will appear here, in motion, the moment a buyer checks out.
+            </span>
+          </div>
+        ) : (
+          <div className="halo-scroll-x" style={{ display: 'flex', gap: 14, overflowX: 'auto', padding: '6px 20px 20px' }}>
+            {orders.slice(0, 8).map((o) => {
+              const st = statusLabel(o.status);
+              const initial = (o.buyerName || 'C').trim().charAt(0).toUpperCase();
+              return (
+                <a
+                  key={o.id}
+                  href="/dashboard/orders"
+                  className="halo-hover-lift"
+                  style={{
+                    ...glassStyle('capsule'),
+                    flex: '0 0 272px', padding: '12px 22px 12px 12px',
+                    display: 'flex', alignItems: 'center', gap: 13, textDecoration: 'none', color: HALO.ink,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: 15, color: '#fff',
+                      background: 'linear-gradient(135deg, #FF8A2B, #FF6B00)',
+                    }}
+                  >
+                    {initial}
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 175 }}>
+                      {o.items[0]?.productName ?? 'Order'}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 11, color: HALO.muted, marginTop: 2 }}>
+                      {o.buyerName} · {formatGBP(o.totalRevenue, true)} · <b style={{ color: st.color }}>{st.text}</b> · {timeAgo(o.createdAt)}
+                    </span>
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ---------- quick actions ---------- */}
+      <div style={{ position: 'relative', zIndex: 5, display: 'flex', justifyContent: 'center', gap: 14, padding: '10px 20px 0', flexWrap: 'wrap' }}>
+        <QuickChip href="/dashboard/products" title="Add a product" sub="list a new piece in minutes" />
+        {dispatchCount > 0 && (
+          <QuickChip href="/dashboard/orders" title={`Dispatch ${dispatchCount} order${dispatchCount === 1 ? '' : 's'}`} sub="confirm shipment and tracking" />
+        )}
+        {payoutReady === false ? (
+          <QuickChip href="/dashboard/stripe-connect" title="Set up payouts" sub="connect your account to receive earnings" />
+        ) : (
+          <QuickChip href="/dashboard/payouts" title="Payout settings" sub={payouts ? `${railLabel} · ${payouts.isTrusted ? 'trusted seller' : 'building trust'}` : 'view your payout timeline'} />
+        )}
+        <QuickChip href="/dashboard/live" title="Go Live" sub="sell face to face, on air" />
+      </div>
+    </div>
   );
 }
 
-export default function DashboardOverview() {
-  const { tier, theme, founding } = useSellerTier();
-  // Only two tiers exist now (Enterprise retired 2026-07-15, collapsed into
-  // Pro everywhere upstream) — isPro/isElevated used to be two separate
-  // checks (isPro strictly PRO, isElevated PRO-or-ENTERPRISE) but since
-  // ENTERPRISE can never reach the client anymore they are identical.
-  const isPro = tier === 'PRO';
-  const isElevated = isPro;
-
-  return (
-    <div style={{ position: 'relative' }}>
-      {/* Pro gets a soft ambient wash behind the whole page — Starter doesn't */}
-      {isPro && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: -20,
-            left: -20,
-            right: -20,
-            height: 260,
-            background: theme.sectionGradient,
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
-      )}
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <h1 style={{
-                fontFamily: 'var(--font-display), system-ui, sans-serif',
-                fontSize: 28, fontWeight: 800, color: 'var(--text)', margin: 0,
-              }}>
-                Overview
-              </h1>
-              <PlanBadge tier={tier} founding={founding} />
-            </div>
-            <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
-              {isPro
-                ? 'Welcome back. Your Pro concierge dashboard is live.'
-                : 'Welcome back. Here is what is happening with your store.'}
-            </p>
-          </div>
-        </div>
-
-        {/* Stats grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: isElevated ? 20 : 32 }}>
-          {stats.map((stat, i) => (
-            <div key={stat.label} style={tierCardStyle(theme, {
-              padding: '20px 24px',
-              position: 'relative',
-              overflow: 'hidden',
-            })}>
-              {isPro && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
-              )}
-              <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                {stat.label}
-              </div>
-              <div style={{
-                fontFamily: 'var(--font-display), system-ui, sans-serif',
-                fontSize: 28,
-                fontWeight: 800,
-                color: i === 0 && isElevated ? theme.statValueColor : stat.color,
-              }}>
-                {stat.value}
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                {stat.sub}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pro concierge strip */}
-        {isPro && (
-          <div style={tierCardStyle(theme, {
-            padding: '18px 24px',
-            marginBottom: 24,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-          })}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD54A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                Pro Concierge
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: 13.5 }}>
-                You have a dedicated account manager and priority support — response times under 2 hours.
-              </div>
-            </div>
-            <Link href="/dashboard/support" style={{
-              flexShrink: 0,
-              background: 'linear-gradient(90deg, #FFD54A, #FF6B00)',
-              color: '#111',
-              fontWeight: 800,
-              fontSize: 13,
-              textDecoration: 'none',
-              padding: '10px 18px',
-              borderRadius: 999,
-            }}>
-              Contact your manager
-            </Link>
-          </div>
-        )}
-
-        {/* Pro growth tip strip */}
-        {isPro && (
-          <div style={tierCardStyle(theme, {
-            padding: '16px 24px',
-            marginBottom: 24,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-          })}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#4FC3F7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Pro Insight
-            </span>
-            <span style={{ color: 'var(--muted)', fontSize: 13.5 }}>
-              Check Analytics for growth trends and your top opportunity this week.
-            </span>
-            <Link href="/dashboard/analytics" style={{ marginLeft: 'auto', color: '#4FC3F7', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              View Analytics →
-            </Link>
-          </div>
-        )}
-
-        {/* Recent orders */}
-        <div style={tierCardStyle(theme, { overflow: 'hidden', marginBottom: 24 })}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-              Recent Orders
-            </h2>
-            <Link href="/dashboard/orders" style={{ color: theme.headingAccent === 'var(--text)' ? 'var(--accent)' : theme.headingAccent, fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
-              View all
-            </Link>
-          </div>
-
-          {recentOrders.length === 0 ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--border)' }}>--</div>
-              <div style={{ color: 'var(--muted)', fontSize: 14 }}>No orders yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Orders will appear here once customers start buying</div>
-            </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  {['Order', 'Customer', 'Product', 'Amount', 'Status', 'Date'].map(h => (
-                    <th key={h} style={{ padding: '12px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '14px 24px', color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>{order.id}</td>
-                    <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13 }}>{order.customer}</td>
-                    <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.product}</td>
-                    <td style={{ padding: '14px 24px', color: 'var(--text)', fontSize: 13, fontWeight: 600 }}>{order.amount}</td>
-                    <td style={{ padding: '14px 24px' }}><StatusBadge status={order.status} /></td>
-                    <td style={{ padding: '14px 24px', color: 'var(--muted)', fontSize: 13 }}>{order.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Quick actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <Link href="/dashboard/products" style={{
-            ...tierCardStyle(theme, { padding: '20px 24px' }),
-            display: 'block',
-            textDecoration: 'none',
-            transition: 'border-color 0.15s',
-          }}>
-            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-              Add Products
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: 13 }}>List your first products to start selling</div>
-          </Link>
-          <Link href="/dashboard/payouts" style={{
-            ...tierCardStyle(theme, { padding: '20px 24px' }),
-            display: 'block',
-            textDecoration: 'none',
-          }}>
-            <div style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-              Set Up Payouts
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: 13 }}>Connect your bank to receive earnings</div>
-          </Link>
-        </div>
+function Hub({ revenue30, allTime, hasOrders, inOrbit }: { revenue30: number | null; allTime: number | null; hasOrders: boolean; inOrbit?: boolean }) {
+  const disc = (
+    <div
+      style={{
+        position: inOrbit ? 'absolute' : 'relative',
+        inset: inOrbit ? 27 : undefined,
+        width: inOrbit ? undefined : 256,
+        height: inOrbit ? undefined : 256,
+        margin: inOrbit ? undefined : '0 auto',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 32% 26%, #FFFDF9, #FBEEDC 55%, #F3DBBB)',
+        boxShadow: '0 30px 70px rgba(120,80,30,0.28), inset 0 2px 10px rgba(255,255,255,0.9), inset 0 -14px 32px rgba(239,159,39,0.18)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center', padding: 34,
+      }}
+    >
+      <div style={{ fontFamily: HALO.fontDisplay, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C98A2E', marginBottom: 7 }}>
+        Last 30 days
       </div>
+      <h1 style={{ fontFamily: HALO.fontSerif, fontWeight: 500, fontStyle: 'italic', fontSize: 24, lineHeight: 1.12, color: HALO.ink, margin: 0 }}>
+        {hasOrders ? 'Your craft is travelling.' : 'Ready for your first order.'}
+      </h1>
+      <div style={{ fontFamily: HALO.fontSerif, fontWeight: 600, fontSize: 34, color: HALO.accent, marginTop: 10, letterSpacing: '-0.02em' }}>
+        {revenue30 === null ? DASH : formatGBP(revenue30)}
+      </div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: HALO.muted, marginTop: 3, fontFamily: HALO.fontDisplay }}>
+        Revenue {allTime !== null ? `· all time ${formatGBP(allTime)}` : ''}
+      </div>
+      <HaloButton variant="accent" href="/dashboard/live" style={{ marginTop: 12, padding: '9px 20px', fontSize: 12 }}>
+        Go Live
+      </HaloButton>
     </div>
+  );
+
+  if (!inOrbit) return disc;
+  return (
+    <>
+      <svg aria-hidden style={{ position: 'absolute', inset: 0, animation: 'haloSpin 40s linear infinite' }} viewBox="0 0 310 310">
+        <defs>
+          <path id="haloCirc" d="M155,155 m-132,0 a132,132 0 1,1 264,0 a132,132 0 1,1 -264,0" />
+        </defs>
+        <text style={{ fontFamily: 'Space Grotesk', fontSize: 11, fontWeight: 700, letterSpacing: '0.34em', fill: '#C98A2E', textTransform: 'uppercase' }}>
+          <textPath href="#haloCirc">VELOR SELLER STUDIO · YOUR SHOP IN ORBIT · VELOR SELLER STUDIO ·</textPath>
+        </text>
+      </svg>
+      {disc}
+    </>
+  );
+}
+
+function QuickChip({ href, title, sub }: { href: string; title: string; sub: string }) {
+  return (
+    <a
+      href={href}
+      className="halo-hover-lift"
+      style={{
+        ...glassStyle('capsule'),
+        display: 'flex', alignItems: 'center', gap: 11, padding: '12px 22px 12px 13px',
+        fontSize: 13, fontWeight: 700, textDecoration: 'none', color: HALO.ink,
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(255,107,0,0.12)', border: '1px solid rgba(255,107,0,0.3)',
+          fontFamily: HALO.fontDisplay, fontWeight: 800, color: HALO.accent, fontSize: 15,
+        }}
+      >
+        +
+      </span>
+      <span>
+        {title}
+        <small style={{ display: 'block', fontSize: 10.5, fontWeight: 500, color: HALO.muted, marginTop: 1 }}>{sub}</small>
+      </span>
+    </a>
   );
 }

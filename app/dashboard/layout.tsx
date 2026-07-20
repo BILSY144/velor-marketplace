@@ -1,140 +1,134 @@
 'use client';
 
+// ============================================================
+// HALO dashboard shell (2026-07-20) — replaces the dark fixed
+// sidebar with the light, full-width Halo layout William approved
+// from the mockup: warm aurora backdrop, top constellation nav
+// (every destination of the old sidebar preserved, grouped into
+// four constellations), plan pills, storefront link.
+//
+// The old layout FORCED dark mode; Halo forces LIGHT for the
+// dashboard only (restored on unmount), so inner pages built on
+// CSS variables pick up the light tokens.
+//
+// Functional parity with the old sidebar, unchanged rules:
+//  - Payouts item swaps to "Set Up Payout" (stripe-connect) until
+//    the Stripe account is charges+payouts enabled.
+//  - API Keys only for Pro.
+//  - Go Live visible to every tier (2026-07-15 rule).
+//  - Mobile (<900px): nav collapses into an opt-in overlay drawer
+//    so content is full-screen by default (William, 2026-07-20).
+// ============================================================
+
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import VelorAssistant from '@/components/VelorAssistant';
 import { normalizeSellerTier } from '@/lib/tier';
-
-const baseNavItems = [
-  { href: '/dashboard', label: 'Overview', icon: 'OV' },
-  { href: '/dashboard/products', label: 'Products', icon: 'PR' },
-  { href: '/dashboard/storefront', label: 'Storefront', icon: 'SF' },
-  { href: '/dashboard/orders', label: 'Orders', icon: 'OR' },
-  { href: '/dashboard/returns', label: 'Returns', icon: 'RT' },
-  { href: '/dashboard/disputes', label: 'Disputes', icon: 'DS' },
-  { href: '/dashboard/messages', label: 'Messages', icon: 'MS' },
-  { href: '/dashboard/discount-codes', label: 'Discounts', icon: 'DC' },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: 'AN' },
-  { href: '/dashboard/live', label: 'Go Live', icon: 'GL', special: 'live' },
-  { href: '/dashboard/settings', label: 'Settings', icon: 'ST' },
-  { href: '/dashboard/support', label: 'Support', icon: 'SP' },
-  { href: '/dashboard/api-keys', label: 'API Keys', icon: 'AK', special: 'enterprise' },
-];
+import { HALO, HaloBackdrop, HaloPlanPills } from '@/lib/halo';
 
 type Tier = 'STARTER' | 'PRO';
 
-// NOTE: ENTERPRISE was retired 2026-07-15. There is intentionally no
-// ENTERPRISE entry below — any legacy 'ENTERPRISE' value coming back from
-// the API is normalized to 'PRO' via normalizeSellerTier() before it ever
-// reaches this map, so every seller always resolves to a real theme.
-const TIER_THEME: Record<Tier, {
+interface NavItem {
+  href: string;
   label: string;
-  badgeColor: string;
-  badgeBg: string;
-  badgeBorder: string;
-  sidebarGradient: string;
-  glow: string;
-  activeGlow: string;
-  avatarRing: string;
-}> = {
-  STARTER: {
-    label: 'Starter',
-    badgeColor: '#999999',
-    badgeBg: 'rgba(153,153,153,0.12)',
-    badgeBorder: 'rgba(153,153,153,0.4)',
-    sidebarGradient: 'none',
-    glow: 'rgba(255,255,255,0.10)',
-    activeGlow: 'none',
-    avatarRing: 'none',
-  },
-  PRO: {
-    label: 'Pro',
-    badgeColor: '#4FC3F7',
-    badgeBg: 'rgba(79,195,247,0.12)',
-    badgeBorder: 'rgba(79,195,247,0.45)',
-    sidebarGradient: 'linear-gradient(180deg, rgba(79,195,247,0.08), transparent 45%)',
-    glow: 'rgba(79,195,247,0.35)',
-    activeGlow: '0 0 14px rgba(79,195,247,0.30)',
-    avatarRing: '0 0 0 2px rgba(79,195,247,0.6)',
-  },
-};
+  special?: 'live' | 'pro-only' | 'payout';
+}
 
-const SIDEBAR_COLLAPSE_KEY = 'velor-dashboard-sidebar-collapsed';
+interface Constellation {
+  label: string | null;
+  items: NavItem[];
+}
+
+const CONSTELLATIONS: Constellation[] = [
+  {
+    label: null,
+    items: [
+      { href: '/dashboard', label: 'Overview' },
+      { href: '/dashboard/analytics', label: 'Analytics' },
+    ],
+  },
+  {
+    label: 'Sell',
+    items: [
+      { href: '/dashboard/products', label: 'Products' },
+      { href: '/dashboard/storefront', label: 'Storefront' },
+      { href: '/dashboard/discount-codes', label: 'Discounts' },
+      { href: '/dashboard/live', label: 'Go Live', special: 'live' },
+    ],
+  },
+  {
+    label: 'Fulfil',
+    items: [
+      { href: '/dashboard/orders', label: 'Orders' },
+      { href: '/dashboard/returns', label: 'Returns' },
+      { href: '/dashboard/disputes', label: 'Disputes' },
+      { href: '/dashboard/messages', label: 'Messages' },
+    ],
+  },
+  {
+    label: 'Studio',
+    items: [
+      { href: '/dashboard/payouts', label: 'Payouts', special: 'payout' },
+      { href: '/dashboard/api-keys', label: 'API Keys', special: 'pro-only' },
+      { href: '/dashboard/settings', label: 'Settings' },
+      { href: '/dashboard/support', label: 'Support' },
+    ],
+  },
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>('STARTER');
-  const [payoutReady, setPayoutReady] = useState<boolean | null>(null); useEffect(() => { const prev = document.documentElement.getAttribute('data-theme'); const force = () => { if (document.documentElement.getAttribute('data-theme') !== 'dark') { document.documentElement.setAttribute('data-theme', 'dark') } }; force(); const observer = new MutationObserver(force); observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); return () => { observer.disconnect(); if (prev) { document.documentElement.setAttribute('data-theme', prev) } else { document.documentElement.removeAttribute('data-theme') } } }, [])
-
-  // Collapsible sidebar (William, 2026-07-20 -- "the seller dashboard is
-  // over taken by the left side bar actions, that needs to be collapsable
-  // when not needed so the seller can access full screen"). Two distinct
-  // behaviors depending on viewport, same isMobile breakpoint the Go Live
-  // redesign already established for this dashboard:
-  //  - Desktop: the sidebar stays docked but can collapse to a slim
-  //    icon-only rail (240px -> 64px), reclaiming width for wide tables and
-  //    charts. Preference persists across visits via localStorage.
-  //  - Mobile: the sidebar is off-canvas by default (0 width used) and
-  //    opens as a full overlay drawer over the content -- true full-screen
-  //    by default, the drawer is opt-in rather than always eating space.
-  const [collapsed, setCollapsed] = useState(false);
+  const [founding, setFounding] = useState(false);
+  const [payoutReady, setPayoutReady] = useState<boolean | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Force LIGHT theme while the dashboard is mounted (the public site
+  // may be in dark mode). Same MutationObserver pattern the old layout
+  // used for dark, restored faithfully on unmount.
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY);
-      if (saved === '1') setCollapsed(true);
-    } catch {
-      // localStorage unavailable (private browsing etc.) -- default to expanded
-    }
+    const prev = document.documentElement.getAttribute('data-theme');
+    const force = () => {
+      if (document.documentElement.getAttribute('data-theme') !== 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    };
+    force();
+    const observer = new MutationObserver(force);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => {
+      observer.disconnect();
+      if (prev) {
+        document.documentElement.setAttribute('data-theme', prev);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 900);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Closing the mobile drawer on route change means a seller who taps a nav
-  // link lands on the new page seeing it full-screen, not still under the
-  // drawer they just opened.
+  // Close the mobile drawer on route change so the new page is seen
+  // full-screen, not under the drawer.
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
-
-  function toggleSidebar() {
-    if (isMobile) {
-      setMobileOpen((v) => !v);
-      return;
-    }
-    setCollapsed((v) => {
-      const next = !v;
-      try {
-        window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, next ? '1' : '0');
-      } catch {
-        // ignore -- collapse still works for this session even if it can't persist
-      }
-      return next;
-    });
-  }
-
-  // Icon-rail (label-hiding) mode only applies to the docked desktop
-  // sidebar. The mobile drawer, when open, is always shown at full width
-  // with labels -- there is no reason to save space inside an overlay that
-  // is already opt-in.
-  const railOnly = !isMobile && collapsed;
-  const sidebarWidth = isMobile ? 240 : (collapsed ? 64 : 240);
 
   useEffect(() => {
     fetch('/api/seller/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.id) setSellerId(d.id);
-        // /api/seller/me already normalizes ENTERPRISE -> PRO server-side,
-        // but normalize again here defensively in case this layout is ever
-        // fed tier data from another, unnormalized source.
         if (d?.tier) setTier(normalizeSellerTier(d.tier) as Tier);
+        setFounding(Boolean(d?.foundingBadge));
       })
       .catch(() => {});
 
@@ -144,244 +138,202 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .catch(() => setPayoutReady(false));
   }, []);
 
-  const theme = TIER_THEME[tier] || TIER_THEME.STARTER;
+  function resolveItem(item: NavItem): NavItem | null {
+    if (item.special === 'pro-only' && tier !== 'PRO') return null;
+    if (item.special === 'payout' && payoutReady === false) {
+      return { href: '/dashboard/stripe-connect', label: 'Set Up Payout', special: 'payout' };
+    }
+    return item;
+  }
 
-  const payoutItem = payoutReady
-    ? { href: '/dashboard/payouts', label: 'Payouts', icon: 'PY' as const }
-    : { href: '/dashboard/stripe-connect', label: 'Set Up Payout', icon: 'PY' as const };
+  function isActive(href: string): boolean {
+    return href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
+  }
 
-  // Insert the single consolidated payout entry right before Analytics
-  const analyticsIdx = baseNavItems.findIndex((i) => i.href === '/dashboard/analytics');
-  const finalNavItems = [
-    ...baseNavItems.slice(0, analyticsIdx),
-    payoutItem,
-    ...baseNavItems.slice(analyticsIdx),
-  ].filter((i) => {
-    const special = (i as { special?: string }).special;
-    if (special === 'live') return true; // live shopping: every tier (2026-07-15)
-    if (special === 'enterprise') return tier === 'PRO'; // legacy flag name — now means Pro features
-    return true;
+  const navLinkStyle = (active: boolean, live: boolean): React.CSSProperties => ({
+    padding: '7px 13px',
+    borderRadius: 999,
+    fontSize: 12.5,
+    fontWeight: live ? 800 : 600,
+    color: live ? HALO.accent : active ? '#FFF4E8' : HALO.inkSoft,
+    background: active && !live ? HALO.ink : 'transparent',
+    boxShadow: active && !live ? '0 6px 16px rgba(26,26,29,0.3)' : 'none',
+    textDecoration: 'none',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.25s',
+    display: 'inline-flex',
+    alignItems: 'center',
   });
 
-  return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      background: '#0D0D0D',
-      fontFamily: 'Inter, sans-serif',
-      color: '#FFFFFF',
-    }}>
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  const liveDot = (
+    <span
+      aria-hidden
+      style={{
+        display: 'inline-block', width: 6, height: 6, marginRight: 6, borderRadius: '50%',
+        background: HALO.accent, animation: 'haloPulse 1.6s infinite',
+      }}
+    />
+  );
 
-      {/* Backdrop behind the mobile drawer -- tapping it closes the sidebar
-          the same way tapping outside any overlay does elsewhere on Velor. */}
-      {isMobile && mobileOpen && (
+  const constellationNav = (
+    <nav
+      style={{
+        position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between',
+        gap: 18, padding: '16px 0 6px', flexWrap: 'wrap',
+        width: 'min(1680px, 96vw)', margin: '0 auto',
+      }}
+    >
+      {CONSTELLATIONS.map((c, i) => (
         <div
-          onClick={() => setMobileOpen(false)}
-          style={{ position: 'fixed', inset: 0, top: '64px', background: 'rgba(0,0,0,0.55)', zIndex: 39 }}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside style={{
-        width: `${sidebarWidth}px`,
-        flexShrink: 0,
-        background: '#111111',
-        backgroundImage: theme.sidebarGradient,
-        borderRight: '1px solid #2A2A2A',
-        position: 'fixed',
-        top: '64px',
-        left: 0,
-        bottom: 0,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        zIndex: 40,
-        transition: 'width 0.2s ease, transform 0.2s ease',
-        transform: isMobile && !mobileOpen ? 'translateX(-100%)' : 'translateX(0)',
-        boxShadow: isMobile && mobileOpen ? '8px 0 24px rgba(0,0,0,0.5)' : 'none',
-      }}>
-        <div style={{ padding: railOnly ? '20px 0 16px' : '24px 20px 16px', borderBottom: '1px solid #2A2A2A', textAlign: railOnly ? 'center' : 'left' }}>
-          <Link href="/" style={{
-            fontFamily: 'Space Grotesk, sans-serif',
-            fontWeight: 800,
-            fontSize: railOnly ? '18px' : '20px',
-            color: '#FF6B00',
-            textDecoration: 'none',
-            letterSpacing: '-0.5px',
-          }}>
-            {railOnly ? 'V' : 'VELOR'}
-          </Link>
-          {!railOnly && (
-            <>
-              <p style={{ color: '#999999', fontSize: '12px', marginTop: '4px', marginBottom: '10px' }}>Seller Dashboard</p>
-              <span style={{
-                display: 'inline-block',
-                padding: '3px 10px',
-                borderRadius: 999,
-                fontSize: '11px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: theme.badgeColor,
-                background: theme.badgeBg,
-                border: `1px solid ${theme.badgeBorder}`,
-              }}>
-                {theme.label} plan
-              </span>
-            </>
+          key={i}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 2, padding: '5px 6px 5px 14px',
+            background: 'rgba(255,255,255,0.55)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.95)', borderRadius: 999,
+            boxShadow: '0 10px 30px rgba(90,60,20,0.1)',
+          }}
+        >
+          {c.label && (
+            <span style={{ fontFamily: HALO.fontDisplay, fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: HALO.amber, marginRight: 8 }}>
+              {c.label}
+            </span>
           )}
-        </div>
-
-        <nav style={{ padding: '16px 0' }}>
-          {finalNavItems.map((item) => {
-            const isActive = item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
-            const isLive = (item as { special?: string }).special === 'live';
-
+          {c.items.map((raw) => {
+            const item = resolveItem(raw);
+            if (!item) return null;
+            const live = raw.special === 'live';
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="sidebar-nav-link"
-                title={railOnly ? item.label : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: railOnly ? 0 : '12px',
-                  justifyContent: railOnly ? 'center' : 'flex-start',
-                  padding: railOnly ? '12px 0' : '12px 20px',
-                  textDecoration: 'none',
-                  borderLeft: isActive && !isLive ? '3px solid #FF6B00' : '3px solid transparent',
-                  background: isLive
-                    ? 'rgba(255,107,0,0.14)'
-                    : isActive ? 'rgba(255,107,0,0.08)' : 'transparent',
-                  color: isLive ? '#FF6B00' : isActive ? '#FFFFFF' : '#999999',
-                  fontSize: '14px',
-                  fontWeight: isActive || isLive ? 600 : 400,
-                  transition: 'all 0.15s',
-                  boxShadow: isActive ? theme.activeGlow : 'none',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                }}
-              >
-                <span style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
-                  background: isLive ? '#FF6B00' : isActive ? '#FF6B00' : '#2A2A2A',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  color: isLive ? '#111111' : isActive ? '#FFFFFF' : '#666666',
-                  flexShrink: 0,
-                  fontFamily: 'Space Grotesk, sans-serif',
-                }}>
-                  {item.icon}
-                </span>
-                {!railOnly && item.label}
+              <Link key={raw.href} href={item.href} style={navLinkStyle(isActive(item.href), live)}>
+                {live && liveDot}
+                {item.label}
               </Link>
             );
           })}
-        </nav>
-      </aside>
+        </div>
+      ))}
+    </nav>
+  );
 
-      <style jsx>{`
-        .sidebar-nav-link:hover {
-          background: rgba(255, 255, 255, 0.04) !important;
-          box-shadow: 0 0 14px ${theme.glow};
-          color: #ffffff !important;
-        }
-      `}</style>
+  const mobileDrawer = mobileOpen && (
+    <div
+      onClick={() => setMobileOpen(false)}
+      style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(26,26,29,0.35)', backdropFilter: 'blur(6px)' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'absolute', top: 12, left: 12, right: 12, borderRadius: 28, padding: '22px 20px',
+          background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
+          border: '1px solid rgba(255,255,255,1)', boxShadow: '0 30px 80px rgba(90,60,20,0.3)',
+          maxHeight: 'calc(100vh - 24px)', overflowY: 'auto',
+        }}
+      >
+        {CONSTELLATIONS.map((c, i) => (
+          <div key={i} style={{ marginBottom: 14 }}>
+            {c.label && (
+              <div style={{ fontFamily: HALO.fontDisplay, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: HALO.amber, margin: '0 0 6px 12px' }}>
+                {c.label}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {c.items.map((raw) => {
+                const item = resolveItem(raw);
+                if (!item) return null;
+                const live = raw.special === 'live';
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={raw.href}
+                    href={item.href}
+                    style={{
+                      padding: '10px 16px', borderRadius: 999, fontSize: 13.5, fontWeight: live || active ? 800 : 600,
+                      color: live ? HALO.accent : active ? '#FFF4E8' : HALO.ink,
+                      background: active && !live ? HALO.ink : 'rgba(26,26,29,0.05)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {live && liveDot}
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-      {/* Top header bar */}
-      <header style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '64px',
-        background: '#111111',
-        borderBottom: '1px solid #2A2A2A',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        zIndex: 50,
-      }}>
-        <div style={{ width: '200px', display: 'flex', alignItems: 'center' }}>
-          <button
-            onClick={toggleSidebar}
-            aria-label={isMobile ? (mobileOpen ? 'Close menu' : 'Open menu') : (collapsed ? 'Expand sidebar' : 'Collapse sidebar')}
+  return (
+    <div style={{ minHeight: '100vh', background: HALO.paper, color: HALO.ink, fontFamily: HALO.fontBody }}>
+      <HaloBackdrop />
+
+      {/* top bar */}
+      <header
+        style={{
+          position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 18,
+          width: 'min(1680px, 96vw)', margin: '0 auto', padding: '20px 0 0',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
+          <Link href="/" style={{ fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px', color: HALO.ink, textDecoration: 'none' }}>
+            VELOR
+          </Link>
+          <span style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 400, fontSize: 13, color: HALO.muted }}>
+            Seller Halo
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+          {!isMobile && (
+            <Link
+              href={sellerId ? `/seller/${sellerId}` : '/'}
+              style={{ fontSize: 12, fontWeight: 600, color: HALO.muted, textDecoration: 'none', borderBottom: `1px dotted ${HALO.muted}`, paddingBottom: 1 }}
+            >
+              View my storefront
+            </Link>
+          )}
+          <HaloPlanPills tier={tier} founding={founding} />
+          <span
+            aria-hidden
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              background: 'transparent',
-              border: '1px solid #2A2A2A',
-              color: '#CCCCCC',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: 40, height: 40, borderRadius: '46% 54% 52% 48% / 54% 46% 54% 46%',
+              background: 'linear-gradient(135deg, #FF8A2B, #FF6B00)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: 14,
+              boxShadow: '0 8px 20px rgba(255,107,0,0.35)', flexShrink: 0,
             }}
           >
-            {isMobile ? (
-              mobileOpen ? (
+            S
+          </span>
+          {isMobile && (
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              style={{
+                width: 40, height: 40, borderRadius: 999, border: '1px solid rgba(26,26,29,0.14)',
+                background: 'rgba(255,255,255,0.7)', color: HALO.ink, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {mobileOpen ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
               ) : (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
-              )
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}><path d="M15 6l-6 6 6 6" /></svg>
-            )}
-          </button>
-        </div>
-        <p style={{
-          fontFamily: 'Space Grotesk, sans-serif',
-          fontWeight: 700,
-          fontSize: '15px',
-          color: '#FFFFFF',
-        }}>
-          Seller Portal
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href={sellerId ? `/seller/${sellerId}` : '/'} style={{ color: '#999999', fontSize: '13px', textDecoration: 'none' }}>
-            View Store
-          </Link>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            background: '#FF6B00',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'Space Grotesk, sans-serif',
-            fontWeight: 700,
-            fontSize: '14px',
-            color: '#FFFFFF',
-            boxShadow: theme.avatarRing,
-          }}>
-            S
-          </div>
+              )}
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Main content -- full-width on mobile (the sidebar is an overlay
-          drawer there, not docked), width tracks the collapse state on
-          desktop so the reclaimed space actually goes to the page. */}
-      <main style={{
-        marginLeft: isMobile ? 0 : `${sidebarWidth}px`,
-        marginTop: '64px',
-        flex: 1,
-        minWidth: 0,
-        transition: 'margin-left 0.2s ease',
-      }}>
+      {!isMobile && constellationNav}
+      {isMobile && mobileDrawer}
+
+      <main style={{ position: 'relative', zIndex: 3, minHeight: '70vh' }}>
         {children}
       </main>
+
       <VelorAssistant />
     </div>
   );
