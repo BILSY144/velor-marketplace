@@ -108,6 +108,7 @@ export default function DashboardOrdersPage() {
   const [shipLoading, setShipLoading] = useState<Record<string, boolean>>({})
   const [shipErrors, setShipErrors] = useState<Record<string, string>>({})
   const [shipForms, setShipForms] = useState<Record<string, ShipFormState>>({})
+  const [editingShipment, setEditingShipment] = useState<Record<string, boolean>>({})
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -159,6 +160,7 @@ export default function DashboardOrdersPage() {
       // Refresh orders to show the new shipment
       const refreshed = await fetch('/api/dashboard/orders').then(r => r.json())
       setOrders(refreshed.orders ?? [])
+      setEditingShipment(e => ({ ...e, [orderId]: false }))
     } catch {
       setShipErrors(e => ({ ...e, [orderId]: 'Network error — please try again' }))
     } finally {
@@ -371,7 +373,7 @@ export default function DashboardOrdersPage() {
                     </div>
 
                     {/* Shipment section */}
-                    {hasShipment && latestShipment ? (
+                    {hasShipment && latestShipment && !editingShipment[order.id] ? (
                       <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
                           Shipment
@@ -397,14 +399,36 @@ export default function DashboardOrdersPage() {
                               Download Label
                             </a>
                           )}
+                          {order.status !== 'DELIVERED' && (
+                            <button
+                              onClick={() => {
+                                setShipForms(f => ({
+                                  ...f,
+                                  [order.id]: {
+                                    carrier: latestShipment.carrier ?? '',
+                                    trackingNumber: latestShipment.trackingNumber ?? '',
+                                    trackingUrl: latestShipment.trackingUrl ?? '',
+                                  },
+                                }))
+                                setEditingShipment(e => ({ ...e, [order.id]: true }))
+                              }}
+                              style={{
+                                padding: '6px 16px', borderRadius: 999, background: 'var(--surface)',
+                                border: '1px solid var(--border)', color: 'var(--text)',
+                                fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                              }}
+                            >
+                              Update tracking
+                            </button>
+                          )}
                         </div>
                       </div>
-                    ) : canShip ? (
+                    ) : (canShip || editingShipment[order.id]) ? (
                       <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
-                          Mark as Shipped
+                          {editingShipment[order.id] ? 'Update Tracking' : 'Mark as Shipped'}
                         </div>
-                        {(() => {
+                        {!editingShipment[order.id] && (() => {
                           const daysLeft = dispatchDaysLeft(order.createdAt)
                           const noteColor = dispatchPillColor(daysLeft)
                           return (
@@ -468,8 +492,20 @@ export default function DashboardOrdersPage() {
                             cursor: shipLoading[order.id] ? 'not-allowed' : 'pointer',
                           }}
                         >
-                          {shipLoading[order.id] ? 'Saving...' : 'Mark as Shipped'}
+                          {shipLoading[order.id] ? 'Saving...' : editingShipment[order.id] ? 'Save Tracking' : 'Mark as Shipped'}
                         </button>
+                        {editingShipment[order.id] && (
+                          <button
+                            onClick={() => setEditingShipment(e => ({ ...e, [order.id]: false }))}
+                            style={{
+                              padding: '10px 24px', marginLeft: 10, background: 'transparent',
+                              color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 999,
+                              fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        )}
                       </div>
                     ) : null}
                   </div>
