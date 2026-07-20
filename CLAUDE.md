@@ -143,7 +143,31 @@ above once it's rebuilt) to confirm none of them leak `contactName` /
 
 ---
 
-## OUTSTANDING -- SELLER DASHBOARD NEEDS A FULL, FUTURISTIC REDESIGN (raised 2026-07-20, not started)
+## IN PROGRESS -- SELLER DASHBOARD "HALO" REDESIGN (raised 2026-07-20; phases 1+2 SHIPPED 2026-07-20, commit 9d7005d; rollout to remaining pages OUTSTANDING)
+
+**Update 2026-07-20 (late session):** William approved a direction from three
+concept mockups: "Halo" -- LIGHT theme (his explicit call: "remove the dark
+colour as its hard to see"), website colours (globals.css light tokens +
+orange/amber), orbital layout: centre hub disc, circular glass stat
+satellites on orbit rings, capsule orders belt, constellation top nav
+replacing the sidebar, wide-desktop layout. Design system lives in
+`lib/halo.tsx`; `app/dashboard/layout.tsx` is the new shell (all 14 nav
+destinations preserved, payout-setup swap, Pro-only API Keys, Go Live every
+tier, mobile overlay drawer); `app/dashboard/page.tsx` is the rebuilt
+Overview -- every figure wired live (analytics/orders/payouts/products
+APIs), zero fabricated numbers, escrow copy states delivery + hold window.
+Deploy 9d7005d confirmed Ready on Vercel. NOT yet live-verified in a
+browser signed in as a seller -- that is the next step before further
+rollout. Remaining pages still carry their old inner styling inside the
+new light shell (they read light via CSS vars; stripe-connect, terms,
+analytics hardcode dark hexes and will look dark-on-light until their
+batch). Rollout batches agreed: Sell (Products, Storefront, Discounts) ->
+Fulfil (Orders, Returns, Disputes, Messages -- visual only, messaging
+function untouched per the rules-needed section above) -> Studio (Payouts,
+Stripe Connect, Payoneer, API Keys, Settings, Support, Terms, Upgrade) ->
+Analytics -> Go Live branded pass last.
+
+Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
 doesn't bring it up himself: the seller dashboard (`app/dashboard/**`)
