@@ -21,7 +21,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel } from '@/lib/specialities'
+import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel, specialitySlug } from '@/lib/specialities'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
@@ -1088,7 +1088,7 @@ export default function HomePage() {
                     const st = specStats[s.term]
                     const claimed = !!st && st.products > 0
                     return (
-                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'} title={s.line}>
+                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={`/specialities/${specialitySlug(s)}`} title={s.line}>
                         <span className="dotst" />
                         {buyerLabel(s.term)}
                         {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}

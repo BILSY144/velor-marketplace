@@ -34,7 +34,7 @@ import { findCountryBySlug, type WorldCountry } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
 import { cultureHints } from '@/lib/cultureHints'
 import { countryImages } from '@/lib/countryImagery'
-import { SPECIALITIES, buyerLabel } from '@/lib/specialities'
+import { SPECIALITIES, buyerLabel, specialitySlug } from '@/lib/specialities'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface PreviewProduct {
@@ -233,7 +233,7 @@ function OriginCountryContent() {
                         <Link
                           key={s.term}
                           className={'ocp-tag' + (claimed ? ' claimed' : '')}
-                          href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                          href={`/specialities/${specialitySlug(s)}`}
                           title={s.line}
                         >
                           {buyerLabel(s.term)}
@@ -278,7 +278,7 @@ function OriginCountryContent() {
                       <Link
                         key={s.term}
                         className={'ocp-tag' + (claimed ? ' claimed' : '')}
-                        href={claimed ? `/shop?speciality=${encodeURIComponent(s.term)}` : '/founding'}
+                        href={`/specialities/${specialitySlug(s)}`}
                         title={s.line}
                       >
                         {buyerLabel(s.term)}
