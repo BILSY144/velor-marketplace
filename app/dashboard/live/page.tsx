@@ -654,7 +654,10 @@ export default function GoLivePage() {
                     onChange={(e) => setChatDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
                     placeholder="Reply to viewers..."
-                    style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13 }}
+                    // 16px -- below this, iOS Safari zooms the whole page in
+                    // on focus, which is what looked like the screen
+                    // "expanding" and cutting off the video.
+                    style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 16 }}
                   />
                   <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 700, cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
                     Send
@@ -973,7 +976,7 @@ export default function GoLivePage() {
                       type="datetime-local"
                       value={scheduledFor}
                       onChange={(e) => setScheduledFor(e.target.value)}
-                      style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
+                      style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', fontSize: 16 }}
                     />
                   )}
                 </FeatureToggle>
@@ -995,7 +998,7 @@ export default function GoLivePage() {
                         max={50}
                         value={offerPercent}
                         onChange={(e) => setOfferPercent(e.target.value)}
-                        style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff' }}
+                        style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', fontSize: 16 }}
                       />
                       <span style={{ color: '#aaa', fontSize: 13 }}>% off featured products</span>
                     </div>
@@ -1055,7 +1058,10 @@ function fieldInputStyle(border: string): React.CSSProperties {
     border: `1px solid ${border}`,
     background: '#0d0d0d',
     color: '#fff',
-    fontSize: 14,
+    // 16px minimum -- anything smaller makes iOS Safari auto-zoom the whole
+    // page in on focus, which is what made this screen look like it was
+    // "expanding" and cutting off the video/preview when tapped.
+    fontSize: 16,
   }
 }
 
@@ -1128,7 +1134,7 @@ function DeviceSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{ flex: 1, background: 'transparent', color: '#fff', border: 'none', fontSize: 12.5, outline: 'none' }}
+        style={{ flex: 1, background: 'transparent', color: '#fff', border: 'none', fontSize: 16, outline: 'none' }}
       >
         {devices.length === 0 && <option value="">{fallbackLabel} unavailable</option>}
         {devices.map((d, i) => (

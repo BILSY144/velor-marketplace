@@ -514,7 +514,10 @@ export default function LiveViewerPage() {
             onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
             placeholder="Say something..."
             maxLength={300}
-            style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13 }}
+            // 16px minimum -- iOS Safari zooms the whole page in on focus
+            // for any input smaller than that, which looks like the video
+            // "expanding" and getting cropped when the keyboard opens.
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 16 }}
           />
           <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
             Send
