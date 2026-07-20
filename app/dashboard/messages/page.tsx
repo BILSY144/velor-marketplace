@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSellerTier, PlanBadge } from '@/lib/dashboard-theme';
 
+// The API sends a privacy-safe display name only (store name for sellers,
+// "First L." for buyers) -- it never sends the other party's email address.
 interface OtherUser {
   id: string;
-  name: string | null;
-  email: string;
+  name: string;
 }
 
 interface Product {
@@ -27,7 +28,7 @@ interface Message {
   content: string;
   createdAt: string;
   senderId: string;
-  sender: { id: string; name: string | null; email: string };
+  sender: { id: string; name: string };
 }
 
 export default function DashboardMessagesPage() {
@@ -115,9 +116,9 @@ export default function DashboardMessagesPage() {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 
-  function initials(name: string | null, email: string) {
+  function initials(name: string | null | undefined) {
     if (name) return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
-    return email.slice(0, 2).toUpperCase();
+    return 'VM';
   }
 
   const totalUnread = conversations.reduce((n, c) => n + c.unreadCount, 0);
@@ -142,7 +143,7 @@ export default function DashboardMessagesPage() {
           ) : (
             conversations.map((conv) => {
               const isSelected = selected?.conversationId === conv.conversationId && selected?.product?.id === conv.product?.id;
-              const displayName = conv.otherUser.name ?? conv.otherUser.email;
+              const displayName = conv.otherUser.name;
               return (
                 <button
                   key={conv.conversationId + (conv.product?.id ?? '')}
@@ -162,7 +163,7 @@ export default function DashboardMessagesPage() {
                   }}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: accentColor, flexShrink: 0 }}>
-                    {initials(conv.otherUser.name, conv.otherUser.email)}
+                    {initials(conv.otherUser.name)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
@@ -200,11 +201,11 @@ export default function DashboardMessagesPage() {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #FFD54A, #FF6B00)' }} />
               )}
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: accentColor }}>
-                {initials(otherUser?.name ?? selected.otherUser.name, otherUser?.email ?? selected.otherUser.email)}
+                {initials(otherUser?.name ?? selected.otherUser.name)}
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
-                  {otherUser?.name ?? selected.otherUser.name ?? selected.otherUser.email}
+                  {otherUser?.name ?? selected.otherUser.name}
                 </div>
                 {selected.product && (
                   <div style={{ fontSize: 12, color: 'var(--muted)' }}>Re: {selected.product.title}</div>
