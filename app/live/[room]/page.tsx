@@ -331,11 +331,19 @@ export default function LiveViewerPage() {
         />
       ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', textAlign: 'center', padding: 24 }}>
+          {/* 'notfound' is deliberately not listed here -- the earlier
+              `if (status === 'notfound') return ...` guard above already
+              handles and returns for that case, so by this point in the
+              function TS has narrowed status to exclude it; comparing
+              against it here is unreachable dead code and fails Next.js's
+              stricter build-time type check (confirmed via the Vercel build
+              log for deployment a124a5e, 2026-07-20: "This comparison
+              appears to be unintentional because the types ... have no
+              overlap"). */}
           {status === 'connecting' && 'Connecting...'}
           {status === 'ended' && 'This stream has ended.'}
           {status === 'error' && 'Could not connect - try refreshing.'}
           {status === 'loading' && 'Loading...'}
-          {status === 'notfound' && 'Stream not found.'}
         </div>
       )}
 
