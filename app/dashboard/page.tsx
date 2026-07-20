@@ -103,7 +103,19 @@ export default function DashboardOverview() {
 
     fetch('/api/dashboard/analytics')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setAnalytics(d))
+      .then((d) => {
+        // The analytics route nests the headline figures under `summary`;
+        // only dailyRevenue is top-level. Normalize here once.
+        if (d?.summary) {
+          setAnalytics({
+            totalRevenue: d.summary.totalRevenue ?? 0,
+            totalEarnings: d.summary.totalEarnings ?? 0,
+            totalOrders: d.summary.totalOrders ?? 0,
+            avgOrderValue: d.summary.avgOrderValue ?? 0,
+            dailyRevenue: Array.isArray(d.dailyRevenue) ? d.dailyRevenue : [],
+          });
+        }
+      })
       .catch(() => {});
 
     fetch('/api/dashboard/products')
