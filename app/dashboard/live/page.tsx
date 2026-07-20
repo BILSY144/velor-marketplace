@@ -645,8 +645,31 @@ export default function GoLivePage() {
 
                 <div style={{ flex: 1 }} />
 
+                {/* Chat feed: fixed-height, newest message at the bottom,
+                    fading upward into the video -- never grows or covers
+                    the picture no matter how many messages arrive. */}
+                <div style={{ position: 'relative', zIndex: 1, height: 130, overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse', gap: 6, padding: '0 14px', maskImage: 'linear-gradient(to bottom, transparent, black 35%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)' }}>
+                  <div ref={chatEndRef} />
+                  {chat.length === 0 && <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Messages from viewers will appear here.</div>}
+                  {chat.slice(-40).reverse().map((m) => (
+                    <div key={m.id} style={{ display: 'inline-flex', alignSelf: 'flex-start', maxWidth: '92%', fontSize: 13, lineHeight: 1.4, background: 'rgba(0,0,0,0.4)', borderRadius: 14, padding: '5px 11px', wordBreak: 'break-word' }}>
+                      <span style={{ color: accent, fontWeight: 700, marginRight: 5 }}>{m.name}</span>
+                      <span style={{ color: '#fff' }}>{m.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {chatError && <div style={{ position: 'relative', zIndex: 1, padding: '4px 14px 0', color: '#ffb4b4', fontSize: 12, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{chatError}</div>}
+
+                {/* Product pin tray -- directly above the composer, not
+                    floating higher up where it could put off the seller's
+                    own view of the video (William, 2026-07-20). The "View
+                    public page" link that used to sit here was removed
+                    entirely -- it served no purpose over the live video
+                    itself (William: "it has no purpose on the video at
+                    all"). */}
                 {streamProducts.length > 0 && (
-                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, overflowX: 'auto', padding: '0 12px 12px' }}>
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, overflowX: 'auto', padding: '0 14px 8px' }}>
                     {streamProducts.map((p) => {
                       const isPinned = pinnedId === p.id
                       return (
@@ -670,28 +693,6 @@ export default function GoLivePage() {
                     })}
                   </div>
                 )}
-
-                <div style={{ position: 'relative', zIndex: 1, padding: '0 12px 4px' }}>
-                  <a href={`/live/${activeStream.roomName}`} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, textDecoration: 'underline' }}>
-                    View public page
-                  </a>
-                </div>
-
-                {/* Chat feed: fixed-height, newest message at the bottom,
-                    fading upward into the video -- never grows or covers
-                    the picture no matter how many messages arrive. */}
-                <div style={{ position: 'relative', zIndex: 1, height: 130, overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse', gap: 6, padding: '0 14px', maskImage: 'linear-gradient(to bottom, transparent, black 35%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)' }}>
-                  <div ref={chatEndRef} />
-                  {chat.length === 0 && <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Messages from viewers will appear here.</div>}
-                  {chat.slice(-40).reverse().map((m) => (
-                    <div key={m.id} style={{ display: 'inline-flex', alignSelf: 'flex-start', maxWidth: '92%', fontSize: 13, lineHeight: 1.4, background: 'rgba(0,0,0,0.4)', borderRadius: 14, padding: '5px 11px', wordBreak: 'break-word' }}>
-                      <span style={{ color: accent, fontWeight: 700, marginRight: 5 }}>{m.name}</span>
-                      <span style={{ color: '#fff' }}>{m.text}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {chatError && <div style={{ position: 'relative', zIndex: 1, padding: '4px 14px 0', color: '#ffb4b4', fontSize: 12, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{chatError}</div>}
 
                 {/* Single-line composer, always visible -- typing here is */}
                 {/* the only chat action; nothing to open or dismiss. */}
