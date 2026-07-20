@@ -28,6 +28,30 @@ type DataMsg =
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 
+// getUserMedia() throws a DOMException whose .message is a terse browser
+// string ("Requested device not found") that doesn't tell a seller what to
+// actually do. This turns the handful of real-world causes into plain
+// instructions. NotFoundError is by far the most common one in practice:
+// it means the browser could not detect ANY camera or microphone at all
+// (no webcam present, or the OS is blocking device enumeration entirely) --
+// not a permissions problem, so re-prompting for permission will not help.
+function friendlyMediaError(e: unknown): string {
+  const name = e instanceof DOMException ? e.name : ''
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return "No camera or microphone was found on this device. Make sure a webcam is connected (built-in or external), that no other app is using it, and that your operating system allows this browser to see it -- then reload and try again."
+  }
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    return "Camera and microphone access was blocked. Click the camera icon in your browser's address bar, allow access for velorcommerce.store, then reload and try again."
+  }
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return "Your camera or microphone is already being used by another app or browser tab. Close it there, then try again."
+  }
+  if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+    return "Your camera doesn't support the requested video settings. Try a different camera if you have one."
+  }
+  return e instanceof Error ? e.message : 'Could not go live - check camera/mic permissions.'
+}
+
 export default function GoLivePage() {
   const [loading, setLoading] = useState(true)
   const [tier, setTier] = useState<string | null>(null)
@@ -219,8 +243,7 @@ export default function GoLivePage() {
         }
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Could not go live - check camera/mic permissions.'
-      setError(msg)
+      setError(friendlyMediaError(e))
     } finally {
       setConnecting(false)
     }
@@ -249,8 +272,7 @@ export default function GoLivePage() {
         }
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Could not go live - check camera/mic permissions.'
-      setError(msg)
+      setError(friendlyMediaError(e))
     } finally {
       setStarting(false)
     }
