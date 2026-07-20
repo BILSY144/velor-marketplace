@@ -10,7 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
 import { FILMS, countryName, Film } from '../data'
-import { fetchProductsByOrigin } from '../api'
+import { fetchProductsByOrigin, fetchLiveStreams } from '../api'
 import { useCart, useFavs } from '../store'
 
 // Velor Live — plate 03 + spec/live.txt, exact: back chip to Atlas, PREVIEW
@@ -21,10 +21,23 @@ import { useCart, useFavs } from '../store'
 // chat bubbles (amira/seller) are not rendered — live chat begins with real
 // broadcasts; the product strip only appears when a real listing exists for
 // the film's country; no viewer counts anywhere (CAP/ASA rule).
+//
+// Real broadcasts banner (2026-07-20): a genuine seller who is live or
+// scheduled now shows above the preview reel, tapping opens the real
+// LiveRoom screen (real LiveKit video, chat, pin, live pricing) — separate
+// from the preview films below, which stay exactly as they were.
 export default function LiveScreen() {
   useI18nTick()
   const { height, width } = useWindowDimensions()
+  const insets = useSafeAreaInsets()
+  const nav = useNavigation<any>()
   const route = useRoute<any>()
+  const liveNow = useQuery({
+    queryKey: ['liveStreamsNow'],
+    queryFn: fetchLiveStreams,
+    refetchInterval: 30000,
+  })
+  const realStreams = (liveNow.data ?? []).slice(0, 5)
   // The Atlas reel deep-links here with { start } — open the feed AT that
   // film (was silently ignored before the 2026-07-15 wiring scan caught it).
   const start: number = Math.min(FILMS.length - 1, Math.max(0, route.params?.start ?? 0))
@@ -69,25 +82,57 @@ export default function LiveScreen() {
   )
 
   return (
-    <FlatList
-      ref={listRef}
-      style={{ flex: 1, backgroundColor: '#000' }}
-      data={FILMS}
-      keyExtractor={(f) => f.src}
-      renderItem={renderItem}
-      pagingEnabled
-      showsVerticalScrollIndicator={false}
-      snapToInterval={height}
-      decelerationRate="fast"
-      getItemLayout={(_, i) => ({ length: height, offset: height * i, index: i })}
-      viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-      onViewableItemsChanged={onViewable.current}
-      windowSize={3}
-      maxToRenderPerBatch={2}
-      initialNumToRender={1}
-    />
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
+      <FlatList
+        ref={listRef}
+        style={{ flex: 1, backgroundColor: '#000' }}
+        data={FILMS}
+        keyExtractor={(f) => f.src}
+        renderItem={renderItem}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={height}
+        decelerationRate="fast"
+        getItemLayout={(_, i) => ({ length: height, offset: height * i, index: i })}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+        onViewableItemsChanged={onViewable.current}
+        windowSize={3}
+        maxToRenderPerBatch={2}
+        initialNumToRender={1}
+      />
+      {realStreams.length > 0 && (
+        <View style={[ls.bannerWrap, { top: insets.top + 8 }]} pointerEvents="box-none">
+          {realStreams.map((st) => (
+            <Pressable key={st.id} style={ls.banner} onPress={() => nav.navigate('LiveRoom', { room: st.roomName })}>
+              {st.status === 'LIVE' ? <View style={ls.liveDot} /> : <Ionicons name="time-outline" size={12} color={C.text} />}
+              <Text style={ls.bannerTx} numberOfLines={1}>
+                {st.status === 'LIVE' ? `${st.sellerName} is live now` : `${st.sellerName} goes live soon`}
+              </Text>
+              <Ionicons name="chevron-forward" size={13} color={C.text} />
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
   )
 }
+
+const ls = StyleSheet.create({
+  bannerWrap: { position: 'absolute', left: 14, right: 14, gap: 8 },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(20,20,26,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,0,0.5)',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  bannerTx: { flex: 1, color: C.text, fontFamily: F.displayMed, fontSize: 12 },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent },
+})
 
 function FilmPage({
   film,
