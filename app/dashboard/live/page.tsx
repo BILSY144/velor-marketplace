@@ -453,7 +453,7 @@ export default function GoLivePage() {
               // opens on demand -- it never permanently covers the picture or
               // pushes the End stream button off-screen the way the old fixed
               // two-column layout did.
-              <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 40, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100dvh', background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
                 <video ref={videoRef} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
 
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
