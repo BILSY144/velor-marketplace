@@ -48,16 +48,31 @@ export async function POST(request: NextRequest) {
     if (!order) {
       return NextResponse.json({ error: 'Order not found or access denied' }, { status: 404 })
     }
-    if (order.status === 'SHIPPED' || order.status === 'DELIVERED') {
-      return NextResponse.json({ error: 'Order already shipped' }, { status: 400 })
+    // Sellers may add tracking to any order that still needs it, and correct
+    // a mistyped tracking number while the parcel is in transit. Only a
+    // delivered order is locked (2026-07-20, William: sellers must be able to
+    // add tracking to every single order).
+    if (order.status === 'DELIVERED') {
+      return NextResponse.json({ error: 'Order already delivered — tracking can no longer be changed' }, { status: 400 })
+    }
+    if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
+      return NextResponse.json({ error: 'This order is ' + order.status.toLowerCase() + ' and does not need shipping' }, { status: 400 })
     }
 
     const cleanCarrier = String(carrier).trim()
     const cleanTracking = String(trackingNumber).trim()
     const cleanTrackingUrl = trackingUrl && String(trackingUrl).trim() ? String(trackingUrl).trim() : null
 
-    const dbShipment = await prisma.shipment.create({
-      data: {
+    // One shipment per order (orderId is unique) — update in place when the
+    // seller is correcting details, create on first entry.
+    const dbShipment = await prisma.shipment.upsert({
+      where: { orderId: order.id },
+      update: {
+        trackingNumber: cleanTracking,
+        trackingUrl: cleanTrackingUrl,
+        carrier: cleanCarrier,
+      },
+      create: {
         orderId: order.id,
         sellerId: seller.id,
         trackingNumber: cleanTracking,
