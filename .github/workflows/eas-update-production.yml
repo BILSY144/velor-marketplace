@@ -1,0 +1,45 @@
+name: Publish Velor app to Expo PRODUCTION
+# APPROVAL-DAY BUTTON (prepared 2026-07-21, William: "yes all").
+# Fires the over-the-air JS update to REAL STORE INSTALLS. Deliberately
+# manual-only -- never on push. Run it from the mobile-app branch the day
+# Google approves store build 5, so installers immediately get every fix
+# since the 19 Jul build (2h SLA screens, seller dashboard black-screen/NaN
+# fix, exact-pence + currency-converting money, translation engine cure,
+# honest Go Live copy).
+#
+# HARD RULE until store build #2 ships: production updates come ONLY from
+# the mobile-app branch. Build 5 has NO LiveKit native module; main's
+# mobile/ imports @livekit/react-native at module load and would crash
+# every store install on launch. Both builds share runtime exposdk:54.0.0,
+# so nothing but this rule keeps the wrong JS off build 5. When build #2
+# (with LiveKit) is cut, split the runtimes first (set an explicit
+# runtimeVersion in main's mobile/app.json) -- see CLAUDE.md.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type LIVE to confirm publishing to real store installs'
+        required: true
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse without explicit confirmation
+        if: ${{ inputs.confirm != 'LIVE' }}
+        run: |
+          echo "Confirmation input was not LIVE -- refusing to publish to production."
+          exit 1
+      - uses: actions/checkout@v4
+        with:
+          ref: mobile-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+      - name: Publish EAS Update to PRODUCTION channel
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli update --branch production --message "Production OTA from mobile-app ${{ github.sha }}" --non-interactive
