@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
+import { HALO } from '@/lib/halo';
 
 interface OrderItem {
   id: string;
@@ -56,13 +57,14 @@ export default function SellerDisputesPage() {
   const open = disputes.filter((d) => d.status === 'OPEN').length;
 
   return (
-    <div style={{ padding: '32px', maxWidth: 900 }}>
+    <div style={{ padding: '32px', maxWidth: 900, position: 'relative', zIndex: 1 }}>
       <div style={{ marginBottom: 28 }}>
+        <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Fulfil</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+          <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 30, color: HALO.ink, margin: 0 }}>
             Disputes
             {open > 0 && (
-              <span style={{ marginLeft: 12, background: 'var(--red)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
+              <span style={{ marginLeft: 12, fontFamily: HALO.fontDisplay, background: 'var(--red)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20, verticalAlign: 'middle' }}>
                 {open} open
               </span>
             )}
@@ -122,7 +124,7 @@ export default function SellerDisputesPage() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {dispute.order.items.map((item) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', borderRadius: 6, padding: '6px 10px' }}>
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(26,26,29,0.05)', border: '1px solid rgba(26,26,29,0.08)', borderRadius: 10, padding: '6px 10px' }}>
                 {item.image && (
                   <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
                 )}

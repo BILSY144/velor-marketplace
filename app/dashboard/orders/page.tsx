@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { HALO } from '@/lib/halo'
 
 interface OrderItem {
   id: string; productId: string; quantity: number; price: number;
@@ -68,8 +69,16 @@ function exportOrdersCsv(orders: Order[]) {
 }
 
 const inputStyle: CSSProperties = {
-  width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
-  borderRadius: 6, padding: '9px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
+  width: '100%', background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(26,26,29,0.12)',
+  borderRadius: 10, padding: '10px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
+}
+
+// Nested sub-panel inside an already-glass order card (shipment info,
+// tracking form) -- a touch lighter than the outer glass so it still
+// reads as content sitting inside the card, not another separate box.
+const subPanelStyle: CSSProperties = {
+  background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(26,26,29,0.08)',
+  borderRadius: 14, padding: '16px 20px',
 }
 
 // Velor dispatch promise (William, 2026-07-20): every order must be
@@ -194,21 +203,25 @@ export default function DashboardOrdersPage() {
   }
 
   return (
-    <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)' }}>
+    <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)', position: 'relative', zIndex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isElevated ? 20 : 28, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-            Orders
-          </h1>
-          <PlanBadge tier={tier} />
+        <div>
+          <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Fulfil</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '30px', color: HALO.ink, margin: 0 }}>
+              Orders
+            </h1>
+            <PlanBadge tier={tier} />
+          </div>
         </div>
         {isPro && orders.length > 0 && (
           <button
             onClick={() => exportOrdersCsv(visibleOrders)}
             style={{
               background: 'linear-gradient(90deg, #FFD54A, #FF6B00)',
-              color: '#111', border: 'none', borderRadius: '6px',
-              padding: '9px 16px', fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+              color: '#111', border: 'none', borderRadius: 999,
+              padding: '10px 18px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+              boxShadow: '0 10px 26px rgba(255,107,0,0.28)',
             }}
           >
             Export Orders (CSV)
@@ -224,14 +237,14 @@ export default function DashboardOrdersPage() {
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by customer, email or order ID..."
             style={{
-              flex: 1, minWidth: 220, background: 'var(--bg)', border: '1px solid var(--border)',
-              borderRadius: 6, padding: '9px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
+              flex: 1, minWidth: 220, background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(26,26,29,0.12)',
+              borderRadius: 10, padding: '10px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
             }}
           />
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '9px 12px', color: 'var(--text)', fontSize: 13, cursor: 'pointer' }}
+            style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(26,26,29,0.12)', borderRadius: 10, padding: '10px 12px', color: 'var(--text)', fontSize: 13, cursor: 'pointer' }}
           >
             <option value="ALL">All statuses</option>
             {Object.keys(STATUS_COLORS).map(s => <option key={s} value={s}>{s}</option>)}
@@ -374,7 +387,7 @@ export default function DashboardOrdersPage() {
 
                     {/* Shipment section */}
                     {hasShipment && latestShipment && !editingShipment[order.id] ? (
-                      <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
+                      <div style={subPanelStyle}>
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
                           Shipment
                         </div>
@@ -424,7 +437,7 @@ export default function DashboardOrdersPage() {
                         </div>
                       </div>
                     ) : (canShip || editingShipment[order.id]) ? (
-                      <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
+                      <div style={subPanelStyle}>
                         <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
                           {editingShipment[order.id] ? 'Update Tracking' : 'Mark as Shipped'}
                         </div>

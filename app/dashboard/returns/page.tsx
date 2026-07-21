@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme';
+import { HALO } from '@/lib/halo';
 
 interface OrderItem {
   id: string;
@@ -69,13 +70,14 @@ export default function SellerReturnsPage() {
   const pending = returns.filter((r) => r.status === 'PENDING').length;
 
   return (
-    <div style={{ padding: '32px', maxWidth: 900 }}>
+    <div style={{ padding: '32px', maxWidth: 900, position: 'relative', zIndex: 1 }}>
       <div style={{ marginBottom: 28 }}>
+        <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Fulfil</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+          <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 30, color: HALO.ink, margin: 0 }}>
             Return Requests
             {pending > 0 && (
-              <span style={{ marginLeft: 12, background: 'var(--accent)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
+              <span style={{ marginLeft: 12, fontFamily: HALO.fontDisplay, background: 'var(--accent)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20, verticalAlign: 'middle' }}>
                 {pending} pending
               </span>
             )}
@@ -125,7 +127,7 @@ export default function SellerReturnsPage() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
             {ret.order.items.map((item) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', borderRadius: 6, padding: '6px 10px' }}>
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(26,26,29,0.05)', border: '1px solid rgba(26,26,29,0.08)', borderRadius: 10, padding: '6px 10px' }}>
                 {item.image && (
                   <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
                 )}
@@ -139,13 +141,13 @@ export default function SellerReturnsPage() {
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => setStatus(ret.id, 'APPROVED')}
-                style={{ background: 'var(--green)', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ background: 'var(--green)', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 999, cursor: 'pointer' }}
               >
                 Approve
               </button>
               <button
                 onClick={() => setStatus(ret.id, 'REJECTED')}
-                style={{ background: 'var(--red)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ background: 'var(--red)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 999, cursor: 'pointer' }}
               >
                 Reject
               </button>
@@ -154,7 +156,7 @@ export default function SellerReturnsPage() {
           {ret.status === 'APPROVED' && (
             <button
               onClick={() => setStatus(ret.id, 'PROCESSING')}
-              style={{ background: '#F59E0B', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+              style={{ background: '#F59E0B', color: '#000', fontWeight: 700, fontSize: 13, padding: '8px 18px', border: 'none', borderRadius: 999, cursor: 'pointer' }}
             >
               Mark Processing
             </button>

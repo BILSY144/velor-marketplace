@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSellerTier, PlanBadge } from '@/lib/dashboard-theme';
+import { HALO } from '@/lib/halo';
 
 // The API sends a privacy-safe display name only (store name for sellers,
 // "First L." for buyers) -- it never sends the other party's email address.
@@ -124,15 +125,18 @@ export default function DashboardMessagesPage() {
   const totalUnread = conversations.reduce((n, c) => n + c.unreadCount, 0);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', fontFamily: 'var(--font-body)', position: 'relative', zIndex: 1 }}>
       {/* Conversation list */}
-      <div style={{ width: 320, borderRight: `1px solid ${isElevated ? theme.cardBorder : 'var(--border)'}`, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Inbox</h2>
-          {totalUnread > 0 && (
-            <span style={{ background: accentColor, color: isPro ? '#111' : '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
-          )}
-          <PlanBadge tier={tier} />
+      <div style={{ width: 320, borderRight: `1px solid ${isElevated ? theme.cardBorder : 'var(--border)'}`, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontFamily: HALO.fontDisplay, fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Fulfil</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 22, color: HALO.ink, margin: 0 }}>Inbox</h2>
+            {totalUnread > 0 && (
+              <span style={{ background: accentColor, color: isPro ? '#111' : '#000', fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '2px 7px' }}>{totalUnread}</span>
+            )}
+            <PlanBadge tier={tier} />
+          </div>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -188,7 +192,7 @@ export default function DashboardMessagesPage() {
       </div>
 
       {/* Thread panel */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.3)' }}>
         {!selected ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
             Select a conversation to start messaging
