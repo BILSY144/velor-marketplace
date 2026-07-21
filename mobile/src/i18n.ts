@@ -73,7 +73,14 @@ export function getLang(): string { return LANG }
 export function getCurrency(): string { return CUR }
 
 // ---- On-device dictionary persistence (v4) -------------------------------
-const dictPath = (lang: string) => `${FileSystem.documentDirectory}velor-i18n-${lang}.json`
+// File version bumped i18n -> i18n2 (2026-07-21): while the server's
+// translation budget was mis-capping (v1 accounting bug, see
+// lib/translate.ts), the engine cached English fallbacks as finished
+// translations AND persisted them here -- so a poisoned dictionary
+// survived app restarts and the language never healed. Old files are
+// simply abandoned; this version also never caches a fallback (below),
+// so the poison cannot rebuild.
+const dictPath = (lang: string) => `${FileSystem.documentDirectory}velor-i18n2-${lang}.json`
 const loadedFromDisk = new Set<string>()
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -181,6 +188,12 @@ const HAS_LETTER = /[A-Za-z]/
 
 // Synchronous translate-or-queue. English (or non-letter strings) pass
 // through; unknown strings render English now and swap when the batch lands.
+// Strings the server recently echoed back untranslated (budget-capped or
+// failed) wait out a cooldown before re-queueing -- retry stays automatic
+// but can never hot-loop the endpoint from render cycles.
+const deferUntil = new Map<string, number>()
+const FALLBACK_RETRY_MS = 60_000
+
 export function T(s: string): string {
   if (LANG === 'en' || typeof s !== 'string') return s
   const t = s.trim()
@@ -188,6 +201,8 @@ export function T(s: string): string {
   const d = dicts[LANG] || (dicts[LANG] = new Map())
   const hit = d.get(t)
   if (hit !== undefined) return hit === t ? s : s.replace(t, hit)
+  const wait = deferUntil.get(t)
+  if (wait !== undefined && wait > Date.now()) return s
   pending.add(t.slice(0, 600))
   // 120ms (was 600): long enough to batch one render pass, short enough
   // that a missed-by-the-manifest string still swaps in near-instantly.
@@ -237,8 +252,15 @@ async function prefetchAll(lang: string) {
         })
         if (r.ok) {
           const { translations } = await r.json()
+          // Only cache REAL translations. A string that comes back
+          // byte-identical to its source is the server's budget-capped /
+          // failed fallback, not a finished translation -- caching it
+          // (as v4.0 did) marked it done forever, and the on-device
+          // persistence made that permanent. Left uncached, the next
+          // prefetch or screen render retries it against a healed server.
           chunk.forEach((t, i) => {
-            if (typeof translations?.[i] === 'string') d.set(t, translations[i])
+            const tr = translations?.[i]
+            if (typeof tr === 'string' && tr !== t) d.set(t, tr)
           })
           lastFlush = `prefetch ${d.size}/${manifest.length}`
           emit()
@@ -272,18 +294,26 @@ async function flush() {
     if (r.ok) {
       const { translations } = await r.json()
       const d = dicts[lang] || (dicts[lang] = new Map())
+      // Only cache REAL translations (tr !== source). A byte-identical
+      // echo is the server's budget-capped/failed fallback -- caching it
+      // as done poisoned the dictionary (and disk) permanently while the
+      // server budget bug was live. Served strings still leave the queue
+      // either way: an uncached fallback re-queues naturally the next
+      // time its screen renders, giving periodic retry against a healed
+      // server without hot-looping the endpoint from a timer.
+      let landed = 0
       texts.forEach((t, i) => {
-        if (typeof translations?.[i] === 'string') d.set(t, translations[i])
+        const tr = translations?.[i]
+        if (typeof tr === 'string' && tr !== t) { d.set(t, tr); landed++ }
+        else deferUntil.set(t, Date.now() + FALLBACK_RETRY_MS)
       })
-      // Only strings that actually got a translation leave the queue -- a
-      // failed or partial batch is retried, never silently dropped (the v2
-      // engine deleted texts from pending BEFORE the fetch, so one network
-      // error left the whole visible screen English forever).
-      texts.forEach((t) => { if (d.has(t)) pending.delete(t) })
+      texts.forEach((t) => pending.delete(t))
       failures = 0
-      lastFlush = `ok ${texts.length} in ${((Date.now() - t0) / 1000).toFixed(1)}s`
-      emit()
-      scheduleSaveDict(lang)
+      lastFlush = `ok ${landed}/${texts.length} in ${((Date.now() - t0) / 1000).toFixed(1)}s`
+      // Repaint + persist only when something real landed -- an all-fallback
+      // batch changing nothing must not trigger the render->queue->flush
+      // cycle again.
+      if (landed > 0) { emit(); scheduleSaveDict(lang) }
     } else {
       failures += 1
       lastFlush = `HTTP ${r.status} after ${((Date.now() - t0) / 1000).toFixed(1)}s`
