@@ -2805,3 +2805,37 @@ Shipped (web + app, server enforced):
 - When the 5th report ends a stream, the ops review SupportTicket now
   includes the reason breakdown and reporter details, so review starts
   with the WHY.
+
+## 2026-07-21 checkpoint (late 6) -- BUYER-FACING UI BATCH, ALL LIVE-VERIFIED
+
+All requested by William in chat this evening, each deployed green and
+verified in his browser:
+- /specialities INDEX page removed entirely (header/footer/origins/shop
+  links + sitemap too; per-term pages kept -- homepage chips and origin
+  pages link them; sitemap carries a DO-NOT-RE-ADD note for the SEO
+  agent, which created it on 07-20). Its header link had been shrinking
+  the search bar.
+- Desktop logo moved to the far left of the viewport (.velor-logo-link,
+  min-width 901px only -- phones/tablets byte-identical to before).
+- Origin (flag) pages stripped to sellers' listing boxes only: category
+  photo-card rail + category pill row now render solely on the global
+  /shop view. Category discovery is the search bar's job (William).
+- /api/search results ranked by seller merit (rankingScore desc, then
+  createdAt), take 8 -> 24 -- "ceramics" now returns a real ranked page
+  of listings across countries.
+- FLAG SWITCHING BUG fixed: client-router push /shop?origin=X ->
+  /shop?origin=Y (same path, query-only) silently no-oped in production
+  (reproduced live; homepage flag clicks were fine). Flags are now real
+  <a href> links (closes SEO backlog 34 -- 190 crawlable country links):
+  soft-nav from other pages, full navigation when already on /shop.
+  Verified live: GB -> Albania -> Andorra hops.
+- Country pages: high-definition faded flag (flagcdn SVG, opacity 0.14,
+  bottom fade) fills the whole white header band behind VELOR / All
+  Goods / search, edge to edge between the borders. William: "thats so
+  much better, gives the seller some state of pride and the buyer knows
+  exactly what page there on. perfect."
+
+Still open from earlier today: William's founding listing is REJECTED ->
+shop + lattice EMPTY in production (needs admin re-approve; see late 4);
+Google Play release 5 in review, production-OTA button armed; session
+PAT to revoke at wrap-up.
