@@ -2986,3 +2986,16 @@ wave (20-30/day, personalised, quality over volume). Trust stack
 Day-1 items (ICO, Good Business Charter, Trustpilot, Google) not yet
 submitted -- William does these. Follow-ups to tonight's 4 due in 5-7
 days if silent. Hand-hold ANY respondent end to end immediately.
+
+## 2026-07-22 correction -- "EMPTY SHOP" FINDING RESOLVED: WILLIAM REJECTED THE DUMMY LISTING DELIBERATELY
+
+The late-4 checkpoint's "critical data finding" (only product REJECTED,
+shop empty, suspected accidental admin click) is RESOLVED and was NOT a
+problem: William rejected "hand made toys" himself -- it was a dummy
+listing created to test the system and checkout (the 2026-07-17
+real-money end-to-end test). Do NOT re-approve it and do NOT treat the
+empty shop as a defect. The shop is empty because Velor genuinely has
+zero real sellers yet -- the origin pages' "200 open seats" design is
+the intended honest state until real sellers list. The one and only fix
+for the empty shop is the seller-acquisition mission (see the playbook
+checkpoints above).
