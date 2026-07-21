@@ -2931,3 +2931,36 @@ aggregator pitches under William's name; Day 3-5 EPCH direct wave
 (20-30/day, quality over volume); Day 5-7 Qwoted + craft-city press;
 Week 2 hand-hold every respondent end to end. Execution starts on
 William's cluster decision.
+
+## 2026-07-21 checkpoint (late 9) -- SELLER OUTREACH EXECUTION STARTED: 4 AGGREGATOR PITCHES SENT + PAYONEER TWO-CHANNEL CHASE DONE
+
+Cluster decision (William): INDIAN HANDICRAFTS first. Company No.
+17268133 (use in all signatures).
+
+SENT tonight from customerservice@velorcommerce.co.uk under William's
+name (all verified sent via Outlook):
+1. Asha Handicrafts Association -- contact@ashahandicrafts.com, cc
+   ivan.carvalho@ashahandicrafts.com (the flagship pitch; 1,000+
+   artisans).
+2. WFTO -- info@wfto.com (sourcing/central route; asked for member
+   circulation + Asia network connection).
+3. EPCH -- mails@epch.com (asked for member circulation route +
+   presentation to the Council).
+4. WCC Asia-Pacific -- admin@asiapacificcraftsalliance.org (wccapr.org
+   redirects there; asked for craft-city/national-council routing,
+   named Jaipur + Srinagar).
+
+FRAMING RULE (William, mid-send): Velor is a GLOBAL marketplace, never
+"a UK marketplace" -- UK appears only in the registration line
+("Velor Commerce Ltd, Company No. 17268133"). Honesty note: pitches 1-2
+(Asha, WFTO) went out BEFORE the correction and describe Velor as "a UK
+marketplace ... launching worldwide" -- factually true, not retracted;
+pitches 3-4 and ALL future outreach use the global framing. Standing
+rule for every agent and session: use the global framing.
+
+STILL TO SEND (Day 2 wave): Jaipur craft-city body + Fair Trade Forum
+India (contacts need identifying first), then the EPCH member direct
+wave (20-30/day, personalised, quality over volume). Trust stack
+Day-1 items (ICO, Good Business Charter, Trustpilot, Google) not yet
+submitted -- William does these. Follow-ups to tonight's 4 due in 5-7
+days if silent. Hand-hold ANY respondent end to end immediately.
