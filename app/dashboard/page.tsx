@@ -22,8 +22,8 @@ interface OrderRow {
   buyerName: string;
   status: string;
   createdAt: string;
-  items: { productName: string }[];
-  totalRevenue: number;
+  items: { product: { name: string } }[];
+  total: number;
 }
 
 interface PayoutsData {
@@ -305,10 +305,10 @@ export default function DashboardOverview() {
                   </span>
                   <span style={{ minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 175 }}>
-                      {o.items[0]?.productName ?? 'Order'}
+                      {o.items[0]?.product?.name ?? 'Order'}
                     </span>
                     <span style={{ display: 'block', fontSize: 11, color: HALO.muted, marginTop: 2 }}>
-                      {o.buyerName} · {formatGBP(o.totalRevenue, true)} · <b style={{ color: st.color }}>{st.text}</b> · {timeAgo(o.createdAt)}
+                      {o.buyerName} · {formatGBP(o.total, true)} · <b style={{ color: st.color }}>{st.text}</b> · {timeAgo(o.createdAt)}
                     </span>
                   </span>
                 </a>
