@@ -28,6 +28,18 @@ export async function GET(req: NextRequest) {
   })
   const now = Date.now()
 
+  // The platform's own Stripe account id -- a seller row must NEVER carry
+  // it as a payout destination (possible via the pre-2026-07-21 cookie
+  // contamination bug in /api/stripe/connect/account). Transfers to self
+  // would fail anyway, but this guard also CLEANS the corrupt row.
+  let platformAccountId: string | null = null
+  try {
+    const platform = await stripe.accounts.retrieve()
+    platformAccountId = platform.id
+  } catch {
+    platformAccountId = null
+  }
+
   // Delivered orders that have not been paid out yet (no payout row).
   const candidates = await prisma.order.findMany({
     where: {
@@ -116,7 +128,15 @@ export async function GET(req: NextRequest) {
         where: { id: o.sellerId },
         select: { country: true, stripeAccountId: true, payoutRail: true, payoneerPayeeId: true, identityVerified: true },
       })
-      const sellerAccountId = sellerRow?.stripeAccountId || ''
+      let sellerAccountId = sellerRow?.stripeAccountId || ''
+      if (sellerAccountId && platformAccountId && sellerAccountId === platformAccountId) {
+        // Corrupt row: clean it and treat the seller as not yet onboarded --
+        // funds stay safely in escrow until they connect a real account.
+        await prisma.seller
+          .update({ where: { id: o.sellerId }, data: { stripeAccountId: null, stripeOnboarded: false } })
+          .catch(() => {})
+        sellerAccountId = ''
+      }
 
       // LAW: never release a payout -- on either rail -- to a seller whose
       // identity is not Stripe-verified. Approval and verification are

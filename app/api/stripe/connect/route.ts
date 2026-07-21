@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
@@ -37,8 +37,12 @@ export async function POST() {
       console.error('Failed to persist new stripe account id', dbErr);
     }
 
+    // The seller's row is the ONLY record of their account id -- the old
+    // per-browser seller_account_id cookie is gone (2026-07-21: it let one
+    // browser's account id masquerade as, and get persisted onto, whichever
+    // seller was signed in). Actively delete any stale copy.
     const res = NextResponse.json({ onboardingUrl: accountLink.url, accountId: account.id });
-    res.cookies.set('seller_account_id', account.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
+    res.cookies.delete('seller_account_id');
     return res;
   } catch (err) {
     console.error('[stripe/connect POST] failed to create account/link', err);
@@ -47,22 +51,25 @@ export async function POST() {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  let accountId = request.cookies.get('seller_account_id')?.value;
+  // Resume onboarding for the account on the seller's OWN row only -- the
+  // per-browser cookie is never consulted (see POST above for why).
+  const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
+  const accountId = seller?.stripeAccountId || null;
   if (!accountId) {
-    const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } });
-    if (seller?.stripeAccountId) accountId = seller.stripeAccountId;
+    const res = NextResponse.json({ needsAccount: true });
+    res.cookies.delete('seller_account_id');
+    return res;
   }
-  if (!accountId) return NextResponse.json({ needsAccount: true });
 
   try {
     const accountLink = await stripe.accountLinks.create({ account: accountId, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
     const res = NextResponse.json({ onboardingUrl: accountLink.url });
-    res.cookies.set('seller_account_id', accountId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60*60*24*365, path: '/' });
+    res.cookies.delete('seller_account_id');
     return res;
   } catch (err) {
     console.error('[stripe/connect GET] failed to create account link', err);
