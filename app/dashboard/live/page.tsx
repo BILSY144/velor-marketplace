@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Room, RoomEvent, Track, createLocalTracks, ConnectionQuality } from 'livekit-client'
 import type { LocalTrack } from 'livekit-client'
 import { checkMessageContent } from '@/lib/messageFilter'
+import { HALO, HaloBackdrop, HaloButton, glassStyle } from '@/lib/halo'
 
 type Product = { id: string; title: string; price: number; stock: number; status: string; images?: string[] }
 type Stream = {
@@ -518,27 +519,48 @@ export default function GoLivePage() {
     }
   }
 
-  const dark = '#111111'
-  const panel = '#1A1A1A'
-  const border = '#2A2A2A'
-  const accent = '#FF6B00'
+  // HALO REDESIGN (2026-07-21, William: "go live page needs complete
+  // redesign"). Scope, deliberately: every "boxed dashboard" surface below
+  // -- gates, the setup form, the scheduled card, the desktop chrome around
+  // the live video, past streams -- moves to the light Halo glass language.
+  // The actual broadcast surfaces stay dark on purpose (stageDark/
+  // stageBorder/stageMuted below): a dark stage around live video is
+  // correct cinematic design, not leftover "boxed" styling, and the mobile
+  // full-screen broadcaster overlay further down is untouched entirely --
+  // it's a separate immersive layer with hard-won iOS-zoom/viewport fixes
+  // from the 2026-07-20 session, verified working, not part of this pass.
+  const dark = HALO.paper
+  const panel = 'rgba(255,255,255,0.62)'
+  const border = 'rgba(255,255,255,0.95)'
+  const accent = HALO.accent
+  const ink = HALO.ink
+  const muted = HALO.muted
+  // Dark stage tokens -- used ONLY for genuine video/broadcast chrome.
+  const stageDark = '#111111'
+  const stagePanel = '#1A1A1A'
+  const stageBorder = '#2A2A2A'
+  const stageMuted = '#999999'
 
   if (loading) {
-    return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: dark }}>Loading Live Shopping...</div>
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: muted, background: dark, fontFamily: HALO.fontBody }}>
+        <HaloBackdrop />
+        <span style={{ position: 'relative', zIndex: 1 }}>Loading Live Shopping…</span>
+      </div>
+    )
   }
 
   if (!canGoLive) {
     return (
-      <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: '48px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ maxWidth: 520, textAlign: 'center', background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 40 }}>
-          <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 12, textTransform: 'uppercase' }}>Live shopping</div>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 28, marginBottom: 12 }}>Go Live Shopping</h1>
-          <p style={{ color: '#aaa', lineHeight: 1.6, marginBottom: 24 }}>
+      <div style={{ minHeight: '60vh', background: dark, color: ink, padding: '48px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <HaloBackdrop />
+        <div style={{ ...glassStyle('lens'), position: 'relative', zIndex: 1, maxWidth: 520, textAlign: 'center', padding: 40 }}>
+          <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, letterSpacing: '0.16em', color: accent, marginBottom: 12, textTransform: 'uppercase', fontWeight: 800 }}>Live shopping</div>
+          <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 28, marginBottom: 12, color: ink }}>Go Live Shopping</h1>
+          <p style={{ color: muted, lineHeight: 1.6, marginBottom: 24 }}>
             Broadcast live to buyers anywhere in the world and sell in real time, straight from your browser - no app needed. Live Shopping is included with every Velor seller plan.
           </p>
-          <a href="/dashboard/settings" style={{ display: 'inline-block', background: accent, color: '#111', padding: '12px 28px', borderRadius: 999, fontWeight: 600, textDecoration: 'none' }}>
-            Back to settings
-          </a>
+          <HaloButton variant="accent" href="/dashboard/settings">Back to settings</HaloButton>
         </div>
       </div>
     )
@@ -546,9 +568,12 @@ export default function GoLivePage() {
 
   if (!liveKitReady) {
     return (
-      <div style={{ minHeight: '60vh', background: dark, color: '#fff', padding: 48, textAlign: 'center' }}>
-        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 24, marginBottom: 12 }}>Live Shopping is almost ready</h1>
-        <p style={{ color: '#aaa' }}>We&apos;re finishing the broadcast infrastructure. Check back shortly.</p>
+      <div style={{ minHeight: '60vh', background: dark, color: ink, padding: 48, textAlign: 'center', position: 'relative' }}>
+        <HaloBackdrop />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 24, marginBottom: 12, color: ink }}>Live Shopping is almost ready</h1>
+          <p style={{ color: muted }}>We&apos;re finishing the broadcast infrastructure. Check back shortly.</p>
+        </div>
       </div>
     )
   }
@@ -560,7 +585,8 @@ export default function GoLivePage() {
   const mockPinnedProduct = products.find((p) => p.id === selectedProductIds[0]) ?? null
 
   return (
-    <div style={{ minHeight: '100vh', background: dark, color: '#fff', padding: '32px 24px' }}>
+    <div style={{ minHeight: '100vh', background: dark, color: ink, padding: '32px 24px', position: 'relative', fontFamily: HALO.fontBody }}>
+      <HaloBackdrop />
       <style>{`
         @keyframes velorLivePulse {
           0% { box-shadow: 0 0 0 0 rgba(255,107,0,0.55); }
@@ -570,52 +596,43 @@ export default function GoLivePage() {
         .velor-live-dot { animation: velorLivePulse 1.8s ease-out infinite; }
         .velor-drawer-handle { width: 36px; height: 4px; border-radius: 999px; background: #3a3a3a; margin: 8px auto 0; }
       `}</style>
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <div style={{ fontSize: 13, letterSpacing: 1, color: accent, marginBottom: 8, textTransform: 'uppercase' }}>Live Shopping</div>
-        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: 32, marginBottom: 24 }}>Go Live</h1>
+      <div style={{ maxWidth: 1080, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, letterSpacing: '0.16em', color: HALO.amber, marginBottom: 10, textTransform: 'uppercase', fontWeight: 800 }}>Live Shopping</div>
+        <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 34, marginBottom: 24, color: ink }}>Go Live</h1>
 
         {error && (
-          <div style={{ background: '#3a1a1a', border: '1px solid #6b2a2a', color: '#ffb4b4', padding: 14, borderRadius: 10, marginBottom: 20 }}>{error}</div>
+          <div style={{ ...glassStyle('lens', { borderRadius: 14 }), background: 'rgba(226,75,74,0.1)', border: '1px solid rgba(226,75,74,0.35)', color: '#A8342E', padding: 14, marginBottom: 20 }}>{error}</div>
         )}
 
         {activeStream && activeStream.status === 'SCHEDULED' ? (
-          <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
+          <div style={{ ...glassStyle('lens'), padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#888', display: 'inline-block' }} />
-              <strong>SCHEDULED</strong>
-              <span style={{ color: '#aaa' }}>{activeStream.title}</span>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: muted, display: 'inline-block' }} />
+              <strong style={{ fontFamily: HALO.fontDisplay }}>SCHEDULED</strong>
+              <span style={{ color: muted }}>{activeStream.title}</span>
             </div>
             {activeStream.scheduledFor && (
-              <p style={{ color: '#ccc', marginBottom: 20 }}>
+              <p style={{ color: HALO.inkSoft, marginBottom: 20 }}>
                 Goes live {new Date(activeStream.scheduledFor).toLocaleDateString()} at {new Date(activeStream.scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
                 Buyers who tapped &quot;Notify me&quot; will get a push the moment you go live.
               </p>
             )}
             <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                onClick={goLiveFromSchedule}
-                disabled={starting}
-                style={{ background: accent, color: '#111', border: 'none', padding: '12px 28px', borderRadius: 999, fontWeight: 700, cursor: starting ? 'default' : 'pointer', opacity: starting ? 0.6 : 1 }}
-              >
+              <HaloButton variant="accent" onClick={goLiveFromSchedule} style={starting ? { opacity: 0.6, cursor: 'default' } : undefined}>
                 {starting ? 'Going live...' : 'Go Live Now'}
-              </button>
-              <button
-                onClick={cancelScheduled}
-                style={{ background: 'transparent', color: '#aaa', border: `1px solid ${border}`, padding: '12px 24px', borderRadius: 999, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
+              </HaloButton>
+              <HaloButton variant="soft" onClick={cancelScheduled}>Cancel</HaloButton>
             </div>
           </div>
         ) : activeStream ? (
-          <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: 24 }}>
+          <div style={{ ...glassStyle('lens'), padding: 24 }}>
             {!isMobile && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                 <span className="velor-live-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'inline-block' }} />
-                <strong>LIVE</strong>
-                <span style={{ color: '#aaa' }}>{activeStream.title}</span>
+                <strong style={{ fontFamily: HALO.fontDisplay, color: ink }}>LIVE</strong>
+                <span style={{ color: muted }}>{activeStream.title}</span>
                 <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <ViewerCountBadge count={viewerCount} border={border} />
+                  <ViewerCountBadge count={viewerCount} border={HALO.border} />
                   <ConnQualityBadge quality={connQuality} />
                 </span>
               </div>
@@ -727,7 +744,7 @@ export default function GoLivePage() {
 
                   {streamProducts.length > 0 && (
                     <div style={{ marginTop: 20 }}>
-                      <div style={{ color: '#ccc', fontSize: 14, marginBottom: 8 }}>Tap a product to pin it as &quot;Now showing&quot; for viewers</div>
+                      <div style={{ color: stageMuted, fontSize: 14, marginBottom: 8 }}>Tap a product to pin it as &quot;Now showing&quot; for viewers</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
                         {streamProducts.map((p) => {
                           const isPinned = pinnedId === p.id
@@ -737,7 +754,7 @@ export default function GoLivePage() {
                               onClick={() => togglePin(p.id)}
                               style={{
                                 textAlign: 'left', padding: 0, borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
-                                background: '#0d0d0d', border: `2px solid ${isPinned ? accent : border}`,
+                                background: '#0d0d0d', border: `2px solid ${isPinned ? accent : stageBorder}`,
                                 boxShadow: isPinned ? '0 0 0 3px rgba(255,107,0,0.18)' : 'none', color: '#fff', fontSize: 13,
                               }}
                             >
@@ -763,8 +780,8 @@ export default function GoLivePage() {
                   )}
                 </div>
 
-                <div style={{ background: '#0d0d0d', border: `1px solid ${border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', height: 420 }}>
-                  <div style={{ padding: '10px 14px', borderBottom: `1px solid ${border}`, color: '#ccc', fontSize: 13, fontWeight: 600 }}>Live chat</div>
+                <div style={{ background: '#0d0d0d', border: `1px solid ${stageBorder}`, borderRadius: 12, display: 'flex', flexDirection: 'column', height: 420 }}>
+                  <div style={{ padding: '10px 14px', borderBottom: `1px solid ${stageBorder}`, color: stageMuted, fontSize: 13, fontWeight: 600 }}>Live chat</div>
                   <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {chat.length === 0 && <div style={{ color: '#555', fontSize: 13 }}>Messages from viewers will appear here.</div>}
                     {chat.map((m) => (
@@ -776,13 +793,13 @@ export default function GoLivePage() {
                     <div ref={chatEndRef} />
                   </div>
                   {chatError && <div style={{ color: '#ffb4b4', fontSize: 12, padding: '0 14px 8px' }}>{chatError}</div>}
-                  <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${border}` }}>
+                  <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${stageBorder}` }}>
                     <input
                       value={chatDraft}
                       onChange={(e) => setChatDraft(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }}
                       placeholder="Reply to viewers..."
-                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${border}`, background: '#111', color: '#fff', fontSize: 13 }}
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${stageBorder}`, background: '#111', color: '#fff', fontSize: 13 }}
                     />
                     <button onClick={sendChat} style={{ background: accent, color: '#111', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                       Send
@@ -813,19 +830,19 @@ export default function GoLivePage() {
                       ) : previewState === 'denied' ? (
                         <>
                           <span style={{ color: '#ffb4b4', fontSize: 12.5, lineHeight: 1.5 }}>Camera access blocked. Allow it for velorcommerce.store in your browser's address bar, then retry.</span>
-                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, border)}>Retry</button>
+                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, stageBorder)}>Retry</button>
                         </>
                       ) : previewState === 'error' ? (
                         <>
                           <span style={{ color: '#ffb4b4', fontSize: 12.5 }}>Couldn't reach a camera or mic.</span>
-                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, border)}>Retry</button>
+                          <button onClick={() => startPreview()} style={ghostBtnStyle(accent, stageBorder)}>Retry</button>
                         </>
                       ) : (
                         <>
-                          <span style={{ width: 46, height: 46, borderRadius: '50%', border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                          <span style={{ width: 46, height: 46, borderRadius: '50%', border: `1.5px solid ${stageBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: stageMuted }}>
                             <Icon name="camera" size={20} />
                           </span>
-                          <span style={{ color: '#999', fontSize: 12.5, lineHeight: 1.5 }}>See yourself before you go live -- this preview isn't visible to buyers.</span>
+                          <span style={{ color: stageMuted, fontSize: 12.5, lineHeight: 1.5 }}>See yourself before you go live -- this preview isn't visible to buyers.</span>
                           <button onClick={() => startPreview()} style={{ background: accent, color: '#111', border: 'none', padding: '10px 20px', borderRadius: 999, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                             Enable camera preview
                           </button>
@@ -863,7 +880,7 @@ export default function GoLivePage() {
                         actually picking up sound before going live, not a
                         decorative animation. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 2px 0' }}>
-                      <span style={{ color: '#666', fontSize: 11 }}>Mic level</span>
+                      <span style={{ color: HALO.muted, fontSize: 11 }}>Mic level</span>
                       <div style={{ flex: 1, display: 'flex', gap: 2, height: 14, alignItems: 'flex-end' }}>
                         {Array.from({ length: 20 }).map((_, i) => {
                           const lit = micLevel * 20 > i
@@ -874,7 +891,7 @@ export default function GoLivePage() {
                               style={{
                                 flex: 1, borderRadius: 1,
                                 height: lit ? `${40 + i * 3}%` : '30%',
-                                background: lit ? (hot ? '#ff5a52' : accent) : '#2a2a2a',
+                                background: lit ? (hot ? '#ff5a52' : accent) : 'rgba(26,26,29,0.10)',
                                 transition: 'height 0.05s linear',
                               }}
                             />
@@ -930,7 +947,7 @@ export default function GoLivePage() {
                     </div>
                   </div>
                 </div>
-                <p style={{ color: '#666', fontSize: 11, marginTop: 10, lineHeight: 1.5 }}>
+                <p style={{ color: HALO.muted, fontSize: 11, marginTop: 10, lineHeight: 1.5 }}>
                   A mockup of your live page -- updates as you fill in the details on the right.
                 </p>
               </div>
@@ -941,8 +958,8 @@ export default function GoLivePage() {
               <SectionHeading icon="info" title="Stream details" />
               <div style={{ marginTop: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <label style={{ color: '#ccc', fontSize: 14 }}>Stream title</label>
-                  <span style={{ color: title.length > 70 ? '#ffb4b4' : '#555', fontSize: 11.5 }}>{title.length}/80</span>
+                  <label style={{ color: HALO.inkSoft, fontSize: 14 }}>Stream title</label>
+                  <span style={{ color: title.length > 70 ? '#B4342C' : HALO.muted, fontSize: 11.5 }}>{title.length}/80</span>
                 </div>
                 <input
                   value={title}
@@ -952,7 +969,7 @@ export default function GoLivePage() {
                 />
               </div>
               <div style={{ marginTop: 16 }}>
-                <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 14 }}>Description (optional)</label>
+                <label style={{ display: 'block', marginBottom: 8, color: HALO.inkSoft, fontSize: 14 }}>Description (optional)</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -979,15 +996,15 @@ export default function GoLivePage() {
                         }
                         style={{
                           position: 'relative', textAlign: 'left', padding: 0, borderRadius: 12, overflow: 'hidden', cursor: atLimit ? 'default' : 'pointer',
-                          border: `2px solid ${checked ? accent : border}`, background: '#0d0d0d', opacity: atLimit ? 0.4 : 1,
+                          border: `2px solid ${checked ? accent : border}`, background: '#FFFFFF', opacity: atLimit ? 0.4 : 1,
                           boxShadow: checked ? '0 0 0 3px rgba(255,107,0,0.18)' : 'none', transition: 'all 0.15s',
                         }}
                       >
-                        <div style={{ width: '100%', aspectRatio: '1 / 1', position: 'relative', background: '#161616' }}>
+                        <div style={{ width: '100%', aspectRatio: '1 / 1', position: 'relative', background: '#F1EEE7' }}>
                           {p.images?.[0] ? (
                             <img src={p.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2a2a2a,#141414)' }} />
+                            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#EDE7DA,#F7F5F1)' }} />
                           )}
                           {checked && (
                             <span style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: accent, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>✓</span>
@@ -997,14 +1014,14 @@ export default function GoLivePage() {
                           )}
                         </div>
                         <div style={{ padding: '8px 10px' }}>
-                          <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                          <div style={{ color: HALO.ink, fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
                           <div style={{ color: accent, fontSize: 12, fontWeight: 700, marginTop: 2 }}>{fmtPrice(p.price)}</div>
                         </div>
                       </button>
                     )
                   })}
                   {products.length === 0 && (
-                    <span style={{ color: '#666', fontSize: 13, gridColumn: '1 / -1' }}>Add products to your store to feature them in a stream.</span>
+                    <span style={{ color: HALO.muted, fontSize: 13, gridColumn: '1 / -1' }}>Add products to your store to feature them in a stream.</span>
                   )}
                 </div>
               </div>
@@ -1024,7 +1041,7 @@ export default function GoLivePage() {
                       type="datetime-local"
                       value={scheduledFor}
                       onChange={(e) => setScheduledFor(e.target.value)}
-                      style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', fontSize: 16 }}
+                      style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#FFFFFF', color: HALO.ink, fontSize: 16 }}
                     />
                   )}
                 </FeatureToggle>
@@ -1046,9 +1063,9 @@ export default function GoLivePage() {
                         max={50}
                         value={offerPercent}
                         onChange={(e) => setOfferPercent(e.target.value)}
-                        style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#0d0d0d', color: '#fff', fontSize: 16 }}
+                        style={{ width: 80, padding: '10px 12px', borderRadius: 8, border: `1px solid ${border}`, background: '#FFFFFF', color: HALO.ink, fontSize: 16 }}
                       />
-                      <span style={{ color: '#aaa', fontSize: 13 }}>% off featured products</span>
+                      <span style={{ color: HALO.inkSoft, fontSize: 13 }}>% off featured products</span>
                     </div>
                   )}
                 </FeatureToggle>
@@ -1061,7 +1078,7 @@ export default function GoLivePage() {
               >
                 {connecting ? (scheduleEnabled ? 'Scheduling...' : 'Going live...') : scheduleEnabled ? 'Schedule Stream' : 'Go Live Now'}
               </button>
-              <p style={{ color: '#666', fontSize: 12, marginTop: 12, textAlign: 'center' }}>
+              <p style={{ color: HALO.muted, fontSize: 12, marginTop: 12, textAlign: 'center' }}>
                 Your browser will ask for camera and microphone access when you go live. Buyers check out the same way they always do - nothing changes there.
               </p>
             </div>
@@ -1070,10 +1087,10 @@ export default function GoLivePage() {
 
         {streams.length > 0 && (
           <div style={{ marginTop: 40 }}>
-            <h2 style={{ fontSize: 18, marginBottom: 12, color: '#ccc' }}>Past streams</h2>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 20, marginBottom: 12, color: HALO.ink }}>Past streams</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {streams.filter((s) => s.status === 'ENDED').slice(0, 10).map((s) => (
-                <div key={s.id} style={{ padding: 12, border: `1px solid ${border}`, borderRadius: 10, display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: 13 }}>
+                <div key={s.id} style={{ ...glassStyle('lens', { borderRadius: 12, padding: 12 }), display: 'flex', justifyContent: 'space-between', color: HALO.inkSoft, fontSize: 13 }}>
                   <span>{s.title}</span>
                   <span>{new Date(s.createdAt).toLocaleDateString()}</span>
                 </div>
@@ -1104,8 +1121,8 @@ function fieldInputStyle(border: string): React.CSSProperties {
     padding: '12px 14px',
     borderRadius: 10,
     border: `1px solid ${border}`,
-    background: '#0d0d0d',
-    color: '#fff',
+    background: '#FFFFFF',
+    color: HALO.ink,
     // 16px minimum -- anything smaller makes iOS Safari auto-zoom the whole
     // page in on focus, which is what made this screen look like it was
     // "expanding" and cutting off the video/preview when tapped.
@@ -1156,7 +1173,7 @@ function SectionHeading({ icon, title }: { icon: IconName; title: string }) {
       <span style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(255,107,0,0.12)', color: '#FF6B00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Icon name={icon} size={14} />
       </span>
-      <span style={{ fontSize: 13.5, fontWeight: 700, color: '#eee' }}>{title}</span>
+      <span style={{ fontSize: 13.5, fontWeight: 700, color: HALO.ink }}>{title}</span>
     </div>
   )
 }
@@ -1177,16 +1194,16 @@ function DeviceSelect({
   onChange: (id: string) => void
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0d0d0d', border: `1px solid ${border}`, borderRadius: 8, padding: '8px 10px' }}>
-      <span style={{ color: '#888', flexShrink: 0 }}><Icon name={icon} size={14} /></span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: 8, padding: '8px 10px' }}>
+      <span style={{ color: HALO.muted, flexShrink: 0 }}><Icon name={icon} size={14} /></span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{ flex: 1, background: 'transparent', color: '#fff', border: 'none', fontSize: 16, outline: 'none' }}
+        style={{ flex: 1, background: 'transparent', color: HALO.ink, border: 'none', fontSize: 16, outline: 'none' }}
       >
         {devices.length === 0 && <option value="">{fallbackLabel} unavailable</option>}
         {devices.map((d, i) => (
-          <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#111' }}>
+          <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#FFFFFF' }}>
             {d.label || `${fallbackLabel} ${i + 1}`}
           </option>
         ))}
@@ -1217,12 +1234,12 @@ function FeatureToggle({
   return (
     <div style={{ border: `1px solid ${checked ? accent : border}`, borderRadius: 12, padding: 14, background: checked ? 'rgba(255,107,0,0.06)' : 'transparent', transition: 'all 0.15s' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(26,26,29,0.05)', color: HALO.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
           <Icon name={icon} size={15} />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{title}</div>
-          <div style={{ color: '#888', fontSize: 12, marginTop: 2, lineHeight: 1.4 }}>{description}</div>
+          <div style={{ color: HALO.ink, fontSize: 14, fontWeight: 600 }}>{title}</div>
+          <div style={{ color: HALO.muted, fontSize: 12, marginTop: 2, lineHeight: 1.4 }}>{description}</div>
         </div>
         {/* Pill switch -- a real checkbox underneath for accessibility/keyboard
             support, visually rendered as the toggle track+thumb. */}
@@ -1244,7 +1261,7 @@ function FeatureToggle({
 
 function ViewerCountBadge({ count, border, dark }: { count: number; border: string; dark?: boolean }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : `1px solid ${border}`, borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : '#aaa', fontSize: 12 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : `1px solid ${border}`, borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : HALO.inkSoft, fontSize: 12 }}>
       <Icon name="eye" size={13} />
       {count}
     </span>
@@ -1264,11 +1281,11 @@ function ConnQualityBadge({ quality, dark }: { quality: ConnectionQuality; dark?
   return (
     <span
       title={meta.label}
-      style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : '1px solid #2A2A2A', borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : '#aaa', fontSize: 12 }}
+      style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'rgba(255,255,255,0.08)' : 'transparent', border: dark ? 'none' : `1px solid ${HALO.border}`, borderRadius: 999, padding: '4px 10px', color: dark ? '#fff' : HALO.inkSoft, fontSize: 12 }}
     >
       <span style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 10 }}>
         {[4, 7, 10].map((h, i) => (
-          <span key={i} style={{ width: 3, height: h, borderRadius: 1, background: i < (quality === 'excellent' ? 3 : quality === 'good' ? 2 : quality === 'poor' || quality === 'lost' ? 1 : 0) ? meta.color : '#3a3a3a' }} />
+          <span key={i} style={{ width: 3, height: h, borderRadius: 1, background: i < (quality === 'excellent' ? 3 : quality === 'good' ? 2 : quality === 'poor' || quality === 'lost' ? 1 : 0) ? meta.color : (dark ? '#3a3a3a' : 'rgba(26,26,29,0.15)') }} />
         ))}
       </span>
       {meta.label}
