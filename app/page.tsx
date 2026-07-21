@@ -21,7 +21,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel, specialitySlug } from '@/lib/specialities'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
@@ -698,14 +697,6 @@ const LIVE_PREVIEWS = [
 
 const REEL_FIRST = ['CN', 'JP', 'MA', 'TR', 'IN', 'PE', 'MX', 'IT', 'KR', 'GH', 'ET', 'UZ', 'NP', 'EC', 'PT', 'VN', 'GR', 'AR', 'TH', 'NG']
 
-const KIND_LINES: Record<string, string> = {
-  'Materials': 'The stuff itself — dug, grown, tanned and fired.',
-  'Techniques': 'Ways of making that took centuries to learn.',
-  'Consumables': 'Eaten, drunk, used up — from where it is actually from.',
-  'Forms': 'The objects a place is famous for.',
-  'Rituals': 'Bought for meaning, not function.',
-  'Modern industry': 'Culture is not only old.',
-}
 
 function flagOf(code: string): string {
   if (!code || code.length !== 2) return ''
@@ -789,7 +780,8 @@ const css = `
 .vh-sp.hot{border-color:rgba(46,204,113,.4)}
 .vh-walllegend{display:flex;gap:20px;font-size:12px;color:var(--muted);margin-bottom:24px}
 .vh-walllegend i{font-style:normal;margin-right:6px}
-.vh-escrow{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.vh-escrow{background:transparent}
+.vh-escrow .vh-wrap{border:1px solid var(--border);border-radius:20px;background:var(--surface);padding-top:46px;padding-bottom:46px}
 .vh-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
 .vh-step{border-left:2px solid var(--border);padding-left:20px}
 .vh-step.active{border-left-color:var(--green)}
@@ -881,7 +873,6 @@ export default function HomePage() {
   }, [streams.length])
 
   const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
-  const specStats = lattice?.specialities ?? {}
 
   const orderedCountries = (() => {
     const seen = new Set<string>()
@@ -1057,49 +1048,6 @@ export default function HomePage() {
             })}
           </div>
           <div className="vh-swipehint">Drag to browse all 190 countries</div>
-        </div>
-      </section>
-
-      {/* ============ SPECIALITIES ============ */}
-      <section id="specialities" style={{ paddingTop: 0 }}>
-        <div className="vh-wrap">
-          <div className="vh-shead">
-            <div>
-              <h2>Or start with a speciality</h2>
-              <p className="sub">Not departments. The things a place has spent centuries getting right —
-              and the things it is good at now.</p>
-            </div>
-          </div>
-          <div className="vh-walllegend">
-            <span><i style={{ color: 'var(--green)' }}>&#9679;</i>Open now &mdash; shop it today</span>
-            <span><i style={{ color: 'var(--accent)', opacity: .7 }}>&#9679;</i>Opening soon &mdash; arriving with our first sellers</span>
-          </div>
-          {SPECIALITY_KINDS.map(kind => {
-            const terms = SPECIALITIES.filter(s => s.kind === kind)
-            const sorted = [...terms].sort((a, b) => (specStats[b.term]?.products ?? 0) - (specStats[a.term]?.products ?? 0))
-            return (
-              <div className="vh-kind" key={kind}>
-                <div className="vh-kindhead">
-                  <span className="vh-kindlbl">{kind}</span>
-                  <span className="vh-kinddesc">{KIND_LINES[kind]}</span>
-                  <span className="vh-kindline" />
-                </div>
-                <div className="vh-wall">
-                  {sorted.map(s => {
-                    const st = specStats[s.term]
-                    const claimed = !!st && st.products > 0
-                    return (
-                      <Link key={s.term} className={'vh-sp' + (claimed ? ' hot' : '')} href={`/specialities/${specialitySlug(s)}`} title={s.line}>
-                        <span className="dotst" />
-                        {buyerLabel(s.term)}
-                        {claimed && <span className="n">{st.countries} {st.countries === 1 ? 'country' : 'countries'}</span>}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
         </div>
       </section>
 
