@@ -596,11 +596,6 @@ export default function GlobalHeader() {
 
           {/* Right cluster */}
           <div className="velor-right" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-            {isSeller && (
-              <Link href={`/seller/${sellerId}`} className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="View my store">
-                My Store
-              </Link>
-            )}
             <Link href="/account/wishlist" className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="Wishlist">
               ♡
             </Link>
