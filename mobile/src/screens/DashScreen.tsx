@@ -177,7 +177,7 @@ export default function DashScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={s.kickDim}>{live ? 'EARNED · ALL ORDERS' : 'REVENUE · 30D'}</Text>
                 <Text style={s.rev}>
-                  {live ? money(os.reduce((n, o) => n + o.totalPayout, 0)) : '£0'}
+                  {live ? money(os.reduce((n, o) => n + (o.sellerEarnings || 0), 0)) : '£0'}
                 </Text>
               </View>
             </View>
