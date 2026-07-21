@@ -486,8 +486,25 @@ function ShopContent() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
       <style dangerouslySetInnerHTML={{ __html: shopSearchCss }} />
       {originCountry && <style dangerouslySetInnerHTML={{ __html: slotsCss }} />}
-      <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px', position: 'relative', overflow: 'hidden' }}>
+        {/* On a country page the whole header band carries that country's
+            flag, faded behind the heading and search (William, 2026-07-21:
+            "a high definition faded flag for that country ... cover that
+            whole section"). flagcdn's SVG is vector -- crisp at any width.
+            Low opacity + a fade-out toward the bottom keep the heading and
+            search fully readable in both light and dark themes. */}
+        {originCountry && (
+          <>
+            <img
+              src={`https://flagcdn.com/${originCountry.code.toLowerCase()}.svg`}
+              alt=""
+              aria-hidden
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.14, pointerEvents: 'none' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, var(--surface) 130%)', pointerEvents: 'none' }} />
+          </>
+        )}
+        <div style={{ maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '24px', letterSpacing: '-0.5px' }}>VELOR</Link>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: 700, margin: '16px 0 20px', color: 'var(--text)' }}>
             {category || 'All Goods'}
