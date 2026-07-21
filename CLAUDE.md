@@ -2599,3 +2599,57 @@ verified lockfile regeneration, the opposite case.
 Environment note for future sessions: this cloud sandbox HAS outbound
 network in bash (public git clone, npm registry, curl all work) -- the "no
 network" rule in older notes applies to a different environment.
+
+## 2026-07-21 checkpoint (late 2) -- LANGUAGE/CURRENCY: ROOT CAUSES FOUND AND FIXED; WARM-UP PASS IS TOP PRIORITY WHEN FUNDS ALLOW
+
+William: "language and currency conversion on both desktop and app. only
+some words and symbols are ever converted... we base our business on
+anywhere anyone can use our services in their own language and currency
+... no room for just settling with part conversions." Full diagnosis run
+with live evidence, all fixes shipped this session.
+
+**ROOT CAUSE 1 -- the translation budget death spiral (server, primary):**
+v1 accounting (lib/translate.ts) counted REQUESTED cache-misses and kept
+incrementing after a caller was capped; capped misses were never
+translated so never became cache hits, so the same strings re-counted on
+every page view forever. Verified live in Vercel logs: William's home IP
+at 39,297 counted "misses" against the 2,000/day cap -- permanently
+capped by one day of legitimate testing, everything new on his IP
+(desktop AND phone share it) falling back to English. Fixed (78287c2d):
+gate peeks without recording, only translations actually performed are
+recorded, day keys prefixed d2: so v1's poisoned counter rows are
+orphaned. Limits deliberately unchanged at 2,000/IP / 25,000 global
+(William chose to keep 2,000). Debug responses now carry the cap reason.
+
+**ROOT CAUSE 2 -- the app cached English fallbacks as done, then saved
+them to disk (mobile/src/i18n.ts):** same bug class the website fixed in
+2930ab4, never ported to the app -- and v4.1's on-device persistence
+made it permanent across restarts. Fixed (c4825a71): only translations
+differing from source are cached; dict files bumped velor-i18n ->
+velor-i18n2 (poisoned on-device files abandoned, they self-clean);
+per-string 60s retry cooldown + repaint-only-on-real-change prevent a
+capped server from being hot-looped by render cycles.
+
+**ROOT CAUSE 3 -- currency was wired only partially:** site dashboard
+pages beyond Overview/Payouts painted raw GBP; the app's SELLER screens
+hardcoded GBP while buyer screens converted. Fixed: new shared
+useMoneyFmt() hook wired into Orders/Analytics/Discounts/Upgrade
+(5c33412f; CSV exports stay raw GBP data; GBP input fields stay GBP;
+Upgrade shows converted price with an honest "Billed as £49 GBP" note),
+and all app seller money now renders via fmt() with useI18nTick()
+(c4825a71).
+
+**TOP PRIORITY WHEN FUNDS ALLOW (William, 2026-07-21: "i dont have the
+funds for now but please can we mark this as top priority for when i can
+afford it"): the full warm-up pass.** Pre-translate the complete
+site+app string union across all 18 non-English languages so every user
+gets instant, total translation from cache instead of lazy trickle-in.
+One-off Anthropic API spend, ballpark £30-100 (last full warm-up was
+~46k strings). Until then translation self-heals lazily as users browse
+-- correct but not instant for first-seen strings. RE-RAISE THIS with
+William when he mentions budget/funds available; do not let it go quiet.
+
+**Verify after deploy (not yet done at write time):** /api/translate
+with {debug:true} from William's IP should show cacheOnly:false and
+genuinely translate; his phone app should heal itself as screens render
+(old poisoned dicts abandoned on next app update via OTA).
