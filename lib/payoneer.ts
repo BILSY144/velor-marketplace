@@ -98,14 +98,19 @@ async function payoneerFetch<T>(path: string, options: { method?: string; body?:
 // gets back a hosted registration link where the seller completes bank/ID
 // details directly with Payoneer -- Velor never sees or stores those details.
 //
-// INDIVIDUAL SELLERS (William, 2026-07-21): Velor's model is that anyone can
-// sell, including private individuals with no registered business. Payoneer's
-// hosted registration supports individual payees natively (the payee chooses
-// individual vs company inside Payoneer's own flow) -- nothing in this
-// payload forces business status. SANDBOX CHECKLIST ADDITION: when partner
-// credentials arrive, verify the program is configured to allow INDIVIDUAL
-// payees, and if the registration-link API accepts a payee-type hint in this
-// program's schema, default it to individual rather than company.
+// INDIVIDUAL SELLERS (William, 2026-07-21: "stripe and payoneer to just
+// request personal identification, nothing business. this way anyone can
+// sign up"): Velor's model is that anyone can sell, including private
+// individuals with no registered business. The registration request now
+// DECLARES the payee as an individual (payee_type below) so Payoneer's
+// hosted flow opens on personal identification, not company details.
+// Field name follows Payoneer's documented Mass Payouts payee schema but,
+// like everything in this file, is UNVERIFIED until sandbox access exists
+// -- if the sandbox rejects it, correct the field name here (single source
+// of truth), never by re-adding business questions. SANDBOX CHECKLIST
+// (docs/PAYONEER_SETUP.md): (1) confirm the program is configured to
+// allow INDIVIDUAL payees; (2) confirm this payload opens the individual
+// registration flow end to end before any live payout.
 export async function getRegistrationLink(params: {
   payeeId: string
   alreadyHaveAnAccount?: boolean
@@ -118,6 +123,7 @@ export async function getRegistrationLink(params: {
       method: 'POST',
       body: {
         payee_id: params.payeeId,
+        payee_type: 'INDIVIDUAL',
         already_have_an_account: params.alreadyHaveAnAccount ?? false,
         redirect_url: params.redirectUrl,
       },

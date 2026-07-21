@@ -42,3 +42,19 @@ is live, to cap the escrow liability.
 ~1% receiving fee on marketplace payouts; up to ~2% FX on cross-currency withdrawal; ~$1.50 flat
 same-currency bank withdrawal; annual account fee waived above $2,000/yr received. Benchmark against
 Wise Platform (~0.4-0.6% FX) before committing exclusively.
+
+## Step 4 — Sandbox verification checklist (REQUIRED before first live payout)
+Added 2026-07-21 per William's standing rule: sellers are asked for PERSONAL identification only —
+never business status. Anyone can sign up, including private individuals.
+
+1. Confirm the Mass Payouts PROGRAM is configured to allow INDIVIDUAL payees (not company-only).
+2. Verify lib/payoneer.ts getRegistrationLink() payload (payee_type: 'INDIVIDUAL') opens the
+   individual registration flow — personal ID + bank only. If the sandbox rejects the field name,
+   correct it in lib/payoneer.ts (single source of truth); never fix it by re-adding business
+   questions to the seller flow.
+3. Exercise every endpoint shape in ENDPOINTS against the sandbox (token, registration-link,
+   payee status, payout) and correct any path/field drift.
+4. Verify getPayeeStatus() returns ACTIVE for a completed individual registration — the
+   release-payouts cron only pays payees whose live status is ACTIVE.
+5. One end-to-end sandbox payout with client_reference_id payout_<orderId>; confirm idempotent
+   retry does not double-pay.
