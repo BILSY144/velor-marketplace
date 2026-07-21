@@ -2113,7 +2113,7 @@ export const I18N_MANIFEST: string[] = [
  "Ready — publishing goes live with your approved seller account. Sign in from the dashboard, or apply in five minutes.",
  "READY TO PUBLISH",
  "real",
- "Real broadcasting opens with your approved seller account — every plan includes Go Live, Starter included. Followers of your channel and country are notified the moment you go on air.",
+ "Live broadcasting arrives with the next app release — this screen is a preview of your broadcast desk. Until then, go live from your seller dashboard on velorcommerce.store, fully working today on every plan.",
  "Real reviews appear here once verified buyers receive real orders — nothing on\n                Velor carries a rating it has not earned.",
  "Real reviews appear here once verified buyers receive real orders — nothing on Velor carries a rating it has not earned.",
  "Recycled-glass (Krobo) beads",

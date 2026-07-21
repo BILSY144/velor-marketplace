@@ -14,8 +14,8 @@ import { Chrome } from '../components/Chrome'
 // Go live — plate 32's setup stage as an honest PREVIEW. The stage shows a
 // real preview film still (the plate's own note: "Preview uses a sample
 // film"), broadcast title and pinned-listings controls are live, and the
-// Go live button explains the gate: real broadcasting opens with an
-// approved seller account — on every plan, Starter included. The plate's
+// Go live button explains the gate honestly: in-app broadcasting ships
+// with the next app release; the website dashboard broadcasts today.
 // LIVE/ended stages carry SIMULATED viewer counts; those are not rendered
 // (no fake counts, ever).
 export default function GoLiveScreen() {
@@ -27,7 +27,7 @@ export default function GoLiveScreen() {
 
   const gate = () => {
     setNote(
-      'Real broadcasting opens with your approved seller account — every plan includes Go Live, Starter included. Followers of your channel and country are notified the moment you go on air.'
+      'Live broadcasting arrives with the next app release — this screen is a preview of your broadcast desk. Until then, go live from your seller dashboard on velorcommerce.store, fully working today on every plan.'
     )
     setTimeout(() => setNote(null), 3800)
   }
