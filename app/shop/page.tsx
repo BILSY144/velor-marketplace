@@ -495,13 +495,29 @@ function ShopContent() {
             search fully readable in both light and dark themes. */}
         {originCountry && (
           <>
+            {/* Layer 1 -- coverage: the flag blurred into a soft wash of its
+                own colours, filling the band edge to edge. A straight
+                object-fit:cover crop of a 3:2 flag into this wide short band
+                sliced out just the middle strip -- Germany showed one stripe,
+                Japan/Netherlands showed near-blank white (William: "not
+                visible at all or misplaced"). Blurring makes the crop
+                irrelevant while still covering the whole section. */}
             <img
               src={`https://flagcdn.com/${originCountry.code.toLowerCase()}.svg`}
               alt=""
               aria-hidden
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.14, pointerEvents: 'none' }}
+              style={{ position: 'absolute', inset: '-40px', width: 'calc(100% + 80px)', height: 'calc(100% + 80px)', objectFit: 'cover', opacity: 0.22, filter: 'blur(34px) saturate(1.15)', pointerEvents: 'none' }}
             />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, var(--surface) 130%)', pointerEvents: 'none' }} />
+            {/* Layer 2 -- recognition: the COMPLETE flag, sharp and clearly
+                visible, anchored to the right of the band. Never cropped, so
+                every country's flag reads correctly. */}
+            <img
+              src={`https://flagcdn.com/${originCountry.code.toLowerCase()}.svg`}
+              alt=""
+              aria-hidden
+              style={{ position: 'absolute', right: '4%', top: '50%', transform: 'translateY(-50%)', height: '76%', width: 'auto', opacity: 0.45, borderRadius: 8, boxShadow: '0 4px 30px rgba(0,0,0,0.10)', pointerEvents: 'none' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 45%, var(--surface) 135%)', pointerEvents: 'none' }} />
           </>
         )}
         <div style={{ maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
