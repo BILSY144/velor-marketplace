@@ -70,7 +70,7 @@ async function modelTranslate(lang: string, texts: string[]): Promise<string[]> 
 // call the model for misses -- misses fall back to source text. Used when a
 // caller has exhausted its new-translation budget; real users on warmed
 // languages never notice, because their strings are all cache hits.
-export async function translateBatch(lang: string, texts: string[], debug = false, cacheOnly = false): Promise<{ translations: string[]; error?: string; missCount: number }> {
+export async function translateBatch(lang: string, texts: string[], debug = false, cacheOnly = false): Promise<{ translations: string[]; error?: string; missCount: number; performed: number }> {
   const hashes = texts.map(hashText)
   const cached = await prisma.translationCache.findMany({
     where: { lang, hash: { in: [...new Set(hashes)] } },
@@ -89,10 +89,11 @@ export async function translateBatch(lang: string, texts: string[], debug = fals
   })
 
   if (cacheOnly) {
-    return { translations: texts.map((t, i) => byHash.get(hashes[i]) ?? t), missCount: missing.length }
+    return { translations: texts.map((t, i) => byHash.get(hashes[i]) ?? t), missCount: missing.length, performed: 0 }
   }
 
   let lastError: string | undefined
+  let performed = 0
   // translate missing in model-call chunks (~50 strings / ~6k chars each)
   for (let i = 0; i < missing.length; ) {
     const chunk: typeof missing = []
@@ -109,6 +110,7 @@ export async function translateBatch(lang: string, texts: string[], debug = fals
         skipDuplicates: true,
       })
       chunk.forEach((c, j) => byHash.set(c.hash, out[j]))
+      performed += chunk.length
     } catch (e) {
       // fail-safe: leave this chunk untranslated (sources returned below)
       lastError = e instanceof Error ? e.message : String(e)
@@ -117,7 +119,7 @@ export async function translateBatch(lang: string, texts: string[], debug = fals
     }
   }
 
-  return { translations: texts.map((t, i) => byHash.get(hashes[i]) ?? t), error: lastError, missCount: missing.length }
+  return { translations: texts.map((t, i) => byHash.get(hashes[i]) ?? t), error: lastError, missCount: missing.length, performed }
 }
 
 // ---- Anti-abuse budgets for /api/translate (2026-07-17) -------------------
@@ -145,9 +147,23 @@ export async function countMisses(lang: string, texts: string[]): Promise<number
   return uniq.length - cachedCount
 }
 
-// Returns true if the caller may model-translate `misses` new strings, and
-// records the usage. Fails OPEN on database errors -- a broken budget table
-// must degrade to the pre-existing behaviour, never take translation down.
+// Budget accounting v2 (2026-07-21). The v1 gate counted REQUESTED misses
+// and incremented even after a caller was capped -- a death spiral: capped
+// misses were never translated, so they never became cache hits, so every
+// later page view re-counted the same strings forever. One heavy day of
+// legitimate testing left William's own home IP at 39k+ "misses" against
+// the 2,000 cap with no way to ever recover, and any real household or
+// office NAT would hit the same wall. v2 counts only translations actually
+// PERFORMED (real model spend): the gate peeks without recording, and the
+// route records the performed count after translateBatch succeeds. The day
+// key is prefixed 'd2:' so v1's poisoned rows are orphaned rather than
+// migrated -- caps now measure the thing they were built to bound.
+const dayKey = () => 'd2:' + utcDay()
+
+// Peek-only: may this caller model-translate `misses` new strings right
+// now? Records NOTHING. Fails OPEN on database errors -- a broken budget
+// table must degrade to the pre-existing behaviour, never take
+// translation down.
 export async function allowNewTranslations(ip: string, misses: number): Promise<{ allowed: boolean; reason?: string }> {
   if (misses <= 0) return { allowed: true }
   try {
@@ -159,18 +175,32 @@ export async function allowNewTranslations(ip: string, misses: number): Promise<
       console.error(`translate budget: GLOBAL daily cap hit (${globalToday} today) -- serving cache-only`)
       return { allowed: false, reason: 'global-daily-cap' }
     }
-    const row = await prisma.translationIpDaily.upsert({
-      where: { ip_day: { ip, day } },
-      create: { ip, day, count: misses },
-      update: { count: { increment: misses } },
+    const row = await prisma.translationIpDaily.findUnique({
+      where: { ip_day: { ip, day: dayKey() } },
     })
-    if (row.count > PER_IP_DAILY_NEW_LIMIT) {
-      console.error(`translate budget: per-IP cap hit for ${ip} (${row.count} today) -- serving cache-only`)
+    if ((row?.count ?? 0) + misses > PER_IP_DAILY_NEW_LIMIT) {
+      console.error(`translate budget: per-IP cap hit for ${ip} (${row?.count ?? 0} performed today) -- serving cache-only`)
       return { allowed: false, reason: 'ip-daily-cap' }
     }
     return { allowed: true }
   } catch (e) {
     console.error('translate budget check failed (failing open):', e instanceof Error ? e.message : e)
     return { allowed: true }
+  }
+}
+
+// Records translations actually performed for this IP today. Called by the
+// route AFTER translateBatch has done real model work, with the number of
+// strings that genuinely got a new model translation. Never throws.
+export async function recordNewTranslations(ip: string, performed: number): Promise<void> {
+  if (performed <= 0) return
+  try {
+    await prisma.translationIpDaily.upsert({
+      where: { ip_day: { ip, day: dayKey() } },
+      create: { ip, day: dayKey(), count: performed },
+      update: { count: { increment: performed } },
+    })
+  } catch (e) {
+    console.error('translate budget record failed (ignored):', e instanceof Error ? e.message : e)
   }
 }

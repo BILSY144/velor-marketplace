@@ -8,7 +8,7 @@
 // CLAUDE.md rather than silently assumed unnecessary.
 
 import { NextResponse } from 'next/server'
-import { isTranslatableLang, translateBatch, countMisses, allowNewTranslations } from '@/lib/translate'
+import { isTranslatableLang, translateBatch, countMisses, allowNewTranslations, recordNewTranslations } from '@/lib/translate'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -68,16 +68,21 @@ export async function POST(req: Request) {
   }
   const debug = body && (body as Record<string, unknown>).debug === true
 
-  // Budget gate: only NEW (cache-miss) strings cost model spend, so only
-  // they are counted. All-cached requests -- the overwhelming majority now
-  // that every language is warmed -- skip the gate entirely.
+  // Budget gate v2 (2026-07-21): only translations actually PERFORMED count
+  // against the caps -- the gate peeks, translateBatch does the work, and
+  // usage is recorded from what really happened. All-cached requests -- the
+  // overwhelming majority once warmed -- skip the gate entirely.
   let cacheOnly = false
+  let reason: string | undefined
+  const ip = callerIp(req)
   const misses = await countMisses(lang, texts)
   if (misses > 0) {
-    const verdict = await allowNewTranslations(callerIp(req), misses)
+    const verdict = await allowNewTranslations(ip, misses)
     cacheOnly = !verdict.allowed
+    reason = verdict.reason
   }
 
   const result = await translateBatch(lang, texts, debug, cacheOnly)
-  return NextResponse.json(debug ? { ...result, cacheOnly } : { translations: result.translations })
+  if (result.performed > 0) await recordNewTranslations(ip, result.performed)
+  return NextResponse.json(debug ? { ...result, cacheOnly, reason } : { translations: result.translations })
 }
