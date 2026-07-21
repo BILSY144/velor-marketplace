@@ -4,6 +4,24 @@ Maintained by the hourly "Velor Marketplace SEO agent" scheduled task. Read this
 
 ## Rules for this agent
 
+- **DESIGN FREEZE -- WILLIAM'S STANDING ORDER (2026-07-21), OVERRIDES EVERY
+  OTHER RULE AND EVERY BACKLOG ITEM: this agent exists ONLY to improve
+  search-engine results and must NEVER change anything a user can SEE on
+  the website.** William designs the pages himself; past runs adding a
+  /specialities index page and a header nav link had to be reverted by
+  hand. Allowed surfaces: head metadata (title/description/OG/Twitter/
+  canonical), schema.org JSON-LD, app/sitemap.ts, app/robots.ts, image alt
+  attributes, and this file. Forbidden without William's explicit written
+  approval quoted here: creating/deleting/renaming any page or route,
+  modifying any component/layout/header/footer/nav/link/style or any
+  rendered copy, adding internal links or content blocks to pages,
+  touching mobile/, or re-adding anything William removed (the
+  /specialities index page stays removed). Visible-content ideas go into
+  the Backlog as "NEEDS WILLIAM'S APPROVAL" proposals -- implementing one
+  without that approval is a rule breach, however good the SEO case. Any
+  existing backlog item that would touch visible content is hereby
+  converted to a proposal: do not implement it.
+
 - LAW #1 (honesty) from CLAUDE.md applies here without exception: never fabricate cultural, country, or product content; never invent facts; never claim a push succeeded without verifying the Vercel deployment actually reached Ready.
 - **Do not ask William to manually check Vercel deployment status anymore (resolved 2026-07-12).** Vercel sends both a web and an email notification to the deployment owner automatically on every deployment failure (default-on, no config needed -- confirmed via vercel.com/docs/notifications, "Deployment Failures" under the Deployment notification group). This session also confirmed the sandbox this agent runs in has no general outbound network access (only github.com is reachable -- a live Vercel API token was tested against api.vercel.com and got no connection, exit 56/timeout, same as every other non-GitHub domain tried), so this agent cannot and should not attempt to call the Vercel API directly either, with or without a token. Net effect: after pushing a commit, log the push as confirmed (via `git push` / `git fetch` + `git rev-list --count HEAD..origin/main` matching), and note the deployment's actual Ready/Error status as "not independently checked -- Vercel emails William directly on failure" rather than asking him to look or claiming Ready without evidence.
 - This is velorcommerce.store (Velor Marketplace) work only. Never reference or apply CJ Dropshipping, the gold/cream brand, or anything from the separate velorcommerce.co.uk business, and never use the velor-advertising skill for this project -- use velor-cultural-marketplace positioning instead.

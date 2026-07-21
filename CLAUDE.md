@@ -2839,3 +2839,18 @@ Still open from earlier today: William's founding listing is REJECTED ->
 shop + lattice EMPTY in production (needs admin re-approve; see late 4);
 Google Play release 5 in review, production-OTA button armed; session
 PAT to revoke at wrap-up.
+
+## STANDING RULE (2026-07-21) -- SEO AGENT DESIGN FREEZE
+
+William: "stop the seo agent from changing our pages we designed ... i
+only set up the seo agent to work for better search engine results."
+Enforced in three places, all live: (1) the hourly scheduled task's
+prompt rewritten with an explicit DESIGN FREEZE (verified updated
+2026-07-21 20:57 UTC); (2) SEO_LOG.md's rules section, which the agent
+reads first every run; (3) this note. The agent may touch ONLY: head
+metadata, schema.org JSON-LD, sitemap.ts, robots.ts, image alt text, and
+SEO_LOG.md. Anything a user can see -- pages, routes, components, nav,
+links, styles, rendered copy, anything in mobile/ -- requires William's
+explicit written approval first, logged as a proposal in SEO_LOG.md's
+backlog. Interactive sessions: if a future SEO-agent commit violates
+this, revert it and tighten further rather than letting it slide.
