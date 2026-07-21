@@ -191,14 +191,48 @@ PAYMENTS HARDENING shipped same session (commit cf1ec28), all additive:
   AgentLog-logged. Order.deliveryConfirmedBy records WEBHOOK/BUYER/AUTO/
   ADMIN. /api/seller/me now returns country + live payoutRail(+Label).
 
-STILL TO DO (next sessions): rebuild remaining pages into Studio --
-Payouts, Orders, Products, Analytics, then Storefront/Discounts/Returns/
-Disputes/Messages (visual only)/Settings/Support/Terms/Upgrade/API Keys,
-Go Live last. Then the page-by-page sign-off walkthrough with William.
-Payoneer transfers remain dormant until his Mass Payouts partner approval
-+ credentials (external blocker). This session's sandbox HAD outbound
-network in bash: repo cloned locally, tsc run before every push, pushed
-via git with a PAT (rotate it, flagged in chat).
+LATER THE SAME SESSION (all pushed, tsc-clean, deploys green):
+- **CRITICAL Stripe cookie bug found BY William** ("it says my stripe
+  connect is linked but ive not set it up"): /api/stripe/connect(+/
+  account) read a year-long per-BROWSER seller_account_id cookie with
+  priority over Seller.stripeAccountId and then PERSISTED the cookie's
+  account onto whichever seller was signed in -- wrong-payout-destination
+  vector. Fixed (f417784): cookie never read/set, actively deleted;
+  status+resume resolve ONLY from the seller's row; platform-account
+  guard cleans contaminated rows in the status route AND release cron.
+  LIVE-VERIFIED: williams workshop now honestly shows Not connected /
+  Set Up Payouts (he had never onboarded; the cookie was the whole lie).
+- **Daily Stripe account hygiene sweep for ALL sellers** (7a431b2), in
+  confirm-deliveries cron: clears platform-id and cross-seller-duplicate
+  stripeAccountId rows, syncs stripeOnboarded with live Stripe, clears
+  deleted accounts; every clearance AgentLog-logged.
+- **Payouts page rebuilt in Studio** (3c7cc43) -- rail-aware method card,
+  live Stripe state, commission ladder + savings calc, history.
+- **Studio rollout leverage** (80cfb29): shared tierCardStyle moved onto
+  the Studio card -- Products/Orders/Returns/Disputes/Storefront/
+  Discounts/Settings/Support/Analytics/Messages restyled in one change;
+  Terms page restyled light (presentation only, legal text untouched);
+  Analytics+Settings got page padding + light chart grid (207514d);
+  shell no longer flashes STARTER before tier loads (d07dfcf).
+- **Individual sellers** (4b561c1, William: "anyone can sell on velor...
+  personal identification instead of business status"): Stripe Express
+  accounts now created with business_type 'individual' -- onboarding
+  asks personal ID only. William must Disconnect + reconnect to get a
+  fresh individual-type account (his first one predates the fix).
+  Payoneer: hosted registration supports individuals natively; sandbox
+  checklist gains an individual-payee program check.
+
+STILL TO DO (next sessions): finish per-page verify of Discounts/
+Returns/Disputes/Messages/Support/API Keys/Upgrade in the new shell;
+phone-width pass; Go Live branded pass; page-by-page sign-off walkthrough
+with William. Payoneer transfers remain dormant until his Mass Payouts
+partner approval + credentials (external blocker). This session's sandbox
+HAD outbound network in bash: repo cloned locally, tsc before every push,
+pushed via git with a PAT (rotate it, flagged in chat). NOTE for future
+sessions: prisma generate needs engine-path override env vars here
+(PRISMA_QUERY_ENGINE_LIBRARY/PRISMA_SCHEMA_ENGINE_BINARY pointed at dummy
+files) because binaries.prisma.sh is proxy-blocked; tsc via /tmp/
+tsconfig.check.json extending repo tsconfig with target es2022.
 
 --- (superseded Halo history below, kept for context) ---
 
