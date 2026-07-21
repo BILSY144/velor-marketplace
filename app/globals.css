@@ -127,14 +127,18 @@ h1, h2, h3, h4, h5, h6 {
    logo is pulled out to sit at the far left of the viewport. */
 .velor-logo-link { margin-left: -20px; }
 @media (min-width: 901px) {
-  .velor-logo-link {
-    margin-left: calc(-4px - max(0px, (100vw - 1360px) / 2));
+  /* William (2026-07-21): the logo sits independently at the far left;
+     every other header option groups together at the far right, clear air
+     between them. The bar spans the full viewport (overriding the inline
+     1360px cap -- hence !important) so there is real free space, and the
+     auto margin on the nav pushes the whole option group right. Desktop
+     only -- phone/tablet layouts unchanged. */
+  .velor-headerbar {
+    max-width: none !important;
   }
-  /* William (2026-07-21): the logo sits independently on the left; every
-     other header option groups to the right, away from it. The auto margin
-     on the first element after the logo pushes nav + search + account
-     cluster to the right edge as one group. Desktop only -- phone/tablet
-     layouts unchanged. */
+  .velor-logo-link {
+    margin-left: -4px;
+  }
   .velor-headerbar .velor-desktop-nav {
     margin-left: auto;
   }
