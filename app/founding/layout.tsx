@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries'
 
 // Server-component layout wrapping the 'use client' /founding page.tsx so
 // this route can carry its own metadata instead of inheriting the generic
@@ -61,6 +62,56 @@ export const metadata: Metadata = {
   },
 }
 
+// ItemList JSON-LD added by the standing SEO agent, 2026-07-21. /founding is
+// this project's current highest-priority page per CLAUDE.md's own standing
+// directive (seller-recruitment terms outweigh buyer terms while the
+// catalogue is near-empty), yet unlike its buyer-facing sibling /origins
+// (app/origins/layout.tsx, ItemList shipped 2026-07-14) and /specialities
+// (app/specialities/layout.tsx, ItemList shipped 2026-07-20), this page had
+// no structured data describing the one thing it actually is: a list of 190
+// founding-seller opportunities, one per country. Confirmed by direct read
+// of app/founding/page.tsx before writing this -- the page already renders
+// exactly this list client-side (`for (const c of WORLD_COUNTRIES)`, each
+// tile linking to `/origins/${countrySlug(c)}`, the identical URL used
+// below), so this schema describes real, already-live, already-indexable
+// content, not a new claim. Deliberately NOT filtered by cultureHints (the
+// way originListCountries in app/origins/layout.tsx is) -- /founding's own
+// live grid shows all 190 WORLD_COUNTRIES regardless of cultureHints depth,
+// since the founding-seat offer itself applies to every country equally;
+// filtering this list would make the schema disagree with the page it
+// describes. Each ListItem's live claimed/unclaimed status is intentionally
+// omitted here (that is real-time data the page fetches client-side and
+// which changes as sellers apply -- baking a snapshot into static JSON-LD
+// would go stale immediately and risk asserting a seat is open/taken when
+// it no longer is); the schema only asserts that a founding-seller page
+// exists for each country, matching the same "page exists, not a live-
+// seller claim" boundary lib/cultureHints.ts's own header comment already
+// establishes for /origins. Helps both classic search and AI answer
+// engines surface "sell on Velor from my country" style seller-recruitment
+// queries with a structured, citable list rather than prose alone --
+// explicitly the framing CLAUDE.md's standing directive calls for right now.
+const foundingItemListJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Founding Seller Seats — One Per Country on Velor',
+  description,
+  numberOfItems: WORLD_COUNTRIES.length,
+  itemListElement: WORLD_COUNTRIES.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.name,
+    url: `https://velorcommerce.store/origins/${countrySlug(c)}`,
+  })),
+}
+
 export default function FoundingLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      {children}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(foundingItemListJsonLd) }}
+      />
+    </>
+  )
 }
