@@ -186,6 +186,29 @@ Connect setup path, Overview reads "via Stripe". Other sellers self-heal
 on their next payouts/dashboard visit; /api/admin/recompute-payout-rails
 exists if a bulk pass is ever wanted.
 
+**2026-07-21 (second round) -- three more issues William caught live, all
+fixed and verified (commit 621b273):**
+1. Payout Settings said "Connected", Payouts page said "no account
+   connected" -- Payout Settings reads the LIVE Stripe account endpoint,
+   Payouts page was reading the (lagging) stored `stripeOnboarded` flag.
+   Both pages now read the same live endpoint; Payouts page also gained an
+   honest "Stripe setup incomplete / Complete Setup" middle state instead
+   of collapsing account-exists-but-not-enabled into "not connected".
+2. Settings > Profile inputs hardcoded `#111` background -- unreadable
+   black boxes once the dashboard forces light. Now theme-safe
+   `var(--surface)` / `var(--surface-2)`.
+3. Overview aurora was paler than the approved preview mockup -- tint
+   opacities restored to the preview's exact values in `lib/halo.tsx`.
+All three live-verified in browser (Payouts now reads "Stripe Connect
+linked"; Settings fields show real values e.g. "William Sinclair",
+"williams workshop"; Overview aurora visibly warmer).
+
+William also asked for a full redesign of the Go Live dashboard page
+(`app/dashboard/live/page.tsx`) in the Halo language -- see the
+IN PROGRESS section for status once started; this is separate from and
+does not touch the buyer-side `/live/[room]` broadcast mechanics verified
+working on 2026-07-20.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
