@@ -219,6 +219,28 @@ immersive layer with the 2026-07-20 iOS-zoom/visualViewport fixes,
 out of scope here and not to be touched without checking in first.
 Buyer-side `/live/[room]` viewer is unaffected either way.
 
+**2026-07-21 aurora "pink" fix (commit f3e83e4), live-verified:** William:
+"the whole dasboard needs the preview colours not the pink it is now."
+Root cause -- the aurora backdrop (`HaloBackdrop` in `lib/halo.tsx`) is
+rendered globally by `app/dashboard/layout.tsx`, so on content-light pages
+(Products, with one row of listings) it sat fully exposed across the whole
+empty lower page. In the originally-approved mockup the aurora was mostly
+hidden behind Overview's dense hub/satellite content, so its true weight
+on a near-empty page had never actually been seen or approved -- two
+semi-transparent layers (orange + amber) stacked over the near-white paper
+read as washed pink rather than warm orange. Fix: lowered overall gradient
+alpha, kept orange dominant over amber (amber trends pink faster when
+double-stacked), and added a `maskImage`/`WebkitMaskImage` so the aurora
+fades to nothing by ~65% down the viewport -- concentrated near the top
+chrome as in the approved preview, clean paper underneath everywhere else.
+Grain overlay opacity also reduced 0.5 -> 0.35. Verified via `tsc`/esbuild
+(no errors) then live in browser on three representative pages: Products
+(content-light, where the bug was visible -- now clean warm-orange glow at
+top, plain paper below), Overview (still reads rich and warm, matches the
+mockup), and Go Live's setup form (same global backdrop, confirmed
+consistent). Since `HaloBackdrop` is shared, this fix applies dashboard-wide
+without touching any other page's code.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
