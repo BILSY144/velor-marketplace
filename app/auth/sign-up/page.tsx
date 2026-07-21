@@ -129,7 +129,7 @@ export default function SignUpPage() {
             Application submitted
           </h2>
           <p style={{ color: '#999999', fontSize: '15px', lineHeight: '1.6', margin: '0 0 32px' }}>
-            We will review your seller account within 24 hours and send a confirmation to{' '}
+            We will review your seller account within 2 hours and send a confirmation to{' '}
             <strong style={{ color: '#FFFFFF' }}>{form.email}</strong>.
           </p>
           <Link

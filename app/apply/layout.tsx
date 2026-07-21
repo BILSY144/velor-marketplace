@@ -19,7 +19,7 @@ import type { Metadata } from 'next'
 // title and the root layout's own description -- no fact added or removed.
 const title = 'Apply to Sell on Velor | Founding Seller Programme'
 const description =
-  'Be the first seller from your country on Velor. Free to list, a decision within 24 hours, and Pro free for life for founding sellers.'
+  'Be the first seller from your country on Velor. Free to list, a decision within 2 hours, and Pro free for life for founding sellers.'
 
 export const metadata: Metadata = {
   title,

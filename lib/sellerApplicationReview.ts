@@ -1,6 +1,7 @@
 // Seller application service level and automated screening.
 //
-// Velor promises sellers a decision within 24 hours. That promise is enforced
+// Velor promises sellers a decision within 2 HOURS (William, 2026-07-21 --
+// lowered from 24h; the review cron now runs every 15 minutes). Enforced
 // here rather than in marketing copy: the review cron (app/api/cron/
 // review-applications) runs hourly, decides every clear-cut case immediately,
 // and escalates anything it is not certain about to a human WELL BEFORE the
@@ -14,10 +15,10 @@
 import { CATEGORY_NAMES } from '@/lib/categories'
 
 /** Velor's published promise to sellers. Change here, and the copy follows. */
-export const APPLICATION_SLA_HOURS = 24
+export const APPLICATION_SLA_HOURS = 2
 
 /** Escalate to a human at this age, so a person still has time to act. */
-export const APPLICATION_ESCALATE_AFTER_HOURS = 12
+export const APPLICATION_ESCALATE_AFTER_HOURS = 1
 
 /** Minimum characters of store description for the listing to be reviewable. */
 export const MIN_DESCRIPTION_CHARS = 20

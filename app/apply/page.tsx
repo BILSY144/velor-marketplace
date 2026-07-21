@@ -240,7 +240,7 @@ export default function ApplyPage() {
           <div className="ap-success">
             <h2>Application received.</h2>
             <p>
-              You will have our decision within 24 hours. Your identity is verified when you
+              You will have our decision within 2 hours. Your identity is verified when you
               set up payouts — Stripe or Payoneer confirm who you are from your personal
               details, directly with them. No photos, no documents to upload, and Velor never
               sees your information.
@@ -283,7 +283,7 @@ export default function ApplyPage() {
 
         <div className="ap-trust">
           <span><i>&#10003;</i>Free to list &mdash; no listing fees, ever</span>
-          <span><i>&#10003;</i>Decision within 24 hours &mdash; no documents to upload</span>
+          <span><i>&#10003;</i>Decision within 2 hours &mdash; no documents to upload</span>
           <span><i>&#10003;</i>Sell and get support in your own language</span>
           <span><i>&#10003;</i>Buyers pay into escrow &mdash; so they buy with confidence</span>
         </div>
