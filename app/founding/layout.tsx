@@ -67,7 +67,10 @@ export const metadata: Metadata = {
 // directive (seller-recruitment terms outweigh buyer terms while the
 // catalogue is near-empty), yet unlike its buyer-facing sibling /origins
 // (app/origins/layout.tsx, ItemList shipped 2026-07-14) and /specialities
-// (app/specialities/layout.tsx, ItemList shipped 2026-07-20), this page had
+// (app/specialities/[term]/layout.tsx, per-term ItemList/BreadcrumbList
+// shipped 2026-07-20 -- the index page that also carried an ItemList,
+// app/specialities/layout.tsx, was later removed by William, 2026-07-21
+// evening, along with its route), this page had
 // no structured data describing the one thing it actually is: a list of 190
 // founding-seller opportunities, one per country. Confirmed by direct read
 // of app/founding/page.tsx before writing this -- the page already renders

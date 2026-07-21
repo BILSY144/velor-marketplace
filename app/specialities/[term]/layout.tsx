@@ -39,8 +39,10 @@ import { findSpecialityBySlug, buyerLabel } from '@/lib/specialities'
 // 2026-07-21, dropping to two levels to match the site's actual current
 // structure -- no invented replacement destination, since no single
 // speciality-hub page exists any more (individual /specialities/[term]
-// pages are reached from the homepage's #specialities section and each
-// /origins/[slug] page instead).
+// pages are reached from each /origins/[slug] page's speciality tags, and
+// from sitemap.xml, instead -- the homepage's own speciality wall that
+// used to link them too was separately removed by William the same
+// evening, commit dcdf8b0, ~1.5h after this fix).
 
 type Props = { params: Promise<{ term: string }> }
 

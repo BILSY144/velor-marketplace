@@ -254,8 +254,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // /specialities index REMOVED 2026-07-21 by William's direct request
     // ("remove specialities page as its not needed at all") -- the header
     // link it brought was also shrinking the search bar. The per-term
-    // /specialities/[term] pages remain (homepage + origin pages link
-    // them). SEO agent: do NOT re-add the index page or its nav links.
+    // /specialities/[term] pages remain (each /origins/[slug] page's
+    // speciality tags link them, plus this sitemap -- the homepage's own
+    // speciality wall that used to link them too was separately removed
+    // by William the same evening, commit dcdf8b0). SEO agent: do NOT
+    // re-add the index page or its nav links.
     { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
