@@ -77,6 +77,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [storeName, setStoreName] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
+  // null until /api/seller/me answers -- the plan pill and avatar initial
+  // render nothing until then, so a Pro seller never sees a STARTER flash
+  // (wrong information, even for a second, is the thing William is
+  // stamping out).
+  const [tierLoaded, setTierLoaded] = useState(false);
   const [tier, setTier] = useState<Tier>('STARTER');
   const [founding, setFounding] = useState(false);
   const [rail, setRail] = useState<Rail | null>(null);
@@ -146,6 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (cancelled || !d) return;
         if (d.id) setSellerId(d.id);
         if (d.tier) setTier(normalizeSellerTier(d.tier) as Tier);
+        setTierLoaded(true);
         setFounding(Boolean(d.foundingBadge));
         if (d.storeName) setStoreName(d.storeName);
         if (d.country) setCountry(d.country);
@@ -331,7 +337,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ));
   }
 
-  const planPill = (
+  const planPill = !tierLoaded ? null : (
     <Link
       href="/dashboard/upgrade"
       title={founding ? 'Founding seller — Pro free for life' : tier === 'PRO' ? 'Pro plan' : 'See plans'}
@@ -536,7 +542,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: STUDIO.fontDisplay, fontWeight: 700, fontSize: 13, flexShrink: 0,
           }}>
-            {(storeName || 'S').charAt(0).toUpperCase()}
+            {storeName ? storeName.charAt(0).toUpperCase() : ''}
           </span>
         </header>
 

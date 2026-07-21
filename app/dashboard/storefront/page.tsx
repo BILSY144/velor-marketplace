@@ -217,7 +217,7 @@ export default function StorefrontDesign() {
           )}
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>Your store logo</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#1A1A1D' }}>Your store logo</div>
           <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
             Add your own logo — it leads your storefront in place of your store name. PNG, JPG or WebP.
           </div>
