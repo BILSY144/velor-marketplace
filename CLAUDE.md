@@ -2653,3 +2653,46 @@ William when he mentions budget/funds available; do not let it go quiet.
 with {debug:true} from William's IP should show cacheOnly:false and
 genuinely translate; his phone app should heal itself as screens render
 (old poisoned dicts abandoned on next app update via OTA).
+
+## 2026-07-21 checkpoint (late 3) -- GOOGLE PLAY STATUS CORRECTED FROM THE LIVE CONSOLE; APPROVAL-DAY RUNBOOK PREPARED
+
+Earlier notes here were OUTDATED, William corrected them and the live Play
+Console was examined 2026-07-21 evening. Current truth:
+
+**Google Play -- nothing left on our side; waiting only on Google's
+review.** Production release 5 (1.0.0), submitted 19 Jul 22:42, IN REVIEW,
+configured for FULL ROLLOUT to 177/177 countries on approval. In the same
+review: store listing (VELOR, en-GB), content rating questionnaire, target
+audience, Shopping category, and all declarations INCLUDING foreground
+services -- the FGS demo video WAS submitted and Google verification
+passed (the 2026-07-19 "not yet submitted" note above is superseded).
+Android developer verification: complete for all apps. Managed publishing
+is OFF, so the app goes live AUTOMATICALLY when review passes -- no
+further action. Internal testing release 2 stays live for testers.
+No policy issues, no rejections. Apple: enrolment still pending, nothing
+to do.
+
+**APPROVAL-DAY RUNBOOK (prepared, William: "yes all"):**
+1. The moment Google approves: run the new manual workflow **"Publish
+   Velor app to Expo PRODUCTION"** (.github/workflows/
+   eas-update-production.yml on mobile-app, commit d5207356). Actions ->
+   that workflow -> Run workflow -> type LIVE in the confirm box. It
+   publishes mobile-app's current JS to the production channel so store
+   installs immediately get everything since the 19 Jul build (2h SLA
+   screens, black-screen/NaN fix, exact-pence + converting money,
+   translation cure, honest Go Live copy).
+2. **HARD RULE until store build #2 ships: production OTA comes ONLY
+   from the mobile-app branch.** Build 5 has no LiveKit native module;
+   main's mobile/ imports @livekit/react-native at module load and would
+   CRASH every store install at launch. Both builds currently share
+   runtime exposdk:54.0.0 (runtimeVersion policy: sdkVersion) -- nothing
+   but this rule keeps main's JS off build 5.
+3. **Store build #2 (adds real LiveKit broadcasting):** unblocked tonight
+   (main's mobile lockfile fixed, npm ci verified). BEFORE cutting it,
+   split the runtimes: set an explicit runtimeVersion (e.g. "1.1.0") in
+   main's mobile/app.json so build-5 installs and build-2 installs stop
+   sharing OTA updates; then build via the existing EAS Build (manual)
+   workflow, profile production, from main. Submitting build #2 to Play
+   restarts review for that release only (the app itself stays live).
+4. Build 5 was built from mobile-app (EAS Build manual run #5, profile
+   production, channel production, appVersionSource remote).
