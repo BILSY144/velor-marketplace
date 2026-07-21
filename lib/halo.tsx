@@ -71,20 +71,35 @@ export function HaloBackdrop() {
         aria-hidden
         style={{
           position: 'fixed', inset: '-20%', zIndex: 0, pointerEvents: 'none',
-          // Tint strengths match the approved preview mockup exactly --
-          // the first shipped pass was paler and William flagged it
-          // ("wrong colour not same as preview colour", 2026-07-21).
+          // In the approved preview the aurora only ever showed as a
+          // background PEEK behind the Overview's dense hub/satellites.
+          // Applied sitewide (every dashboard page, via the shared shell)
+          // it was fully exposed on lighter pages -- Products, with one
+          // row of content, showed the raw overlapping blobs across the
+          // whole empty lower page, and two semi-transparent layers
+          // (orange + amber) stacked over the near-white paper read as a
+          // washed pink rather than the intended warm orange (William,
+          // 2026-07-21: "the whole dashboard needs the preview colours
+          // not the pink it is now"). Fix: orange stays dominant over
+          // amber (amber trends pink faster when double-stacked), overall
+          // strength is lower, and a mask fades the whole thing out by
+          // ~60% down the VIEWPORT (this div is position:fixed, so that's
+          // an absolute fade line, not tied to page scroll length) --
+          // concentrated near the top chrome exactly like the approved
+          // preview, clean paper underneath on any page.
           background: [
-            'radial-gradient(38% 34% at 22% 28%, rgba(255,107,0,0.20), transparent 70%)',
-            'radial-gradient(30% 30% at 78% 22%, rgba(239,159,39,0.22), transparent 70%)',
-            'radial-gradient(34% 32% at 72% 78%, rgba(255,138,43,0.18), transparent 70%)',
-            'radial-gradient(28% 26% at 24% 76%, rgba(239,159,39,0.16), transparent 70%)',
+            'radial-gradient(36% 32% at 20% 22%, rgba(255,107,0,0.16), transparent 68%)',
+            'radial-gradient(28% 28% at 80% 18%, rgba(239,159,39,0.12), transparent 68%)',
+            'radial-gradient(32% 30% at 70% 60%, rgba(255,107,0,0.10), transparent 68%)',
+            'radial-gradient(26% 24% at 22% 64%, rgba(239,159,39,0.08), transparent 68%)',
           ].join(', '),
           filter: 'blur(50px)',
           animation: 'haloBreathe 18s ease-in-out infinite alternate',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 45%, transparent 65%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 45%, transparent 65%)',
         }}
       />
-      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, opacity: 0.5, pointerEvents: 'none', backgroundImage: GRAIN_URI }} />
+      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, opacity: 0.35, pointerEvents: 'none', backgroundImage: GRAIN_URI }} />
     </>
   )
 }
