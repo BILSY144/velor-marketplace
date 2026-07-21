@@ -12,6 +12,7 @@ import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
 import { createListing } from '../api'
+import { fmt, useI18nTick } from '../i18n'
 
 // New listing — plate 30, fully interactive as a PREVIEW: real photo picker
 // (tap a thumb to make it the cover), title, price/stock/parcel, the
@@ -37,6 +38,7 @@ export default function NewListingScreen() {
   const [regulated, setRegulated] = useState<null | boolean>(null)
   const [certs, setCerts] = useState<string[]>([])
   const [note, setNote] = useState<string | null>(null)
+  useI18nTick() // repaint fmt() money on currency/rate ticks
   const [busy, setBusy] = useState(false)
 
   async function addPhotos() {
@@ -196,8 +198,8 @@ export default function NewListingScreen() {
           {priceN > 0 ? (
             <Text style={s.keep}>
               You'd keep{' '}
-              <Text style={{ color: C.accent }}>£{keepStarter.toFixed(2)}</Text> on Starter (10%) ·{' '}
-              <Text style={{ color: C.accent }}>£{keepPro.toFixed(2)}</Text> on Pro (4%). Shipping
+              <Text style={{ color: C.accent }}>{fmt(keepStarter)}</Text> on Starter (10%) ·{' '}
+              <Text style={{ color: C.accent }}>{fmt(keepPro)}</Text> on Pro (4%). Shipping
               is paid on top and passes to you in full.
             </Text>
           ) : null}

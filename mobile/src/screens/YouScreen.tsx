@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
+import { fmt, useI18nTick } from '../i18n'
 import { useFavs, useFollows, useSession } from '../store'
 import {
   signInWithPassword,
@@ -566,12 +567,10 @@ function SellerChannel() {
   const founding = Boolean((sub.data as any)?.foundingBadge)
   const listingLimit = (sub.data as any)?.listingLimit as number | null | undefined
 
-  // Exact pence, always — whole-pound rounding made real earnings read
-  // wrong on-device (2026-07-21); must match desktop to the penny.
-  const money = (n?: number) =>
-    n === undefined
-      ? '—'
-      : `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  // fmt() converts GBP -> chosen display currency, exact decimals always
+  // (2026-07-21: seller money converts like everywhere else, never rounds).
+  useI18nTick() // repaint fmt() money on currency/rate ticks
+  const money = (n?: number) => (n === undefined ? '—' : fmt(n))
 
   const os = orders.data
   const nToShip = os ? os.filter((o) => o.status === 'PENDING' || o.status === 'PAID' || o.status === 'PROCESSING').length : undefined
@@ -631,7 +630,7 @@ function SellerChannel() {
       icon: 'wallet-outline',
       title: 'Payouts',
       sub: payouts.data
-        ? `£${payouts.data.pendingEscrow.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in escrow · ${payouts.data.holdLabel}`
+        ? `${fmt(payouts.data.pendingEscrow)} in escrow · ${payouts.data.holdLabel}`
         : 'Escrow releases after delivery is confirmed',
       route: 'Payouts',
     },

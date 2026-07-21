@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
+import { fmt, useI18nTick } from '../i18n'
 import { Kicker, Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
@@ -38,6 +39,7 @@ export default function DashScreen() {
   const [previewTier, setPreviewTier] = useState<Tier>('STARTER')
   const [upBusy, setUpBusy] = useState(false)
   const [upError, setUpError] = useState<string | null>(null)
+  useI18nTick() // repaint fmt() money on currency/rate ticks
 
   // Upgrade to Pro — Stripe's hosted checkout opens in the browser; the
   // seller adds their payment details with Stripe, never inside the app.
@@ -74,10 +76,12 @@ export default function DashScreen() {
   // Exact pence, always — rounding £3.67 up to "£4" made William's real
   // earnings read as wrong on-device (2026-07-21). Money figures must match
   // the desktop dashboard to the penny.
-  const money = (n?: number) =>
-    n === undefined
-      ? '—'
-      : `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  // fmt() converts GBP -> the user's chosen display currency and repaints
+  // on rate/currency ticks -- the same engine as the buyer screens. Seller
+  // money must convert exactly like everywhere else (William, 2026-07-21:
+  // language and currency conversion is the business model, no partial
+  // conversions). Exact decimals always -- never round real earnings.
+  const money = (n?: number) => (n === undefined ? '—' : fmt(n))
 
   const listings = products.data ?? []
   const listingCap = live
@@ -140,8 +144,8 @@ export default function DashScreen() {
               [
                 [live ? '—' : '0', 'Views · 7d', null],
                 [live ? String(nShip + nNew) : '0', 'To ship', () => nav.navigate('SellerOrders')],
-                [live ? money(payouts.data?.pendingEscrow) : '£0', 'In escrow', () => nav.navigate('Payouts')],
-                [live ? money(payouts.data?.lifetimePaidOut) : '£0', 'Paid out', () => nav.navigate('Payouts')],
+                [live ? money(payouts.data?.pendingEscrow) : fmt(0), 'In escrow', () => nav.navigate('Payouts')],
+                [live ? money(payouts.data?.lifetimePaidOut) : fmt(0), 'Paid out', () => nav.navigate('Payouts')],
               ] as [string, string, (() => void) | null][]
             ).map(([k, l, fn]) => (
               <Pressable key={l} style={s.stat} onPress={fn ?? undefined}>
@@ -157,7 +161,7 @@ export default function DashScreen() {
             <View style={s.upCard}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={s.upKick}>UPGRADE</Text>
-                <Text style={s.upPrice}>{'\u00a3'}49/month</Text>
+                <Text style={s.upPrice}>{fmt(49)}/month</Text>
               </View>
               <Text style={s.upT}>Go Pro. Keep 6% more of every sale.</Text>
               <Text style={s.upS}>
@@ -182,7 +186,7 @@ export default function DashScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={s.kickDim}>{live ? 'EARNED · ALL ORDERS' : 'REVENUE · 30D'}</Text>
                 <Text style={s.rev}>
-                  {live ? money(os.reduce((n, o) => n + (o.sellerEarnings || 0), 0)) : '£0'}
+                  {live ? money(os.reduce((n, o) => n + (o.sellerEarnings || 0), 0)) : fmt(0)}
                 </Text>
               </View>
             </View>
@@ -289,7 +293,7 @@ export default function DashScreen() {
                         : p.status}
                   </Text>
                 </View>
-                <Text style={s.lp}>{'£'}{p.price.toFixed(2)}</Text>
+                <Text style={s.lp}>{fmt(p.price)}</Text>
               </View>
             ))
           ) : (

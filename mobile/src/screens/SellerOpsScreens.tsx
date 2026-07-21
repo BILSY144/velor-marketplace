@@ -11,6 +11,7 @@ import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
 import { fetchSellerOrders, fetchSellerPayouts, fetchSubscription, startProUpgrade, SellerOrder } from '../api'
+import { fmt, useI18nTick } from '../i18n'
 
 // Seller orders (plate 28), API access (plate 29) and Payouts (plate 31) —
 // the plates' exact structure as honest PREVIEWS, same pattern as the
@@ -42,6 +43,7 @@ export function SellerOrdersScreen() {
   const user = useSession((st) => st.user)
   const live = Boolean(user?.sellerId)
   const [filter, setFilter] = useState('New')
+  useI18nTick() // repaint fmt() money on currency/rate ticks
 
   const orders = useQuery({ queryKey: ['sellerOrders'], queryFn: fetchSellerOrders, enabled: live })
   const os = orders.data ?? []
@@ -95,8 +97,8 @@ export function SellerOrdersScreen() {
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.ordP}>{'£'}{(o.total ?? 0).toFixed(2)}</Text>
-                    <Text style={s.ordPay}>yours £{(o.sellerEarnings ?? 0).toFixed(2)}</Text>
+                    <Text style={s.ordP}>{fmt(o.total ?? 0)}</Text>
+                    <Text style={s.ordPay}>yours {fmt(o.sellerEarnings ?? 0)}</Text>
                   </View>
                 </View>
               </View>
@@ -222,6 +224,7 @@ export function PayoutsScreen() {
 
   const payouts = useQuery({ queryKey: ['sellerPayouts'], queryFn: fetchSellerPayouts, enabled: live })
   const p = payouts.data
+  useI18nTick() // repaint fmt() money on currency/rate ticks
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -235,7 +238,7 @@ export function PayoutsScreen() {
           <View style={s.escrowCard}>
             <Text style={s.kickDim2}>HELD IN ESCROW FOR YOU</Text>
             <Text style={s.big}>
-              {'£'}{(live ? (p?.pendingEscrow ?? 0) : 0).toFixed(2)}
+              {fmt(live ? (p?.pendingEscrow ?? 0) : 0)}
             </Text>
             <Dim style={{ marginTop: 8, lineHeight: 17, fontSize: 11.5 }}>
               {live && p
@@ -246,7 +249,7 @@ export function PayoutsScreen() {
             </Dim>
             {live && p ? (
               <Dim style={{ marginTop: 8, fontSize: 11.5 }}>
-                Paid out to date: <Text style={{ color: C.green }}>£{p.lifetimePaidOut.toFixed(2)}</Text>
+                Paid out to date: <Text style={{ color: C.green }}>{fmt(p.lifetimePaidOut)}</Text>
               </Dim>
             ) : null}
           </View>
@@ -278,7 +281,7 @@ export function PayoutsScreen() {
                   {new Date(h.date).toLocaleDateString('en-GB')} · {h.method} · {h.status}
                 </Text>
                 <Text style={[s.histR, h.status === 'paid' && { color: C.green }]}>
-                  +£{h.amount.toFixed(2)}
+                  +{fmt(h.amount)}
                 </Text>
               </View>
             ))
