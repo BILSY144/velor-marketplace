@@ -143,7 +143,64 @@ above once it's rebuilt) to confirm none of them leak `contactName` /
 
 ---
 
-## IN PROGRESS -- SELLER DASHBOARD "HALO" REDESIGN (raised 2026-07-20; phases 1+2 SHIPPED 2026-07-20, commit 9d7005d; rollout to remaining pages OUTSTANDING)
+## IN PROGRESS -- SELLER STUDIO DASHBOARD (2026-07-21: HALO SCRAPPED BY WILLIAM, REPLACED)
+
+**2026-07-21 (evening session): William rejected Halo outright** ("total
+redesign of halo seller dashboard i do not like the design") and chose a
+Shopify/Stripe-style professional design from a concept mockup he approved
+in chat (collapsible sidebar was his added requirement). New standing goal:
+"professional fully functioning wired up to all routes seller dashboard"
+and a payment system that is rail-correct per country AND fully
+operational, so he can sign off and focus on onboarding sellers.
+
+SHIPPED and LIVE-VERIFIED in William's browser this session:
+- **lib/studio.tsx** -- the new Seller Studio design system (light,
+  white cards, Fraunces headings, orange accent only). Halo (lib/halo.tsx)
+  remains ONLY as a dependency of not-yet-migrated pages; do not build new
+  work on it.
+- **app/dashboard/layout.tsx** rebuilt (commit 0760336): grouped left
+  sidebar (Sell/Fulfil/Money/Account), collapsible to icon rail with
+  per-browser localStorage memory (velor-studio-sidebar), mobile overlay
+  drawer, RAIL-AWARE payout nav (see below). All old nav rules preserved
+  (Pro-only API Keys, Go Live every tier, light-theme force,
+  language+currency pickers, VelorAssistant + LanguageTranslator).
+- **Home/Overview** rebuilt (b3c1d34 + 787ff82): KPI row, real 30-day
+  revenue chart from analytics dailyRevenue, recent-orders table,
+  rail-aware payouts card, honest store-health checklist. LESSON RE-LEARNED
+  (787ff82): payout readiness must be read from the LIVE endpoint for the
+  seller's own rail, never the stored stripeOnboarded flag -- the stored
+  flag was stale for williams workshop on first render.
+- **stripe-connect + payoneer setup pages** rebuilt in Studio (0760336);
+  payoneer page gained the missing REVERSE rail guard (Stripe-rail sellers
+  redirected away; stripe-connect already redirected Payoneer-rail).
+
+PAYMENTS HARDENING shipped same session (commit cf1ec28), all additive:
+- release-payouts cron resolves rail LIVE from seller country
+  (getPayoutRail), STRICT branching per rail (a leftover stripeAccountId
+  can no longer pay a Payoneer-rail seller via Stripe or vice versa),
+  self-heals stored payoutRail, new heldForStripeSetup counter; Payoneer
+  payouts additionally gated on getPayeeStatus === ACTIVE.
+- Delivery can no longer dead-end short of DELIVERED (which would strand
+  seller money in escrow forever). William chose "buyer confirm + auto
+  after 30 days" in chat: Shippo track-registration outcome recorded on
+  Shipment.trackRegistered and retried by NEW daily cron
+  /api/cron/confirm-deliveries (45 2 * * *); buyer "I have received this
+  order" button on /orders (POST /api/orders/[orderId]/confirm-delivery);
+  30-day auto-confirm anchored on new Order.shippedAt (blocked by open
+  return/dispute); admin PATCH mark-delivered on /api/admin/orders,
+  AgentLog-logged. Order.deliveryConfirmedBy records WEBHOOK/BUYER/AUTO/
+  ADMIN. /api/seller/me now returns country + live payoutRail(+Label).
+
+STILL TO DO (next sessions): rebuild remaining pages into Studio --
+Payouts, Orders, Products, Analytics, then Storefront/Discounts/Returns/
+Disputes/Messages (visual only)/Settings/Support/Terms/Upgrade/API Keys,
+Go Live last. Then the page-by-page sign-off walkthrough with William.
+Payoneer transfers remain dormant until his Mass Payouts partner approval
++ credentials (external blocker). This session's sandbox HAD outbound
+network in bash: repo cloned locally, tsc run before every push, pushed
+via git with a PAT (rotate it, flagged in chat).
+
+--- (superseded Halo history below, kept for context) ---
 
 **Update 2026-07-20 (late session):** William approved a direction from three
 concept mockups: "Halo" -- LIGHT theme (his explicit call: "remove the dark
