@@ -251,15 +251,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // submitting to search engines.
     { url: `${base}/founding`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${base}/origins`, changeFrequency: 'weekly', priority: 0.8 },
-    // /specialities added 2026-07-20 by the standing SEO agent: the
-    // speciality-side companion to /origins directly above, resolving half
-    // of backlog item 33's "origins x specialities lattice is one-sided"
-    // finding (2026-07-17). See app/specialities/layout.tsx for full
-    // rationale. Same priority/changeFrequency as /origins -- both are
-    // static, real-content index pages over a fixed, already-signed-off
-    // vocabulary (59 specialities / 190 countries respectively), neither
-    // depends on the catalogue to have real content today.
-    { url: `${base}/specialities`, changeFrequency: 'weekly', priority: 0.8 },
+    // /specialities index REMOVED 2026-07-21 by William's direct request
+    // ("remove specialities page as its not needed at all") -- the header
+    // link it brought was also shrinking the search bar. The per-term
+    // /specialities/[term] pages remain (homepage + origin pages link
+    // them). SEO agent: do NOT re-add the index page or its nav links.
     { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },

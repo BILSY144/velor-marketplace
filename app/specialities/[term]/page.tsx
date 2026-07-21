@@ -139,7 +139,7 @@ export default function SpecialityTermPage() {
         <div className="spt-404">
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30 }}>We can&apos;t find that speciality.</h1>
           <p style={{ color: 'var(--muted)', fontSize: 15 }}>Try the full list instead.</p>
-          <Link className="spt-btn" href="/specialities">See all specialities</Link>
+          <Link className="spt-btn" href="/shop">Browse all goods</Link>
         </div>
       </div>
     )
@@ -154,7 +154,7 @@ export default function SpecialityTermPage() {
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
       <div className="spt-wrap">
-        <Link className="spt-back" href="/specialities">&larr; All specialities</Link>
+        <Link className="spt-back" href="/shop">&larr; Shop</Link>
 
         <div className="spt-hero">
           <div className="spt-eyebrow"><span className="spt-dot" /> {speciality.kind}</div>
@@ -222,7 +222,7 @@ export default function SpecialityTermPage() {
               </p>
               <div className="spt-btnrow">
                 <Link className="spt-btn" href="/founding">Be the first to open {label.toLowerCase()}</Link>
-                <Link className="spt-btn2" href="/specialities">See all specialities</Link>
+                <Link className="spt-btn2" href="/origins">Shop by origin</Link>
               </div>
             </div>
           </div>
