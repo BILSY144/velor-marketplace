@@ -141,6 +141,20 @@ h1, h2, h3, h4, h5, h6 {
   }
   .velor-headerbar .velor-desktop-nav {
     margin-left: auto;
+    gap: 28px !important;
+  }
+  /* Rebalance (William, 2026-07-21: "options not squashed together") --
+     wider breathing room between header items and a slightly roomier
+     search, so the right-hand group reads as calm, not crowded. The
+     !importants override the components' inline values on desktop only. */
+  .velor-headerbar {
+    gap: 24px !important;
+  }
+  .velor-right {
+    gap: 22px !important;
+  }
+  .velor-searchform {
+    flex: 0 1 400px !important;
   }
 }
 
