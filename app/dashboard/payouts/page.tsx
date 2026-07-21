@@ -199,6 +199,14 @@ export default function PayoutsPage() {
 
   const [data, setData] = useState<PayoutsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  // Live Stripe account state, same source Payout Settings
+  // (/dashboard/stripe-connect) reads. The stored Seller.stripeOnboarded
+  // flag can lag behind Stripe (it only self-heals when the account route
+  // runs), which had this page saying "no payout method connected" while
+  // Payout Settings simultaneously said "Connected" (William, 2026-07-21).
+  // Reading the same live endpoint on both pages ends the disagreement,
+  // and the account route persists the corrected flag as a side effect.
+  const [stripeLive, setStripeLive] = useState<{ accountExists: boolean; enabled: boolean } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -211,6 +219,17 @@ export default function PayoutsPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+    fetch('/api/stripe/connect/account')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d) {
+          setStripeLive({
+            accountExists: Boolean(d.connected),
+            enabled: Boolean(d.chargesEnabled && d.payoutsEnabled),
+          });
+        }
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -233,12 +252,21 @@ export default function PayoutsPage() {
   let methodConnected = false;
 
   if (data?.payoutRail === 'STRIPE') {
-    if (data.stripeOnboarded) {
+    // Live Stripe state wins over the stored flag; the two must never
+    // disagree with what Payout Settings shows.
+    const enabled = stripeLive ? stripeLive.enabled : data.stripeOnboarded;
+    const started = stripeLive?.accountExists ?? data.stripeOnboarded;
+    if (enabled) {
       methodConnected = true;
       methodTitle = 'Stripe Connect linked';
       methodSubtitle = 'Your earnings release here automatically once each order clears its hold window.';
       methodLinkHref = '/dashboard/stripe-connect';
       methodLinkLabel = 'Manage';
+    } else if (started) {
+      methodTitle = 'Stripe setup incomplete';
+      methodSubtitle = 'Your Stripe account exists but needs a few more details before payouts can be enabled.';
+      methodLinkHref = '/dashboard/stripe-connect';
+      methodLinkLabel = 'Complete Setup';
     } else {
       methodLinkHref = '/dashboard/stripe-connect';
       methodLinkLabel = 'Connect Bank Account';

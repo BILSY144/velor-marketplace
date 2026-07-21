@@ -71,11 +71,14 @@ export function HaloBackdrop() {
         aria-hidden
         style={{
           position: 'fixed', inset: '-20%', zIndex: 0, pointerEvents: 'none',
+          // Tint strengths match the approved preview mockup exactly --
+          // the first shipped pass was paler and William flagged it
+          // ("wrong colour not same as preview colour", 2026-07-21).
           background: [
-            'radial-gradient(38% 34% at 22% 28%, rgba(255,107,0,0.16), transparent 70%)',
-            'radial-gradient(30% 30% at 78% 22%, rgba(239,159,39,0.18), transparent 70%)',
-            'radial-gradient(34% 32% at 72% 78%, rgba(255,138,43,0.14), transparent 70%)',
-            'radial-gradient(28% 26% at 24% 76%, rgba(239,159,39,0.12), transparent 70%)',
+            'radial-gradient(38% 34% at 22% 28%, rgba(255,107,0,0.20), transparent 70%)',
+            'radial-gradient(30% 30% at 78% 22%, rgba(239,159,39,0.22), transparent 70%)',
+            'radial-gradient(34% 32% at 72% 78%, rgba(255,138,43,0.18), transparent 70%)',
+            'radial-gradient(28% 26% at 24% 76%, rgba(239,159,39,0.16), transparent 70%)',
           ].join(', '),
           filter: 'blur(50px)',
           animation: 'haloBreathe 18s ease-in-out infinite alternate',

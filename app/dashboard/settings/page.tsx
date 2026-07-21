@@ -127,13 +127,17 @@ export default function SettingsPage() {
     marginBottom: '8px',
   }
 
+  // Theme-safe fields: the old hardcoded '#111' background rendered as
+  // unreadable black boxes once the Halo shell forced the dashboard light
+  // (2026-07-21, William: "its all black boxes"). Surface vars track the
+  // active theme instead.
   const inputStyle = (disabled?: boolean): React.CSSProperties => ({
     width: '100%',
-    background: disabled ? '#111' : '#111',
+    background: disabled ? 'var(--surface-2)' : 'var(--surface)',
     border: '1px solid var(--border)',
     borderRadius: '8px',
     padding: '12px 14px',
-    color: disabled ? '#444' : 'var(--text)',
+    color: disabled ? 'var(--muted)' : 'var(--text)',
     fontSize: '14px',
     fontFamily: 'var(--font-body)',
     outline: 'none',
