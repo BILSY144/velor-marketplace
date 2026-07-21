@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { DASHBOARD_TIER_THEME, PlanBadge, tierCardStyle, type SellerTier } from '@/lib/dashboard-theme'
+import { useMoneyFmt } from '@/lib/useCurrencyDisplay'
 
 interface AnalyticsData {
     tier: string
@@ -41,6 +42,9 @@ interface AnalyticsData {
     canExport?: boolean
 }
 
+// GBP-only fallback -- display components shadow this with the converting
+// useMoneyFmt() so all on-screen money follows the chosen display currency.
+// (CSV export deliberately stays raw GBP: it is data, not display.)
 function fmt(amount: number): string {
     return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount)
 }
@@ -52,6 +56,7 @@ function fmtPct(value: number | null | undefined): string {
 }
 
 function RevenueChart({ data, lineColor }: { data: { date: string; revenue: number }[]; lineColor: string }) {
+    const fmt = useMoneyFmt() // shadows the GBP fallback -- converts on-screen money
     const maxRevenue = Math.max(...data.map((d) => d.revenue), 1)
     const W = 680
     const H = 200
@@ -180,6 +185,7 @@ function forecastNext30(dailyRevenue: { date: string; revenue: number }[]) {
 }
 
 export default function AnalyticsPage() {
+    const fmt = useMoneyFmt() // shadows the GBP fallback -- converts on-screen money
     const [data, setData] = useState<AnalyticsData | null>(null)
     const [loading, setLoading] = useState(true)
 

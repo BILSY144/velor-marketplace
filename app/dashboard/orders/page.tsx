@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { HALO } from '@/lib/halo'
 
 interface OrderItem {
@@ -177,8 +178,18 @@ export default function DashboardOrdersPage() {
     }
   }
 
-  const fmt = (val: number, currency: string) =>
-    new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(val)
+  // Convert every on-screen amount from the order's own currency into the
+  // seller's chosen display currency (2026-07-21, William: currency must
+  // convert everywhere, not just Overview).
+  const { displayCurrency, symbol, convert } = useCurrencyDisplay()
+  const fmt = (val: number, currency: string) => {
+    const converted = convert(val, currency || 'GBP')
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: displayCurrency }).format(converted)
+    } catch {
+      return `${symbol}${converted.toFixed(2)}`
+    }
+  }
 
   const visibleOrders = useMemo(() => {
     let list = orders

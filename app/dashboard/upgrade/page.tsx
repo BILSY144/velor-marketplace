@@ -1,11 +1,15 @@
-import Link from 'next/link'
+'use client'
 
-const TILES: { id: string; name: string; price: string; blurb: string; gradient: string }[] = [
-  { id: 'starter', name: 'Starter', price: 'Free', blurb: 'Up to 10 listings · 10% commission', gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)' },
-  { id: 'pro', name: 'Pro', price: '£49/mo', blurb: 'Unlimited listings · 4% commission · Go Live', gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)' },
+import Link from 'next/link'
+import { useMoneyFmt } from '@/lib/useCurrencyDisplay'
+
+const TILES: { id: string; name: string; priceGbp: number | null; blurb: string; gradient: string }[] = [
+  { id: 'starter', name: 'Starter', priceGbp: null, blurb: 'Up to 10 listings · 10% commission', gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)' },
+  { id: 'pro', name: 'Pro', priceGbp: 49, blurb: 'Unlimited listings · 4% commission · Go Live', gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)' },
 ]
 
 export default function UpgradeIndexPage() {
+  const fmtMoney = useMoneyFmt()
   return (
     <div
       style={{
@@ -33,7 +37,7 @@ export default function UpgradeIndexPage() {
               }}
             >
               <span style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{t.name}</span>
-              <span style={{ fontSize: '20px', fontWeight: 700 }}>{t.price}</span>
+              <span style={{ fontSize: '20px', fontWeight: 700 }}>{t.priceGbp === null ? 'Free' : `${fmtMoney(t.priceGbp)}/mo`}</span>
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)' }}>{t.blurb}</span>
             </Link>
           ))}

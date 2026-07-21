@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { useMoneyFmt } from '@/lib/useCurrencyDisplay'
 import { HALO, HaloButton } from '@/lib/halo'
 
 interface DiscountCode {
@@ -63,6 +64,7 @@ function randomSuffix() {
 }
 
 export default function DiscountCodesPage() {
+  const fmtMoney = useMoneyFmt() // on-screen money in the chosen display currency; inputs stay GBP
   const { tier, theme } = useSellerTier()
   const isPro = tier === 'PRO'
   const isElevated = tier !== 'STARTER'
@@ -346,8 +348,8 @@ export default function DiscountCodesPage() {
                   <tr key={c.id}>
                     <td style={S.td}><span style={S.code}>{c.code}</span></td>
                     <td style={S.td}>
-                      {c.type === 'PERCENTAGE' ? `${c.value}% off` : `£${c.value.toFixed(2)} off`}
-                      {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max £{c.maxDiscount})</span> : null}
+                      {c.type === 'PERCENTAGE' ? `${c.value}% off` : `${fmtMoney(c.value)} off`}
+                      {c.maxDiscount ? <span style={{ color: 'var(--muted)', fontSize: '12px' }}> (max {fmtMoney(c.maxDiscount)})</span> : null}
                     </td>
                     <td style={S.td}>
                       {scoped ? (
@@ -369,7 +371,7 @@ export default function DiscountCodesPage() {
                       </span>
                     </td>
                     <td style={S.td}>{c.usedCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
-                    <td style={S.td}>{c.minOrder ? `£${c.minOrder.toFixed(2)}` : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
+                    <td style={S.td}>{c.minOrder ? fmtMoney(c.minOrder) : <span style={{ color: 'var(--muted)' }}>None</span>}</td>
                     <td style={S.td}>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-GB') : <span style={{ color: 'var(--muted)' }}>Never</span>}</td>
                     <td style={S.td}>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -490,7 +492,7 @@ export default function DiscountCodesPage() {
                             style={{ accentColor, width: 15, height: 15, flexShrink: 0 }}
                           />
                           <span style={{ flex: 1, color: 'var(--text)' }}>{p.title}</span>
-                          <span style={{ color: 'var(--muted)' }}>£{Number(p.price).toFixed(2)}</span>
+                          <span style={{ color: 'var(--muted)' }}>{fmtMoney(Number(p.price))}</span>
                         </label>
                       ))
                     )}

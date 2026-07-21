@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useMoneyFmt } from '@/lib/useCurrencyDisplay'
 import Link from 'next/link'
 
 interface SubscriptionStatus {
@@ -99,9 +100,10 @@ function breakEvenVsStarter(price: number, commission: number): number | null {
 }
 
 function CompareModal({ onClose }: { onClose: () => void }) {
+  const fmtMoney = useMoneyFmt()
   const rows: [string, string, string][] = [
     ['Commission', '10%', '4%'],
-    ['Monthly fee', 'Free', '£49/mo'],
+    ['Monthly fee', 'Free', `${fmtMoney(49)}/mo`],
     ['Listings', '10', 'Unlimited'],
     ['Go Live video shopping', 'Yes', 'Yes'],
     ['Custom storefront', '—', 'Free'],
@@ -157,6 +159,7 @@ function CompareModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
+  const fmtMoney = useMoneyFmt() // display prices convert; billing itself stays GBP (note below button)
   const tier = TIERS[tierId]
   const [status, setStatus] = useState<SubscriptionStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -335,7 +338,7 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
               {tier.name}
             </h1>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '40px', fontWeight: 700 }}>{tier.price === 0 ? 'Free' : `£${tier.price}`}</span>
+              <span style={{ fontSize: '40px', fontWeight: 700 }}>{tier.price === 0 ? 'Free' : fmtMoney(tier.price)}</span>
               {tier.price > 0 && <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px' }}>/ month</span>}
             </div>
             <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -400,7 +403,7 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
               {breakEven && !isCurrent && (
                 <div style={{ marginTop: '18px', padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px' }}>
                   <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
-                    Pays for itself vs Starter once you sell <strong style={{ color: 'var(--text)' }}>£{breakEven}+</strong> a month.
+                    Pays for itself vs Starter once you sell <strong style={{ color: 'var(--text)' }}>{fmtMoney(breakEven ?? 0)}+</strong> a month.
                   </p>
                 </div>
               )}
@@ -436,16 +439,21 @@ export default function TierUpgradeView({ tierId }: { tierId: TierId }) {
                 )}
               </div>
             ) : tier.id === 'PRO' ? (
-              <button
-                onClick={() => handleUpgrade('upgrade_to_pro')}
-                disabled={upgrading}
-                style={{
-                  width: '100%', padding: '16px', borderRadius: '10px', border: 'none', fontWeight: 700, fontSize: '15px',
-                  background: upgrading ? 'var(--border)' : 'var(--accent)', color: '#fff', cursor: upgrading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Pro — £49/mo`}
-              </button>
+              <div>
+                <button
+                  onClick={() => handleUpgrade('upgrade_to_pro')}
+                  disabled={upgrading}
+                  style={{
+                    width: '100%', padding: '16px', borderRadius: '10px', border: 'none', fontWeight: 700, fontSize: '15px',
+                    background: upgrading ? 'var(--border)' : 'var(--accent)', color: '#fff', cursor: upgrading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {upgrading ? 'Redirecting to secure payment…' : `Upgrade to Pro — ${fmtMoney(49)}/mo`}
+                </button>
+                <p style={{ fontSize: '11.5px', color: 'var(--muted)', margin: '8px 0 0', textAlign: 'center' }}>
+                  Billed as £49 GBP per month — other currencies shown at today&apos;s rate.
+                </p>
+              </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                 <p style={{ flex: '1 1 auto', fontSize: '13px', color: 'var(--muted)', margin: 0 }}>

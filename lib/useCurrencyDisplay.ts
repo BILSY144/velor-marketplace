@@ -47,3 +47,20 @@ const convert = useCallback((amount: number, from: string) => {
 
 return { displayCurrency, symbol: symbolFor(displayCurrency), convert }
 }
+
+
+// Converting GBP formatter shared by dashboard pages (2026-07-21, William:
+// currency must convert everywhere, not just Overview). Renders a GBP
+// amount in the user's chosen display currency; falls back to the raw
+// symbol+amount if Intl rejects the code.
+export function useMoneyFmt(): (gbpAmount: number) => string {
+  const { displayCurrency, symbol, convert } = useCurrencyDisplay()
+  return (gbpAmount: number) => {
+    const converted = convert(gbpAmount, 'GBP')
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: displayCurrency }).format(converted)
+    } catch {
+      return `${symbol}${converted.toFixed(2)}`
+    }
+  }
+}
