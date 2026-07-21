@@ -28,11 +28,19 @@ import { findSpecialityBySlug, buyerLabel } from '@/lib/specialities'
 // a distinct, deliberately noindex metadata block -- same "we can't find
 // that" treatment already given to /origins/[slug]'s own not-found branch.
 //
-// BreadcrumbList JSON-LD mirrors app/origins/[slug]/layout.tsx's own
-// breadcrumb exactly, one level deep: Home > Shop by Speciality > this term.
-// Real, live navigational hierarchy -- the header's future speciality nav,
-// this page's own canonical, and the /specialities index all already chain
-// the same way.
+// BreadcrumbList JSON-LD: Home > this term. Originally three levels (Home >
+// Shop by Speciality > term), mirroring app/origins/[slug]/layout.tsx's own
+// breadcrumb -- but the middle level pointed at /specialities, the index
+// page William had removed 2026-07-21 ("remove specialities page as its not
+// needed at all", see app/sitemap.ts's own comment on the same removal).
+// That left a live BreadcrumbList entry asserting a URL that 404s, a real
+// structured-data defect (Google's guidance: every breadcrumb item should
+// resolve to a real, navigable page). Fixed by the standing SEO agent,
+// 2026-07-21, dropping to two levels to match the site's actual current
+// structure -- no invented replacement destination, since no single
+// speciality-hub page exists any more (individual /specialities/[term]
+// pages are reached from the homepage's #specialities section and each
+// /origins/[slug] page instead).
 
 type Props = { params: Promise<{ term: string }> }
 
@@ -103,8 +111,7 @@ export default async function SpecialityTermLayout({ children, params }: { child
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://velorcommerce.store' },
-      { '@type': 'ListItem', position: 2, name: 'Shop by Speciality', item: 'https://velorcommerce.store/specialities' },
-      { '@type': 'ListItem', position: 3, name: label, item: `https://velorcommerce.store/specialities/${slug}` },
+      { '@type': 'ListItem', position: 2, name: label, item: `https://velorcommerce.store/specialities/${slug}` },
     ],
   }
 
