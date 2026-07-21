@@ -28,8 +28,15 @@ export async function GET(request: Request) {
         category: true,
         seller: { select: { id: true, storeName: true, currency: true } },
       },
-      take: 8,
-      orderBy: { createdAt: 'desc' },
+      // A search for a craft or category ("ceramics") is the buyer's whole
+      // discovery path now that origin pages carry only listings (William,
+      // 2026-07-21) -- so return a real page of results, ranked by the same
+      // merit-first seller ranking the shop grid uses (rankingScore: score
+      // + bounded tier bonus, lib/seller-ranking.ts), newest first among
+      // equals. Countries mix naturally because ranking is seller-merit,
+      // not origin.
+      take: 24,
+      orderBy: [{ seller: { rankingScore: 'desc' } }, { createdAt: 'desc' }],
     }),
     prisma.seller.findMany({
       where: {

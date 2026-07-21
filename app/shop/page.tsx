@@ -504,6 +504,11 @@ function ShopContent() {
             )}
           </h1>
 
+          {/* Category boxes and pills are browse aids for the GLOBAL shop only.
+              On an origin page (flag click) William wants nothing but the
+              sellers' listing boxes (2026-07-21) -- category discovery is
+              the search bar's job. */}
+          {!originCountry && (<>
           {/* Browse by category -- real photography per category, matching
               the app's card-grid quality instead of a plain text pill list.
               Still sets the same `category` filter the pills below use, so
@@ -558,7 +563,7 @@ function ShopContent() {
               )
             })}
           </div>
-
+          </>)}
           <div ref={searchWrapRef} style={{ position: 'relative', display: 'flex', gap: '12px', marginBottom: '16px', maxWidth: '400px' }}>
             <input
               type="text"
@@ -704,6 +709,7 @@ function ShopContent() {
               </div>
             )}
           </div>
+          {!originCountry && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={() => navigate({ category: '' })}
@@ -721,6 +727,7 @@ function ShopContent() {
               </button>
             ))}
           </div>
+          )}
         </div>
       </div>
 
