@@ -15,7 +15,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSellerTier } from '@/lib/dashboard-theme';
-import { HALO, Satellite, BeltLabel, HaloButton, glassStyle, formatGBP } from '@/lib/halo';
+import { HALO, Satellite, BeltLabel, HaloButton, glassStyle } from '@/lib/halo';
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay';
 
 interface OrderRow {
   id: string;
@@ -75,6 +76,29 @@ const DASH = '—';
 export default function DashboardOverview() {
   const { tier } = useSellerTier();
   const isPro = tier === 'PRO';
+
+  // Every money figure on this page is computed server-side in GBP (Order/
+  // Payout rows are always GBP-denominated -- see lib/orders.ts). This
+  // converts for DISPLAY ONLY, live, using the same mechanism and the same
+  // stored preference as the buyer-facing site (William, 2026-07-21: "if
+  // the seller sets their language on the website, the whole website needs
+  // to change language, that's our business model. the same for currency").
+  // No underlying figure or business logic changes -- a seller's real
+  // payout is always in GBP regardless of what they've chosen to view here.
+  const { displayCurrency, symbol, convert } = useCurrencyDisplay();
+  function fmtMoney(gbpAmount: number, penceAlways = false): string {
+    const converted = convert(gbpAmount, 'GBP');
+    try {
+      const opts: Intl.NumberFormatOptions = { style: 'currency', currency: displayCurrency };
+      if (!penceAlways && Math.abs(converted) >= 1000) {
+        opts.maximumFractionDigits = 0;
+        opts.minimumFractionDigits = 0;
+      }
+      return new Intl.NumberFormat(undefined, opts).format(converted);
+    } catch {
+      return `${symbol}${converted.toFixed(2)}`;
+    }
+  }
 
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [payouts, setPayouts] = useState<PayoutsData | null>(null);
@@ -157,7 +181,7 @@ export default function DashboardOverview() {
       />
       <Satellite
         label="In escrow"
-        value={payouts ? formatGBP(payouts.pendingEscrow) : DASH}
+        value={payouts ? fmtMoney(payouts.pendingEscrow) : DASH}
         valueColor={HALO.amber}
         sub={payouts ? `releases after delivery + ${payouts.holdLabel} hold` : 'loading'}
         tint="rgba(239,159,39,0.42)"
@@ -166,7 +190,7 @@ export default function DashboardOverview() {
       />
       <Satellite
         label="Paid out"
-        value={payouts ? formatGBP(payouts.lifetimePaidOut) : DASH}
+        value={payouts ? fmtMoney(payouts.lifetimePaidOut) : DASH}
         valueColor={HALO.green}
         sub={payouts ? `to date via ${railLabel}` : 'loading'}
         tint="rgba(31,160,92,0.30)"
@@ -187,7 +211,7 @@ export default function DashboardOverview() {
       />
       <Satellite
         label="Net earnings"
-        value={analytics ? formatGBP(analytics.totalEarnings) : DASH}
+        value={analytics ? fmtMoney(analytics.totalEarnings) : DASH}
         sub="after commission"
         tint="rgba(239,159,39,0.32)"
         size="sm"
@@ -195,7 +219,7 @@ export default function DashboardOverview() {
       />
       <Satellite
         label="Avg order"
-        value={analytics ? formatGBP(analytics.avgOrderValue) : DASH}
+        value={analytics ? fmtMoney(analytics.avgOrderValue) : DASH}
         sub="all time"
         tint="rgba(255,107,0,0.24)"
         size="sm"
@@ -209,7 +233,7 @@ export default function DashboardOverview() {
       {/* ---------- orbital stage ---------- */}
       {isNarrow ? (
         <div style={{ padding: '10px 16px 0' }}>
-          <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} />
+          <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} fmtMoney={fmtMoney} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginTop: 20 }}>
             {satellites}
           </div>
@@ -237,7 +261,7 @@ export default function DashboardOverview() {
             </circle>
           </svg>
           <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 310, height: 310, zIndex: 4 }}>
-            <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} inOrbit />
+            <Hub revenue30={revenue30} allTime={analytics?.totalRevenue ?? null} hasOrders={hasOrders} fmtMoney={fmtMoney} inOrbit />
           </div>
           {satellites}
         </div>
@@ -308,7 +332,7 @@ export default function DashboardOverview() {
                       {o.items[0]?.product?.name ?? 'Order'}
                     </span>
                     <span style={{ display: 'block', fontSize: 11, color: HALO.muted, marginTop: 2 }}>
-                      {o.buyerName} · {formatGBP(o.total, true)} · <b style={{ color: st.color }}>{st.text}</b> · {timeAgo(o.createdAt)}
+                      {o.buyerName} · {fmtMoney(o.total, true)} · <b style={{ color: st.color }}>{st.text}</b> · {timeAgo(o.createdAt)}
                     </span>
                   </span>
                 </a>
@@ -335,7 +359,7 @@ export default function DashboardOverview() {
   );
 }
 
-function Hub({ revenue30, allTime, hasOrders, inOrbit }: { revenue30: number | null; allTime: number | null; hasOrders: boolean; inOrbit?: boolean }) {
+function Hub({ revenue30, allTime, hasOrders, fmtMoney, inOrbit }: { revenue30: number | null; allTime: number | null; hasOrders: boolean; fmtMoney: (n: number, penceAlways?: boolean) => string; inOrbit?: boolean }) {
   const disc = (
     <div
       style={{
@@ -358,10 +382,10 @@ function Hub({ revenue30, allTime, hasOrders, inOrbit }: { revenue30: number | n
         {hasOrders ? 'Your craft is travelling.' : 'Ready for your first order.'}
       </h1>
       <div style={{ fontFamily: HALO.fontSerif, fontWeight: 600, fontSize: 34, color: HALO.accent, marginTop: 10, letterSpacing: '-0.02em' }}>
-        {revenue30 === null ? DASH : formatGBP(revenue30)}
+        {revenue30 === null ? DASH : fmtMoney(revenue30)}
       </div>
       <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: HALO.muted, marginTop: 3, fontFamily: HALO.fontDisplay }}>
-        Revenue {allTime !== null ? `· all time ${formatGBP(allTime)}` : ''}
+        Revenue {allTime !== null ? `· all time ${fmtMoney(allTime)}` : ''}
       </div>
       <HaloButton variant="accent" href="/dashboard/live" style={{ marginTop: 12, padding: '9px 20px', fontSize: 12 }}>
         Go Live

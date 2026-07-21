@@ -24,8 +24,11 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import VelorAssistant from '@/components/VelorAssistant';
+import LanguageTranslator from '@/components/LanguageTranslator';
 import { normalizeSellerTier } from '@/lib/tier';
 import { HALO, HaloBackdrop, HaloPlanPills } from '@/lib/halo';
+import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency';
+import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language';
 
 type Tier = 'STARTER' | 'PRO';
 
@@ -85,6 +88,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [payoutReady, setPayoutReady] = useState<boolean | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currency, setCurrency] = useState('GBP');
+  const [language, setLanguage] = useState('en');
+  const [langNote, setLangNote] = useState<string | null>(null);
 
   // Force LIGHT theme while the dashboard is mounted (the public site
   // may be in dark mode). Same MutationObserver pattern the old layout
@@ -138,6 +144,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .catch(() => setPayoutReady(false));
   }, []);
 
+  // Language + currency -- same mechanism as components/GlobalHeader.tsx on
+  // every public page (William, 2026-07-21: "if the seller sets their
+  // language on the website, the whole website needs to change language,
+  // that's our business model. the same for currency"). Both are stored
+  // under the same site-wide localStorage keys, so a choice made here or on
+  // the storefront round-trips both ways on the next load. The actual live
+  // translation is done by <LanguageTranslator /> mounted below -- this
+  // effect only keeps the header <select>s in sync with the stored value
+  // and reacts to a change fired from elsewhere on the site.
+  useEffect(() => {
+    setCurrency(getDisplayCurrency());
+    setLanguage(getDisplayLanguage());
+    const onCurrencyChange = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail) setCurrency(detail);
+    };
+    window.addEventListener('velor-currency-changed', onCurrencyChange);
+    return () => window.removeEventListener('velor-currency-changed', onCurrencyChange);
+  }, []);
+
+  function changeLanguage(value: string) {
+    setLanguage(value);
+    setStoredLanguage(value);
+    const l = SUPPORTED_LANGUAGES.find((x) => x.code === value);
+    if (l && value !== 'en') {
+      setLangNote(`Translating Velor into ${l.native} — a page's first visit takes a few seconds, then it's instant.`);
+      window.setTimeout(() => setLangNote(null), 7000);
+    } else {
+      setLangNote(null);
+    }
+  }
+
+  function changeCurrency(value: string) {
+    setCurrency(value);
+    setStoredCurrency(value);
+  }
+
   function resolveItem(item: NavItem): NavItem | null {
     if (item.special === 'pro-only' && tier !== 'PRO') return null;
     if (item.special === 'payout' && payoutReady === false) {
@@ -164,6 +207,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     display: 'inline-flex',
     alignItems: 'center',
   });
+
+  const selectPillStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(26,26,29,0.12)', borderRadius: 999,
+    padding: '6px 10px', fontSize: 11.5, fontWeight: 700, color: HALO.inkSoft, fontFamily: HALO.fontBody,
+    cursor: 'pointer', maxWidth: 96, outline: 'none',
+  };
+
+  // Same switcher as components/GlobalHeader.tsx on every public page --
+  // mounted here too so a seller can set it from inside the dashboard, not
+  // only from the storefront. Currency here is a DISPLAY convenience only:
+  // it does not change what actually gets paid out (see useCurrencyDisplay
+  // usage on individual pages) -- same honesty boundary the storefront uses
+  // (prices convert live for browsing, the real charge is reconfirmed at
+  // checkout).
+  const langCurrencySwitcher = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
+      <select
+        title="Velor speaks 19 languages. Pick yours and every page translates as you browse."
+        aria-label="Language"
+        value={language}
+        onChange={(e) => changeLanguage(e.target.value)}
+        style={selectPillStyle}
+      >
+        {SUPPORTED_LANGUAGES.map((l) => (
+          <option key={l.code} value={l.code} style={{ color: '#000' }}>{l.native}</option>
+        ))}
+      </select>
+      {langNote && (
+        <div style={{
+          position: 'absolute', top: 40, right: 0, width: 260, zIndex: 60,
+          background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,1)', borderRadius: 14, padding: '10px 13px',
+          fontSize: 12, lineHeight: 1.5, color: HALO.ink, boxShadow: '0 16px 40px rgba(90,60,20,0.25)',
+        }}>
+          {langNote}
+        </div>
+      )}
+      <select
+        title="Figures are converted live using current exchange rates for your own viewing -- your real payout currency is unchanged."
+        aria-label="Display currency"
+        value={currency}
+        onChange={(e) => changeCurrency(e.target.value)}
+        style={selectPillStyle}
+      >
+        {SUPPORTED_CURRENCIES.map((c) => (
+          <option key={c} value={c} style={{ color: '#000' }}>{c}</option>
+        ))}
+      </select>
+    </div>
+  );
 
   const liveDot = (
     <span
@@ -229,6 +322,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           maxHeight: 'calc(100vh - 24px)', overflowY: 'auto',
         }}
       >
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          {langCurrencySwitcher}
+        </div>
         {CONSTELLATIONS.map((c, i) => (
           <div key={i} style={{ marginBottom: 14 }}>
             {c.label && (
@@ -294,6 +390,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               View my storefront
             </Link>
           )}
+          {!isMobile && langCurrencySwitcher}
           <HaloPlanPills tier={tier} founding={founding} />
           <span
             aria-hidden
@@ -335,6 +432,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       <VelorAssistant />
+      {/* Live whole-page translation, same as every public page (see
+          components/LanguageTranslator.tsx) -- this was the actual root
+          cause of language not working on the dashboard: ConditionalLayout
+          excludes /dashboard/* from the site's shared chrome bundle, which
+          is where this normally mounts. Safe to add here on its own: it
+          only swaps DOM text nodes (never numbers, currency symbols, or
+          SELECT/OPTION content) and does its own English restore. */}
+      <LanguageTranslator />
     </div>
   );
 }
