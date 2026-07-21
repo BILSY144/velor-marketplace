@@ -203,11 +203,21 @@ All three live-verified in browser (Payouts now reads "Stripe Connect
 linked"; Settings fields show real values e.g. "William Sinclair",
 "williams workshop"; Overview aurora visibly warmer).
 
-William also asked for a full redesign of the Go Live dashboard page
-(`app/dashboard/live/page.tsx`) in the Halo language -- see the
-IN PROGRESS section for status once started; this is separate from and
-does not touch the buyer-side `/live/[room]` broadcast mechanics verified
-working on 2026-07-20.
+**Go Live page redesigned (commit e8a3a55), live-verified:** gate screens,
+setup form (camera check, buyer-preview mockup, stream details, product
+picker, schedule/live-offer toggles), the scheduled-stream card, and past
+streams all moved to light Halo glass -- including fixing the same
+dark-input-box bug just found on Settings (title/description/schedule/
+offer fields all hardcoded `#0d0d0d`/`#fff`). Deliberately kept dark: the
+camera-preview frame (shows the real feed), the "how buyers will see it"
+phone mockup (simulates the actual dark live viewer), and the desktop
+live-broadcast stage (video/pin-tray/chat) via new `stageDark`/
+`stagePanel`/`stageBorder`/`stageMuted` tokens -- a dark stage around live
+video is correct, not leftover boxed styling. NOT touched at all: the
+mobile full-screen broadcaster overlay (`isMobile` branch) -- separate
+immersive layer with the 2026-07-20 iOS-zoom/visualViewport fixes,
+out of scope here and not to be touched without checking in first.
+Buyer-side `/live/[room]` viewer is unaffected either way.
 
 Original directive, kept for context:
 
