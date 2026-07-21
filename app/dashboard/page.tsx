@@ -123,15 +123,42 @@ export default function DashboardOverview() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Payout readiness is checked LIVE against the seller's own rail --
+  // never the stored stripeOnboarded flag, which lags real Stripe state
+  // (the exact bug William caught on the old Payouts page, 2026-07-21:
+  // "Payout Settings said Connected, Payouts page said no account
+  // connected"). Same pattern as the dashboard shell.
+  const [payoutLive, setPayoutLive] = useState<boolean | null>(null);
+
   useEffect(() => {
+    let cancelled = false;
     fetch('/api/seller/me')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.storeName) setStoreName(d.storeName);
-        if (d?.payoutRailLabel) setRailLabel(d.payoutRailLabel);
-        if (d?.payoutRail) setRail(d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE');
+      .then(async (d) => {
+        if (cancelled || !d) return;
+        if (d.storeName) setStoreName(d.storeName);
+        if (d.payoutRailLabel) setRailLabel(d.payoutRailLabel);
+        const r: 'STRIPE' | 'PAYONEER' = d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
+        setRail(r);
+        try {
+          if (r === 'STRIPE') {
+            const res = await fetch('/api/stripe/connect/account');
+            const a = res.ok ? await res.json() : null;
+            if (!cancelled) setPayoutLive(!!(a?.chargesEnabled && a?.payoutsEnabled));
+          } else {
+            const res = await fetch('/api/payoneer/onboard');
+            const a = res.ok ? await res.json() : null;
+            if (!cancelled) setPayoutLive(Boolean(a?.onboarded));
+          }
+        } catch {
+          if (!cancelled) setPayoutLive(null);
+        }
       })
       .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
 
     fetch('/api/dashboard/orders')
       .then((r) => (r.ok ? r.json() : null))
@@ -179,7 +206,7 @@ export default function DashboardOverview() {
     [analytics]
   );
 
-  const payoutReady = payouts ? payouts.stripeOnboarded || payouts.payoneerLinked : null;
+  const payoutReady = payoutLive;
   const payoutSetupHref = rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
 
   return (
