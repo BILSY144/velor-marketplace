@@ -100,18 +100,92 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (autoConfirmed > 0 || retried > 0) {
+  // --- Job 3: Stripe payout-account hygiene, ALL sellers ------------------
+  // (William, 2026-07-21: "make sure this is set for all seller dashboards")
+  // The pre-fix cookie bug could persist a wrong Stripe account id onto any
+  // seller row. This sweep cleans every seller daily:
+  //   - a row carrying the PLATFORM's own account id is cleared
+  //   - the SAME account id on multiple seller rows is contamination for
+  //     all of them (rightful owner cannot be proven) -- all cleared;
+  //     affected sellers simply re-onboard, funds stay safely in escrow
+  //   - surviving unique accounts get stripeOnboarded synced with live
+  //     Stripe truth; deleted/missing accounts are cleared
+  let hygieneCleared = 0
+  let hygieneSynced = 0
+  if (process.env.STRIPE_SECRET_KEY) {
+    try {
+      const { default: Stripe } = await import('stripe')
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24.acacia' })
+      let platformId: string | null = null
+      try { platformId = (await stripe.accounts.retrieve()).id } catch { platformId = null }
+
+      const rows = await prisma.seller.findMany({
+        where: { stripeAccountId: { not: null } },
+        select: { id: true, stripeAccountId: true, stripeOnboarded: true },
+        take: 500,
+      })
+      const byAccount = new Map<string, string[]>()
+      for (const r of rows) {
+        const acc = r.stripeAccountId as string
+        byAccount.set(acc, [...(byAccount.get(acc) || []), r.id])
+      }
+      for (const [acc, sellerIds] of Array.from(byAccount.entries())) {
+        const isPlatform = platformId !== null && acc === platformId
+        if (isPlatform || sellerIds.length > 1) {
+          await prisma.seller.updateMany({
+            where: { id: { in: sellerIds } },
+            data: { stripeAccountId: null, stripeOnboarded: false },
+          })
+          hygieneCleared += sellerIds.length
+          await prisma.agentLog.create({
+            data: {
+              agentName: 'confirm-deliveries',
+              action: 'stripe-account-hygiene-cleared',
+              status: 'success',
+              details: { reason: isPlatform ? 'platform-account' : 'duplicate-across-sellers', sellerIds },
+            },
+          }).catch(() => {})
+          continue
+        }
+        // Unique, non-platform account: sync the stored flag with Stripe.
+        try {
+          const account = await stripe.accounts.retrieve(acc)
+          const onboarded = !!(account.charges_enabled && account.payouts_enabled)
+          const row = rows.find((r) => r.id === sellerIds[0])
+          if (row && row.stripeOnboarded !== onboarded) {
+            await prisma.seller.update({ where: { id: sellerIds[0] }, data: { stripeOnboarded: onboarded } })
+            hygieneSynced++
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : ''
+          // Only clear when Stripe says the account genuinely does not
+          // exist -- transient API errors must not wipe a valid link.
+          if (/No such account|does not exist/i.test(msg)) {
+            await prisma.seller.updateMany({
+              where: { id: { in: sellerIds } },
+              data: { stripeAccountId: null, stripeOnboarded: false },
+            })
+            hygieneCleared += sellerIds.length
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[confirm-deliveries] stripe hygiene sweep failed (non-blocking):', err)
+    }
+  }
+
+  if (autoConfirmed > 0 || retried > 0 || hygieneCleared > 0 || hygieneSynced > 0) {
     await prisma.agentLog
       .create({
         data: {
           agentName: 'confirm-deliveries',
           action: 'delivery-backstop-run',
           status: 'success',
-          details: { retried, retryFailed, autoConfirmed, blockedByIssue },
+          details: { retried, retryFailed, autoConfirmed, blockedByIssue, hygieneCleared, hygieneSynced },
         },
       })
       .catch(() => {})
   }
 
-  return NextResponse.json({ ok: true, retried, retryFailed, autoConfirmed, blockedByIssue })
+  return NextResponse.json({ ok: true, retried, retryFailed, autoConfirmed, blockedByIssue, hygieneCleared, hygieneSynced })
 }
