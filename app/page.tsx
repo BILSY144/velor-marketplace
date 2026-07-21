@@ -25,6 +25,7 @@ import { SPECIALITIES, SPECIALITY_KINDS, buyerLabel, specialitySlug } from '@/li
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
 type LatticeSummary = {
   totalCountries: number
@@ -1129,7 +1130,7 @@ export default function HomePage() {
               <p>Velor is a shopping channel &mdash; and sellers are the broadcasters. The first
               verified seller from each country opens it &mdash; keeping the founding badge, Pro free
               for life — every Pro benefit, permanently. Velor Live broadcasting is open to
-              every seller, on every tier. Decision within 24 hours of your verification.</p>
+              every seller, on every tier. Decision within {APPLICATION_SLA_HOURS} hours of your verification.</p>
             </div>
             <Link className="vh-btn" href="/apply">Apply to sell</Link>
           </div>
