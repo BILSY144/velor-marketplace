@@ -358,7 +358,6 @@ export default function GlobalHeader() {
                 </div>
               )}
             </div>
-            <Link href="/about" style={navLink}>How it works</Link>
           </nav>
 
           {/* Search. On phones this wraps onto its own full-width row.
@@ -817,7 +816,6 @@ export default function GlobalHeader() {
           </div>
           <Link href="/origins" style={menuItem}>Shop by origin</Link>
           <Link href="/sell" style={menuItem}>Sell on Velor</Link>
-          <Link href="/about" style={menuItem}>How it works</Link>
           <Link href="/orders" style={menuItem}>My orders</Link>
           <Link href="/track" style={menuItem}>Track an order</Link>
           <Link href="/messages" style={menuItem}>Messages</Link>
