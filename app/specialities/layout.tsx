@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SPECIALITIES } from '@/lib/specialities'
+import { SPECIALITIES, specialitySlug } from '@/lib/specialities'
 
 // Server-component layout wrapping the 'use client' /specialities page.tsx
 // (the buyer-facing index of Velor's closed 59-term speciality vocabulary,
@@ -58,6 +58,20 @@ export default function SpecialitiesLayout({ children }: { children: React.React
   // catalogue and are rendered client-side only in page.tsx) -- same
   // "structured, citable list for classic search and AI answer engines"
   // reasoning as the /origins ItemList.
+  //
+  // `url` per item added by the standing SEO agent, 2026-07-21. When this
+  // block was first written (2026-07-20), no per-speciality page existed
+  // yet to link to -- app/specialities/[term]/layout.tsx (the direct
+  // analogue of app/origins/[slug]/layout.tsx) didn't ship until later the
+  // same day (backlog item 33's second half). app/origins/layout.tsx's own
+  // ItemList has always included a `url` per country (its per-country page
+  // already existed when that ItemList was written); this one was missing
+  // the same field for its own now-existing per-term pages -- a real,
+  // verified asymmetry, not a stray omission never meant to be filled.
+  // `specialitySlug()` is the exact same slugifier app/sitemap.ts already
+  // uses to build every live `/specialities/[term]` sitemap URL (see that
+  // file's own `specialitySlug(s)` call), so this cannot disagree with what
+  // is actually indexable.
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -68,6 +82,7 @@ export default function SpecialitiesLayout({ children }: { children: React.React
       '@type': 'ListItem',
       position: i + 1,
       name: s.term,
+      url: `https://velorcommerce.store/specialities/${specialitySlug(s)}`,
     })),
   }
 
