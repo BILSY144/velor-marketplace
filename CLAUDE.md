@@ -647,7 +647,26 @@ Dropping a column drops its data â be careful.
 
 ## SELLER IDENTITY VERIFICATION
 
-No seller is approved without a VERIFIED government-issued identity document.
+**MODEL CHANGED 2026-07-21 by William's explicit instruction** ("same
+process as payouts please so we dont require photo, just id verification
+like payouts. this way anyone can sign up"). SUPERSEDES the old rule
+below. Do NOT revert to a photo-ID gate without William's say-so.
+
+CURRENT RULE: identity assurance is the payout rail's own regulated KYC.
+Applications are approved on rules screening alone (review-applications
+cron, commit c5b9121). Stripe Connect verifies each seller's personal
+identity at payout onboarding (individual accounts, personal details;
+photo ID only when Stripe itself escalates); Payoneer runs KYC on its
+rail. ENFORCEMENT lives in release-payouts: before any transfer, the
+Stripe branch live-retrieves the account and pays only charges+payouts
+enabled; the Payoneer branch pays only payees Payoneer reports ACTIVE.
+Both self-heal Seller.identityVerified=true when the rail confirms. The
+verification-reminders cron is a retired no-op (candidate to become
+payout-setup reminders). Stripe Identity machinery (lib/identity.ts,
+webhook) remains but no longer gates approval.
+
+Historical (pre-2026-07-21) rule, for context only:
+~~No seller is approved without a VERIFIED government-issued identity document.~~
 
 - `lib/identity.ts` wraps Stripe Identity. Sessions are hosted by Stripe;
   Velor never receives or stores the document, only a pass/fail. Do not
