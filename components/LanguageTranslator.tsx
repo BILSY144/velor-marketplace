@@ -158,7 +158,20 @@ export default function LanguageTranslator() {
               })
               if (res.ok) {
                 const { translations } = await res.json()
-                chunk.forEach((src, i) => d.set(src, translations[i]))
+                // Only cache genuine translations. /api/translate falls
+                // back to the source string (translated === src) when the
+                // daily anti-abuse budget is capped or a model call fails
+                // for that chunk -- if we cached those as if they were real
+                // translations, the string would look "done" forever and
+                // never be retried, permanently stranding it in English
+                // even after the budget resets. Leaving it out of `d` means
+                // the next translatePage() pass (next visit, or a later
+                // pass this session) sees it as still-missing and tries
+                // again.
+                chunk.forEach((src, i) => {
+                  const t = translations[i]
+                  if (t && t !== src) d.set(src, t)
+                })
                 // stale-run guard: only paint if the user is still on the
                 // language this batch was fetched for
                 if (getDisplayLanguage() === lang) {
@@ -210,7 +223,12 @@ export default function LanguageTranslator() {
             const res = await fetch('/api/translate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: l, texts: chunk }) })
             if (res.ok) {
               const { translations } = await res.json()
-              chunk.forEach((src, i) => d.set(src, translations[i]))
+              // Same fallback-vs-real distinction as translatePage() above --
+              // don't cache a budget/error fallback as a finished translation.
+              chunk.forEach((src, i) => {
+                const t = translations[i]
+                if (t && t !== src) d.set(src, t)
+              })
             }
           }))
           saveDict(l)
