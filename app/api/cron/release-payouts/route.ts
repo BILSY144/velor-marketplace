@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { isPayoneerConfigured, createPayout as createPayoneerPayout } from '@/lib/payoneer'
+import { isPayoneerConfigured, createPayout as createPayoneerPayout, getPayeeStatus } from '@/lib/payoneer'
+import { getPayoutRail } from '@/lib/payoutRail'
 import {
   PROBATION_HOLD_MS,
   TRUSTED_HOLD_MS,
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
   let heldOpen = 0
   let waiting = 0
   let heldForPayoneer = 0
+  let heldForStripeSetup = 0
   let skipped = 0
   let heldUnverified = 0
 
@@ -112,7 +114,7 @@ export async function GET(req: NextRequest) {
       // down only for the Payoneer branch.
       const sellerRow = await prisma.seller.findUnique({
         where: { id: o.sellerId },
-        select: { stripeAccountId: true, payoutRail: true, payoneerPayeeId: true, identityVerified: true },
+        select: { country: true, stripeAccountId: true, payoutRail: true, payoneerPayeeId: true, identityVerified: true },
       })
       const sellerAccountId = sellerRow?.stripeAccountId || ''
 
@@ -128,7 +130,23 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      if (sellerAccountId) {
+      // Rail is resolved LIVE from the seller's country -- never from the
+      // stored payoutRail field, which can be stale (the exact bug class
+      // caught live on 2026-07-21: a GB seller stuck on a persisted
+      // PAYONEER value would never have been paid). lib/payoutRail.ts is
+      // the single source of truth and accepts country names or ISO codes.
+      // Branching is STRICT per rail: a Stripe-rail seller can only ever be
+      // paid through Stripe Connect, a Payoneer-rail seller only ever
+      // through Payoneer -- a leftover stripeAccountId on a Payoneer-rail
+      // seller (or vice versa) can no longer route money down the wrong
+      // rail. Self-heal the stored field while we're here, same pattern as
+      // /api/dashboard/payouts.
+      const rail = getPayoutRail(sellerRow.country)
+      if (rail !== sellerRow.payoutRail) {
+        await prisma.seller.update({ where: { id: o.sellerId }, data: { payoutRail: rail } }).catch(() => {})
+      }
+
+      if (rail === 'STRIPE' && sellerAccountId) {
         // STRIPE rail. Idempotency key keyed on the order guarantees we never
         // double-transfer, even if a later step fails and the cron retries.
         const transfer = await stripe.transfers.create(
@@ -157,10 +175,19 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // No Stripe account on file: PAYONEER-rail seller (or a seller who
-      // has not finished payout onboarding). Same holds and dispute checks
-      // already passed above -- only the transfer differs.
-      if (sellerRow?.payoutRail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
+      // PAYONEER rail (or a Stripe-rail seller who has not finished Connect
+      // onboarding, who simply waits in escrow). Same holds and dispute
+      // checks already passed above -- only the transfer differs.
+      if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
+        // A payeeId is stored the moment a registration link is generated,
+        // BEFORE the seller has necessarily completed Payoneer signup --
+        // pay only a payee Payoneer itself reports as active, otherwise
+        // keep the funds safely in escrow and retry next run.
+        const payee = await getPayeeStatus(sellerRow.payoneerPayeeId)
+        if (String(payee.status).toUpperCase() !== 'ACTIVE') {
+          heldForPayoneer++
+          continue
+        }
         // client_reference_id `payout_<orderId>` mirrors the Stripe
         // idempotency convention so a retried run can never double-pay.
         const { payoutId } = await createPayoneerPayout({
@@ -181,10 +208,14 @@ export async function GET(req: NextRequest) {
           },
         })
         releasedPayoneer++
-      } else {
-        // Rail not live or seller not onboarded yet: funds stay safely in
-        // the platform escrow and this order is retried on every run.
+      } else if (rail === 'PAYONEER') {
+        // Payoneer rail not live yet, or seller not onboarded: funds stay
+        // safely in the platform escrow and this order retries every run.
         heldForPayoneer++
+      } else {
+        // Stripe-rail seller without a completed Connect account: funds
+        // stay safely in escrow until their Stripe onboarding finishes.
+        heldForStripeSetup++
       }
     } catch {
       skipped++
@@ -199,6 +230,7 @@ export async function GET(req: NextRequest) {
     heldOpen,
     waiting,
     heldForPayoneer,
+    heldForStripeSetup,
     heldUnverified,
     skipped,
   })

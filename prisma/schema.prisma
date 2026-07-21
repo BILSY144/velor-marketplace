@@ -236,6 +236,13 @@ model Order {
   stripePaymentId   String?
   status            OrderStatus     @default(PENDING)
   deliveredAt       DateTime?
+  // When the seller first reported shipping (tracking added). Anchor for the
+  // 30-day delivery auto-confirm backstop (William, 2026-07-21).
+  shippedAt         DateTime?
+  // How DELIVERED was confirmed: WEBHOOK (Shippo tracking), BUYER (confirm
+  // button), AUTO (30-day backstop), ADMIN (manual override). Null on orders
+  // delivered before this field existed.
+  deliveryConfirmedBy String?
   subtotal          Float
   platformFee       Float           @default(0)
   sellerEarnings    Float           @default(0)
@@ -282,6 +289,11 @@ model Shipment {
   carrier           String?
   status            ShipmentStatus  @default(PENDING)
   labelUrl          String?
+  // True once the tracking number is successfully registered with Shippo's
+  // /tracks endpoint (what makes the delivery webhook fire). False means
+  // registration failed or never ran -- the confirm-deliveries cron retries
+  // these so no order can silently never reach DELIVERED.
+  trackRegistered   Boolean         @default(false)
   events            ShipmentEvent[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

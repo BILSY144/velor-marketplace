@@ -67,3 +67,46 @@ export async function GET(request: NextRequest) {
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
   })
 }
+
+// Admin manual delivery override (William, 2026-07-21) -- the human backstop
+// for orders stuck short of DELIVERED (unsupported carrier, dead tracking)
+// when neither the webhook, the buyer confirm button, nor the 30-day
+// auto-confirm has resolved them. Logged to AgentLog every time; the payout
+// cron's own open-issue and identity checks still apply downstream, so this
+// can never bypass a dispute freeze.
+export async function PATCH(request: NextRequest) {
+  if (!(await isAuthorizedAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    const { orderId, action } = await request.json()
+    if (!orderId || action !== 'mark-delivered') {
+      return NextResponse.json({ error: 'orderId and action "mark-delivered" required' }, { status: 400 })
+    }
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, status: true } })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    if (order.status === 'DELIVERED') return NextResponse.json({ ok: true, alreadyDelivered: true })
+    if (order.status !== 'SHIPPED') {
+      return NextResponse.json({ error: `Order is ${order.status} -- only a SHIPPED order can be marked delivered` }, { status: 400 })
+    }
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: 'DELIVERED', deliveredAt: new Date(), deliveryConfirmedBy: 'ADMIN' },
+    })
+    await prisma.shipment.updateMany({ where: { orderId: order.id }, data: { status: 'DELIVERED' } })
+    await prisma.agentLog.create({
+      data: {
+        agentName: 'admin-orders',
+        action: 'manual-mark-delivered',
+        status: 'success',
+        details: { orderId: order.id },
+      },
+    }).catch(() => {})
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[admin/orders PATCH]', err)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}

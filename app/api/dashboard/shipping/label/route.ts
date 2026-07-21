@@ -84,17 +84,24 @@ export async function POST(request: NextRequest) {
 
     await prisma.order.update({
       where: { id: order.id },
-      data: { status: 'SHIPPED' },
+      // shippedAt anchors the 30-day delivery auto-confirm backstop -- set
+      // once on first tracking entry, never moved by later corrections.
+      data: { status: 'SHIPPED', ...(order.shippedAt ? {} : { shippedAt: new Date() }) },
     })
 
-    // Best-effort tracking registration — never blocks marking the order
-    // shipped. Costs nothing: this is Shippo's free tracking endpoint, not
-    // a label purchase.
+    // Tracking registration — never blocks marking the order shipped (this
+    // is Shippo's free tracking endpoint, not a label purchase), but the
+    // outcome is now RECORDED on the shipment: trackRegistered stays false
+    // on failure and the confirm-deliveries cron retries it, so a failed
+    // registration can no longer silently strand an order short of
+    // DELIVERED (and its seller short of their payout) forever.
     if (process.env.SHIPPO_API_KEY) {
       try {
         await createTrack(normalizeCarrierToken(cleanCarrier), cleanTracking)
+        await prisma.shipment.update({ where: { id: dbShipment.id }, data: { trackRegistered: true } })
       } catch (err) {
-        console.warn('[dashboard/shipping/label] Shippo tracking registration failed (non-blocking):', err)
+        await prisma.shipment.update({ where: { id: dbShipment.id }, data: { trackRegistered: false } }).catch(() => {})
+        console.warn('[dashboard/shipping/label] Shippo tracking registration failed (will be retried by cron):', err)
       }
     }
 

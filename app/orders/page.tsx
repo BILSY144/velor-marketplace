@@ -52,6 +52,26 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState('')
+  const [confirming, setConfirming] = useState<string | null>(null)
+
+  // Buyer-side delivery confirmation (William, 2026-07-21). Confirming
+  // starts the seller's normal escrow hold window -- it never releases
+  // money instantly, and an open return or dispute still freezes it.
+  async function confirmDelivery(orderId: string) {
+    setConfirming(orderId)
+    try {
+      const res = await fetch(`/api/orders/${orderId}/confirm-delivery`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Could not confirm delivery')
+      }
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'DELIVERED' } : o)))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not confirm delivery. Please try again.')
+    } finally {
+      setConfirming(null)
+    }
+  }
 
   // Orders are always scoped server-side to the signed-in account's own
   // email (see /api/orders GET) -- there is no way to look up another
@@ -203,13 +223,26 @@ export default function OrdersPage() {
                   page never had one -- the only way in was typing the URL by
                   hand. Always shown: /orders/[id]/track itself handles the
                   no-shipment-yet state honestly ("No tracking events yet"). */}
-              <div style={{ padding: '10px 20px', borderTop: '1px solid #2A2A2A' }}>
+              <div style={{ padding: '10px 20px', borderTop: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
                 <a
                   href={`/orders/${order.id}/track?email=${encodeURIComponent(order.customerEmail)}`}
                   style={{ fontSize: 12, fontWeight: 600, color: '#FF6B00', textDecoration: 'none' }}
                 >
                   Track order &rarr;
                 </a>
+                {order.status === 'SHIPPED' && (
+                  <button
+                    onClick={() => confirmDelivery(order.id)}
+                    disabled={confirming === order.id}
+                    style={{
+                      fontSize: 12, fontWeight: 600, color: '#00E676', background: 'rgba(0,230,118,0.10)',
+                      border: '1px solid rgba(0,230,118,0.35)', borderRadius: 8, padding: '6px 12px',
+                      cursor: confirming === order.id ? 'wait' : 'pointer', fontFamily: 'Inter, sans-serif',
+                    }}
+                  >
+                    {confirming === order.id ? 'Confirming...' : 'I have received this order'}
+                  </button>
+                )}
               </div>
             </div>
           )

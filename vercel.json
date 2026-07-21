@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/verification-reminders",
       "schedule": "45 * * * *"
+    },
+    {
+      "path": "/api/cron/confirm-deliveries",
+      "schedule": "45 2 * * *"
     }
   ]
 }
