@@ -381,6 +381,8 @@ export default function GoLivePage() {
   async function startStream() {
     setError('')
     if (!title.trim()) { setError('Give your stream a title.'); return }
+    // Client-side mirror of the server filter -- catch it before the API does.
+    if (checkMessageContent(`${title} ${description}`).blocked) { setError("Titles and descriptions can't include contact details, links, or social handles -- everything stays on Velor, on stream too."); return }
     let scheduledForIso: string | null = null
     if (scheduleEnabled) {
       if (!scheduledFor) { setError('Pick a date and time to schedule for.'); return }

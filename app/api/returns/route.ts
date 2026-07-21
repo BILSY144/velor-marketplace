@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkMessageContent } from '@/lib/messageFilter';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -11,6 +12,12 @@ export async function POST(req: Request) {
   const { orderId, reason } = body;
   if (!orderId || !reason) {
     return NextResponse.json({ error: 'orderId and reason are required' }, { status: 400 });
+  }
+  // The seller reads this reason -- same no-contact-details rule as
+  // messages (William, 2026-07-21). Tracking and order details are
+  // already in the system; the reason needs none of them.
+  if (checkMessageContent(String(reason)).blocked) {
+    return NextResponse.json({ error: "The reason can't include email addresses, phone numbers, website links, or social/messaging handles -- keep everything on Velor." }, { status: 400 });
   }
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });

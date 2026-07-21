@@ -109,6 +109,7 @@ export default function GoLiveScreen() {
   async function goLiveNow() {
     setError('')
     if (!title.trim()) { setError('Give your stream a title.'); return }
+    if (checkMessageContent(`${title} ${description}`).blocked) { setError("Titles and descriptions can't include contact details, links, or social handles - everything stays on Velor, on stream too."); return }
     if (scheduleEnabled && !scheduledFor) { setError('Pick a date and time to schedule for.'); return }
     let liveOfferPercent: number | null = null
     if (offerEnabled) {

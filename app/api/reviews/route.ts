@@ -1,4 +1,5 @@
 import { auth } from '@/auth'
+import { checkMessageContent } from '@/lib/messageFilter'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { maskPersonalName } from '@/lib/messageIdentity'
@@ -27,6 +28,15 @@ export async function POST(request: Request) {
   const { productId, rating, comment } = body
   if (!productId || !rating || rating < 1 || rating > 5) {
     return NextResponse.json({ error: 'Rating must be 1-5' }, { status: 400 })
+  }
+  // Reviews are public -- the same no-contact-details rule as messages
+  // (William, 2026-07-21: the platform is the channel; no personal or
+  // business contact information anywhere buyers and sellers meet).
+  if (comment) {
+    const check = checkMessageContent(String(comment))
+    if (check.blocked) {
+      return NextResponse.json({ error: "Reviews can't include email addresses, phone numbers, website links, or social/messaging handles." }, { status: 400 })
+    }
   }
   const purchased = await prisma.orderItem.findFirst({
     where: {

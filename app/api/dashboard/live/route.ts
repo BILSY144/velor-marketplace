@@ -1,4 +1,5 @@
 import { auth } from '@/auth'
+import { checkMessageContent } from '@/lib/messageFilter'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { createBroadcasterToken, getWsUrl, liveKitConfigured, makeRoomName } from '@/lib/livekit'
@@ -45,6 +46,15 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const title = typeof body.title === 'string' ? body.title.trim().slice(0, 120) : ''
   const description = typeof body.description === 'string' ? body.description.trim().slice(0, 2000) : null
+
+  // Live streams are buyer-facing like listings and messages -- the same
+  // no-contact-details rule applies to their title and description
+  // (William, 2026-07-21: "that also goes for live videos"). On-camera
+  // speech cannot be auto-filtered; that is covered by the viewer report
+  // button (auto-end on threshold) and the seller rules.
+  if (checkMessageContent(`${title} ${description || ''}`).blocked) {
+    return NextResponse.json({ error: "Stream titles and descriptions can't include email addresses, phone numbers, website links, or social/messaging handles." }, { status: 400 })
+  }
   const productIds = Array.isArray(body.productIds) ? body.productIds.filter((x: unknown) => typeof x === 'string').slice(0, 12) : []
 
   // Optional scheduling (2026-07-20): a future date creates a SCHEDULED

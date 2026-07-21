@@ -18,7 +18,38 @@ This law outranks every other instruction in this file, including deadlines.
 
 ---
 
-## OUTSTANDING -- BUYER-SELLER MESSAGING: RULES STILL NEEDED, BUT THE WIRING BUGS BELOW WERE FIXED 2026-07-20 (status corrected 2026-07-21)
+## RESOLVED 2026-07-21 -- BUYER-SELLER COMMUNICATION RULES DEFINED BY WILLIAM AND ENFORCED (was: rules needed since 2026-07-16)
+
+**WILLIAM'S RULES (2026-07-21, verbatim intent): buyer-seller messages must
+never allow exchange of personal or business information; buyer-facing
+surfaces show a seller's STOREFRONT NAME ONLY, never a real company name;
+sellers rely on the platform to sell, not bypass it; strict
+implementation; applies to website AND app; "that also goes for live
+videos."**
+
+Enforcement map (all server-side unless noted, all shipped/verified
+2026-07-21):
+- lib/messageFilter.ts is the single shared filter (emails incl.
+  obfuscation, 7+ digit runs, social handles, URLs/domains, spaced-out
+  evasion). Deliberately blunt; false positives acceptable.
+- Already enforced before today: /api/messages POST, /api/dashboard/
+  messages POST, listings create+edit, store settings (storeName +
+  description), live chat send AND receive on web + app (client-side by
+  necessity -- LiveKit data channel is peer-delivered).
+- Added today: /api/reviews POST (public comments), /api/returns POST
+  (buyer reason the seller reads), /api/disputes POST (reason+evidence),
+  /api/dashboard/live POST (stream title+description), plus client-side
+  mirrors in the web and app broadcaster setup forms.
+- On-camera speech cannot be auto-filtered: covered by the viewer report
+  button (auto-end on threshold, shipped 2026-07-20) and seller rules.
+- Storefront-name-only was already the design and is verified: the
+  Seller row carries only storeName; the real business name lives on
+  SellerApplication and appears ONLY in admin/pulse UIs, seller-facing
+  emails, and William's daily report. Buyer-facing surfaces (shop APIs,
+  PDP, live, reviews, messaging identities via lib/messageIdentity.ts)
+  all use storeName; buyers appear as "First L." everywhere.
+
+The old OUTSTANDING text below is history only:
 
 William asked to lay down the rules for buyer-seller messaging before this
 feature is touched again ("remind me to come back to message seller topic
