@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div>
+      <div style={{ padding: '26px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
         <h1
           style={{
             fontFamily: 'var(--font-display)',

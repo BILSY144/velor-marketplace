@@ -98,8 +98,8 @@ function RevenueChart({ data, lineColor }: { data: { date: string; revenue: numb
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
             {yLabels.map((l, i) => (
                     <g key={i}>
-                              <line x1={pad.left} y1={l.y} x2={W - pad.right} y2={l.y} stroke="#2A2A2A" strokeWidth="1" />
-                              <text x={pad.left - 8} y={l.y + 4} textAnchor="end" fill="#666" fontSize="10">
+                              <line x1={pad.left} y1={l.y} x2={W - pad.right} y2={l.y} stroke="#ECECEF" strokeWidth="1" />
+                              <text x={pad.left - 8} y={l.y + 4} textAnchor="end" fill="#9C9FA5" fontSize="10">
                                 {fmt(l.value).replace('.00', '')}
                               </text>
                     </g>
@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
         return (
-                <div>
+                <div style={{ padding: '26px 28px 60px' }}>
                         <div style={{ marginBottom: '32px' }}>
                                   <h1
                                                 style={{
@@ -274,7 +274,7 @@ export default function AnalyticsPage() {
       ]
 
   return (
-        <div>
+        <div style={{ padding: '26px 28px 60px' }}>
               <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
