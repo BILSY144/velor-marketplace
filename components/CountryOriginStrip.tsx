@@ -128,6 +128,22 @@ export default function CountryOriginStrip() {
     drag.current.lastT = now
   }, [])
 
+    // Country-to-country switching (2026-07-21, William: "when i click on a
+  // flag it stays on united kingdom"): a client-router push from
+  // /shop?origin=X to /shop?origin=Y (same pathname, query-only) was
+  // silently ignored by the app router in production -- reproduced live;
+  // no error, URL simply never changed. From any OTHER page the soft push
+  // works fine. So: soft-navigate normally, but when already on /shop use
+  // a full navigation, which the browser handles unconditionally.
+  const goToOrigin = useCallback((code: string) => {
+    const href = `/shop?origin=${code}`
+    if (typeof window !== 'undefined' && window.location.pathname === '/shop') {
+      window.location.assign(href)
+    } else {
+      router.push(href)
+    }
+  }, [router])
+
   const endDrag = useCallback((e: React.PointerEvent) => {
     if (drag.current.pointerId !== e.pointerId) return
     drag.current.pointerId = -1
@@ -151,7 +167,7 @@ export default function CountryOriginStrip() {
     // second navigation. Keyboard users still navigate via the button's own
     // onClick -- Enter/Space produce no pointer events, so nothing here
     // interferes with that path.
-    const flag = (e.target as HTMLElement).closest?.('button[data-country-code]') as HTMLElement | null
+    const flag = (e.target as HTMLElement).closest?.('[data-country-code]') as HTMLElement | null
     const code = flag?.getAttribute('data-country-code')
     if (code) {
       drag.current.suppressClick = true
@@ -159,9 +175,9 @@ export default function CountryOriginStrip() {
       // suppression armed to swallow an unrelated future click (e.g. a
       // keyboard activation, which has no pointerdown to reset it).
       setTimeout(() => { drag.current.suppressClick = false }, 400)
-      router.push(`/shop?origin=${code}`)
+      goToOrigin(code)
     }
-  }, [runMomentum, router])
+  }, [runMomentum, goToOrigin])
 
   // Swallows exactly one click after a real drag, so releasing a spin over
   // a flag doesn't navigate. Plain taps never set suppressClick, so their
@@ -176,12 +192,11 @@ export default function CountryOriginStrip() {
 
   useEffect(() => stopMomentum, [stopMomentum])
 
-  const handleFlagClick = (code: string) => {
-    // Takes buyers straight to products whose Origin Country matches the
-    // flag they picked -- from ANY page, including another country's page
-    // (/shop?origin=X to /shop?origin=Y is a query-only navigation; the
-    // shop page derives everything from useSearchParams so it re-fetches).
-    router.push(`/shop?origin=${code}`)
+  const handleFlagClick = (e: React.MouseEvent, code: string) => {
+    // Modified clicks (new tab etc.) take the anchor's default behaviour.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    goToOrigin(code)
   }
 
   return (
@@ -227,13 +242,14 @@ export default function CountryOriginStrip() {
           Shop by origin
         </span>
         {WORLD_COUNTRIES.map((c) => (
-          <button
+          <a
             key={c.code}
-            type="button"
+            href={`/shop?origin=${c.code}`}
             title={c.name}
             aria-label={`Shop goods from ${c.name}`}
             data-country-code={c.code}
-            onClick={() => handleFlagClick(c.code)}
+            draggable={false}
+            onClick={(e) => handleFlagClick(e, c.code)}
             style={{
               flexShrink: 0,
               width: '37px',
@@ -244,6 +260,7 @@ export default function CountryOriginStrip() {
               border: '1px solid var(--border)',
               background: 'var(--bg)',
               cursor: 'pointer',
+              display: 'block',
             }}
           >
             <img
@@ -253,7 +270,7 @@ export default function CountryOriginStrip() {
               loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
             />
-          </button>
+          </a>
         ))}
       </div>
     </div>
