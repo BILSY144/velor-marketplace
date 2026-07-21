@@ -2883,3 +2883,51 @@ levers, cold-start precedents, competitor-seller discontent, and a
 and the action plan to be checkpointed here when done. HONEST BASELINE:
 weeks of cold email + Facebook group outreach have produced ZERO
 sellers; treat channel strategy as unproven until a signup exists.
+
+## 2026-07-21 checkpoint (late 8) -- SELLER ACQUISITION PLAYBOOK DELIVERED (deep research, adversarially verified) + TRUST ACCREDITATION RESEARCH
+
+Deep-research run complete (104 agents; every claim 3-voter adversarially
+verified; live-fetched sources 2026-07-21). PDF delivered to William:
+"Velor-Seller-Acquisition-Playbook.pdf". Core verdict: cold-emailing
+individual artisans failed because an unknown marketplace is
+indistinguishable from a scam to an individual; the evidence-backed play
+is AGGREGATORS + DENSITY + HAND-HOLDING.
+
+VERIFIED CHANNELS (all live-checked):
+- Asha Handicrafts Association (India): WFTO Guaranteed Member,
+  aggregates 1,000+ artisans, mission IS finding them sales channels,
+  already supplies SERRV/Ten Thousand Villages. Highest-value pitch.
+- WFTO free searchable member directory (wfto.com/members/) + sourcing
+  route info@wfto.com.
+- EPCH (epch.in/member): ~10,000 Indian handicraft exporters with
+  public emails, verified accessible without login.
+- World Crafts Council (UNESCO-accredited): 5 regional networks +
+  downloadable World Craft Cities list (Srinagar, Jaipur, Kyoto,
+  Birmingham, Stoke-on-Trent...).
+- Fair Trade Federation (US/CA member directory).
+- Qwoted free tier (2 pitches/month) -- the only free press channel
+  that survived verification.
+COLD-START PRINCIPLES (verified): one niche/region first, density before
+breadth (Reforge/Chen/Rachitsky, no counterexamples); Etsy seeded from
+existing craft communities + craft fairs + near-zero fees + sellers with
+audiences; manual founder-led onboarding (Breather/Airbnb). Barriers to
+lead with (ITC 111-country survey; DEF India ~20% digital training):
+payments, escrow, delivery, hand-held setup -- NOT commission rates.
+HONEST NULLS: no conversion-rate data survived verification; craft
+bloggers/TikTok/diaspora/tourism-board channels unproven.
+
+TRUST ACCREDITATIONS (separate agent, all verified with costs/URLs, in
+the PDF): ICO registration LEGALLY REQUIRED (£52/yr); FREE: Good
+Business Charter, Trustpilot, Google Customer Reviews, PCI SAQ A
+statement; £50 Heritage Crafts membership; later: chamber (~£300),
+Cyber Essentials (£360), BAFTS, Buy With Confidence (needs 6mo trading),
+WFTO candidacy (~EUR850/yr, 2027). INELIGIBLE/AVOID: Fair Trade
+Federation membership (US/CA only), SafeBuy (credibility challenged),
+Shopper Approved, "Stripe verified partner" badges (do not exist).
+
+2-WEEK PLAN (in PDF): Day 1 pick ONE launch cluster (recommended: Indian
+handicrafts); Day 1-2 free trust stack; Day 2-4 five-to-ten personalised
+aggregator pitches under William's name; Day 3-5 EPCH direct wave
+(20-30/day, quality over volume); Day 5-7 Qwoted + craft-city press;
+Week 2 hand-hold every respondent end to end. Execution starts on
+William's cluster decision.
