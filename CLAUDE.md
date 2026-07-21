@@ -241,6 +241,26 @@ mockup), and Go Live's setup form (same global backdrop, confirmed
 consistent). Since `HaloBackdrop` is shared, this fix applies dashboard-wide
 without touching any other page's code.
 
+**2026-07-21 "Sell" batch shipped (commit 706e20d), live-verified on
+Products, Storefront, Discounts:** moved `tierCardStyle()` in
+`lib/dashboard-theme.tsx` onto the Halo glass base -- this is the shared
+card wrapper used by nearly every remaining dashboard page (Products,
+Storefront, Discounts, Payouts, Orders, Returns, Disputes, Settings,
+Support, Analytics), so all of them picked up blurred/translucent glass
+panels in this one change instead of needing per-page rewrites. Tier
+distinction (Starter grey vs Pro blue border/glow) is untouched -- Pro's
+heading/stat text colour was swapped from the light-cyan #4FC3F7 to
+HALO.proBlue (#1D5F93) to match the Pro pill already shipped and read
+better against light glass. HaloButton (`lib/halo.tsx`) gained a `type`
+prop (defaults to `'button'`) so it can be used safely as a non-submitting
+Cancel action inside forms. Each of the three pages then got the Halo
+kicker + italic-serif heading treatment and HaloButton primary actions.
+Also fixed a real bug on Discounts: its root container had a solid
+`background: 'var(--bg)'` that fully painted over the dashboard's aurora
+backdrop, so the page never showed any Halo styling regardless of the
+tierCardStyle change -- now transparent like every other page. Verified
+via `tsc`/esbuild (no errors) then live in browser on all three pages.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
