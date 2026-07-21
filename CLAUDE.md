@@ -222,6 +222,22 @@ LATER THE SAME SESSION (all pushed, tsc-clean, deploys green):
   Payoneer: hosted registration supports individuals natively; sandbox
   checklist gains an individual-payee program check.
 
+APP SYNC (same session, later): approval SLA lowered to 2 HOURS max
+(1d2bdfb -- constants 2h/1h, review cron every 15 min, all site copy);
+app screens synced to the new reality on BOTH main (c91ca24) and
+mobile-app (e9c7445 + 5072fbd): ApplyScreen steps (Apply -> Decision in
+2 hours -> Set up payouts), VerifyScreen rebuilt as post-application
+confirmation (no camera/24h copy; route name kept), SellScreen hint.
+Expo publish auto-fired on the mobile-app push (preview channel).
+CAUTION LEARNED: a `git commit -am` on mobile-app swept in local
+package-lock.json drift (1,738 lines) -- reverted to ee6e297's lockfile
+in 5072fbd; never commit lockfiles from this sandbox's own npm installs.
+NOTE: the PRODUCTION store app only gets these changes via a deliberate
+production-channel `eas update` or the next store build (per the
+2026-07-19 checkpoint) -- ask William before firing that. Mobile i18n
+manifest NOT regenerated (extractor produced only 737 strings vs the
+3,014 union -- reverted; new strings translate lazily).
+
 STILL TO DO (next sessions): finish per-page verify of Discounts/
 Returns/Disputes/Messages/Support/API Keys/Upgrade in the new shell;
 phone-width pass; Go Live branded pass; page-by-page sign-off walkthrough
