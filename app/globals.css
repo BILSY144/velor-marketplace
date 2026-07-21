@@ -130,6 +130,14 @@ h1, h2, h3, h4, h5, h6 {
   .velor-logo-link {
     margin-left: calc(-4px - max(0px, (100vw - 1360px) / 2));
   }
+  /* William (2026-07-21): the logo sits independently on the left; every
+     other header option groups to the right, away from it. The auto margin
+     on the first element after the logo pushes nav + search + account
+     cluster to the right edge as one group. Desktop only -- phone/tablet
+     layouts unchanged. */
+  .velor-headerbar .velor-desktop-nav {
+    margin-left: auto;
+  }
 }
 
 /* Tablet and below */
