@@ -64,6 +64,10 @@ export async function GET() {
       id: o.id,
       status: o.status,
       total: o.subtotal,
+      // The seller's own share of this order (stored at checkout, after
+      // commission) -- added 2026-07-21 for the app's "yours" figures so
+      // no client ever recomputes commission maths.
+      sellerEarnings: o.sellerEarnings,
       productSubtotal,
       shippingCost,
       dutiesCost: 0,

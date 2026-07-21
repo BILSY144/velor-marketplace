@@ -159,14 +159,20 @@ export type SellerPayouts = {
 
 export const fetchSellerPayouts = () => authedGet<SellerPayouts>('/api/dashboard/payouts')
 
+// Matches app/api/dashboard/orders EXACTLY (reshaped 2026-07-21, commit
+// a4bd2fe + sellerEarnings added same day). The old shape (productName/
+// totalRevenue/totalPayout) no longer exists -- reading it crashed the
+// app's seller screens to black and rendered NaN under EARNED (the
+// "abnormal symbols" William reported).
 export type SellerOrder = {
   id: string
   buyerName: string
   status: string
   createdAt: string
-  items: { id: string; productId: string; productName: string; productImage: string | null; quantity: number; unitPrice: number; commission: number; payout: number }[]
-  totalRevenue: number
-  totalPayout: number
+  total: number
+  sellerEarnings: number
+  currency: string
+  items: { id: string; productId: string; quantity: number; price: number; product: { name: string; images: string[] } }[]
 }
 
 export const fetchSellerOrders = async (): Promise<SellerOrder[]> =>

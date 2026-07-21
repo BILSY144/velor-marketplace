@@ -80,14 +80,14 @@ export function SellerOrdersScreen() {
             shown.map((o) => (
               <View key={o.id} style={s.orderCard}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  {o.items[0]?.productImage ? (
-                    <Image source={{ uri: o.items[0].productImage }} style={s.ordImg} contentFit="cover" />
+                  {o.items[0]?.product?.images?.[0] ? (
+                    <Image source={{ uri: o.items[0].product.images[0] }} style={s.ordImg} contentFit="cover" />
                   ) : (
                     <View style={[s.ordImg, { backgroundColor: C.surf2 }]} />
                   )}
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={s.ordT} numberOfLines={1}>
-                      {o.items.map((i) => i.productName).join(' · ')}
+                      {o.items.map((i) => i.product?.name ?? 'Product').join(' · ')}
                     </Text>
                     <Text style={s.ordS} numberOfLines={1}>
                       {o.buyerName} · {new Date(o.createdAt).toLocaleDateString('en-GB')} ·{' '}
@@ -95,8 +95,8 @@ export function SellerOrdersScreen() {
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.ordP}>{'£'}{o.totalRevenue.toFixed(2)}</Text>
-                    <Text style={s.ordPay}>yours £{o.totalPayout.toFixed(2)}</Text>
+                    <Text style={s.ordP}>{'£'}{(o.total ?? 0).toFixed(2)}</Text>
+                    <Text style={s.ordPay}>yours £{(o.sellerEarnings ?? 0).toFixed(2)}</Text>
                   </View>
                 </View>
               </View>
