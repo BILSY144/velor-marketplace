@@ -14,6 +14,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02
 // redirect back into the dashboard. Matches the rest of the codebase now.
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://velorcommerce.store';
 
+// Pre-answered "business details" for every seller (William, 2026-07-21:
+// "stripe is still asking for business details"). Even an individual-type
+// account gets Stripe's business-details step unless the platform supplies
+// an industry code and a URL up front. Every Velor seller's "business" is
+// the same thing -- selling goods through the Velor marketplace -- so we
+// answer for them: industry = gift/craft retail (MCC 5947, the standard
+// code for gift/novelty/souvenir goods), URL = their own Velor storefront.
+// Stripe then focuses onboarding on personal identity + bank details.
+function sellerBusinessProfile(sellerId: string) {
+  return {
+    mcc: '5947',
+    url: `${BASE_URL}/seller/${sellerId}`,
+    product_description: 'Independent seller on Velor Marketplace (velorcommerce.store), selling cultural and handmade goods.',
+  };
+}
+
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -35,6 +51,7 @@ export async function POST() {
     const account = await stripe.accounts.create({
       type: 'express',
       business_type: 'individual',
+      business_profile: sellerBusinessProfile(seller.id),
       capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
     });
     const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
@@ -78,6 +95,25 @@ export async function GET() {
   }
 
   try {
+    // RETRO-FIT (best-effort): accounts created before the individual-type
+    // fix still carry the business-details questions. Before resuming,
+    // update the existing account to individual with the pre-answered
+    // business profile so the seller lands straight in personal-ID
+    // onboarding. Stripe rejects the business_type change once identity
+    // details have been submitted -- in that case we fall back to just the
+    // profile pre-fill, and if even that fails we still hand out the
+    // onboarding link rather than blocking the seller.
+    try {
+      await stripe.accounts.update(accountId, {
+        business_type: 'individual',
+        business_profile: sellerBusinessProfile(seller!.id),
+      });
+    } catch {
+      try {
+        await stripe.accounts.update(accountId, { business_profile: sellerBusinessProfile(seller!.id) });
+      } catch { /* proceed with the link regardless */ }
+    }
+
     const accountLink = await stripe.accountLinks.create({ account: accountId, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
     const res = NextResponse.json({ onboardingUrl: accountLink.url });
     res.cookies.delete('seller_account_id');
