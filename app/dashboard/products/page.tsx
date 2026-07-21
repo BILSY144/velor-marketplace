@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES, COUNTRY_TO_CURRENCY, symbolFor } from '@/lib/currency'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { HALO, HaloButton } from '@/lib/halo'
 
 const HS_CATEGORY_MAP: Record<string, { label: string; example: string }> = {
 '01': { label: 'Live Animals', example: '010110 — horses' },
@@ -177,8 +178,8 @@ isHandmade: '', makerStory: '', materials: '', containsRegulated: '',
 }
 
 const inputStyle = {
-width: '100%', padding: '10px 12px', background: 'var(--bg)',
-border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)',
+width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.75)',
+border: '1px solid rgba(26,26,29,0.12)', borderRadius: '10px', color: 'var(--text)',
 fontFamily: 'var(--font-body)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' as const,
 }
 const labelStyle = {
@@ -671,18 +672,16 @@ const categoryIsKnown = !form.category || PRODUCT_CATEGORIES.includes(form.categ
 if (loading) return <div style={{ padding: '40px', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>Loading...</div>
 
 return (
-<div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)' }}>
-<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+<div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)', position: 'relative', zIndex: 1 }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
+<div>
+<div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Sell</div>
 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-<h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>Products</h1>
+<h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '30px', color: HALO.ink, margin: 0 }}>Products</h1>
 <PlanBadge tier={tier} />
 </div>
-<button onClick={openNew} style={{
-padding: '10px 20px', background: 'var(--accent)', color: '#fff',
-border: 'none', borderRadius: '6px', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-}}>
-Add Product
-</button>
+</div>
+<HaloButton variant="accent" onClick={openNew}>Add Product</HaloButton>
 </div>
 
 {showForm && (
@@ -937,16 +936,14 @@ I confirm this listing is accurate and complies with the <a href="/legal/seller-
 </label>
 
 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-<button type="button" onClick={() => setShowForm(false)} style={{
-padding: '10px 20px', background: 'var(--bg)', color: 'var(--text)',
-border: '1px solid var(--border)', borderRadius: '6px', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-}}>
+<HaloButton type="button" variant="soft" onClick={() => setShowForm(false)}>
 Cancel
-</button>
+</HaloButton>
 <button type="submit" disabled={saving || !rulesAccepted} style={{
-padding: '10px 20px', background: saving || !rulesAccepted ? 'var(--border)' : accentColor, color: isElevated ? '#000' : '#fff',
-border: 'none', borderRadius: '6px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '14px',
+padding: '11px 22px', background: saving || !rulesAccepted ? 'rgba(26,26,29,0.14)' : accentColor, color: isElevated ? '#000' : '#FFF4E8',
+border: 'none', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', letterSpacing: '0.03em',
 cursor: saving || !rulesAccepted ? 'not-allowed' : 'pointer',
+boxShadow: saving || !rulesAccepted ? 'none' : `0 10px 26px ${accentColor}40`,
 }}>
 {saving ? 'Saving...' : editProduct ? 'Save Changes' : 'Create Product'}
 </button>

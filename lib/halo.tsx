@@ -146,13 +146,14 @@ export function HaloPlanPills({ tier, founding }: { tier: string; founding?: boo
 }
 
 export function HaloButton({
-  children, variant = 'ink', onClick, href, style,
+  children, variant = 'ink', onClick, href, style, type = 'button',
 }: {
   children: React.ReactNode
   variant?: 'accent' | 'ink' | 'soft'
   onClick?: () => void
   href?: string
   style?: React.CSSProperties
+  type?: 'button' | 'submit' | 'reset'
 }) {
   const base: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -174,7 +175,7 @@ export function HaloButton({
   if (href) {
     return <a className="halo-hover-lift" href={href} style={base}>{children}</a>
   }
-  return <button className="halo-hover-lift" onClick={onClick} style={base}>{children}</button>
+  return <button type={type} className="halo-hover-lift" onClick={onClick} style={base}>{children}</button>
 }
 
 // A circular stat satellite. Size lg 152, md 126, sm 106.

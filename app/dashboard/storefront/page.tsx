@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { STORE_THEMES, canUseTheme, canBrandLogo, type StoreTheme } from '@/lib/store-themes'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { HALO } from '@/lib/halo'
 
 function Preview({ t }: { t: StoreTheme }) {
   const k = t.tokens
@@ -183,9 +184,10 @@ export default function StorefrontDesign() {
   const accentColor = isPro ? '#FFD54A' : 'var(--accent)'
 
   return (
-    <div style={{ padding: '32px 28px', maxWidth: 1200, margin: '0 auto', fontFamily: 'var(--font-body)', color: 'var(--text)' }}>
+    <div style={{ padding: '32px 28px', maxWidth: 1200, margin: '0 auto', fontFamily: 'var(--font-body)', color: 'var(--text)', position: 'relative', zIndex: 1 }}>
+      <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Sell</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, margin: 0 }}>Storefront design</h1>
+        <h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 30, margin: 0, color: HALO.ink }}>Storefront design</h1>
         <PlanBadge tier={sellerTier} />
       </div>
       <p style={{ color: 'var(--muted)', fontSize: 15, margin: '8px 0 4px' }}>
@@ -252,10 +254,13 @@ export default function StorefrontDesign() {
                 onClick={() => pick(t.id)}
                 style={{
                   cursor: 'pointer',
-                  borderRadius: 16,
+                  borderRadius: 20,
                   padding: 12,
-                  background: 'var(--surface)',
-                  border: isActive ? `2px solid ${accentColor}` : '1px solid var(--border)',
+                  background: 'rgba(255,255,255,0.62)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: isActive ? `2px solid ${accentColor}` : '1px solid rgba(255,255,255,0.9)',
+                  boxShadow: isActive ? `0 14px 34px ${accentColor}33, inset 0 1px 0 rgba(255,255,255,0.9)` : '0 12px 30px rgba(90,60,20,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
                   position: 'relative',
                 }}
               >
@@ -293,9 +298,9 @@ export default function StorefrontDesign() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: 30, maxWidth: 440, width: '100%', textAlign: 'center' }}
+            style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.95)', boxShadow: '0 24px 60px rgba(90,60,20,0.22)', borderRadius: 24, padding: 30, maxWidth: 440, width: '100%', textAlign: 'center' }}
           >
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, margin: '0 0 8px' }}>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: 24, margin: '0 0 8px', color: HALO.ink }}>
               Unlock every storefront design
             </h2>
             <p style={{ color: 'var(--muted)', fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px' }}>
@@ -324,7 +329,7 @@ export default function StorefrontDesign() {
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '12px 20px', borderRadius: 12, fontSize: 14, zIndex: 120, boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.95)', color: 'var(--text)', padding: '12px 20px', borderRadius: 999, fontSize: 14, zIndex: 120, boxShadow: '0 14px 34px rgba(90,60,20,0.2)' }}>
           {toast}
         </div>
       )}

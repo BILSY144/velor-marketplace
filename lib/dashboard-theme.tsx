@@ -25,10 +25,11 @@ export interface TierTheme {
   rowHoverBg: string
 }
 
-// Single source of truth for how Starter / Pro dashboard pages look. Starter
-// stays exactly as the original plain design. Pro layers in a blue accent
-// treatment. (Enterprise used to layer in a separate gold "premium"
-// treatment here; it was retired 2026-07-15 and folded into Pro.)
+// Single source of truth for how Starter / Pro dashboard pages look. Both
+// tiers now render on the Halo glass base (2026-07-21 -- see tierCardStyle
+// below); Pro layers in a blue accent treatment on top of that same glass.
+// (Enterprise used to layer in a separate gold "premium" treatment here; it
+// was retired 2026-07-15 and folded into Pro.)
 // Import this everywhere instead of re-deriving colours per page.
 export const DASHBOARD_TIER_THEME: Record<SellerTier, TierTheme> = {
   STARTER: {
@@ -38,13 +39,13 @@ export const DASHBOARD_TIER_THEME: Record<SellerTier, TierTheme> = {
     badgeBg: 'rgba(153,153,153,0.12)',
     badgeBorder: 'rgba(153,153,153,0.35)',
     cardBorder: 'var(--border)',
-    cardBg: 'var(--surface)',
-    cardGlow: 'none',
+    cardBg: 'rgba(255,255,255,0.62)',
+    cardGlow: '0 14px 34px rgba(90,60,20,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
     headingAccent: 'var(--text)',
     sectionGradient: 'none',
     statValueColor: 'var(--text)',
     chartLine: '#FF6B00',
-    rowHoverBg: 'transparent',
+    rowHoverBg: 'rgba(255,255,255,0.35)',
   },
   PRO: {
     tier: 'PRO',
@@ -53,13 +54,13 @@ export const DASHBOARD_TIER_THEME: Record<SellerTier, TierTheme> = {
     badgeBg: 'rgba(79,195,247,0.12)',
     badgeBorder: 'rgba(79,195,247,0.45)',
     cardBorder: 'rgba(79,195,247,0.25)',
-    cardBg: 'linear-gradient(180deg, rgba(79,195,247,0.05), var(--surface) 55%)',
-    cardGlow: '0 8px 28px rgba(79,195,247,0.08)',
-    headingAccent: '#4FC3F7',
+    cardBg: 'linear-gradient(160deg, rgba(157,209,255,0.24), rgba(255,255,255,0.62) 55%)',
+    cardGlow: '0 18px 40px rgba(29,95,147,0.14), inset 0 1px 0 rgba(255,255,255,0.9)',
+    headingAccent: '#1D5F93',
     sectionGradient: 'linear-gradient(135deg, rgba(79,195,247,0.09), transparent 60%)',
-    statValueColor: '#4FC3F7',
+    statValueColor: '#1D5F93',
     chartLine: '#4FC3F7',
-    rowHoverBg: 'rgba(79,195,247,0.04)',
+    rowHoverBg: 'rgba(79,195,247,0.06)',
   },
 }
 
@@ -173,13 +174,19 @@ export function FoundingChip() {
 }
 
 // A card wrapper that automatically picks up the right border/background/glow
-// for the seller's tier. Starter renders an identical card to the original
-// design (no visual change at all).
+// for the seller's tier. 2026-07-21: moved onto the Halo glass base (frosted,
+// blurred, sits on the dashboard's aurora backdrop) as part of the "Sell"
+// batch of the Halo redesign -- tier distinction (Starter grey vs Pro blue
+// border/glow/heading colour) is unchanged, just now expressed as a glass
+// panel instead of a flat bordered box. Every page that imports this picks
+// the new look up automatically, no per-page changes required.
 export function tierCardStyle(theme: TierTheme, extra?: React.CSSProperties): React.CSSProperties {
   return {
     background: theme.cardBg,
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
     border: `1px solid ${theme.cardBorder}`,
-    borderRadius: 12,
+    borderRadius: 18,
     boxShadow: theme.cardGlow,
     ...extra,
   }

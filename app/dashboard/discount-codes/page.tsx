@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
+import { HALO, HaloButton } from '@/lib/halo'
 
 interface DiscountCode {
   id: string
@@ -26,9 +27,12 @@ interface SellerProduct {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif', padding: '32px' },
+  // background left transparent (was a solid 'var(--bg)' that painted over
+  // the dashboard's Halo aurora backdrop, hiding it completely on this
+  // page -- see lib/halo.tsx HaloBackdrop / app/dashboard/layout.tsx).
+  page: { minHeight: '100vh', color: 'var(--text)', fontFamily: 'Inter, sans-serif', padding: '32px', position: 'relative', zIndex: 1 },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: 16 },
-  title: { fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: 0 },
+  title: { fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '30px', margin: 0, color: HALO.ink },
   btn: { background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' },
   btnSm: { border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
   table: { width: '100%', borderCollapse: 'collapse' as const },
@@ -36,13 +40,13 @@ const S: Record<string, React.CSSProperties> = {
   td: { padding: '14px 16px', fontSize: '14px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle' as const },
   code: { fontFamily: 'monospace', background: 'rgba(255,107,0,0.12)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, fontSize: '13px' },
   badge: { padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const },
-  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
-  modal: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '32px', width: '520px', maxWidth: '90vw', maxHeight: '88vh', overflowY: 'auto' as const },
-  modalTitle: { fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 24px' },
+  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(26,26,29,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
+  modal: { background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.95)', boxShadow: '0 24px 60px rgba(90,60,20,0.22)', borderRadius: '20px', padding: '32px', width: '520px', maxWidth: '90vw', maxHeight: '88vh', overflowY: 'auto' as const },
+  modalTitle: { fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', margin: '0 0 24px', color: HALO.ink },
   field: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' },
-  input: { width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box' as const },
-  select: { width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box' as const },
+  input: { width: '100%', background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(26,26,29,0.12)', borderRadius: '10px', padding: '10px 12px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box' as const },
+  select: { width: '100%', background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(26,26,29,0.12)', borderRadius: '10px', padding: '10px 12px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box' as const },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   modalFooter: { display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' },
   btnOutline: { background: 'transparent', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '8px', padding: '10px 20px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' },
@@ -221,11 +225,14 @@ export default function DiscountCodesPage() {
   return (
     <div style={S.page}>
       <div style={S.header}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={S.title}>Discounts</h1>
-          <PlanBadge tier={tier} />
+        <div>
+          <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Sell</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={S.title}>Discounts</h1>
+            <PlanBadge tier={tier} />
+          </div>
         </div>
-        <button style={S.btn} onClick={openCreateModal}>+ Create Discount</button>
+        <HaloButton variant="accent" onClick={openCreateModal}>+ Create Discount</HaloButton>
       </div>
 
       <div style={{
