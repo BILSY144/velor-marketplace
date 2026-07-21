@@ -138,15 +138,22 @@ export async function GET(req: NextRequest) {
         sellerAccountId = ''
       }
 
-      // LAW: never release a payout -- on either rail -- to a seller whose
-      // identity is not Stripe-verified. Approval and verification are
-      // decoupled (a human can approve before verification finishes, see
-      // provisionSeller.ts), so this is the backstop that keeps that gap from
-      // ever reaching real money. Funds stay safely in escrow and this order
-      // is retried on every run once the seller verifies (see the Stripe
-      // Identity webhook, which flips identityVerified to true).
-      if (!sellerRow?.identityVerified) {
-        heldUnverified++
+      // LAW (identity model changed 2026-07-21, William: identity works
+      // "like payouts"): never release a payout -- on either rail -- to a
+      // seller who has not passed the payout rail's own regulated KYC.
+      // This replaced the old separate photo-ID (Stripe Identity) gate:
+      //   STRIPE rail   -> the connected account must be LIVE-verified as
+      //                    charges+payouts enabled (checked below, fresh
+      //                    from Stripe, before every transfer). Stripe only
+      //                    enables payouts once its KYC has passed.
+      //   PAYONEER rail -> the payee must be LIVE-reported ACTIVE (checked
+      //                    below). Payoneer only activates a payee once its
+      //                    KYC has passed.
+      // Funds stay safely in escrow and retry every run until the seller's
+      // rail reports them verified. Seller.identityVerified is self-healed
+      // to true at that moment so every other surface reads consistently.
+      if (!sellerRow) {
+        skipped++
         continue
       }
 
@@ -167,7 +174,22 @@ export async function GET(req: NextRequest) {
       }
 
       if (rail === 'STRIPE' && sellerAccountId) {
-        // STRIPE rail. Idempotency key keyed on the order guarantees we never
+        // STRIPE rail. LIVE KYC gate: only transfer to an account Stripe
+        // itself reports fully enabled -- payouts_enabled means Stripe's
+        // identity verification has passed. A part-onboarded account never
+        // receives funds (they would strand in the connected account's
+        // balance); the order waits in escrow and retries.
+        const account = await stripe.accounts.retrieve(sellerAccountId)
+        if (!account.charges_enabled || !account.payouts_enabled) {
+          heldForStripeSetup++
+          continue
+        }
+        if (!sellerRow.identityVerified) {
+          await prisma.seller
+            .update({ where: { id: o.sellerId }, data: { identityVerified: true, stripeOnboarded: true } })
+            .catch(() => {})
+        }
+        // Idempotency key keyed on the order guarantees we never
         // double-transfer, even if a later step fails and the cron retries.
         const transfer = await stripe.transfers.create(
           {
@@ -207,6 +229,13 @@ export async function GET(req: NextRequest) {
         if (String(payee.status).toUpperCase() !== 'ACTIVE') {
           heldForPayoneer++
           continue
+        }
+        // ACTIVE means Payoneer's KYC has passed -- self-heal the identity
+        // flag so every surface reads consistently (same as Stripe branch).
+        if (!sellerRow.identityVerified) {
+          await prisma.seller
+            .update({ where: { id: o.sellerId }, data: { identityVerified: true } })
+            .catch(() => {})
         }
         // client_reference_id `payout_<orderId>` mirrors the Stripe
         // idempotency convention so a retried run can never double-pay.

@@ -8,11 +8,6 @@ import {
   APPLICATION_SLA_HOURS,
   APPLICATION_ESCALATE_AFTER_HOURS,
 } from '@/lib/sellerApplicationReview';
-import {
-  createVerificationSession,
-  isIdentityConfigured,
-  isRestrictedForIdentity,
-} from '@/lib/identity';
 import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
@@ -23,27 +18,27 @@ const AGENT = 'seller-onboarding';
 
 // Seller Onboarding Agent, hourly.
 //
-// Velor accepts NO seller without a verified government-issued identity
-// document. The clock Velor publishes is "a decision within 24 hours of your
-// verification completing" -- the 24 hours is ours to honour, the verification
-// step belongs to the seller.
+// IDENTITY MODEL CHANGED 2026-07-21 (William: "same process as payouts...
+// we dont require photo, just id verification like payouts"). Velor no
+// longer runs its own photo-ID (Stripe Identity) step at application.
+// Identity assurance is the payout rail's own regulated KYC: Stripe
+// Connect verifies each seller's personal identity at payout onboarding
+// (name/DOB/address, escalating to photo ID only where Stripe must), and
+// Payoneer runs its own KYC on its rail. The money stays protected
+// regardless of what is approved here: app/api/cron/release-payouts
+// refuses to move a penny to any seller whose payout account has not
+// passed the rail's KYC (Stripe charges+payouts enabled / Payoneer payee
+// ACTIVE). Approval therefore needs only the rules screening:
+//   1. Screen against the published rules (/legal/seller-rules). A
+//      prohibited or plainly incomplete application is rejected
+//      immediately; an ambiguous one holds for a human.
+//   2. Screening passed? Approve and provision. The seller proves their
+//      identity to Stripe/Payoneer when they set up payouts -- exactly
+//      once, exactly where the money moves.
 //
-// Order of operations per pending application, and it matters:
-//   1. Screen against the published rules (/legal/seller-rules). A prohibited
-//      or plainly incomplete application is rejected immediately -- we do not
-//      make someone photograph their passport for a listing we will refuse.
-//   2. Restricted jurisdiction (China, Russia, Cuba, Iran, North Korea, Syria)?
-//      Stripe Identity is legally barred from verifying them. HOLD, tell the
-//      seller honestly why, and wait for Payoneer's own KYC rail.
-//   3. No verification started? Create a Stripe Identity session and email the
-//      seller the link. HOLD.
-//   4. Verification VERIFIED? Approve, provision the account, email them.
-//   5. Anything else (PROCESSING / FAILED / CANCELED)? HOLD.
-//
-// LAW #1: this agent never approves an unverified seller, and never approves an
-// application it could not fully screen, however close the deadline is. A held
-// application stays PENDING, a human is told, and an SLA breach is reported
-// loudly rather than hidden.
+// LAW #1: this agent never approves an application it could not fully
+// screen, and never claims an identity check happened here -- it happens
+// on the payout rail, and the payout cron enforces it.
 export async function GET(req: NextRequest) {
   const authError = requireCronSecret(req);
   if (authError) return authError;
@@ -57,7 +52,6 @@ export async function GET(req: NextRequest) {
 
   let approved = 0;
   let rejected = 0;
-  let verificationsStarted = 0;
   const held: { id: string; businessName: string; ageHours: number; reason: string }[] = [];
   const breached: { id: string; businessName: string; ageHours: number }[] = [];
   const errors: string[] = [];
@@ -103,86 +97,19 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    // --- 2. Restricted jurisdiction --------------------------------------
-    if (isRestrictedForIdentity(app.country)) {
-      if (app.verificationStatus !== 'RESTRICTED') {
-        try {
-          await prisma.sellerApplication.update({
-            where: { id: app.id },
-            data: {
-              verificationStatus: 'RESTRICTED',
-              verificationNotes: `Stripe Identity is not permitted to verify applicants from ${app.country}. Awaiting Payoneer KYC rail.`,
-            },
-          });
-          await sendEmail({
-            from: SELLER_FROM,
-            to: app.contactEmail,
-            subject: 'Your Velor application: an honest update',
-            html: `<p>Hi ${app.contactName},</p>
-              <p>Thank you for applying to sell on Velor. We want to be straight with you about where your application stands.</p>
-              <p>Velor verifies every seller's identity before accepting them. Our verification provider is not permitted to verify applicants based in ${app.country}, so we cannot complete that step for you today. This is a restriction placed on us, not a judgement about you or your work.</p>
-              <p>We are building a second verification route for exactly this reason. Your application stays open, and we will contact you the moment it is available. We will not ask you for money or documents in the meantime.</p>
-              <p>&mdash; The Velor Seller Team</p>`,
-          });
-        } catch (err) {
-          errors.push(`restricted ${app.id}: ${err instanceof Error ? err.message : 'error'}`);
-        }
+    // --- 2. Screening passed: approve. Identity is proven on the payout
+    // rail (Stripe Connect / Payoneer KYC) and enforced by release-payouts
+    // before any money moves.
+    const ageHours = hoursSince(app.createdAt, now);
+    try {
+      await approveApplication(app, AGENT);
+      approved++;
+    } catch (err) {
+      errors.push(`approve ${app.id}: ${err instanceof Error ? err.message : 'error'}`);
+      if (ageHours >= APPLICATION_SLA_HOURS) {
+        breached.push({ id: app.id, businessName: app.businessName, ageHours: Math.round(ageHours) });
       }
-      hold(app, `Restricted jurisdiction (${app.country}) -- Stripe Identity not permitted. Awaiting Payoneer KYC.`);
-      continue;
     }
-
-    // --- 3. Verification not started -------------------------------------
-    if (app.verificationStatus === 'NOT_STARTED' || !app.verificationSessionId) {
-      if (!isIdentityConfigured()) {
-        hold(app, 'Identity verification is not configured (STRIPE_SECRET_KEY missing). No seller can be approved.');
-        continue;
-      }
-      try {
-        const { sessionId, url } = await createVerificationSession(app.id, app.contactEmail);
-        await prisma.sellerApplication.update({
-          where: { id: app.id },
-          data: { verificationSessionId: sessionId, verificationStatus: 'PENDING' },
-        });
-        await sendEmail({
-          from: SELLER_FROM,
-          to: app.contactEmail,
-          subject: 'One step left: verify your identity to sell on Velor',
-          html: `<p>Hi ${app.contactName},</p>
-            <p>Your application to sell on Velor looks good. One step remains: verifying your identity.</p>
-            <p>Velor verifies every seller before accepting them. It protects buyers, and it protects honest sellers from being lumped in with the dishonest ones. It takes about two minutes and needs a government-issued ID.</p>
-            <p><a href="${url}" style="display:inline-block;background:#FF6B00;color:#000;font-weight:800;text-decoration:none;padding:14px 30px;border-radius:8px;">Verify my identity</a></p>
-            <p>Your documents go directly to Stripe, our verification provider. Velor never sees or stores them &mdash; we receive only a pass or fail.</p>
-            <p>Once you have verified, we will make a decision on your application within 24 hours.</p>
-            <p>&mdash; The Velor Seller Team</p>`,
-        });
-        verificationsStarted++;
-      } catch (err) {
-        errors.push(`identity ${app.id}: ${err instanceof Error ? err.message : 'error'}`);
-      }
-      hold(app, 'Identity verification link sent; waiting on the seller.');
-      continue;
-    }
-
-    // --- 4. Verified: approve --------------------------------------------
-    if (app.verificationStatus === 'VERIFIED') {
-      const hoursSinceVerified = app.verifiedAt ? hoursSince(app.verifiedAt, now) : 0;
-      try {
-        await approveApplication(app, AGENT);
-        approved++;
-      } catch (err) {
-        errors.push(`approve ${app.id}: ${err instanceof Error ? err.message : 'error'}`);
-        // Only a verified application is on our 24-hour clock, so only a verified
-        // application can breach it.
-        if (hoursSinceVerified >= APPLICATION_SLA_HOURS) {
-          breached.push({ id: app.id, businessName: app.businessName, ageHours: Math.round(hoursSinceVerified) });
-        }
-      }
-      continue;
-    }
-
-    // --- 5. Everything else: hold ----------------------------------------
-    hold(app, `Identity verification is ${app.verificationStatus}.`);
   }
 
   // Escalate to a human, in time to still keep the promise.
@@ -216,7 +143,6 @@ export async function GET(req: NextRequest) {
     scanned: pending.length,
     approved,
     rejected,
-    verificationsStarted,
     held: held.length,
     escalated: needsHuman.length,
     slaBreached: breached.length,
@@ -239,7 +165,6 @@ export async function GET(req: NextRequest) {
     scanned: pending.length,
     approved,
     rejected,
-    verificationsStarted,
     held: held.length,
     slaBreached: breached.length,
     errors,

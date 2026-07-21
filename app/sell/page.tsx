@@ -141,7 +141,7 @@ export default function SellPage() {
             <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Live broadcasting — for every seller.</b> Go on air on Velor Live from any tier, Starter included. Founding sellers keep the whole Pro tier free for life.</div></div>
             <div className="vs-stat"><div className="n">190</div><div className="t"><b>Countries, one marketplace.</b> Your country&apos;s page exists the day you list — and the first seller from each country opens it.</div></div>
             <div className="vs-stat"><div className="n">0%</div><div className="t"><b>Listing fees. None.</b> You pay commission when you sell, or a subscription that lowers it. Nothing to list.</div></div>
-            <div className="vs-stat"><div className="n">{APPLICATION_SLA_HOURS}h</div><div className="t"><b>Application decision</b> within {APPLICATION_SLA_HOURS} hours of your identity verification completing. The clock is ours, the camera is yours.</div></div>
+            <div className="vs-stat"><div className="n">{APPLICATION_SLA_HOURS}h</div><div className="t"><b>Application decision</b> within {APPLICATION_SLA_HOURS} hours of applying &mdash; no documents to upload. The clock is ours, the camera is yours.</div></div>
           </div>
         </div>
       </div>

@@ -62,7 +62,7 @@ export default function TermsPage() {
           <p style={pStyle}>The Platform is a global marketplace, open to Sellers and Buyers worldwide. Sellers are solely responsible for ensuring compliance with all laws applicable in their country of operation and in every country they ship to.</p>
 
           <h3 style={h3Style}>3. Account Registration &amp; Verification</h3>
-          <p style={pStyle}>Sellers must provide accurate, complete, and current information during registration and keep it updated. The Platform requires identity verification (government-issued ID) and, where applicable, business registration documentation before a Seller account becomes fully active. The Platform reserves the right to suspend or terminate accounts where verification cannot be completed or where false information has been provided.</p>
+          <p style={pStyle}>Sellers must provide accurate, complete, and current information during registration and keep it updated. Every Seller's identity is verified through the Platform's regulated payout providers (Stripe, or Payoneer where applicable) as part of payout onboarding, before any funds are released to the Seller. Individuals and businesses alike may sell; no separate document upload to the Platform is required. The Platform reserves the right to suspend or terminate accounts where verification cannot be completed or where false information has been provided.</p>
 
           <h3 style={h3Style}>4. Platform Fees &amp; Commission</h3>
           <p style={pStyle}>The Platform charges commission on each sale. Rates depend on your subscription tier:</p>
