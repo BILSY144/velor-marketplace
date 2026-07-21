@@ -2526,3 +2526,76 @@ Continuation of the TikTok-style live-shopping redesign from earlier in the week
 **End state, William's words:** "ok now its perfect. from what i can see its set right now." Session closed on that note, with an explicit plan for **tomorrow**: "we will make it our own design based off these visuals" -- i.e. a further, more distinctively-Velor-branded pass on top of the now-working TikTok-style structure, not a functional redo. See the OUTSTANDING section near the top of this file for the seller dashboard redesign William raised in the same conversation, which is a separate, larger, not-yet-started piece of work.
 
 **Not done this session, still open:** the homepage/home-screen live video embed feature (actual inline live video tiles on the website homepage and the native app's home screen, horizontal row when multiple sellers are live simultaneously, click-through to the full room) -- raised earlier in the week, confirmed still not started, not touched this session either. The GitHub PAT William pasted in chat this session is, per standing practice, flagged again for rotation -- it sat in plain chat text and shell history for the whole session.
+
+## 2026-07-21 checkpoint (late) -- APP SELLER DASHBOARD: BLACK SCREEN + NaN FIXED, FULL SWEEP COMPLETED, BROKEN npm ci FIXED
+
+Context: the prior session (Seller Studio work above) crashed mid-task while
+sweeping the native app's seller dashboard for William's report: "abnormal
+symbols" under YOUR CHANNEL / EARNED - ALL ORDERS, plus black blank screens
+when opening some seller sections. It got the core fix PUSHED before dying
+(main `c35e539d`, mobile-app `843444af`, Expo preview publish auto-fired,
+Vercel green) but never checkpointed it, and never finished the full sweep.
+This session verified the fix and completed the sweep.
+
+**The fix that landed (verified in git + Vercel, not memory):** the
+2026-07-21 orders-API reshape (`a4bd2fe`) changed `/api/dashboard/orders`'s
+response; the app still read the OLD fields -- `o.totalPayout` (now
+undefined) summed to NaN under EARNED (the "abnormal symbols"), and
+`o.totalRevenue.toFixed(2)` threw on undefined, crashing SellerOrders to a
+black screen. `mobile/src/api.ts`'s SellerOrder type now matches the route
+exactly, DashScreen sums `sellerEarnings`, SellerOrders renders
+`product.name`/`images`/`total`/`sellerEarnings`, all null-guarded; the
+route additionally returns per-order `sellerEarnings` (additive) so no
+client recomputes commission maths.
+
+**Full sweep completed this session (William: "a full sweep is needed"):**
+every app screen that consumes seller APIs was diffed against the LIVE
+route handlers, not assumptions:
+- `/api/dashboard/payouts` <-> SellerPayouts: exact field match; PayoutsScreen
+  fully null-guarded (`p?.pendingEscrow ?? 0`, `live && p` gates).
+- `/api/dashboard/products` <-> SellerProduct: match (route maps title->name;
+  screens read `name ?? title`).
+- `/api/seller/subscription` <-> tier/foundingBadge/listingLimit reads: match.
+- `/api/dashboard/live` <-> SellerLiveStatus: match; GoLiveScreen try/catch
+  with honest error state.
+- YouScreen seller card: all figures guarded -- em dash while loading,
+  never NaN.
+- Every `nav.navigate()` target in mobile/src resolves to a registered
+  route in App.tsx (no dead-route black screens).
+- Byte-level mojibake scan of mobile/src: clean (the symbols were NaN
+  output, confirming the prior session's scan).
+- `tsc --noEmit` on mobile/: ZERO errors in any data/screen code. The only
+  errors are 8 PRE-EXISTING types-only complaints in GoLiveScreen/
+  LiveRoomScreen (LiveKitRoom `style` prop not in its TS props, TS 5.x
+  Uint8Array generic strictness, RegisteredStyle vs ViewStyle) -- runtime-
+  safe, Metro doesn't type-check so EAS builds can't fail on them, and the
+  live-broadcast screens are on the do-not-touch-without-checking-in list,
+  so deliberately left alone and logged here instead.
+- Branch parity checked: after the sync, mobile/src data screens (api.ts,
+  DashScreen, SellerOpsScreens, YouScreen) are byte-identical between main
+  and mobile-app; the branches only diverge on the LiveKit live-shopping
+  files (main = store build with real LiveKit; mobile-app = Expo Go
+  version without the native module). That divergence is intentional.
+
+NOT yet confirmed on William's device -- he should reopen the seller
+dashboard in Expo Go: Earned figure and Orders pages should now be correct.
+
+**Real breakage found by the sweep, fixed (commit `326fe815`):** main's
+`mobile/package-lock.json` never gained the LiveKit dependencies
+package.json added 2026-07-20 -- `npm ci` failed outright, and
+`.github/workflows/eas-build.yml` runs exactly `npm ci`, so THE NEXT STORE
+BUILD WOULD HAVE DIED AT INSTALL. (Unrelated to the 5072fbd lockfile-drift
+revert on mobile-app, which is consistent -- `npm ci --dry-run` clean, no
+LiveKit in its package.json.) Regenerating surfaced two real peer
+conflicts, fixed at the source, NO --legacy-peer-deps papering:
+`@config-plugins/react-native-webrtc` ^10 -> ^13 (v10 peers expo ^52,
+project is expo 54) and `@livekit/react-native` ^2.7.0 -> ~2.8.0 (2.9+
+peers webrtc ^137/^144 but the project pins webrtc ^125; 2.8.x is the
+newest that peers ^125). `npm ci` verified passing from a clean tree.
+Reminder that still stands: never commit lockfile drift from this
+sandbox's own incidental installs -- this commit is a deliberate,
+verified lockfile regeneration, the opposite case.
+
+Environment note for future sessions: this cloud sandbox HAS outbound
+network in bash (public git clone, npm registry, curl all work) -- the "no
+network" rule in older notes applies to a different environment.
