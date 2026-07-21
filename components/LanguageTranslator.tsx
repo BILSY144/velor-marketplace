@@ -25,6 +25,11 @@ const NO_LETTERS = /^[^A-Za-z]*$/
 export default function LanguageTranslator() {
   const pathname = usePathname()
   const originals = useRef(new WeakMap<Text, string>())
+  // The value WE last wrote into each node (i.e. our own translated output).
+  // Used to tell "this node's live content changed because we translated
+  // it" apart from "this node's live content changed because React
+  // re-rendered it with new data" -- see the staleness check in applyDict.
+  const applied = useRef(new WeakMap<Text, string>())
   const dict = useRef(new Map<string, Map<string, string>>()) // lang -> src -> dst
   const busy = useRef(false)
   const queued = useRef(false)
@@ -88,6 +93,13 @@ export default function LanguageTranslator() {
       observer.current?.disconnect()
       for (const node of nodes) {
         const raw = node.nodeValue || ''
+        // If the live DOM content no longer matches what we last wrote
+        // ourselves, the underlying English source changed since (e.g. a
+        // live price after a currency switch) -- treat it as a fresh
+        // original rather than reusing a stale one.
+        if (originals.current.has(node) && applied.current.get(node) !== raw) {
+          originals.current.set(node, raw)
+        }
         const orig = originals.current.get(node) ?? raw
         const key = orig.trim()
         const dst = d.get(key)
@@ -95,7 +107,9 @@ export default function LanguageTranslator() {
           if (!originals.current.has(node)) originals.current.set(node, raw)
           const lead = raw.match(/^\s*/)?.[0] ?? ''
           const tail = raw.match(/\s*$/)?.[0] ?? ''
-          node.nodeValue = lead + dst + tail
+          const next = lead + dst + tail
+          node.nodeValue = next
+          applied.current.set(node, next)
         }
       }
       startObserver()
