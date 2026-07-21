@@ -261,6 +261,52 @@ backdrop, so the page never showed any Halo styling regardless of the
 tierCardStyle change -- now transparent like every other page. Verified
 via `tsc`/esbuild (no errors) then live in browser on all three pages.
 
+**2026-07-21 "Fulfil" batch shipped (commits d9b149a, a4bd2fe), live-verified
+on Orders, Returns, Messages:** visual-only Halo pass on Orders, Returns,
+Disputes, Messages -- kicker/serif-italic headings, glass sub-panels for
+Orders' nested shipment/tracking sections, Messages' two columns moved
+from a flat opaque background to translucent glass. No fulfillment,
+dispute, or messaging logic touched. Also fixed a hardcoded dark
+`background: '#111'` on the Returns/Disputes item chips (same bug class as
+the earlier Settings black-input fix).
+
+**Real bug found live while redesigning Orders, fixed same session
+(commit a4bd2fe):** every order showed "£NaN" for its total and every
+line item, generic "Product" instead of the real name, no product image,
+and a blank shipping address on expand. Root cause: `/api/dashboard/
+orders` (GET) had never matched what `app/dashboard/orders/page.tsx`
+actually renders -- it grouped OrderItem rows into an unrelated summary
+shape (totalRevenue/totalPayout, productName/unitPrice) instead of
+order.total/productSubtotal/shippingCost/item.price/item.product.name+
+images/shippingAddress/shipments[]. This wasn't a regression from
+today's work -- git history shows it's been this way since the route was
+first added to the repo, so every seller's Orders page has likely always
+shown this. Rebuilt the route to query Order directly (with items+product
+and the singular shipment relation) and map every field onto the real
+Prisma schema (Product.title -> item.product.name, Order.customerEmail ->
+buyerEmail, Order.shippingAddress passed through, Order.shipment wrapped
+in a one-element array to match the page's shipments[] check). LIVE-
+VERIFIED: expanding the CMROFH22 order now shows the real address
+(William Sinclair, 1 Palmerston Gardens, Grays, Essex, GB), the real
+product ("hand made toys" with its photo), and a correct breakdown
+(Products £1.00, Shipping £2.71, Total £3.71).
+
+KNOWN REMAINING LIMITATION (flagged, not fixed): Order.subtotal only
+persists the seller's COMBINED product+shipping+duties total -- the
+shipping/duties split is computed at checkout (payment-intent route) but
+never written to the Order row, so it can't be reconstructed after the
+fact. The route now computes productSubtotal honestly from real item
+prices and reports the true remainder as shippingCost (exactly correct
+for non-DDP orders; on a DDP international order it will fold that
+order's duty into the shipping line since the two can't be told apart
+from what's stored). dutiesCost is left at 0 rather than guessed -- the
+order Total itself is always exactly correct either way. A precise
+shipping/duties split needs a schema migration to persist those metadata
+fields on Order at creation time (lib/orders.ts) -- worth doing, but out
+of scope for this pass since it touches the production schema and this
+sandbox has no way to run a migration against it (network-restricted, see
+Session Notes).
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
