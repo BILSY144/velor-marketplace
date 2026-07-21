@@ -1,13 +1,18 @@
 import React from 'react'
-import { View, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { Serif, Body, Dim, Btn } from '../ui'
 
-// The mockup's verify screen. The identity check itself is Stripe-hosted —
-// that single step opens the secure Stripe page; everything else stays here.
+// Post-application confirmation. IDENTITY MODEL CHANGED 2026-07-21
+// (William: identity works "like payouts" -- no photo-ID step). This screen
+// used to send sellers to a Stripe-hosted camera check with a 24-hour
+// clock; both are gone. Applications are rules-screened and decided within
+// 2 hours; identity is confirmed by Stripe or Payoneer from personal
+// details at payout setup, and no payout moves until their KYC passes.
+// Route name stays "Verify" so existing navigation keeps working.
 export default function VerifyScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
@@ -18,24 +23,19 @@ export default function VerifyScreen() {
       </Pressable>
       <View style={{ alignItems: 'center', paddingHorizontal: 30 }}>
         <View style={s.idbox}>
-          <Ionicons name="person-outline" size={34} color={C.accent} />
+          <Ionicons name="checkmark-circle-outline" size={34} color={C.accent} />
         </View>
-        <Serif style={{ fontSize: 26, marginTop: 22 }}>One step left.</Serif>
-        <Dim style={{ textAlign: 'center', marginTop: 10, maxWidth: 290, lineHeight: 19 }}>
-          Verify your identity with your phone camera — hosted by Stripe. Velor never
-          receives or stores your documents, only the result. Your 24-hour clock starts
-          the moment it completes.
+        <Serif style={{ fontSize: 26, marginTop: 22 }}>Application in.</Serif>
+        <Dim style={{ textAlign: 'center', marginTop: 10, maxWidth: 300, lineHeight: 19 }}>
+          You will have a decision within 2 hours — usually minutes. No documents to
+          upload: your identity is confirmed by Stripe or Payoneer from your personal
+          details when you set up payouts, and Velor never sees or stores them.
         </Dim>
       </View>
       <View style={{ paddingHorizontal: 20, marginTop: 26 }}>
-        <Btn
-          label="Verify with Stripe"
-          onPress={() => Linking.openURL('https://velorcommerce.store/apply')}
-        />
-        <Btn ghost label="Do it later" style={{ marginTop: 9 }} onPress={() => nav.navigate('Tabs')} />
+        <Btn label="Back to Velor" onPress={() => nav.navigate('Tabs')} />
         <Dim style={{ textAlign: 'center', marginTop: 12, fontSize: 10.5 }}>
-          The secure identity check is the one step that opens in your browser —
-          it finishes your application on velorcommerce.store.
+          Watch your email — approval and your next steps arrive there.
         </Dim>
       </View>
     </View>

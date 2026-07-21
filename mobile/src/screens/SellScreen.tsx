@@ -106,8 +106,8 @@ export default function SellScreen() {
           <Btn label="See if your seat is open" onPress={() => nav.navigate('Seats')} />
           <Btn ghost label="Apply now" onPress={() => nav.navigate('Apply', {})} />
           <Dim style={{ textAlign: 'center', marginTop: 4, fontSize: 11 }}>
-            Five minutes in-app. Only the Stripe-hosted identity check opens in your
-            browser — decision within 24h of verification.
+            Five minutes in-app, no documents to upload — decision within 2 hours.
+            Your identity is confirmed by Stripe or Payoneer at payout setup.
           </Dim>
         </View>
       </ScrollView>

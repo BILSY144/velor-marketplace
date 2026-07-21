@@ -16,12 +16,13 @@ import { Kicker, Display, Body, Dim, Btn } from '../ui'
 // agent enforces; each has a delete button). Country is a real picker — all
 // 190, searchable. No website/social field: William's call, 2026-07-15 —
 // nothing on the application invites buyers off-platform. Submitting leads
-// to the Verify step; the Stripe-hosted identity check itself is the only
-// part that runs on the secure web page.
+// to the confirmation step. IDENTITY MODEL 2026-07-21: no photo-ID step
+// anywhere -- identity is confirmed by Stripe/Payoneer from personal
+// details when the seller sets up payouts, and enforced before any payout.
 const STEPS: [string, string, string][] = [
-  ['1', 'Apply', 'Five minutes, one form.'],
-  ['2', 'Verify identity', 'Stripe-hosted — Velor never sees your documents, only pass or fail.'],
-  ['3', 'Decision in 24h', 'From the moment verification completes.'],
+  ['1', 'Apply', 'Five minutes, one form. No documents to upload.'],
+  ['2', 'Decision in 2 hours', 'Usually minutes. Rules-screened, honestly.'],
+  ['3', 'Set up payouts', 'Stripe or Payoneer confirm your identity from personal details — no photos.'],
 ]
 
 export default function ApplyScreen() {
@@ -171,7 +172,7 @@ export default function ApplyScreen() {
       <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
         <Btn label="Submit application" onPress={submit} />
         <Dim style={{ textAlign: 'center', marginTop: 9, fontSize: 11 }}>
-          Submitting takes you straight to identity verification.
+          Decision within 2 hours — no documents to upload.
         </Dim>
       </View>
     </ScrollView>
