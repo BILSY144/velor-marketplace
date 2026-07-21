@@ -25,7 +25,18 @@ export async function POST() {
   }
 
   try {
-    const account = await stripe.accounts.create({ type: 'express', capabilities: { card_payments: { requested: true }, transfers: { requested: true } } });
+    // business_type 'individual' (William, 2026-07-21): anyone can sell on
+    // Velor, including personal sellers -- Stripe therefore collects
+    // PERSONAL identification (name, date of birth, address, bank) instead
+    // of asking for business/company details. A seller who genuinely
+    // operates as a registered company can still be switched later
+    // (disconnect creates a fresh account); the default onboarding must
+    // never demand business status from a private individual.
+    const account = await stripe.accounts.create({
+      type: 'express',
+      business_type: 'individual',
+      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+    });
     const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
 
     try {

@@ -97,6 +97,15 @@ async function payoneerFetch<T>(path: string, options: { method?: string; body?:
 // Payee onboarding: the marketplace submits a payee id (we use Seller.id) and
 // gets back a hosted registration link where the seller completes bank/ID
 // details directly with Payoneer -- Velor never sees or stores those details.
+//
+// INDIVIDUAL SELLERS (William, 2026-07-21): Velor's model is that anyone can
+// sell, including private individuals with no registered business. Payoneer's
+// hosted registration supports individual payees natively (the payee chooses
+// individual vs company inside Payoneer's own flow) -- nothing in this
+// payload forces business status. SANDBOX CHECKLIST ADDITION: when partner
+// credentials arrive, verify the program is configured to allow INDIVIDUAL
+// payees, and if the registration-link API accepts a payee-type hint in this
+// program's schema, default it to individual rather than company.
 export async function getRegistrationLink(params: {
   payeeId: string
   alreadyHaveAnAccount?: boolean
