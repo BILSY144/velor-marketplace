@@ -18,6 +18,28 @@ This law outranks every other instruction in this file, including deadlines.
 
 ---
 
+## LAW #2 -- VELOR IS A GLOBAL MARKETPLACE (William, 2026-07-21: "this is
+something we just cannot get wrong again")
+
+Velor is a GLOBAL marketplace for authentic cultural and artisan goods.
+It is NEVER described -- in outreach emails, site copy, app copy, press,
+agent prompts, assistant answers, metadata, or anywhere else a human or
+search engine can read -- as "a UK marketplace", "UK-based marketplace",
+"British marketplace", or any equivalent. Every country has its own
+shopping channel; buyers and sellers are worldwide.
+
+The ONLY correct uses of "UK" are legal/registration facts: "Velor
+Commerce Ltd, Company No. 17268133", the registered office, UK tax/OMP
+obligations, ICO registration, and similar. Correct identity line for
+outreach: "Velor (velorcommerce.store), a global online marketplace for
+authentic cultural goods" with the company registration in the signature.
+
+Before ANY outward-facing text ships (email, page, agent prompt, store
+listing copy), check it against this law. If an existing surface is
+found violating it, fix it in the same session and log it here.
+
+---
+
 ## RESOLVED 2026-07-21 -- BUYER-SELLER COMMUNICATION RULES DEFINED BY WILLIAM AND ENFORCED (was: rules needed since 2026-07-16)
 
 **WILLIAM'S RULES (2026-07-21, verbatim intent): buyer-seller messages must
