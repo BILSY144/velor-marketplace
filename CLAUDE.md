@@ -167,6 +167,25 @@ function untouched per the rules-needed section above) -> Studio (Payouts,
 Stripe Connect, Payoneer, API Keys, Settings, Support, Terms, Upgrade) ->
 Analytics -> Go Live branded pass last.
 
+**2026-07-21 urgent fix, found BY the redesign (William: "the information
+is wrong on payouts page... it needs to read the correct set up for that
+country"):** the new Overview's live "via Payoneer" label exposed a real
+money-path bug -- Seller.country stores COUNTRY NAMES (the /apply
+business-country select uses names as values) but getPayoutRail() matched
+only 2-letter ISO codes, so any caller passing Seller.country (payoneer/
+onboard did, and its GET PERSISTED the wrong answer) resolved every such
+seller to PAYONEER. Not cosmetic: the release-payouts cron branches on the
+stored rail, so a Stripe-country seller stuck on PAYONEER with no payee id
+would NEVER be paid. Fixed at the source (commits ad89619 + afc52f4):
+lib/payoutRail.ts countryToCode() now accepts names or codes
+(WORLD_COUNTRIES lookup + aliases incl. UK->GB; 16-case behaviour test
+passed), and /api/dashboard/payouts resolves the rail live from country
+and self-heals the stored field (same pattern payoneer/onboard uses).
+LIVE-VERIFIED: williams workshop payouts page now shows the Stripe
+Connect setup path, Overview reads "via Stripe". Other sellers self-heal
+on their next payouts/dashboard visit; /api/admin/recompute-payout-rails
+exists if a bulk pass is ever wanted.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
