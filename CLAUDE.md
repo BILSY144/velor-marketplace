@@ -2854,3 +2854,32 @@ links, styles, rendered copy, anything in mobile/ -- requires William's
 explicit written approval first, logged as a proposal in SEO_LOG.md's
 backlog. Interactive sessions: if a future SEO-agent commit violates
 this, revert it and tighten further rather than letting it slide.
+
+## 2026-07-21 checkpoint (late 7) -- PAYONEER MASS PAYOUTS: TWO-CHANNEL CHASE SENT; SELLER-ACQUISITION RESEARCH LAUNCHED
+
+Payoneer (urgent, William): 8 days after the 13 July Mass Payouts partner
+application, zero genuine contact (Outlook contains only wrong-account
+noise from the mistaken duplicate, Customer ID 105170281). Verified live
+in the signed-in Payoneer account (correct account confirmed on-screen:
+VELOR COMMERCE LTD, Customer ID 104582691) that the application never
+created any support case ("My Requests" was empty -- the Salesforce lead
+form left no tracked record). Chased on two channels 2026-07-21 evening:
+(1) support case 260721-023420 raised from inside the correct account
+(status Received; William ticked the captcha and submitted); (2) email
+SENT 22:34 from customerservice@velorcommerce.co.uk to
+partners@payoneer.com, cc smb@payoneer.com, referencing the case, the
+application date, the 6 Aug launch, and the disregard-the-duplicate
+instruction -- verified in Sent Items. One-shot scheduled task
+trig_01M4Mda4L43vPPGbmErV4MXu fires 2026-07-23 08:00 UTC to check both
+channels and recommend LIVE CHAT escalation if still silent.
+
+SELLER ACQUISITION (William: "really struggling to get sellers to
+onboard, not a single 1 to date... full research how we can reach these
+people around the world for free... otherwise we are going to have to
+pospone opening to buyers"): deep-research workflow launched this
+session on free worldwide artisan-recruitment channels, conversion
+levers, cold-start precedents, competitor-seller discontent, and a
+0-to-10-sellers-in-2-weeks plan. Report lands in this session; findings
+and the action plan to be checkpointed here when done. HONEST BASELINE:
+weeks of cold email + Facebook group outreach have produced ZERO
+sellers; treat channel strategy as unproven until a signup exists.
