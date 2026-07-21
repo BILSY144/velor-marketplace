@@ -71,8 +71,13 @@ export default function DashScreen() {
   const nTransit = os.filter((o) => o.status === 'SHIPPED').length
   const nDone = os.filter((o) => o.status === 'DELIVERED').length
 
+  // Exact pence, always — rounding £3.67 up to "£4" made William's real
+  // earnings read as wrong on-device (2026-07-21). Money figures must match
+  // the desktop dashboard to the penny.
   const money = (n?: number) =>
-    n === undefined ? '—' : `£${n.toLocaleString('en-GB', { maximumFractionDigits: 0 })}`
+    n === undefined
+      ? '—'
+      : `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const listings = products.data ?? []
   const listingCap = live
@@ -284,7 +289,7 @@ export default function DashScreen() {
                         : p.status}
                   </Text>
                 </View>
-                <Text style={s.lp}>{'£'}{p.price.toFixed(0)}</Text>
+                <Text style={s.lp}>{'£'}{p.price.toFixed(2)}</Text>
               </View>
             ))
           ) : (

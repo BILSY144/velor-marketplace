@@ -566,8 +566,12 @@ function SellerChannel() {
   const founding = Boolean((sub.data as any)?.foundingBadge)
   const listingLimit = (sub.data as any)?.listingLimit as number | null | undefined
 
+  // Exact pence, always — whole-pound rounding made real earnings read
+  // wrong on-device (2026-07-21); must match desktop to the penny.
   const money = (n?: number) =>
-    n === undefined ? '—' : `£${n.toLocaleString('en-GB', { maximumFractionDigits: 0 })}`
+    n === undefined
+      ? '—'
+      : `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const os = orders.data
   const nToShip = os ? os.filter((o) => o.status === 'PENDING' || o.status === 'PAID' || o.status === 'PROCESSING').length : undefined
@@ -627,7 +631,7 @@ function SellerChannel() {
       icon: 'wallet-outline',
       title: 'Payouts',
       sub: payouts.data
-        ? `£${payouts.data.pendingEscrow.toLocaleString('en-GB', { maximumFractionDigits: 0 })} in escrow · ${payouts.data.holdLabel}`
+        ? `£${payouts.data.pendingEscrow.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in escrow · ${payouts.data.holdLabel}`
         : 'Escrow releases after delivery is confirmed',
       route: 'Payouts',
     },
