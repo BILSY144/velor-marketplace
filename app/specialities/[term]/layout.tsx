@@ -58,6 +58,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // export; every one of the 59 descriptions this template produces sits
   // under 160 chars given the current SPECIALITIES.line lengths.
   const description = `Shop ${label.toLowerCase()} on Velor — ${speciality.line} Real makers, real origin, on every listing.`
+  // Per-speciality share image (opengraph-image.tsx, added by the standing
+  // SEO agent 2026-07-21, same directory as this layout) -- replaces the
+  // generic sitewide homepage card every /specialities/[term] page
+  // previously shared for openGraph/twitter, the same fix already shipped
+  // for /origins/[slug] on 2026-07-16 (see that route's own layout.tsx
+  // comment), using only the same real buyerLabel()/line data already used
+  // above -- nothing new authored.
+  const ogImageUrl = `${url}/opengraph-image`
 
   return {
     title,
@@ -70,13 +78,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Velor',
       locale: 'en_GB',
       type: 'website',
-      images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${label} — Shop by Speciality, Velor` }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://velorcommerce.store/opengraph-image'],
+      images: [ogImageUrl],
     },
   }
 }
