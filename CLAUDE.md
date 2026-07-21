@@ -18,7 +18,7 @@ This law outranks every other instruction in this file, including deadlines.
 
 ---
 
-## OUTSTANDING -- MESSAGE SELLER / BUYER-SELLER MESSAGING: RULES NEEDED (raised 2026-07-16, still open)
+## OUTSTANDING -- BUYER-SELLER MESSAGING: RULES STILL NEEDED, BUT THE WIRING BUGS BELOW WERE FIXED 2026-07-20 (status corrected 2026-07-21)
 
 William asked to lay down the rules for buyer-seller messaging before this
 feature is touched again ("remind me to come back to message seller topic
@@ -29,9 +29,19 @@ path until William has explicitly given the rules below. If William starts a
 session and doesn't bring this up himself, re-raise it -- don't let it go
 quiet just because it isn't blocking anything else.
 
-**Current state, verified live in code 2026-07-16 (not gated, actually
-broken end to end -- no buyer can send a first message today, by two
-independent bugs):**
+**STATUS CORRECTION (2026-07-21, William: "i believe the information you
+have for buyer/seller messaging is stale" -- confirmed by code inspection):
+both bugs below were FIXED on 2026-07-20.** /api/messages POST now
+resolves a sellerId to the seller's User id (comment in the route dates
+the fix), and the buyer inbox fetches /api/messages?format=raw which the
+route supports, so threads build correctly. The messaging path is wired
+end to end in code (not live-tested with a real send this session).
+WHAT REMAINS OPEN is only William's RULES for the feature -- moderation,
+what buyers/sellers may exchange, abuse handling. Keep re-raising that
+until he lays them down; do not build further messaging features before
+then. Original 2026-07-16 note kept below for history:
+
+**Superseded 2026-07-16 note:**
 1. `app/shop/[productId]/ProductPageClient.tsx`'s "Contact Seller" button
    sends `sellerId` (a `Seller.id`), but `app/api/messages/route.ts` expects
    `receiverId` (a `User.id`) -- always returns 400.
@@ -2696,3 +2706,44 @@ to do.
    restarts review for that release only (the app itself stays live).
 4. Build 5 was built from mobile-app (EAS Build manual run #5, profile
    production, channel production, appVersionSource remote).
+
+## 2026-07-21 checkpoint (late 4) -- FULL SITE WIRING SWEEP BEFORE SELLER ONBOARDING PUSH
+
+William: "1 full enhanced sweep through the entire website for anything
+not working or wired up through routes." Method: static cross-check of
+the whole codebase plus live verification against production.
+
+**CLEAN (verified, not assumed):**
+- All 144 frontend fetch calls resolve to one of the 133 real API routes
+  with a matching exported HTTP method. Every initially-flagged mismatch
+  was a false positive of the checking script, individually re-verified.
+- All 220 internal link/navigation targets resolve to one of the 93 real
+  pages (the only two non-page hrefs are the press page's logo downloads,
+  both files present in public/).
+- No dead handlers, no empty onClick, no fake setTimeout-only buttons.
+  The only "Coming soon" copy is the honest Payoneer state.
+- All 34 top-level public pages return 200 in production; dynamic routes
+  verified live (/origins/gb, /specialities/ceramics). Zero console
+  errors on / and /shop.
+- Messaging: see the corrected OUTSTANDING section above -- wired since
+  2026-07-20; only William's rules remain open.
+
+**CLEANUP:** deleted the stray file `app/feat: add Google Fonts and CSS
+variables to layout` (junk from an old botched commit; Next ignored it)
+and the dead components/Footer.tsx it was the sole importer of (the
+placeholder-link footer superseded by GlobalFooter). tsc clean after.
+
+**CRITICAL DATA FINDING (not a wiring bug -- needs William):** the shop
+is currently EMPTY in production. /api/shop/products returns zero
+products and /api/lattice reports trading: 0, because the ONLY product
+in the database -- William's founding "hand made toys" listing, APPROVED
+and live-verified with real money on 2026-07-17 -- is now status
+REJECTED. No cron or agent code path can reject an APPROVED product
+(auto-moderate only touches PENDING_REVIEW; the seller edit PATCH never
+writes status): the only route is the admin products PATCH behind an
+ADMIN-role session, i.e. someone clicked reject in /admin/products or
+/pulse/listings after 07-17. Raised with William in chat; needs an admin
+re-approve (and its stock is 0 from the test purchase, so it will show
+SOLD OUT once restored). Until at least one APPROVED product exists,
+buyers see an empty marketplace and the atlas shows no trading
+countries -- worth fixing before the seller-onboarding push.
