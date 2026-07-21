@@ -27,30 +27,32 @@ export default function TermsPage() {
     }
   };
 
+  // Studio light presentation (2026-07-21) -- legal text unchanged.
   const cardStyle = {
-    background: '#1A1A1A',
-    border: '1px solid #2A2A2A',
-    borderRadius: '16px',
+    background: '#FFFFFF',
+    border: '1px solid #E3E3E6',
+    borderRadius: '12px',
     padding: '40px',
+    boxShadow: '0 1px 2px rgba(26,26,29,0.04)',
   };
-  const h3Style = { fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '17px', color: '#FFFFFF', margin: '28px 0 10px' };
-  const pStyle = { color: '#CCCCCC', fontSize: '14px', lineHeight: '1.7', margin: '0 0 4px' };
+  const h3Style = { fontWeight: 600, fontSize: '16px', color: '#1A1A1D', margin: '28px 0 10px' };
+  const pStyle = { color: '#44464B', fontSize: '14px', lineHeight: '1.7', margin: '0 0 4px' };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif', padding: '48px 24px' }}>
+    <div style={{ minHeight: '100vh', background: '#F6F6F7', fontFamily: 'Inter, sans-serif', padding: '48px 24px', color: '#1A1A1D' }}>
       <div style={{ maxWidth: '760px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '30px', color: '#FFFFFF', margin: '0 0 8px' }}>
+          <h1 style={{ fontWeight: 600, fontSize: '30px', color: '#1A1A1D', margin: '0 0 8px' }}>
             Velor Marketplace
           </h1>
-          <p style={{ color: '#999999', fontSize: '14px', margin: 0 }}>Seller Agreement - Version 1.2 (July 2026)</p>
+          <p style={{ color: '#6D7175', fontSize: '14px', margin: 0 }}>Seller Agreement - Version 1.2 (July 2026)</p>
         </div>
 
         <div style={cardStyle}>
-          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '22px', color: '#FFFFFF', margin: '0 0 6px' }}>
+          <h2 style={{ fontWeight: 600, fontSize: '22px', color: '#1A1A1D', margin: '0 0 6px' }}>
             Seller Terms &amp; Conditions
           </h2>
-          <p style={{ color: '#999999', fontSize: '14px', margin: '0 0 8px' }}>Please read carefully before accessing your seller dashboard</p>
+          <p style={{ color: '#6D7175', fontSize: '14px', margin: '0 0 8px' }}>Please read carefully before accessing your seller dashboard</p>
 
           <h3 style={h3Style}>1. Definitions</h3>
           <p style={pStyle}>Platform means the Velor Marketplace at velorcommerce.store and all associated services. Seller means any individual or entity that registers to sell products on the Platform. Buyer means any person purchasing products through the Platform. Listing means any product offered for sale by a Seller. GMV means Gross Merchandise Value - the total value of sales processed through the Platform.</p>
@@ -64,17 +66,17 @@ export default function TermsPage() {
 
           <h3 style={h3Style}>4. Platform Fees &amp; Commission</h3>
           <p style={pStyle}>The Platform charges commission on each sale. Rates depend on your subscription tier:</p>
-          <ul style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
-            <li><strong style={{ color: '#FFFFFF' }}>Starter (Free):</strong> 10% commission on GMV. Maximum 10 active listings. Go Live live shopping, seller dashboard, analytics, and buyer protection on every sale.</li>
-            <li><strong style={{ color: '#FFFFFF' }}>Pro (£49/month):</strong> 4% commission on GMV. Unlimited listings. Go Live live shopping, full analytics, a dedicated AI account manager, full API access, a free custom storefront, featured listing slots, priority review, discount code tools.</li>
+          <ul style={{ color: '#44464B', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
+            <li><strong style={{ color: '#1A1A1D' }}>Starter (Free):</strong> 10% commission on GMV. Maximum 10 active listings. Go Live live shopping, seller dashboard, analytics, and buyer protection on every sale.</li>
+            <li><strong style={{ color: '#1A1A1D' }}>Pro (£49/month):</strong> 4% commission on GMV. Unlimited listings. Go Live live shopping, full analytics, a dedicated AI account manager, full API access, a free custom storefront, featured listing slots, priority review, discount code tools.</li>
           </ul>
           <p style={pStyle}>Commission is deducted from each transaction before payout. Subscription fees are billed monthly via Stripe and are non-refundable except where required by applicable law. Optional add-on features (for example, additional storefront themes or custom branding beyond what your tier includes) may be offered for a separate one-time or recurring fee, disclosed at the point of purchase. The Platform reserves the right to adjust fee structures with 30 days notice.</p>
 
           <h3 style={h3Style}>5. Payouts</h3>
           <p style={pStyle}>Buyer payments are held on the Platform's account, not transferred directly to Sellers at the time of sale. Once an order is confirmed delivered (via carrier tracking), the Seller's share (sale price plus shipping and duties, minus commission) is released to the Seller's connected payout account - Stripe Connect where Stripe supports payouts in the Seller's country, or Payoneer where it does not - after a hold period:</p>
-          <ul style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
-            <li><strong style={{ color: '#FFFFFF' }}>New (probation) Sellers:</strong> 15 days after confirmed delivery.</li>
-            <li><strong style={{ color: '#FFFFFF' }}>Trusted Sellers:</strong> 72 hours after confirmed delivery. A Seller becomes Trusted automatically once they have 10+ delivered orders, an account at least 30 days old, and no unresolved disputes or returns.</li>
+          <ul style={{ color: '#44464B', fontSize: '14px', lineHeight: '1.7', margin: '8px 0', paddingLeft: '20px' }}>
+            <li><strong style={{ color: '#1A1A1D' }}>New (probation) Sellers:</strong> 15 days after confirmed delivery.</li>
+            <li><strong style={{ color: '#1A1A1D' }}>Trusted Sellers:</strong> 72 hours after confirmed delivery. A Seller becomes Trusted automatically once they have 10+ delivered orders, an account at least 30 days old, and no unresolved disputes or returns.</li>
           </ul>
           <p style={pStyle}>If a return or dispute is opened on an order, that order's payout is frozen until the return or dispute is resolved, regardless of the hold period above. Sellers must complete payout onboarding with the applicable provider (Stripe Connect, or Payoneer where applicable) to receive payouts; funds remain safely held on the Platform until onboarding is complete.</p>
 
@@ -113,18 +115,18 @@ export default function TermsPage() {
           <h3 style={h3Style}>16. Entire Agreement</h3>
           <p style={pStyle}>These terms, together with the Platform Privacy Policy and the Seller Rules and Product Compliance Policy, constitute the entire agreement between the Seller and the Platform. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
 
-          <p style={{ color: '#666666', fontSize: '12px', margin: '24px 0 0' }}>
+          <p style={{ color: '#9C9FA5', fontSize: '12px', margin: '24px 0 0' }}>
             Effective date: 4 July 2026 - Version 1.2 - Operated by Velor Commerce Ltd - Contact: customerservice@velorcommerce.store
           </p>
 
-          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #2A2A2A' }}>
+          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #ECECEF' }}>
             {error && (
               <div style={{ background: 'rgba(255,23,68,0.1)', border: '1px solid #FF1744', borderRadius: '8px', padding: '12px 16px', color: '#FF1744', fontSize: '14px', marginBottom: '16px' }}>
                 {error}
               </div>
             )}
 
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#CCCCCC', fontSize: '14px', lineHeight: '1.6', cursor: 'pointer', marginBottom: '20px' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#44464B', fontSize: '14px', lineHeight: '1.6', cursor: 'pointer', marginBottom: '20px' }}>
               <input
                 type="checkbox"
                 checked={accepted}
@@ -141,7 +143,7 @@ export default function TermsPage() {
               disabled={!accepted || loading}
               style={{
                 width: '100%',
-                background: !accepted || loading ? '#5A3000' : '#FF6B00',
+                background: !accepted || loading ? '#FFC59B' : '#FF6B00',
                 color: '#FFFFFF',
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontWeight: 700,

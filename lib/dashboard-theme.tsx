@@ -158,36 +158,33 @@ export function FoundingChip() {
         fontWeight: 800,
         textTransform: 'uppercase',
         letterSpacing: '0.08em',
-        color: '#E9C46A',
-        background: 'linear-gradient(135deg, rgba(93,69,16,0.55), rgba(41,29,8,0.55))',
-        border: '1px solid rgba(185,138,47,0.75)',
+        color: '#8A6116',
+        background: '#FBF1DC',
+        border: '1px solid rgba(185,138,47,0.55)',
         whiteSpace: 'nowrap',
       }}
     >
       <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
-        <circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" />
-        <text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text>
+        <circle cx="7" cy="7" r="6" fill="none" stroke="#8A6116" strokeWidth="1.3" />
+        <text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#8A6116">1</text>
       </svg>
       Founding Seller
     </span>
   )
 }
 
-// A card wrapper that automatically picks up the right border/background/glow
-// for the seller's tier. 2026-07-21: moved onto the Halo glass base (frosted,
-// blurred, sits on the dashboard's aurora backdrop) as part of the "Sell"
-// batch of the Halo redesign -- tier distinction (Starter grey vs Pro blue
-// border/glow/heading colour) is unchanged, just now expressed as a glass
-// panel instead of a flat bordered box. Every page that imports this picks
-// the new look up automatically, no per-page changes required.
+// A card wrapper that automatically picks up the right border for the
+// seller's tier. 2026-07-21 (second pass): moved from the Halo glass base
+// onto the SELLER STUDIO card (William-approved Shopify-style: solid white,
+// crisp border, subtle shadow, radius 12 -- see lib/studio.tsx). Tier
+// distinction survives as Pro's soft blue border. Every page that imports
+// this picks the new look up automatically, no per-page changes required.
 export function tierCardStyle(theme: TierTheme, extra?: React.CSSProperties): React.CSSProperties {
   return {
-    background: theme.cardBg,
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: `1px solid ${theme.cardBorder}`,
-    borderRadius: 18,
-    boxShadow: theme.cardGlow,
+    background: '#FFFFFF',
+    border: `1px solid ${theme.tier === 'PRO' ? 'rgba(29,95,147,0.28)' : '#E3E3E6'}`,
+    borderRadius: 12,
+    boxShadow: '0 1px 2px rgba(26,26,29,0.04)',
     ...extra,
   }
 }
