@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { isPayoneerConfigured } from '@/lib/payoneer'
 import { isSellerTrusted, PROBATION_HOLD_MS } from '@/lib/payouts'
+import { getPayoutRail } from '@/lib/payoutRail'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,9 +25,24 @@ export async function GET() {
 
   const seller = await prisma.seller.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, payoutRail: true, stripeOnboarded: true, payoneerPayeeId: true },
+    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true, payoneerPayeeId: true },
   })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
+
+  // Resolve the rail LIVE from the seller's country (lib/payoutRail.ts is
+  // the single source of truth: Stripe Connect where supported, Payoneer
+  // everywhere else) and self-heal the stored field when it disagrees --
+  // the same pattern app/api/payoneer/onboard already uses. The stored
+  // value has a history of being mis-resolved at approval (see
+  // app/api/admin/recompute-payout-rails), and a stale PAYONEER value is
+  // not merely cosmetic: app/api/cron/release-payouts branches on the
+  // STORED field, so a Stripe-country seller stuck on PAYONEER with no
+  // payee id would never receive a payout. Found live 2026-07-21 when the
+  // GB founding seller's dashboard read "via Payoneer".
+  const rail = getPayoutRail(seller.country)
+  if (rail !== seller.payoutRail) {
+    await prisma.seller.update({ where: { id: seller.id }, data: { payoutRail: rail } })
+  }
 
   const [pendingAgg, payouts, trusted] = await Promise.all([
     // Same definition of "still held" as release-payouts' own candidate
@@ -61,7 +77,7 @@ export async function GET() {
     .reduce((sum, p) => sum + p.amount, 0)
 
   return NextResponse.json({
-    payoutRail: seller.payoutRail,
+    payoutRail: rail,
     stripeOnboarded: seller.stripeOnboarded,
     payoneerConfigured: isPayoneerConfigured(),
     payoneerLinked: Boolean(seller.payoneerPayeeId),
