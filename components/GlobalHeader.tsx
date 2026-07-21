@@ -291,7 +291,7 @@ export default function GlobalHeader() {
           }}
         >
           {/* Logo */}
-          <Link href="/" style={{ display: 'block', flexShrink: 0, marginLeft: -20 }} aria-label="Velor home">
+          <Link href="/" className="velor-logo-link" style={{ display: 'block', flexShrink: 0 }} aria-label="Velor home">
             <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" style={{ height: 40, width: 'auto' }} />
           </Link>
 

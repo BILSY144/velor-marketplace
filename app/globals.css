@@ -120,6 +120,18 @@ h1, h2, h3, h4, h5, h6 {
    that needs mobile treatment must opt in by adding the class.
    ============================================================ */
 
+/* Logo position (William, 2026-07-21: "move the logo to the left ...
+   without it affecting the mobile version"). Default keeps the previous
+   -20px nudge everywhere (phones/tablets unchanged); on desktop widths the
+   centered 1360px container leaves a large margin on wide screens, so the
+   logo is pulled out to sit at the far left of the viewport. */
+.velor-logo-link { margin-left: -20px; }
+@media (min-width: 901px) {
+  .velor-logo-link {
+    margin-left: calc(-4px - max(0px, (100vw - 1360px) / 2));
+  }
+}
+
 /* Tablet and below */
 @media (max-width: 900px) {
   .velor-desktop-nav { display: none !important; }
