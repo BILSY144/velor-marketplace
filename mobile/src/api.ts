@@ -336,9 +336,21 @@ export async function notifyMeForLive(room: string, pushToken?: string): Promise
   }
 }
 
-export async function reportLiveStream(room: string): Promise<{ ended: boolean; reportCount: number } | { error: string }> {
+// Report form rules (William, 2026-07-21): every report carries a reason
+// (details required for 'other'); 5 separate filled-in reports end a
+// stream, never 1. Reasons mirror lib/liveReportReasons.ts on the server.
+export const LIVE_REPORT_REASONS: Record<string, string> = {
+  contact: 'Sharing contact details or steering buyers off Velor',
+  inappropriate: 'Inappropriate or offensive behaviour',
+  prohibited: 'Counterfeit or prohibited items',
+  misleading: 'Spam or misleading claims',
+  safety: 'Safety concern',
+  other: 'Something else',
+}
+
+export async function reportLiveStream(room: string, reason: string, details?: string): Promise<{ ended: boolean; reportCount: number } | { error: string }> {
   try {
-    return await authedPost(`/api/live/${encodeURIComponent(room)}/report`)
+    return await authedPost(`/api/live/${encodeURIComponent(room)}/report`, { reason, details })
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Could not report this stream.' }
   }

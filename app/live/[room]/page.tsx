@@ -1,5 +1,6 @@
 'use client'
 import { addToCart as addToSharedCart } from '@/lib/cart'
+import { LIVE_REPORT_REASONS } from '@/lib/liveReportReasons'
 import { checkMessageContent } from '@/lib/messageFilter'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
@@ -47,6 +48,13 @@ export default function LiveViewerPage() {
   const [chatError, setChatError] = useState('')
   const [status, setStatus] = useState<'loading' | 'connecting' | 'connected' | 'ended' | 'scheduled' | 'notfound' | 'error'>('loading')
   const [reported, setReported] = useState(false)
+  // Report form (William, 2026-07-21): reports are filled in with a reason;
+  // 5 separate filled-in reports end a stream, never 1.
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportSending, setReportSending] = useState(false)
+  const [reportError, setReportError] = useState('')
   const [notifyState, setNotifyState] = useState<'idle' | 'saved' | 'signin'>('idle')
   const [addedId, setAddedId] = useState<string | null>(null)
   // TikTok LIVE parity (William, 2026-07-20): a real, LiveKit-reported
@@ -270,14 +278,31 @@ export default function LiveViewerPage() {
     }
   }
 
-  async function reportStream() {
-    if (reported) return
-    setReported(true)
+  async function submitReport() {
+    if (reported || reportSending) return
+    if (!reportReason) { setReportError('Pick a reason for the report.'); return }
+    if (reportReason === 'other' && !reportDetails.trim()) { setReportError('Tell us what happened.'); return }
+    setReportSending(true)
+    setReportError('')
     try {
-      const res = await fetch(`/api/live/${room}/report`, { method: 'POST' })
-      if (!res.ok) setReported(false)
+      const res = await fetch(`/api/live/${room}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reportReason, details: reportDetails.trim() }),
+      })
+      if (res.ok) {
+        setReported(true)
+        setReportOpen(false)
+      } else if (res.status === 401) {
+        setReportError('Sign in to report a stream.')
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setReportError(d?.error || 'Could not send the report - try again.')
+      }
     } catch {
-      setReported(false)
+      setReportError('Could not send the report - try again.')
+    } finally {
+      setReportSending(false)
     }
   }
 
@@ -455,13 +480,47 @@ export default function LiveViewerPage() {
               <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 3 }} />
               <div style={{ position: 'absolute', top: 36, right: 0, zIndex: 4, background: '#1a1a1aee', border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', minWidth: 140, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
                 <button
-                  onClick={() => { reportStream(); setMenuOpen(false) }}
+                  onClick={() => { if (!reported) { setReportOpen(true) } setMenuOpen(false) }}
                   style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: reported ? '#888' : '#ffb4b4', padding: '10px 14px', fontSize: 13, cursor: reported ? 'default' : 'pointer' }}
                 >
-                  {reported ? 'Reported' : 'Report stream'}
+                  {reported ? 'Reported - thank you' : 'Report stream'}
                 </button>
               </div>
             </>
+          )}
+
+          {reportOpen && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+              <div style={{ width: '100%', maxWidth: 400, background: '#151515', border: `1px solid ${border}`, borderRadius: 16, padding: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Report this stream</div>
+                <div style={{ fontSize: 12, color: '#999', lineHeight: 1.5, marginBottom: 14 }}>
+                  Our team reviews every report. A stream ends automatically once five separate viewers report it.
+                </div>
+                {Object.entries(LIVE_REPORT_REASONS).map(([key, label]) => (
+                  <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px', cursor: 'pointer', color: reportReason === key ? '#fff' : '#bbb', fontSize: 13.5 }}>
+                    <input type="radio" name="report-reason" checked={reportReason === key} onChange={() => setReportReason(key)} style={{ accentColor: accent }} />
+                    {label}
+                  </label>
+                ))}
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder={reportReason === 'other' ? 'Tell us what happened (required)' : 'Anything else we should know? (optional)'}
+                  rows={3}
+                  maxLength={1000}
+                  style={{ width: '100%', marginTop: 10, background: '#0f0f0f', border: `1px solid ${border}`, borderRadius: 10, color: '#fff', fontSize: 13, padding: 10, resize: 'vertical' }}
+                />
+                {reportError ? <div style={{ color: '#ff8080', fontSize: 12, marginTop: 8 }}>{reportError}</div> : null}
+                <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                  <button onClick={() => { setReportOpen(false); setReportError('') }} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: `1px solid ${border}`, background: 'none', color: '#ccc', fontSize: 13.5, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button onClick={submitReport} disabled={reportSending} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: reportSending ? '#333' : '#c0392b', color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: reportSending ? 'default' : 'pointer' }}>
+                    {reportSending ? 'Sending...' : 'Send report'}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

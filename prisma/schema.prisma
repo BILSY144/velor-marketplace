@@ -620,6 +620,11 @@ model LiveStreamReport {
   streamId      String
   liveStream    LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
   reporterEmail String
+  // Report form (William, 2026-07-21): every report is filled in with a
+  // reason; free-text details optional except for reason "other". Default
+  // keeps rows created before the form valid.
+  reason        String     @default("unspecified")
+  details       String?    @db.Text
   createdAt     DateTime   @default(now())
 
   @@unique([streamId, reporterEmail])

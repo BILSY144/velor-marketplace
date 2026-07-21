@@ -2778,3 +2778,30 @@ re-approve (and its stock is 0 from the test purchase, so it will show
 SOLD OUT once restored). Until at least one APPROVED product exists,
 buyers see an empty marketplace and the atlas shows no trading
 countries -- worth fixing before the seller-onboarding push.
+
+## 2026-07-21 checkpoint (late 5) -- LIVE STREAM REPORTING RULES (William): FORM WITH REASONS, 5 SEPARATE REPORTS END A STREAM
+
+William: "cant stop a live by 1 report. there needs to be a page for the
+viewer to report to and the reasons for the report, and the rules are 5
+seperate reports triggers a live stream ending after reports filled in."
+
+Shipped (web + app, server enforced):
+- AUTO_END_THRESHOLD raised 3 -> 5 in /api/live/[room]/report. Reports
+  were ALREADY per-account deduplicated (LiveStreamReport unique on
+  [streamId, reporterEmail]) and sign-in gated, so 5 means five separate
+  accounts -- one person can never end a stream.
+- Every report must now be FILLED IN: a reason from the shared list in
+  lib/liveReportReasons.ts (contact-sharing/off-Velor steering,
+  inappropriate, prohibited items, misleading, safety, other) with
+  optional details -- required for "other". Schema: LiveStreamReport
+  gained reason (default "unspecified" for old rows) + details; applied
+  in production automatically by the build's prisma db push.
+- Report FORM (reasons radio list + details + submit) replaces the old
+  one-tap report: full-screen overlay on the web viewer
+  (app/live/[room]/page.tsx) and in the native app's LiveRoomScreen
+  (main branch -- build #2 code; the Expo Go branch has no live viewer).
+  Overlay keeps the stream playing underneath rather than navigating
+  away to a separate URL.
+- When the 5th report ends a stream, the ops review SupportTicket now
+  includes the reason breakdown and reporter details, so review starts
+  with the WHY.

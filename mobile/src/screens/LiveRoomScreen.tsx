@@ -24,6 +24,7 @@ import {
   fetchLiveViewerToken,
   notifyMeForLive,
   reportLiveStream,
+  LIVE_REPORT_REASONS,
   LiveRoomData,
   LiveRoomProduct,
 } from '../api'
@@ -97,8 +98,24 @@ export default function LiveRoomScreen() {
     setNotifyState('signin')
   }
 
-  async function reportStream() {
-    await reportLiveStream(room)
+  // Report form (William, 2026-07-21): filled-in reason required; 5
+  // separate reports end a stream, never 1.
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportBusy, setReportBusy] = useState(false)
+  const [reportErr, setReportErr] = useState('')
+  const [reportDone, setReportDone] = useState(false)
+
+  async function submitReport() {
+    if (reportBusy || reportDone) return
+    if (!reportReason) { setReportErr('Pick a reason for the report.'); return }
+    if (reportReason === 'other' && !reportDetails.trim()) { setReportErr('Tell us what happened.'); return }
+    setReportBusy(true)
+    setReportErr('')
+    const r = await reportLiveStream(room, reportReason, reportDetails.trim())
+    setReportBusy(false)
+    if ('error' in r) { setReportErr(r.error) } else { setReportDone(true); setReportOpen(false) }
   }
 
   if (status === 'loading') {
@@ -159,14 +176,52 @@ export default function LiveRoomScreen() {
 
   if (status === 'live' && data && creds) {
     return (
-      <ViewerRoom
-        wsUrl={creds.wsUrl}
-        token={creds.token}
-        data={data}
-        onReport={reportStream}
-        insetsTop={insets.top}
-        onBack={() => nav.goBack()}
-      />
+      <View style={{ flex: 1 }}>
+        <ViewerRoom
+          wsUrl={creds.wsUrl}
+          token={creds.token}
+          data={data}
+          onReport={() => { if (!reportDone) setReportOpen(true) }}
+          insetsTop={insets.top}
+          onBack={() => nav.goBack()}
+        />
+        {reportOpen ? (
+          <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.82)', alignItems: 'center', justifyContent: 'center', padding: 18, zIndex: 50 }}>
+            <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#151515', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 18 }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 4 }}>Report this stream</Text>
+              <Text style={{ color: '#999', fontSize: 12, lineHeight: 17, marginBottom: 12 }}>
+                Our team reviews every report. A stream ends automatically once five separate viewers report it.
+              </Text>
+              {Object.entries(LIVE_REPORT_REASONS).map(([key, label]) => (
+                <Pressable key={key} onPress={() => setReportReason(key)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 }}>
+                  <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: reportReason === key ? '#FF6B00' : '#666', alignItems: 'center', justifyContent: 'center' }}>
+                    {reportReason === key ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF6B00' }} /> : null}
+                  </View>
+                  <Text style={{ color: reportReason === key ? '#fff' : '#bbb', fontSize: 13.5, flex: 1 }}>{label}</Text>
+                </Pressable>
+              ))}
+              <TextInput
+                value={reportDetails}
+                onChangeText={setReportDetails}
+                placeholder={reportReason === 'other' ? 'Tell us what happened (required)' : 'Anything else we should know? (optional)'}
+                placeholderTextColor="#666"
+                multiline
+                maxLength={1000}
+                style={{ marginTop: 10, minHeight: 64, backgroundColor: '#0f0f0f', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: 10, color: '#fff', fontSize: 13, padding: 10, textAlignVertical: 'top' }}
+              />
+              {reportErr ? <Text style={{ color: '#ff8080', fontSize: 12, marginTop: 8 }}>{reportErr}</Text> : null}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                <Pressable onPress={() => { setReportOpen(false); setReportErr('') }} style={{ flex: 1, paddingVertical: 11, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center' }}>
+                  <Text style={{ color: '#ccc', fontSize: 13.5 }}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={submitReport} disabled={reportBusy} style={{ flex: 1, paddingVertical: 11, borderRadius: 10, backgroundColor: reportBusy ? '#333' : '#c0392b', alignItems: 'center' }}>
+                  <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{reportBusy ? 'Sending...' : 'Send report'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
+      </View>
     )
   }
 
