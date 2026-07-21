@@ -320,6 +320,69 @@ new real fields (`item.product.name`, `order.total`). LIVE-VERIFIED: the
 belt now reads "hand made toys · William S. · £3.71 · In escrow · 3d ago"
 instead of the NaN/blank state.
 
+**2026-07-21 language/currency parity (William: "the dashboard does not
+convert language and currency like every where else on the website" ->
+"if the seller sets their language on the website, the whole website
+needs to change language, thats our business model. the same for
+currency."):** root cause was `components/ConditionalLayout.tsx` --
+`showChrome` excludes every `/dashboard/*` route from ALL site chrome
+(header, footer, and critically `LanguageTranslator`), so neither the
+site's real language translator nor its real currency switcher had ever
+been mounted there. Fixed by mounting `<LanguageTranslator />` in
+`app/dashboard/layout.tsx` and adding the same language/currency
+`<select>` pair `components/GlobalHeader.tsx` uses on public pages
+(reads/writes the same `velor_language`/`velor-display-currency`
+localStorage keys, so switching in either place is instant and shared).
+Wired Overview's money figures through `useCurrencyDisplay()`
+(commit e36fe55). Currency conversion is genuinely live, not scripted --
+`lib/fx.ts` pulls real rates from frankfurter.app (ECB), falls back to
+open.er-api.com, DB-caches each base/quote pair 6h (`FxRate` table).
+Confirmed live: switching to USD/EUR correctly re-priced every Overview
+figure.
+
+**Two real bugs found and fixed live while wiring this up, both in the
+shared `components/LanguageTranslator.tsx` (used site-wide, not
+dashboard-specific):**
+1. (commit 55608b3) `applyDict()` cached each text node's pre-translation
+   English content ONCE (WeakMap) and never refreshed it. When a node's
+   live content later changed for a real reason (e.g. a price re-render
+   after a currency switch), the translator still looked up the OLD
+   cached English key, found the OLD cached translation, and silently
+   wrote the STALE value back over the live update -- caught live as
+   Overview's "Ingresos . Historico" figure staying stuck at the
+   pre-switch GBP amount after switching to USD while Spanish was active,
+   while every other figure updated correctly. Fixed by tracking the
+   value we last wrote ourselves (`applied` ref) so a mismatch between
+   that and the live DOM content is recognised as "this changed for a
+   real reason" and the cached original is refreshed.
+2. (commit 2930ab4) William then reported "some words are still in
+   english so not 100% conversion." Live debug call to `/api/translate`
+   (`{debug:true}`) confirmed the site's own daily anti-abuse translation
+   budget (`lib/translate.ts`, self-imposed Anthropic-spend cap, coded
+   2026-07-17) is currently capped -- `cacheOnly:true` -- almost
+   certainly from this session's own heavy testing across many dashboard
+   pages x 19 languages while building this feature. While capped the
+   endpoint intentionally falls back to the source English string rather
+   than erroring, which is correct behaviour -- but `translatePage()`/
+   `prefetchAll()` were caching EVERY returned string as if it were a
+   finished translation, including these fallbacks, so any word first
+   seen while capped got permanently stuck in English for that browser
+   even after the daily budget reset. Confirmed live: Overview/Products/
+   Storefront/Discounts/Disputes/Settings/Support/"Go Live" all came back
+   byte-identical to their English source from the API. Fixed by only
+   caching a result when it actually differs from its source string --
+   fallbacks are left out of the dict so the next translation pass
+   retries them instead of treating them as done.
+
+**Not fully re-verifiable this session:** the budget cap was still active
+at last check, so genuinely-new strings will keep falling back to English
+until it resets (daily) regardless of the fix above -- the fix ensures
+they self-heal once it does, rather than staying stuck. Could not
+determine from this sandbox (no DB access) whether the per-IP cap
+(2000/day) or the global cap (25000/day) was hit; if this recurs for real
+sellers/buyers (not just dev testing) after a day, that points to the
+global cap and is worth raising with William.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
