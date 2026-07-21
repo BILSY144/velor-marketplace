@@ -307,6 +307,19 @@ of scope for this pass since it touches the production schema and this
 sandbox has no way to run a migration against it (network-restricted, see
 Session Notes).
 
+**2026-07-21 follow-up, caught live by William right after the fix above
+(commit 232318d):** "that bug is still in overview page at bottom" -- the
+Orders API reshape (a4bd2fe) fixed the Orders page itself but broke
+Overview's "Orders in motion" belt, which reads the SAME `/api/dashboard/
+orders` endpoint and was still using the old field names
+(`item.productName`, `order.totalRevenue`) that no longer exist in the
+reshaped response -- a regression I introduced and missed by only
+checking the Orders page, not every consumer of that endpoint. Updated
+`app/dashboard/page.tsx`'s `OrderRow` type and both usage sites to the
+new real fields (`item.product.name`, `order.total`). LIVE-VERIFIED: the
+belt now reads "hand made toys · William S. · £3.71 · In escrow · 3d ago"
+instead of the NaN/blank state.
+
 Original directive, kept for context:
 
 William's directive, to pick up in a future session -- re-raise this if he
