@@ -88,6 +88,35 @@ export default function GlobalFooter() {
         </div>
       </div>
 
+      {/* Accreditations — more to join this row over time */}
+      <div style={{ borderBottom: '1px solid var(--border)' }}>
+        <div
+          style={{
+            maxWidth: 1360,
+            margin: '0 auto',
+            padding: '14px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            gap: 20,
+          }}
+        >
+          <a
+            href="https://goodbusinesscharter.com/what-good-business-charter-accreditation-means-and-why-it-matters/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Velor Commerce Ltd is Good Business Charter accredited — find out what that means"
+            style={{ display: 'inline-flex' }}
+          >
+            <img
+              src="/gbc-accredited.jpg"
+              alt="Good Business Charter Accredited"
+              style={{ height: 58, width: 'auto', display: 'block' }}
+            />
+          </a>
+        </div>
+      </div>
+
       {/* Sitemap */}
       <div
         style={{
