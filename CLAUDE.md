@@ -3189,3 +3189,33 @@ review; 5) Meta Verified WhatsApp check on William's phone; 6) EPCH +
 aggregator follow-ups ~27-29 Jul (WFTO contact back 27th); 7) printer
 door sensor via HP support when time allows; 8) translation warm-up
 when funds.
+
+## 2026-07-22 checkpoint 4 (early evening) -- GOOGLE BUSINESS PROFILE BUILT; ACCREDITATION MAP SETTLED
+
+**GOOGLE BUSINESS PROFILE -- CREATED, PENDING VIDEO VERIFICATION.**
+Profile "Velor" / category E-commerce service, under willsinclair144@
+gmail.com. Region UK; verification address 49 Station Road, Polegate
+BN26 6EA (hidden from public; William's choice); phone +44 7404 014621;
+website velorcommerce.store; hours OPEN 24 HOURS all 7 days (William:
+"were open 24h because its global"); description global-framed per LAW
+#2 (note: Google REJECTS URLs inside the description field); photos:
+velor logo (logo2026-on-white), assistant avatar (velor-avatar-circle),
+global hero + dark brand visual. Google offered ONLY video verification
+for this profile ("show location, equipment, proof of management") --
+chose Verify Later; WILLIAM records the video from the dashboard when
+fresh. Until verified the profile is not publicly visible. A GBP £400
+Google Ads credit offer (spend-matched, T&Cs) was deliberately skipped;
+claimable later from the dashboard for launch marketing.
+
+**ACCREDITATION RESEARCH SETTLED (free/global):** Artisan Alliance =
+CLOSED ("not currently accepting new membership applications", was
+$100/yr) -- off the list. ITC ecomConnect (free, UN ITC) = QUEUED,
+needs a William account signup (~10 min). Fair Payment Code (UK gov,
+free, Bronze/Silver/Gold for paying suppliers fast) = apply 2-3 months
+POST-LAUNCH with real payout evidence -- extremely on-brand, do not
+apply early with no payment history. Paid/parked: WFTO membership,
+Heritage Crafts (£50), Cyber Essentials (~£320), UN Global Compact
+(mandatory annual contribution -- NOT free for companies).
+
+**Next session queue additions:** GBP video verification (William's
+phone, from business.google.com dashboard); ITC ecomConnect signup.
