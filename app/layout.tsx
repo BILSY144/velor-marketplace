@@ -241,6 +241,22 @@ const jsonLd = {
         addressCountry: 'GB',
       },
       sameAs: ['https://www.facebook.com/Velorcommerce', 'https://www.instagram.com/velorcommerce'],
+      // award added by the standing SEO agent, 2026-07-22 (16:xx UTC cycle) --
+      // schema.org/award's own "Used on these types" list (confirmed this
+      // cycle via a direct fetch of schema.org/award, not assumed) includes
+      // Organization alongside CreativeWork/Person/Product/Service, so this
+      // is a valid property here. Not a guess: William's Good Business
+      // Charter accreditation went live today, per CLAUDE.md's own
+      // 2026-07-22 "checkpoint 3 (afternoon)" ("VELOR COMMERCE LTD is now
+      // officially Good Business Charter accredited") and independently
+      // re-confirmed this cycle directly against components/GlobalFooter.tsx
+      // (the real, live accreditation-band stamp, linked to GBC's own
+      // explainer page, alt="Good Business Charter Accredited"). Uses the
+      // exact wording already live in that footer's own alt text rather
+      // than a second hand-written phrase, so the two can never drift
+      // apart. Purely additive: one new field, nothing else in this node
+      // touched.
+      award: 'Good Business Charter Accredited',
       // email added by the standing SEO agent, 2026-07-13 (fifth pass) --
       // schema.org/email confirms Organization (alongside ContactPoint and
       // Person) is a valid domain for a top-level `email` property, checked
