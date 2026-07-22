@@ -113,11 +113,21 @@ import type { MetadataRoute } from 'next';
 // page is really just `/shop`). Confirmed this is not a theoretical risk:
 // `app/origins/[slug]/page.tsx` (~145-190 live, sitemap-indexed, real-content
 // country pages) contains a genuine `<Link href={\`/shop?origin=${code}\`}>`
-// on every one of them -- a real, crawlable, non-JS-only anchor, distinct
-// from `components/CountryOriginStrip.tsx`'s own onClick-only flag buttons
-// already flagged separately in SEO_LOG.md backlog item 34 as NOT reliably
-// crawlable. So Googlebot has a real, standard-link path to discover up to
-// ~190 near-duplicate `/shop?origin=<code>` URLs today, each currently
+// on every one of them -- a real, crawlable, non-JS-only anchor. **Correction,
+// 2026-07-22 by the standing SEO agent:** at the time this comment was
+// written, `components/CountryOriginStrip.tsx`'s flags were plain
+// onClick-only `<button>`s with no `href`, flagged in SEO_LOG.md backlog
+// item 34 as NOT reliably crawlable -- that has since changed. Commit
+// `6cd8c87f` (2026-07-21 20:39:25 UTC, a same-path-query-push tap-reliability
+// fix, not an SEO change) rewrote those flags as real `<a href={\`/shop?
+// origin=${c.code}\`}>` elements with a `preventDefault()`-based client
+// navigation only on a plain left-click (modified clicks/middle-click keep
+// the anchor's default behaviour) -- so the strip is now also a real,
+// standard-crawlable link path, on every public page, not just via
+// `/origins/[slug]`. See backlog item 34 (now archived, SEO_LOG_ARCHIVE.md)
+// for the full verification. So Googlebot has (now two) real, standard-link
+// paths to discover up to ~190 near-duplicate `/shop?origin=<code>` URLs
+// today, each currently
 // rendering the 200 empty "open goods slot" placeholder boxes rather than
 // real per-origin products (catalogue confirmed still near-empty per
 // CLAUDE.md), all sharing byte-identical title/description with each other
