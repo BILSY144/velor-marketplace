@@ -10,6 +10,8 @@ Selling tiers: Starter is free to list at 10% commission (10 listings); Pro is Â
 
 Buyer protection: payment is held by Velor in escrow and released to the seller only after delivery is confirmed, subject to a hold window (15 days for new sellers, 72 hours once a seller is trusted). An open return or dispute freezes the funds.
 
+Accreditation: Velor Commerce Ltd, the company operating Velor, is Good Business Charter accredited.
+
 ## Key pages
 
 - [Apply to sell](https://velorcommerce.store/apply): Founding Seller programme application.
