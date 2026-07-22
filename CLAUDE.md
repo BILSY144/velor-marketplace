@@ -2999,3 +2999,81 @@ zero real sellers yet -- the origin pages' "200 open seats" design is
 the intended honest state until real sellers list. The one and only fix
 for the empty shop is the seller-acquisition mission (see the playbook
 checkpoints above).
+
+## 2026-07-22 checkpoint (overnight session, ~00:00-02:15 UK) -- TRUST STACK EXECUTED, ALL 6 AGGREGATOR PITCHES SENT, WILLIAM'S EMAIL IDENTITY REBUILT
+
+Continuation of the seller-acquisition execution (late 8/9 checkpoints).
+All verified live, nothing assumed:
+
+**TRUST STACK (Day-1 items DONE, William clicking, Claude navigating):**
+- ICO data-protection registration COMPLETE: application C1989708, Tier 1,
+  paid by Direct Debit (auto-renews annually). Org address on the form:
+  49 Station Road, Polegate BN26 6EA. Trading names listed: Velor, Velor
+  Marketplace, velorcommerce.store. DPO outcome: not required (correct).
+  Public register listing follows within 7 working days -- once the
+  registration number email arrives, add "ICO registered" to the site
+  footer trust badges (NOT before).
+- Good Business Charter application SUBMITTED (status Pending): GBC
+  account under customerservice@; org profile with velor-logo-2026.png,
+  Company No. 17268133, the global-marketplace description; all 10 SME
+  components answered honestly (N/A on zero-hours; escrow=customer
+  commitment, seller rules+certificates=ethical sourcing, digital-first=
+  environmental); the 3 declarations ticked; the GBC logo licence
+  agreement was reviewed and Agreed by WILLIAM personally. On approval:
+  add GBC logo to footer trust badges (promised in the application).
+- Trustpilot claim NOT yet started (next session). Heritage Crafts (£50)
+  parked until funds.
+
+**SELLER OUTREACH -- ALL 6 AGGREGATOR PITCHES NOW SENT** (Outlook,
+verified in Sent Items): RajSICO rajsico@rajasthan.gov.in (00:50) and
+FTF-India x.selvan@fairtradeforum.org.in + ftfindia@gmail.com (00:54)
+joined the four sent 21 Jul. Both new pitches use the GLOBAL framing +
+Company No. 17268133. Follow-ups due ~27-29 Jul if silent. The EPCH
+member direct wave (30-prospect shortlist with emails, in the 2026-07-21
+research agent report) is QUEUED for next session -- deliberately not
+started at 2am so sends carry the new from-address (below).
+
+**WILLIAM'S EMAIL IDENTITY (his standing rules, all implemented):**
+1. RULE: customerservice@ is ONLY for customer/seller correspondence
+   through the business; anything to organisations/partners/press goes
+   FROM william@velorcommerce.co.uk under his name.
+2. RULE: every outgoing email carries the standing signature: William
+   Sinclair / Director, Velor Commerce Ltd (Company No. 17268133) /
+   velorcommerce.store | william@velorcommerce.co.uk | WhatsApp +44 7404
+   014621 / VELOR Global Marketplace logo (velor-logo-2026.png -- the
+   website header logo; NOT brand/velor-logo-master.png which has a black
+   background). Saved as the default Outlook signature ("Velor Standard
+   Signature", new messages AND replies) -- deeplink-composed drafts
+   should now END at "Kind regards," and let the signature do the rest.
+3. Mailbox PRIMARY ADDRESS CHANGED to william@velorcommerce.co.uk via
+   Exchange Online PowerShell ON WILLIAM'S OWN PC (GoDaddy panel cannot
+   do it; GoDaddy support chat only tried to sell a second mailbox --
+   declined). Commands run: Set-Mailbox -WindowsEmailAddress william@...
+   + Set-OrganizationConfig -SendFromAliasEnabled $true. VERIFIED:
+   Get-Mailbox returns PrimarySmtpAddress william@velorcommerce.co.uk.
+   customerservice@ + all other aliases keep receiving into the same
+   inbox; sign-in username UNCHANGED (customerservice@).
+   PROPAGATION CAVEAT: a 02:05 test STILL stamped customerservice@ --
+   Exchange transport cache; expect william@ on sends from the morning.
+   VERIFY on next session's first send. If the signature logo still
+   arrives as an attachment (cid) instead of inline, swap the saved
+   signature's image to the hosted URL https://velorcommerce.store/velor-logo-2026.png.
+- "Always show From" enabled in Outlook compose settings.
+- Resend/transactional/agent email routing is UNTOUCHED (hello@ /
+  noreply@ .store, customerservice@ recipient rules all unchanged).
+
+**Environment notes:** Chrome MCP tab group can be closed by William
+mid-session (tabs vanish -- re-create via tabs_context_mcp createIfEmpty).
+Desktop bridge: terminals grant at click-tier only (NO typing) -- for
+PowerShell work, prepare a single paste-block and William pastes/runs it
+himself while Claude watches via computer_screenshot (worked perfectly).
+William asked for EXTRA-CLEAR non-technical instructions ("im not
+computer savvy") -- one small step at a time, say exactly where to click.
+GitHub warned the classic PAT expires soon; session PAT deletion still
+owed at wrap-up (William).
+
+**Next session queue:** 1) verify from-address shows william@ on a real
+send; 2) EPCH direct wave (20-30 personalised, from william@, global
+framing); 3) Trustpilot claim; 4) Payoneer trigger fires 08:00 UTC 23 Jul
+(escalate live chat if silent); 5) watch GBC approval + ICO number email
++ Google Play release 5; 6) translation warm-up TOP PRIORITY when funds.
