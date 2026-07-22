@@ -103,6 +103,15 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
+  // Trustpilot domain-ownership verification for the business profile claim
+  // (added 2026-07-22, William's session). Renders as
+  // <meta name="trustpilot-one-time-domain-verification-id" content="..."/>
+  // in <head> on every page including the homepage. One-time check on
+  // Trustpilot's side; harmless to leave in place afterwards.
+  other: {
+    'trustpilot-one-time-domain-verification-id':
+      '8061aa65-b7d4-40d6-a528-058f2b60f2c6',
+  },
 }
 
 // Added by the standing SEO agent, 2026-07-13 -- the root layout had no
