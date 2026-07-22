@@ -3077,3 +3077,18 @@ send; 2) EPCH direct wave (20-30 personalised, from william@, global
 framing); 3) Trustpilot claim; 4) Payoneer trigger fires 08:00 UTC 23 Jul
 (escalate live chat if silent); 5) watch GBC approval + ICO number email
 + Google Play release 5; 6) translation warm-up TOP PRIORITY when funds.
+
+
+## 2026-07-22 checkpoint 2 (overnight ~02:40-03:35 UK) -- EPCH WAVE COMPLETE, HONESTY CORRECTION, WHATSAPP AUTOMATION LIVE
+
+**HONESTY CORRECTION (William, applies to ALL future outreach):** Never promise "we will build your store/listings for you" - that service does not exist. Truth (Option A): sellers self-serve at velorcommerce.store/apply - simple ID verification, site works in the seller's own language, listing takes only minutes; agents are too slow for hands-on builds. The 6 EPCH emails sent earlier tonight and the aggregator pitches DO contain the old promise - if anyone replies asking us to build their store, answer honestly and point them to the simple signup. All later sends corrected.
+
+**EPCH DIRECT WAVE COMPLETE - 12/12 sent from william@** (verified in Sent Items). Final 6 sent 02:51-02:55 with corrected honest wording: A.H. Decorative (info@ahdecorative.com), A. M. Glass (amglass@amglassintl.com), Ajay Glass Works (info@ajayglassworks.com), A M Leather (info@amleatherindia.com), A S K Hometex (jegan@askhometex.com), Akrati Jewels (akratijewelsinc@gmail.com). Follow-ups due ~27-29 Jul if silent.
+
+**WHATSAPP BUSINESS AUTOMATION LIVE** on +44 7404 014621 (app was already installed and connected): Greeting message (first-time contacts) + Away message (custom night schedule), both carrying the join link https://velorcommerce.store/apply, recipients "Everyone not in address book". Corrected texts (no store-building promise) saved by William himself.
+
+**META VERIFIED STATUS (verified on screen):** the Velor business portfolio has an ACTIVE "Meta Verified Business Standard" subscription covering the VELOR Facebook Page and @velorcommerce Instagram (both blue-ticked). WhatsApp is NOT covered. Desktop cannot manage the subscription (mobile-billed) - changes only via the phone Facebook app: Accounts Centre, Subscriptions, Meta Verified. The WhatsApp number is Approved and connected in the portfolio (WhatsApp Manager shows +44 7404 014621 / VELOR / GB). NEXT: check the phone flow for an add-WhatsApp option and its price; if absent, join the waitlist at facebook.com/business/tools/meta-verified-for-business. Parked as non-launch-critical.
+
+**STANDING RULE (William):** if he asks a question mid-task, STOP and reply acknowledging it BEFORE continuing any work.
+
+**Next session queue:** 1) morning from-address verify on a real send; 2) Trustpilot claim; 3) Payoneer trigger fires 08:00 UTC 23 Jul; 4) watch GBC approval, ICO number email, Google Play release 5; 5) EPCH follow-ups ~27-29 Jul; 6) Meta Verified WhatsApp via phone; 7) translation warm-up when funds allow.
