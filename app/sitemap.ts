@@ -40,15 +40,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // one-time-token or confirmation page): /contact, /cookies, /live,
   // /legal/seller-rules, /marketplace (later redirected to /shop, see below),
   // /returns, /seller-agreement, /track.
-  // Deliberately NOT added: /apply/verified, which also has a canonical set
-  // but is a Stripe Identity `return_url` reached only via a per-applicant
-  // `?application=<id>` query string (confirmed via lib/identity.ts) with no
-  // internal link pointing to it anywhere in the app -- the same profile as
-  // /unsubscribe and /apply/invited, both of which prior runs correctly set
-  // to noindex rather than canonical. That looks like a real inconsistency
-  // in an earlier run's canonical batch, not something to paper over by
-  // listing it here -- logged as a new backlog item instead of decided
-  // unilaterally in a sitemap-only change.
+  // Deliberately NOT added: /apply/verified, a Stripe Identity `return_url`
+  // reached only via a per-applicant `?application=<id>` query string
+  // (confirmed via lib/identity.ts) with no internal link pointing to it
+  // anywhere in the app -- the same profile as /unsubscribe and
+  // /apply/invited, neither of which is listed here either. This page
+  // previously had a canonical instead of noindex (a real inconsistency
+  // flagged as SEO_LOG.md backlog item 11 since 2026-07-13); corrected
+  // 2026-07-22 to `robots: { index: false, follow: false }`, matching its
+  // two siblings -- see app/apply/verified/page.tsx for the fix itself.
   //
   // Extended 2026-07-13 (evening) by the standing SEO agent: /origins, the
   // buyer-facing country index, was built the same day (commit a62357e) and

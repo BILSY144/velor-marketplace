@@ -1,10 +1,24 @@
 import Link from 'next/link';
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview';
 
+// Indexing directive corrected by the standing SEO agent, 2026-07-22 --
+// closes SEO_LOG.md backlog item 11 (open since 2026-07-13). This route is
+// a Stripe Identity return_url reached only via a per-applicant token query
+// string (?application=<id>, see lib/identity.ts), with zero internal
+// <a>/<Link> pointing to it anywhere in the app -- the same profile as its
+// two siblings /unsubscribe and /apply/invited, which were both correctly
+// given `robots: { index: false, follow: false }` instead of a canonical
+// for that exact reason. This page previously got a canonical instead by
+// oversight during the 2026-07-12 21:17 UTC canonical batch, flagged
+// repeatedly since as a likely inconsistency but never corrected pending
+// a reason to believe it was deliberate. No such reason ever surfaced
+// across ~10 days of re-audits, so aligning it with its siblings now:
+// a tokenized, non-navigable, one-time landing page should not carry a
+// reusable canonical inviting search engines to index it.
 export const metadata = {
   title: 'Verification submitted — Velor',
   description: 'Your identity verification has been submitted to Velor.',
-  alternates: { canonical: 'https://velorcommerce.store/apply/verified' },
+  robots: { index: false, follow: false },
   openGraph: {
     title: 'Verification submitted — Velor',
     description: 'Your identity verification has been submitted to Velor.',
