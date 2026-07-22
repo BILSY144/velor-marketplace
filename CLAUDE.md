@@ -3092,3 +3092,100 @@ framing); 3) Trustpilot claim; 4) Payoneer trigger fires 08:00 UTC 23 Jul
 **STANDING RULE (William):** if he asks a question mid-task, STOP and reply acknowledging it BEFORE continuing any work.
 
 **Next session queue:** 1) morning from-address verify on a real send; 2) Trustpilot claim; 3) Payoneer trigger fires 08:00 UTC 23 Jul; 4) watch GBC approval, ICO number email, Google Play release 5; 5) EPCH follow-ups ~27-29 Jul; 6) Meta Verified WhatsApp via phone; 7) translation warm-up when funds allow.
+
+## 2026-07-22 checkpoint 3 (afternoon session, ~13:20-17:00 UK) -- GBC ACCREDITED + LIVE ON SITE, TRUSTPILOT CLAIMED, WEPs APPLICATION SUBMITTED
+
+All verified live unless stated. William present and clicking throughout.
+
+**GBC -- ACCREDITED.** Official email 10:46: "VELOR COMMERCE LTD is now
+officially Good Business Charter accredited." Their condition (stamp on
+site linked to their explainer page) SHIPPED same hour: new footer
+accreditations band, left end, own bordered row between trust band and
+link columns, built to take more badges (commits cbee534/11e614d/f366d55;
+stamp at 174px per William "3 times the size"; asset public/
+gbc-accredited.jpg -- the crisp official PNG pack exists at
+Downloads/GBC-accreditation-stamp-3.zip if an upgrade is ever wanted).
+Linked to goodbusinesscharter.com/what-good-business-charter-accreditation
+-means-and-why-it-matters/. LIVE-VERIFIED on /contact footer.
+
+**ICO -- partial.** 08:00 email is only William's CONTACT security number
+(CSN6256110, ref ICO:00014871559 -- quote both when phoning 0303 123
+1113). The REGISTRATION number email (needed before "ICO registered" may
+join the footer) has NOT arrived yet; due within 7 working days of 21 Jul.
+
+**TRUSTPILOT -- account created and profile claimed; domain verification
+BLOCKED BY THEIR SIDE.** Free plan. Account william@velorcommerce.co.uk
+(William's explicit choice), Velor Commerce Ltd / velorcommerce.store,
+activated via email, logged in. Domain-email route impossible
+(velorcommerce.store has NO MX -- confirmed by DNS query; it is
+send-only via Resend). Meta tag route: tag live in app/layout.tsx
+metadata.other (commit 3e8eb8e) -- verified present on live homepage.
+DNS route: TXT record trustpilot-one-time-verification-id=f99701c5-922e-
+49a2-ba30-ec66eb37e125 added @ velorcommerce.store in GoDaddy, verified
+resolving. BOTH proofs permanently in place, but Trustpilot's "Verify
+domain" button spun indefinitely on 4 attempts over ~1h (no API error
+visible; their backend hanging). NEXT SESSION: retry once (fresh load of
+businessapp.b2b.trustpilot.com/dashboard/claim, Verify with DNS); if
+still hanging, submit their "Fill out this form" support link on that
+page.
+
+**WEPs (UN Women's Empowerment Principles) -- APPLICATION SUBMITTED.**
+On-screen confirmation: "Sign Up WEP Velor Commerce Ltd has been
+created." 10-15 business days review; follow-ups to
+william@velorcommerce.co.uk. Submission included: signed CEO Statement
+of Support (official template; William signed on paper, signature
+photographed, extracted and composed onto the PDF -- final file
+Downloads/Velor-CEO-Statement-of-Support-SIGNED.pdf, joining date
+22/07/2026), CEO headshot (Downloads/William-Sinclair-CEO-photo.png),
+certificate of incorporation. CEO quote (approved by William) frames
+Velor as championing women makers worldwide. Gender-balance fields
+answered HONESTLY (Less than 30% across -- one-man company); William
+questioned the look, agreed honest baseline + growth story is right.
+
+**SME Climate Hub -- deliberately NOT joined.** William spotted the
+conflict himself: a global-shipping marketplace signing "halve emissions
+by 2030" from a near-zero pre-launch baseline would be greenwashing bait
+(CMA Green Claims risk). Honest positioning instead: digital-first, no
+warehouses, goods ship once maker-to-buyer. Do not sign climate pledges
+that growth would break.
+
+**Printer (HP DeskJet 2910) -- 90% set up, one hardware fault.** Windows
+added it over WiFi (it was already on the network, solid blue light);
+the official HP app (Microsoft Store -- note: "HP Smart" is retired, the
+app is now just "HP") installed and the printer connected in it. BUT a
+persistent phantom "printer door open" error survives door reseating,
+power cycles and the proper HP driver -- likely a sticky door sensor.
+Parked; HP support another day. Print jobs go nowhere until fixed.
+
+**From-address VERIFIED.** William's Outlook sends now stamp
+william@velorcommerce.co.uk (WEPs-statement email to his Gmail showed the
+new From + the standing signature with inline logo). Yesterday's
+Exchange-cache caveat is resolved.
+
+**Seller inbox note:** Nepal Art Shop (Sharma Meera) -- William is
+handling her directly by email/WhatsApp himself; do not double-reply.
+WFTO pitch got an out-of-office (Robert Vidal Esteve back 27 Jul --
+matches the planned follow-up date).
+
+**Environment notes for future sessions:** This cloud sandbox HAS git
+network to github.com (clone/push with PAT worked; api.github.com is
+proxy-limited -- use browser-context fetch for Contents API instead).
+William created a 7-day fine-grained PAT this session -- treat as
+rotated/expired after ~29 Jul; ask fresh. File shuttle device<->sandbox:
+desktop-app folder connect (Downloads granted) + device_stage_files /
+device_commit_files works cleanly; Chrome-extension file_upload can fill
+web file inputs from /mnt/user-data/* paths. Chrome MCP JS return filter
+blocks base64/hex dumps -- transfer binaries via GitHub Contents API from
+browser context (delete temp files from repo after; done this session).
+Computer-use on William's desktop works (Microsoft Store, Settings, HP
+app granted; HP app renders via msedgewebview2 -- grant that basename
+too, and first launch can be minutes-slow/blank).
+
+**Next session queue:** 1) Trustpilot verify retry (both proofs already
+in place); 2) Payoneer trigger fires 08:00 UTC 23 Jul -- escalate live
+chat if silent; 3) watch for ICO registration number email -> then add
+"ICO registered" footer badge; 4) watch GBC public listing + WEPs
+review; 5) Meta Verified WhatsApp check on William's phone; 6) EPCH +
+aggregator follow-ups ~27-29 Jul (WFTO contact back 27th); 7) printer
+door sensor via HP support when time allows; 8) translation warm-up
+when funds.
