@@ -111,7 +111,7 @@ export default function GlobalFooter() {
             <img
               src="/gbc-accredited.jpg"
               alt="Good Business Charter Accredited"
-              style={{ height: 58, width: 'auto', display: 'block' }}
+              style={{ height: 174, width: 'auto', display: 'block' }}
             />
           </a>
         </div>
