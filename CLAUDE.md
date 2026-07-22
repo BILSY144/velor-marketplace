@@ -3219,3 +3219,82 @@ Heritage Crafts (£50), Cyber Essentials (~£320), UN Global Compact
 
 **Next session queue additions:** GBP video verification (William's
 phone, from business.google.com dashboard); ITC ecomConnect signup.
+
+## 2026-07-22 checkpoint 5 (evening) -- ACCREDITATION SWEEP: GOOD MARKET DRAFTED, ECOMCONNECT JOINED, NEST SENT
+
+**ARTISAN ALLIANCE EMAIL BOUNCED.** William sent the outreach email
+himself; Outlook returned "Delivery has failed to these recipients"
+(17:03). Confirms the organisation is dead (matches the dormant/closed
+finding). Off the list permanently.
+
+**NEST PARTNERSHIP LETTER SENT.** To partnerships@buildanest.org from
+william@velorcommerce.co.uk -- intro to Velor, asks how a marketplace
+can work with Nest (partnership / Nest Standards alignment), offers
+founding-seller places to their maker network. Await reply.
+
+**GOOD MARKET APPLICATION -- COMPLETE ON ALL 7 PAGES, SAVED AS DRAFT
+20909. NOT YET SUBMITTED (needs 1 more photo).**
+- Account: william@velorcommerce.co.uk (password set by William).
+  Draft URL: goodmarket.global/application-form/20909 (also via
+  Account -> My Enterprises -> Velor -> Edit).
+- Answers (all honest): brand Velor / Velor Commerce Ltd; sector
+  System Services > Trade > MARKETPLACE (exact category); chips
+  Online marketplace, Artisan goods, Handicrafts, Live commerce;
+  Physical No; map pin on Polegate (Location Title "Registered
+  office - Polegate, East Sussex, UK"); email customerservice@;
+  website + FB + IG; logo uploaded; CEO photo as photo 1; People &
+  Planet: Prioritize/Purpose/Communicate Yes, Measure No, Certify
+  Yes via GBC (listed under Other Certifications w/ link to GBC 10
+  components), Legal Status No, Registration Yes, Private Company,
+  Revenue = Commissions, Self-Sustaining Yes, Reinvest No, Services
+  Yes (escrow/onboarding detail), Contributions No; Environment page
+  all No (pre-launch digital, per their "doesn't apply = No" rule);
+  Customers: Responsive/Guarantee/Relationships/Transparent-Pricing
+  Yes, rest No; Workers all No (solo founder); Suppliers: Ethical
+  Practice Yes, rest No; Community: Good Citizen/Social Benefit/
+  Networks Yes (Networks detail cites GBC + WEPs + artisan-org
+  partnerships); Additional Info written; postal address for
+  certificate 49 Station Road; Optional programmes = No.
+- BLOCKER: needs >= 2 REAL photos (no graphics/AI/screenshots).
+  William's first supplied 2nd photo was AI-generated (his own
+  admission) -- correctly NOT used. Options: real photo from a
+  founding seller (with permission -- ask Sharma/ceramics contacts
+  via WhatsApp) or William's own photo of himself at work. When the
+  photo lands: upload to Photos, then SUBMIT. Review < 48h, free
+  forever.
+- APP LANDMINES (their bugs): typing in the Latitude/Longitude
+  fields CRASHES the app and wipes ALL unsaved answers (use the map
+  picker + search box instead); the "Successfully Saved" modal
+  sometimes gets stuck (reload the draft URL to escape); /application-
+  form/0 is always a BLANK NEW application, never the draft; radios
+  render checked but read false via DOM (trust the visual, not
+  input.checked); text inputs need REAL typing (React state ignores
+  synthetic value setters; chips + radios via JS .click() are fine).
+
+**ITC ECOMCONNECT -- ACCOUNT LIVE.** william@velorcommerce.co.uk,
+org Velor Commerce Ltd (Business / Services / Polegate UK), profile
+user id 8891772. 8,102 members; Members directory filter Industries=
+"Arts and Crafts" = 56 prospects across Ghana, Indonesia, Peru,
+Tunisia, India, Grenada, Sierra Leone, Kenya, Cameroon, Nigeria,
+Cambodia, Bangladesh, Zambia, Costa Rica. STANDOUTS: BaSE (Khulna,
+Bangladesh -- fair-trade handicraft umbrella org, one yes = many
+makers), Israel Fugah (Accra, active), Meta Dharmawan (Jakarta).
+Platform has built-in member messaging.
+
+**OUTREACH PLAN APPROVED BY WILLIAM:** one intro message drafted
+(founding-seller invitation; link to velorcommerce.store/SELL not
+/apply -- landing page sells the vision first), personalised first
+line per recipient, batches of ~10, organisations first. William's
+ecomConnect profile needs photo + bio BEFORE first send (avatar
+cropped and ready at /mnt/user-data/outputs/william-ecomconnect-
+avatar.jpg from his cafe selfie IMG_3720.JPG; upload was mid-flight
+when the Chrome tab group dropped). Bio line: "Founder of Velor -- a
+global marketplace for authentic cultural and artisan goods,
+launching 6 August 2026."
+
+**Session-end state:** Chrome tab group dropped (4th time today) and
+tab-group recreation was being blocked -- browser work paused pending
+William confirming the extension is up. Non-browser work continued.
+Next: finish ecomConnect profile (photo+bio), send outreach batch 1,
+Good Market 2nd photo + submit, Trustpilot support form, GBP video
+verification, WFTO ~27 Jul, Payoneer 08:00 UTC 23 Jul.
