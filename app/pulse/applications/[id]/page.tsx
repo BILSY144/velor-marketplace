@@ -93,11 +93,6 @@ const act = async (action: 'approve' | 'reject') => {
 if (!app) return
 setActionError('')
 
-if (action === 'approve' && app.verificationStatus !== 'VERIFIED') {
-const ok = window.confirm(`${app.businessName} has not completed identity verification yet (status: ${app.verificationStatus.replace(/_/g, ' ')}). Velor's policy is to hold approval until a seller's ID is verified. Approve anyway?`)
-if (!ok) return
-}
-
 if (action === 'reject' && !showRejectBox) {
 setShowRejectBox(true)
 return
@@ -171,8 +166,8 @@ ID: {app.verificationStatus.replace(/_/g, ' ')}
 <Field label="Verified at" value={app.verifiedAt ? fmtDateTime(app.verifiedAt) : null} />
 <Field label="Notes" value={app.verificationNotes} />
 {app.verificationStatus !== 'VERIFIED' && (
-<div style={{ fontSize: 12, color: '#ffd28a', background: 'rgba(242,201,76,0.1)', border: '1px solid rgba(242,201,76,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 14 }}>
-This applicant has not completed Stripe identity verification yet. Velor&apos;s policy is to hold approval until verification succeeds -- the automated review agent emails a verification link and approves automatically once they pass.
+<div style={{ fontSize: 12, color: PULSE.mutedDark, background: 'rgba(255,255,255,0.03)', border: `1px solid ${PULSE.border}`, borderRadius: 8, padding: '8px 10px', marginBottom: 14 }}>
+This is expected and does not block approval. Since 2026-07-21, applications are approved on rules screening alone -- identity is verified by the seller&apos;s payout rail (Stripe Connect or Trolley) when they set up payouts after approval, not before.
 </div>
 )}
 
