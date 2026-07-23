@@ -29,13 +29,16 @@ interface PayoutRecord {
 }
 
 interface PayoutsSummary {
-  payoutRail: 'STRIPE' | 'DOTS' | 'PAYONEER';
+  payoutRail: 'STRIPE' | 'TROLLEY' | 'DOTS' | 'PAYONEER';
   stripeOnboarded: boolean;
   payoneerConfigured: boolean;
   payoneerLinked: boolean;
   dotsConfigured: boolean;
   dotsLinked: boolean;
   dotsOnboarded: boolean;
+  trolleyConfigured: boolean;
+  trolleyLinked: boolean;
+  trolleyOnboarded: boolean;
   pendingEscrow: number;
   pendingOrderCount: number;
   lifetimePaidOut: number;
@@ -104,8 +107,8 @@ export default function PayoutsPage() {
   }, []);
 
   const rail = data?.payoutRail ?? null;
-  const railName = rail === 'DOTS' ? 'Dots' : rail === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect';
-  const setupHref = rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
+  const railName = rail === 'TROLLEY' ? 'Trolley' : rail === 'DOTS' ? 'Dots' : rail === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect';
+  const setupHref = rail === 'TROLLEY' ? '/dashboard/trolley' : rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
   const pendingEscrow = data?.pendingEscrow ?? 0;
   const pendingOrderCount = data?.pendingOrderCount ?? 0;
   const lifetimePaidOut = data?.lifetimePaidOut ?? 0;
@@ -130,6 +133,24 @@ export default function PayoutsPage() {
       methodTitle = 'Stripe setup incomplete';
       methodSub = 'Your Stripe account exists but needs a few more details before payouts can be enabled.';
       methodTone = 'escrow'; methodChip = 'Action needed'; methodAction = 'Complete setup';
+    }
+  } else if (rail === 'TROLLEY' && data) {
+    if (data.trolleyOnboarded) {
+      methodTitle = 'Trolley account linked';
+      methodSub = 'Your earnings release here automatically once each order clears its hold window.';
+      methodTone = 'good'; methodChip = 'Active'; methodAction = 'Manage';
+    } else if (data.trolleyLinked) {
+      methodTitle = 'Trolley setup in progress';
+      methodSub = 'Finish verification on Trolley’s site to start receiving payouts. Held earnings release automatically once you do.';
+      methodTone = 'blue'; methodChip = 'In progress'; methodAction = 'Manage';
+    } else if (data.trolleyConfigured) {
+      methodTitle = 'Payout account available for your country';
+      methodSub = 'Set up takes a few minutes on Trolley’s secure site.';
+      methodTone = 'neutral'; methodChip = 'Not linked'; methodAction = 'Set up payouts';
+    } else {
+      methodTitle = 'Payout setup is being finalised for your country';
+      methodSub = 'Your earnings are held safely and released as soon as setup opens. We will email you the moment it is ready.';
+      methodTone = 'escrow'; methodChip = 'Coming soon'; methodAction = 'View details';
     }
   } else if (rail === 'DOTS' && data) {
     if (data.dotsOnboarded) {
@@ -181,8 +202,8 @@ export default function PayoutsPage() {
       {rail && (
         <StudioNotice tone="blue">
           <b>Why {railName}?</b> Velor pays sellers through Stripe Connect in the countries Stripe
-          supports, and Dots everywhere else (or, for a legacy few, Payoneer). Your country decides the
-          rail — there is nothing to choose and no way to pick the wrong one. Escrow rules are identical
+          supports, and Trolley everywhere else (or, for a legacy few, Dots/Payoneer). Your country decides
+          the rail — there is nothing to choose and no way to pick the wrong one. Escrow rules are identical
           on every rail: funds release after delivery is confirmed plus your hold window, and an open
           return or dispute pauses release.
         </StudioNotice>
@@ -219,11 +240,11 @@ export default function PayoutsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             <span aria-hidden style={{
               width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-              background: rail === 'DOTS' ? '#111318' : rail === 'PAYONEER' ? '#FF4800' : '#635BFF', color: '#fff',
+              background: rail === 'TROLLEY' ? '#0E7C61' : rail === 'DOTS' ? '#111318' : rail === 'PAYONEER' ? '#FF4800' : '#635BFF', color: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: STUDIO.fontDisplay, fontWeight: 700, fontSize: 14,
             }}>
-              {rail === 'DOTS' ? 'D' : rail === 'PAYONEER' ? 'P' : 'S'}
+              {rail === 'TROLLEY' ? 'T' : rail === 'DOTS' ? 'D' : rail === 'PAYONEER' ? 'P' : 'S'}
             </span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{methodTitle}</span>

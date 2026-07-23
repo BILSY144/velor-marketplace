@@ -144,14 +144,23 @@ model Seller {
   storeLogo                     String?
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
-  // Dots.dev payout rail (added 2026-07-23, see lib/payoutRail.ts) -- the
-  // default rail for every non-Stripe country now, replacing Payoneer while
-  // its partner application remains unanswered. dotsUserId is set the
-  // moment onboarding starts (mirrors payoneerPayeeId's timing);
-  // dotsOnboarded is only ever set true once Dots itself reports the
-  // user's payout method/compliance as complete (lib/dots.ts getUserStatus).
+  // Dots.dev payout rail (added 2026-07-23 morning, see lib/payoutRail.ts).
+  // SUPERSEDED the same evening -- Dots turned out to be a hard dead end
+  // (US-businesses-only lock, Velor is UK-registered) -- see the header of
+  // lib/payoutRail.ts and lib/trolley.ts. Fields kept only so any seller
+  // still stored on this legacy rail self-heals to TROLLEY on next resolve.
   dotsUserId                    String?   @unique
   dotsOnboarded                 Boolean   @default(false)
+  // Trolley payout rail (added 2026-07-23 evening, see lib/payoutRail.ts) --
+  // the default rail for every non-Stripe country now, replacing Dots
+  // (a confirmed dead end) and Payoneer (partner application still
+  // unanswered). trolleyRecipientId is set the moment onboarding starts
+  // (mirrors payoneerPayeeId's/dotsUserId's timing); trolleyOnboarded is
+  // only ever set true once Trolley itself reports the recipient's
+  // compliance status AND payout method as complete (lib/trolley.ts
+  // getRecipientStatus).
+  trolleyRecipientId            String?   @unique
+  trolleyOnboarded              Boolean   @default(false)
   identityVerified               Boolean   @default(false)
     // DEPRECATED (2026-07-18): foundingEligible/foundingPerksGrantedAt/
   // foundingBadge below were driven by SellerApplication.country, which
@@ -338,6 +347,7 @@ model Payout {
   stripeTransferId String?  @unique
   payoneerPayoutId String?  @unique
   dotsPayoutId     String?  @unique
+  trolleyPayoutId  String?  @unique
   status           String   @default("pending")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { isPayoneerConfigured } from '@/lib/payoneer'
 import { isDotsConfigured } from '@/lib/dots'
+import { isTrolleyConfigured } from '@/lib/trolley'
 import { isSellerTrusted, PROBATION_HOLD_MS } from '@/lib/payouts'
 import { getPayoutRail } from '@/lib/payoutRail'
 
@@ -34,6 +35,8 @@ export async function GET() {
       payoneerPayeeId: true,
       dotsUserId: true,
       dotsOnboarded: true,
+      trolleyRecipientId: true,
+      trolleyOnboarded: true,
     },
   })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
@@ -76,6 +79,7 @@ export async function GET() {
         stripeTransferId: true,
         payoneerPayoutId: true,
         dotsPayoutId: true,
+        trolleyPayoutId: true,
         createdAt: true,
       },
     }),
@@ -94,6 +98,9 @@ export async function GET() {
     dotsConfigured: isDotsConfigured(),
     dotsLinked: Boolean(seller.dotsUserId),
     dotsOnboarded: seller.dotsOnboarded,
+    trolleyConfigured: isTrolleyConfigured(),
+    trolleyLinked: Boolean(seller.trolleyRecipientId),
+    trolleyOnboarded: seller.trolleyOnboarded,
     pendingEscrow: pendingAgg._sum.sellerEarnings || 0,
     pendingOrderCount: pendingAgg._count,
     lifetimePaidOut,
@@ -107,7 +114,7 @@ export async function GET() {
       amount: p.amount,
       currency: p.currency,
       status: p.status,
-      method: p.stripeTransferId ? 'Stripe' : p.dotsPayoutId ? 'Dots' : p.payoneerPayoutId ? 'Payoneer' : '—',
+      method: p.stripeTransferId ? 'Stripe' : p.trolleyPayoutId ? 'Trolley' : p.dotsPayoutId ? 'Dots' : p.payoneerPayoutId ? 'Payoneer' : '—',
       date: p.createdAt.toISOString(),
     })),
   })

@@ -6,7 +6,7 @@
 import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getPayoutRail } from '@/lib/payoutRail';
-import { isDotsConfigured } from '@/lib/dots';
+import { isTrolleyConfigured } from '@/lib/trolley';
 import { PAYOUT_GATE_COOKIE, payoutGateSatisfied } from '@/lib/payoutGateCookie';
 
 export { PAYOUT_GATE_COOKIE, payoutGateSatisfied };
@@ -14,7 +14,7 @@ export { PAYOUT_GATE_COOKIE, payoutGateSatisfied };
 export interface PayoutGateStatus {
   rail: string;
   stripeOnboarded: boolean;
-  dotsOnboarded: boolean;
+  trolleyOnboarded: boolean;
   satisfied: boolean;
 }
 
@@ -22,13 +22,13 @@ export interface PayoutGateStatus {
  * Look up a seller's live payout-rail state and decide whether the dashboard
  * gate is satisfied. Also self-heals Seller.payoutRail if the seller's
  * country resolves to a different rail than what's stored, same pattern
- * already used in app/api/payoneer/onboard, app/api/dots/onboard, and
- * app/api/dashboard/payouts.
+ * already used in app/api/payoneer/onboard, app/api/dots/onboard,
+ * app/api/trolley/onboard, and app/api/dashboard/payouts.
  */
 export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatus | null> {
   const seller = await prisma.seller.findUnique({
     where: { userId },
-    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true, dotsOnboarded: true },
+    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true, trolleyOnboarded: true },
   });
   if (!seller) return null;
 
@@ -40,8 +40,8 @@ export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatu
   return {
     rail,
     stripeOnboarded: seller.stripeOnboarded,
-    dotsOnboarded: seller.dotsOnboarded,
-    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()),
+    trolleyOnboarded: seller.trolleyOnboarded,
+    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded, seller.trolleyOnboarded, isTrolleyConfigured()),
   };
 }
 
