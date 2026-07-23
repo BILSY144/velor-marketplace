@@ -87,6 +87,32 @@ const faqJsonLd = {
   })),
 }
 
+// BreadcrumbList JSON-LD added by the standing SEO agent, 2026-07-23 (full
+// audit cycle) — a genuine gap found this run, not a re-implementation of
+// something that already existed: the 2026-07-22 00:xx UTC full audit's own
+// schema inventory summary listed "FAQPage+BreadcrumbList (/help)", but a
+// fresh read of this file found only FAQPage markup ever shipped here — no
+// BreadcrumbList script was ever rendered on this route. (The
+// app/origins/[slug]/layout.tsx comment that calls its own breadcrumb "the
+// direct country-page analogue of the FAQPage markup already shipped on
+// /help" only claims /help has FAQPage, which is accurate — it does not
+// claim /help already has a breadcrumb. The prior audit's summary line
+// conflated the two.) This is a real, live, two-level hierarchy, not an
+// invented one: the header logo links Home (components/GlobalHeader.tsx)
+// and GlobalFooter.tsx links this exact page as "Help centre" — /help is a
+// top-level destination, not nested under another section, so Home > Help
+// Centre is the accurate depth (unlike the three-level Home > Shop by
+// Origin > <Country> shape used on /origins/[slug], which reflects that
+// page's own real nesting under /origins).
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://velorcommerce.store' },
+    { '@type': 'ListItem', position: 2, name: 'Help Centre', item: 'https://velorcommerce.store/help' },
+  ],
+}
+
 export default function HelpLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -94,6 +120,10 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
     </>
   )
