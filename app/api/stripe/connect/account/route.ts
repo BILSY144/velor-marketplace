@@ -48,7 +48,7 @@ async function platformAccountId(stripe: Stripe): Promise<string | null> {
 // lib/payoutGateCookie.ts for what "satisfied" means.
 async function syncPayoutGateCookie(res: NextResponse, userId: string): Promise<void> {
   const gate = await resolvePayoutGate(userId);
-  setPayoutGateCookie(res, gate?.satisfied ?? false);
+  setPayoutGateCookie(res, gate?.satisfied ?? false, userId);
 }
 
 export async function GET() {

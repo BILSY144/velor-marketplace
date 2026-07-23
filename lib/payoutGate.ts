@@ -47,10 +47,25 @@ export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatu
 
 /** Set or clear the gate cookie on a response, matching the same
  * httpOnly/secure/sameSite/maxAge shape as the existing velor_terms cookie
- * (app/api/seller/terms/route.ts) for consistency. */
-export function setPayoutGateCookie(res: NextResponse, satisfied: boolean): void {
+ * (app/api/seller/terms/route.ts) for consistency.
+ *
+ * BOUND TO userId (fixed 2026-07-23, found live by William testing his own
+ * China/Trolley test seller): the cookie value used to be a flat '1', which
+ * middleware.ts only ever checked for PRESENCE, not identity. Any seller who
+ * was ever satisfied in a given browser (a different, already-onboarded
+ * seller account, or an old test account) left a year-long cookie that then
+ * silently unlocked the dashboard for ANY seller later signed in on that
+ * same browser -- including one who has completed zero payout verification.
+ * Exactly the "William: I can access the dashboard without ID verification,
+ * that's not what I want" bug. The cookie now stores the satisfied seller's
+ * own userId, and middleware compares it against the CURRENTLY signed-in
+ * user's id -- so switching accounts in the same browser can never inherit
+ * another account's satisfied state. Same root-cause shape as the
+ * `seller_account_id` cookie bug fixed 2026-07-21 (see that checkpoint in
+ * CLAUDE.md) -- a per-browser cookie standing in for per-session truth. */
+export function setPayoutGateCookie(res: NextResponse, satisfied: boolean, userId: string): void {
   if (satisfied) {
-    res.cookies.set(PAYOUT_GATE_COOKIE, '1', {
+    res.cookies.set(PAYOUT_GATE_COOKIE, userId, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',

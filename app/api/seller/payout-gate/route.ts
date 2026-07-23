@@ -17,6 +17,6 @@ export async function GET() {
   if (!gate) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
 
   const res = NextResponse.json(gate);
-  setPayoutGateCookie(res, gate.satisfied);
+  setPayoutGateCookie(res, gate.satisfied, session.user.id);
   return res;
 }

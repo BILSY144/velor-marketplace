@@ -100,9 +100,22 @@ async function trolleyFetch<T>(path: string, options: { method?: string; body?: 
   const method = options.method || 'GET'
   const bodyStr = options.body ? JSON.stringify(options.body) : ''
   const timestamp = String(Math.floor(Date.now() / 1000))
-  const signature = signRequest(cfg.secretKey, timestamp, method, path, bodyStr)
+  const fullUrl = cfg.base + path
+  // FIXED 2026-07-23 (live "invalid_api_key: bad hash" 401 from William's own
+  // test): Trolley's documented signing scheme requires requestPath to be the
+  // FULL request path INCLUDING the /v1 version prefix (confirmed against
+  // developers.trolley.com/api's own worked example, "/v1/recipients", and
+  // its complete curl example). This used to sign the bare ENDPOINTS path
+  // (e.g. '/recipients', no /v1) while the actual HTTP request went to
+  // cfg.base + path (which DOES include /v1 via DEFAULT_API_BASE/
+  // TROLLEY_API_BASE) -- so the signed path never matched the real request
+  // path and Trolley's server-side recomputed signature never matched ours.
+  // Deriving requestPath from the real request URL's pathname guarantees the
+  // two can never drift apart again, however TROLLEY_API_BASE is configured.
+  const requestPath = new URL(fullUrl).pathname
+  const signature = signRequest(cfg.secretKey, timestamp, method, requestPath, bodyStr)
 
-  const res = await fetch(cfg.base + path, {
+  const res = await fetch(fullUrl, {
     method,
     headers: {
       'Content-Type': 'application/json',

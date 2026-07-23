@@ -51,7 +51,7 @@ export async function GET() {
   // has already self-healed to DOTS by the time this GET runs (rail is
   // recomputed from country above), so the DOTS-not-configured exemption
   // still applies rather than defaulting to the strict branch.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()))
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()), session.user.id)
   return res
 }
 

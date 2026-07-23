@@ -87,7 +87,14 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
       const gateExempt = PAYOUT_GATE_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
       if (!gateExempt) {
         const payoutCookie = req.cookies.get(PAYOUT_GATE_COOKIE)
-        if (!payoutCookie?.value) {
+        const currentUserId = (req.auth as any)?.user?.id
+        // Cookie value must match the CURRENTLY signed-in user's id, not just
+        // be present -- fixed 2026-07-23 after William found he could reach
+        // the dashboard on a never-verified test seller because a previous,
+        // already-satisfied account had left this cookie in the same
+        // browser. See lib/payoutGate.ts's setPayoutGateCookie for the full
+        // story; do not revert to a plain presence check.
+        if (!payoutCookie?.value || payoutCookie.value !== currentUserId) {
           return NextResponse.redirect(new URL('/dashboard/stripe-connect', req.url))
         }
       }

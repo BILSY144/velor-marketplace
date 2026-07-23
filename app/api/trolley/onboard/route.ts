@@ -79,7 +79,7 @@ export async function GET() {
   // Transfer Activation submission is still pending -- see
   // lib/payoutGateCookie.ts) instead of locking every non-Stripe-country
   // seller out of the dashboard until William adds the Trolley API keys.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, trolleyOnboarded, isTrolleyConfigured()))
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, trolleyOnboarded, isTrolleyConfigured()), session.user.id)
   return res
 }
 

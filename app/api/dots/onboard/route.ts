@@ -77,7 +77,7 @@ export async function GET() {
   // the gate exempts sellers while Dots itself isn't live yet (see
   // lib/payoutGateCookie.ts) instead of locking every non-Stripe-country
   // seller out of the dashboard until William adds DOTS_API_KEY.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, dotsOnboarded, isDotsConfigured()))
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, dotsOnboarded, isDotsConfigured()), session.user.id)
   return res
 }
 
