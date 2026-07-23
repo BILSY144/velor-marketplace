@@ -7,6 +7,48 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## URGENT -- STOP: SET UP DOTS ACCOUNT BEFORE ANY OTHER WORK (William, 2026-07-23)
+
+William's explicit instruction, given directly in chat: this is the single
+most important thing to do right now, marked as a matter of urgency. No
+other work on this project should be carried out until it is resolved.
+Read this before doing anything else in this repo.
+
+**What needs to happen:** William signs up for a real Dots.dev account at
+https://dashboard.dots.dev himself (Claude cannot create accounts on his
+behalf -- this is a standing prohibited action, same reason Payoneer and
+Stripe accounts were always his to create) and adds the resulting
+DOTS_API_KEY (and DOTS_API_BASE, if it differs from the default
+https://api.dots.dev) to Vercel's environment variables, for both
+Production and Preview.
+
+**Why this is urgent, not routine:** Dots.dev is now the default payout
+rail for every seller outside Stripe's supported countries (lib/payoutRail.ts,
+added 2026-07-23 to replace Payoneer after its Mass Payouts partner
+application sat unanswered since 13 July). That covers most of the
+countries this seller-recruitment push is actually targeting. Until
+DOTS_API_KEY exists, isDotsConfigured() returns false and no seller outside
+Stripe's reach can complete real payout onboarding -- their earnings queue
+safely in escrow (an interim payout-gate exemption, commit 1ce2671,
+2026-07-23, stops them being locked out of the dashboard entirely while
+this is pending -- see lib/payoutGateCookie.ts) but nobody can actually be
+paid. Two real approved sellers (LAKA's Studio and HALLORY, both China)
+were emailed the same day telling them they can list products now -- if
+either lists and later sells something, their money has nowhere real to go
+until this is done.
+
+**Next session: do not start other feature work, redesigns, or outreach
+before checking whether this has been resolved.** If DOTS_API_KEY is
+already in Vercel, confirm isDotsConfigured() actually returns true (e.g.
+via GET /api/dots/onboard while signed in as a seller) and sandbox-verify
+the two flagged-unconfirmed items in lib/dots.ts's own header (whether a
+zero-amount onboarding link is accepted, and the exact shape of GET
+/v2/users/{id}) before trusting a live payout. If it is NOT yet done,
+re-raise it with William immediately rather than moving on to anything
+else.
+
+---
+
 ## LAW #1 â HONESTY
 
 Never lie, fabricate, or invent actions or results. If a step was not taken,
