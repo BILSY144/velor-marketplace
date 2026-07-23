@@ -73,8 +73,11 @@ export async function GET() {
   // cookie ever gets set, mirroring /api/payoneer/onboard and /api/stripe/
   // connect/account. This route is called on every /dashboard/stripe-connect
   // and /dashboard/dots page load, which is exactly where middleware.ts
-  // sends a not-yet-satisfied seller.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, dotsOnboarded))
+  // sends a not-yet-satisfied seller. Passes isDotsConfigured() through so
+  // the gate exempts sellers while Dots itself isn't live yet (see
+  // lib/payoutGateCookie.ts) instead of locking every non-Stripe-country
+  // seller out of the dashboard until William adds DOTS_API_KEY.
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, dotsOnboarded, isDotsConfigured()))
   return res
 }
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayoutRail } from '@/lib/payoutRail'
 import { isPayoneerConfigured, getRegistrationLink } from '@/lib/payoneer'
+import { isDotsConfigured } from '@/lib/dots'
 import { payoutGateSatisfied, setPayoutGateCookie } from '@/lib/payoutGate'
 
 export const dynamic = 'force-dynamic'
@@ -46,8 +47,11 @@ export async function GET() {
   // lib/payoutGateCookie.ts for why) or mid-self-heal to DOTS. This route is
   // called on every /dashboard/stripe-connect and /dashboard/payoneer page
   // load, which is exactly where middleware.ts sends a not-yet-satisfied
-  // seller.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded))
+  // seller. Passes isDotsConfigured() through in case this seller's rail
+  // has already self-healed to DOTS by the time this GET runs (rail is
+  // recomputed from country above), so the DOTS-not-configured exemption
+  // still applies rather than defaulting to the strict branch.
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()))
   return res
 }
 

@@ -6,6 +6,7 @@
 import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getPayoutRail } from '@/lib/payoutRail';
+import { isDotsConfigured } from '@/lib/dots';
 import { PAYOUT_GATE_COOKIE, payoutGateSatisfied } from '@/lib/payoutGateCookie';
 
 export { PAYOUT_GATE_COOKIE, payoutGateSatisfied };
@@ -40,7 +41,7 @@ export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatu
     rail,
     stripeOnboarded: seller.stripeOnboarded,
     dotsOnboarded: seller.dotsOnboarded,
-    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded),
+    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()),
   };
 }
 

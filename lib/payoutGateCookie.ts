@@ -31,10 +31,29 @@ export const PAYOUT_GATE_COOKIE = 'velor_payout_setup';
  * a payout method/compliance status Dots itself reports complete
  * (Seller.dotsOnboarded, self-healed from lib/dots.ts's getUserStatus()).
  * DOTS is now the rail getPayoutRail() actually assigns for every non-
- * Stripe country (see lib/payoutRail.ts), so this closes the exact gap
- * PAYONEER's exemption below left open -- a non-Stripe-country seller can
- * no longer reach the rest of the dashboard without completing payout
- * verification, same as a Stripe-country seller.
+ * Stripe country (see lib/payoutRail.ts).
+ *
+ * DOTS-NOT-YET-CONFIGURED exemption (added same day, a few hours after the
+ * DOTS rail landed): William has not yet signed up at dashboard.dots.dev
+ * and added DOTS_API_KEY to Vercel, so isDotsConfigured() is still false --
+ * the entire Dots onboarding flow 400s (see app/api/dots/onboard's POST).
+ * Without this exemption, EVERY approved seller outside Stripe's supported
+ * countries (the exact countries this recruitment push most needs) would
+ * be locked out of Products/Orders/Settings with no way through, discovered
+ * live on 2026-07-23 when two approved China-origin sellers (LAKA's
+ * Studio, HALLORY) could sign in but never reach their dashboard. This is
+ * the identical dead-end-not-friction reasoning as the PAYONEER exemption
+ * below -- carried over a few hours late because Dots replaced Payoneer as
+ * the auto-assigned rail without carrying its "rail isn't live yet" escape
+ * hatch along with it. The caller passes whether Dots is actually
+ * configured (computed Node-side via lib/dots.ts's isDotsConfigured() --
+ * never imported directly into this Edge-safe file) rather than this file
+ * checking env vars itself.
+ *
+ * REVISIT (DOTS): the moment isDotsConfigured() can return true, stop
+ * passing dotsConfigured=false and DOTS-rail sellers are held to the same
+ * bar as Stripe -- a real completed Dots onboarding, not just an
+ * exemption.
  *
  * PAYONEER-rail sellers: exempted (William, confirmed 2026-07-23 after
  * asking directly whether Payoneer verification could happen independently
@@ -60,9 +79,10 @@ export const PAYOUT_GATE_COOKIE = 'velor_payout_setup';
 export function payoutGateSatisfied(
   rail: string,
   stripeOnboarded: boolean,
-  dotsOnboarded: boolean = false
+  dotsOnboarded: boolean = false,
+  dotsConfigured: boolean = true
 ): boolean {
   if (rail === 'PAYONEER') return true;
-  if (rail === 'DOTS') return dotsOnboarded === true;
+  if (rail === 'DOTS') return dotsConfigured ? dotsOnboarded === true : true;
   return stripeOnboarded === true;
 }
