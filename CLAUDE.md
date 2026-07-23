@@ -3298,3 +3298,13 @@ William confirming the extension is up. Non-browser work continued.
 Next: finish ecomConnect profile (photo+bio), send outreach batch 1,
 Good Market 2nd photo + submit, Trustpilot support form, GBP video
 verification, WFTO ~27 Jul, Payoneer 08:00 UTC 23 Jul.
+
+
+## 2026-07-23 checkpoint -- Companies House confirmed new registered office; Indiegogo business address updated to match
+
+Companies House has CONFIRMED the AD01 change of registered office address for company 17268133 (VELOR COMMERCE LTD) to **49 Station Road, Polegate, East Sussex, BN26 6EA** -- previously logged as "in progress" pending William's own WebFiling authentication/submit step. William confirmed today (2026-07-23) that Companies House has accepted it. The old address (1 Palmerston Gardens, Grays, RM20 4YJ) is no longer the registered office of record.
+
+Also updated to match, same session: Indiegogo's Business Details > Registered Business Address (admin/project-settings/velor-marketplace/velor--the-worlds-shopping-channel/merchant-details/business-data) still had the old Palmerston Gardens address, which appears to have triggered an Indiegogo email ("There's an issue with your account details" -- business account details flagged for review/resubmission). Fields updated and saved live, confirmed via the page's own "Your changes have been saved" toast:
+Street: Station Road; House/unit number: 49; City: Polegate; Postal code: BN26 6EA; Country: United Kingdom (unchanged).
+       
+        Not independently verified this session: whether Indiegogo's account-verification flag has actually cleared as a result -- that depends on their backend re-check of the submitted data, not just the form save succeeding. If the "issue with your account details" email or dashboard banner reappears, check Indiegogo's verification status directly rather than assuming the address edit alone resolved it (per LAW #1).
