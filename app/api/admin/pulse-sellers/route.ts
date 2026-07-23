@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
+import { sendEmail, buildSellerApprovedEmail, buildSellerRejectedEmail } from '@/lib/email'
 
 // Seller directory -- backs /pulse/sellers, the mobile ops dashboard's
 // searchable list of every seller on the marketplace (store name, tier,
@@ -107,4 +108,66 @@ export async function GET(request: NextRequest) {
     byTier,
     byCountry,
   })
+}
+
+// Approve/deny a seller directly from Pulse -- added 2026-07-23 for
+// "orphaned" sellers: bare Seller rows (approved: false) created by the
+// legacy /auth/sign-up -> /api/auth/register path, which never creates a
+// SellerApplication and so never appears in the real review pipeline
+// (review-applications cron, /pulse/applications, /admin/applications).
+// Until now the only way to action one of these was the desktop-only
+// /admin/sellers console (NextAuth session, not Bearer-token). This PATCH
+// mirrors that route's approve/reject behaviour but is gated through
+// isAuthorizedAdmin so it also works from Pulse's Bearer ADMIN_SECRET
+// model. Deliberately scoped to approve/reject only, not "suspend" --
+// this is for actioning a PENDING orphaned seller, not managing an
+// already-approved seller's lifecycle.
+export async function PATCH(request: NextRequest) {
+  if (!(await isAuthorizedAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json().catch(() => null)
+  const sellerId = body?.sellerId
+  const action = body?.action
+  const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
+
+  if (!sellerId || !['approve', 'reject'].includes(action)) {
+    return NextResponse.json({ error: 'Invalid request -- sellerId and action (approve|reject) are required' }, { status: 400 })
+  }
+  if (action === 'reject' && !reason) {
+    return NextResponse.json({ error: 'A reason is required to deny a seller' }, { status: 400 })
+  }
+
+  const approved = action === 'approve'
+  const seller = await prisma.seller.update({
+    where: { id: sellerId },
+    data: { approved },
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+  }).catch(() => null)
+
+  if (!seller) {
+    return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
+  }
+
+  const sellerName = seller.user?.name || 'Seller'
+  const sellerEmail = seller.user?.email || ''
+
+  // Best-effort: a failed email must never undo the approve/reject that
+  // already committed -- same pattern used elsewhere in this codebase
+  // (e.g. order confirmation emails in lib/orders.ts).
+  if (sellerEmail) {
+    try {
+      const built = approved
+        ? buildSellerApprovedEmail({ sellerName, storeName: seller.storeName })
+        : buildSellerRejectedEmail({ contactName: sellerName, businessName: seller.storeName, reason })
+      await sendEmail({ to: sellerEmail, subject: built.subject, html: built.html })
+    } catch (err) {
+      console.error('pulse-sellers PATCH: failed to send seller decision email', err)
+    }
+  }
+
+  return NextResponse.json({ seller })
 }

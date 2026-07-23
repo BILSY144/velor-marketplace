@@ -139,35 +139,115 @@ export default function PulseSellersPage() {
       {data && data.sellers.length === 0 && <EmptyState>No sellers match these filters.</EmptyState>}
 
       {data && data.sellers.map((s) => (
-        <ListCard key={s.id}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: PULSE.text, fontFamily: "'Space Grotesk', sans-serif" }}>{s.storeName}</span>
-            <div style={{ display: 'flex', gap: 6, flex: '0 0 auto' }}>
-              <Badge color={TIER_COLOR[s.tier] || PULSE.muted}>{s.tier}</Badge>
-              {!s.approved && <Badge color={PULSE.amber}>PENDING</Badge>}
-            </div>
-          </div>
-          {s.foundingBadge && (
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: PULSE.amber, marginBottom: 4 }}>&#9733; FOUNDING</div>
-          )}
-          <div style={{ fontSize: 12, color: PULSE.muted, marginBottom: 2 }}>
-            {s.country || 'Country not provided'} &middot; {s.currency} &middot; {s.payoutRail}
-          </div>
-          <div style={{ fontSize: 12, color: PULSE.muted, marginBottom: 2 }}>
-            {s.contactName || 'Not provided'} &middot; {s.contactEmail || 'No email on record'}
-          </div>
-          <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 4 }}>
-            {s.productCount} product{s.productCount === 1 ? '' : 's'} &middot; ranking {s.rankingScore.toFixed(1)} &middot; seller score {s.sellerScore.toFixed(1)}
-            {s.sellerBadge ? ` · ${s.sellerBadge}` : ''}
-          </div>
-          <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 4 }}>
-            Joined {fmtDate(s.createdAt)}
-          </div>
-        </ListCard>
+        <SellerCard key={s.id} s={s} token={token} />
       ))}
 
       {data && <PageNav page={page} totalPages={data.totalPages} onPage={setPage} />}
       <PulseFooter />
     </PulseShell>
+  )
+}
+
+// Approve/Deny for "orphaned" sellers -- added 2026-07-23. A bare Seller
+// row with approved:false and no backing SellerApplication (created by
+// the legacy /auth/sign-up -> /api/auth/register path) never appears in
+// /pulse/applications, so this is the only Pulse-side place to action it.
+// Mirrors the act()/showRejectBox/window.location.reload() pattern used
+// on /pulse/applications/[id] for consistency across Pulse.
+function SellerCard({ s, token }: { s: Seller; token: string }) {
+  const [busy, setBusy] = useState(false)
+  const [actionError, setActionError] = useState('')
+  const [showRejectBox, setShowRejectBox] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+
+  const act = async (action: 'approve' | 'reject') => {
+    setActionError('')
+
+    if (action === 'reject' && !showRejectBox) {
+      setShowRejectBox(true)
+      return
+    }
+    if (action === 'reject' && !rejectReason.trim()) {
+      setActionError('A reason is required -- the seller will see it.')
+      return
+    }
+
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/pulse-sellers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(action === 'reject' ? { sellerId: s.id, action, reason: rejectReason.trim() } : { sellerId: s.id, action }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setActionError(j.error || 'Action failed.')
+        setBusy(false)
+        return
+      }
+      window.location.reload()
+    } catch {
+      setActionError('Could not reach the server.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <ListCard>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: PULSE.text, fontFamily: "'Space Grotesk', sans-serif" }}>{s.storeName}</span>
+        <div style={{ display: 'flex', gap: 6, flex: '0 0 auto' }}>
+          <Badge color={TIER_COLOR[s.tier] || PULSE.muted}>{s.tier}</Badge>
+          {!s.approved && <Badge color={PULSE.amber}>PENDING</Badge>}
+        </div>
+      </div>
+      {s.foundingBadge && (
+        <div style={{ fontSize: 10.5, fontWeight: 700, color: PULSE.amber, marginBottom: 4 }}>&#9733; FOUNDING</div>
+      )}
+      <div style={{ fontSize: 12, color: PULSE.muted, marginBottom: 2 }}>
+        {s.country || 'Country not provided'} &middot; {s.currency} &middot; {s.payoutRail}
+      </div>
+      <div style={{ fontSize: 12, color: PULSE.muted, marginBottom: 2 }}>
+        {s.contactName || 'Not provided'} &middot; {s.contactEmail || 'No email on record'}
+      </div>
+      <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 4 }}>
+        {s.productCount} product{s.productCount === 1 ? '' : 's'} &middot; ranking {s.rankingScore.toFixed(1)} &middot; seller score {s.sellerScore.toFixed(1)}
+        {s.sellerBadge ? ` · ${s.sellerBadge}` : ''}
+      </div>
+      <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 4 }}>
+        Joined {fmtDate(s.createdAt)}
+      </div>
+
+      {!s.approved && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${PULSE.border}` }}>
+          {actionError && <div style={{ fontSize: 12, color: PULSE.red, marginBottom: 8 }}>{actionError}</div>}
+          {showRejectBox && (
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason the seller will see..."
+              rows={3}
+              style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${PULSE.border}`, background: PULSE.bg, color: PULSE.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              disabled={busy}
+              onClick={() => act('approve')}
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PULSE.green}, #2bb968)`, color: '#04170c', fontSize: 13, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}
+            >
+              Accept
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => act('reject')}
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PULSE.red}, #c93a52)`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}
+            >
+              {showRejectBox ? 'Confirm deny' : 'Deny'}
+            </button>
+          </div>
+        </div>
+      )}
+    </ListCard>
   )
 }

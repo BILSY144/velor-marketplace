@@ -3657,3 +3657,49 @@ path (CJ Dropshippers and 义乌市芳拓饰品厂 are also PENDING on
 test accounts from 2026-07-08, not new orphans — see that session's
 checkpoint). A full audit of every `approved:false` Seller row's origin
 would confirm there's nothing else stuck the same way.
+
+## 2026-07-23 checkpoint (5) -- Approve/Deny for orphaned sellers shipped directly to Pulse
+
+Follow-up 1 from the checkpoint above: William answered "yes" to adding
+Approve/Deny for orphaned sellers to Pulse itself, specifically so he can
+accept **Vellora International Trading Co. Ltd.** from his phone rather
+than needing the desktop `/admin/sellers` console. Shipped, tsc-clean
+(real `prisma generate` + `tsc` against a temp config extending the repo's
+own tsconfig — zero errors), not yet committed/pushed at the point this
+note was written (do that next, per the session's established pattern:
+fetch+rebase against `origin/main` first, since the SEO agent pushes
+concurrently).
+
+**Backend:** `app/api/admin/pulse-sellers/route.ts` gained a `PATCH`
+export, gated by `isAuthorizedAdmin(request)` (works from Pulse's
+Bearer-token model, unlike the desktop-only `/api/admin/sellers` PATCH).
+Accepts `{sellerId, action: 'approve'|'reject', reason?}` — deliberately
+scoped to approve/reject only, not "suspend" (this is for actioning a
+PENDING orphaned seller, not managing an already-approved seller's
+lifecycle). Reject requires a non-empty `reason` (shown to the seller),
+matching the UX already established on `/pulse/applications/[id]`'s
+reject flow, even though the `Seller` model has nowhere to persist that
+reason (same as the existing desktop `/api/admin/sellers` PATCH). Updates
+`seller.approved` then sends a best-effort email via the existing
+`lib/email.ts` builders (`buildSellerApprovedEmail`/
+`buildSellerRejectedEmail`, reused rather than duplicating the desktop
+route's inline HTML template style) — a failed send never undoes the
+already-committed approve/reject, same pattern as `lib/orders.ts`'s
+order-confirmation email.
+
+**Frontend:** rather than a new `/pulse/sellers/[id]` detail page (the
+`Seller` model has little to show beyond what the list card already
+renders), `app/pulse/sellers/page.tsx`'s per-row rendering was extracted
+into a new `SellerCard` subcomponent with its own `busy`/`actionError`/
+`showRejectBox`/`rejectReason` state, mirroring `/pulse/applications/
+[id]`'s `act()`/`showRejectBox`/`window.location.reload()` pattern
+exactly. Accept/Deny buttons render only when `!s.approved`, call the new
+`PATCH /api/admin/pulse-sellers` with the Bearer token from
+`usePulseAuth()`, and reload on success (`usePulseData` exposes no
+refetch function, so this matches the established Pulse convention).
+
+**Not yet done:** commit, fetch+rebase, push, then confirm with William
+he can approve Vellora from `/pulse/sellers` on his phone. William's
+second follow-up (retire vs. fix vs. leave `/auth/sign-up` as-is) remains
+unanswered — do not touch that page or `/api/auth/register` without
+further explicit direction.
