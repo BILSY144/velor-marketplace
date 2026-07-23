@@ -3789,3 +3789,35 @@ confirm REJECTED now actually sticks on both surfaces. Also worth a
 follow-up: audit whether any other admin surface in this codebase has the
 same `seller.status`-vs-`approved` mismatch pattern (none found so far,
 but this was found by accident, not an exhaustive sweep).
+
+## 2026-07-23 checkpoint (7) -- Fix verified live: both named sellers now REJECTED and it sticks
+
+Live-verified in production on `/pulse/sellers` (fresh navigation + search,
+not just the action's own reload): both sellers William named --
+**CJ Dropshippers** and **义乌市芳拓饰品厂** -- now show a red REJECTED
+badge with their stored deny reason and a single "Approve anyway" button
+(no more Deny button, correctly, since denying an already-denied seller is
+meaningless). CJ Dropshippers was denied live this session with reason
+"Legacy test/seed account, never a real seller -- denying to remove it
+from the pending queue." and confirmed still REJECTED after navigating
+away and back. 义乌市芳拓饰品厂 was already showing REJECTED ("Denied:
+not applicible") when checked -- either William tested it himself via
+desktop `/admin/sellers` or Pulse after the fix deployed, or it was denied
+earlier in this same session; either way the status is real and persists.
+A third bare/orphaned seller, **Play Review Test Store** (the account
+William made himself for the Google Play reviewer, see the 2026-07-19
+checkpoint), also now shows REJECTED ("Denied: 0 images") -- confirms the
+fix generalizes correctly to every orphaned-seller row, not just the two
+William specifically flagged.
+
+**NOT independently verified this session:** the desktop `/admin/sellers`
+console's rendering of the same status -- this sandbox's browser has no
+NextAuth ADMIN session (Pulse uses a separate Bearer-token model), and
+signing in is William's own action per standing rule, not something to
+do on his behalf. Since both routes now share the exact same
+`lib/sellerStatus.ts` helper and the exact same underlying
+`rejectedAt`/`rejectionReason` schema fields, desktop should show the
+identical REJECTED state -- but per LAW #1 this is stated as high-confidence
+from the shared code path, not as independently confirmed on that specific
+screen. Asked William to check `/admin/sellers` himself to close the loop
+on his original complaint, which was specifically about the desktop surface.
