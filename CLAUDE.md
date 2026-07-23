@@ -3821,3 +3821,39 @@ identical REJECTED state -- but per LAW #1 this is stated as high-confidence
 from the shared code path, not as independently confirmed on that specific
 screen. Asked William to check `/admin/sellers` himself to close the loop
 on his original complaint, which was specifically about the desktop surface.
+
+## 2026-07-23 checkpoint (8) -- William's 4 named test sellers purged; one blocked by real order data (kept)
+
+William pasted the 4 legacy/test seller cards from `/pulse/sellers` and asked
+to delete them completely. Built a one-off admin route
+(`/api/admin/purge-sellers`, now removed -- see below) that only deletes a
+seller if it has zero real Order/Payout/Shipment rows and zero Products
+referenced by a real OrderItem, since `OrderItem.product` and `Order.seller`
+have no cascade in the schema (deleting a seller with real order history
+would either throw an FK-violation or, if forced, destroy real transaction
+data). Ran a dry run first, then executed.
+
+**Deleted completely (User row deleted, cascades Seller/Product/
+ShippingProfile/etc.), confirmed gone via a fresh Pulse search afterward:**
+- Test Storefront Preview (`willsinclair144+testseller@gmail.com`)
+- CJ Dropshippers (`sourcing@velorcommerce.store`)
+- Bills deals (`willsinclair234@gmail.com`)
+
+**NOT deleted, left completely untouched -- 义乌市芳拓饰品厂**
+(`sourcing+supplier@velorcommerce.store`). This is the same seller/product
+the 2026-07-08 CJ-purge session already flagged and deliberately kept: its
+one product, "Crystal Heart Tree Of Life Charm Bracelet...", has a real
+PAID order against it (`cmraubky30001564050xr7kmt`) -- William's own real
+test purchase, used elsewhere in this file as proof the payment pipeline
+works end to end. Deleting the seller would require either deleting that
+order/payment record too or forcing an FK violation. Told William this
+directly and left it as REJECTED (already denied, invisible to buyers,
+already effectively inactive) pending his decision on whether he also wants
+the order itself destroyed to allow a full delete, or whether REJECTED is
+good enough. Do not force-delete this one without an explicit, informed
+yes from William specifically about losing that order record.
+
+The temporary `/api/admin/purge-sellers` route has been removed from the
+codebase now that the job is done, per the same disposable-utility pattern
+as `prospect-lookup`/`prospect-cleanup` and `application-lookup`/
+`reinvite-application` from earlier sessions.
