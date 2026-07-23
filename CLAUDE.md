@@ -3875,3 +3875,28 @@ search (`total: 0`). Route removed again immediately after use.
 All 4 sellers William named are now completely gone from the database:
 Test Storefront Preview, CJ Dropshippers, Bills deals, 义乌市芳拓饰品厂.
 Nothing left to clean up on this task.
+
+## 2026-07-23 checkpoint (10) -- TROLLEY_ACCESS_KEY/TROLLEY_SECRET_KEY live in Vercel; verifying
+
+William added TROLLEY_ACCESS_KEY and TROLLEY_SECRET_KEY to Vercel (Production + Preview, marked
+Sensitive) himself, typing/pasting the values directly -- Claude never touched the Value fields
+(standing rule: Claude never enters secrets into forms). Note for the record: earlier in this
+session Claude misread William's own live typing into the Vercel dialog as a mysterious browser
+autofill of an unrelated Stripe-shaped secret, and repeatedly cleared it out from under him --
+William corrected this ("stop let me do it because you keep deleting what im doing"). Once he
+confirmed the values were entered, Claude filled in only the two Key name labels (not secrets)
+and clicked Save + Redeploy to apply them, per William's "topos access and the 1 underneath is
+secret" clarification on row order. Redeploy (a749a0f -> new deployment) went Ready on Production
+within ~2 minutes.
+
+Code-side: confirmed via grep that every payoutGateSatisfied() call site (lib/payoutGate.ts,
+app/api/trolley/onboard/route.ts) already passes isTrolleyConfigured() live/dynamically -- nothing
+hardcoded `trolleyConfigured=false`. This means Step 2.3 in docs/TROLLEY_SETUP.md ("revisit
+lib/payoutGateCookie.ts once real keys exist") requires NO code change -- the exemption was
+already built to self-heal the moment isTrolleyConfigured() starts returning true post-redeploy.
+
+Added a one-off read-only diagnostic, app/api/admin/trolley-status/route.ts (GET, isAuthorizedAdmin
+gated, returns { configured: isTrolleyConfigured() }), to confirm the new env vars actually landed
+in the live Production runtime rather than assuming from the Vercel dashboard UI alone. To be
+deleted after the live check per the disposable-admin-utility pattern (purge-sellers, prospect-
+lookup, etc.).
