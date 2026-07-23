@@ -3900,3 +3900,19 @@ gated, returns { configured: isTrolleyConfigured() }), to confirm the new env va
 in the live Production runtime rather than assuming from the Vercel dashboard UI alone. To be
 deleted after the live check per the disposable-admin-utility pattern (purge-sellers, prospect-
 lookup, etc.).
+
+## 2026-07-23 checkpoint (11) -- Trolley confirmed live in production; diagnostic route removed
+
+Verified live via GET /api/admin/trolley-status (Bearer ADMIN_SECRET, from Pulse's own token):
+{"status":200,"configured":true} -- TROLLEY_ACCESS_KEY/TROLLEY_SECRET_KEY are readable by
+isTrolleyConfigured() in the running Production deployment, not just present in the Vercel UI.
+Since every payoutGateSatisfied() call site already passes isTrolleyConfigured() live (confirmed
+checkpoint 10), the TROLLEY exemption on the mandatory payout-verification gate has now
+self-healed off with zero code changes -- TROLLEY-rail sellers are held to the same bar as Stripe
+from this deployment forward. Diagnostic route deleted immediately after the live check, per the
+disposable-admin-utility pattern.
+
+Next (William, same message): wire Trolley identity verification into seller SIGN-UP itself,
+matching how Stripe onboarding is triggered at sign-up (not "whenever" after approval) --
+personal/individual ID verification only, not business verification. Investigating the current
+sign-up flow and Stripe-at-signup wiring before touching code.
