@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayoutRail } from '@/lib/payoutRail'
 import { isPayoneerConfigured, getRegistrationLink } from '@/lib/payoneer'
+import { payoutGateSatisfied, setPayoutGateCookie } from '@/lib/payoutGate'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,12 +33,22 @@ export async function GET() {
     await prisma.seller.update({ where: { id: seller.id }, data: { payoutRail: rail } })
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     rail,
     configured: isPayoneerConfigured(),
     payeeId: seller.payoneerPayeeId,
     onboarded: Boolean(seller.payoneerPayeeId),
   })
+  // Keeps the payout-verification dashboard gate cookie (middleware.ts) in
+  // sync -- this is the one place a Payoneer-rail seller's velor_payout_setup
+  // cookie ever gets set, since payoutGateSatisfied() exempts PAYONEER
+  // entirely for now (see lib/payoutGateCookie.ts for why). This route is
+  // called on every /dashboard/stripe-connect and /dashboard/payoneer page
+  // load, which is exactly where middleware.ts sends a not-yet-satisfied
+  // seller, so a Payoneer-rail seller's very first landing here satisfies
+  // the gate immediately.
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded))
+  return res
 }
 
 export async function POST(req: NextRequest) {

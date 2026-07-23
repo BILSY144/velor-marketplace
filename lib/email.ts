@@ -122,7 +122,7 @@ export function buildSellerApprovedEmail(d: {
       Hi ${h(d.sellerName)}, we are pleased to confirm that <strong style="color:#FFF">${h(d.storeName)}</strong> has been approved to sell on Velor Commerce.
     </p>
     <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 24px">
-      ${d.activationLink ? 'Set a password to activate your seller account, then you can log in to your dashboard to set up your store, add products, and start selling.' : 'You can now log in to your seller dashboard to set up your store, add products, and start selling.'}
+      ${d.activationLink ? 'Set a password to activate your seller account, then log in to your dashboard. The first step is verifying your payout details (Stripe, or Payoneer where Stripe is not supported in your country) -- after that you can set up your store, add products, and start selling.' : 'You can now log in to your seller dashboard. The first step is verifying your payout details (Stripe, or Payoneer where Stripe is not supported in your country) -- after that you can set up your store, add products, and start selling.'}
     </p>
     ${cta}
     ${WRAP_CLOSE}`;

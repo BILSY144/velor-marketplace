@@ -1,6 +1,13 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+// Edge-safe only (no Prisma/DB import) -- see lib/payoutGateCookie.ts.
+import { PAYOUT_GATE_COOKIE } from '@/lib/payoutGateCookie'
+
+// Setup pages exempt from the payout-verification gate below -- a seller
+// must always be able to reach these regardless of gate status, or they
+// could never satisfy it in the first place.
+const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/payoneer']
 
 const _rl = new Map<string, { count: number; reset: number }>()
 
@@ -46,6 +53,28 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
       const termsCookie = req.cookies.get('velor_terms')
       if (!termsCookie?.value) {
         return NextResponse.redirect(new URL('/dashboard/terms', req.url))
+      }
+
+      // Payout-verification gate (William, 2026-07-23): a seller must finish
+      // real payout-rail verification (Stripe Connect onboarding, or -- see
+      // lib/payoutGateCookie.ts -- the Payoneer exemption while that rail
+      // isn't live yet) BEFORE using the rest of the dashboard, not whenever
+      // they get round to it. Previously nothing enforced this at all: an
+      // approved seller could sign in and use Products/Orders/Settings/etc.
+      // having never touched Stripe. The gate cookie (set/cleared server-side
+      // by lib/payoutGate.ts's setPayoutGateCookie) is refreshed every time
+      // /api/stripe/connect/account or /api/payoneer/onboard is called --
+      // and app/dashboard/layout.tsx already calls one of those two on every
+      // dashboard mount (to drive its own rail-aware payout nav item), so the
+      // cookie self-heals on normal navigation without any extra fetch. A
+      // dedicated GET /api/seller/payout-gate also exists for any page that
+      // wants to check/refresh gate status directly.
+      const gateExempt = PAYOUT_GATE_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
+      if (!gateExempt) {
+        const payoutCookie = req.cookies.get(PAYOUT_GATE_COOKIE)
+        if (!payoutCookie?.value) {
+          return NextResponse.redirect(new URL('/dashboard/stripe-connect', req.url))
+        }
       }
     }
   }

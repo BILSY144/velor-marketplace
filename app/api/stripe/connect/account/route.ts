@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { resolvePayoutGate, setPayoutGateCookie } from '@/lib/payoutGate';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,16 @@ async function platformAccountId(stripe: Stripe): Promise<string | null> {
   }
 }
 
+// Keeps the payout-verification dashboard gate cookie (middleware.ts) in sync
+// with this route's own live Stripe check, every time this route is called --
+// this is one of the two places (the other is /api/payoneer/onboard) a
+// seller's velor_payout_setup cookie ever gets refreshed. See
+// lib/payoutGateCookie.ts for what "satisfied" means.
+async function syncPayoutGateCookie(res: NextResponse, userId: string): Promise<void> {
+  const gate = await resolvePayoutGate(userId);
+  setPayoutGateCookie(res, gate?.satisfied ?? false);
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -51,6 +62,7 @@ export async function GET() {
   if (!accountId) {
     const res = NextResponse.json({ connected: false, needsAccount: true });
     res.cookies.delete('seller_account_id');
+    await syncPayoutGateCookie(res, session.user.id);
     return res;
   }
 
@@ -71,6 +83,7 @@ export async function GET() {
       }
       const res = NextResponse.json({ connected: false, needsAccount: true, cleaned: true });
       res.cookies.delete('seller_account_id');
+      await syncPayoutGateCookie(res, session.user.id);
       return res;
     }
 
@@ -101,12 +114,14 @@ export async function GET() {
       email: account.email,
     });
     res.cookies.delete('seller_account_id');
+    await syncPayoutGateCookie(res, session.user.id);
     return res;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to retrieve account';
     console.error('[stripe/connect/account GET]', message);
     const res = NextResponse.json({ connected: false, error: message });
     res.cookies.delete('seller_account_id');
+    await syncPayoutGateCookie(res, session.user.id);
     return res;
   }
 }
@@ -126,5 +141,10 @@ export async function DELETE() {
   });
   const res = NextResponse.json({ disconnected: true });
   res.cookies.delete('seller_account_id');
+  // Re-syncs the payout-verification gate cookie now that stripeOnboarded is
+  // false again -- disconnecting always re-arms the gate for a Stripe-rail
+  // seller (a Payoneer-rail seller could never reach this route in the first
+  // place; the Stripe Connect page redirects them away before it renders).
+  await syncPayoutGateCookie(res, session.user.id);
   return res;
 }
