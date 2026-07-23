@@ -56,8 +56,29 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
       signInUrl.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
       return NextResponse.redirect(signInUrl)
     }
-    const role = (req.auth as any)?.user?.role
-    if (role === 'SELLER' && !pathname.startsWith('/dashboard/terms')) {
+    // Gate on having an attached seller profile (session.user.sellerId,
+    // baked into the JWT at sign-in by auth.ts), NOT on role === 'SELLER'.
+    // FOUND LIVE 2026-07-23 (William testing his own China/Trolley test
+    // seller from his personal willsinclair144@gmail.com account, role
+    // ADMIN): an ADMIN who becomes a seller by applying with their own
+    // account (lib/provisionSeller.ts's "existing buyer/admin becomes
+    // seller" path -- exactly what William used, per his own "can i test it
+    // with my account" question earlier this session) keeps role: 'ADMIN'.
+    // The role-only check meant the ENTIRE seller gate block (Terms AND the
+    // payout-verification gate just fixed above) was skipped outright for
+    // any such account -- not a cookie bug, not a Trolley bug, a completely
+    // different bypass: this whole if-block never even ran. Confirmed live
+    // via GET /api/auth/session returning role:"ADMIN", sellerId set, and
+    // GET /api/seller/payout-gate independently confirming satisfied:false
+    // for that same session -- yet /dashboard returned a bare 200, no
+    // redirect, because `role === 'SELLER'` was false. sellerId presence is
+    // the right signal: it means this session is being used in a seller
+    // capacity right now (visiting /dashboard/*, which is exclusively
+    // seller functionality -- admin surfaces are /admin and /pulse), so the
+    // same completeness rules must apply regardless of the account's
+    // broader platform role.
+    const sellerId = (req.auth as any)?.user?.sellerId
+    if (sellerId && !pathname.startsWith('/dashboard/terms')) {
       const termsCookie = req.cookies.get('velor_terms')
       if (!termsCookie?.value) {
         return NextResponse.redirect(new URL('/dashboard/terms', req.url))
