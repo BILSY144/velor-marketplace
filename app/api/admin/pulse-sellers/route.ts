@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
 import { sendEmail, buildSellerApprovedEmail, buildSellerRejectedEmail } from '@/lib/email'
+import { computeSellerStatus, sellerActionData } from '@/lib/sellerStatus'
 
 // Seller directory -- backs /pulse/sellers, the mobile ops dashboard's
 // searchable list of every seller on the marketplace (store name, tier,
@@ -44,10 +45,19 @@ export async function GET(request: NextRequest) {
   if (tier === 'STARTER' || tier === 'PRO' || tier === 'ENTERPRISE') {
     where.tier = tier
   }
+  // Fixed 2026-07-23: "pending" used to mean any approved:false row, which
+  // made a denied seller indistinguishable from one never reviewed -- see
+  // the Seller.rejectedAt schema comment. "pending" now means genuinely
+  // never-actioned; a separate "rejected" filter is available too.
   if (status === 'approved') {
     where.approved = true
   } else if (status === 'pending') {
     where.approved = false
+    where.rejectedAt = null
+    where.suspendedAt = null
+  } else if (status === 'rejected') {
+    where.approved = false
+    where.rejectedAt = { not: null }
   }
 
   const [sellers, total, byTierRaw, byCountryRaw] = await Promise.all([
@@ -89,6 +99,8 @@ export async function GET(request: NextRequest) {
       country: s.country,
       currency: s.currency,
       approved: s.approved,
+      status: computeSellerStatus(s),
+      rejectionReason: s.rejectionReason,
       tier: s.tier,
       sellerScore: s.sellerScore,
       sellerBadge: s.sellerBadge,
@@ -142,7 +154,12 @@ export async function PATCH(request: NextRequest) {
   const approved = action === 'approve'
   const seller = await prisma.seller.update({
     where: { id: sellerId },
-    data: { approved },
+    // Fixed 2026-07-23: this used to write only { approved }, which for a
+    // reject is a no-op (the row was already approved:false) -- that's the
+    // literal reason "Deny" appeared to do nothing and the seller kept
+    // showing back up as PENDING. sellerActionData also sets rejectedAt/
+    // rejectionReason so a denied seller is now a real, distinct status.
+    data: sellerActionData(action, reason),
     include: {
       user: { select: { name: true, email: true } },
     },
@@ -169,5 +186,5 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ seller })
+  return NextResponse.json({ seller: { ...seller, status: computeSellerStatus(seller) } })
 }

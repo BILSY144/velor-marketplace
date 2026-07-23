@@ -115,6 +115,21 @@ model Seller {
   stripeAccountId               String?   @unique
   stripeOnboarded               Boolean   @default(false)
   approved                      Boolean   @default(false)
+  // Added 2026-07-23 -- fixes a real bug: `approved` was the ONLY status
+  // field on this model, so "reject" and "never reviewed" were both just
+  // approved:false and completely indistinguishable. Denying a bare/orphaned
+  // seller (one with no SellerApplication -- see /api/auth/register) from
+  // either the desktop admin console or Pulse silently did nothing visible:
+  // the row just came right back as PENDING. rejectedAt/rejectionReason and
+  // suspendedAt let both admin surfaces show a real REJECTED/SUSPENDED state
+  // distinct from PENDING. `approved` remains the single field every other
+  // code path gates on (product listing, dashboard access, etc.) -- these
+  // are additive status labels only, set/cleared together with `approved`
+  // by the approve/reject/suspend actions in app/api/admin/sellers/route.ts
+  // and app/api/admin/pulse-sellers/route.ts.
+  rejectedAt                    DateTime?
+  rejectionReason               String?   @db.Text
+  suspendedAt                   DateTime?
   tier                          SellerTier @default(STARTER)
   stripeCustomerId              String?   @unique
   stripeSubscriptionId          String?   @unique

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { Resend } from 'resend'
+import { computeSellerStatus, sellerActionData } from '@/lib/sellerStatus'
+import { sendEmail, buildSellerApprovedEmail, buildSellerRejectedEmail } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
@@ -13,14 +14,21 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
 
-  // Seller model uses: approved (Boolean)
+  // Fixed 2026-07-23: PENDING/REJECTED/SUSPENDED used to all collapse onto
+  // the same `approved:false` query (see the Seller.rejectedAt schema
+  // comment) -- a REJECTED filter returned every never-reviewed seller too.
+  // Now that rejectedAt/suspendedAt exist, each tab is a real, distinct query.
   let where: Prisma.SellerWhereInput = {}
   if (status === 'APPROVED') {
     where = { approved: true }
-  } else if (status !== 'ALL') {
-    // PENDING, REJECTED, SUSPENDED all map to not-yet-approved
-    where = { approved: false }
+  } else if (status === 'REJECTED') {
+    where = { approved: false, rejectedAt: { not: null } }
+  } else if (status === 'SUSPENDED') {
+    where = { approved: false, suspendedAt: { not: null } }
+  } else if (status === 'PENDING') {
+    where = { approved: false, rejectedAt: null, suspendedAt: null }
   }
+  // status === 'ALL' -> where stays {}
 
   const sellers = await prisma.seller.findMany({
     where,
@@ -33,7 +41,12 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json({ sellers })
+  return NextResponse.json({
+    sellers: sellers.map((s) => ({
+      ...s,
+      status: computeSellerStatus(s),
+    })),
+  })
 }
 
 export async function PATCH(request: NextRequest) {
@@ -44,15 +57,15 @@ export async function PATCH(request: NextRequest) {
 
   const body = await request.json()
   const { sellerId, action } = body
+  const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
 
   if (!sellerId || !['approve', 'reject', 'suspend'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-      const approved = action === 'approve'
   const seller = await prisma.seller.update({
     where: { id: sellerId },
-    data: { approved },
+    data: sellerActionData(action, reason),
     include: {
       user: { select: { name: true, email: true } },
     },
@@ -61,46 +74,38 @@ export async function PATCH(request: NextRequest) {
   const sellerName = seller.user.name || 'Seller'
   const sellerEmail = seller.user.email || ''
 
-  if (sellerEmail && process.env.RESEND_API_KEY) {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-
-    const subject =
-      action === 'approve'
-        ? 'Your Velor seller account has been approved'
-        : action === 'reject'
-        ? 'Update on your Velor seller application'
-        : 'Your Velor seller account has been suspended'
-
-    const bodyHtml =
-      action === 'approve'
-        ? `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
-<h1 style="color:#FF6B00;font-size:24px;margin-bottom:16px">You're approved!</h1>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Hi ${sellerName},</p>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Great news — your Velor seller account has been approved. You can now list products, manage orders, and receive payouts through your seller dashboard.</p>
-<a href="https://velorcommerce.store/dashboard" style="display:inline-block;margin-top:24px;background:#FF6B00;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">Go to Dashboard</a>
-<p style="color:#666666;font-size:13px;margin-top:40px">The Velor Team</p>
-</div>`
-        : action === 'reject'
-        ? `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
-<h1 style="color:#ffffff;font-size:24px;margin-bottom:16px">Application update</h1>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Hi ${sellerName},</p>
-<p style="color:#cccccc;font-size:15px;line-height:1.6">Thank you for applying to sell on Velor. After reviewing your application, we are unable to approve it at this time. If you believe this is an error or have further information to share, please contact our team.</p>
-<p style="color:#666666;font-size:13px;margin-top:40px">The Velor Team</p>
-</div>`
-        : `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
+  // Best-effort: a failed email must never undo the status change that
+  // already committed. Reuses lib/email.ts's shared builders for
+  // approve/reject (same copy every other seller decision email in the
+  // codebase uses) rather than the old inline HTML template.
+  if (sellerEmail) {
+    try {
+      if (action === 'approve') {
+        const built = buildSellerApprovedEmail({ sellerName, storeName: seller.storeName })
+        await sendEmail({ to: sellerEmail, subject: built.subject, html: built.html })
+      } else if (action === 'reject') {
+        const built = buildSellerRejectedEmail({
+          contactName: sellerName,
+          businessName: seller.storeName,
+          reason: reason || 'No specific reason was provided.',
+        })
+        await sendEmail({ to: sellerEmail, subject: built.subject, html: built.html })
+      } else {
+        await sendEmail({
+          to: sellerEmail,
+          subject: 'Your Velor seller account has been suspended',
+          html: `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#ffffff;padding:40px;max-width:600px;margin:0 auto">
 <h1 style="color:#FF1744;font-size:24px;margin-bottom:16px">Account suspended</h1>
 <p style="color:#cccccc;font-size:15px;line-height:1.6">Hi ${sellerName},</p>
 <p style="color:#cccccc;font-size:15px;line-height:1.6">Your Velor seller account has been suspended. Please contact our support team for more information.</p>
 <p style="color:#666666;font-size:13px;margin-top:40px">The Velor Team</p>
-</div>`
-
-    await resend.emails.send({
-      from: 'noreply@velorcommerce.store',
-      to: sellerEmail,
-      subject,
-      html: bodyHtml,
-    })
+</div>`,
+        })
+      }
+    } catch (err) {
+      console.error('admin/sellers PATCH: failed to send seller decision email', err)
+    }
   }
 
-  return NextResponse.json({ seller })
+  return NextResponse.json({ seller: { ...seller, status: computeSellerStatus(seller) } })
 }

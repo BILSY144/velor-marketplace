@@ -3703,3 +3703,89 @@ he can approve Vellora from `/pulse/sellers` on his phone. William's
 second follow-up (retire vs. fix vs. leave `/auth/sign-up` as-is) remains
 unanswered — do not touch that page or `/api/auth/register` without
 further explicit direction.
+
+## 2026-07-23 checkpoint (6) -- ROOT CAUSE FOUND: "Deny" has never actually worked, on desktop or Pulse, since 1 July
+
+William approved Vellora himself via the desktop `/admin/sellers` console
+(the Pulse buttons from checkpoint (5) were live but he hadn't tried them
+yet on that specific case). He then reported denying **CJ Dropshippers**
+and **义乌市芳拓饰品厂** (the two known legacy test sellers, both
+`approved:false`) from `/admin/sellers` "just kept coming back as
+pending, not denied" -- and separately, that Pulse's new Accept/Deny
+still didn't work for him. He asked directly who had changed this without
+his authorisation. Investigated via full git history (per LAW #1, not
+memory) rather than assuming either a regression or user error:
+
+**This was never a working feature -- it's been broken since the very
+first day this admin page was built, not something anyone later
+disabled.** On 1 July 2026 (the initial schema-scaffolding session) the
+`Seller` model churned through a `SellerStatus` enum, then
+`isApproved`/`isSuspended` booleans, before settling that same evening on
+the single `approved: Boolean` it has had ever since (verified via
+`git log --all -p -- prisma/schema.prisma`, timestamps 03:24-22:14 on
+07-01). `app/admin/sellers/page.tsx`'s frontend was wired to read
+`seller.status` at 16:44 that day; the backend was aligned back to the
+real schema (`approved` only, no `status` field) at 21:33 the same
+evening and never reverted -- so `seller.status` has been `undefined` on
+every row for over three weeks, silently making the Approve/Reject/
+Suspend buttons always render (the `!== 'APPROVED'`/`!== 'REJECTED'`
+checks against `undefined` are always true) and the status badge always
+blank. `PATCH` action `'reject'` set only `{approved: false}` --
+already `false` on an orphaned/never-reviewed seller, so it was a
+literal no-op, and the "REJECTED" tab's filter also collapsed onto
+`approved:false`, indistinguishable from "PENDING". This is also exactly
+why my own new Pulse Accept/Deny (checkpoint (5), same session) looked
+broken to him: it was built by mirroring `/api/admin/sellers`' PATCH,
+inheriting the identical `{approved: false}`-only bug. Told William this
+plainly, including that nobody removed or changed a working system --
+it never worked, and simply hadn't been exercised by a real deny before
+now.
+
+**Fixed properly, not patched around, commit pending push at write time:**
+- `prisma/schema.prisma`: `Seller` gains `rejectedAt DateTime?`,
+  `rejectionReason String? @db.Text`, `suspendedAt DateTime?` -- additive,
+  applied automatically by `prisma db push` on the next production
+  deploy. `approved` remains the ONE field every other code path
+  (product listing gate, dashboard access) reads -- these are pure status
+  labels, always written alongside `approved` by the same action.
+- New `lib/sellerStatus.ts`: `computeSellerStatus()` (derives
+  PENDING/APPROVED/REJECTED/SUSPENDED from `approved`+`rejectedAt`+
+  `suspendedAt`) and `sellerActionData(action, reason)` (the one place
+  approve/reject/suspend's Prisma `data` object is defined -- shared by
+  both PATCH routes so they can never drift apart again the way they did
+  on 1 July).
+- `app/api/admin/sellers/route.ts` (desktop): GET now queries each status
+  tab correctly (PENDING excludes rejected/suspended; REJECTED/SUSPENDED
+  are now real, disjoint queries) and returns a real `status` field.
+  PATCH accepts an optional `reason`, uses `sellerActionData()`, and
+  reuses `lib/email.ts`'s `buildSellerApprovedEmail`/
+  `buildSellerRejectedEmail` (dropped the old inline HTML duplicate for
+  approve/reject; kept a small inline template for suspend, which has no
+  shared builder).
+- `app/admin/sellers/page.tsx`: the Reject confirm dialog now has a
+  required reason textarea (Confirm is disabled until non-empty) sent as
+  `reason` in the PATCH body; the status column shows the rejection
+  reason under the badge when status is REJECTED.
+- `app/api/admin/pulse-sellers/route.ts`: GET's `status=pending` filter
+  now excludes rejected/suspended rows; added `status=rejected`; response
+  includes `status` and `rejectionReason`. PATCH uses `sellerActionData()`
+  instead of the bare `{approved}` write from checkpoint (5).
+- `app/pulse/sellers/page.tsx`: badge shows PENDING/REJECTED/SUSPENDED
+  distinctly (not just a binary approved check); a REJECTED card shows
+  its stored reason and a single "Approve anyway" button instead of the
+  Accept/Deny pair (denying again is meaningless); the status filter
+  dropdown gained a "Rejected" option.
+
+Verified with a real type-check: `prisma generate` (dummy engine-path env
+vars, `binaries.prisma.sh` still proxy-blocked here) regenerated the
+client with the new fields, then `tsc` against the temp config extending
+the repo's real tsconfig -- zero errors. No stray `package-lock.json`
+this time (no `npm install` was run, only `prisma generate`).
+
+**Not yet done at write time:** commit, fetch+rebase against
+`origin/main`, push, then ask William to re-try denying CJ Dropshippers
+and 义乌市芳拓饰品厂 from both `/admin/sellers` and `/pulse/sellers` to
+confirm REJECTED now actually sticks on both surfaces. Also worth a
+follow-up: audit whether any other admin surface in this codebase has the
+same `seller.status`-vs-`approved` mismatch pattern (none found so far,
+but this was found by accident, not an exhaustive sweep).

@@ -9,6 +9,7 @@ interface Seller {
   storeName: string
   status: string; description?: string | null; country?: string | null; products?: { id: string; title: string; category: string; status: string }[];
   createdAt: string
+  rejectionReason?: string | null
   user: {
     id: string
     name: string | null
@@ -39,6 +40,7 @@ export default function AdminSellersPage() {
     action: string
     storeName: string
   } | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -78,14 +80,18 @@ export default function AdminSellersPage() {
     setTimeout(() => setToast(null), 3500)
   }
 
-  async function handleAction(sellerId: string, action: string) {
+  async function handleAction(sellerId: string, action: string, reason?: string) {
+    if (action === 'reject' && !(reason || '').trim()) {
+      showToast('A rejection reason is required -- the seller will see it.', false)
+      return
+    }
     setActionLoading(sellerId + action)
     setConfirmDialog(null)
     try {
       const res = await fetch('/api/admin/sellers', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (typeof window !== 'undefined' ? localStorage.getItem('velor_admin_secret') || '' : '') },
-        body: JSON.stringify({ sellerId, action }),
+        body: JSON.stringify(action === 'reject' ? { sellerId, action, reason: (reason || '').trim() } : { sellerId, action }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Action failed')
@@ -97,6 +103,7 @@ export default function AdminSellersPage() {
           : 'Seller suspended',
         true
       )
+      setRejectReason('')
       loadSellers()
     } catch (e: any) {
       showToast(e.message || 'Something went wrong', false)
@@ -109,6 +116,7 @@ export default function AdminSellersPage() {
     if (action === 'approve') {
       handleAction(seller.id, action)
     } else {
+      setRejectReason('')
       setConfirmDialog({ sellerId: seller.id, action, storeName: seller.storeName })
     }
   }
@@ -141,11 +149,24 @@ export default function AdminSellersPage() {
             <h3 style={{ margin: '0 0 12px', fontFamily: 'Space Grotesk, sans-serif', fontSize: 18 }}>
               {confirmDialog.action === 'reject' ? 'Reject Seller' : 'Suspend Seller'}
             </h3>
-            <p style={{ margin: '0 0 24px', color: '#999999', fontSize: 14 }}>
+            <p style={{ margin: '0 0 16px', color: '#999999', fontSize: 14 }}>
               Are you sure you want to {confirmDialog.action}{' '}
               <strong style={{ color: '#FFFFFF' }}>{confirmDialog.storeName}</strong>?
               {confirmDialog.action === 'reject' && ' They will be notified by email.'}
             </p>
+            {confirmDialog.action === 'reject' && (
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Reason the seller will see..."
+                rows={3}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: 10, borderRadius: 6,
+                  border: '1px solid #2A2A2A', background: '#111111', color: '#FFFFFF',
+                  fontSize: 13, marginBottom: 20, fontFamily: 'inherit', resize: 'vertical',
+                }}
+              />
+            )}
             <div style={{ display: 'flex', gap: 12 }}>
               <button
                 onClick={() => setConfirmDialog(null)}
@@ -156,11 +177,14 @@ export default function AdminSellersPage() {
                 Cancel
               </button>
               <button
-                onClick={() => handleAction(confirmDialog.sellerId, confirmDialog.action)}
+                onClick={() => handleAction(confirmDialog.sellerId, confirmDialog.action, rejectReason)}
+                disabled={confirmDialog.action === 'reject' && !rejectReason.trim()}
                 style={{
                   flex: 1, padding: '10px 0', borderRadius: 6, border: 'none',
                   background: confirmDialog.action === 'reject' ? '#FF1744' : '#FF6B00',
-                  color: '#FFFFFF', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                  color: '#FFFFFF', cursor: (confirmDialog.action === 'reject' && !rejectReason.trim()) ? 'default' : 'pointer',
+                  opacity: (confirmDialog.action === 'reject' && !rejectReason.trim()) ? 0.5 : 1,
+                  fontWeight: 600, fontSize: 14,
                 }}>
                 Confirm
               </button>
@@ -256,6 +280,9 @@ export default function AdminSellersPage() {
                   }}>
                     {seller.status}
                   </span>
+                  {seller.status === 'REJECTED' && seller.rejectionReason && (
+                    <div style={{ fontSize: 11, color: '#777', marginTop: 6, maxWidth: 200 }}>{seller.rejectionReason}</div>
+                  )}
                 </td>
                 <td style={{ padding: '14px 16px' }}>
                   <div style={{ display: 'flex', gap: 8 }}>

@@ -30,6 +30,8 @@ type Seller = {
   country: string | null
   currency: string
   approved: boolean
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'
+  rejectionReason: string | null
   tier: 'STARTER' | 'PRO' | 'ENTERPRISE'
   sellerScore: number
   sellerBadge: string | null
@@ -122,6 +124,7 @@ export default function PulseSellersPage() {
           <option value="all">All</option>
           <option value="approved">Approved</option>
           <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
         </FilterSelect>
         <FilterButton onClick={runFilters}>Search</FilterButton>
       </FilterBar>
@@ -198,7 +201,9 @@ function SellerCard({ s, token }: { s: Seller; token: string }) {
         <span style={{ fontSize: 15, fontWeight: 700, color: PULSE.text, fontFamily: "'Space Grotesk', sans-serif" }}>{s.storeName}</span>
         <div style={{ display: 'flex', gap: 6, flex: '0 0 auto' }}>
           <Badge color={TIER_COLOR[s.tier] || PULSE.muted}>{s.tier}</Badge>
-          {!s.approved && <Badge color={PULSE.amber}>PENDING</Badge>}
+          {s.status === 'PENDING' && <Badge color={PULSE.amber}>PENDING</Badge>}
+          {s.status === 'REJECTED' && <Badge color={PULSE.red}>REJECTED</Badge>}
+          {s.status === 'SUSPENDED' && <Badge color={PULSE.red}>SUSPENDED</Badge>}
         </div>
       </div>
       {s.foundingBadge && (
@@ -218,7 +223,13 @@ function SellerCard({ s, token }: { s: Seller; token: string }) {
         Joined {fmtDate(s.createdAt)}
       </div>
 
-      {!s.approved && (
+      {s.status === 'REJECTED' && s.rejectionReason && (
+        <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 6, background: 'rgba(255,84,112,0.08)', border: `1px solid rgba(255,84,112,0.25)`, borderRadius: 8, padding: '7px 9px' }}>
+          Denied: {s.rejectionReason}
+        </div>
+      )}
+
+      {(s.status === 'PENDING' || s.status === 'REJECTED') && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${PULSE.border}` }}>
           {actionError && <div style={{ fontSize: 12, color: PULSE.red, marginBottom: 8 }}>{actionError}</div>}
           {showRejectBox && (
@@ -236,15 +247,17 @@ function SellerCard({ s, token }: { s: Seller; token: string }) {
               onClick={() => act('approve')}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PULSE.green}, #2bb968)`, color: '#04170c', fontSize: 13, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}
             >
-              Accept
+              {s.status === 'REJECTED' ? 'Approve anyway' : 'Accept'}
             </button>
-            <button
-              disabled={busy}
-              onClick={() => act('reject')}
-              style={{ flex: 1, padding: '11px 10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PULSE.red}, #c93a52)`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}
-            >
-              {showRejectBox ? 'Confirm deny' : 'Deny'}
-            </button>
+            {s.status === 'PENDING' && (
+              <button
+                disabled={busy}
+                onClick={() => act('reject')}
+                style={{ flex: 1, padding: '11px 10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PULSE.red}, #c93a52)`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}
+              >
+                {showRejectBox ? 'Confirm deny' : 'Deny'}
+              </button>
+            )}
           </div>
         </div>
       )}
