@@ -3857,3 +3857,21 @@ The temporary `/api/admin/purge-sellers` route has been removed from the
 codebase now that the job is done, per the same disposable-utility pattern
 as `prospect-lookup`/`prospect-cleanup` and `application-lookup`/
 `reinvite-application` from earlier sessions.
+
+## 2026-07-23 checkpoint (9) -- Last of the 4 named sellers fully deleted, William confirmed the order loss
+
+Follow-up to checkpoint (8). William confirmed via AskUserQuestion he wanted
+**义乌市芳拓饰品厂** fully gone too, including the real PAID test order tied
+to its one product. Extended the (already-removed) `purge-sellers` route
+with a narrow `forceOrderIds` path -- only deletes an Order if its
+`sellerId` matches a seller in the same request (never an arbitrary order
+by ID alone), then relies on the schema's existing cascades
+(OrderItem/ReturnRequest/Dispute all cascade from Order) before running the
+normal safe-seller-delete. Order `cmraubky30001564050xr7kmt` (status PAID,
+`willsinclair144@gmail.com`) deleted, then the seller/product/user deleted
+cleanly with zero remaining blockers. Confirmed gone via a fresh Pulse
+search (`total: 0`). Route removed again immediately after use.
+
+All 4 sellers William named are now completely gone from the database:
+Test Storefront Preview, CJ Dropshippers, Bills deals, 义乌市芳拓饰品厂.
+Nothing left to clean up on this task.
