@@ -7,7 +7,57 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
-## URGENT -- STOP: SET UP DOTS ACCOUNT BEFORE ANY OTHER WORK (William, 2026-07-23)
+## URGENT -- DOTS IS A NO-GO; TROLLEY BANK-TRANSFER ONBOARDING IN PROGRESS (William, 2026-07-23 evening -- SUPERSEDES the original Dots directive below)
+
+**Dots.dev is confirmed NOT usable for Velor.** Its platform/business
+Country field is hard-locked to United States ("Only US businesses are
+supported at the moment") -- confirmed live (the dropdown does not respond
+to any selection attempt) and confirmed against Dots' own AI documentation
+assistant, which stated this restriction plainly and is not documented
+publicly. This is a genuine platform limitation, not a bug or something a
+different account/flow works around. Velor Commerce Ltd is UK-registered,
+so a Dots account can never be created. **Do not re-attempt Dots signup in
+a future session** -- treat DOTS_API_KEY as permanently unobtainable unless
+Dots changes this policy (nothing suggests they are about to).
+
+**Alternative found and onboarding underway: Trolley (usetrolley.com /
+dashboard.trolley.com).** Signup started, Company Details + Directors +
+Payout Information sections saved. Two things to know before continuing:
+1. Trolley auto-approved the account for **PayPal payouts only** on
+   signup -- that is NOT the payout rail Velor needs (sellers worldwide
+   won't all have/want PayPal). The real requirement, **Bank Transfer
+   payouts**, is a SEPARATE onboarding flow (Business Structure ->
+   Beneficial Owners -> Shareholder Register -> Review Submission), only
+   just started -- see the 2026-07-23 evening checkpoint near the bottom
+   of this file for exact form-field state and what's still blank.
+2. The Directors section auto-populated William's real name and date of
+   birth without anyone typing it -- flagged to William, never
+   independently confirmed as accurate or altered by Claude. Sanity-check
+   this before trusting it.
+
+**Payoneer status, unchanged from before:** the Mass Payouts partner
+application (case 260721-023420, chased by email to partners@payoneer.com
+21 Jul) is still unanswered. A WhatsApp "your account is ready" message
+William received was unrelated -- it was his personal Payoneer *receiving*
+account activating (confirmed by inspecting the actual signed-in Payoneer
+account, which has no partner/developer API features), not the Mass
+Payouts partner approval. Do not treat that WhatsApp message as the
+blocker being resolved.
+
+**Do NOT enter a Tax Identification Number into any of these forms.**
+That is a standing rule, not specific to Trolley -- a Tax ID is a
+government identification number and Claude will never enter one into any
+form, regardless of instruction. William enters that field himself when
+the Beneficial Owners step is resumed.
+
+**Next session: pick up the Trolley Bank Transfer onboarding exactly where
+the 2026-07-23 evening checkpoint left off** (Beneficial Owners step,
+phone number field selected but empty) rather than restarting the flow or
+attempting Dots again.
+
+---
+
+## SUPERSEDED -- original Dots.dev directive (William, 2026-07-23 morning), kept for history only
 
 William's explicit instruction, given directly in chat: this is the single
 most important thing to do right now, marked as a matter of urgency. No
@@ -37,15 +87,17 @@ were emailed the same day telling them they can list products now -- if
 either lists and later sells something, their money has nowhere real to go
 until this is done.
 
-**Next session: do not start other feature work, redesigns, or outreach
-before checking whether this has been resolved.** If DOTS_API_KEY is
-already in Vercel, confirm isDotsConfigured() actually returns true (e.g.
-via GET /api/dots/onboard while signed in as a seller) and sandbox-verify
-the two flagged-unconfirmed items in lib/dots.ts's own header (whether a
+**THIS PLAN NO LONGER WORKS -- Dots cannot be used at all, see the
+superseding section above.** Kept verbatim below only so the reasoning
+trail isn't lost.
+
+If it is NOT yet done, re-raise it with William immediately rather than
+moving on to anything else. [ORIGINAL: if DOTS_API_KEY is already in
+Vercel, confirm isDotsConfigured() actually returns true (e.g. via GET
+/api/dots/onboard while signed in as a seller) and sandbox-verify the two
+flagged-unconfirmed items in lib/dots.ts's own header (whether a
 zero-amount onboarding link is accepted, and the exact shape of GET
-/v2/users/{id}) before trusting a live payout. If it is NOT yet done,
-re-raise it with William immediately rather than moving on to anything
-else.
+/v2/users/{id}) before trusting a live payout.]
 
 ---
 
@@ -3372,3 +3424,129 @@ William reported a new seller signup "thinks it's a hoax seller" and asked to mo
 **Separate, NOT investigated or fixed this session:** the specific "hoax seller" wording. No code path anywhere in this repo flags, labels, or rejects an application/seller as a "hoax" (grepped for hoax/fraud/suspicious/risk-score -- only hits are generic legal-policy prose, nothing functional). The most likely real-world explanation is that Stripe's own risk/fraud system flagged that specific seller's Connect account during onboarding (a per-account Stripe decision, external to this codebase, not fixable by a code change) -- but this was NOT confirmed against the actual seller's Stripe account this session (no live Stripe dashboard/API access from this sandbox; would need either the seller's email/Stripe account id and browser access, or STRIPE_SECRET_KEY, neither available here). If William can supply which seller this was, a future session should look up their actual Stripe Connect account status/requirements directly before assuming which specific Stripe flag caused it.
 
 **Verification done this session (no browser/Vercel-dashboard access, so build status is NOT independently confirmed -- check Vercel deployments for bdac5d16 next time before treating this as fully live):** `npx prisma generate` (with `PRISMA_QUERY_ENGINE_LIBRARY`/`PRISMA_SCHEMA_ENGINE_BINARY` pointed at dummy files + `PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1`, since `binaries.prisma.sh` is proxy-blocked here same as prior sessions) followed by a full `npx tsc` against a `/tmp/tsconfig.check.json` extending the repo's real tsconfig -- zero errors, confirming every changed/new file type-checks against the real Prisma-generated types, not just parses. Pushed via a PAT William pasted directly in chat this session -- he should revoke it at github.com/settings/tokens now that this is done, per standing practice.
+
+
+## 2026-07-23 checkpoint (3, evening) -- Dots.dev ruled out (US-only, confirmed); Payoneer WhatsApp message clarified; Trolley chosen as the alternative and bank-transfer onboarding started; SESSION PAUSED MID-FORM
+
+Continuation of the morning's urgent Dots.dev directive (see the superseded
+section near the top of this file). This session actually tried to execute
+it, hit a hard platform wall, and pivoted -- full trail below per LAW #1.
+
+**Dots.dev -- confirmed dead end.** Attempted signup at
+dashboard.dots.dev. The Country field on the business-account form is
+locked to United States with the text "Only US businesses are supported at
+the moment" -- the dropdown does not respond to any click/selection
+attempt (verified via JS inspection, not just a visual glitch). Asked
+Dots' own AI documentation chatbot directly: it confirmed the restriction
+is real and current, and that it isn't spelled out in their public docs.
+Velor Commerce Ltd is UK-registered, so this is a permanent block, not
+something to retry differently next time. **Do not attempt Dots signup
+again.**
+
+**Payoneer WhatsApp message -- clarified, not a resolution.** William had
+received a WhatsApp notification saying his account was "ready" and could
+receive payments. Investigated by actually signing into the live Payoneer
+account (myaccount.payoneer.com) and checking Home/Manage: this was his
+personal Payoneer *receiving* account activating, unrelated to the stalled
+**Mass Payouts partner API application** (case 260721-023420, chased by
+email to partners@payoneer.com on 21 Jul, still unanswered as of this
+session). No partner/developer API features are visible on the account.
+The real blocker is unchanged and still open.
+
+**Payoneer escalation phone number found:** +1-332-244-7939, sourced
+directly from the signed-in account's own Support Center (not a generic
+public listing) -- for calling to escalate case 260721-023420 if the email
+chase stays silent.
+
+**Trolley (usetrolley.com) identified and chosen as the fast alternative**
+after research into UK-eligible, quick-setup global payout providers.
+Signup started same session:
+- Company Details, Directors, and Payout Information sections all show
+  "Saved" in the main Trolley activation flow
+  (dashboard.trolley.com/activate). Business Registration Number
+  17268133 entered (had to clear-and-retype once due to a browser-autofill
+  collision that kept reverting the field to "VELOR COMMERCE LTD" -- fixed
+  by Ctrl+A/Delete then a fresh type). Registered address entered as 49
+  Station Road, Polegate, East Sussex, BN26 6EA -- the current confirmed
+  Companies House registered office (see the 2026-07-23 checkpoint (2)
+  address-confirmation entry elsewhere in this file). County field needed
+  a second attempt after a misclick selected "Barking and Dagenham"
+  instead of "East Sussex."
+- **Directors section auto-populated William's real First Name, Last
+  Name, and Date of Birth without any typing action** -- flagged to
+  William in chat as a concern (this is exactly the kind of personal
+  identity data Claude does not enter itself), but not independently
+  verified as correct or altered. Sanity-check this before relying on it.
+- The **countries multi-select** ("expected payout countries") had a stray
+  autofill/stale-state populate itself with 53 then 106 unintended
+  countries at one point -- cleared via the field's clear-all icon.
+  William then took over that field himself using the real UI mechanic
+  (clicking one checkbox per continent selects every country in it) and
+  selected all 239 available countries; Claude filled the adjacent
+  purpose/description text field and saved that section.
+
+**IMPORTANT DISCOVERY, mid-submission:** clicking through to finish
+account activation revealed a "Congratulations!" modal reading *"Your
+account has been approved to send PayPal payouts."* Trolley auto-approves
+PayPal-based sending on signup, but that is NOT what Velor needs -- a
+PayPal-only rail doesn't serve a global 190-country seller base. **Real
+bank-transfer payouts are a separate onboarding flow**, reached via "Go to
+Bank Transfer Onboarding Form" on that same modal
+(dashboard.trolley.com/activate/bank). This is the flow actually needed
+and the one now in progress.
+
+**Bank Transfer Onboarding -- IN PROGRESS, paused mid-form, nothing
+submitted yet.** Steps: 1) Business Structure, 2) Beneficial Owners
+(inside step 1's flow), 3) Shareholder Register, 4) Review Submission.
+State at pause:
+- Business Structure: answered "One or several owners own 25% or more,
+  directly or indirectly, or have a controlling interest" (accurate --
+  William owns 100% of Velor Commerce Ltd).
+- Beneficial Owners, Owner #1 (William): Owner Type Individual; First
+  Name William; Last Name Sinclair; Position/Title Director; Email
+  auto-filled william@velorcommerce.co.uk; Country of Residence
+  auto-filled United Kingdom; Shareholding Amount pre-filled 100%; PEP
+  question answered No (accurate). Phone country code +44 selected but
+  **no phone digits typed yet** -- this is exactly where the session was
+  paused.
+- **Still blank, not yet touched:** Street / City / County / Postal Code
+  (William's residential address -- not filled pending resume), **Date of
+  Birth**, **Nationality**, and **Tax Identification Number**.
+- **Tax Identification Number will NEVER be filled in by Claude** -- it is
+  a government identification number, in the same standing-prohibited
+  category as an SSN or passport number, regardless of any instruction to
+  do so. William must type that field himself when this resumes. Date of
+  Birth and Nationality are being left for William too, consistent with
+  how the Directors section's auto-populated DOB was handled earlier in
+  this same session (flagged, not entered/altered by Claude).
+- Step 2 (Shareholder Register) and step 3 (Review Submission) have not
+  been reached yet.
+
+**Session paused at William's request** (family time), to resume "tonight."
+**Next session: do not restart the Trolley flow from scratch.** Resume
+directly at dashboard.trolley.com/activate/bank on the Beneficial Owners
+step -- click into the Phone Number field (country already set to +44)
+and continue from there. Hand the Date of Birth / Nationality / Tax ID
+fields to William directly rather than attempting them.
+
+**Next steps, in order:**
+1. Resume and complete the Trolley Bank Transfer Beneficial Owners step
+   (phone number, address, then William enters DOB/Nationality/Tax ID
+   himself), then Shareholder Register, then Review Submission -- confirm
+   with William before the final submit, same as the PayPal step.
+2. Once Trolley bank-transfer is actually approved, this needs real
+   engineering work to wire into the codebase (a new rail alongside/
+   instead of the dead-end DOTS entry in lib/payoutRail.ts's PayoutRail
+   type, a lib/trolley.ts equivalent, env vars) -- NOT started, NOT
+   requested yet. Do not start this without William's explicit go-ahead,
+   per standing directive 4.
+3. Keep chasing Payoneer's Mass Payouts case 260721-023420 (email sent,
+   phone number now on hand: +1-332-244-7939) as a second, independent
+   payout-rail track -- Trolley is not guaranteed to pan out either.
+4. Sanity-check the auto-populated Director DOB on Trolley with William
+   directly; do not assume it's correct.
+5. The original urgent-Dots directive's downstream concern still stands
+   even though Dots itself is dead: sellers outside Stripe's coverage
+   (including the two approved China sellers, LAKA's Studio and HALLORY)
+   still have no live payout rail. Whichever of Trolley/Payoneer lands
+   first becomes the thing to wire up with real urgency.
