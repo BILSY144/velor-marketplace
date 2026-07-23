@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { isPayoneerConfigured, createPayout as createPayoneerPayout, getPayeeStatus } from '@/lib/payoneer'
+import { isDotsConfigured, createPayout as createDotsPayout, getUserStatus as getDotsUserStatus } from '@/lib/dots'
 import { getPayoutRail } from '@/lib/payoutRail'
 import {
   PROBATION_HOLD_MS,
@@ -16,9 +17,10 @@ export const maxDuration = 60
 // Payout release cron. Holds funds on the platform until delivery is confirmed,
 // then releases the seller's share (from the PaymentIntent metadata) once the
 // hold window passes and no return/dispute is open. The rail differs by seller
-// (Stripe transfer, or Payoneer payout for Stripe-unsupported countries) but
-// the RULES are identical on both rails by explicit decision: same delivery
-// confirmation requirement, same 15-day/72-hour holds, same dispute freeze.
+// (Stripe transfer, or a Dots payout for Stripe-unsupported countries -- see
+// lib/payoutRail.ts; Payoneer kept only for a legacy few) but the RULES are
+// identical on every rail by explicit decision: same delivery confirmation
+// requirement, same 15-day/72-hour holds, same dispute freeze.
 export async function GET(req: NextRequest) {
   const authError = requireCronSecret(req)
   if (authError) return authError
@@ -54,9 +56,11 @@ export async function GET(req: NextRequest) {
 
   let released = 0
   let releasedPayoneer = 0
+  let releasedDots = 0
   let heldOpen = 0
   let waiting = 0
   let heldForPayoneer = 0
+  let heldForDots = 0
   let heldForStripeSetup = 0
   let skipped = 0
   let heldUnverified = 0
@@ -126,7 +130,15 @@ export async function GET(req: NextRequest) {
       // down only for the Payoneer branch.
       const sellerRow = await prisma.seller.findUnique({
         where: { id: o.sellerId },
-        select: { country: true, stripeAccountId: true, payoutRail: true, payoneerPayeeId: true, identityVerified: true },
+        select: {
+          country: true,
+          stripeAccountId: true,
+          payoutRail: true,
+          payoneerPayeeId: true,
+          dotsUserId: true,
+          dotsOnboarded: true,
+          identityVerified: true,
+        },
       })
       let sellerAccountId = sellerRow?.stripeAccountId || ''
       if (sellerAccountId && platformAccountId && sellerAccountId === platformAccountId) {
@@ -139,13 +151,17 @@ export async function GET(req: NextRequest) {
       }
 
       // LAW (identity model changed 2026-07-21, William: identity works
-      // "like payouts"): never release a payout -- on either rail -- to a
+      // "like payouts"): never release a payout -- on any rail -- to a
       // seller who has not passed the payout rail's own regulated KYC.
       // This replaced the old separate photo-ID (Stripe Identity) gate:
       //   STRIPE rail   -> the connected account must be LIVE-verified as
       //                    charges+payouts enabled (checked below, fresh
       //                    from Stripe, before every transfer). Stripe only
       //                    enables payouts once its KYC has passed.
+      //   DOTS rail     -> the user must be LIVE-reported onboarded
+      //                    (checked below, lib/dots.ts getUserStatus).
+      //                    Dots only reports this once its own compliance
+      //                    checks have passed.
       //   PAYONEER rail -> the payee must be LIVE-reported ACTIVE (checked
       //                    below). Payoneer only activates a payee once its
       //                    KYC has passed.
@@ -161,13 +177,14 @@ export async function GET(req: NextRequest) {
       // stored payoutRail field, which can be stale (the exact bug class
       // caught live on 2026-07-21: a GB seller stuck on a persisted
       // PAYONEER value would never have been paid). lib/payoutRail.ts is
-      // the single source of truth and accepts country names or ISO codes.
-      // Branching is STRICT per rail: a Stripe-rail seller can only ever be
-      // paid through Stripe Connect, a Payoneer-rail seller only ever
-      // through Payoneer -- a leftover stripeAccountId on a Payoneer-rail
-      // seller (or vice versa) can no longer route money down the wrong
-      // rail. Self-heal the stored field while we're here, same pattern as
-      // /api/dashboard/payouts.
+      // the single source of truth and accepts country names or ISO codes;
+      // it now resolves every non-Stripe country to DOTS, not PAYONEER
+      // (2026-07-23). Branching is STRICT per rail: a Stripe-rail seller
+      // can only ever be paid through Stripe Connect, a Dots-rail seller
+      // only ever through Dots, a Payoneer-rail seller only ever through
+      // Payoneer -- a leftover account/payee on the wrong rail can no
+      // longer route money down it. Self-heal the stored field while we're
+      // here, same pattern as /api/dashboard/payouts.
       const rail = getPayoutRail(sellerRow.country)
       if (rail !== sellerRow.payoutRail) {
         await prisma.seller.update({ where: { id: o.sellerId }, data: { payoutRail: rail } }).catch(() => {})
@@ -217,9 +234,59 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // PAYONEER rail (or a Stripe-rail seller who has not finished Connect
-      // onboarding, who simply waits in escrow). Same holds and dispute
-      // checks already passed above -- only the transfer differs.
+      // DOTS rail -- the default for non-Stripe countries since 2026-07-23
+      // (see lib/payoutRail.ts). Same holds and dispute checks already
+      // passed above -- only the transfer differs. A dotsUserId is stored
+      // the moment onboarding starts, BEFORE the seller has necessarily
+      // finished it -- pay only a user Dots itself reports onboarded,
+      // otherwise keep the funds safely in escrow and retry next run.
+      if (rail === 'DOTS' && sellerRow.dotsUserId && isDotsConfigured()) {
+        const dotsStatus = await getDotsUserStatus(sellerRow.dotsUserId)
+        if (!dotsStatus.onboarded) {
+          heldForDots++
+          continue
+        }
+        if (!sellerRow.dotsOnboarded) {
+          await prisma.seller
+            .update({ where: { id: o.sellerId }, data: { dotsOnboarded: true } })
+            .catch(() => {})
+        }
+        if (!sellerRow.identityVerified) {
+          await prisma.seller
+            .update({ where: { id: o.sellerId }, data: { identityVerified: true } })
+            .catch(() => {})
+        }
+        const { payoutId } = await createDotsPayout({
+          userId: sellerRow.dotsUserId,
+          amount: sellerShare / 100,
+          currency,
+          clientReferenceId: `payout_${o.id}`,
+          description: `Velor Marketplace payout for order ${o.id}`,
+        })
+        await prisma.payout.create({
+          data: {
+            sellerId: o.sellerId,
+            orderId: o.id,
+            amount: sellerShare / 100,
+            currency,
+            dotsPayoutId: payoutId,
+            status: 'paid',
+          },
+        })
+        releasedDots++
+        continue
+      } else if (rail === 'DOTS') {
+        // Dots rail not configured yet, or seller not onboarded: funds stay
+        // safely in the platform escrow and this order retries every run.
+        heldForDots++
+        continue
+      }
+
+      // PAYONEER rail (legacy -- no longer auto-assigned by getPayoutRail(),
+      // see lib/payoutRail.ts -- or a Stripe-rail seller who has not
+      // finished Connect onboarding, who simply waits in escrow). Same
+      // holds and dispute checks already passed above -- only the transfer
+      // differs.
       if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
         // A payeeId is stored the moment a registration link is generated,
         // BEFORE the seller has necessarily completed Payoneer signup --
@@ -275,9 +342,11 @@ export async function GET(req: NextRequest) {
     ok: true,
     scanned: candidates.length,
     released,
+    releasedDots,
     releasedPayoneer,
     heldOpen,
     waiting,
+    heldForDots,
     heldForPayoneer,
     heldForStripeSetup,
     heldUnverified,

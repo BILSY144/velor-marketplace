@@ -1,21 +1,19 @@
 'use client';
 
-// Payoneer payout setup -- LEGACY PAYONEER-rail sellers only. Since
-// 2026-07-23, getPayoutRail() no longer assigns PAYONEER to any seller
-// (DOTS is the default for non-Stripe countries now -- see
-// lib/payoutRail.ts and lib/dots.ts) -- this page only matters for a
-// seller already stored on PAYONEER before that change, until they
-// self-heal to DOTS on their next visit. Rebuilt in the Seller Studio
-// design (2026-07-21); given the rail guards it was missing: a
-// STRIPE-rail seller who lands here is redirected to
-// /dashboard/stripe-connect, and a DOTS-rail seller to /dashboard/dots,
-// before anything renders. The rail comes live from /api/payoneer/onboard,
-// which resolves it from the seller's country -- lib/payoutRail.ts, the
-// single source of truth.
+// Dots payout setup -- DOTS-rail sellers only (added 2026-07-23, replacing
+// Payoneer as the default rail for non-Stripe countries -- see
+// lib/payoutRail.ts and lib/dots.ts). Mirrors the Payoneer setup page's
+// structure and rail guard: a STRIPE-rail seller who lands here is
+// redirected to /dashboard/stripe-connect before anything renders; a
+// legacy PAYONEER-rail seller (pre-2026-07-23, not yet self-healed) is
+// redirected to /dashboard/payoneer instead. The rail comes live from
+// /api/dots/onboard, which resolves it from the seller's country --
+// lib/payoutRail.ts, the single source of truth.
 //
-// HONESTY: while the Payoneer partner application is pending
-// (configured: false), the button registers interest and says so plainly
-// -- it never claims Payoneer payouts are live before they are.
+// HONESTY: while Dots is not yet configured (no DOTS_API_KEY in Vercel --
+// William has not created a Dots account yet), the button registers
+// interest and says so plainly -- it never claims Dots payouts are live
+// before they are.
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -24,7 +22,7 @@ import {
   cardStyle, cardHeadStyle, pageStyle,
 } from '@/lib/studio';
 
-export default function PayoneerSetupPage() {
+export default function DotsSetupPage() {
   const router = useRouter();
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,18 +32,18 @@ export default function PayoneerSetupPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/payoneer/onboard')
+    fetch('/api/dots/onboard')
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        // Rail guard: a seller on any other rail must never see Payoneer
-        // setup screens -- their payouts run elsewhere.
+        // Rail guard: a seller on any other rail must never see Dots setup
+        // screens -- their payouts run elsewhere.
         if (d?.rail === 'STRIPE') {
           router.replace('/dashboard/stripe-connect');
           return;
         }
-        if (d?.rail === 'DOTS') {
-          router.replace('/dashboard/dots');
+        if (d?.rail === 'PAYONEER') {
+          router.replace('/dashboard/payoneer');
           return;
         }
         setStatus(d);
@@ -60,16 +58,16 @@ export default function PayoneerSetupPage() {
     setError('');
     setPendingMsg('');
     try {
-      const r = await fetch('/api/payoneer/onboard', { method: 'POST' });
+      const r = await fetch('/api/dots/onboard', { method: 'POST' });
       const d = await r.json();
-      if (r.ok && d.registrationLink) {
-        window.location.href = d.registrationLink;
+      if (r.ok && d.onboardingLink) {
+        window.location.href = d.onboardingLink;
         return;
       }
       if (r.ok && d.pending) {
         setPendingMsg(d.message);
       } else {
-        setError(d.error || 'Could not start Payoneer onboarding. Try again.');
+        setError(d.error || 'Could not start payout setup. Try again.');
       }
     } catch {
       setError('Network error. Please try again.');
@@ -88,13 +86,13 @@ export default function PayoneerSetupPage() {
       <StudioPageHead
         kicker="Money"
         title="Payout setup"
-        sub={<>Your payout rail is <b>Payoneer</b> — resolved from your country, automatically.</>}
+        sub={<>Your payout rail is <b>Dots</b> — resolved from your country, automatically.</>}
       />
 
       <StudioNotice tone="blue">
         <b>Same rules, different rail.</b> Stripe does not support seller payouts in your country, so
-        Velor pays you through Payoneer instead. Delivery confirmation, hold windows and dispute
-        freezes are identical for every seller — only the final transfer method differs.
+        Velor pays you through Dots instead. Delivery confirmation, hold windows and dispute freezes
+        are identical for every seller — only the final transfer method differs.
       </StudioNotice>
 
       {error && <StudioNotice tone="red">{error}</StudioNotice>}
@@ -107,29 +105,29 @@ export default function PayoneerSetupPage() {
           {status?.onboarded ? (
             <div style={cardStyle({ marginBottom: 14 })}>
               <div style={cardHeadStyle()}>
-                <h3 style={{ fontSize: 13.5, fontWeight: 600, margin: 0 }}>Payoneer account</h3>
+                <h3 style={{ fontSize: 13.5, fontWeight: 600, margin: 0 }}>Dots account</h3>
                 <StudioChip tone="good">Linked</StudioChip>
               </div>
               <p style={{ color: STUDIO.muted, fontSize: 13, lineHeight: 1.6, margin: 0, padding: '14px 18px 18px' }}>
-                Your earnings are released to your Payoneer account after each delivery is confirmed
+                Your earnings are released to your Dots account after each delivery is confirmed
                 and the standard hold period passes.
               </p>
             </div>
           ) : (
             <div style={cardStyle({ marginBottom: 14, padding: '20px 22px' })}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Set up Payoneer payouts</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Set up your payout account</h3>
               <p style={{ color: STUDIO.muted, fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
                 You keep every sale minus your tier&apos;s commission. Setup takes a few minutes on
-                Payoneer&apos;s secure site — Velor never sees your bank details. You can sell and earn
+                Dots&apos; secure site — Velor never sees your bank details. You can sell and earn
                 before setup completes: your earnings are held safely and paid out once your account
                 is linked.
               </p>
               <StudioButton onClick={handleStart} disabled={busy}>
-                {busy ? 'Working…' : status?.configured ? 'Connect with Payoneer' : 'Notify me when ready'}
+                {busy ? 'Working…' : status?.configured ? 'Connect payout account' : 'Notify me when ready'}
               </StudioButton>
               {!status?.configured && (
                 <p style={{ color: STUDIO.faint, fontSize: 12, margin: '12px 0 0', lineHeight: 1.55 }}>
-                  Payoneer onboarding for your country is opening soon — registering tells us to
+                  Payout setup for your country is opening soon — registering tells us to
                   prioritise it and to email you the moment it is live.
                 </p>
               )}
@@ -142,7 +140,7 @@ export default function PayoneerSetupPage() {
               'A customer purchases your product.',
               "Velor deducts your tier's commission (10% Starter, 4% Pro).",
               'Funds are held safely in escrow until delivery is confirmed.',
-              'Your share is released to your Payoneer account — within 15 days for new sellers, 72 hours once trusted. An open return or dispute pauses release.',
+              'Your share is released to your Dots account — within 15 days for new sellers, 72 hours once trusted. An open return or dispute pauses release.',
             ].map((text, i) => (
               <div key={i} style={stepStyle}>
                 <div style={stepNum}>{i + 1}</div>

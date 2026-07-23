@@ -215,7 +215,7 @@ export default function SellPage() {
             <div className="vs-fstep green">
               <div className="vs-fnum">STEP 04</div>
               <h3>Paid, your way</h3>
-              <p>Weekly payouts by Stripe where supported. Payoneer is on the way for everywhere else — sign up today and your earnings are held safely until payouts go live for your country.</p>
+              <p>Weekly payouts by Stripe where supported, Dots everywhere else — sign up today and your earnings are held safely until payout setup completes for your country.</p>
               <span className="vs-tag rel">Released</span>
             </div>
           </div>

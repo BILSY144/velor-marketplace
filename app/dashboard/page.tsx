@@ -108,7 +108,7 @@ export default function DashboardOverview() {
 
   const [storeName, setStoreName] = useState<string | null>(null);
   const [railLabel, setRailLabel] = useState<string | null>(null);
-  const [rail, setRail] = useState<'STRIPE' | 'PAYONEER' | null>(null);
+  const [rail, setRail] = useState<'STRIPE' | 'DOTS' | 'PAYONEER' | null>(null);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [payouts, setPayouts] = useState<PayoutsData | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -138,13 +138,17 @@ export default function DashboardOverview() {
         if (cancelled || !d) return;
         if (d.storeName) setStoreName(d.storeName);
         if (d.payoutRailLabel) setRailLabel(d.payoutRailLabel);
-        const r: 'STRIPE' | 'PAYONEER' = d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
+        const r: 'STRIPE' | 'DOTS' | 'PAYONEER' = d.payoutRail === 'DOTS' ? 'DOTS' : d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
         setRail(r);
         try {
           if (r === 'STRIPE') {
             const res = await fetch('/api/stripe/connect/account');
             const a = res.ok ? await res.json() : null;
             if (!cancelled) setPayoutLive(!!(a?.chargesEnabled && a?.payoutsEnabled));
+          } else if (r === 'DOTS') {
+            const res = await fetch('/api/dots/onboard');
+            const a = res.ok ? await res.json() : null;
+            if (!cancelled) setPayoutLive(Boolean(a?.onboarded));
           } else {
             const res = await fetch('/api/payoneer/onboard');
             const a = res.ok ? await res.json() : null;
@@ -207,7 +211,7 @@ export default function DashboardOverview() {
   );
 
   const payoutReady = payoutLive;
-  const payoutSetupHref = rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
+  const payoutSetupHref = rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
 
   return (
     <div style={pageStyle()}>
@@ -330,11 +334,11 @@ export default function DashboardOverview() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <span aria-hidden style={{
                   width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                  background: rail === 'PAYONEER' ? '#FF4800' : '#635BFF', color: '#fff',
+                  background: rail === 'DOTS' ? '#111318' : rail === 'PAYONEER' ? '#FF4800' : '#635BFF', color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: STUDIO.fontDisplay, fontWeight: 700, fontSize: 13,
                 }}>
-                  {rail === 'PAYONEER' ? 'P' : 'S'}
+                  {rail === 'DOTS' ? 'D' : rail === 'PAYONEER' ? 'P' : 'S'}
                 </span>
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{railLabel || DASH}</span>

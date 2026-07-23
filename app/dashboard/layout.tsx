@@ -13,8 +13,10 @@
 //    resolved live from their country by /api/seller/me
 //    (lib/payoutRail.ts is the single source of truth). A
 //    Stripe-country seller is only ever routed to Stripe
-//    Connect setup; a Payoneer-country seller only ever to
-//    Payoneer. No path to the wrong payment system.
+//    Connect setup; a non-Stripe-country seller only ever to
+//    Dots setup (the default rail since 2026-07-23, replacing
+//    Payoneer -- see lib/payoutRail.ts and lib/dots.ts), or, for
+//    a legacy few, Payoneer. No path to the wrong payment system.
 //  - Functional parity rules preserved from the old shells:
 //    API Keys only for Pro; Go Live visible to every tier
 //    (2026-07-15 rule); payout item swaps to "Set Up Payouts"
@@ -34,7 +36,7 @@ import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/l
 import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language';
 
 type Tier = 'STARTER' | 'PRO';
-type Rail = 'STRIPE' | 'PAYONEER';
+type Rail = 'STRIPE' | 'DOTS' | 'PAYONEER';
 
 const SIDEBAR_KEY = 'velor-studio-sidebar';
 
@@ -155,14 +157,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setFounding(Boolean(d.foundingBadge));
         if (d.storeName) setStoreName(d.storeName);
         if (d.country) setCountry(d.country);
-        const r: Rail = d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
+        const r: Rail = d.payoutRail === 'DOTS' ? 'DOTS' : d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
         setRail(r);
-        setRailLabel(d.payoutRailLabel || (r === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect'));
+        setRailLabel(d.payoutRailLabel || (r === 'DOTS' ? 'Dots' : r === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect'));
         try {
           if (r === 'STRIPE') {
             const res = await fetch('/api/stripe/connect/account');
             const a = res.ok ? await res.json() : null;
             if (!cancelled) setPayoutReady(!!(a?.chargesEnabled && a?.payoutsEnabled));
+          } else if (r === 'DOTS') {
+            const res = await fetch('/api/dots/onboard');
+            const a = res.ok ? await res.json() : null;
+            if (!cancelled) setPayoutReady(Boolean(a?.onboarded));
           } else {
             const res = await fetch('/api/payoneer/onboard');
             const a = res.ok ? await res.json() : null;
@@ -209,12 +215,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // ---- navigation model -------------------------------------------------
   // The payout destination is the ONLY rail-dependent link in the app:
   //   STRIPE rail, not ready  -> /dashboard/stripe-connect ("Set Up Payouts")
+  //   DOTS rail, not ready    -> /dashboard/dots           ("Set Up Payouts")
   //   PAYONEER rail, not ready-> /dashboard/payoneer       ("Set Up Payouts")
-  //   ready (either rail)     -> /dashboard/payouts
-  const payoutSetupHref = rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
+  //   ready (any rail)        -> /dashboard/payouts
+  const payoutSetupHref = rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
+  const payoutAlsoActive = ['/dashboard/payouts', '/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer'];
   const payoutItem: NavItem = payoutReady === false
-    ? { href: payoutSetupHref, label: 'Set Up Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: ['/dashboard/payouts', '/dashboard/stripe-connect', '/dashboard/payoneer'] }
-    : { href: '/dashboard/payouts', label: 'Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: ['/dashboard/stripe-connect', '/dashboard/payoneer'] };
+    ? { href: payoutSetupHref, label: 'Set Up Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: payoutAlsoActive }
+    : { href: '/dashboard/payouts', label: 'Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: payoutAlsoActive.slice(1) };
 
   const sections: { label: string | null; items: NavItem[] }[] = [
     {
@@ -280,10 +288,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <span style={{
       fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
       padding: '2px 6px', borderRadius: 4, flexShrink: 0,
-      background: rail === 'PAYONEER' ? STUDIO.accentSoft : STUDIO.blueSoft,
-      color: rail === 'PAYONEER' ? '#B54A00' : STUDIO.blue,
+      background: rail === 'STRIPE' ? STUDIO.blueSoft : STUDIO.accentSoft,
+      color: rail === 'STRIPE' ? STUDIO.blue : '#B54A00',
     }}>
-      {rail === 'PAYONEER' ? 'Payoneer' : 'Stripe'}
+      {rail === 'STRIPE' ? 'Stripe' : rail === 'DOTS' ? 'Dots' : 'Payoneer'}
     </span>
   );
 

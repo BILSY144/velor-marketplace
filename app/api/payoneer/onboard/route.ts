@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
 async function getSeller(userId: string) {
   return prisma.seller.findUnique({
     where: { userId },
-    select: { id: true, country: true, payoutRail: true, payoneerPayeeId: true, stripeOnboarded: true },
+    select: { id: true, country: true, payoutRail: true, payoneerPayeeId: true, stripeOnboarded: true, dotsOnboarded: true },
   })
 }
 
@@ -40,14 +40,14 @@ export async function GET() {
     onboarded: Boolean(seller.payoneerPayeeId),
   })
   // Keeps the payout-verification dashboard gate cookie (middleware.ts) in
-  // sync -- this is the one place a Payoneer-rail seller's velor_payout_setup
-  // cookie ever gets set, since payoutGateSatisfied() exempts PAYONEER
-  // entirely for now (see lib/payoutGateCookie.ts for why). This route is
+  // sync. DOTS is now the default rail for non-Stripe countries (see
+  // lib/payoutRail.ts, 2026-07-23) -- this route is kept only for sellers
+  // still stored on the legacy PAYONEER rail (exempted, see
+  // lib/payoutGateCookie.ts for why) or mid-self-heal to DOTS. This route is
   // called on every /dashboard/stripe-connect and /dashboard/payoneer page
   // load, which is exactly where middleware.ts sends a not-yet-satisfied
-  // seller, so a Payoneer-rail seller's very first landing here satisfies
-  // the gate immediately.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded))
+  // seller.
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded))
   return res
 }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const rail = getPayoutRail(seller.country)
   if (rail !== 'PAYONEER') {
-    return NextResponse.json({ error: 'Stripe supports payouts in your country -- use the Stripe payout setup instead.' }, { status: 400 })
+    return NextResponse.json({ error: 'Your country uses a different payout rail -- use the matching setup page instead.' }, { status: 400 })
   }
 
   if (!isPayoneerConfigured()) {

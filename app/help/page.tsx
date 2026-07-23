@@ -37,9 +37,9 @@ const FAQS: { category: string; blurb: string; items: { q: string; a: string }[]
     category: 'Selling',
     blurb: 'Opening your country, fees, and how you get paid.',
     items: [
-      { q: 'How do I start selling on Velor?', a: 'Apply on the Sell on Velor page — anyone can sell, individuals and businesses alike, with no documents to upload. You get a decision within 2 hours. Your identity is confirmed by Stripe or Payoneer when you set up payouts.' },
+      { q: 'How do I start selling on Velor?', a: 'Apply on the Sell on Velor page — anyone can sell, individuals and businesses alike, with no documents to upload. You get a decision within 2 hours. Your identity is confirmed by Stripe or Dots when you set up payouts.' },
       { q: 'What does it cost?', a: 'Nothing to list — ever. You pay commission when you sell: 10% on the free Starter tier, 4% on Pro. The earnings calculator on the Sell page shows the honest maths for your numbers.' },
-      { q: 'How do payouts work?', a: 'Buyers pay into escrow, and once delivery is confirmed your earnings are queued for payout on the schedule in your seller agreement — to Stripe Connect, or Payoneer where Stripe is unavailable.' },
+      { q: 'How do payouts work?', a: 'Buyers pay into escrow, and once delivery is confirmed your earnings are queued for payout on the schedule in your seller agreement — to Stripe Connect, or Dots where Stripe is unavailable.' },
       { q: 'What do founding sellers get?', a: 'The first verified seller from each country keeps the full Pro tier free for life — unlimited listings, 4% commission, the dedicated AI account manager — plus the permanent founding badge and the first store on their country’s page.' },
       { q: 'Can I sell internationally?', a: 'Yes — that is the point. Your listings are visible worldwide by default, prices convert into the buyer’s currency, and you can sell and get support in your own language.' },
       { q: 'How do listings get approved?', a: 'Submit a listing and it is reviewed within 1 to 2 business days. You get an email either way.' },

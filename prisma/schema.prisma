@@ -144,6 +144,14 @@ model Seller {
   storeLogo                     String?
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
+  // Dots.dev payout rail (added 2026-07-23, see lib/payoutRail.ts) -- the
+  // default rail for every non-Stripe country now, replacing Payoneer while
+  // its partner application remains unanswered. dotsUserId is set the
+  // moment onboarding starts (mirrors payoneerPayeeId's timing);
+  // dotsOnboarded is only ever set true once Dots itself reports the
+  // user's payout method/compliance as complete (lib/dots.ts getUserStatus).
+  dotsUserId                    String?   @unique
+  dotsOnboarded                 Boolean   @default(false)
   identityVerified               Boolean   @default(false)
     // DEPRECATED (2026-07-18): foundingEligible/foundingPerksGrantedAt/
   // foundingBadge below were driven by SellerApplication.country, which
@@ -329,6 +337,7 @@ model Payout {
   currency         String   @default("gbp")
   stripeTransferId String?  @unique
   payoneerPayoutId String?  @unique
+  dotsPayoutId     String?  @unique
   status           String   @default("pending")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

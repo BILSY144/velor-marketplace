@@ -241,7 +241,7 @@ export default function ApplyPage() {
             <h2>Application received.</h2>
             <p>
               You will have our decision within 2 hours. Your identity is verified when you
-              set up payouts — Stripe or Payoneer confirm who you are from your personal
+              set up payouts — Stripe or Dots confirm who you are from your personal
               details, directly with them. No photos, no documents to upload, and Velor never
               sees your information.
             </p>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { isPayoneerConfigured } from '@/lib/payoneer'
+import { isDotsConfigured } from '@/lib/dots'
 import { isSellerTrusted, PROBATION_HOLD_MS } from '@/lib/payouts'
 import { getPayoutRail } from '@/lib/payoutRail'
 
@@ -25,7 +26,15 @@ export async function GET() {
 
   const seller = await prisma.seller.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true, payoneerPayeeId: true },
+    select: {
+      id: true,
+      country: true,
+      payoutRail: true,
+      stripeOnboarded: true,
+      payoneerPayeeId: true,
+      dotsUserId: true,
+      dotsOnboarded: true,
+    },
   })
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
 
@@ -66,6 +75,7 @@ export async function GET() {
         status: true,
         stripeTransferId: true,
         payoneerPayoutId: true,
+        dotsPayoutId: true,
         createdAt: true,
       },
     }),
@@ -81,6 +91,9 @@ export async function GET() {
     stripeOnboarded: seller.stripeOnboarded,
     payoneerConfigured: isPayoneerConfigured(),
     payoneerLinked: Boolean(seller.payoneerPayeeId),
+    dotsConfigured: isDotsConfigured(),
+    dotsLinked: Boolean(seller.dotsUserId),
+    dotsOnboarded: seller.dotsOnboarded,
     pendingEscrow: pendingAgg._sum.sellerEarnings || 0,
     pendingOrderCount: pendingAgg._count,
     lifetimePaidOut,
@@ -94,7 +107,7 @@ export async function GET() {
       amount: p.amount,
       currency: p.currency,
       status: p.status,
-      method: p.stripeTransferId ? 'Stripe' : p.payoneerPayoutId ? 'Payoneer' : '—',
+      method: p.stripeTransferId ? 'Stripe' : p.dotsPayoutId ? 'Dots' : p.payoneerPayoutId ? 'Payoneer' : '—',
       date: p.createdAt.toISOString(),
     })),
   })
