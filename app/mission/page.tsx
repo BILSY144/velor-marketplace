@@ -76,7 +76,10 @@ const css = `
 .ms-shead{margin-bottom:30px}
 .ms-shead h2{font-size:29px}
 .ms-shead p{font-size:14.5px;color:var(--muted);margin:9px 0 0;max-width:66ch;line-height:1.65}
-.ms-hero{padding:74px 0 20px}
+.ms-hero{padding:74px 0 20px;display:flex;align-items:center;gap:48px;justify-content:space-between}
+.ms-hero-text{flex:1 1 520px;max-width:640px}
+.ms-hero-media{flex:0 0 300px;display:flex;justify-content:center}
+.ms-hero-media img{width:100%;max-width:300px;height:auto;display:block}
 .ms-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
 .ms-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .ms-hero h1{font-size:46px;line-height:1.1;margin-bottom:20px;max-width:20ch}
@@ -100,7 +103,10 @@ const css = `
 .ms-founding p{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:54ch;margin:0}
 .ms-legal{font-size:12.5px;color:var(--muted);margin-top:8px}
 @media(max-width:980px){
+.ms-hero{flex-direction:column;align-items:flex-start}
 .ms-hero h1{font-size:32px}
+.ms-hero-media{order:-1;max-width:220px;margin:0 auto 12px}
+.ms-hero-media img{max-width:220px}
 .ms-pillars{grid-template-columns:1fr}
 .ms-honest{padding:30px 26px}
 }
@@ -112,22 +118,30 @@ export default function MissionPage() {
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div className="ms-wrap">
         <section className="ms-hero">
-          <div className="ms-eyebrow"><span className="ms-dot" />Our mission</div>
-          <h1>Real makers should keep more of what they make.</h1>
-          <p className="ms-lede">
-            Most global marketplaces sell the same mass-produced catalogue sourced from a handful of
-            manufacturing hubs. Velor exists to give traditional artisans and makers -- many in regions
-            overlooked by mainstream e-commerce -- direct access to a global market for authentic,
-            culturally rooted work, at a time when generic, factory-made goods are displacing
-            traditional-craft economies.
-          </p>
-          <p className="ms-lede">
-            Velor&apos;s commercial success is tied directly to more real makers earning fair, direct
-            income from their craft -- and more of that craft surviving commercially.
-          </p>
-          <div>
-            <Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
-            <Link href="/about" className="ms-btn ms-btn-s">See how buyer protection works</Link>
+          <div className="ms-hero-text">
+            <div className="ms-eyebrow"><span className="ms-dot" />Our mission</div>
+            <h1>Real makers should keep more of what they make.</h1>
+            <p className="ms-lede">
+              Most global marketplaces sell the same mass-produced catalogue sourced from a handful of
+              manufacturing hubs. Velor exists to give traditional artisans and makers -- many in regions
+              overlooked by mainstream e-commerce -- direct access to a global market for authentic,
+              culturally rooted work, at a time when generic, factory-made goods are displacing
+              traditional-craft economies.
+            </p>
+            <p className="ms-lede">
+              Velor&apos;s commercial success is tied directly to more real makers earning fair, direct
+              income from their craft -- and more of that craft surviving commercially.
+            </p>
+            <div>
+              <Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
+              <Link href="/about" className="ms-btn ms-btn-s">See how buyer protection works</Link>
+            </div>
+          </div>
+          <div className="ms-hero-media">
+            <img
+              src="/velor%20united%20charity%20mascot.png"
+              alt="Illustrated Velor mascot -- a friendly cartoon globe surrounded by illustrated characters in cultural dress from around the world"
+            />
           </div>
         </section>
       </div>
