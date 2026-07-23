@@ -3550,3 +3550,110 @@ fields to William directly rather than attempting them.
    (including the two approved China sellers, LAKA's Studio and HALLORY)
    still have no live payout rail. Whichever of Trolley/Payoneer lands
    first becomes the thing to wire up with real urgency.
+
+## 2026-07-23 checkpoint (4) -- Trolley payout-rail engineering COMPLETE and pushed; real Pulse bug found: a legacy sign-up page creates unreviewable "orphaned" sellers
+
+**Trolley integration finished, commit e84492f7 on main, pushed and
+tsc-clean.** Completes the work started earlier the same session
+(lib/trolley.ts, schema fields, `/api/trolley/onboard`,
+`/dashboard/trolley`, the release-payouts TROLLEY branch — see the
+checkpoint above this one for that half). This commit updates every
+remaining dashboard surface that still referenced DOTS as the default
+non-Stripe rail: `app/dashboard/layout.tsx`, `app/dashboard/page.tsx`,
+`app/dashboard/payouts/page.tsx`, `app/dashboard/stripe-connect/page.tsx`,
+and `app/api/dashboard/payouts/route.ts` now all resolve/route/label/brand
+TROLLEY correctly (green "T" tile, "Trolley" label, `/dashboard/trolley`
+setup link), while the existing DOTS/PAYONEER legacy branches are left
+fully intact for any seller row not yet self-healed onto TROLLEY. Also
+added `TROLLEY_ACCESS_KEY`/`TROLLEY_SECRET_KEY`/`TROLLEY_API_BASE` to
+`.env.example` (marked the DOTS entries there as legacy/permanently
+unusable) and wrote `docs/TROLLEY_SETUP.md` (mirrors `docs/DOTS_SETUP.md`'s
+structure — what's built, what William needs to do once Trolley approves,
+the sandbox-verification checklist). Verified with a REAL type-check this
+time, not just syntax: `npx prisma generate` (dummy engine-path env vars,
+since `binaries.prisma.sh` is proxy-blocked here) then `npx tsc` against a
+temp tsconfig extending the real one — zero errors across every
+changed/new file. This cloud sandbox turned out to have full outbound git
+network this session (contradicts some older per-session notes in this
+file; `git fetch --unshallow` worked, `npm install` worked) — verify fresh
+each session rather than assuming either way, per the TOOLING TRAPS section.
+
+Still open, exactly as before: Trolley's own KYC review of Velor's Bank
+Transfer Activation is pending (no live credentials yet, `isTrolleyConfigured()`
+false, the whole rail is safely inert — sellers accrue in escrow); revisit
+`lib/payoutGateCookie.ts`'s TROLLEY exemption the moment credentials land
+(see that file's own "REVISIT (TROLLEY)" comment and
+`docs/TROLLEY_SETUP.md` Step 2.3); keep chasing Payoneer's Mass Payouts
+case 260721-023420 in parallel.
+
+**Real bug found mid-session, NOT yet fixed (William's report, verified
+live in the browser): a whole separate seller sign-up surface exists that
+bypasses the entire application/review pipeline and produces permanently
+unreviewable seller accounts.**
+
+William reported he could not review a pending seller application from
+`/pulse/applications` on his phone. First answer given was WRONG and had
+to be corrected: `/pulse/applications/[id]` (tap into any row from the
+list) genuinely does have Accept/Deny buttons — built under William's own
+account on 12 July (`0b1a6715`), still live on `main`, calling the same
+admin-gated `PATCH /api/agents/applications/[id]` the desktop console
+uses. Nothing was removed or changed without his permission; the first
+answer was simply researched wrong (only the list page + its GET-only API
+were checked, not the detail page).
+
+The REAL problem, found by live-checking production (`/pulse/applications`
+via the stored admin token): the specific applicant, **Vellora
+International Trading Co. Ltd.** (刘保霞 / liubeier76@gmail.com, joined
+23 Jul 2026), does not appear on `/pulse/applications` at all — because
+she never has a `SellerApplication` row. `/pulse/sellers` shows her as a
+bare `Seller` record with `approved: false` (badge "PENDING"). Root cause,
+confirmed by reading the code: `app/auth/sign-up/page.tsx` is a genuinely
+live, reachable, LEGACY sign-up page (separate from the real `/apply`
+flow) that POSTs to `app/api/auth/register/route.ts`. That route creates a
+`User` + nested `Seller` directly — no `SellerApplication` row is ever
+created, so the applicant never enters `review-applications` (the 24h SLA
+cron), never appears on `/pulse/applications` or `/admin/applications`,
+and gets an honest-sounding "we'll review within 2 hours" email that
+nothing ever acts on. She is permanently stuck with **zero approve/reject
+path anywhere on Pulse** — confirmed live: the Sellers page rows on Pulse
+are not even links (`document.querySelectorAll('a')` returned only the 6
+nav links, nothing per-seller).
+
+**This same legacy page is not purely a bug to delete on sight** — per the
+2026-07-19 checkpoint (4), William used `/auth/sign-up` himself to create
+the Play Store reviewer account (`Play Review Test Store`, also currently
+sitting `approved: false`/PENDING on Pulse's Sellers list for the exact
+same reason). So this page is a known, previously-used utility, not purely
+an accident — but its silent lack of any review path is a real gap
+regardless of who uses it.
+
+**Stopgap that works today, told to William:** the desktop admin console
+at `/admin/sellers` (`app/admin/sellers/page.tsx` +
+`app/api/admin/sellers/route.ts` GET/PATCH, real NextAuth ADMIN session,
+not the Pulse Bearer-token model) already has working Approve/Reject/
+Suspend buttons for exactly this kind of bare `Seller` row — confirmed by
+reading the route (`PATCH { sellerId, action }` sets `approved` directly
+and emails the seller). William needs to sign in on desktop and use that
+page for Vellora (and the Play Review account, if he ever wants it
+formally "approved" rather than left as a working test account) until a
+Pulse-side fix exists. Not yet confirmed live in the browser that this
+page actually renders/works end-to-end this session — no admin session
+existed in the browser this session, and signing in is William's own
+action per standing rule.
+
+**Awaiting William's direction on two follow-ups, do not start either
+without his go-ahead (standing directive 4):**
+1. Add Approve/Deny for these bare/orphaned `Seller` rows to Pulse itself
+   (a new detail surface, or extend `/pulse/sellers`), so this doesn't
+   require the desktop console.
+2. Whether to retire `/auth/sign-up` entirely, wire it into the real
+   `SellerApplication` flow instead of bypassing it, or leave it as-is
+   with a Pulse-side fix covering the gap it creates.
+
+Not investigated this session: whether any OTHER orphaned `approved:false`
+sellers besides Vellora and Play Review Test Store exist from this same
+path (CJ Dropshippers and 义乌市芳拓饰品厂 are also PENDING on
+`/pulse/sellers` but those are known, intentionally-deactivated legacy
+test accounts from 2026-07-08, not new orphans — see that session's
+checkpoint). A full audit of every `approved:false` Seller row's origin
+would confirm there's nothing else stuck the same way.
