@@ -6,8 +6,16 @@ import { PAYOUT_GATE_COOKIE } from '@/lib/payoutGateCookie'
 
 // Setup pages exempt from the payout-verification gate below -- a seller
 // must always be able to reach these regardless of gate status, or they
-// could never satisfy it in the first place.
-const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer']
+// could never satisfy it in the first place. TROLLEY is the default
+// non-Stripe rail as of 2026-07-23 evening (DOTS/PAYONEER kept only for
+// legacy sellers not yet self-healed onto it) -- /dashboard/trolley was
+// missing from this list until 2026-07-23, which meant the moment Trolley
+// went live (isTrolleyConfigured() started returning true) every
+// TROLLEY-rail seller got stuck in an infinite redirect loop between here
+// and /dashboard/stripe-connect and could never actually complete
+// onboarding -- a dead end, not friction. Fixed same day; see that
+// checkpoint in CLAUDE.md.
+const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/trolley', '/dashboard/dots', '/dashboard/payoneer']
 
 const _rl = new Map<string, { count: number; reset: number }>()
 
