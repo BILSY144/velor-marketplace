@@ -355,11 +355,11 @@ export default function ApplyPage() {
 
               <div className="ap-row">
                 <div className="ap-field">
-                  <label className="ap-label">Website or store link</label>
+                  <label className="ap-label">Existing website or shop (optional)</label>
                   <input className="ap-input" type="text" value={form.website}
                     onChange={e => setField('website', e.target.value)}
                     placeholder="yourstore.com" />
-                  <p className="ap-hint">Just the address — no need to type https://</p>
+                  <p className="ap-hint">Etsy, Instagram, your own site — anything you&apos;d like us to see. Don&apos;t have one? No problem, Velor gives you your own storefront the moment you&apos;re approved.</p>
                 </div>
                 <div className="ap-field">
                   <label className="ap-label">Country</label>
