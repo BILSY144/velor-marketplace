@@ -116,15 +116,25 @@ const ETSY_TARGETS = [
 
 // ââ eBay search targets âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const EBAY_TARGETS = [
-  // NOTE: category IDs are best-effort (Pottery & Glass 870, Jewelry &
-  // Watches 10968, Home & Garden 11700, Kitchen Dining & Bar 20625, Health &
-  // Beauty 26395) -- verify against eBay's Taxonomy API before this cron
-  // runs against production credentials.
-  { query: 'moroccan tagine handmade ceramic pottery', categoryId: '870', category: 'Ceramics & porcelain' },
-  { query: 'talavera pottery mexican handmade', categoryId: '870', category: 'Ceramics & porcelain' },
-  { query: 'japanese kintsugi pottery handmade', categoryId: '870', category: 'Ceramics & porcelain' },
-  { query: 'turkish iznik ceramic tile handmade', categoryId: '870', category: 'Ceramics & porcelain' },
-  { query: 'polish boleslawiec pottery stoneware handmade', categoryId: '870', category: 'Ceramics & porcelain' },
+  // NOTE on category IDs, William 2026-07-24: eBay now has real production
+  // credentials (EBAY_APP_ID/EBAY_CERT_ID), so the two categories below that
+  // have a dedicated eBay "Handmade" subcategory now use it instead of the
+  // generic catch-all, confirmed against eBay's own public category browse
+  // pages (ebay.com/b/Handcrafted-Artisan-Jewelry/110633,
+  // ebay.com/b/Handmade-Other-Home-Decor-Items/10034) -- these only surface
+  // listings eBay's own Handmade taxonomy classifies as handmade, on top of
+  // the keyword/exclusion filtering below. The remaining categories
+  // (Rugs/thread 11700, Kitchen 20625, Beauty 26395) don't have a clean
+  // dedicated Handmade equivalent and stay on the generic best-effort IDs --
+  // still verify those against eBay's Taxonomy API if this becomes a
+  // priority; for now the keyword bias in the query text plus
+  // EBAY_MASS_PRODUCTION_SIGNALS filtering (below) is the safety net for
+  // them.
+  { query: 'moroccan tagine handmade ceramic pottery', categoryId: '10034', category: 'Ceramics & porcelain' },
+  { query: 'talavera pottery mexican handmade', categoryId: '10034', category: 'Ceramics & porcelain' },
+  { query: 'japanese kintsugi pottery handmade', categoryId: '10034', category: 'Ceramics & porcelain' },
+  { query: 'turkish iznik ceramic tile handmade', categoryId: '10034', category: 'Ceramics & porcelain' },
+  { query: 'polish boleslawiec pottery stoneware handmade', categoryId: '10034', category: 'Ceramics & porcelain' },
   { query: 'turkish kilim rug handwoven vintage wool', categoryId: '11700', category: 'Rugs, cloth & thread' },
   { query: 'moroccan berber rug handwoven wool', categoryId: '11700', category: 'Rugs, cloth & thread' },
   { query: 'peruvian alpaca poncho scarf handwoven', categoryId: '11700', category: 'Rugs, cloth & thread' },
@@ -134,11 +144,11 @@ const EBAY_TARGETS = [
   { query: 'turkish copper cookware handmade artisan', categoryId: '20625', category: "The world's kitchen" },
   { query: 'mexican molcajete stone handmade', categoryId: '20625', category: "The world's kitchen" },
   { query: 'moroccan tagine cooking pot ceramic', categoryId: '20625', category: "The world's kitchen" },
-  { query: 'indian brass jewelry handmade artisan', categoryId: '10968', category: 'Adornment' },
-  { query: 'moroccan berber silver jewelry handmade', categoryId: '10968', category: 'Adornment' },
-  { query: 'peruvian silver filigree jewelry handmade', categoryId: '10968', category: 'Adornment' },
-  { query: 'turkish evil eye nazar jewelry handmade', categoryId: '10968', category: 'Adornment' },
-  { query: 'baltic amber jewelry handmade poland', categoryId: '10968', category: 'Adornment' },
+  { query: 'indian brass jewelry handmade artisan', categoryId: '110633', category: 'Adornment' },
+  { query: 'moroccan berber silver jewelry handmade', categoryId: '110633', category: 'Adornment' },
+  { query: 'peruvian silver filigree jewelry handmade', categoryId: '110633', category: 'Adornment' },
+  { query: 'turkish evil eye nazar jewelry handmade', categoryId: '110633', category: 'Adornment' },
+  { query: 'baltic amber jewelry handmade poland', categoryId: '110633', category: 'Adornment' },
   { query: 'ethiopian jebena coffee pot handmade', categoryId: '20625', category: 'Tea, coffee & pantry' },
   { query: 'moroccan argan oil skincare handmade', categoryId: '26395', category: 'Light, scent & self' },
   { query: 'moroccan mosaic lantern lamp handmade', categoryId: '11700', category: 'Light, scent & self' },
@@ -281,6 +291,18 @@ const NEGATIVE_SUFFIX =
   ' -site:etsy.com -site:ebay.com -site:amazon.com -site:pinterest.com' +
   ' -site:alibaba.com -site:dhgate.com';
 
+// Mass-production / reseller signal words checked against each eBay item's
+// title post-fetch (William, 2026-07-24). Tried adding a Google/Bing-style
+// "-wholesale -factory ..." negative suffix to the eBay query first, but
+// eBay's Browse API "q" parameter (a) is capped at 100 characters -- the
+// suffix alone is longer than that, so every search would have started
+// failing with HTTP 400 -- and (b) doesn't document "-term" exclusion syntax
+// at all, unlike Google/Bing. Filtering the returned item titles in code is
+// the mechanism that actually works. scoutEbay previously had zero
+// wholesale/factory filtering; Google and Bing already had NEGATIVE_SUFFIX.
+const EBAY_MASS_PRODUCTION_SIGNALS =
+  /\b(wholesale|factory|manufactur\w*|supplier|trade\s*only|bulk\s*lot|job\s*lot|reproduction|replica|mass[\s-]produced)\b/i;
+
 function isExcluded(displayLink: string): boolean {
   const domain = displayLink.replace(/^www\./, '');
   return WEB_EXCLUDED_DOMAINS.some((ex) => domain.includes(ex));
@@ -383,6 +405,12 @@ async function scoutEbay(
         if (!res.ok) { errors.push(`eBay ${market.id} "${target.query}": HTTP ${res.status}`); continue; }
         const data: EbaySearchResponse = await res.json();
         for (const item of (data.itemSummaries ?? [])) {
+          // Skip items whose own title flags them as wholesale/factory/reseller
+          // stock before this item can qualify -- or disqualify -- a seller.
+          // (See EBAY_MASS_PRODUCTION_SIGNALS comment: eBay's Browse API "q"
+          // param can't do this via query-string exclusion, so it has to
+          // happen here on the returned title.)
+          if (item.title && EBAY_MASS_PRODUCTION_SIGNALS.test(item.title)) continue;
           const seller = item.seller;
           const sellerKey = `${market.id}:${seller?.username}`;
           if (!seller?.username || seenSellers.has(sellerKey)) continue;

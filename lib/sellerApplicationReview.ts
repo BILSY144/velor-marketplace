@@ -37,6 +37,20 @@ const PROHIBITED_PATTERNS: { pattern: RegExp; reason: string }[] = [
 // the certificate flow (ProductCertificate) is per-listing, not per-application.
 const REGULATED_PATTERNS = /\b(coral|python|crocodile|alligator|rosewood|agarwood|fur|feather|bone|horn|shell|snakeskin)\b/i
 
+// Wholesale/factory/reseller signals, William 2026-07-24: nothing in this
+// screener previously checked whether an applicant is an actual maker versus
+// a reseller of factory-made stock, even though that distinction is core to
+// Velor's cultural-marketplace positioning (see the standing vision doc --
+// generic mass-produced goods are welcome as a stopgap, but the recruiting
+// push exists specifically to find authentic makers, not to wave through
+// dropshippers/factory resellers under an artisan label). This is a HOLD,
+// not a reject -- LAW #1 above: the screener never guesses on a judgement
+// call. A genuine artisan might legitimately mention "wholesale enquiries
+// welcome" as one line among many; only a human should decide that case, not
+// a keyword match auto-rejecting it.
+const MASS_PRODUCTION_SIGNALS =
+  /\b(wholesale|factory[\s-]?(direct|produced|made)|mass[\s-]produced|bulk\s*order|dropship\w*|trade\s*only|minimum\s*order\s*quantity|\bMOQ\b|OEM|private\s*label)\b/i
+
 export type ApplicationVerdict = 'approve' | 'reject' | 'hold'
 
 export interface ScreenResult {
@@ -118,6 +132,12 @@ export function screenApplication(app: ScreenableApplication): ScreenResult {
     return {
       verdict: 'hold',
       reason: 'Application mentions a regulated material (CITES or similar). A human must confirm the seller understands the per-listing certificate requirement.',
+    }
+  }
+  if (MASS_PRODUCTION_SIGNALS.test(haystack)) {
+    return {
+      verdict: 'hold',
+      reason: 'Application mentions wholesale/factory/bulk-production language. A human should confirm this seller is an actual maker (or a genuine artisan cooperative), not a reseller of factory-made or mass-produced stock, before approving.',
     }
   }
 
