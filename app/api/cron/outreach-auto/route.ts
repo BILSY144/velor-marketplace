@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
   async function sendTo(prospect: ProspectRow, emailType: 'initial' | 'followup1' | 'followup2') {
     const { subject, html, lang } = buildOutreachEmail({
       prospect: {
+        id: prospect.id,
         name: prospect.name,
         platform: prospect.platform,
         storeUrl: prospect.storeUrl,
