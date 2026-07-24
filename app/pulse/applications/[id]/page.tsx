@@ -167,7 +167,7 @@ ID: {app.verificationStatus.replace(/_/g, ' ')}
 <Field label="Notes" value={app.verificationNotes} />
 {app.verificationStatus !== 'VERIFIED' && (
 <div style={{ fontSize: 12, color: PULSE.mutedDark, background: 'rgba(255,255,255,0.03)', border: `1px solid ${PULSE.border}`, borderRadius: 8, padding: '8px 10px', marginBottom: 14 }}>
-This is expected and does not block approval. Since 2026-07-21, applications are approved on rules screening alone -- identity is verified by the seller&apos;s payout rail (Stripe Connect or Trolley) when they set up payouts after approval, not before.
+This is expected and does not block approval. Since 2026-07-21, applications are approved on rules screening alone -- identity is verified by the seller&apos;s payout rail (Stripe Connect or Payoneer) when they set up payouts after approval, not before.
 </div>
 )}
 

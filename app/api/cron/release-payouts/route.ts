@@ -3,7 +3,6 @@ import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { isPayoneerConfigured, createPayout as createPayoneerPayout, getPayeeStatus } from '@/lib/payoneer'
 import { isDotsConfigured, createPayout as createDotsPayout, getUserStatus as getDotsUserStatus } from '@/lib/dots'
-import { isTrolleyConfigured, createPayout as createTrolleyPayout, getRecipientStatus as getTrolleyRecipientStatus } from '@/lib/trolley'
 import { getPayoutRail } from '@/lib/payoutRail'
 import {
   PROBATION_HOLD_MS,
@@ -18,10 +17,16 @@ export const maxDuration = 60
 // Payout release cron. Holds funds on the platform until delivery is confirmed,
 // then releases the seller's share (from the PaymentIntent metadata) once the
 // hold window passes and no return/dispute is open. The rail differs by seller
-// (Stripe transfer, or a Trolley payout for Stripe-unsupported countries --
-// see lib/payoutRail.ts; Dots and Payoneer kept only for a legacy few) but
-// the RULES are identical on every rail by explicit decision: same delivery
-// confirmation requirement, same 15-day/72-hour holds, same dispute freeze.
+// (Stripe transfer, or a Payoneer payout for Stripe-unsupported countries --
+// see lib/payoutRail.ts; Dots kept only for a legacy few) but the RULES are
+// identical on every rail by explicit decision: same delivery confirmation
+// requirement, same 15-day/72-hour holds, same dispute freeze.
+//
+// TROLLEY REMOVED (William, 2026-07-24): Trolley was the non-Stripe default
+// from 2026-07-23 evening through 2026-07-24 -- removed once tested
+// end-to-end (API worked, but a flat GBP 158.25/month subscription fee plus
+// per-payout fees was judged not worth it against zero completed
+// onboardings). See lib/payoutRail.ts's header for the full story.
 export async function GET(req: NextRequest) {
   const authError = requireCronSecret(req)
   if (authError) return authError
@@ -58,12 +63,10 @@ export async function GET(req: NextRequest) {
   let released = 0
   let releasedPayoneer = 0
   let releasedDots = 0
-  let releasedTrolley = 0
   let heldOpen = 0
   let waiting = 0
   let heldForPayoneer = 0
   let heldForDots = 0
-  let heldForTrolley = 0
   let heldForStripeSetup = 0
   let skipped = 0
   let heldUnverified = 0
@@ -140,8 +143,6 @@ export async function GET(req: NextRequest) {
           payoneerPayeeId: true,
           dotsUserId: true,
           dotsOnboarded: true,
-          trolleyRecipientId: true,
-          trolleyOnboarded: true,
           identityVerified: true,
         },
       })
@@ -183,10 +184,12 @@ export async function GET(req: NextRequest) {
       // caught live on 2026-07-21: a GB seller stuck on a persisted
       // PAYONEER value would never have been paid). lib/payoutRail.ts is
       // the single source of truth and accepts country names or ISO codes;
-      // it now resolves every non-Stripe country to DOTS, not PAYONEER
-      // (2026-07-23). Branching is STRICT per rail: a Stripe-rail seller
-      // can only ever be paid through Stripe Connect, a Dots-rail seller
-      // only ever through Dots, a Payoneer-rail seller only ever through
+      // it resolves every non-Stripe country to PAYONEER again as of
+      // 2026-07-24 (Trolley was tried 2026-07-23 evening through
+      // 2026-07-24, then removed entirely -- see lib/payoutRail.ts's
+      // header). Branching is STRICT per rail: a Stripe-rail seller can
+      // only ever be paid through Stripe Connect, a Dots-rail seller only
+      // ever through Dots, a Payoneer-rail seller only ever through
       // Payoneer -- a leftover account/payee on the wrong rail can no
       // longer route money down it. Self-heal the stored field while we're
       // here, same pattern as /api/dashboard/payouts.
@@ -239,67 +242,15 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // TROLLEY rail -- the default for non-Stripe countries since
-      // 2026-07-23 evening (see lib/payoutRail.ts), replacing DOTS (a
-      // confirmed permanent dead end -- Dots.dev is hard-locked to US
-      // businesses only). Same holds and dispute checks already passed
-      // above -- only the transfer differs. A trolleyRecipientId is stored
-      // the moment onboarding starts, BEFORE the seller has necessarily
-      // finished it -- pay only a recipient Trolley itself reports
-      // onboarded (compliance verified AND a payout method added),
-      // otherwise keep the funds safely in escrow and retry next run.
-      if (rail === 'TROLLEY' && sellerRow.trolleyRecipientId && isTrolleyConfigured()) {
-        const trolleyStatus = await getTrolleyRecipientStatus(sellerRow.trolleyRecipientId)
-        if (!trolleyStatus.onboarded) {
-          heldForTrolley++
-          continue
-        }
-        if (!sellerRow.trolleyOnboarded) {
-          await prisma.seller
-            .update({ where: { id: o.sellerId }, data: { trolleyOnboarded: true } })
-            .catch(() => {})
-        }
-        if (!sellerRow.identityVerified) {
-          await prisma.seller
-            .update({ where: { id: o.sellerId }, data: { identityVerified: true } })
-            .catch(() => {})
-        }
-        const { payoutId } = await createTrolleyPayout({
-          recipientId: sellerRow.trolleyRecipientId,
-          amount: sellerShare / 100,
-          currency: currency.toUpperCase(),
-          clientReferenceId: `payout_${o.id}`,
-          description: `Velor Marketplace payout for order ${o.id}`,
-        })
-        await prisma.payout.create({
-          data: {
-            sellerId: o.sellerId,
-            orderId: o.id,
-            amount: sellerShare / 100,
-            currency,
-            trolleyPayoutId: payoutId,
-            status: 'paid',
-          },
-        })
-        releasedTrolley++
-        continue
-      } else if (rail === 'TROLLEY') {
-        // Trolley rail not configured yet, or seller not onboarded: funds
-        // stay safely in the platform escrow and this order retries every
-        // run.
-        heldForTrolley++
-        continue
-      }
-
       // DOTS rail -- LEGACY. Confirmed a permanent dead end (Dots.dev is
       // hard-locked to United States businesses only; Velor Commerce Ltd is
       // UK-registered and can never create an account), no longer
       // auto-assigned by getPayoutRail() (see lib/payoutRail.ts). This
       // branch only matters for a seller stored as DOTS before 2026-07-23
-      // evening who has not yet self-healed to TROLLEY -- kept only so
+      // evening who has not yet self-healed to PAYONEER -- kept only so
       // in-flight rows never silently strand; the rail resolves fresh from
       // country at the top of this loop, so any such seller self-heals to
-      // TROLLEY on this very run before reaching this branch.
+      // PAYONEER on this very run before reaching this branch.
       if (rail === 'DOTS' && sellerRow.dotsUserId && isDotsConfigured()) {
         const dotsStatus = await getDotsUserStatus(sellerRow.dotsUserId)
         if (!dotsStatus.onboarded) {
@@ -342,11 +293,10 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // PAYONEER rail (legacy -- no longer auto-assigned by getPayoutRail(),
-      // see lib/payoutRail.ts -- or a Stripe-rail seller who has not
-      // finished Connect onboarding, who simply waits in escrow). Same
-      // holds and dispute checks already passed above -- only the transfer
-      // differs.
+      // PAYONEER rail -- the default for non-Stripe countries again as of
+      // 2026-07-24 (see lib/payoutRail.ts's header for why Trolley was
+      // tried and then removed). Same holds and dispute checks already
+      // passed above -- only the transfer differs.
       if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
         // A payeeId is stored the moment a registration link is generated,
         // BEFORE the seller has necessarily completed Payoneer signup --
@@ -402,12 +352,10 @@ export async function GET(req: NextRequest) {
     ok: true,
     scanned: candidates.length,
     released,
-    releasedTrolley,
     releasedDots,
     releasedPayoneer,
     heldOpen,
     waiting,
-    heldForTrolley,
     heldForDots,
     heldForPayoneer,
     heldForStripeSetup,

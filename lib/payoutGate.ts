@@ -6,7 +6,6 @@
 import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getPayoutRail } from '@/lib/payoutRail';
-import { isTrolleyConfigured } from '@/lib/trolley';
 import { PAYOUT_GATE_COOKIE, payoutGateSatisfied } from '@/lib/payoutGateCookie';
 
 export { PAYOUT_GATE_COOKIE, payoutGateSatisfied };
@@ -14,7 +13,6 @@ export { PAYOUT_GATE_COOKIE, payoutGateSatisfied };
 export interface PayoutGateStatus {
   rail: string;
   stripeOnboarded: boolean;
-  trolleyOnboarded: boolean;
   satisfied: boolean;
 }
 
@@ -22,13 +20,13 @@ export interface PayoutGateStatus {
  * Look up a seller's live payout-rail state and decide whether the dashboard
  * gate is satisfied. Also self-heals Seller.payoutRail if the seller's
  * country resolves to a different rail than what's stored, same pattern
- * already used in app/api/payoneer/onboard, app/api/dots/onboard,
- * app/api/trolley/onboard, and app/api/dashboard/payouts.
+ * already used in app/api/payoneer/onboard, app/api/dots/onboard, and
+ * app/api/dashboard/payouts.
  */
 export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatus | null> {
   const seller = await prisma.seller.findUnique({
     where: { userId },
-    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true, trolleyOnboarded: true },
+    select: { id: true, country: true, payoutRail: true, stripeOnboarded: true },
   });
   if (!seller) return null;
 
@@ -40,8 +38,7 @@ export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatu
   return {
     rail,
     stripeOnboarded: seller.stripeOnboarded,
-    trolleyOnboarded: seller.trolleyOnboarded,
-    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded, seller.trolleyOnboarded, isTrolleyConfigured()),
+    satisfied: payoutGateSatisfied(rail, seller.stripeOnboarded),
   };
 }
 
@@ -50,7 +47,7 @@ export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatu
  * (app/api/seller/terms/route.ts) for consistency.
  *
  * BOUND TO userId (fixed 2026-07-23, found live by William testing his own
- * China/Trolley test seller): the cookie value used to be a flat '1', which
+ * China test seller): the cookie value used to be a flat '1', which
  * middleware.ts only ever checked for PRESENCE, not identity. Any seller who
  * was ever satisfied in a given browser (a different, already-onboarded
  * seller account, or an old test account) left a year-long cookie that then

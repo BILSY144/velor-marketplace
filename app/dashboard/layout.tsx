@@ -14,10 +14,10 @@
 //    (lib/payoutRail.ts is the single source of truth). A
 //    Stripe-country seller is only ever routed to Stripe
 //    Connect setup; a non-Stripe-country seller only ever to
-//    Trolley setup (the default rail since 2026-07-23 evening,
-//    replacing Dots -- see lib/payoutRail.ts and lib/trolley.ts),
-//    or, for a legacy few, Dots/Payoneer. No path to the wrong
-//    payment system.
+//    Payoneer setup (the default rail again as of 2026-07-24 --
+//    Trolley was tried 2026-07-23 evening through 2026-07-24,
+//    then removed entirely, see lib/payoutRail.ts), or, for a
+//    legacy few, Dots. No path to the wrong payment system.
 //  - Functional parity rules preserved from the old shells:
 //    API Keys only for Pro; Go Live visible to every tier
 //    (2026-07-15 rule); payout item swaps to "Set Up Payouts"
@@ -37,7 +37,7 @@ import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/l
 import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language';
 
 type Tier = 'STARTER' | 'PRO';
-type Rail = 'STRIPE' | 'TROLLEY' | 'DOTS' | 'PAYONEER';
+type Rail = 'STRIPE' | 'DOTS' | 'PAYONEER';
 
 const SIDEBAR_KEY = 'velor-studio-sidebar';
 
@@ -158,18 +158,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setFounding(Boolean(d.foundingBadge));
         if (d.storeName) setStoreName(d.storeName);
         if (d.country) setCountry(d.country);
-        const r: Rail = d.payoutRail === 'TROLLEY' ? 'TROLLEY' : d.payoutRail === 'DOTS' ? 'DOTS' : d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
+        const r: Rail = d.payoutRail === 'DOTS' ? 'DOTS' : d.payoutRail === 'PAYONEER' ? 'PAYONEER' : 'STRIPE';
         setRail(r);
-        setRailLabel(d.payoutRailLabel || (r === 'TROLLEY' ? 'Trolley' : r === 'DOTS' ? 'Dots' : r === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect'));
+        setRailLabel(d.payoutRailLabel || (r === 'DOTS' ? 'Dots' : r === 'PAYONEER' ? 'Payoneer' : 'Stripe Connect'));
         try {
           if (r === 'STRIPE') {
             const res = await fetch('/api/stripe/connect/account');
             const a = res.ok ? await res.json() : null;
             if (!cancelled) setPayoutReady(!!(a?.chargesEnabled && a?.payoutsEnabled));
-          } else if (r === 'TROLLEY') {
-            const res = await fetch('/api/trolley/onboard');
-            const a = res.ok ? await res.json() : null;
-            if (!cancelled) setPayoutReady(Boolean(a?.onboarded));
           } else if (r === 'DOTS') {
             const res = await fetch('/api/dots/onboard');
             const a = res.ok ? await res.json() : null;
@@ -220,12 +216,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // ---- navigation model -------------------------------------------------
   // The payout destination is the ONLY rail-dependent link in the app:
   //   STRIPE rail, not ready  -> /dashboard/stripe-connect ("Set Up Payouts")
-  //   TROLLEY rail, not ready -> /dashboard/trolley        ("Set Up Payouts")
+  //   PAYONEER rail, not ready-> /dashboard/payoneer       ("Set Up Payouts")
   //   DOTS rail, not ready    -> /dashboard/dots           ("Set Up Payouts", legacy)
-  //   PAYONEER rail, not ready-> /dashboard/payoneer       ("Set Up Payouts", legacy)
   //   ready (any rail)        -> /dashboard/payouts
-  const payoutSetupHref = rail === 'TROLLEY' ? '/dashboard/trolley' : rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
-  const payoutAlsoActive = ['/dashboard/payouts', '/dashboard/stripe-connect', '/dashboard/trolley', '/dashboard/dots', '/dashboard/payoneer'];
+  // PAYONEER is the default non-Stripe rail again as of 2026-07-24 (Trolley
+  // was tried 2026-07-23 evening through 2026-07-24, then removed entirely --
+  // see lib/payoutRail.ts). This nav item is cosmetic only ("Set Up Payouts"
+  // vs "Payouts") -- it never blocks dashboard access; the payout gate
+  // (middleware.ts) exempts PAYONEER-rail sellers unconditionally so they
+  // can sign up and list now, and set up real payouts once a system exists.
+  const payoutSetupHref = rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';
+  const payoutAlsoActive = ['/dashboard/payouts', '/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer'];
   const payoutItem: NavItem = payoutReady === false
     ? { href: payoutSetupHref, label: 'Set Up Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: payoutAlsoActive }
     : { href: '/dashboard/payouts', label: 'Payouts', icon: ICONS.payouts, special: 'payout', alsoActive: payoutAlsoActive.slice(1) };
@@ -297,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       background: rail === 'STRIPE' ? STUDIO.blueSoft : STUDIO.accentSoft,
       color: rail === 'STRIPE' ? STUDIO.blue : '#B54A00',
     }}>
-      {rail === 'STRIPE' ? 'Stripe' : rail === 'TROLLEY' ? 'Trolley' : rail === 'DOTS' ? 'Dots' : 'Payoneer'}
+      {rail === 'STRIPE' ? 'Stripe' : rail === 'DOTS' ? 'Dots' : 'Payoneer'}
     </span>
   );
 

@@ -6,16 +6,18 @@ import { PAYOUT_GATE_COOKIE } from '@/lib/payoutGateCookie'
 
 // Setup pages exempt from the payout-verification gate below -- a seller
 // must always be able to reach these regardless of gate status, or they
-// could never satisfy it in the first place. TROLLEY is the default
-// non-Stripe rail as of 2026-07-23 evening (DOTS/PAYONEER kept only for
-// legacy sellers not yet self-healed onto it) -- /dashboard/trolley was
-// missing from this list until 2026-07-23, which meant the moment Trolley
-// went live (isTrolleyConfigured() started returning true) every
-// TROLLEY-rail seller got stuck in an infinite redirect loop between here
-// and /dashboard/stripe-connect and could never actually complete
-// onboarding -- a dead end, not friction. Fixed same day; see that
-// checkpoint in CLAUDE.md.
-const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/trolley', '/dashboard/dots', '/dashboard/payoneer']
+// could never satisfy it in the first place. PAYONEER is the default
+// non-Stripe rail again as of 2026-07-24 (DOTS kept only for legacy sellers
+// not yet self-healed off it) -- Trolley was tried 2026-07-23 evening
+// through 2026-07-24 as the non-Stripe default, then removed entirely once
+// tested end-to-end (working API, but a flat GBP 158.25/month fee on top of
+// per-payout fees, judged not worth it with zero completed onboardings --
+// see lib/payoutRail.ts's header). /dashboard/trolley is gone along with it;
+// removing an exempt prefix without also removing every route/page that
+// resolved to it would recreate the exact dead-end-redirect-loop class of
+// bug documented here before 2026-07-23's fix, so this change went out as
+// one atomic removal, not a partial one.
+const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer']
 
 const _rl = new Map<string, { count: number; reset: number }>()
 

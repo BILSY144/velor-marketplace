@@ -1,41 +1,37 @@
 // Payout rail resolution: Stripe Connect where Stripe supports payouts in the
-// seller's country, Trolley everywhere else. This is the single source of
+// seller's country, Payoneer everywhere else. This is the single source of
 // truth the onboarding flow and dashboard should use.
 //
-// CHANGED 2026-07-23 EVENING (William, after choosing Trolley as the
-// alternative and completing its Bank Transfer Activation submission same
-// evening -- see CLAUDE.md): supersedes the DOTS default from earlier the
-// same day. Dots.dev turned out to be a genuine dead end, not a pending-
-// approval situation -- its Country field is hard-locked to United States
-// businesses only, confirmed both live in the signup UI and by Dots' own AI
-// documentation assistant. Velor Commerce Ltd is UK-registered, so a Dots
-// account can never be created, ever. TROLLEY is now the DEFAULT rail for
-// every country Stripe Connect does not cover. DOTS and PAYONEER remain
-// supported PayoutRail values (lib/dots.ts and lib/payoneer.ts are
-// untouched and still fully wired -- release-payouts, the dashboard, the
-// gate) but getPayoutRail() will never resolve a seller onto either again.
-// Existing sellers already stored as DOTS or PAYONEER self-heal to TROLLEY
-// the next time any of the several self-healing call sites (payoutGate.ts,
-// dashboard/payouts, release-payouts, /api/payoneer/onboard,
-// /api/dots/onboard, /api/trolley/onboard) recompute their rail from
-// country.
-//
-// IMPORTANT: verify every Trolley API call in sandbox before the first live
-// payout -- see lib/trolley.ts's own header for what is and isn't
-// confirmed. Trolley's own KYC review of Velor's Bank Transfer Activation
-// submission was still pending at write time -- TROLLEY_ACCESS_KEY/
-// TROLLEY_SECRET_KEY do not exist yet, so isTrolleyConfigured() returns
-// false and every non-Stripe seller's earnings sit safely in escrow until
-// William adds them (see docs/TROLLEY_SETUP.md).
+// REMOVED TROLLEY (William, 2026-07-24): Trolley was adopted 2026-07-23
+// evening as the non-Stripe default after Dots.dev was confirmed a permanent
+// dead end (hard-locked to US-only businesses; Velor Commerce Ltd is
+// UK-registered). Removed the next day once actually tested end-to-end: the
+// API keys worked and recipient creation succeeded, but Trolley itself
+// carries a flat GBP 158.25/month subscription fee (the "Pay" module) on top
+// of per-payout fees (GBP 1-22.50 depending on rail/country) and a 2-2.95%
+// FX markup -- a fixed cost regardless of seller volume, unlike Stripe's
+// pure percentage-of-sale model. With zero completed onboardings and the
+// Bank Transfer Activation still pending Trolley's own KYC review, William
+// judged this not worth it and cancelled the Trolley subscription before the
+// 30-day trial ever billed. lib/trolley.ts, app/api/trolley/*,
+// app/dashboard/trolley/*, and docs/TROLLEY_SETUP.md were deleted in the
+// same change. PAYONEER is the non-Stripe default again (its Mass Payouts
+// partner application has been pending since 13 July 2026 -- see CLAUDE.md --
+// so this rail exempts sellers from the payout gate while unconfigured,
+// same as before Trolley existed; see lib/payoutGateCookie.ts). DOTS remains
+// a supported PayoutRail value only for legacy rows (lib/dots.ts is
+// untouched and still wired) -- getPayoutRail() will never resolve a seller
+// onto it, since it is a confirmed permanent dead end for a UK-registered
+// company.
 //
 // Country list: Stripe cross-border Connect payout availability as published
 // at stripe.com/global (checked 2026-07). Stripe expands this list over time
 // -- re-verify against stripe.com/global before removing a country from the
-// Trolley rail, and prefer adding to this list over removing.
+// Payoneer rail, and prefer adding to this list over removing.
 
 import { WORLD_COUNTRIES } from './worldCountries'
 
-export type PayoutRail = 'STRIPE' | 'TROLLEY' | 'DOTS' | 'PAYONEER'
+export type PayoutRail = 'STRIPE' | 'DOTS' | 'PAYONEER'
 
 // Seller.country stores the COUNTRY NAME (the /apply form's business-country
 // <select> uses names as option values), while SellerApplication.shippingCountry
@@ -90,16 +86,15 @@ export function getPayoutRail(country: string | null | undefined): PayoutRail {
   // Stripe Connect onboarding independently validates the seller's real
   // country, so a wrong default here cannot misroute money, only copy.
   if (!code) return 'STRIPE'
-  // TROLLEY is the live default for every non-Stripe country -- see the
-  // header note above. A seller already stored as DOTS or PAYONEER (from
-  // before this change) is corrected to TROLLEY wherever this function's
+  // PAYONEER is the live default for every non-Stripe country -- see the
+  // header note above. A seller already stored as DOTS or TROLLEY (from
+  // before this change) is corrected to PAYONEER wherever this function's
   // result is persisted.
-  return STRIPE_PAYOUT_COUNTRIES.has(code) ? 'STRIPE' : 'TROLLEY'
+  return STRIPE_PAYOUT_COUNTRIES.has(code) ? 'STRIPE' : 'PAYONEER'
 }
 
 export function payoutRailLabel(rail: PayoutRail): string {
   if (rail === 'STRIPE') return 'Stripe Connect'
-  if (rail === 'PAYONEER') return 'Payoneer'
   if (rail === 'DOTS') return 'Dots'
-  return 'Trolley'
+  return 'Payoneer'
 }

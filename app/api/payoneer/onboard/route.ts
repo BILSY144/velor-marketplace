@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayoutRail } from '@/lib/payoutRail'
 import { isPayoneerConfigured, getRegistrationLink } from '@/lib/payoneer'
-import { isDotsConfigured } from '@/lib/dots'
 import { payoutGateSatisfied, setPayoutGateCookie } from '@/lib/payoutGate'
 
 export const dynamic = 'force-dynamic'
@@ -17,7 +16,7 @@ export const dynamic = 'force-dynamic'
 async function getSeller(userId: string) {
   return prisma.seller.findUnique({
     where: { userId },
-    select: { id: true, country: true, payoutRail: true, payoneerPayeeId: true, stripeOnboarded: true, dotsOnboarded: true },
+    select: { id: true, country: true, payoutRail: true, payoneerPayeeId: true, stripeOnboarded: true },
   })
 }
 
@@ -41,17 +40,15 @@ export async function GET() {
     onboarded: Boolean(seller.payoneerPayeeId),
   })
   // Keeps the payout-verification dashboard gate cookie (middleware.ts) in
-  // sync. DOTS is now the default rail for non-Stripe countries (see
-  // lib/payoutRail.ts, 2026-07-23) -- this route is kept only for sellers
-  // still stored on the legacy PAYONEER rail (exempted, see
-  // lib/payoutGateCookie.ts for why) or mid-self-heal to DOTS. This route is
-  // called on every /dashboard/stripe-connect and /dashboard/payoneer page
-  // load, which is exactly where middleware.ts sends a not-yet-satisfied
-  // seller. Passes isDotsConfigured() through in case this seller's rail
-  // has already self-healed to DOTS by the time this GET runs (rail is
-  // recomputed from country above), so the DOTS-not-configured exemption
-  // still applies rather than defaulting to the strict branch.
-  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded, seller.dotsOnboarded, isDotsConfigured()), session.user.id)
+  // sync. PAYONEER is the default rail for every non-Stripe country again
+  // as of 2026-07-24 (see lib/payoutRail.ts's header) -- Payoneer-rail
+  // sellers are exempted from the gate unconditionally (lib/payoutGateCookie.ts)
+  // since the partner application is still pending, so this always resolves
+  // to "satisfied" for them: sign up and list now, payout setup is optional
+  // until a real payout system is in place. This route is called on every
+  // /dashboard/stripe-connect and /dashboard/payoneer page load, which is
+  // exactly where middleware.ts sends a not-yet-satisfied seller.
+  setPayoutGateCookie(res, payoutGateSatisfied(rail, seller.stripeOnboarded), session.user.id)
   return res
 }
 
