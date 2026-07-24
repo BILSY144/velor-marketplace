@@ -7,66 +7,69 @@ import Link from 'next/link'
 //
 // Honesty rules, same standard as every other page in this app:
 // - No fee percentages or fabricated stats. 190 = WORLD_COUNTRIES length,
-// reused from /about, the only number on this page that isn't plain prose.
+//   reused from /about, the only number on this page that isn't plain prose.
 // - The site is pre-launch to buyers (opens 6 August 2026) with no filler
-// or placeholder listings — this page says that plainly rather than
-// implying an established live catalogue.
+//   or placeholder listings — this page says that plainly rather than
+//   implying an established live catalogue.
 // - No claims about supplier certification schemes, charities, or NGO
-// partnerships that don't exist yet. Where something is an early idea
-// rather than active work, it's labelled that way or left out.
+//   partnerships that don't exist yet. Where something is an early idea
+//   rather than active work, it's labelled that way or left out.
 // - ICO registration (added 2026-07-24) is a legal requirement, not a
-// merit-based accreditation like GBC -- shown as a small factual line
-// with a verify link, not a badge, so it isn't overstated.
+//   merit-based accreditation like GBC -- shown as a small factual line
+//   with a verify link, not a badge, so it isn't overstated.
+// - Good Market approval (added 2026-07-24) is shown as a second badge
+//   alongside GBC, matching the same honesty standard -- no claims beyond
+//   what the approval itself covers.
 
 export const metadata = {
-title: 'Our mission — Velor Marketplace',
-description:
-'Velor exists so real makers and artisans -- not factories, wholesalers, or dropshippers -- get direct, fair access to a global market for authentic, culturally rooted work.',
-alternates: { canonical: 'https://velorcommerce.store/mission' },
-openGraph: {
-title: 'Our mission — Velor Marketplace',
-description:
-'Velor exists so real makers and artisans get direct, fair access to a global market for authentic, culturally rooted work.',
-url: 'https://velorcommerce.store/mission',
-siteName: 'Velor',
-locale: 'en_GB',
-type: 'website',
-images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
-},
-twitter: {
-card: 'summary_large_image',
-title: 'Our mission — Velor Marketplace',
-description:
-'Velor exists so real makers and artisans get direct, fair access to a global market for authentic, culturally rooted work.',
-images: ['https://velorcommerce.store/opengraph-image'],
-},
+  title: 'Our mission — Velor Marketplace',
+  description:
+    'Velor exists so real makers and artisans -- not factories, wholesalers, or dropshippers -- get direct, fair access to a global market for authentic, culturally rooted work.',
+  alternates: { canonical: 'https://velorcommerce.store/mission' },
+  openGraph: {
+    title: 'Our mission — Velor Marketplace',
+    description:
+      'Velor exists so real makers and artisans get direct, fair access to a global market for authentic, culturally rooted work.',
+    url: 'https://velorcommerce.store/mission',
+    siteName: 'Velor',
+    locale: 'en_GB',
+    type: 'website',
+    images: [{ url: 'https://velorcommerce.store/opengraph-image', width: 1200, height: 630, alt: 'Velor - Global Marketplace' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Our mission — Velor Marketplace',
+    description:
+      'Velor exists so real makers and artisans get direct, fair access to a global market for authentic, culturally rooted work.',
+    images: ['https://velorcommerce.store/opengraph-image'],
+  },
 }
 
 const pillars = [
-{
-num: '01',
-title: 'Real makers, not warehouses',
-body:
-"Every seller is screened to be a genuine artisan, family workshop, or cooperative -- not a reseller of generic goods relabelled as \"cultural.\" Factory, wholesale, and dropship sources are excluded by design.",
-},
-{
-num: '02',
-title: 'The maker’s story, on every listing',
-body:
-'Who made it, where, and what tradition it comes from -- alongside the item, not buried in an about page. Authenticity is the point of the catalogue, not a marketing claim on top of it.',
-},
-{
-num: '03',
-title: 'Sellers keep control',
-body:
-'Sellers set their own prices and keep their own storefront and story. Our commission is a single published rate, the same for everyone -- not a hidden or negotiated number.',
-},
-{
-num: '04',
-title: 'Paid safely, paid directly',
-body:
-"Payment sits in escrow until delivery is confirmed, then goes straight to the maker via Stripe or Payoneer -- built specifically so sellers in countries most marketplaces ignore can still get paid.",
-},
+  {
+    num: '01',
+    title: 'Real makers, not warehouses',
+    body:
+      "Every seller is screened to be a genuine artisan, family workshop, or cooperative -- not a reseller of generic goods relabelled as \"cultural.\" Factory, wholesale, and dropship sources are excluded by design.",
+  },
+  {
+    num: '02',
+    title: 'The maker’s story, on every listing',
+    body:
+      'Who made it, where, and what tradition it comes from -- alongside the item, not buried in an about page. Authenticity is the point of the catalogue, not a marketing claim on top of it.',
+  },
+  {
+    num: '03',
+    title: 'Sellers keep control',
+    body:
+      'Sellers set their own prices and keep their own storefront and story. Our commission is a single published rate, the same for everyone -- not a hidden or negotiated number.',
+  },
+  {
+    num: '04',
+    title: 'Paid safely, paid directly',
+    body:
+      "Payment sits in escrow until delivery is confirmed, then goes straight to the maker via Stripe or Payoneer -- built specifically so sellers in countries most marketplaces ignore can still get paid.",
+  },
 ]
 
 const css = `
@@ -117,109 +120,117 @@ const css = `
 `
 
 export default function MissionPage() {
-return (
-<div className="ms">
-<style dangerouslySetInnerHTML={{ __html: css }} />
-<section className="ms-hero">
-<div className="ms-hero-media" aria-hidden="true">
-<img
-src="/velor-mission-artisans-hero-wide.png"
-alt=""
-/>
-</div>
-<div className="ms-hero-inner">
-<div className="ms-hero-text">
-<div className="ms-eyebrow"><span className="ms-dot" />Our mission</div>
-<h1>Real makers should keep more of what they make.</h1>
-<p className="ms-lede">
-Most global marketplaces sell the same mass-produced catalogue sourced from a handful of
-manufacturing hubs. Velor exists to give traditional artisans and makers -- many in regions
-overlooked by mainstream e-commerce -- direct access to a global market for authentic,
-culturally rooted work, at a time when generic, factory-made goods are displacing
-traditional-craft economies.
-</p>
-<p className="ms-lede">
-Velor&apos;s commercial success is tied directly to more real makers earning fair, direct
-income from their craft -- and more of that craft surviving commercially.
-</p>
-<div>
-<Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
-<Link href="/about" className="ms-btn ms-btn-s">See how buyer protection works</Link>
-</div>
-</div>
-</div>
-</section>
+  return (
+    <div className="ms">
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <section className="ms-hero">
+        <div className="ms-hero-media" aria-hidden="true">
+          <img
+            src="/velor-mission-artisans-hero-wide.png"
+            alt=""
+          />
+        </div>
+        <div className="ms-hero-inner">
+          <div className="ms-hero-text">
+            <div className="ms-eyebrow"><span className="ms-dot" />Our mission</div>
+            <h1>Real makers should keep more of what they make.</h1>
+            <p className="ms-lede">
+              Most global marketplaces sell the same mass-produced catalogue sourced from a handful of
+              manufacturing hubs. Velor exists to give traditional artisans and makers -- many in regions
+              overlooked by mainstream e-commerce -- direct access to a global market for authentic,
+              culturally rooted work, at a time when generic, factory-made goods are displacing
+              traditional-craft economies.
+            </p>
+            <p className="ms-lede">
+              Velor&apos;s commercial success is tied directly to more real makers earning fair, direct
+              income from their craft -- and more of that craft surviving commercially.
+            </p>
+            <div>
+              <Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
+              <Link href="/about" className="ms-btn ms-btn-s">See how buyer protection works</Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
-<div className="ms-wrap">
-<section>
-<div className="ms-shead">
-<h2>What makes a marketplace good for people</h2>
-<p>Four things we build for, not just claim.</p>
-</div>
-<div className="ms-pillars">
-{pillars.map((p) => (
-<div key={p.num} className="ms-pcard">
-<div className="ms-pnum">{p.num}</div>
-<h3>{p.title}</h3>
-<p>{p.body}</p>
-</div>
-))}
-</div>
-</section>
-</div>
+      <div className="ms-wrap">
+        <section>
+          <div className="ms-shead">
+            <h2>What makes a marketplace good for people</h2>
+            <p>Four things we build for, not just claim.</p>
+          </div>
+          <div className="ms-pillars">
+            {pillars.map((p) => (
+              <div key={p.num} className="ms-pcard">
+                <div className="ms-pnum">{p.num}</div>
+                <h3>{p.title}</h3>
+                <p>{p.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
-<div className="ms-wrap">
-<section>
-<div className="ms-honest">
-<div className="toplbl">Where we are today</div>
-<h2>We&apos;re early, and we&apos;d rather say so than overstate it.</h2>
-<p>
-Velor is a new marketplace. Our payment and escrow pipeline is live and tested -- a real
-end-to-end transaction has gone through Stripe, from payment to buyer confirmation to
-payout -- but we haven&apos;t opened publicly to buyers yet, and by design we don&apos;t
-fill the shop with filler or placeholder listings while we wait. Buyers arrive on 6 August
-2026, once our founding sellers -- real, identity-verified makers -- are onboarded and
-ready.
-</p>
-<p>
-Velor Commerce Ltd is accredited by the Good Business Charter (UK), which verifies
-responsible business practice across 10 components including fair payment, employee
-wellbeing, environmental responsibility, and ethical sourcing.
-</p>
-<div className="ms-badge-row">
-<a
-href="https://goodbusinesscharter.com/what-good-business-charter-accreditation-means-and-why-it-matters/"
-target="_blank"
-rel="noopener noreferrer"
-title="Velor Commerce Ltd is Good Business Charter accredited"
->
-<img src="/gbc-accredited.jpg" alt="Good Business Charter Accredited" style={{ height: 64, width: 'auto', display: 'block' }} />
-</a>
-</div>
-<p className="ms-compliance">
-Velor Commerce Ltd is also registered with the UK Information Commissioner&apos;s Office
-as a data controller (registration reference ZC204644), as required under UK data
-protection law. <a href="https://ico.org.uk/register" target="_blank" rel="noopener noreferrer">Verify on the ICO register</a>.
-</p>
-</div>
-</section>
-</div>
+      <div className="ms-wrap">
+        <section>
+          <div className="ms-honest">
+            <div className="toplbl">Where we are today</div>
+            <h2>We&apos;re early, and we&apos;d rather say so than overstate it.</h2>
+            <p>
+              Velor is a new marketplace. Our payment and escrow pipeline is live and tested -- a real
+              end-to-end transaction has gone through Stripe, from payment to buyer confirmation to
+              payout -- but we haven&apos;t opened publicly to buyers yet, and by design we don&apos;t
+              fill the shop with filler or placeholder listings while we wait. Buyers arrive on 6 August
+              2026, once our founding sellers -- real, identity-verified makers -- are onboarded and
+              ready.
+            </p>
+            <p>
+              Velor Commerce Ltd is accredited by the Good Business Charter (UK), which verifies
+              responsible business practice across 10 components including fair payment, employee
+              wellbeing, environmental responsibility, and ethical sourcing.
+            </p>
+            <div className="ms-badge-row">
+              <a
+                href="https://goodbusinesscharter.com/what-good-business-charter-accreditation-means-and-why-it-matters/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Velor Commerce Ltd is Good Business Charter accredited"
+              >
+                <img src="/gbc-accredited.jpg" alt="Good Business Charter Accredited" style={{ height: 64, width: 'auto', display: 'block' }} />
+              </a>
+              <a
+                href="https://www.goodmarket.global"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Velor is Good Market approved"
+              >
+                <img src="https://www.goodmarket.global/assets/images/good-market-approved-logo-new.png" alt="Good Market Approved" style={{ height: 64, width: 'auto', display: 'block' }} />
+              </a>
+            </div>
+            <p className="ms-compliance">
+              Velor Commerce Ltd is also registered with the UK Information Commissioner&apos;s Office
+              as a data controller (registration reference ZC204644), as required under UK data
+              protection law. <a href="https://ico.org.uk/register" target="_blank" rel="noopener noreferrer">Verify on the ICO register</a>.
+            </p>
+          </div>
+        </section>
+      </div>
 
-<div className="ms-wrap">
-<section>
-<div className="ms-founding">
-<div>
-<h2>Make something your country is known for?</h2>
-<p>
-Our Founding Seller programme recruits real makers by country and craft tradition, free
-to join. If that&apos;s you, there&apos;s an application at the end of this page.
-</p>
-<p className="ms-legal">Velor Commerce Ltd (company no. 17268133) is registered in England and Wales, registered office 49 Station Road, Polegate, East Sussex, BN26 6EA.</p>
-</div>
-<Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
-</div>
-</section>
-</div>
-</div>
-)
+      <div className="ms-wrap">
+        <section>
+          <div className="ms-founding">
+            <div>
+              <h2>Make something your country is known for?</h2>
+              <p>
+                Our Founding Seller programme recruits real makers by country and craft tradition, free
+                to join. If that&apos;s you, there&apos;s an application at the end of this page.
+              </p>
+              <p className="ms-legal">Velor Commerce Ltd (company no. 17268133) is registered in England and Wales, registered office 49 Station Road, Polegate, East Sussex, BN26 6EA.</p>
+            </div>
+            <Link href="/apply" className="ms-btn ms-btn-p">Apply to sell</Link>
+          </div>
+        </section>
+      </div>
+    </div>
+  )
 }
