@@ -120,6 +120,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Attribution: mark the matching SellerProspect as 'applied' so the Pulse
+    // pipeline can measure real outreach conversion, not just count sends.
+    // Prefer the prospectId the /apply/invited link carried through; fall
+    // back to an email match for applications that arrive without one (a
+    // prospect who found Velor on their own, or applied before this link
+    // existed). Best-effort only -- must never fail the application.
+    try {
+      if (prospectId) {
+        await prisma.sellerProspect.updateMany({
+          where: { id: prospectId },
+          data: { status: 'applied' },
+        });
+      } else if (contactEmail) {
+        await prisma.sellerProspect.updateMany({
+          where: { email: { equals: contactEmail, mode: 'insensitive' }, status: { not: 'applied' } },
+          data: { status: 'applied' },
+        });
+      }
+    } catch (attributionError) {
+      console.error('[seller/apply] prospect attribution failed', attributionError);
+    }
+
     const { subject, html } = buildApplicationReceivedEmail({
       contactName,
       businessName,
