@@ -14,6 +14,9 @@ import Link from 'next/link'
 // - No claims about supplier certification schemes, charities, or NGO
 // partnerships that don't exist yet. Where something is an early idea
 // rather than active work, it's labelled that way or left out.
+// - ICO registration (added 2026-07-24) is a legal requirement, not a
+// merit-based accreditation like GBC -- shown as a small factual line
+// with a verify link, not a badge, so it isn't overstated.
 
 export const metadata = {
 title: 'Our mission — Velor Marketplace',
@@ -99,6 +102,8 @@ const css = `
 .ms-honest h2{font-size:25px;margin-bottom:14px;max-width:30ch}
 .ms-honest p{font-size:14.5px;color:var(--muted);line-height:1.75;margin:0 0 14px;max-width:74ch}
 .ms-badge-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px}
+.ms-compliance{font-size:12.5px;color:var(--muted);margin-top:16px;max-width:74ch;line-height:1.6}
+.ms-compliance a{text-decoration:underline}
 .ms-founding{border:1px solid rgba(255,107,0,.32);border-radius:18px;padding:42px 46px;display:flex;align-items:center;justify-content:space-between;gap:38px;background:linear-gradient(120deg,rgba(255,107,0,.06) 0%,rgba(255,107,0,0) 55%),var(--surface);flex-wrap:wrap}
 .ms-founding h2{font-size:27px;margin-bottom:11px;max-width:22ch}
 .ms-founding p{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:54ch;margin:0}
@@ -191,6 +196,11 @@ title="Velor Commerce Ltd is Good Business Charter accredited"
 <img src="/gbc-accredited.jpg" alt="Good Business Charter Accredited" style={{ height: 64, width: 'auto', display: 'block' }} />
 </a>
 </div>
+<p className="ms-compliance">
+Velor Commerce Ltd is also registered with the UK Information Commissioner&apos;s Office
+as a data controller (registration reference ZC204644), as required under UK data
+protection law. <a href="https://ico.org.uk/register" target="_blank" rel="noopener noreferrer">Verify on the ICO register</a>.
+</p>
 </div>
 </section>
 </div>
