@@ -262,6 +262,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
+    // /mission added 2026-07-23 (commit dbab69cc) -- a static, real-content
+    // page (mission/values/seller-guidelines) with its own generateMetadata
+    // (title/description/canonical/OG/Twitter, confirmed present in
+    // app/mission/page.tsx) and now a real internal link from GlobalFooter
+    // (commit 308548e0). Missing from this sitemap until the standing SEO
+    // agent added this line -- same priority/frequency as the similar
+    // static /about page.
+    { url: `${base}/mission`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/help`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/press`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${base}/contact`, changeFrequency: 'monthly', priority: 0.5 },
