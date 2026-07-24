@@ -116,7 +116,7 @@ export default function GlobalFooter() {
             />
           </a>
           <a
-            href="https://www.goodmarket.global"
+            href="https://www.goodmarket.global/info/digital-commons/curation-verification-certification/"
             target="_blank"
             rel="noopener noreferrer"
             title="Velor is Good Market approved — find out what that means"
