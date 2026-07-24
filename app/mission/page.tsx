@@ -79,7 +79,7 @@ const css = `
 .ms-hero{padding:74px 0 20px;position:relative;overflow:hidden;isolation:isolate;border-radius:20px}
 .ms-hero-text{position:relative;z-index:1;max-width:640px}
 .ms-hero-media{position:absolute;inset:0;z-index:0;pointer-events:none}
-.ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.13}
+.ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:right center;opacity:.15;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 14%,#000 38%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 14%,#000 38%)}
 .ms-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
 .ms-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .ms-hero h1{font-size:46px;line-height:1.1;margin-bottom:20px;max-width:20ch}
@@ -104,7 +104,7 @@ const css = `
 .ms-legal{font-size:12.5px;color:var(--muted);margin-top:8px}
 @media(max-width:980px){
 .ms-hero h1{font-size:32px}
-.ms-hero-media img{opacity:.16}
+.ms-hero-media img{opacity:.18}
 .ms-pillars{grid-template-columns:1fr}
 .ms-honest{padding:30px 26px}
 }
