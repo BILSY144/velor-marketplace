@@ -199,7 +199,7 @@ export default function MissionPage() {
                 <img src="/gbc-accredited.jpg" alt="Good Business Charter Accredited" style={{ height: 64, width: 'auto', display: 'block' }} />
               </a>
               <a
-                href="https://www.goodmarket.global"
+                href="https://www.goodmarket.global/info/digital-commons/curation-verification-certification/"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Velor is Good Market approved"
