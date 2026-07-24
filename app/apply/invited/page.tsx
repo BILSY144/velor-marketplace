@@ -34,8 +34,9 @@ const css = `
 function InvitedContent() {
   const params = useSearchParams();
   const countryCode = (params.get('country') || '').toUpperCase();
+  const pid = params.get('pid') || '';
   const country = WORLD_COUNTRIES.find(c => c.code === countryCode);
-  const applyHref = countryCode ? `/apply?country=${countryCode}&invited=1` : '/apply?invited=1';
+  const applyHref = `/apply?invited=1${countryCode ? `&country=${countryCode}` : ''}${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
 
   return (
     <div className="iv-page">
