@@ -78,8 +78,8 @@ const css = `
 .ms-shead p{font-size:14.5px;color:var(--muted);margin:9px 0 0;max-width:66ch;line-height:1.65}
 .ms-hero{padding:74px 0 20px;position:relative;overflow:hidden;isolation:isolate;border-radius:20px}
 .ms-hero-text{position:relative;z-index:1;max-width:640px}
-.ms-hero-media{position:absolute;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.ms-hero-media img{width:86%;height:86%;object-fit:contain;object-position:center;opacity:.13}
+.ms-hero-media{position:absolute;inset:0;z-index:0;pointer-events:none}
+.ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.13}
 .ms-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
 .ms-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .ms-hero h1{font-size:46px;line-height:1.1;margin-bottom:20px;max-width:20ch}
@@ -118,7 +118,7 @@ return (
 <section className="ms-hero">
 <div className="ms-hero-media" aria-hidden="true">
 <img
-src="/velor-mascot-transparent-cropped.png"
+src="/velor-mission-artisans-hero-wide.png"
 alt=""
 />
 </div>
