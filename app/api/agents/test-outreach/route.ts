@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
   }
   const emailType = (searchParams.get('type') as 'initial' | 'followup1' | 'followup2') || 'initial';
   const prospect = {
+    id: 'test-preview',
     name: 'Aurora Home & Living',
     platform: 'Shopify',
     storeUrl: 'https://example.com',
