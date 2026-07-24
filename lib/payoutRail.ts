@@ -2,27 +2,15 @@
 // seller's country, Payoneer everywhere else. This is the single source of
 // truth the onboarding flow and dashboard should use.
 //
-// REMOVED TROLLEY (William, 2026-07-24): Trolley was adopted 2026-07-23
-// evening as the non-Stripe default after Dots.dev was confirmed a permanent
-// dead end (hard-locked to US-only businesses; Velor Commerce Ltd is
-// UK-registered). Removed the next day once actually tested end-to-end: the
-// API keys worked and recipient creation succeeded, but Trolley itself
-// carries a flat GBP 158.25/month subscription fee (the "Pay" module) on top
-// of per-payout fees (GBP 1-22.50 depending on rail/country) and a 2-2.95%
-// FX markup -- a fixed cost regardless of seller volume, unlike Stripe's
-// pure percentage-of-sale model. With zero completed onboardings and the
-// Bank Transfer Activation still pending Trolley's own KYC review, William
-// judged this not worth it and cancelled the Trolley subscription before the
-// 30-day trial ever billed. lib/trolley.ts, app/api/trolley/*,
-// app/dashboard/trolley/*, and docs/TROLLEY_SETUP.md were deleted in the
-// same change. PAYONEER is the non-Stripe default again (its Mass Payouts
-// partner application has been pending since 13 July 2026 -- see CLAUDE.md --
-// so this rail exempts sellers from the payout gate while unconfigured,
-// same as before Trolley existed; see lib/payoutGateCookie.ts). DOTS remains
-// a supported PayoutRail value only for legacy rows (lib/dots.ts is
-// untouched and still wired) -- getPayoutRail() will never resolve a seller
-// onto it, since it is a confirmed permanent dead end for a UK-registered
-// company.
+// PAYONEER is the non-Stripe default (its Mass Payouts partner application
+// has been pending since 13 July 2026 -- see CLAUDE.md -- so this rail
+// exempts sellers from the payout gate while unconfigured; see
+// lib/payoutGateCookie.ts). DOTS remains a supported PayoutRail value only
+// for legacy rows (lib/dots.ts is untouched and still wired) --
+// getPayoutRail() will never resolve a seller onto it, since it is a
+// confirmed permanent dead end for a UK-registered company. No other payout
+// provider is integrated; see CLAUDE.md's payout-rail history for prior
+// providers evaluated and rejected.
 //
 // Country list: Stripe cross-border Connect payout availability as published
 // at stripe.com/global (checked 2026-07). Stripe expands this list over time
@@ -87,9 +75,8 @@ export function getPayoutRail(country: string | null | undefined): PayoutRail {
   // country, so a wrong default here cannot misroute money, only copy.
   if (!code) return 'STRIPE'
   // PAYONEER is the live default for every non-Stripe country -- see the
-  // header note above. A seller already stored as DOTS or TROLLEY (from
-  // before this change) is corrected to PAYONEER wherever this function's
-  // result is persisted.
+  // header note above. A seller already stored as DOTS (a legacy value) is
+  // corrected to PAYONEER wherever this function's result is persisted.
   return STRIPE_PAYOUT_COUNTRIES.has(code) ? 'STRIPE' : 'PAYONEER'
 }
 

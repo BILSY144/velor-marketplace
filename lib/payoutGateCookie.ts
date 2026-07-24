@@ -46,10 +46,9 @@ export const PAYOUT_GATE_COOKIE = 'velor_payout_setup';
  * false, partner approval has been pending since 13 July 2026 (support case
  * 260721-023420, chased 21 Jul). Gating a Payoneer-rail seller on a step
  * that cannot currently be completed would be a dead end, not friction.
- * PAYONEER is the DEFAULT non-Stripe rail again as of 2026-07-24 (Trolley
- * was tried 2026-07-23 evening through 2026-07-24, then removed entirely --
- * see lib/payoutRail.ts's header for why), so this branch now covers every
- * non-Stripe-country seller, not just a legacy few.
+ * PAYONEER is the DEFAULT non-Stripe rail (see lib/payoutRail.ts's header),
+ * so this branch covers every non-Stripe-country seller, not just a legacy
+ * few.
  *
  * REVISIT THIS the moment Payoneer approves partner access and
  * isPayoneerConfigured() can return true: at that point Payoneer-rail

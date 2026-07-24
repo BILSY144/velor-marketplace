@@ -21,12 +21,6 @@ export const maxDuration = 60
 // see lib/payoutRail.ts; Dots kept only for a legacy few) but the RULES are
 // identical on every rail by explicit decision: same delivery confirmation
 // requirement, same 15-day/72-hour holds, same dispute freeze.
-//
-// TROLLEY REMOVED (William, 2026-07-24): Trolley was the non-Stripe default
-// from 2026-07-23 evening through 2026-07-24 -- removed once tested
-// end-to-end (API worked, but a flat GBP 158.25/month subscription fee plus
-// per-payout fees was judged not worth it against zero completed
-// onboardings). See lib/payoutRail.ts's header for the full story.
 export async function GET(req: NextRequest) {
   const authError = requireCronSecret(req)
   if (authError) return authError
@@ -184,10 +178,8 @@ export async function GET(req: NextRequest) {
       // caught live on 2026-07-21: a GB seller stuck on a persisted
       // PAYONEER value would never have been paid). lib/payoutRail.ts is
       // the single source of truth and accepts country names or ISO codes;
-      // it resolves every non-Stripe country to PAYONEER again as of
-      // 2026-07-24 (Trolley was tried 2026-07-23 evening through
-      // 2026-07-24, then removed entirely -- see lib/payoutRail.ts's
-      // header). Branching is STRICT per rail: a Stripe-rail seller can
+      // it resolves every non-Stripe country to PAYONEER. Branching is
+      // STRICT per rail: a Stripe-rail seller can
       // only ever be paid through Stripe Connect, a Dots-rail seller only
       // ever through Dots, a Payoneer-rail seller only ever through
       // Payoneer -- a leftover account/payee on the wrong rail can no
@@ -293,9 +285,8 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // PAYONEER rail -- the default for non-Stripe countries again as of
-      // 2026-07-24 (see lib/payoutRail.ts's header for why Trolley was
-      // tried and then removed). Same holds and dispute checks already
+      // PAYONEER rail -- the default for non-Stripe countries (see
+      // lib/payoutRail.ts's header). Same holds and dispute checks already
       // passed above -- only the transfer differs.
       if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
         // A payeeId is stored the moment a registration link is generated,

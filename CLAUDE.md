@@ -7,7 +7,43 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
-## URGENT -- DOTS IS A NO-GO; TROLLEY BANK-TRANSFER ONBOARDING IN PROGRESS (William, 2026-07-23 evening -- SUPERSEDES the original Dots directive below)
+## CURRENT PAYOUT-RAIL STATE (William, 2026-07-24 -- SUPERSEDES the Trolley directive below, which is dead history only)
+
+**Trolley is fully removed. Do not revisit it without William's explicit new
+instruction.** It was trialled 2026-07-23 evening through 2026-07-24 as the
+non-Stripe payout rail and tested working end-to-end (API keys, recipient
+creation, and the hosted onboarding widget all functioned correctly), but it
+carries a flat GBP 158.25/month subscription fee on top of per-payout fees
+and an FX markup -- a fixed cost regardless of seller volume, unlike
+Stripe's pure percentage-of-sale model. With zero completed onboardings,
+William judged this not worth it and cancelled the subscription before the
+30-day trial ever billed. All Trolley code (lib/trolley.ts,
+app/api/trolley/*, app/dashboard/trolley/*, docs/TROLLEY_SETUP.md, and the
+TROLLEY_ACCESS_KEY/TROLLEY_SECRET_KEY env vars) was deleted from the
+codebase and Vercel in the same change (commit 5c58099e). Every remaining
+code comment that once narrated the Trolley saga has since been trimmed
+back to plain current-state statements -- this file is the one place that
+keeps the full history.
+
+**Current rail state:** Stripe Connect where Stripe supports payouts in the
+seller's country; Payoneer everywhere else (`lib/payoutRail.ts` is the
+single source of truth, not this file). Payoneer's own Mass Payouts partner
+application is still pending (case 260721-023420, chased 21 Jul) -- until
+it's approved, Payoneer-rail sellers are unconditionally exempted from the
+payout-verification gate (`lib/payoutGateCookie.ts`) so they can sign up and
+list now, with real payout setup deferred until a rail is actually live.
+Dots.dev remains a confirmed permanent dead end for a UK-registered business
+(see the superseded section directly below for why) -- never re-attempt it.
+
+**Business focus (William, 2026-07-24):** concentrate on Stripe-supported
+countries (Europe, North America, and the rest of the Stripe Connect list in
+`lib/payoutRail.ts`) for now -- both seller recruitment and any paid
+marketing. Hold off on Payoneer-rail countries until Payoneer is actually
+fully set up and live; those become the next phase once it is.
+
+---
+
+## SUPERSEDED -- Trolley bank-transfer onboarding attempt, 2026-07-23 evening (dead history only; Trolley has since been fully removed, see above)
 
 **Dots.dev is confirmed NOT usable for Velor.** Its platform/business
 Country field is hard-locked to United States ("Only US businesses are

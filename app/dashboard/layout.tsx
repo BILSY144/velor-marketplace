@@ -14,10 +14,9 @@
 //    (lib/payoutRail.ts is the single source of truth). A
 //    Stripe-country seller is only ever routed to Stripe
 //    Connect setup; a non-Stripe-country seller only ever to
-//    Payoneer setup (the default rail again as of 2026-07-24 --
-//    Trolley was tried 2026-07-23 evening through 2026-07-24,
-//    then removed entirely, see lib/payoutRail.ts), or, for a
-//    legacy few, Dots. No path to the wrong payment system.
+//    Payoneer setup (the default rail, see lib/payoutRail.ts),
+//    or, for a legacy few, Dots. No path to the wrong payment
+//    system.
 //  - Functional parity rules preserved from the old shells:
 //    API Keys only for Pro; Go Live visible to every tier
 //    (2026-07-15 rule); payout item swaps to "Set Up Payouts"
@@ -219,10 +218,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   //   PAYONEER rail, not ready-> /dashboard/payoneer       ("Set Up Payouts")
   //   DOTS rail, not ready    -> /dashboard/dots           ("Set Up Payouts", legacy)
   //   ready (any rail)        -> /dashboard/payouts
-  // PAYONEER is the default non-Stripe rail again as of 2026-07-24 (Trolley
-  // was tried 2026-07-23 evening through 2026-07-24, then removed entirely --
-  // see lib/payoutRail.ts). This nav item is cosmetic only ("Set Up Payouts"
-  // vs "Payouts") -- it never blocks dashboard access; the payout gate
+  // PAYONEER is the default non-Stripe rail (see lib/payoutRail.ts). This
+  // nav item is cosmetic only ("Set Up Payouts" vs "Payouts") -- it never
+  // blocks dashboard access; the payout gate
   // (middleware.ts) exempts PAYONEER-rail sellers unconditionally so they
   // can sign up and list now, and set up real payouts once a system exists.
   const payoutSetupHref = rail === 'DOTS' ? '/dashboard/dots' : rail === 'PAYONEER' ? '/dashboard/payoneer' : '/dashboard/stripe-connect';

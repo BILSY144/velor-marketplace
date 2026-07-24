@@ -7,16 +7,11 @@ import { PAYOUT_GATE_COOKIE } from '@/lib/payoutGateCookie'
 // Setup pages exempt from the payout-verification gate below -- a seller
 // must always be able to reach these regardless of gate status, or they
 // could never satisfy it in the first place. PAYONEER is the default
-// non-Stripe rail again as of 2026-07-24 (DOTS kept only for legacy sellers
-// not yet self-healed off it) -- Trolley was tried 2026-07-23 evening
-// through 2026-07-24 as the non-Stripe default, then removed entirely once
-// tested end-to-end (working API, but a flat GBP 158.25/month fee on top of
-// per-payout fees, judged not worth it with zero completed onboardings --
-// see lib/payoutRail.ts's header). /dashboard/trolley is gone along with it;
-// removing an exempt prefix without also removing every route/page that
-// resolved to it would recreate the exact dead-end-redirect-loop class of
-// bug documented here before 2026-07-23's fix, so this change went out as
-// one atomic removal, not a partial one.
+// non-Stripe rail (DOTS kept only for legacy sellers not yet self-healed off
+// it). Removing an exempt prefix without also removing every route/page that
+// resolves to it would recreate the dead-end-redirect-loop bug class this
+// file has hit before (see CLAUDE.md's payout-gate history), so any future
+// rail change should go out as one atomic removal, not a partial one.
 const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer']
 
 const _rl = new Map<string, { count: number; reset: number }>()
@@ -60,16 +55,17 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
     }
     // Gate on having an attached seller profile (session.user.sellerId,
     // baked into the JWT at sign-in by auth.ts), NOT on role === 'SELLER'.
-    // FOUND LIVE 2026-07-23 (William testing his own China/Trolley test
-    // seller from his personal willsinclair144@gmail.com account, role
-    // ADMIN): an ADMIN who becomes a seller by applying with their own
-    // account (lib/provisionSeller.ts's "existing buyer/admin becomes
-    // seller" path -- exactly what William used, per his own "can i test it
-    // with my account" question earlier this session) keeps role: 'ADMIN'.
-    // The role-only check meant the ENTIRE seller gate block (Terms AND the
-    // payout-verification gate just fixed above) was skipped outright for
-    // any such account -- not a cookie bug, not a Trolley bug, a completely
-    // different bypass: this whole if-block never even ran. Confirmed live
+    // FOUND LIVE 2026-07-23 (William testing his own China test seller
+    // account -- a non-Stripe-country test seller used to validate the
+    // payout-rail gate -- from his personal willsinclair144@gmail.com
+    // account, role ADMIN): an ADMIN who becomes a seller by applying with
+    // their own account (lib/provisionSeller.ts's "existing buyer/admin
+    // becomes seller" path -- exactly what William used, per his own "can i
+    // test it with my account" question earlier this session) keeps role:
+    // 'ADMIN'. The role-only check meant the ENTIRE seller gate block (Terms
+    // AND the payout-verification gate just fixed above) was skipped
+    // outright for any such account -- a completely separate bypass from any
+    // rail-specific bug: this whole if-block never even ran. Confirmed live
     // via GET /api/auth/session returning role:"ADMIN", sellerId set, and
     // GET /api/seller/payout-gate independently confirming satisfied:false
     // for that same session -- yet /dashboard returned a bare 200, no

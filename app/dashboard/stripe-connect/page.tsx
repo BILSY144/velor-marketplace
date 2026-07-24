@@ -4,11 +4,9 @@
 // Seller Studio design (2026-07-21). A seller on any other rail can never
 // use this page: the rail is resolved live from their country server-side
 // and they are redirected to /dashboard/payoneer (the default non-Stripe
-// rail again as of 2026-07-24 -- Trolley was tried 2026-07-23 evening
-// through 2026-07-24, then removed entirely, see lib/payoutRail.ts) or
-// /dashboard/dots (legacy) before anything renders. Behaviour is otherwise
-// unchanged from the previous version: connect / resume onboarding /
-// disconnect against /api/stripe/connect*.
+// rail, see lib/payoutRail.ts) or /dashboard/dots (legacy) before anything
+// renders. Behaviour is otherwise unchanged from the previous version:
+// connect / resume onboarding / disconnect against /api/stripe/connect*.
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,9 +28,9 @@ export default function StripeConnectPage() {
     setLoading(true);
     try {
       // Rail guard: sellers in countries Stripe does not support are paid
-      // via Payoneer (default again as of 2026-07-24) or, for a legacy
-      // few, Dots -- same escrow and hold rules, different rail. They must
-      // never see Stripe setup screens.
+      // via Payoneer (the default) or, for a legacy few, Dots -- same
+      // escrow and hold rules, different rail. They must never see Stripe
+      // setup screens.
       const railRes = await fetch('/api/payoneer/onboard');
       if (railRes.ok) {
         const rail = await railRes.json();
