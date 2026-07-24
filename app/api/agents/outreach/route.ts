@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
 
   const { subject, html } = buildOutreachEmail({
     prospect: {
+      id: prospect.id,
       name: prospect.name,
       platform: prospect.platform,
       storeUrl: prospect.storeUrl,
