@@ -67,7 +67,7 @@ body:
 ]
 
 const css = `
-.ms{background:var(--bg);color:var(--text);font-family:var(--font-body);position:relative}
+.ms{background:var(--bg);color:var(--text);font-family:var(--font-body);position:relative;overflow-x:hidden}
 .ms::before{content:'';position:fixed;top:-320px;left:50%;transform:translateX(-50%);width:1000px;height:560px;background:radial-gradient(50% 50% at 50% 50%, rgba(255,107,0,.08) 0%, rgba(255,107,0,0) 100%);pointer-events:none}
 .ms a{color:inherit;text-decoration:none}
 .ms-wrap{max-width:1240px;margin:0 auto;padding:0 32px;position:relative}
@@ -76,10 +76,11 @@ const css = `
 .ms-shead{margin-bottom:30px}
 .ms-shead h2{font-size:29px}
 .ms-shead p{font-size:14.5px;color:var(--muted);margin:9px 0 0;max-width:66ch;line-height:1.65}
-.ms-hero{padding:74px 0 20px;position:relative;overflow:hidden;isolation:isolate;border-radius:20px}
+.ms-hero{position:relative;overflow:hidden;isolation:isolate;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:74px 0 60px}
+.ms-hero-inner{max-width:1240px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
 .ms-hero-text{position:relative;z-index:1;max-width:640px}
 .ms-hero-media{position:absolute;inset:0;z-index:0;pointer-events:none}
-.ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:right center;opacity:.15;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 14%,#000 38%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 14%,#000 38%)}
+.ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:right center;opacity:.16;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 8%,#000 30%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 8%,#000 30%)}
 .ms-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;font-weight:600}
 .ms-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .ms-hero h1{font-size:46px;line-height:1.1;margin-bottom:20px;max-width:20ch}
@@ -104,7 +105,7 @@ const css = `
 .ms-legal{font-size:12.5px;color:var(--muted);margin-top:8px}
 @media(max-width:980px){
 .ms-hero h1{font-size:32px}
-.ms-hero-media img{opacity:.18}
+.ms-hero-media img{opacity:.2}
 .ms-pillars{grid-template-columns:1fr}
 .ms-honest{padding:30px 26px}
 }
@@ -114,7 +115,6 @@ export default function MissionPage() {
 return (
 <div className="ms">
 <style dangerouslySetInnerHTML={{ __html: css }} />
-<div className="ms-wrap">
 <section className="ms-hero">
 <div className="ms-hero-media" aria-hidden="true">
 <img
@@ -122,6 +122,7 @@ src="/velor-mission-artisans-hero-wide.png"
 alt=""
 />
 </div>
+<div className="ms-hero-inner">
 <div className="ms-hero-text">
 <div className="ms-eyebrow"><span className="ms-dot" />Our mission</div>
 <h1>Real makers should keep more of what they make.</h1>
@@ -141,8 +142,8 @@ income from their craft -- and more of that craft surviving commercially.
 <Link href="/about" className="ms-btn ms-btn-s">See how buyer protection works</Link>
 </div>
 </div>
-</section>
 </div>
+</section>
 
 <div className="ms-wrap">
 <section>
