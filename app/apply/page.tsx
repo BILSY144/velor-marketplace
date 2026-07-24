@@ -20,6 +20,7 @@ import { CATEGORY_NAMES as CATEGORIES } from '@/lib/categories';
 import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
 type FormState = {
+  prospectId: string;
   businessName: string;
   // Legal trader-status disclosure -- Velor is open to anyone, not just
   // registered businesses, but the Seller Rules page has always promised
@@ -50,6 +51,7 @@ type FormState = {
 };
 
 const initialForm: FormState = {
+  prospectId: '',
   businessName: '',
   sellerType: '',
   contactName: '',
@@ -139,8 +141,13 @@ export default function ApplyPage() {
     const params = new URLSearchParams(window.location.search);
     const code = (params.get('country') || '').toUpperCase();
     const match = WORLD_COUNTRIES.find(c => c.code === code);
-    if (match) {
-      setForm(prev => ({ ...prev, country: match.name, shippingCountry: prev.shippingCountry || match.code }));
+    const pid = params.get('pid') || '';
+    if (match || pid) {
+      setForm(prev => ({
+        ...prev,
+        ...(match ? { country: match.name, shippingCountry: prev.shippingCountry || match.code } : {}),
+        ...(pid ? { prospectId: pid } : {}),
+      }));
     }
   }, []);
 
