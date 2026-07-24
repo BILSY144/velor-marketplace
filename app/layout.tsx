@@ -256,7 +256,35 @@ const jsonLd = {
       // than a second hand-written phrase, so the two can never drift
       // apart. Purely additive: one new field, nothing else in this node
       // touched.
-      award: 'Good Business Charter Accredited',
+      //
+      // Second entry added by the standing SEO agent, 2026-07-24 (15:xx UTC
+      // cycle) -- a second, real accreditation badge went live on the site
+      // in the same session as this fix (commits d41a8ad3/62f07d40/
+      // 7ecf0fac/8988e75c, minutes before this cycle's clone): a Good
+      // Market "approved" logo + link, added to both GlobalFooter.tsx and
+      // app/mission/page.tsx, confirmed directly by reading both diffs
+      // rather than assumed. Converted `award` from a single string to an
+      // array -- schema.org/award expects `Text` and does not itself
+      // document multi-value cardinality on its own page (checked this
+      // cycle), but this codebase's own Organization node already uses the
+      // array form for a comparable single-Text-typed property (`sameAs`,
+      // directly below) to hold more than one real value, so this follows
+      // established local precedent rather than introducing a new pattern.
+      // (schema.org also publishes a plural `awards` property for the same
+      // Organization type, but its own page states it "has been superseded"
+      // by singular `award` -- confirmed via a direct fetch of
+      // schema.org/awards this cycle -- so the array-of-`award` form used
+      // here is the current, non-deprecated approach.) Wording reuses the
+      // exact live alt text from both new badge instances
+      // ("Good Market Approved") rather than a second hand-written phrase,
+      // same reasoning as the original GBC entry. Not independently
+      // verified this cycle that goodmarket.global's logo/link URLs
+      // resolve live (WebFetch to that exact asset URL failed with
+      // PROVENANCE_REQUIRED, the same unattended-run limitation this log
+      // has documented before) -- this only mirrors what the site's own
+      // just-shipped, human-authored commits already render, it does not
+      // independently confirm the third-party page's liveness.
+      award: ['Good Business Charter Accredited', 'Good Market Approved'],
       // email added by the standing SEO agent, 2026-07-13 (fifth pass) --
       // schema.org/email confirms Organization (alongside ContactPoint and
       // Person) is a valid domain for a top-level `email` property, checked
