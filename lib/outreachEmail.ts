@@ -66,6 +66,7 @@ const ASSETS = 'https://velorcommerce.store/email-assets'
 export type OutreachEmailType = 'initial' | 'followup1' | 'followup2'
 
 export interface OutreachProspect {
+  id: string
   name: string
   platform: string
   storeUrl: string
@@ -430,9 +431,7 @@ export function buildOutreachEmail(d: {
   // not the general /apply form -- that page is only reachable via this
   // link, and carries the country through so /apply's country field arrives
   // pre-filled once they continue.
-  const inviteUrl = p.country
-    ? `https://velorcommerce.store/apply/invited?country=${encodeURIComponent(p.country)}`
-    : 'https://velorcommerce.store/apply/invited'
+  const inviteUrl = `https://velorcommerce.store/apply/invited?pid=${encodeURIComponent(p.id)}${p.country ? `&country=${encodeURIComponent(p.country)}` : ''}`
 
   const cta = (label: string) => ctaButton(inviteUrl, label)
 
