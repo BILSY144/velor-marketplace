@@ -77,7 +77,7 @@ const css = `
 .ms-shead h2{font-size:29px}
 .ms-shead p{font-size:14.5px;color:var(--muted);margin:9px 0 0;max-width:66ch;line-height:1.65}
 .ms-hero{position:relative;overflow:hidden;isolation:isolate;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:74px 0 60px}
-.ms-hero-inner{max-width:1240px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+.ms-hero-inner{max-width:1240px;padding:0 32px;position:relative;z-index:1}
 .ms-hero-text{position:relative;z-index:1;max-width:640px}
 .ms-hero-media{position:absolute;inset:0;z-index:0;pointer-events:none}
 .ms-hero-media img{width:100%;height:100%;object-fit:cover;object-position:right center;opacity:.16;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 8%,#000 30%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 8%,#000 30%)}
@@ -87,7 +87,7 @@ const css = `
 .ms-lede{font-size:17px;color:var(--muted);line-height:1.7;max-width:64ch;margin:0 0 16px}
 .ms-btn{border-radius:11px;padding:15px 30px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
 .ms-btn-p{background:var(--accent);color:#160a00 !important}
-.ms-btn-s{background:none;border:1px solid var(--border);margin-left:10px}
+.ms-btn-s{background:#fff;border:1px solid var(--border);margin-left:10px;color:#160a00 !important}
 .ms-pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .ms-pcard{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:30px 32px;position:relative;overflow:hidden;transition:transform .15s, border-color .15s}
 .ms-pcard:hover{transform:translateY(-3px);border-color:#3d3d46}
