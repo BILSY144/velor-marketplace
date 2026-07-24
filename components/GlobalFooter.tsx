@@ -115,6 +115,19 @@ export default function GlobalFooter() {
               style={{ height: 174, width: 'auto', display: 'block' }}
             />
           </a>
+          <a
+            href="https://www.goodmarket.global"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Velor is Good Market approved — find out what that means"
+            style={{ display: 'inline-flex' }}
+          >
+            <img
+              src="https://www.goodmarket.global/assets/images/good-market-approved-logo-new.png"
+              alt="Good Market Approved"
+              style={{ height: 174, width: 'auto', display: 'block' }}
+            />
+          </a>
         </div>
       </div>
 
