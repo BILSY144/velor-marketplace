@@ -283,7 +283,7 @@ export default function ShopPreviewPage() {
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 700 }}>Returns</div>
                 <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  14-day right to cancel under the UK Consumer Contracts Regulations. <Link href="/help" style={{ color: 'var(--accent)', fontWeight: 600 }}>See return policy</Link>
+                  Set by each seller. <Link href="/returns" style={{ color: 'var(--accent)', fontWeight: 600 }}>See our returns &amp; refunds policy</Link>
                 </div>
               </div>
             </div>

@@ -635,11 +635,17 @@ export default function ProductPageClient() {
           </button>
 
           {/* Dispatch, returns & buyer-protection module (2026-07-25 PDP
-              redesign) -- every line here is either a real field off this
-              seller/product or a genuine, already-live platform policy
-              (Consumer Contracts Regs cooling-off period; messageFilter.ts's
-              no-contact-details rule). No invented delivery date -- Shippo
-              calculates the real one at checkout. */}
+              redesign). Returns copy was originally drafted against a
+              UK-specific statutory claim (Consumer Contracts Regs, 14-day
+              cooling-off) -- William caught same-day that this both
+              contradicts LAW #2 (Velor is a global marketplace, never
+              described as UK-based) and doesn't match the real, live
+              app/returns/page.tsx, which deliberately states no fixed day
+              count because returns are set per-seller, not by platform-wide
+              UK law. Fixed to match that page's actual, already-correct
+              language and link there instead of the wrong /help target. No
+              invented delivery date either -- Shippo calculates the real one
+              at checkout. */}
           <div style={{ marginTop: '20px', padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
               <span style={{ fontSize: '16px', lineHeight: 1.4 }}>📦</span>
@@ -656,7 +662,7 @@ export default function ProductPageClient() {
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 700 }}>Returns</div>
                 <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  14-day right to cancel under the UK Consumer Contracts Regulations. <Link href="/help" style={{ color: 'var(--accent)', fontWeight: 600 }}>See return policy</Link>
+                  Set by this seller. <Link href="/returns" style={{ color: 'var(--accent)', fontWeight: 600 }}>See our returns &amp; refunds policy</Link>
                 </div>
               </div>
             </div>
