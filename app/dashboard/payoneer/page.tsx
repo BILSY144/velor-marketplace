@@ -1,17 +1,12 @@
 'use client';
 
-// Payoneer payout setup -- LEGACY PAYONEER-rail sellers only. Since
-// 2026-07-23, getPayoutRail() no longer assigns PAYONEER to any seller
-// (DOTS is the default for non-Stripe countries now -- see
-// lib/payoutRail.ts and lib/dots.ts) -- this page only matters for a
-// seller already stored on PAYONEER before that change, until they
-// self-heal to DOTS on their next visit. Rebuilt in the Seller Studio
-// design (2026-07-21); given the rail guards it was missing: a
+// Payoneer payout setup -- PAYONEER-rail sellers only, i.e. every seller in
+// a country Stripe does not support (the only non-Stripe rail -- see
+// lib/payoutRail.ts). Rebuilt in the Seller Studio design (2026-07-21); a
 // STRIPE-rail seller who lands here is redirected to
-// /dashboard/stripe-connect, and a DOTS-rail seller to /dashboard/dots,
-// before anything renders. The rail comes live from /api/payoneer/onboard,
-// which resolves it from the seller's country -- lib/payoutRail.ts, the
-// single source of truth.
+// /dashboard/stripe-connect before anything renders. The rail comes live
+// from /api/payoneer/onboard, which resolves it from the seller's country
+// -- lib/payoutRail.ts, the single source of truth.
 //
 // HONESTY: while the Payoneer partner application is pending
 // (configured: false), the button registers interest and says so plainly
@@ -42,10 +37,6 @@ export default function PayoneerSetupPage() {
         // setup screens -- their payouts run elsewhere.
         if (d?.rail === 'STRIPE') {
           router.replace('/dashboard/stripe-connect');
-          return;
-        }
-        if (d?.rail === 'DOTS') {
-          router.replace('/dashboard/dots');
           return;
         }
         setStatus(d);

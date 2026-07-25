@@ -5,12 +5,14 @@
 // PAYONEER is the non-Stripe default (its Mass Payouts partner application
 // has been pending since 13 July 2026 -- see CLAUDE.md -- so this rail
 // exempts sellers from the payout gate while unconfigured; see
-// lib/payoutGateCookie.ts). DOTS remains a supported PayoutRail value only
-// for legacy rows (lib/dots.ts is untouched and still wired) --
-// getPayoutRail() will never resolve a seller onto it, since it is a
-// confirmed permanent dead end for a UK-registered company. No other payout
-// provider is integrated; see CLAUDE.md's payout-rail history for prior
-// providers evaluated and rejected.
+// lib/payoutGateCookie.ts). No other payout provider is integrated; see
+// CLAUDE.md's payout-rail history for prior providers evaluated and
+// rejected -- including Dots (tried 2026-07-23, removed the same day: a
+// hard dead end, Dots.dev is US-businesses-only and Velor is UK-registered)
+// and Trolley (tried and removed 2026-07-24). 'DOTS' fully removed as a
+// PayoutRail value 2026-07-25 -- every seller confirmed migrated off it
+// first; see lib/dots.ts's git history if the old adapter is ever needed
+// for reference.
 //
 // Country list: Stripe cross-border Connect payout availability as published
 // at stripe.com/global (checked 2026-07). Stripe expands this list over time
@@ -19,7 +21,7 @@
 
 import { WORLD_COUNTRIES } from './worldCountries'
 
-export type PayoutRail = 'STRIPE' | 'DOTS' | 'PAYONEER'
+export type PayoutRail = 'STRIPE' | 'PAYONEER'
 
 // Seller.country stores the COUNTRY NAME (the /apply form's business-country
 // <select> uses names as option values), while SellerApplication.shippingCountry
@@ -75,13 +77,13 @@ export function getPayoutRail(country: string | null | undefined): PayoutRail {
   // country, so a wrong default here cannot misroute money, only copy.
   if (!code) return 'STRIPE'
   // PAYONEER is the live default for every non-Stripe country -- see the
-  // header note above. A seller already stored as DOTS (a legacy value) is
-  // corrected to PAYONEER wherever this function's result is persisted.
+  // header note above. A seller row still holding a stale legacy value
+  // (DOTS, Trolley) is corrected to PAYONEER wherever this function's
+  // result is persisted.
   return STRIPE_PAYOUT_COUNTRIES.has(code) ? 'STRIPE' : 'PAYONEER'
 }
 
 export function payoutRailLabel(rail: PayoutRail): string {
   if (rail === 'STRIPE') return 'Stripe Connect'
-  if (rail === 'DOTS') return 'Dots'
   return 'Payoneer'
 }

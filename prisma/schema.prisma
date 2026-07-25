@@ -159,13 +159,14 @@ model Seller {
   storeLogo                     String?
   payoutRail                    String    @default("STRIPE")
   payoneerPayeeId               String?   @unique
-  // Dots.dev payout rail (added 2026-07-23 morning, see lib/payoutRail.ts).
-  // SUPERSEDED the same evening -- Dots turned out to be a hard dead end
-  // (US-businesses-only lock, Velor is UK-registered) -- see the header of
-  // lib/payoutRail.ts. Fields kept only so any seller still stored on this
-  // legacy rail self-heals to PAYONEER on next resolve.
-  dotsUserId                    String?   @unique
-  dotsOnboarded                 Boolean   @default(false)
+  // dotsUserId/dotsOnboarded fields REMOVED from this model (William,
+  // 2026-07-25). Dots.dev (added 2026-07-23 morning) turned out to be a
+  // hard dead end the same evening -- US-businesses-only lock, Velor is
+  // UK-registered and could never create an account -- and no real Dots
+  // account was ever created (isDotsConfigured() always returned false),
+  // so both columns were empty/false for every seller with zero data to
+  // lose. Unlike the Trolley columns below, safe to let the next
+  // `prisma db push` drop these along with the rest of the Dots removal.
   // Trolley payout rail fields REMOVED from the app (William, 2026-07-24 --
   // see lib/payoutRail.ts's header for why Trolley was tried 2026-07-23
   // evening then removed the next day). The trolleyRecipientId/
@@ -359,7 +360,8 @@ model Payout {
   currency         String   @default("gbp")
   stripeTransferId String?  @unique
   payoneerPayoutId String?  @unique
-  dotsPayoutId     String?  @unique
+  // dotsPayoutId field removed from this model (William, 2026-07-25) -- see
+  // the Seller model's dotsUserId/dotsOnboarded comment above for why.
   // trolleyPayoutId column removed from this model (William, 2026-07-24) --
   // Trolley was removed from the app the same day it was tested end-to-end;
   // see lib/payoutRail.ts's header. The column still physically exists in

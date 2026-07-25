@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b.count - a.count)
 
   // Self-heal, matching every other consumer of payoutRail (payoutGate.ts,
-  // dashboard/payouts, seller/me, release-payouts, dots/onboard,
-  // payoneer/onboard). Fixed 2026-07-25 -- Pulse used to be the one place
+  // dashboard/payouts, seller/me, release-payouts, payoneer/onboard).
+  // Fixed 2026-07-25 -- Pulse used to be the one place
   // that displayed the raw stored payoutRail without ever re-checking it,
   // so it could silently show a stale/wrong rail even after the real
   // country data was corrected elsewhere. Only touches this page's own

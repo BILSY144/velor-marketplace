@@ -26,16 +26,6 @@ export const PAYOUT_GATE_COOKIE = 'velor_payout_setup';
  * (charges_enabled && payouts_enabled -- the same definition already used as
  * Seller.stripeOnboarded elsewhere in this codebase).
  *
- * DOTS-rail sellers: exempted unconditionally. DOTS is a confirmed
- * PERMANENT dead end (Dots.dev is hard-locked to United States businesses
- * only; Velor Commerce Ltd is UK-registered and can never create an
- * account) -- this will never become configurable, so there is nothing to
- * "revisit" here. DOTS is never auto-assigned by getPayoutRail() (see
- * lib/payoutRail.ts), so this branch only matters for a seller who was
- * already stored as DOTS before 2026-07-23 evening and has not yet
- * self-healed onto PAYONEER on their next dashboard visit -- kept exempted
- * rather than gated on a step that can never be completed.
- *
  * PAYONEER-rail sellers: exempted (William, confirmed 2026-07-23 after
  * asking directly whether Payoneer verification could happen independently
  * of the payout API -- it cannot). The ENTIRE Payoneer registration flow,
@@ -58,6 +48,5 @@ export const PAYOUT_GATE_COOKIE = 'velor_payout_setup';
  */
 export function payoutGateSatisfied(rail: string, stripeOnboarded: boolean): boolean {
   if (rail === 'PAYONEER') return true;
-  if (rail === 'DOTS') return true;
   return stripeOnboarded === true;
 }

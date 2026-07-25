@@ -6,13 +6,13 @@ import { PAYOUT_GATE_COOKIE } from '@/lib/payoutGateCookie'
 
 // Setup pages exempt from the payout-verification gate below -- a seller
 // must always be able to reach these regardless of gate status, or they
-// could never satisfy it in the first place. PAYONEER is the default
-// non-Stripe rail (DOTS kept only for legacy sellers not yet self-healed off
-// it). Removing an exempt prefix without also removing every route/page that
-// resolves to it would recreate the dead-end-redirect-loop bug class this
-// file has hit before (see CLAUDE.md's payout-gate history), so any future
-// rail change should go out as one atomic removal, not a partial one.
-const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/dots', '/dashboard/payoneer']
+// could never satisfy it in the first place. PAYONEER is the only
+// non-Stripe rail (see lib/payoutRail.ts). Removing an exempt prefix
+// without also removing every route/page that resolves to it would
+// recreate the dead-end-redirect-loop bug class this file has hit before
+// (see CLAUDE.md's payout-gate history), so any future rail change should
+// go out as one atomic removal, not a partial one.
+const PAYOUT_GATE_EXEMPT_PREFIXES = ['/dashboard/stripe-connect', '/dashboard/payoneer']
 
 const _rl = new Map<string, { count: number; reset: number }>()
 
@@ -84,25 +84,24 @@ export default auth((req: NextRequest & { auth?: unknown }) => {
 
       // Payout-verification gate (William, 2026-07-23): a seller must finish
       // real payout-rail verification (Stripe Connect onboarding for
-      // STRIPE-rail sellers, real Dots onboarding for DOTS-rail sellers --
-      // the default non-Stripe rail since the same day, see
-      // lib/payoutRail.ts -- or, for a legacy few, the Payoneer exemption in
-      // lib/payoutGateCookie.ts while that rail isn't live) BEFORE using the
-      // rest of the dashboard, not whenever they get round to it. Previously
-      // nothing enforced this at all: an approved seller could sign in and
-      // use Products/Orders/Settings/etc. having never touched a payout
-      // rail. The gate cookie (set/cleared server-side by lib/payoutGate.ts's
-      // setPayoutGateCookie) is refreshed every time /api/stripe/connect/
-      // account, /api/dots/onboard, or /api/payoneer/onboard is called --
-      // and app/dashboard/layout.tsx already calls one of those on every
-      // dashboard mount (to drive its own rail-aware payout nav item), so the
-      // cookie self-heals on normal navigation without any extra fetch. A
-      // dedicated GET /api/seller/payout-gate also exists for any page that
-      // wants to check/refresh gate status directly. The escape-hatch
-      // redirect below always targets /dashboard/stripe-connect, which
-      // itself rail-guards and forwards a DOTS or PAYONEER seller onward --
-      // same indirection pattern that page already used before this cookie
-      // existed.
+      // STRIPE-rail sellers, or the Payoneer exemption in
+      // lib/payoutGateCookie.ts while that rail isn't fully live yet -- see
+      // lib/payoutRail.ts for the two-rail model, PAYONEER is the only
+      // non-Stripe rail) BEFORE using the rest of the dashboard, not
+      // whenever they get round to it. Previously nothing enforced this at
+      // all: an approved seller could sign in and use Products/Orders/
+      // Settings/etc. having never touched a payout rail. The gate cookie
+      // (set/cleared server-side by lib/payoutGate.ts's setPayoutGateCookie)
+      // is refreshed every time /api/stripe/connect/account or
+      // /api/payoneer/onboard is called -- and app/dashboard/layout.tsx
+      // already calls one of those on every dashboard mount (to drive its
+      // own rail-aware payout nav item), so the cookie self-heals on normal
+      // navigation without any extra fetch. A dedicated GET
+      // /api/seller/payout-gate also exists for any page that wants to
+      // check/refresh gate status directly. The escape-hatch redirect below
+      // always targets /dashboard/stripe-connect, which itself rail-guards
+      // and forwards a PAYONEER seller onward -- same indirection pattern
+      // that page already used before this cookie existed.
       const gateExempt = PAYOUT_GATE_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
       if (!gateExempt) {
         const payoutCookie = req.cookies.get(PAYOUT_GATE_COOKIE)

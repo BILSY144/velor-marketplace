@@ -20,8 +20,7 @@ export interface PayoutGateStatus {
  * Look up a seller's live payout-rail state and decide whether the dashboard
  * gate is satisfied. Also self-heals Seller.payoutRail if the seller's
  * country resolves to a different rail than what's stored, same pattern
- * already used in app/api/payoneer/onboard, app/api/dots/onboard, and
- * app/api/dashboard/payouts.
+ * already used in app/api/payoneer/onboard and app/api/dashboard/payouts.
  */
 export async function resolvePayoutGate(userId: string): Promise<PayoutGateStatus | null> {
   const seller = await prisma.seller.findUnique({
