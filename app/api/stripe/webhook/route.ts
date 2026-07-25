@@ -212,6 +212,46 @@ export async function POST(request: Request): Promise<NextResponse> {
       break;
     }
 
+    case 'account.updated': {
+      // Keeps Seller.stripeOnboarded in sync the moment Stripe reports a
+      // change, so a seller who finishes Stripe's hosted onboarding but
+      // never navigates back to /dashboard/stripe-connect/return (closed
+      // tab, network drop, whatever) is no longer stuck behind the
+      // payout-verification gate (middleware.ts) until they happen to
+      // revisit a setup page and trigger GET /api/stripe/connect/account's
+      // own live check. Mirrors that exact same
+      // `charges_enabled && payouts_enabled` definition -- this is a
+      // second writer of the same field via the same rule, not a new
+      // source of truth. Real gap identified and left unfixed in the
+      // 2026-07-13 checkpoint (continued 19) payments audit; closed here
+      // 2026-07-25 per William's direct instruction.
+      //
+      // Requires this webhook endpoint to actually be subscribed to
+      // Connect account events in Stripe (Dashboard: Developers ->
+      // Webhooks -> this endpoint -> "Listen to events on Connected
+      // accounts", or via the API's `connect: true` param) -- otherwise
+      // Stripe never sends this event type here and this case is simply
+      // unreached. See GET/POST /api/admin/stripe-webhook-status for a
+      // live check of the current subscription state; do not assume it is
+      // already enabled.
+      const account = event.data.object as Stripe.Account;
+      const seller = await prisma.seller.findUnique({ where: { stripeAccountId: account.id } });
+      if (seller) {
+        const onboarded = !!(account.charges_enabled && account.payouts_enabled);
+        if (seller.stripeOnboarded !== onboarded) {
+          await prisma.seller
+            .update({ where: { id: seller.id }, data: { stripeOnboarded: onboarded } })
+            .catch((err) => console.error('[webhook] failed to sync stripeOnboarded from account.updated', account.id, err));
+        }
+      }
+      // No matching seller is expected and harmless: either this is the
+      // platform's own account (never stored as a seller's stripeAccountId
+      // -- guarded in app/api/stripe/connect/account/route.ts) or an
+      // account not yet linked to a seller row (mid-onboarding, before the
+      // first GET /api/stripe/connect/account call that sets it).
+      break;
+    }
+
     case 'payment_intent.payment_failed': {
       // No order should be (and isn't) created here -- this case exists
       // purely so a failed charge leaves a trace in logs instead of
