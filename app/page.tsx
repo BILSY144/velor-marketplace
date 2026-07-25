@@ -705,7 +705,7 @@ function flagOf(code: string): string {
 
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
-.vh-annbar{background:var(--accent);color:#0b0b0b;text-align:center;padding:10px 16px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.01em}
+.vh-annbar{background:var(--accent);color:#0b0b0b;text-align:center;padding:10px 16px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.01em;position:relative}.vh-annbar-hint{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.02em;white-space:nowrap;opacity:.85}.vh-annbar-hint .arrow{display:inline-block;font-size:14px;line-height:1;animation:vhHintBounce 1.6s ease-in-out infinite}@keyframes vhHintBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}@media (max-width:700px){.vh-annbar-hint{display:none}}.vh-annbar-cta{display:inline-block;background:#0b0b0b;color:var(--accent);font-weight:800;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:4px;margin:0 2px;vertical-align:middle}
 .vh-annbar b{font-weight:700}
 .vh-sellertop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#0b0b0b;border:2px solid var(--accent);padding:14px 22px;animation:vhPulseGlow 2.2s ease-in-out infinite}
 .vh-sellertop .txt{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;max-width:70ch;line-height:1.5}
@@ -897,7 +897,7 @@ export default function HomePage() {
     <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      <Link href="/sell" className="vh-annbar" style={{ display: 'block' }}>List your items on Velor <b>for free</b> — apply now, before we open to buyers on 6th August.</Link>
+      <Link href="/sell" className="vh-annbar" style={{ display: 'block' }}>List your items on Velor <b>for free</b> <span className="vh-annbar-cta">Apply now</span> before we open to buyers on 6th August.<span className="vh-annbar-hint" aria-hidden="true"><span className="arrow">👆</span> Swipe and click for country</span></Link>
 
       
 
