@@ -484,7 +484,7 @@ export default function ProductPageClient() {
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size image"
-            style={{ width: '100%', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (

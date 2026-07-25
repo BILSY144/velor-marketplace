@@ -206,7 +206,7 @@ export default function ShopPreviewPage() {
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size example image"
-            style={{ width: '100%', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={PHOTOS[mainImage]} alt="Example product" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '11px', fontWeight: 600, padding: '5px 11px', borderRadius: '20px' }}>
