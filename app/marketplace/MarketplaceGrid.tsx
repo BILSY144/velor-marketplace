@@ -116,7 +116,7 @@ const filtered = useMemo(() => {
           <div className="mp-search-sort">
             <input
               className="mp-search"
-              placeholder="Search products..."
+              placeholder="Search goods, country or seller..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
