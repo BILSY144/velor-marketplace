@@ -229,3 +229,21 @@ export function findCountryBySlug(slug: string): WorldCountry | undefined {
 export function countrySlug(c: WorldCountry): string {
   return slugifyCountryName(c.name)
 }
+
+// Resolves a 2-letter ISO code (the format SellerApplication.shippingCountry
+// and SellerShippingProfile.country are stored in) back to its display name
+// (the format Seller.country and SellerApplication.country are stored in).
+// The single conversion point for "seller's real country" everywhere it
+// needs to be derived from their ship-from address instead of asked as a
+// separate, independently-editable field -- see William, 2026-07-25:
+// sellers were able to state a country they neither ship from nor (per the
+// old /apply hint) even claimed as their culture, which fed straight into
+// getPayoutRail() and silently misrouted payouts. Falls back to the raw
+// code if it isn't a recognized ISO-2 value, so a bad/legacy value never
+// throws or disappears -- it just displays as-is instead of a full name.
+export function codeToCountryName(code: string | null | undefined): string | null {
+  if (!code) return null
+  const trimmed = code.trim()
+  const match = WORLD_COUNTRIES.find((c) => c.code.toLowerCase() === trimmed.toLowerCase())
+  return match ? match.name : trimmed
+}

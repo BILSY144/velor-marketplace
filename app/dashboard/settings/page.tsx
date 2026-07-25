@@ -6,24 +6,6 @@ import Link from 'next/link'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
 import { useSellerTier, tierCardStyle, DASHBOARD_TIER_THEME } from '@/lib/dashboard-theme'
 
-const COUNTRIES = [
-  'United Kingdom', 'United States', 'Canada', 'Australia', 'Germany', 'France',
-  'Spain', 'Italy', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland',
-  'Austria', 'Belgium', 'Portugal', 'Ireland', 'New Zealand', 'Singapore',
-  'Japan', 'South Korea', 'Hong Kong', 'India', 'Brazil', 'Mexico', 'Other',
-]
-
-// Suggests a sensible default currency the moment a seller picks their
-// country — they can still override it with the Currency dropdown below.
-const COUNTRY_CURRENCY: Record<string, string> = {
-  'United Kingdom': 'GBP', 'United States': 'USD', 'Canada': 'CAD', 'Australia': 'AUD',
-  'Germany': 'EUR', 'France': 'EUR', 'Spain': 'EUR', 'Italy': 'EUR', 'Netherlands': 'EUR',
-  'Sweden': 'SEK', 'Norway': 'NOK', 'Denmark': 'DKK', 'Switzerland': 'CHF',
-  'Austria': 'EUR', 'Belgium': 'EUR', 'Portugal': 'EUR', 'Ireland': 'EUR',
-  'New Zealand': 'NZD', 'Singapore': 'SGD', 'Japan': 'JPY', 'South Korea': 'KRW',
-  'Hong Kong': 'HKD', 'India': 'INR', 'Brazil': 'BRL', 'Mexico': 'MXN', 'Other': 'GBP',
-}
-
 // Feature list shown in the new "Your Plan" card so sellers can see exactly
 // what their subscription buys them, and what upgrading would add.
 const PLAN_FEATURES: Record<string, string[]> = {
@@ -73,18 +55,6 @@ export default function SettingsPage() {
     setError('')
   }
 
-  // Changing the country re-suggests a currency, but the seller can still
-  // pick a different one from the Currency dropdown right after this field.
-  const setCountry = (value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      country: value,
-      currency: COUNTRY_CURRENCY[value] ?? prev.currency,
-    }))
-    setSaved(false)
-    setError('')
-  }
-
   const handleSave = async () => {
     setSaving(true)
     setError('')
@@ -96,7 +66,6 @@ export default function SettingsPage() {
           name: form.name,
           storeName: form.storeName,
           description: form.description,
-          country: form.country,
           currency: form.currency,
         }),
       })
@@ -332,18 +301,16 @@ export default function SettingsPage() {
           </div>
           <div>
             <label style={label}>Country</label>
-            <select
-              style={selectStyle}
-              value={form.country}
-              onChange={(e) => setCountry(e.target.value)}
-            >
-              <option value="">Select your country</option>
-              {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div style={{ ...inputStyle(), display: 'flex', alignItems: 'center', color: form.country ? undefined : '#666' }}>
+              {form.country || 'Not set -- add your ship-from address below'}
+            </div>
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+              This is your ship-from address&apos;s country, so it always matches where you
+              actually sell from. To change it, update your address in{' '}
+              <Link href="/dashboard/settings/shipping" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                Settings → Shipping
+              </Link>.
+            </div>
           </div>
           <div>
             <label style={label}>Currency</label>

@@ -25,6 +25,8 @@ export async function GET() {
     email: user?.email ?? '',
     storeName: seller.storeName,
     description: seller.description ?? '',
+    // Read-only here -- see the PATCH handler below for why country can no
+    // longer be set from this route.
     country: seller.country ?? '',
     currency: seller.currency ?? 'GBP',
   })
@@ -38,7 +40,14 @@ export async function PATCH(request: Request) {
   if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 403 })
 
   const body = await request.json()
-  const { name, storeName, description, country, currency } = body
+  // `country` is deliberately NOT accepted here (William, 2026-07-25). It
+  // used to be a free-text field a seller could set to anything, completely
+  // disconnected from their real ship-from address, which fed straight into
+  // getPayoutRail() and could misroute their own payouts. A seller's country
+  // is now derived only from their ship-from address in Settings -> Shipping
+  // -- see POST /api/dashboard/settings/shipping, which updates it (and
+  // recomputes payoutRail) whenever that address changes.
+  const { name, storeName, description, currency } = body
 
   if (typeof storeName === 'string' && storeName.trim().length < 2) {
     return NextResponse.json({ error: 'Store name must be at least 2 characters' }, { status: 400 })
@@ -74,7 +83,6 @@ export async function PATCH(request: Request) {
       data: {
         ...(storeName !== undefined && { storeName: String(storeName).trim() }),
         ...(description !== undefined && { description: String(description).trim() }),
-        ...(country !== undefined && { country: String(country).trim() }),
         ...(currency !== undefined && { currency: String(currency).toUpperCase() }),
       },
     }),

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { convert } from '@/lib/fx'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
+import { getPayoutRail } from '@/lib/payoutRail'
 
 // Paginated/filterable seller-payout lookup, backing the mobile Pulse detail
 // page at /pulse/payouts. Mirrors app/api/admin/orders/route.ts's
@@ -65,6 +66,29 @@ export async function GET(request: NextRequest) {
   }
 
   const byStatus = statusRows.map((row) => ({ status: row.status, count: row._count.status }))
+
+  // Self-heal, same pattern and reasoning as app/api/admin/pulse-sellers --
+  // this page was reading Seller.payoutRail raw off the Payout->Seller
+  // relation with no live recomputation, so it could show a payout as
+  // "via Stripe" for a seller whose country actually resolves to Payoneer.
+  // De-duped by sellerId since several payouts on this page can share the
+  // same seller.
+  const uniqueSellersById = new Map(payouts.map((p) => [p.sellerId, p.seller]))
+  const railFixes = Array.from(uniqueSellersById.entries())
+    .map(([sellerId, seller]) => ({ sellerId, correctRail: getPayoutRail(seller.country) }))
+    .filter(({ sellerId, correctRail }) => correctRail !== uniqueSellersById.get(sellerId)?.payoutRail)
+  if (railFixes.length > 0) {
+    await Promise.all(
+      railFixes.map(({ sellerId, correctRail }) =>
+        prisma.seller.update({ where: { id: sellerId }, data: { payoutRail: correctRail } }).catch(() => {})
+      )
+    )
+    const fixedBySellerId = new Map(railFixes.map(({ sellerId, correctRail }) => [sellerId, correctRail]))
+    for (const p of payouts) {
+      const fixed = fixedBySellerId.get(p.sellerId)
+      if (fixed) p.seller.payoutRail = fixed
+    }
+  }
 
   return NextResponse.json({
     payouts,

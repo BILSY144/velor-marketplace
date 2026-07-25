@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
 import { sendEmail, buildSellerApprovedEmail, buildSellerRejectedEmail } from '@/lib/email'
 import { computeSellerStatus, sellerActionData } from '@/lib/sellerStatus'
+import { getPayoutRail } from '@/lib/payoutRail'
 
 // Seller directory -- backs /pulse/sellers, the mobile ops dashboard's
 // searchable list of every seller on the marketplace (store name, tier,
@@ -91,6 +92,29 @@ export async function GET(request: NextRequest) {
   const byCountry = byCountryRaw
     .map((row) => ({ country: row.country || 'Not provided', count: row._count._all }))
     .sort((a, b) => b.count - a.count)
+
+  // Self-heal, matching every other consumer of payoutRail (payoutGate.ts,
+  // dashboard/payouts, seller/me, release-payouts, dots/onboard,
+  // payoneer/onboard). Fixed 2026-07-25 -- Pulse used to be the one place
+  // that displayed the raw stored payoutRail without ever re-checking it,
+  // so it could silently show a stale/wrong rail even after the real
+  // country data was corrected elsewhere. Only touches this page's own
+  // result set, so it's cheap even on the full seller list.
+  const railFixes = sellers
+    .map((s) => ({ seller: s, correctRail: getPayoutRail(s.country) }))
+    .filter(({ seller, correctRail }) => correctRail !== seller.payoutRail)
+  if (railFixes.length > 0) {
+    await Promise.all(
+      railFixes.map(({ seller, correctRail }) =>
+        prisma.seller.update({ where: { id: seller.id }, data: { payoutRail: correctRail } }).catch(() => {})
+      )
+    )
+    const fixedById = new Map(railFixes.map(({ seller, correctRail }) => [seller.id, correctRail]))
+    for (const s of sellers) {
+      const fixed = fixedById.get(s.id)
+      if (fixed) s.payoutRail = fixed
+    }
+  }
 
   return NextResponse.json({
     sellers: sellers.map((s) => ({

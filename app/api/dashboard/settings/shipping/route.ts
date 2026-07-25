@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { codeToCountryName } from '@/lib/worldCountries'
+import { getPayoutRail } from '@/lib/payoutRail'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
     // server-side so it can never be abused as a hidden price hike.
     const rawFee = Number(body.handlingFeeGBP)
     const handlingFeeGBP = Number.isFinite(rawFee) ? Math.min(Math.max(rawFee, 0), 25) : 0
+    const shipFromCountry = country || 'GB'
     const profile = await prisma.sellerShippingProfile.upsert({
       where: { sellerId: seller.id },
       create: {
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
         name, company: company || null,
         street1, street2: street2 || null,
         city, state: state || null,
-        zip, country: country || 'GB',
+        zip, country: shipFromCountry,
         phone: phone || null,
         handlingFeeGBP,
       },
@@ -61,11 +64,26 @@ export async function POST(request: NextRequest) {
         name, company: company || null,
         street1, street2: street2 || null,
         city, state: state || null,
-        zip, country: country || 'GB',
+        zip, country: shipFromCountry,
         phone: phone || null,
         handlingFeeGBP,
       },
     })
+
+    // Keep Seller.country and Seller.payoutRail in lockstep with the real
+    // ship-from address (William, 2026-07-25 -- see the note on
+    // app/api/dashboard/settings/route.ts). This is now the only place a
+    // seller's stated country can change after their application is
+    // approved, so a seller who genuinely relocates gets routed correctly
+    // without needing an admin to run the repair route.
+    await prisma.seller.update({
+      where: { id: seller.id },
+      data: {
+        country: codeToCountryName(shipFromCountry) ?? shipFromCountry,
+        payoutRail: getPayoutRail(shipFromCountry),
+      },
+    })
+
     return NextResponse.json({ profile })
   } catch (err) {
     console.error('[dashboard/settings/shipping POST]', err)

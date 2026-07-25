@@ -14,6 +14,19 @@ import {
   buildNewSellerAlertEmail,
 } from '@/lib/email'
 import { getPayoutRail } from '@/lib/payoutRail'
+import { codeToCountryName } from '@/lib/worldCountries'
+
+// Since 2026-07-25, app/api/seller/apply/route.ts always derives
+// application.country from application.shippingCountry server-side, so the
+// two should already agree for every application submitted after that
+// change. This is a defensive fallback only, for PENDING applications
+// submitted before it (where application.country may be a stale, freely-typed
+// value, or null) -- it prefers the real ship-from country whenever one is
+// available, so an old application can't provision a seller with a
+// mismatched or missing country.
+function resolveSellerCountry(app: ApplicationRow): string | undefined {
+  return codeToCountryName(app.shippingCountry) ?? app.country ?? undefined
+}
 
 const DIRECTOR_EMAIL = 'willsinclair144@gmail.com'
 const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
@@ -133,8 +146,9 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
   // country, decided once, here, at approval. This only makes the seller
   // ELIGIBLE -- the perks themselves do not activate until they list their
   // first product (lib/founding.ts).
-  const foundingEligible = application.country
-    ? !(await prisma.seller.findFirst({ where: { country: application.country, foundingEligible: true } }))
+  const resolvedCountry = resolveSellerCountry(application)
+  const foundingEligible = resolvedCountry
+    ? !(await prisma.seller.findFirst({ where: { country: resolvedCountry, foundingEligible: true } }))
     : false
 
   let activationLink: string | undefined
@@ -166,7 +180,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
         userId: existingUser.id,
         storeName: application.businessName,
         description: application.storeDescription ?? undefined,
-        country: application.country ?? undefined,
+        country: resolvedCountry,
           sellerType: application.sellerType ?? undefined,
         approved: true,
         foundingEligible,
@@ -207,7 +221,7 @@ export async function approveApplication(application: ApplicationRow, reviewedBy
           create: {
             storeName: application.businessName,
             description: application.storeDescription ?? undefined,
-            country: application.country ?? undefined,
+            country: resolvedCountry,
             sellerType: application.sellerType ?? undefined,
             approved: true,
             foundingEligible,

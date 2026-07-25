@@ -3,16 +3,24 @@
 // Seller application — the general application form. Outreach emails no
 // longer link straight here: they go to /apply/invited first (a
 // congratulations page naming the founding perks), which then sends the
-// seller on to this form with ?country=XX&invited=1 so the country field
-// below arrives pre-filled. Read via window.location.search (not
+// seller on to this form with ?country=XX&invited=1 so the ship-from country
+// field below arrives pre-filled. Read via window.location.search (not
 // useSearchParams) so this stays a plain client component with no Suspense
 // boundary required.
 //
-// The form logic, fields and POST /api/seller/apply submission are unchanged
-// from the previous version — only the presentation moved.
-//
 // Language rule (standing): the first seller "opens" a country and is
 // "credited as the seller who opened it" — never "claims", "owns", "is yours".
+//
+// William, 2026-07-25: this form used to also ask a separate, independently
+// free-text "Country" question ("Where you're based, or the culture your
+// products represent") alongside the required Ship-from country below --
+// with no validation tying the two together. That let a seller pick any
+// country name they liked (seen live: a China-based, China-shipping company
+// selecting "United States"), which fed straight into getPayoutRail() and
+// silently misrouted their payouts to Stripe. There is now only one country
+// question -- Ship-from country -- and the server derives the seller's
+// stored `country` from it directly (app/api/seller/apply/route.ts), so the
+// two can never diverge again.
 
 import { useEffect, useState } from 'react';
 
@@ -33,7 +41,6 @@ type FormState = {
   password: string;
   confirmPassword: string;
   website: string;
-  country: string;
   storeDescription: string;
   productCategories: string[];
   // Ship-from address. Captured here, not left to a later dashboard step,
@@ -59,7 +66,6 @@ const initialForm: FormState = {
   password: '',
   confirmPassword: '',
   website: '',
-  country: '',
   storeDescription: '',
   productCategories: [],
   shippingName: '',
@@ -129,14 +135,9 @@ export default function ApplyPage() {
   const [error, setError] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
 
-  // Prefill country when arriving from /apply/invited?country=XX or from an
-  // /origins/[slug] "Be the first from X" link (both pass the ISO code).
-  // The business/culture country <select> below stores the COUNTRY NAME as
-  // its option value, not the code -- setting form.country to a raw code
-  // silently failed to select anything in that dropdown (found 2026-07-13
-  // while building /origins). Resolve the code to its matching name here,
-  // and prefill shippingCountry (which IS code-keyed) at the same time,
-  // mirroring what setCountry() below does when a seller picks manually.
+  // Prefill ship-from country when arriving from /apply/invited?country=XX
+  // or from an /origins/[slug] "Be the first from X" link (both pass the
+  // ISO code, which is exactly the format shippingCountry stores).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = (params.get('country') || '').toUpperCase();
@@ -145,7 +146,7 @@ export default function ApplyPage() {
     if (match || pid) {
       setForm(prev => ({
         ...prev,
-        ...(match ? { country: match.name, shippingCountry: prev.shippingCountry || match.code } : {}),
+        ...(match ? { shippingCountry: prev.shippingCountry || match.code } : {}),
         ...(pid ? { prospectId: pid } : {}),
       }));
     }
@@ -153,19 +154,6 @@ export default function ApplyPage() {
 
   function setField(field: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
-  }
-
-  // Picking a business/culture country auto-suggests the same country as
-  // the ship-from address (most sellers dispatch from where they are) --
-  // the seller can still change the ship-from country independently right
-  // below, e.g. a maker whose heritage is Peru but who currently ships from
-  // Spain. Never overwrites a ship-from country the seller already chose.
-  function setCountry(name: string) {
-    setForm(prev => {
-      if (prev.shippingCountry) return { ...prev, country: name };
-      const match = WORLD_COUNTRIES.find(c => c.name === name);
-      return { ...prev, country: name, shippingCountry: match ? match.code : prev.shippingCountry };
-    });
   }
 
   function toggleCategory(cat: string) {
@@ -360,25 +348,12 @@ export default function ApplyPage() {
                 </div>
               </div>
 
-              <div className="ap-row">
-                <div className="ap-field">
-                  <label className="ap-label">Existing website or shop (optional)</label>
-                  <input className="ap-input" type="text" value={form.website}
-                    onChange={e => setField('website', e.target.value)}
-                    placeholder="yourstore.com" />
-                  <p className="ap-hint">Etsy, Instagram, your own site — anything you&apos;d like us to see. Don&apos;t have one? No problem, Velor gives you your own storefront the moment you&apos;re approved.</p>
-                </div>
-                <div className="ap-field">
-                  <label className="ap-label">Country</label>
-                  <select className="ap-select" value={form.country}
-                    onChange={e => setCountry(e.target.value)}>
-                    <option value="">Select country</option>
-                    {WORLD_COUNTRIES.map(c => (
-                      <option key={c.code} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                  <p className="ap-hint">Where you&apos;re based, or the culture your products represent. It does not decide which country page a listing appears on, or who gets founding credit for a country -- that is set per product, by the origin country you choose for each listing after you are approved.</p>
-                </div>
+              <div className="ap-field">
+                <label className="ap-label">Existing website or shop (optional)</label>
+                <input className="ap-input" type="text" value={form.website}
+                  onChange={e => setField('website', e.target.value)}
+                  placeholder="yourstore.com" />
+                <p className="ap-hint">Etsy, Instagram, your own site — anything you&apos;d like us to see. Don&apos;t have one? No problem, Velor gives you your own storefront the moment you&apos;re approved.</p>
               </div>
             </div>
 
@@ -481,6 +456,7 @@ export default function ApplyPage() {
                       <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
                   </select>
+                  <p className="ap-hint">This is also the country Velor lists you under. It does not decide which country page a listing appears on, or who gets founding credit for a country -- that is set per product, by the origin country you choose for each listing after you are approved.</p>
                 </div>
               </div>
 

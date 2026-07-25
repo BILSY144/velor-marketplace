@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, buildApplicationReceivedEmail } from '@/lib/email';
+import { codeToCountryName } from '@/lib/worldCountries';
 
 // The /apply form only asks for a bare domain now (William, 2026-07-19 --
 // the old `type="url"` field forced sellers to type the full "https://"
@@ -31,7 +32,6 @@ export async function POST(request: NextRequest) {
       website,
       productCategories,
       sampleImages,
-      country,
       prospectId,
       // Ship-from address -- required for every new application so
       // provisionSeller.ts can create a real SellerShippingProfile at
@@ -106,7 +106,16 @@ export async function POST(request: NextRequest) {
         website: normalizeWebsite(website),
         productCategories,
         sampleImages: Array.isArray(sampleImages) ? sampleImages : [],
-        country: country ?? null,
+        // William, 2026-07-25 -- `country` is no longer taken from the
+        // client. It used to be a separate, freely-typed field on the
+        // /apply form ("Where you're based, or the culture your products
+        // represent") with nothing tying it to the seller's real address,
+        // which let a seller state a country they neither ship from nor
+        // represent -- and that value fed straight into getPayoutRail(),
+        // silently misrouting payouts. It is now always derived from the
+        // required, validated shippingCountry below, so the two can never
+        // diverge. Any `country` the client still sends is ignored.
+        country: codeToCountryName(shippingCountry),
         prospectId: prospectId ?? null,
         shippingName,
         shippingCompany: shippingCompany || null,
