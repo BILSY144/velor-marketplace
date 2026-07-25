@@ -7,6 +7,16 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## UPDATE 2026-07-25 -- PAYONEER LEAD FORM SUBMITTED FOLLOWING CUSTOMER CARE REPLY (case 260721-023420) -- next step only, NOT a partner approval
+
+Payoneer Customer Care replied today -- the first response since William's 21 Jul chase -- to case 260721-023420, directing us to fill out the "Talk to our team" lead form at payoneer.com/payer so it routes to their Sales team based on location and expected volume. This is the next required step in the stalled Mass Payouts partner application (submitted 13 Jul per docs/PAYONEER_SETUP.md Step 1, William's own action per the standing rule that Claude cannot create accounts/apply on his behalf) -- it is NOT a decision or an approval.
+
+Form submitted (via Claude, with William's explicit go-ahead in chat) with: William Sinclair, +44 7947 181970, customerservice@velorcommerce.co.uk, United Kingdom, company "Velor Commerce Ltd (Velor Marketplace)". The numeric fields entered (200 payees, $10k-$50k/month volume) are an honest 12-MONTH PROJECTION, not current volume -- real current state is near-zero, pre-launch (buyers open 6 Aug 2026), 12 approved sellers from ~2,798 prospects per today's daily report. The Comments field referenced case 260721-023420 and explained the marketplace model, pre-launch stage, and the specific non-Stripe countries needing coverage (China and Morocco already have approved sellers; broader focus on Africa/South Asia/Latin America/Eastern Europe). Payoneer's on-screen confirmation: "Thank you! We look forward to getting in touch with you to better understand how Payoneer can help you."
+
+STILL UNCONFIRMED / next session: whether this lead-form route actually reaches the Mass Payouts partner/API team or a generic sales rep unaware of the existing case -- no reply received yet as of this checkpoint. Check both Gmail (willsinclair144@gmail.com) and Outlook for a Payoneer Sales follow-up before re-submitting or chasing again.
+
+---
+
 ## CURRENT PAYOUT-RAIL STATE (William, 2026-07-24 -- SUPERSEDES the Trolley directive below, which is dead history only)
 
 **Trolley is fully removed. Do not revisit it without William's explicit new
