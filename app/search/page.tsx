@@ -174,7 +174,7 @@ function SearchContent() {
             className="vsr-in"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Try a craft, a country, a thing..."
+            placeholder="Search goods, country or seller..."
           />
           <button className="vsr-btn" type="submit">Search</button>
         </form>
