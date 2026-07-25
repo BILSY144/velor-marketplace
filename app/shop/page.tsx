@@ -603,7 +603,7 @@ function ShopContent() {
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               onFocus={() => setSearchOpen(true)}
-              placeholder="Search goods, countries, categories..."
+              placeholder="Search goods, country or seller..."
               onKeyDown={e => { if (e.key === 'Enter') { navigate({ search: searchInput }); setSearchOpen(false) } }}
               style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none' }}
             />
