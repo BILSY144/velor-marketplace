@@ -18,12 +18,42 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
+  // Two live Stripe webhook endpoints now deliver to this same route
+  // (2026-07-25, see app/api/admin/stripe-webhook-status/route.ts): the
+  // original platform-account endpoint (STRIPE_WEBHOOK_SECRET) and a new
+  // connect:true endpoint for connected-account events like
+  // account.updated (STRIPE_WEBHOOK_SECRET_CONNECT). Each Stripe webhook
+  // endpoint has its OWN signing secret -- constructEvent only accepts one
+  // secret per call, so a delivery is checked against the platform secret
+  // first and, only if that fails, against the Connect secret before
+  // giving up. This is the standard pattern for one route serving multiple
+  // Stripe endpoints; it is not a security weakening, since a payload must
+  // still verify against SOME valid secret in full (HMAC + timestamp
+  // tolerance) to be accepted -- an attacker gains nothing from there being
+  // two acceptable secrets instead of one, same as any key-rotation window.
   let event: Stripe.Event;
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_CONNECT].filter(
+    (s): s is string => !!s,
+  );
+  if (secrets.length === 0) {
+    console.error('[webhook] no STRIPE_WEBHOOK_SECRET(S) configured');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+  }
+  let lastError: unknown = null;
+  let verified: Stripe.Event | null = null;
+  for (const secret of secrets) {
     try {
-          event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    } catch (err: any) {
-          return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+      verified = stripe.webhooks.constructEvent(body, sig, secret);
+      break;
+    } catch (err) {
+      lastError = err;
     }
+  }
+  if (!verified) {
+    const message = lastError instanceof Error ? lastError.message : 'Webhook signature verification failed';
+    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
+  }
+  event = verified;
 
   switch (event.type) {
     case 'checkout.session.completed': {
