@@ -19,7 +19,15 @@ interface Review {
   rating: number
   comment: string
   createdAt: string
-  user: { name: string }
+  user: { name: string; image?: string | null }
+}
+
+interface SellerStats {
+  totalSales: number
+  approvedProductCount: number
+  avgRating: number | null
+  reviewCount: number
+  memberSinceYear: number
 }
 
 interface Product {
@@ -34,7 +42,7 @@ interface Product {
   stock: number
   sellerId: string
   sellerName: string
-  seller?: { storeName: string; currency?: string } | null
+  seller?: { storeName: string; currency?: string; country?: string | null; storeLogo?: string | null; tier?: string; sellerBadge?: string | null; foundingBadge?: boolean } | null
   avgRating: number | null
   reviewCount: number
   variants: Variant[]
@@ -43,6 +51,17 @@ interface Product {
   percentOff: number | null
   isHandmade: boolean
   makerStory: string | null
+  // Real spec fields already on Product (prisma/schema.prisma) -- only ever
+  // rendered when actually present; never fabricated. See RESEARCH note in
+  // CLAUDE.md's 2026-07-25 PDP redesign checkpoint.
+  materials?: string | null
+  weightGrams?: number | null
+  lengthCm?: number | null
+  widthCm?: number | null
+  heightCm?: number | null
+  originCountry?: string | null
+  specialities?: string[]
+  sellerStats?: SellerStats
 }
 
 import { addToCart as addToSharedCart } from '@/lib/cart'
@@ -57,7 +76,125 @@ interface StoredCartItem {
   sellerId?: string
 }
 
+// Shared shape for anything rendered in a rail card -- either a live API
+// result from /api/shop/products (title comes back aliased as `name`) or a
+// locally-stored "recently viewed" snapshot (title stored directly).
+interface RailItem {
+  id: string
+  title?: string
+  name?: string
+  images?: string[]
+  image?: string
+  price: number
+  currency?: string
+  discountedPrice?: number | null
+  percentOff?: number | null
+  avgRating?: number | null
+  reviewCount?: number
+  stock?: number
+}
 
+const RECENTLY_VIEWED_KEY = 'velor-recently-viewed'
+
+function RailCard({ p, symbol, convert }: { p: RailItem; symbol: string; convert: (amount: number, from: string) => number }) {
+  const title = p.title || p.name || 'Goods'
+  const img = p.image || p.images?.[0]
+  const onSale = p.discountedPrice != null && p.discountedPrice < p.price
+  const cur = p.currency || 'GBP'
+  return (
+    <Link href={`/shop/${p.id}`} className="velor-pdp-rail-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', height: '100%' }}>
+        <div style={{ aspectRatio: '1', background: '#1c1c20', position: 'relative', overflow: 'hidden' }}>
+          {img ? (
+            <img src={img} alt={title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '11px' }}>No image</div>
+          )}
+          {onSale && (
+            <div style={{ position: 'absolute', top: 8, left: 8, background: 'var(--accent)', color: '#000', fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '4px' }}>
+              {p.percentOff}% OFF
+            </div>
+          )}
+          {(p.stock ?? 1) === 0 && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ background: '#000', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '4px 10px', borderRadius: '4px', letterSpacing: '1px' }}>SOLD OUT</span>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: '10px' }}>
+          <div style={{ fontSize: '12.5px', fontWeight: 600, lineHeight: 1.3, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '32px' }}>
+            {title}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: onSale ? 'var(--accent)' : 'var(--text)' }}>
+              {symbol}{convert(onSale ? (p.discountedPrice as number) : p.price, cur).toFixed(2)}
+            </span>
+            {onSale && (
+              <span style={{ fontSize: '11px', color: 'var(--muted)', textDecoration: 'line-through' }}>
+                {symbol}{convert(p.price, cur).toFixed(2)}
+              </span>
+            )}
+          </div>
+          {p.avgRating != null && (p.reviewCount ?? 0) > 0 && (
+            <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--accent)' }}>
+              {'★'.repeat(Math.round(p.avgRating))} <span style={{ color: 'var(--muted)' }}>({p.reviewCount})</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function Rail({ heading, items, symbol, convert, viewAllHref }: { heading: string; items: RailItem[]; symbol: string; convert: (amount: number, from: string) => number; viewAllHref?: string }) {
+  if (items.length === 0) return null
+  return (
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 40px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '19px', fontWeight: 700, margin: 0 }}>{heading}</h2>
+        {viewAllHref && (
+          <Link href={viewAllHref} style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>View all</Link>
+        )}
+      </div>
+      <div className="velor-pdp-rail-scroll">
+        {items.map((p) => (
+          <RailCard key={p.id} p={p} symbol={symbol} convert={convert} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SpecRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: '14px' }}>
+      <span style={{ color: 'var(--muted)' }}>{label}</span>
+      <span style={{ fontWeight: 600, textAlign: 'right' }}>{value}</span>
+    </div>
+  )
+}
+
+const pdpCss = `
+.velor-pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.velor-pdp-mobilebar{display:none;}
+.velor-pdp-gallery-main{cursor:zoom-in;}
+.velor-pdp-gallery-main img{transition:transform .35s ease;}
+.velor-pdp-gallery-main:hover img{transform:scale(1.06);}
+.velor-pdp-rail-scroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:6px;}
+.velor-pdp-rail-scroll::-webkit-scrollbar{display:none;}
+.velor-pdp-rail-card{flex:0 0 auto;width:170px;scroll-snap-align:start;}
+.velor-pdp-tap{min-height:44px;}
+@media(max-width:900px){
+  .velor-pdp-grid{grid-template-columns:1fr;gap:24px;}
+  .velor-pdp-page{padding-bottom:84px;}
+  .velor-pdp-mobilebar{display:flex;}
+  .velor-pdp-desktop-cta{display:none;}
+}
+@media(max-width:600px){
+  .velor-pdp-rail-card{width:148px;}
+  .velor-pdp-seller-stats{grid-template-columns:1fr 1fr 1fr !important;}
+}
+`
 
 export default function ProductPageClient() {
   const params = useParams()
@@ -80,6 +217,10 @@ export default function ProductPageClient() {
   const [contactSending, setContactSending] = useState(false)
   const [contactSent, setContactSent] = useState(false)
   const [contactError, setContactError] = useState('')
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [sellerRail, setSellerRail] = useState<RailItem[]>([])
+  const [relatedRail, setRelatedRail] = useState<RailItem[]>([])
+  const [recentlyViewed, setRecentlyViewed] = useState<RailItem[]>([])
 
   // Review submission -- 2026-07-16 readiness audit finding: app/api/reviews
   // (purchase-gated, one-review-per-buyer, Prisma-backed) already existed
@@ -113,6 +254,65 @@ export default function ProductPageClient() {
       })
       .catch(() => {})
   }, [session, productId])
+
+  // "More from this seller" + "You may also like" rails (William, 2026-07-25
+  // PDP redesign). Both reuse the existing /api/shop/products listing
+  // endpoint (extended with sellerId/excludeId params for this) rather than
+  // a bespoke recommendation service -- real catalogue data, no fabricated
+  // "personalization".
+  useEffect(() => {
+    if (!product) return
+    let cancelled = false
+    fetch(`/api/shop/products?sellerId=${product.sellerId}&excludeId=${product.id}&limit=10`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (!cancelled && data?.products) setSellerRail(data.products) })
+      .catch(() => {})
+    fetch(`/api/shop/products?category=${encodeURIComponent(product.category)}&excludeId=${product.id}&limit=12`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (cancelled || !data?.products) return
+        const filtered = (data.products as RailItem[] & { sellerId?: string }[]).filter((p: RailItem & { sellerId?: string }) => p.sellerId !== product.sellerId)
+        setRelatedRail((filtered.length > 0 ? filtered : data.products).slice(0, 8))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [product?.id, product?.sellerId, product?.category])
+
+  // Recently-viewed rail -- client-side only (localStorage), same pattern
+  // already used site-wide for the cart (lib/cart.ts). Records THIS product
+  // on every visit, then shows everything else in the list excluding it.
+  useEffect(() => {
+    if (!product) return
+    try {
+      const raw = localStorage.getItem(RECENTLY_VIEWED_KEY)
+      const list: RailItem[] = raw ? JSON.parse(raw) : []
+      const entry: RailItem = {
+        id: product.id,
+        title: product.title,
+        image: product.images[0] || '',
+        price: product.price,
+        currency: product.seller?.currency || product.currency || 'GBP',
+      }
+      const next = [entry, ...list.filter(i => i.id !== product.id)].slice(0, 12)
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next))
+      setRecentlyViewed(next.filter(i => i.id !== product.id).slice(0, 8))
+    } catch {}
+  }, [product?.id])
+
+  // Lightbox keyboard controls (Escape closes, arrows navigate). Declared
+  // above any early return so hook order stays stable regardless of loading/
+  // notFound state, per the Rules of Hooks.
+  useEffect(() => {
+    if (!lightboxOpen || !product) return
+    const imgCount = product.images.length || 1
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightboxOpen(false)
+      else if (e.key === 'ArrowLeft') setMainImage(i => (i - 1 + imgCount) % imgCount)
+      else if (e.key === 'ArrowRight') setMainImage(i => (i + 1) % imgCount)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightboxOpen, product])
 
   async function toggleWishlist() {
     if (!session) {
@@ -156,7 +356,6 @@ export default function ProductPageClient() {
     }
   }
 
-
   async function submitReview() {
     if (!session) {
       router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
@@ -195,7 +394,7 @@ export default function ProductPageClient() {
       setReviewSubmitting(false)
     }
   }
-  // Cart items store the ORIGINAL price, never the discounted one â the
+  // Cart items store the ORIGINAL price, never the discounted one â the
   // automatic discount is recomputed server-side at checkout from the
   // seller's live discount codes, so the buyer is always charged against
   // the current rules rather than a client-supplied number. The discount
@@ -231,6 +430,7 @@ export default function ProductPageClient() {
   // are scoped by productId, not by variant), so only show the "was/now"
   // treatment when no variant is selected or the product has no variants.
   const onSale = !selectedVariant && product?.discountedPrice != null && product.discountedPrice < product.price
+  const images = product && product.images.length > 0 ? product.images : ['/placeholder.png']
 
   if (loading) {
     return (
@@ -249,10 +449,19 @@ export default function ProductPageClient() {
     )
   }
 
-  const images = product.images.length > 0 ? product.images : ['/placeholder.png']
+  // Rating breakdown is computed off the loaded reviews (API returns the 20
+  // most recent -- same set the average/star display already uses). Flagged
+  // honestly below when the seller has more reviews than are shown, rather
+  // than implying this is a full-history breakdown.
+  const ratingCounts = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: product.reviews.filter(r => r.rating === star).length,
+  }))
+  const hasMoreReviews = product.reviewCount > product.reviews.length
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+    <div className="velor-pdp-page" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+      <style dangerouslySetInnerHTML={{ __html: pdpCss }} />
       <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '16px 40px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--muted)' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '18px' }}>VELOR</Link>
@@ -263,9 +472,15 @@ export default function ProductPageClient() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'start' }}>
+      <div className="velor-pdp-grid" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ width: '100%', maxWidth: '420px', maxHeight: '420px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}>
+          <div
+            className="velor-pdp-gallery-main"
+            onClick={() => setLightboxOpen(true)}
+            role="button"
+            aria-label="Open full-size image"
+            style={{ width: '100%', maxWidth: '480px', maxHeight: '480px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+          >
             <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
@@ -279,6 +494,9 @@ export default function ProductPageClient() {
                 </span>
               </div>
             )}
+            <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '11px', fontWeight: 600, padding: '5px 11px', borderRadius: '20px' }}>
+              Tap to zoom
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px' }}>
             {images.map((img, i) => (
@@ -301,7 +519,7 @@ export default function ProductPageClient() {
           <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{product.category}</div>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.title}</h1>
 
-          {(product.avgRating ?? 0) != null && (
+          {(product.avgRating ?? 0) != null && product.reviewCount > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
               <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
               <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
@@ -342,8 +560,9 @@ export default function ProductPageClient() {
                   <button
                     key={v.id}
                     onClick={() => setSelectedVariant(v)}
+                    className="velor-pdp-tap"
                     style={{
-                      padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                      padding: '10px 18px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
                       border: selectedVariant?.id === v.id ? '2px solid var(--accent)' : '2px solid var(--border)',
                       background: selectedVariant?.id === v.id ? 'rgba(255,107,0,0.12)' : 'transparent',
                       color: selectedVariant?.id === v.id ? 'var(--accent)' : 'var(--text)',
@@ -359,34 +578,39 @@ export default function ProductPageClient() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
             <div style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 600 }}>Quantity</div>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: '40px', height: '40px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>-</button>
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="velor-pdp-tap" style={{ width: '44px', height: '44px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>-</button>
               <span style={{ width: '40px', textAlign: 'center', fontWeight: 600 }}>{qty}</span>
-              <button onClick={() => setQty(q => Math.min(currentStock, q + 1))} style={{ width: '40px', height: '40px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>+</button>
+              <button onClick={() => setQty(q => Math.min(currentStock, q + 1))} className="velor-pdp-tap" style={{ width: '44px', height: '44px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>+</button>
             </div>
             {currentStock > 0 && currentStock < 5 && (
               <span style={{ color: 'var(--red)', fontSize: '13px', fontWeight: 600 }}>Only {currentStock} left</span>
             )}
           </div>
 
-          <button
-            onClick={addToCart}
-            disabled={currentStock === 0}
-            style={{ width: '100%', padding: '16px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: addedToCart ? '#000' : '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '10px', transition: 'background 0.2s' }}
-          >
-            {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added to Cart!' : 'Add to Cart'}
-          </button>
+          <div className="velor-pdp-desktop-cta">
+            <button
+              onClick={addToCart}
+              disabled={currentStock === 0}
+              className="velor-pdp-tap"
+              style={{ width: '100%', padding: '16px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: addedToCart ? '#000' : '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '10px', transition: 'background 0.2s' }}
+            >
+              {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added to Cart!' : 'Add to Cart'}
+            </button>
 
-          <button
-            onClick={buyNow}
-            disabled={currentStock === 0}
-            style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '16px' }}
-          >
-            Buy Now
-          </button>
+            <button
+              onClick={buyNow}
+              disabled={currentStock === 0}
+              className="velor-pdp-tap"
+              style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '16px' }}
+            >
+              Buy Now
+            </button>
+          </div>
 
           <button
             onClick={toggleWishlist}
             disabled={wishlistLoading}
+            className="velor-pdp-tap"
             style={{ width: '100%', padding: '12px', background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <span style={{ fontSize: '18px' }}>{isWishlisted ? '♥' : '♡'}</span>
@@ -403,15 +627,105 @@ export default function ProductPageClient() {
               setContactSent(false)
               setContactError('')
             }}
+            className="velor-pdp-tap"
             style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <span style={{ fontSize: '16px' }}>&#9993;</span>
             Contact Seller
           </button>
 
-          {product.seller?.storeName && (
-            <div style={{ marginTop: '20px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--muted)' }}>
-              Sold by <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span>
+          {/* Dispatch, returns & buyer-protection module (2026-07-25 PDP
+              redesign) -- every line here is either a real field off this
+              seller/product or a genuine, already-live platform policy
+              (Consumer Contracts Regs cooling-off period; messageFilter.ts's
+              no-contact-details rule). No invented delivery date -- Shippo
+              calculates the real one at checkout. */}
+          <div style={{ marginTop: '20px', padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '16px', lineHeight: 1.4 }}>📦</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700 }}>Dispatch &amp; delivery</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  {product.seller?.country ? `Dispatched from ${product.seller.country}. ` : ''}
+                  Usually dispatched within 1–3 business days. Real shipping cost and estimated arrival are calculated at checkout.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '16px', lineHeight: 1.4 }}>↩️</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700 }}>Returns</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  14-day right to cancel under the UK Consumer Contracts Regulations. <Link href="/help" style={{ color: 'var(--accent)', fontWeight: 600 }}>See return policy</Link>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '16px', lineHeight: 1.4 }}>🔒</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700 }}>Buyer protection</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Payments secured by Stripe. All buyer–seller messages stay on Velor — never shared contact details.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Seller trust card -- replaces the old one-line "Sold by X". Every
+              number is computed live in app/api/shop/products/[productId]
+              from real Orders/Reviews/Products, never fabricated. */}
+          {product.seller && (
+            <div style={{ marginTop: '16px', padding: '18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
+                  {product.seller.storeLogo ? (
+                    <img src={product.seller.storeLogo} alt={product.seller.storeName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--accent)' }}>{product.seller.storeName?.[0]?.toUpperCase() ?? '?'}</span>
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Link href={`/seller/${product.sellerId}`} style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)', textDecoration: 'none' }}>{product.seller.storeName}</Link>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                    {product.seller.country ? `${product.seller.country} · ` : ''}
+                    {product.sellerStats ? `Member since ${product.sellerStats.memberSinceYear}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              {(product.seller.foundingBadge || product.seller.sellerBadge) && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  {product.seller.foundingBadge && (
+                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#E9C46A', background: 'linear-gradient(135deg, rgba(93,69,16,0.55), rgba(41,29,8,0.55))', border: '1px solid rgba(185,138,47,0.75)', borderRadius: '999px', padding: '3px 10px' }}>
+                      Founding Seller
+                    </span>
+                  )}
+                  {product.seller.sellerBadge && (
+                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(255,107,0,0.12)', border: '1px solid var(--accent)', borderRadius: '999px', padding: '3px 10px' }}>
+                      {product.seller.sellerBadge}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="velor-pdp-seller-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '15px' }}>{product.sellerStats?.approvedProductCount ?? 0}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Listings</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '15px' }}>{product.sellerStats && product.sellerStats.totalSales > 0 ? product.sellerStats.totalSales : 'New'}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{product.sellerStats && product.sellerStats.totalSales > 0 ? 'Sold' : 'Seller'}</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '15px' }}>{product.sellerStats?.avgRating != null ? `${product.sellerStats.avgRating}★` : '—'}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{product.sellerStats?.reviewCount ? `${product.sellerStats.reviewCount} reviews` : 'No reviews yet'}</div>
+                </div>
+              </div>
+
+              <Link href={`/seller/${product.sellerId}`} className="velor-pdp-tap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text)', textDecoration: 'none', boxSizing: 'border-box' }}>
+                Visit Store
+              </Link>
             </div>
           )}
 
@@ -437,23 +751,72 @@ export default function ProductPageClient() {
           )}
         </div>
 
+        {(product.materials || product.originCountry || product.weightGrams || product.lengthCm || product.widthCm || product.heightCm || (product.specialities && product.specialities.length > 0)) && (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', marginBottom: '24px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Details</h2>
+            <div>
+              {product.materials && <SpecRow label="Materials" value={product.materials} />}
+              {product.originCountry && <SpecRow label="Origin" value={product.originCountry} />}
+              {(product.lengthCm || product.widthCm || product.heightCm) && (
+                <SpecRow label="Dimensions" value={`${product.lengthCm ?? '—'} × ${product.widthCm ?? '—'} × ${product.heightCm ?? '—'} cm`} />
+              )}
+              {product.weightGrams && <SpecRow label="Weight" value={`${product.weightGrams} g`} />}
+              {product.specialities && product.specialities.length > 0 && <SpecRow label="Speciality" value={product.specialities.join(', ')} />}
+            </div>
+          </div>
+        )}
+
         {(product.reviews.length > 0 || session) && (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
             {product.reviews.length > 0 && (
               <>
-                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '24px' }}>
+                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '20px' }}>
                   Reviews
-                  {(product.avgRating ?? 0) != null && (
-                    <span style={{ marginLeft: '12px', color: 'var(--accent)', fontSize: '18px' }}>{product.avgRating ?? 0} ★</span>
-                  )}
                 </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '36px', fontWeight: 800, fontFamily: 'Space Grotesk, sans-serif' }}>{product.avgRating ?? 0}</div>
+                    <div style={{ color: 'var(--accent)', fontSize: '14px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{product.reviewCount} review{product.reviewCount === 1 ? '' : 's'}</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    {ratingCounts.map(({ star, count }) => {
+                      const pct = product.reviews.length ? Math.round((count / product.reviews.length) * 100) : 0
+                      return (
+                        <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                          <span style={{ width: '32px', color: 'var(--muted)' }}>{star}★</span>
+                          <div style={{ flex: 1, height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
+                          </div>
+                          <span style={{ width: '24px', color: 'var(--muted)', textAlign: 'right' }}>{count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                {hasMoreReviews && (
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '20px' }}>
+                    Showing the {product.reviews.length} most recent of {product.reviewCount} reviews
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px', marginTop: hasMoreReviews ? 0 : '20px' }}>
                   {product.reviews.map(r => (
                     <div key={r.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: 'var(--accent)' }}>
+                          {r.user.image ? (
+                            <img src={r.user.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            r.user.name?.[0]?.toUpperCase() || '?'
+                          )}
+                        </div>
                         <span style={{ fontWeight: 600, fontSize: '14px' }}>{r.user.name}</span>
                         <span style={{ color: 'var(--accent)', fontSize: '13px' }}>{'★'.repeat(r.rating)}</span>
-                        <span style={{ color: 'var(--muted)', fontSize: '12px' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
+                        {/* Every review requires a real completed OrderItem for
+                            this product (app/api/reviews POST) -- so this
+                            badge is always true, never decorative. */}
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--green)', background: 'rgba(46,204,113,0.12)', padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.02em' }}>VERIFIED PURCHASE</span>
+                        <span style={{ color: 'var(--muted)', fontSize: '12px', marginLeft: 'auto' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
                       </div>
                       <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
                     </div>
@@ -520,6 +883,75 @@ export default function ProductPageClient() {
           </div>
         )}
       </div>
+
+      <Rail heading={`More from ${product.seller?.storeName || 'this seller'}`} items={sellerRail} symbol={symbol} convert={convert} viewAllHref={`/seller/${product.sellerId}`} />
+      <Rail heading="You may also like" items={relatedRail} symbol={symbol} convert={convert} viewAllHref={`/shop?category=${encodeURIComponent(product.category)}`} />
+      <Rail heading="Recently viewed" items={recentlyViewed} symbol={symbol} convert={convert} />
+
+      {/* Sticky mobile buy bar -- hidden on desktop via .velor-pdp-mobilebar's
+          media query in pdpCss; the full-width Add to Cart / Buy Now buttons
+          above stay in the normal flow on desktop only (.velor-pdp-desktop-cta),
+          since on mobile a buyer scrolling through reviews/specs otherwise
+          loses the buy box entirely -- primary action always reachable in the
+          bottom thumb zone, matching standard mobile commerce UX. */}
+      <div className="velor-pdp-mobilebar">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--muted)' }}>{onSale ? 'Sale price' : 'Price'}</div>
+          <div style={{ fontWeight: 800, fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px' }}>
+            {symbol}{convert(onSale ? (product.discountedPrice as number) : currentPrice, product.seller?.currency || 'GBP').toFixed(2)}
+          </div>
+        </div>
+        <button
+          onClick={buyNow}
+          disabled={currentStock === 0}
+          className="velor-pdp-tap"
+          style={{ flex: '0 0 auto', padding: '0 18px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', border: '2px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+        >
+          Buy Now
+        </button>
+        <button
+          onClick={addToCart}
+          disabled={currentStock === 0}
+          className="velor-pdp-tap"
+          style={{ flex: '1.3 1 0', padding: '0 16px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', border: 'none', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+        >
+          {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
+        </button>
+      </div>
+
+      {lightboxOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}
+          onClick={e => { if (e.target === e.currentTarget) setLightboxOpen(false) }}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close"
+            style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', width: '44px', height: '44px', borderRadius: '50%', cursor: 'pointer', lineHeight: 1 }}
+          >
+            &times;
+          </button>
+          {images.length > 1 && (
+            <button
+              onClick={() => setMainImage(i => (i - 1 + images.length) % images.length)}
+              aria-label="Previous image"
+              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '28px', width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer', lineHeight: 1 }}
+            >
+              ‹
+            </button>
+          )}
+          <img src={images[mainImage]} alt={product.title} style={{ maxWidth: '92vw', maxHeight: '86vh', objectFit: 'contain' }} />
+          {images.length > 1 && (
+            <button
+              onClick={() => setMainImage(i => (i + 1) % images.length)}
+              aria-label="Next image"
+              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '28px', width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer', lineHeight: 1 }}
+            >
+              ›
+            </button>
+          )}
+        </div>
+      )}
 
       {showContactModal && (
         <div

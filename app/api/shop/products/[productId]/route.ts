@@ -19,7 +19,16 @@ export async function GET(
           country: true,
           currency: true,
           createdAt: true,
-          _count: { select: { products: true } },
+          storeLogo: true,
+          tier: true,
+          sellerBadge: true,
+          foundingBadge: true,
+          countryFounded: { select: { countryName: true } },
+          // Real, approved-only listing count -- the previous unfiltered
+          // _count.products included PENDING_REVIEW/REJECTED rows too, which
+          // would have overstated an active catalogue size on the storefront
+          // trust card added 2026-07-25 (William: "serious work" PDP upgrade).
+          _count: { select: { products: { where: { status: 'APPROVED' } } } },
         },
       },
       reviews: {
@@ -50,10 +59,47 @@ export async function GET(
   })
   const discount = computeListingDiscount(codes, product.id, product.price, now)
 
+  // Seller trust-card stats (2026-07-25, William: PDP redesign -- "a whole
+  // lot more than just basic"). Every number here is computed live from real
+  // rows, never fabricated -- LAW #1. totalSales counts real paid OrderItems
+  // across every product this seller has ever listed (not just this one);
+  // sellerAvgRating/sellerReviewCount aggregate Reviews across the seller's
+  // whole catalogue, matching what a buyer would find by visiting the actual
+  // storefront at /seller/[sellerId].
+  const [totalSalesAgg, sellerReviewAgg] = await Promise.all([
+    prisma.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        product: { sellerId: product.seller.id },
+        order: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } },
+      },
+    }),
+    prisma.review.aggregate({
+      _avg: { rating: true },
+      _count: { _all: true },
+      where: { product: { sellerId: product.seller.id } },
+    }),
+  ])
+
+  const sellerStats = {
+    totalSales: totalSalesAgg._sum.quantity ?? 0,
+    approvedProductCount: product.seller._count.products,
+    avgRating: sellerReviewAgg._count._all > 0 ? Math.round((sellerReviewAgg._avg.rating ?? 0) * 10) / 10 : null,
+    reviewCount: sellerReviewAgg._count._all,
+    memberSinceYear: new Date(product.seller.createdAt).getFullYear(),
+  }
+
   return NextResponse.json({
     ...product,
+    // Flat reviewCount alongside the existing _count.reviews shape -- the PDP
+    // client has always read product.reviewCount directly (a pre-existing
+    // field expectation that the raw Prisma `...product` spread never
+    // actually satisfied, since Prisma nests it under _count.reviews; fixed
+    // here rather than silently left to render "undefined reviews").
+    reviewCount: product._count.reviews,
     avgRating: Math.round(avgRating * 10) / 10,
     discountedPrice: discount?.discountedPriceGBP ?? null,
     percentOff: discount?.percentOff ?? null,
+    sellerStats,
   })
 }

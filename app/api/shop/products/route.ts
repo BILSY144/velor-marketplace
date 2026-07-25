@@ -15,11 +15,18 @@ export async function GET(request: Request) {
   const search = searchParams.get('search')
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
+  // Added 2026-07-25 for the PDP redesign's "More from this seller" and
+  // "You may also like" rails -- sellerId scopes to one seller's catalogue,
+  // excludeId keeps the current product itself out of its own rail.
+  const sellerId = searchParams.get('sellerId')
+  const excludeId = searchParams.get('excludeId')
 
   const where: Record<string, unknown> = { status: 'APPROVED' }
 
   if (category) where.category = category
   if (origin) where.originCountry = origin
+  if (sellerId) where.sellerId = sellerId
+  if (excludeId) where.id = { not: excludeId }
   // Closed-vocabulary speciality filter (lib/specialities.ts) — Product.specialities
   // is a String[] (max 2 terms per listing, see prisma/schema.prisma), so this is
   // an array-contains match, not an equality match. Validated against the closed
