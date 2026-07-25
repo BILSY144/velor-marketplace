@@ -91,20 +91,25 @@ const RATING_BREAKDOWN = [
 ]
 
 const pdpCss = `
-.velor-pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.velor-pdp-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);gap:40px;align-items:start;}
 .velor-pdp-mobilebar{display:none;}
-.velor-pdp-gallery-main{cursor:zoom-in;}
+.velor-pdp-gallery-main{cursor:zoom-in;width:100%;}
 .velor-pdp-gallery-main img{transition:transform .35s ease;}
-.velor-pdp-gallery-main:hover img{transform:scale(1.06);}
+.velor-pdp-gallery-main:hover img{transform:scale(1.05);}
 .velor-pdp-rail-scroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:6px;}
 .velor-pdp-rail-scroll::-webkit-scrollbar{display:none;}
 .velor-pdp-rail-card{flex:0 0 auto;width:170px;scroll-snap-align:start;}
 .velor-pdp-tap{min-height:44px;}
+.velor-pdp-info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start;}
+.velor-pdp-desc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;align-items:start;}
 @media(max-width:900px){
   .velor-pdp-grid{grid-template-columns:1fr;gap:24px;}
   .velor-pdp-page{padding-bottom:84px;}
   .velor-pdp-mobilebar{display:flex;}
   .velor-pdp-desktop-cta{display:none;}
+  .velor-pdp-cta-primary{display:none;}
+  .velor-pdp-cta-icon{flex:1 !important;width:auto !important;}
+  .velor-pdp-mobile-contact{display:flex !important;}
 }
 @media(max-width:600px){
   .velor-pdp-rail-card{width:148px;}
@@ -194,14 +199,14 @@ export default function ShopPreviewPage() {
         </div>
       </div>
 
-      <div className="velor-pdp-grid" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="velor-pdp-grid" style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 40px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div
             className="velor-pdp-gallery-main"
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size example image"
-            style={{ width: '100%', maxWidth: '480px', maxHeight: '480px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: '100%', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={PHOTOS[mainImage]} alt="Example product" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '11px', fontWeight: 600, padding: '5px 11px', borderRadius: '20px' }}>
@@ -229,17 +234,17 @@ export default function ShopPreviewPage() {
           <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Art, Crafts &amp; Handmade</div>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>Example handwoven wool scarf</h1>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <span style={{ color: 'var(--accent)', fontSize: '16px' }}>★★★★</span>
             <span style={{ color: 'var(--accent)', fontWeight: 600 }}>4.5</span>
             <span style={{ color: 'var(--muted)', fontSize: '14px' }}>(12 reviews)</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '18px' }}>
             <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--text)' }}>{symbol}42.00</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 600 }}>Quantity</div>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="velor-pdp-tap" style={{ width: '44px', height: '44px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>-</button>
@@ -248,27 +253,52 @@ export default function ShopPreviewPage() {
             </div>
           </div>
 
-          <div className="velor-pdp-desktop-cta">
-            <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ width: '100%', padding: '16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', marginBottom: '10px', opacity: .85 }}>
+          {/* Compact action rows -- mirrors the real PDP's button restructuring
+              (William, 2026-07-25: "the big add to cart, buy now, save to
+              wishlist, contact seller buttons are too big and really wasting
+              space"). This preview must stay in lockstep with the real page's
+              layout, so the same primary+icon row pairing applies here. */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-cta-primary" style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
               Add to Cart
             </button>
-            <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', marginBottom: '16px', opacity: .85 }}>
-              Buy Now
+            <button onClick={showPreviewNotice} aria-label="Save to wishlist" title="Save to wishlist" className="velor-pdp-tap velor-pdp-cta-icon" style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: .85 }}>
+              ♡
             </button>
           </div>
-          <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ width: '100%', padding: '12px', background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
-            <span style={{ fontSize: '18px' }}>♡</span> Save to Wishlist
-          </button>
-          <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: .85 }}>
-            <span style={{ fontSize: '16px' }}>&#9993;</span> Contact Seller
+
+          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ flex: 1, padding: '12px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
+              Buy Now
+            </button>
+            <button onClick={showPreviewNotice} aria-label="Contact seller" title="Contact seller" className="velor-pdp-tap" style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: .85 }}>
+              &#9993;
+            </button>
+          </div>
+
+          {/* Contact Seller must still be reachable on mobile even though Buy
+              Now hides there (mobile bar covers Buy Now) -- shown on its own,
+              mobile-only, via the inverse of .velor-pdp-desktop-cta. */}
+          <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-mobile-contact" style={{ display: 'none', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px', opacity: .85 }}>
+            <span style={{ fontSize: '16px' }}>&#9993;</span>
+            Contact Seller
           </button>
           {noticeVisible && (
             <div style={{ marginTop: '2px', marginBottom: '4px', padding: '10px 14px', background: 'rgba(255,107,0,0.1)', border: '1px solid var(--accent)', borderRadius: '8px', color: 'var(--accent)', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
               This is a preview, not a real listing — <Link href="/sell" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>list your own goods</Link> to enable real buying.
             </div>
           )}
+        </div>
+      </div>
 
-          <div style={{ marginTop: '20px', padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Full-width info row -- mirrors the real PDP's layout (William,
+          2026-07-25: "theres a lot of unneccassary waisted space on the page
+          we need to utilize it"). Must stay in lockstep with the real page's
+          structure per this file's own documented rule, using clearly-labeled
+          example/placeholder data throughout. */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 28px' }}>
+        <div className="velor-pdp-info-row">
+          <div style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
               <span style={{ fontSize: '16px', lineHeight: 1.4 }}>📦</span>
               <div>
@@ -298,7 +328,7 @@ export default function ShopPreviewPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: '16px', padding: '18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+          <div style={{ padding: '18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
             <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>Example seller card</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
@@ -328,31 +358,35 @@ export default function ShopPreviewPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: '12px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--accent)', fontSize: '13px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>Handmade / Artisan-made</div>
+          <div style={{ padding: '18px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--accent)', fontSize: '13px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '8px' }}>Handmade / Artisan-made</div>
             <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>Placeholder maker story text — this is where your own words about your craft will appear.</p>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 40px' }}>
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>Description</h2>
-          <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '15px', whiteSpace: 'pre-wrap' }}>This is placeholder example text showing where your own description will appear once you list your goods.</p>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px' }}>
-            <span style={{ padding: '4px 12px', background: 'rgba(255,107,0,0.1)', color: 'var(--accent)', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>example</span>
+        <div className="velor-pdp-desc-row">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>Description</h2>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '15px', whiteSpace: 'pre-wrap' }}>This is placeholder example text showing where your own description will appear once you list your goods.</p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px' }}>
+              <span style={{ padding: '4px 12px', background: 'rgba(255,107,0,0.1)', color: 'var(--accent)', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>example</span>
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Details</h2>
+            <div>
+              <SpecRow label="Materials" value="Example: 100% merino wool" />
+              <SpecRow label="Origin" value="Example: United Kingdom" />
+              <SpecRow label="Dimensions" value="Example: 180 × 30 × 2 cm" />
+              <SpecRow label="Weight" value="Example: 220 g" />
+            </div>
           </div>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Details</h2>
-          <div>
-            <SpecRow label="Materials" value="Example: 100% merino wool" />
-            <SpecRow label="Origin" value="Example: United Kingdom" />
-            <SpecRow label="Dimensions" value="Example: 180 × 30 × 2 cm" />
-            <SpecRow label="Weight" value="Example: 220 g" />
-          </div>
-        </div>
+        <div style={{ height: '24px' }} />
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
           <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '20px' }}>Reviews</h2>

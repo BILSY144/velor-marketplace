@@ -175,20 +175,25 @@ function SpecRow({ label, value }: { label: string; value: string }) {
 }
 
 const pdpCss = `
-.velor-pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.velor-pdp-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);gap:40px;align-items:start;}
 .velor-pdp-mobilebar{display:none;}
-.velor-pdp-gallery-main{cursor:zoom-in;}
+.velor-pdp-gallery-main{cursor:zoom-in;width:100%;}
 .velor-pdp-gallery-main img{transition:transform .35s ease;}
-.velor-pdp-gallery-main:hover img{transform:scale(1.06);}
+.velor-pdp-gallery-main:hover img{transform:scale(1.05);}
 .velor-pdp-rail-scroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:6px;}
 .velor-pdp-rail-scroll::-webkit-scrollbar{display:none;}
 .velor-pdp-rail-card{flex:0 0 auto;width:170px;scroll-snap-align:start;}
 .velor-pdp-tap{min-height:44px;}
+.velor-pdp-info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start;}
+.velor-pdp-desc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;align-items:start;}
 @media(max-width:900px){
   .velor-pdp-grid{grid-template-columns:1fr;gap:24px;}
   .velor-pdp-page{padding-bottom:84px;}
   .velor-pdp-mobilebar{display:flex;}
   .velor-pdp-desktop-cta{display:none;}
+  .velor-pdp-cta-primary{display:none;}
+  .velor-pdp-cta-icon{flex:1 !important;width:auto !important;}
+  .velor-pdp-mobile-contact{display:flex !important;}
 }
 @media(max-width:600px){
   .velor-pdp-rail-card{width:148px;}
@@ -472,14 +477,14 @@ export default function ProductPageClient() {
         </div>
       </div>
 
-      <div className="velor-pdp-grid" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="velor-pdp-grid" style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 40px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div
             className="velor-pdp-gallery-main"
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size image"
-            style={{ width: '100%', maxWidth: '480px', maxHeight: '480px', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: '100%', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
@@ -520,14 +525,14 @@ export default function ProductPageClient() {
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.title}</h1>
 
           {(product.avgRating ?? 0) != null && product.reviewCount > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
               <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
               <span style={{ color: 'var(--muted)', fontSize: '14px' }}>({product.reviewCount} reviews)</span>
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '18px' }}>
             {onSale ? (
               <>
                 <span style={{ fontSize: '36px', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: 'var(--accent)' }}>
@@ -553,7 +558,7 @@ export default function ProductPageClient() {
           )}
 
           {(product.variants && product.variants.length > 0) && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '18px' }}>
               <div style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '10px', fontWeight: 600 }}>Variant</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {product.variants.map(v => (
@@ -575,7 +580,7 @@ export default function ProductPageClient() {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 600 }}>Quantity</div>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="velor-pdp-tap" style={{ width: '44px', height: '44px', background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '18px', cursor: 'pointer' }}>-</button>
@@ -587,36 +592,70 @@ export default function ProductPageClient() {
             )}
           </div>
 
-          <div className="velor-pdp-desktop-cta">
+          {/* Compact action rows (William, 2026-07-25: "the big add to cart, buy
+              now, save to wishlist, contact seller buttons are too big and
+              really wasting space"). Primary actions paired with their
+              secondary counterpart as an icon-only square button on the same
+              row, instead of four full-width stacked buttons -- same actions,
+              roughly half the vertical footprint, and no more bare unused
+              width down either side of a full-width button's centered text. */}
+          {/* Rows themselves stay visible on mobile (the icon buttons have no
+              mobile equivalent elsewhere), but the Add to Cart/Buy Now text
+              buttons carry .velor-pdp-cta-primary so they hide under 900px in
+              favour of the sticky mobile bar -- leaving each icon button to
+              stretch and fill its now-solo row (.velor-pdp-cta-icon). */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <button
               onClick={addToCart}
               disabled={currentStock === 0}
-              className="velor-pdp-tap"
-              style={{ width: '100%', padding: '16px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: addedToCart ? '#000' : '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '10px', transition: 'background 0.2s' }}
+              className="velor-pdp-tap velor-pdp-cta-primary"
+              style={{ flex: 1, padding: '12px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
             >
-              {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added to Cart!' : 'Add to Cart'}
+              {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
             </button>
+            <button
+              onClick={toggleWishlist}
+              disabled={wishlistLoading}
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+              title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+              className="velor-pdp-tap velor-pdp-cta-icon"
+              style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '18px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {isWishlisted ? '♥' : '♡'}
+            </button>
+          </div>
 
+          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={buyNow}
               disabled={currentStock === 0}
               className="velor-pdp-tap"
-              style={{ width: '100%', padding: '16px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '16px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', marginBottom: '16px' }}
+              style={{ flex: 1, padding: '12px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
             >
               Buy Now
             </button>
+            <button
+              onClick={() => {
+                if (!session) {
+                  router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+                  return
+                }
+                setShowContactModal(true)
+                setContactSent(false)
+                setContactError('')
+              }}
+              aria-label="Contact seller"
+              title="Contact seller"
+              className="velor-pdp-tap"
+              style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              &#9993;
+            </button>
           </div>
 
-          <button
-            onClick={toggleWishlist}
-            disabled={wishlistLoading}
-            className="velor-pdp-tap"
-            style={{ width: '100%', padding: '12px', background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-          >
-            <span style={{ fontSize: '18px' }}>{isWishlisted ? '♥' : '♡'}</span>
-            {isWishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
-          </button>
-
+          {/* Contact Seller must still be reachable on mobile even though Buy
+              Now hides there (mobile bar covers Buy Now) -- shown on its own,
+              mobile-only, via the inverse of .velor-pdp-desktop-cta. */}
           <button
             onClick={() => {
               if (!session) {
@@ -627,26 +666,30 @@ export default function ProductPageClient() {
               setContactSent(false)
               setContactError('')
             }}
-            className="velor-pdp-tap"
-            style={{ marginTop: '10px', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            className="velor-pdp-tap velor-pdp-mobile-contact"
+            style={{ display: 'none', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}
           >
             <span style={{ fontSize: '16px' }}>&#9993;</span>
             Contact Seller
           </button>
+        </div>
+      </div>
 
-          {/* Dispatch, returns & buyer-protection module (2026-07-25 PDP
-              redesign). Returns copy was originally drafted against a
-              UK-specific statutory claim (Consumer Contracts Regs, 14-day
-              cooling-off) -- William caught same-day that this both
-              contradicts LAW #2 (Velor is a global marketplace, never
-              described as UK-based) and doesn't match the real, live
-              app/returns/page.tsx, which deliberately states no fixed day
-              count because returns are set per-seller, not by platform-wide
-              UK law. Fixed to match that page's actual, already-correct
-              language and link there instead of the wrong /help target. No
-              invented delivery date either -- Shippo calculates the real one
-              at checkout. */}
-          <div style={{ marginTop: '20px', padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Full-width info row (2026-07-25, William: "theres a lot of unneccassary
+          waisted space on the page we need to utilize it"). The trust/delivery
+          module, seller card, and handmade story used to be stacked inside the
+          narrow right-hand buy-box column, running on well past the bottom of
+          the image column and leaving a large empty gap under the gallery on
+          desktop. Pulling them into their own full-width row (auto-fit grid --
+          2 columns normally, 3 when the handmade block is present and there's
+          room, 1 on narrow screens automatically since each card has a 280px
+          minimum) uses the page's actual width instead of stacking everything
+          into one half of it. Returns copy is the corrected, seller-managed
+          version (see the checkpoint below this comment's original -- 2026-07-25
+          CLAUDE.md entry -- for why the old UK-statutory line was wrong). */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 28px' }}>
+        <div className="velor-pdp-info-row">
+          <div style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
               <span style={{ fontSize: '16px', lineHeight: 1.4 }}>📦</span>
               <div>
@@ -681,7 +724,7 @@ export default function ProductPageClient() {
               number is computed live in app/api/shop/products/[productId]
               from real Orders/Reviews/Products, never fabricated. */}
           {product.seller && (
-            <div style={{ marginTop: '16px', padding: '18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+            <div style={{ padding: '18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
                   {product.seller.storeLogo ? (
@@ -736,8 +779,8 @@ export default function ProductPageClient() {
           )}
 
           {product.isHandmade && (
-            <div style={{ marginTop: '12px', padding: '14px', background: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--accent)', fontSize: '13px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>Handmade / Artisan-made</div>
+            <div style={{ padding: '18px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--accent)', fontSize: '13px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '8px' }}>Handmade / Artisan-made</div>
               {product.makerStory && <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>{product.makerStory}</p>}
             </div>
           )}
@@ -745,32 +788,36 @@ export default function ProductPageClient() {
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 40px' }}>
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>Description</h2>
-          <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '15px', whiteSpace: 'pre-wrap' }}>{product.description}</p>
-          {product.tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px' }}>
-              {product.tags.map(tag => (
-                <span key={tag} style={{ padding: '4px 12px', background: 'rgba(255,107,0,0.1)', color: 'var(--accent)', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{tag}</span>
-              ))}
+        <div className="velor-pdp-desc-row">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>Description</h2>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '15px', whiteSpace: 'pre-wrap' }}>{product.description}</p>
+            {product.tags.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px' }}>
+                {product.tags.map(tag => (
+                  <span key={tag} style={{ padding: '4px 12px', background: 'rgba(255,107,0,0.1)', color: 'var(--accent)', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {(product.materials || product.originCountry || product.weightGrams || product.lengthCm || product.widthCm || product.heightCm || (product.specialities && product.specialities.length > 0)) && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px' }}>
+              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Details</h2>
+              <div>
+                {product.materials && <SpecRow label="Materials" value={product.materials} />}
+                {product.originCountry && <SpecRow label="Origin" value={product.originCountry} />}
+                {(product.lengthCm || product.widthCm || product.heightCm) && (
+                  <SpecRow label="Dimensions" value={`${product.lengthCm ?? '—'} × ${product.widthCm ?? '—'} × ${product.heightCm ?? '—'} cm`} />
+                )}
+                {product.weightGrams && <SpecRow label="Weight" value={`${product.weightGrams} g`} />}
+                {product.specialities && product.specialities.length > 0 && <SpecRow label="Speciality" value={product.specialities.join(', ')} />}
+              </div>
             </div>
           )}
         </div>
 
-        {(product.materials || product.originCountry || product.weightGrams || product.lengthCm || product.widthCm || product.heightCm || (product.specialities && product.specialities.length > 0)) && (
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', marginBottom: '24px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Details</h2>
-            <div>
-              {product.materials && <SpecRow label="Materials" value={product.materials} />}
-              {product.originCountry && <SpecRow label="Origin" value={product.originCountry} />}
-              {(product.lengthCm || product.widthCm || product.heightCm) && (
-                <SpecRow label="Dimensions" value={`${product.lengthCm ?? '—'} × ${product.widthCm ?? '—'} × ${product.heightCm ?? '—'} cm`} />
-              )}
-              {product.weightGrams && <SpecRow label="Weight" value={`${product.weightGrams} g`} />}
-              {product.specialities && product.specialities.length > 0 && <SpecRow label="Speciality" value={product.specialities.join(', ')} />}
-            </div>
-          </div>
-        )}
+        <div style={{ height: '24px' }} />
 
         {(product.reviews.length > 0 || session) && (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
