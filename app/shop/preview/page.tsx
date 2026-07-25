@@ -108,7 +108,6 @@ const pdpCss = `
   .velor-pdp-mobilebar{display:flex;}
   .velor-pdp-desktop-cta{display:none;}
   .velor-pdp-cta-primary{display:none;}
-  .velor-pdp-cta-icon{flex:1 !important;width:auto !important;}
   .velor-pdp-mobile-contact{display:flex !important;}
 }
 @media(max-width:600px){
@@ -206,7 +205,7 @@ export default function ShopPreviewPage() {
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size example image"
-            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={PHOTOS[mainImage]} alt="Example product" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '11px', fontWeight: 600, padding: '5px 11px', borderRadius: '20px' }}>
@@ -256,32 +255,34 @@ export default function ShopPreviewPage() {
           {/* Compact action rows -- mirrors the real PDP's button restructuring
               (William, 2026-07-25: "the big add to cart, buy now, save to
               wishlist, contact seller buttons are too big and really wasting
-              space"). This preview must stay in lockstep with the real page's
-              layout, so the same primary+icon row pairing applies here. */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-            <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-cta-primary" style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
+              space" -- then "bring back add to wishlist and message seller
+              buttons back too to mirror new sized add to cart button"). Every
+              button keeps a real text label and the same tightened sizing as
+              Add to Cart, paired side by side instead of stacked full-width. */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+            <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-cta-primary" style={{ flex: 1, padding: '0 14px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
               Add to Cart
             </button>
-            <button onClick={showPreviewNotice} aria-label="Save to wishlist" title="Save to wishlist" className="velor-pdp-tap velor-pdp-cta-icon" style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: .85 }}>
-              ♡
+            <button onClick={showPreviewNotice} aria-label="Add to wishlist" title="Add to wishlist" className="velor-pdp-tap" style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: .85 }}>
+              <span style={{ fontSize: '16px' }}>♡</span> Add to Wishlist
             </button>
           </div>
 
-          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ flex: 1, padding: '12px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
+          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <button onClick={showPreviewNotice} className="velor-pdp-tap" style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', opacity: .85 }}>
               Buy Now
             </button>
-            <button onClick={showPreviewNotice} aria-label="Contact seller" title="Contact seller" className="velor-pdp-tap" style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: .85 }}>
-              &#9993;
+            <button onClick={showPreviewNotice} aria-label="Message seller" title="Message seller" className="velor-pdp-tap" style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: .85 }}>
+              <span style={{ fontSize: '16px' }}>&#9993;</span> Message Seller
             </button>
           </div>
 
-          {/* Contact Seller must still be reachable on mobile even though Buy
+          {/* Message Seller must still be reachable on mobile even though Buy
               Now hides there (mobile bar covers Buy Now) -- shown on its own,
               mobile-only, via the inverse of .velor-pdp-desktop-cta. */}
-          <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-mobile-contact" style={{ display: 'none', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px', opacity: .85 }}>
+          <button onClick={showPreviewNotice} className="velor-pdp-tap velor-pdp-mobile-contact" style={{ display: 'none', width: '100%', padding: '0 14px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', opacity: .85 }}>
             <span style={{ fontSize: '16px' }}>&#9993;</span>
-            Contact Seller
+            Message Seller
           </button>
           {noticeVisible && (
             <div style={{ marginTop: '2px', marginBottom: '4px', padding: '10px 14px', background: 'rgba(255,107,0,0.1)', border: '1px solid var(--accent)', borderRadius: '8px', color: 'var(--accent)', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>

@@ -192,7 +192,6 @@ const pdpCss = `
   .velor-pdp-mobilebar{display:flex;}
   .velor-pdp-desktop-cta{display:none;}
   .velor-pdp-cta-primary{display:none;}
-  .velor-pdp-cta-icon{flex:1 !important;width:auto !important;}
   .velor-pdp-mobile-contact{display:flex !important;}
 }
 @media(max-width:600px){
@@ -484,7 +483,7 @@ export default function ProductPageClient() {
             onClick={() => setLightboxOpen(true)}
             role="button"
             aria-label="Open full-size image"
-            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
+            style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
             <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
@@ -594,43 +593,45 @@ export default function ProductPageClient() {
 
           {/* Compact action rows (William, 2026-07-25: "the big add to cart, buy
               now, save to wishlist, contact seller buttons are too big and
-              really wasting space"). Primary actions paired with their
-              secondary counterpart as an icon-only square button on the same
-              row, instead of four full-width stacked buttons -- same actions,
-              roughly half the vertical footprint, and no more bare unused
-              width down either side of a full-width button's centered text. */}
-          {/* Rows themselves stay visible on mobile (the icon buttons have no
-              mobile equivalent elsewhere), but the Add to Cart/Buy Now text
-              buttons carry .velor-pdp-cta-primary so they hide under 900px in
-              favour of the sticky mobile bar -- leaving each icon button to
-              stretch and fill its now-solo row (.velor-pdp-cta-icon). */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              really wasting space" -- then, after the first icon-only pass,
+              "bring back add to wishlist and message seller buttons back too
+              to mirror new sized add to cart button"). Every button carries
+              the same tightened sizing as Add to Cart (0 vertical padding,
+              8px radius, 44px floor via .velor-pdp-tap) and keeps a real text
+              label -- paired side by side instead of stacked full-width, so
+              the row is compact without falling back to unlabeled icons. */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
             <button
               onClick={addToCart}
               disabled={currentStock === 0}
               className="velor-pdp-tap velor-pdp-cta-primary"
-              style={{ flex: 1, padding: '12px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+              style={{ flex: 1, padding: '0 14px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
             >
               {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
             </button>
+            {/* No .velor-pdp-cta-primary here on purpose -- once Add to Cart
+                hides under 900px (sticky mobile bar covers it), this button's
+                flex:1 with no sibling naturally expands to fill the row, no
+                extra mobile-only override needed. */}
             <button
               onClick={toggleWishlist}
               disabled={wishlistLoading}
-              aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-              title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-              className="velor-pdp-tap velor-pdp-cta-icon"
-              style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--muted)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '18px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              className="velor-pdp-tap"
+              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: isWishlisted ? 'var(--red)' : 'var(--text)', border: '1px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: wishlistLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              {isWishlisted ? '♥' : '♡'}
+              <span style={{ fontSize: '16px' }}>{isWishlisted ? '♥' : '♡'}</span>
+              {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
             </button>
           </div>
 
-          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <button
               onClick={buyNow}
               disabled={currentStock === 0}
               className="velor-pdp-tap"
-              style={{ flex: 1, padding: '12px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '10px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
             >
               Buy Now
             </button>
@@ -644,16 +645,17 @@ export default function ProductPageClient() {
                 setContactSent(false)
                 setContactError('')
               }}
-              aria-label="Contact seller"
-              title="Contact seller"
+              aria-label="Message seller"
+              title="Message seller"
               className="velor-pdp-tap"
-              style={{ flex: '0 0 auto', width: '44px', padding: 0, background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              &#9993;
+              <span style={{ fontSize: '16px' }}>&#9993;</span>
+              Message Seller
             </button>
           </div>
 
-          {/* Contact Seller must still be reachable on mobile even though Buy
+          {/* Message Seller must still be reachable on mobile even though Buy
               Now hides there (mobile bar covers Buy Now) -- shown on its own,
               mobile-only, via the inverse of .velor-pdp-desktop-cta. */}
           <button
@@ -667,10 +669,10 @@ export default function ProductPageClient() {
               setContactError('')
             }}
             className="velor-pdp-tap velor-pdp-mobile-contact"
-            style={{ display: 'none', width: '100%', padding: '12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '10px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}
+            style={{ display: 'none', width: '100%', padding: '0 14px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}
           >
             <span style={{ fontSize: '16px' }}>&#9993;</span>
-            Contact Seller
+            Message Seller
           </button>
         </div>
       </div>
@@ -1018,7 +1020,7 @@ export default function ProductPageClient() {
             >
               &times;
             </button>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Contact Seller</h2>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Message Seller</h2>
             <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '0 0 24px' }}>
               Message <span style={{ color: 'var(--text)', fontWeight: 600 }}>{product.seller?.storeName}</span> about these goods
             </p>
