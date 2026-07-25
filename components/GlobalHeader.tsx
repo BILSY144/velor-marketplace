@@ -382,8 +382,8 @@ export default function GlobalHeader() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setSearchOpen(true)}
-                  placeholder="Search goods, brands and sellers"
-                  aria-label="Search goods, brands and sellers"
+                  placeholder="Search goods, country or seller"
+                  aria-label="Search goods, country or seller"
                   autoComplete="off"
                   style={{
                     flex: 1,
