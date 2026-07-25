@@ -7,6 +7,14 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## OUTSTANDING -- NEXT SESSION (William asked this be logged for Tuesday 28 Jul 2026): research Amazon's product page for PDP design ideas
+
+William's request, verbatim: review Amazon's product page -- the same kind of page as the PDP work done this session (`app/shop/[productId]/ProductPageClient.tsx` + its lockstep twin `app/shop/preview/page.tsx`) -- and look closely at its design, layout, and what it actually offers on that page, so Velor's PDP can take further cues from it. Not yet started; this is a note-to-self for whoever picks this up Tuesday, not completed research.
+
+Scope for that session: browse a real Amazon product page (Chrome MCP), and catalogue what it does structurally/visually that Velor's PDP doesn't yet -- likely candidates worth checking specifically, based on what Amazon is known for: "frequently bought together" / bundle upsell modules, A+ brand content blocks (rich manufacturer-supplied imagery/copy below the fold), the full ratings breakdown with a star-histogram bar chart (Velor already has a rating breakdown per the 2026-07-25 PDP redesign checkpoint above -- compare rather than assume it's missing), Q&A section separate from reviews, "customers also viewed"/"customers also bought" as distinct rails from Velor's current "More from this seller"/"You may also like", delivery-date estimate shown prominently near the buy box, size/variant swatches with live stock-per-variant indicators, and image gallery interaction patterns (zoom-on-hover, video in the gallery). Cross-reference every candidate idea against what Velor's PDP already has (read `ProductPageClient.tsx` fresh, don't rely on a stale summary per LAW #3) before proposing it as new -- the point is genuinely new ideas, not rebuilding something already shipped. Any change proposed from this research still needs William's explicit go-ahead before implementation, per the standing "no changes without permission" directive.
+
+---
+
 ## UPDATE 2026-07-25 (later) -- Dots fully removed from code+legal; LAW #3 added; Stripe account.updated webhook shipped but NOT YET LIVE -- two real blockers found, needs William's decision before either can be fixed
 
 **Dots removed completely** (commits `bd15637`, prior session's Trolley-style directive superseded): `lib/dots.ts`, `/dashboard/dots`, `/api/dots/onboard` deleted; `PayoutRail` type narrowed to `'STRIPE' | 'PAYONEER'` everywhere (release-payouts cron, dashboard nav, payouts page, payout gate, Pulse); `dotsUserId`/`dotsOnboarded`/`dotsPayoutId` dropped from the Prisma schema (confirmed actually dropped in the DB via the live `prisma db push --accept-data-loss` on this deploy, not just removed from schema.prisma); every Terms/Privacy/Seller Agreement/Help/Sell/Apply page and the seller-approved email rewritten Dots -> Payoneer. Live-verified via Pulse: all 15 sellers resolve to STRIPE (6) or PAYONEER (9), zero DOTS.
