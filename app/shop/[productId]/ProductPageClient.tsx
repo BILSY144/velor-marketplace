@@ -405,7 +405,20 @@ export default function ProductPageClient() {
   // is shown here and at checkout, and both are guaranteed to match because
   // they both call the same computeListingDiscount/findAutomaticDiscounts
   // logic in lib/discount.ts.
+  // Sign-in gated, same as toggleWishlist/handleContactSeller/submitReview
+  // above -- found live 2026-07-25 (William's "make sure everything is
+  // actually connected" audit) that Add to Cart/Buy Now were the ONE path
+  // on this page a guest could get all the way through: fill in the full
+  // checkout form, pick shipping, only to hit a bare 401 from
+  // /api/stripe/payment-intent (which has always required a session -- see
+  // that route's own auth() check) with no sign-in prompt, just a generic
+  // "Could not set up payment" error. Gating here instead closes that
+  // dead-end before the buyer ever invests time filling out checkout.
   function addToCart() {
+    if (!session) {
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+      return
+    }
     if (!product) return
     const cartId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id
     const price = selectedVariant ? selectedVariant.price : product.price
@@ -424,6 +437,10 @@ export default function ProductPageClient() {
   }
 
   function buyNow() {
+    if (!session) {
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+      return
+    }
     addToCart()
     router.push('/checkout')
   }
