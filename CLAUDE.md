@@ -180,6 +180,55 @@ found violating it, fix it in the same session and log it here.
 
 ---
 
+## LAW #3 -- AFTER CONTEXT COMPACTION, RE-VERIFY AGAINST THIS FILE AND LIVE
+VERCEL BUILDS BEFORE ANSWERING ANY STATUS QUESTION (William, 2026-07-25:
+"i never want this issue to arise again")
+
+Long sessions get auto-compacted by the underlying agent harness once the
+conversation grows too large -- the model's working context is replaced
+with a lossy summary of everything said so far. That summary is NOT a
+substitute for this file. It has already caused real, concrete mistakes in
+this exact session on 2026-07-25: after compaction, Claude told William the
+Enterprise-tier Stripe price discrepancy (GBP 199 vs GBP 99) was still an
+open, unverified item -- it had actually been fixed and live-verified on 14
+July, and the entire Enterprise tier was retired the very next day, 15
+July. Claude also told William two "orphaned" seller accounts needed
+cleaning up -- one (Play Review Test Store) is William's own deliberate
+Google Play reviewer account, the other (Vellora International Trading Co.
+Ltd.) had already been approved by William himself weeks earlier. Both
+mistakes came from trusting a compacted summary over this file, and were
+only caught because William pushed back and asked why Claude couldn't
+remember something already logged here.
+
+**Standing rule, no exceptions:** at the start of any new session, and the
+moment there is any sign the current session's context may have been
+compacted (a gap in continuity, being asked "why don't you remember X," or
+simply not being sure), STOP and do the following BEFORE answering any
+question about current system state, open items, priorities, or "what's
+next":
+
+1. Read this entire file (CLAUDE.md), top to bottom -- not just the most
+   recent section. Old entries get superseded by newer ones; the only way
+   to know which is current is to read the whole thing, not skim the top.
+2. Check the live Vercel deployments list
+   (vercel.com/velor1/velor-marketplace/deployments) for the actual current
+   build/deploy state of anything about to be described as live, broken, or
+   pending. This file records intent and history; the deployment list is
+   the final live truth for what's actually running in production.
+3. Where a claim can be checked against a live API/DB/UI response (Pulse, a
+   specific endpoint, a Stripe/Payoneer dashboard), do that too rather than
+   trusting either source's own narrative -- consistent with LAW #1.
+
+This law exists because relying on a compacted summary is exactly the
+failure mode LAW #1 already prohibits ("never lie... verify against a live
+deployment... never against memory, and never against a checkpoint's own
+claim that something was done"). Compaction just makes this easy to do by
+accident, since the summary FEELS like memory rather than a lossy
+approximation of it. Skipping this re-verification step after compaction is
+a LAW #1 violation, not a separate, lesser mistake.
+
+---
+
 ## RESOLVED 2026-07-21 -- BUYER-SELLER COMMUNICATION RULES DEFINED BY WILLIAM AND ENFORCED (was: rules needed since 2026-07-16)
 
 **WILLIAM'S RULES (2026-07-21, verbatim intent): buyer-seller messages must
