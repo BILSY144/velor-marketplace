@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { countryFlagUrl } from '@/lib/countryFlag'
 import { FounderMedal } from '@/components/FounderMedal'
+import { SellerWishlistHeart } from '@/components/SellerWishlistHeart'
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -360,10 +361,10 @@ export default async function SellerProfilePage({
           >
             {seller.products.map((product) => {
               return (
+                <div key={product.id} style={{ position: 'relative' }}>
                 <Link
-                  key={product.id}
                   href={`/shop/${product.id}`}
-                  style={{ textDecoration: 'none', display: 'block' }}
+                  style={{ textDecoration: 'none', display: 'block', color: 'inherit' }}
                 >
                   <div
                     style={{
@@ -403,16 +404,6 @@ export default async function SellerProfilePage({
                           No image
                         </div>
                       )}
-                      {/* Founding-seller medal (William, 2026-07-26, "for every
-                          listing" -- "wherever a founding sellers listing is
-                          showed ... this badge travels with the listing
-                          everywhere it is placed"): every product here belongs
-                          to this one seller, so the flag is just the seller's
-                          own foundingBadge -- same shared medallion as every
-                          other listing surface. */}
-                      {seller.foundingBadge && (
-                        <FounderMedal countryName={seller.countryFounded?.countryName} size={40} />
-                      )}
                     </div>
 
                     {/* Info -- brought down to the homepage reel card's
@@ -424,15 +415,36 @@ export default async function SellerProfilePage({
                     <div style={{ padding: '12px' }}>
                       <div
                         style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          color: 'var(--muted)',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 6,
                           marginBottom: '4px',
                         }}
                       >
-                        {product.category}
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: 'var(--muted)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                          }}
+                        >
+                          {product.category}
+                        </span>
+                        {/* Founding-seller medal (William, 2026-07-26, "on
+                            the homepage in the id card section ... make it
+                            small so it does not take up too much room in the
+                            id card"): moved off the listing image into the
+                            id card/caption, small -- every product here
+                            belongs to this one seller, so the flag is just
+                            the seller's own foundingBadge. Same shared
+                            medallion as every other listing surface; only
+                            the wishlist heart sits on the photo. */}
+                        {seller.foundingBadge && (
+                          <FounderMedal countryName={seller.countryFounded?.countryName} size={28} />
+                        )}
                       </div>
                       <div
                         style={{
@@ -473,6 +485,8 @@ export default async function SellerProfilePage({
                     </div>
                   </div>
                 </Link>
+                <SellerWishlistHeart productId={product.id} />
+                </div>
               )
             })}
           </div>
