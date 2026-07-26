@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
-import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { FounderMedal } from '@/components/FounderMedal'
@@ -191,7 +191,7 @@ function SearchContent() {
               {countryHits.map((c) => {
                 const im = countryImage(c.code, 500)
                 return (
-                  <Link key={c.code} href={`/origins/${slugifyCountryName(c.name)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <Link key={c.code} href={`/shop?origin=${c.code}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     {im && (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={im.url} alt={c.name} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -238,7 +238,7 @@ function SearchContent() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 34 }}>
               {craftHits.map((h) => {
                 return (
-                  <Link key={h.code + h.term} href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <Link key={h.code + h.term} href={`/shop?origin=${h.code}&speciality=${encodeURIComponent(h.term)}`} style={{ position: 'relative', display: 'block', borderRadius: 14, overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     {h.image && (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={h.image.url} alt={h.term} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
