@@ -26,7 +26,15 @@ export async function GET(request: Request) {
         price: true,
         images: true,
         category: true,
-        seller: { select: { id: true, storeName: true, currency: true } },
+        seller: {
+          select: {
+            id: true,
+            storeName: true,
+            currency: true,
+            foundingBadge: true,
+            countryFounded: { select: { countryName: true } },
+          },
+        },
       },
       // A search for a craft or category ("ceramics") is the buyer's whole
       // discovery path now that origin pages carry only listings (William,
@@ -61,6 +69,12 @@ export async function GET(request: Request) {
   // silently assumed to be GBP (that was the bug -- this endpoint used to
   // return { products, sellers } while the page read data.results, so
   // search silently always showed zero results).
+  //
+  // sellerFounding/sellerFoundingCountry (William, 2026-07-26, "for every
+  // listing" -- "wherever a founding sellers listing is showed"): same two
+  // fields /api/shop/products already returns, so /search's result cards
+  // can show the identical FounderMedal instead of search results being
+  // the one surface a founding seller's badge silently drops off of.
   const results = products.map((p) => ({
     id: p.id,
     name: p.title,
@@ -70,6 +84,8 @@ export async function GET(request: Request) {
     category: p.category,
     sellerId: p.seller?.id || '',
     sellerName: p.seller?.storeName || '',
+    sellerFounding: !!p.seller?.countryFounded,
+    sellerFoundingCountry: p.seller?.countryFounded?.countryName ?? null,
   }))
 
   return NextResponse.json({ results, sellers })
