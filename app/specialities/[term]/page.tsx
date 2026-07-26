@@ -28,7 +28,8 @@
 // client-side below) drives any "trading" claim.
 
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import {
   findSpecialityBySlug,
@@ -105,10 +106,53 @@ export default function SpecialityTermPage() {
   const slug = params.term as string
   const speciality = useMemo(() => findSpecialityBySlug(slug), [slug])
   const { symbol, convert } = useCurrencyDisplay()
+  const { data: session } = useSession()
+  const router = useRouter()
 
   const [stats, setStats] = useState<{ countries: number; products: number } | null>(null)
   const [pending, setPending] = useState(true)
   const [products, setProducts] = useState<PreviewProduct[]>([])
+  // Wishlist heart (William, 2026-07-26: "add the wishlist heart to all
+  // listing boxes that link to wishlist" -- "repeat that on all pages for
+  // the heart"): same fetch/toggle pattern as /shop's ShopPageClient.tsx.
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+  const [wishlistPending, setWishlistPending] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/wishlist')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => {
+        const ids = new Set<string>(data.items.map((i: { product: { id: string } }) => i.product.id))
+        setWishlistIds(ids)
+      })
+      .catch(() => {})
+  }, [session])
+
+  async function toggleWishlist(e: React.MouseEvent, productId: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!session) {
+      router.push(`/auth/sign-in?callbackUrl=/specialities/${slug}`)
+      return
+    }
+    setWishlistPending(productId)
+    const isIn = wishlistIds.has(productId)
+    try {
+      await fetch('/api/wishlist', {
+        method: isIn ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+      setWishlistIds(prev => {
+        const next = new Set(prev)
+        isIn ? next.delete(productId) : next.add(productId)
+        return next
+      })
+    } finally {
+      setWishlistPending(null)
+    }
+  }
 
   useEffect(() => {
     if (!speciality) { setPending(false); return }
@@ -199,19 +243,54 @@ export default function SpecialityTermPage() {
             </div>
             <div className="spt-grid">
               {products.map(p => (
-                <Link className="spt-card" href={`/shop/${p.id}`} key={p.id}>
-                  <div className="spt-cimg">
-                    {p.images[0]
-                      ? <img src={p.images[0]} alt={p.name} />
-                      : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 12 }}>No image</div>
-                    }
-                    {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={40} />}
-                  </div>
-                  <div className="spt-cbody">
-                    <div className="spt-cname">{p.name}</div>
-                    <div className="spt-cprice">{symbol}{convert(p.price, p.currency).toFixed(2)}</div>
-                  </div>
-                </Link>
+                <div className="spt-card" key={p.id} style={{ position: 'relative' }}>
+                  <Link href={`/shop/${p.id}`} style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+                    <div className="spt-cimg">
+                      {p.images[0]
+                        ? <img src={p.images[0]} alt={p.name} />
+                        : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 12 }}>No image</div>
+                      }
+                    </div>
+                    <div className="spt-cbody">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
+                        <div className="spt-cname" style={{ marginBottom: 0 }}>{p.name}</div>
+                        {/* Founding-seller medal, small, in the id card
+                            (William, 2026-07-26) -- moved off the image so
+                            nothing ever blocks the buyer's view; only the
+                            wishlist heart sits on the photo. */}
+                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={14} />}
+                      </div>
+                      <div className="spt-cprice">{symbol}{convert(p.price, p.currency).toFixed(2)}</div>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={e => toggleWishlist(e, p.id)}
+                    disabled={wishlistPending === p.id}
+                    title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'rgba(13,13,13,0.78)',
+                      border: 'none',
+                      cursor: wishlistPending === p.id ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '15px',
+                      color: wishlistIds.has(p.id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
+                      backdropFilter: 'blur(4px)',
+                      transition: 'color 0.15s',
+                      zIndex: 1,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {wishlistIds.has(p.id) ? '♥' : '♡'}
+                  </button>
+                </div>
               ))}
             </div>
           </div>
