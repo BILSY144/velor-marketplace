@@ -25,12 +25,14 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
+import { orderByCategoryActivity } from '@/lib/categoryOrdering'
 
 type LatticeSummary = {
   totalCountries: number
   trading: number
   countries: { code: string; name: string; products: number; specialities: string[] }[]
   specialities: Record<string, { countries: number; products: number }>
+  categories: Record<string, number>
 }
 
 type LiveStream = {
@@ -874,6 +876,24 @@ export default function HomePage() {
 
   const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
 
+  // Reel ordering (William, 2026-07-26, "as soon as a seller lists an item
+  // that category reel on homepage climbs to the top" -- then, same
+  // thread, "that is the same for every product page, the same system,
+  // until at least half of pages full, then revert to ranking climbing").
+  // lib/categoryOrdering.ts implements the two phases (cold-start binary
+  // boost, then mature count ranking once >=12 of 24 categories have a
+  // real listing) so this page, /shop, /marketplace and /search all share
+  // one definition instead of drifting apart. Matched case-insensitively
+  // inside the shared helper: CULTURE_REELS titles use editorial casing
+  // ("Ceramics & porcelain") while Product.category stores the canonical
+  // casing from lib/categories.ts ("Ceramics & Porcelain") -- same string,
+  // different case, confirmed 1:1 across all 24 categories.
+  const orderedReels = orderByCategoryActivity(
+    CULTURE_REELS,
+    (reel) => reel.title,
+    lattice?.categories ?? {},
+  )
+
   const orderedCountries = (() => {
     const seen = new Set<string>()
     const out: { code: string; name: string }[] = []
@@ -949,7 +969,7 @@ export default function HomePage() {
       </div>
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
-      {CULTURE_REELS.map((reel, ri) => reel.comingSoon ? (
+      {orderedReels.map((reel, ri) => reel.comingSoon ? (
         <section key={reel.title} style={{ paddingTop: 6, paddingBottom: 0 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
