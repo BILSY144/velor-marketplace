@@ -1,7 +1,31 @@
 import type { MetadataRoute } from 'next';
 import { SPECIALITIES, specialitySlug } from '@/lib/specialities';
+import { prisma } from '@/lib/prisma';
+import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Forces this route to run per-request rather than being statically
+// generated at build time (Next's default for a sitemap with no dynamic
+// data). Required now that originCountryEntries below reads live product
+// data from Prisma -- a build-time-only sitemap would freeze the set of
+// indexed countries at whatever the catalogue looked like at the last
+// deploy, silently going stale as sellers from new countries get approved.
+export const dynamic = 'force-dynamic';
+
+// Same origin-code normalisation as app/api/lattice/route.ts (duplicated
+// rather than imported/centralised, matching this codebase's established
+// convention -- e.g. SHOP_SEARCH_COUNTRY_ALIASES is already duplicated
+// between GlobalHeader.tsx, /search, and /shop).
+const nameToCode = new Map(WORLD_COUNTRIES.map((c) => [c.name.toLowerCase(), c.code]));
+const codeSet = new Set(WORLD_COUNTRIES.map((c) => c.code));
+
+function toCode(origin: string | null): string | null {
+  if (!origin) return null;
+  const v = origin.trim();
+  if (v.length === 2 && codeSet.has(v.toUpperCase())) return v.toUpperCase();
+  return nameToCode.get(v.toLowerCase()) ?? null;
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = 'https://velorcommerce.store';
   // Removed 2026-07-19 by the standing SEO agent: every entry below used to
   // carry `lastModified: now`, i.e. the exact moment this function last ran
@@ -53,13 +77,39 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // this used to be a large per-country sitemap block (originCountryEntries,
   // one URL per WORLD_COUNTRIES entry with a real lib/cultureHints.ts
   // entry, ~145-190 URLs depending on research coverage at the time -- see
-  // git history for the full research trail this replaced). Removed along
-  // with the route itself; country discovery is now the /shop origin
-  // filter and the flag strip, neither of which is indexed (see
-  // app/robots.ts's `/shop?` disallow rule), so there is currently no
-  // indexable per-country landing page. Flagged, not silently dropped: if
-  // organic country-first search traffic matters later, that is a real gap
-  // worth a deliberate decision, not a side effect of this removal.
+  // git history for the full research trail this replaced).
+  //
+  // Gap closed the same day (William, later, "how do we get around that"):
+  // app/shop/page.tsx is now a server component with real per-country
+  // generateMetadata for `?origin=CODE`, and app/robots.ts carves out an
+  // explicit allow for `/shop?origin=` -- so `/shop?origin=CODE` is once
+  // again a real, indexable per-country landing page. originCountryEntries
+  // below lists it, but deliberately NOT for all 190 WORLD_COUNTRIES the
+  // way the old /origins block did -- only for countries with at least one
+  // real, live APPROVED product right now, queried fresh on every sitemap
+  // request (see `dynamic = 'force-dynamic'` above). That is the same
+  // "don't submit thin/empty pages to search engines" discipline that
+  // motivated removing /origins in the first place: a country with zero
+  // real listings has nothing on the page for a crawler to index, so it
+  // stays out of the sitemap until a seller from there is actually
+  // approved -- at which point it appears automatically, no redeploy or
+  // manual sitemap edit needed.
+  const originCountryEntries: MetadataRoute.Sitemap = await (async () => {
+    const rows = await prisma.product.findMany({
+      where: { status: 'APPROVED', originCountry: { not: null } },
+      select: { originCountry: true },
+    });
+    const liveCodes = new Set<string>();
+    for (const r of rows) {
+      const code = toCode(r.originCountry);
+      if (code) liveCodes.add(code);
+    }
+    return Array.from(liveCodes).map((code) => ({
+      url: `${base}/shop?origin=${code}`,
+      changeFrequency: 'daily' as const,
+      priority: 0.6,
+    }));
+  })();
 
   // Added 2026-07-20 (later same-day run) by the standing SEO agent,
   // alongside app/specialities/[term]/layout.tsx and page.tsx -- the
@@ -122,5 +172,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/returns`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
     ...specialityEntries,
+    ...originCountryEntries,
   ];
 }
