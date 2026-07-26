@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { getDisplayCurrency, setStoredCurrency, SUPPORTED_CURRENCIES } from '@/lib/currency'
 import { getDisplayLanguage, setStoredLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 import { useCart } from '@/lib/cart'
-import { slugifyCountryName, WORLD_COUNTRIES } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage, pexelsUrl, matchCraftImagery } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
@@ -333,7 +333,7 @@ export default function GlobalHeader() {
                       return (
                         <Link
                           key={o.code}
-                          href={`/origins/${slugifyCountryName(o.name)}`}
+                          href={`/shop?origin=${o.code}`}
                           style={{ position: 'relative', display: 'block', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/11', background: 'var(--surface-2)', border: '1px solid var(--border)' }}
                         >
                           {im && (
@@ -349,8 +349,12 @@ export default function GlobalHeader() {
                       )
                     })}
                   </div>
+                  {/* /origins removed site-wide (William, 2026-07-26) --
+                      this dropdown's per-country links and its "all
+                      countries" link now both go to the real transactional
+                      /shop origin filter instead of the deleted page. */}
                   <Link
-                    href="/origins"
+                    href="/shop"
                     style={{ ...menuItem, borderRadius: 9, fontSize: 12.5, marginTop: 8, display: 'block', textAlign: 'center', color: 'var(--accent)', borderTop: '1px solid var(--border)', paddingTop: 12 }}
                   >
                     All 190 countries &rarr;
@@ -508,7 +512,7 @@ export default function GlobalHeader() {
                     {craftHits.map((h) => (
                       <Link
                         key={h.code + h.term}
-                        href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`}
+                        href={`/shop?origin=${h.code}&speciality=${encodeURIComponent(h.term)}`}
                         onClick={() => setSearchOpen(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
                       >
@@ -536,7 +540,7 @@ export default function GlobalHeader() {
                     {countryHits.map((c) => (
                       <Link
                         key={c.code}
-                        href={`/origins/${slugifyCountryName(c.name)}`}
+                        href={`/shop?origin=${c.code}`}
                         onClick={() => setSearchOpen(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--text)' }}
                       >
@@ -814,7 +818,7 @@ export default function GlobalHeader() {
               Live
             </Link>
           </div>
-          <Link href="/origins" style={menuItem}>Shop by origin</Link>
+          <Link href="/shop" style={menuItem}>Shop by origin</Link>
           <Link href="/sell" style={menuItem}>Sell on Velor</Link>
           <Link href="/orders" style={menuItem}>My orders</Link>
           <Link href="/track" style={menuItem}>Track an order</Link>
