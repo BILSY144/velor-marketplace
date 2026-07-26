@@ -5,16 +5,27 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 export const dynamic = 'force-dynamic'
 
 // Public lattice summary — powers the homepage origins grid, the speciality
-// wall, and the founding counters. Everything here is COMPUTED from live
-// APPROVED listings (the standing rule: country pages never promise what no
-// seller offers). With a zero catalogue it returns honest zeros.
+// wall, the founding counters, and (2026-07-26) the homepage culture-reel
+// ordering. Everything here is COMPUTED from live APPROVED listings (the
+// standing rule: country pages never promise what no seller offers). With a
+// zero catalogue it returns honest zeros.
+//
+// `categories` (William, 2026-07-26, "as soon as a seller lists an item
+// that category reel on homepage climbs to the top"): counts of APPROVED
+// products per Product.category value. The homepage uses this to sort its
+// CULTURE_REELS -- reels with a real listing move above the still
+// stock-photo-only ones, same pattern already used for orderedCountries
+// below. Keyed by the exact category string as stored on Product (matches
+// lib/categories.ts CATEGORIES[].name); callers should compare
+// case-insensitively since CULTURE_REELS titles use editorial casing.
 //
 // Response shape:
 // {
 //   totalCountries: 190,
 //   trading: <countries with >=1 approved product>,
 //   countries: [{ code, name, products, specialities: [term...] }],
-//   specialities: { term: { countries, products } }
+//   specialities: { term: { countries, products } },
+//   categories: { categoryName: productCount }
 // }
 
 const nameToCode = new Map(WORLD_COUNTRIES.map((c) => [c.name.toLowerCase(), c.code]))
@@ -31,11 +42,12 @@ function toCode(origin: string | null): string | null {
 export async function GET() {
   const products = await prisma.product.findMany({
     where: { status: 'APPROVED' },
-    select: { originCountry: true, specialities: true },
+    select: { originCountry: true, specialities: true, category: true },
   })
 
   const countries = new Map<string, { products: number; specialities: Set<string> }>()
   const specialities = new Map<string, { countries: Set<string>; products: number }>()
+  const categories = new Map<string, number>()
 
   for (const p of products) {
     const code = toCode(p.originCountry)
@@ -51,6 +63,7 @@ export async function GET() {
       if (code) s.countries.add(code)
       specialities.set(term, s)
     }
+    if (p.category) categories.set(p.category, (categories.get(p.category) ?? 0) + 1)
   }
 
   return NextResponse.json({
@@ -65,5 +78,6 @@ export async function GET() {
     specialities: Object.fromEntries(
       Array.from(specialities.entries()).map(([term, s]) => [term, { countries: s.countries.size, products: s.products }])
     ),
+    categories: Object.fromEntries(categories),
   })
 }
