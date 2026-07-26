@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 // Server-component layout wrapping the 'use client' /founding page.tsx so
 // this route can carry its own metadata instead of inheriting the generic
@@ -93,6 +93,13 @@ export const metadata: Metadata = {
 // engines surface "sell on Velor from my country" style seller-recruitment
 // queries with a structured, citable list rather than prose alone --
 // explicitly the framing CLAUDE.md's standing directive calls for right now.
+// `url` per item removed (William, 2026-07-26, "/origins ... lets remove
+// it completly"): it used to point at that country's now-deleted
+// /origins/[slug] page. There is no longer a unique per-country URL to
+// cite -- every country tile on /founding now opens the single shared
+// /apply form (prefilled via ?country=XX) -- and repeating that one URL
+// across all 190 ListItems would misrepresent 190 distinct pages that
+// don't exist. Name/position alone still accurately describes the list.
 const foundingItemListJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
@@ -103,7 +110,6 @@ const foundingItemListJsonLd = {
     '@type': 'ListItem',
     position: i + 1,
     name: c.name,
-    url: `https://velorcommerce.store/origins/${countrySlug(c)}`,
   })),
 }
 

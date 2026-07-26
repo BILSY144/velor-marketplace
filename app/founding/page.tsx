@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { RESTRICTED_IDENTITY_COUNTRY_CODES } from '@/lib/identity'
 import { cultureHints } from '@/lib/cultureHints'
 import { countryImage } from '@/lib/countryImagery'
@@ -271,8 +271,15 @@ export default function FoundingPage() {
                   const st = status(c.code)
                   const products = liveCodes.get(c.code)
                   const img = countryImage(c.code)
+                  // /origins removed site-wide (William, 2026-07-26, "i dont
+                  // think the origins page serves any purpose at all lets
+                  // remove it completly") -- each country tile now goes
+                  // straight to the seller application, prefilled with this
+                  // country via /apply's existing ?country=XX handling (same
+                  // param /apply/invited already uses), rather than a
+                  // country detail page that no longer exists.
                   return (
-                    <Link className={'vf-ci ' + st} href={`/origins/${countrySlug(c)}`} key={c.code}>
+                    <Link className={'vf-ci ' + st} href={`/apply?country=${c.code}`} key={c.code}>
                       {img && (
                         <div className="vf-cimg">
                           <img src={img.url} alt={img.name} loading="lazy" />
