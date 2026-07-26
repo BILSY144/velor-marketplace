@@ -1123,7 +1123,7 @@ export default function HomePage() {
                                     photo -- only the wishlist heart sits on the image.
                                     Same shared medallion as /shop, /search, /origins,
                                     /specialities and a seller's own storefront grid. */}
-                                {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={14} />}
+                                {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
                               </div>
                               <div className="t">{p.title}</div>
                               <div className="pr"><span className="p">{symbol}{convert(p.price, p.currency).toFixed(2)}</span><span className="s">{p.storeName}</span></div>
