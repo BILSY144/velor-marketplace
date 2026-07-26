@@ -381,11 +381,12 @@ function ShopContent() {
                           {p.percentOff}% OFF
                         </div>
                       )}
-                      {p.isHandmade && (
-                        <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'var(--surface)', color: 'var(--text)', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.3px', border: '1px solid var(--accent)' }}>
-                          HANDMADE
-                        </div>
-                      )}
+                      {/* HANDMADE and "ONLY N LEFT" badges moved off the image
+                          into pills in the card body below (William,
+                          2026-07-26, "leaving only the founders round badge
+                          in the listing image") -- the image now carries
+                          only the sale ribbon, the sold-out overlay, and the
+                          round FounderMedal. */}
                       {p.stock <= 0 && (
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ background: '#000', color: '#fff', fontSize: '13px', fontWeight: 800, padding: '6px 18px', borderRadius: '4px', letterSpacing: '1.5px', border: '1px solid #fff' }}>
@@ -394,21 +395,16 @@ function ShopContent() {
                         </div>
                       )}
                       {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} />}
-                      {p.stock > 0 && p.stock < 5 && (
-                        <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--red)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
-                          ONLY {p.stock} LEFT
-                        </div>
-                      )}
                     </div>
-                    <div style={{ padding: '14px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{p.category}</div>
-                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
-                      {(p.avgRating ?? 0) !== null && (
-                        <div style={{ color: 'var(--accent)', fontSize: '13px', marginBottom: '8px' }}>
-                          Rating: {'★'.repeat(Math.round(p.avgRating ?? 0))} {p.avgRating ?? 0}
-                          <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>({p.reviewCount})</span>
-                        </div>
-                      )}
+                    <div style={{ padding: '12px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px' }}>{p.category}</div>
+                      {/* Rating line dropped (William, 2026-07-26, "homepage
+                          size is correct, please replicate to all other
+                          pages") -- the homepage reel card this is being
+                          matched to never showed a rating line either;
+                          removing it (rather than just shrinking it) is what
+                          actually brings this card down to that height. */}
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.25, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
                           {onSale ? (
@@ -424,14 +420,21 @@ function ShopContent() {
                             <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
                           )}
                         </span>
-                        <span title={p.sellerFounding ? (p.sellerFoundingCountry ? `Founding Seller of ${p.sellerFoundingCountry}` : 'Founding Seller') : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: p.sellerFounding ? '#E9C46A' : 'var(--muted)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerFounding && (<svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" style={{ flexShrink: 0 }}><circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" /><text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text></svg>)}{p.sellerName}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: 'var(--muted)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
                       </div>
-                      {p.sellerFounding && (
-                        <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px 3px 6px', borderRadius: 999, fontSize: '9px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#E9C46A', background: 'linear-gradient(135deg, rgba(93,69,16,0.55), rgba(41,29,8,0.55))', border: '1px solid rgba(185,138,47,0.75)', whiteSpace: 'nowrap' }}>
-                          <svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="#E9C46A" strokeWidth="1.3" /><text x="7" y="9.6" textAnchor="middle" fontSize="7" fontWeight="800" fill="#E9C46A">1</text></svg>
-                          {p.sellerFoundingCountry ? `Founding Seller of ${p.sellerFoundingCountry}` : 'Founding Seller'}
-                        </div>
-                      )}
+                      {/* Founding Seller pill removed from this card entirely
+                          (William, 2026-07-26, "remove the pill ... that
+                          says founding seller of the united kingdom
+                          completly remove it") -- founding status now shows
+                          ONLY as the round FounderMedal on the image above.
+                          Stock and handmade status are NOT shown here either
+                          (William, same thread, "not on id cards" -- "can be
+                          shown in the product page before a buyer goes to
+                          checkout" instead): this card is now brought down
+                          to the homepage reel card's own compact size --
+                          category, title, price + seller, nothing else. The
+                          stock/handmade pills live on the product page's
+                          seller card instead (ProductPageClient.tsx). */}
                     </div>
                   </div>
                 </Link>
