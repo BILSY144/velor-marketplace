@@ -231,7 +231,10 @@ export default function PressPage() {
           <div className="pr-linkrow">
             <Link className="pr-linkcard" href="/founding">The founding-seller atlas &rarr;</Link>
             <Link className="pr-linkcard" href="/sell">The seller pitch &rarr;</Link>
-            <Link className="pr-linkcard" href="/origins">Shop by origin &rarr;</Link>
+            {/* /origins removed site-wide (William, 2026-07-26) -- shopping
+                by origin now happens on /shop itself via the country flag
+                strip and the origin filter, not a separate page. */}
+            <Link className="pr-linkcard" href="/shop">Shop by origin &rarr;</Link>
             <Link className="pr-linkcard" href="/about">How Velor works &rarr;</Link>
           </div>
         </section>
