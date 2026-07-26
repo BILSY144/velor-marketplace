@@ -1043,6 +1043,14 @@ export default function HomePage() {
                       return (
                         <Link className="vh-ct" href={`/shop/${p.id}`} key={p.id}>
                           <div className="ph">
+                            {/* No ribbon on real listings (William, 2026-07-26, "remove the
+                                live listing banner on my listing as its not needed and this
+                                must be done every time a seller successfully lists an item"):
+                                the diagonal ribbon is reserved for the example/placeholder
+                                tiles below ("Your goods here", "Preview") -- a real listing IS
+                                the goods, it doesn't need a banner announcing it, and this
+                                applies to every real product tile this block renders, not
+                                just this one seller's. */}
                             {p.image ? (
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img
@@ -1052,7 +1060,6 @@ export default function HomePage() {
                                 onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
                               />
                             ) : null}
-                            <div className="ribbon">Live listing</div>
                           </div>
                           <div className="cap">
                             <div className="k">{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</div>
