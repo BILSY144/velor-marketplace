@@ -34,7 +34,7 @@ import {
   findSpecialityBySlug,
   buyerLabel,
 } from '@/lib/specialities'
-import { WORLD_COUNTRIES, countrySlug } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { FounderMedal } from '@/components/FounderMedal'
 
@@ -174,7 +174,7 @@ export default function SpecialityTermPage() {
           {associatedCountries.length > 0 && (
             <div className="spt-tags">
               {associatedCountries.map(c => (
-                <Link key={c.code} className="spt-tag" href={`/origins/${countrySlug(c)}`} title={`${c.name} — known for ${speciality.term.toLowerCase()}`}>
+                <Link key={c.code} className="spt-tag" href={`/shop?origin=${c.code}`} title={`${c.name} — known for ${speciality.term.toLowerCase()}`}>
                   {c.name}
                 </Link>
               ))}
@@ -226,7 +226,7 @@ export default function SpecialityTermPage() {
               </p>
               <div className="spt-btnrow">
                 <Link className="spt-btn" href="/founding">Be the first to open {label.toLowerCase()}</Link>
-                <Link className="spt-btn2" href="/origins">Shop by origin</Link>
+                <Link className="spt-btn2" href="/shop">Shop by origin</Link>
               </div>
             </div>
           </div>
