@@ -152,12 +152,40 @@ import type { MetadataRoute } from 'next';
 // nothing about how real users filter or browse `/shop`, and does not
 // remove any existing sitemap entry (no `/shop?...` URL was ever in
 // `sitemap.xml` to begin with -- confirmed by grep).
+//
+// Extended 2026-07-26 by the standing SEO agent, closing the gap the
+// 2026-07-22 comment above predicted: `/origins` was removed the same day
+// (William, "remove the origins page entirely"), and `app/shop/page.tsx`
+// was converted to a server component with a real `generateMetadata`
+// reading `searchParams.origin` (the bigger architectural change the
+// 2026-07-17 comment above flagged as out of scope for that cycle -- now
+// done). `/shop?origin=CODE` is the real per-country landing page today --
+// the header dropdown, homepage country strip, `/search`, and
+// `/specialities/[term]` all link buyers there -- so blanket-disallowing
+// every `/shop?...` query would keep it invisible to search engines with no
+// indexable per-country page left anywhere on the site. Carved out an
+// explicit allow for `/shop?origin=` rather than removing the `/shop?`
+// disallow outright: Google's robots.txt spec resolves a conflict between
+// an allow and a disallow rule by matching length, not declaration order --
+// the longer, more specific `/shop?origin=` (13 chars) wins over the
+// shorter `/shop?` (6 chars) for any URL starting with it, so
+// `/shop?origin=GB` etc. are now crawlable while `/shop?category=...`,
+// `/shop?search=...`, `/shop?page=...` (any query with no leading `origin=`)
+// stay blocked -- exactly the same duplicate/thin-content protection this
+// file already gives `/search`. Repo-wide grep confirmed every real,
+// crawlable `<Link>`/`<a>` building a `/shop?origin=...` URL always puts
+// `origin` first when both `origin` and `speciality` are present (never the
+// reverse), so this prefix rule is safe. `sitemap.ts` was updated alongside
+// this to only list `/shop?origin=CODE` for countries with a real, live
+// APPROVED product -- not all 190 -- so this doesn't recreate the exact
+// thin-content-across-190-mostly-empty-pages problem that motivated
+// removing `/origins` in the first place.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/shop?origin='],
         disallow: [
           '/api/',
           '/dashboard',
