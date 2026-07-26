@@ -21,6 +21,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
@@ -823,14 +825,59 @@ const css = `
 
 export default function HomePage() {
   const { symbol, convert } = useCurrencyDisplay()
+  const { data: session } = useSession()
+  const router = useRouter()
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
   const [streams, setStreams] = useState<LiveStream[]>([])
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+  const [wishlistPending, setWishlistPending] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/lattice').then(r => (r.ok ? r.json() : null)).then(d => { if (d) setLattice(d) }).catch(() => {})
     fetch('/api/live').then(r => (r.ok ? r.json() : null)).then(d => { if (d?.streams) setStreams(d.streams) }).catch(() => {})
   }, [])
+
+  // Wishlist heart (William, 2026-07-26: "add the wishlist heart to all
+  // listing boxes that link to wishlist" -- "repeat that on all pages for
+  // the heart"): same fetch/toggle pattern as /shop's ShopPageClient.tsx,
+  // duplicated here rather than shared since this page has no dependency
+  // on that one.
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/wishlist')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => {
+        const ids = new Set<string>(data.items.map((i: { product: { id: string } }) => i.product.id))
+        setWishlistIds(ids)
+      })
+      .catch(() => {})
+  }, [session])
+
+  async function toggleWishlist(e: React.MouseEvent, productId: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!session) {
+      router.push('/auth/sign-in?callbackUrl=/')
+      return
+    }
+    setWishlistPending(productId)
+    const isIn = wishlistIds.has(productId)
+    try {
+      await fetch('/api/wishlist', {
+        method: isIn ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+      setWishlistIds(prev => {
+        const next = new Set(prev)
+        isIn ? next.delete(productId) : next.add(productId)
+        return next
+      })
+    } finally {
+      setWishlistPending(null)
+    }
+  }
 
   // Pointer-drag scroll for every rail on the page.
   useEffect(() => {
@@ -1044,39 +1091,72 @@ export default function HomePage() {
                       const code = p.originCountry && p.originCountry.length === 2 ? p.originCountry.toUpperCase() : null
                       const countryName = code ? (WORLD_COUNTRIES.find(w => w.code === code)?.name ?? code) : null
                       return (
-                        <Link className="vh-ct" href={`/shop/${p.id}`} key={p.id}>
-                          <div className="ph">
-                            {/* No ribbon on real listings (William, 2026-07-26, "remove the
-                                live listing banner on my listing as its not needed and this
-                                must be done every time a seller successfully lists an item"):
-                                the diagonal ribbon is reserved for the example/placeholder
-                                tiles below ("Your goods here", "Preview") -- a real listing IS
-                                the goods, it doesn't need a banner announcing it, and this
-                                applies to every real product tile this block renders, not
-                                just this one seller's. */}
-                            {p.image ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img
-                                src={p.image}
-                                alt={p.title}
-                                loading="lazy"
-                                onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
-                              />
-                            ) : null}
-                            {/* Founding-seller medal (William, 2026-07-26, "for every
-                                listing" -- "wherever a founding sellers listing is
-                                showed i want the round founders badge ... this badge
-                                travels with the listing everywhere it is placed"):
-                                same shared medallion as /shop, /search, /origins,
-                                /specialities and a seller's own storefront grid. */}
-                            {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} />}
-                          </div>
-                          <div className="cap">
-                            <div className="k">{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</div>
-                            <div className="t">{p.title}</div>
-                            <div className="pr"><span className="p">{symbol}{convert(p.price, p.currency).toFixed(2)}</span><span className="s">{p.storeName}</span></div>
-                          </div>
-                        </Link>
+                        <div className="vh-ct" key={p.id}>
+                          <Link href={`/shop/${p.id}`} style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+                            <div className="ph">
+                              {/* No ribbon on real listings (William, 2026-07-26, "remove the
+                                  live listing banner on my listing as its not needed and this
+                                  must be done every time a seller successfully lists an item"):
+                                  the diagonal ribbon is reserved for the example/placeholder
+                                  tiles below ("Your goods here", "Preview") -- a real listing IS
+                                  the goods, it doesn't need a banner announcing it, and this
+                                  applies to every real product tile this block renders, not
+                                  just this one seller's. */}
+                              {p.image ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={p.image}
+                                  alt={p.title}
+                                  loading="lazy"
+                                  onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                                />
+                              ) : null}
+                            </div>
+                            <div className="cap">
+                              <div className="k" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                                <span>{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</span>
+                                {/* Founding-seller medal (William, 2026-07-26, "on the
+                                    homepage in the id card section ... make it small so
+                                    it does not take up too much room in the id card"):
+                                    moved off the listing image into the id card/caption,
+                                    small, so nothing ever blocks the buyer's view of the
+                                    photo -- only the wishlist heart sits on the image.
+                                    Same shared medallion as /shop, /search, /origins,
+                                    /specialities and a seller's own storefront grid. */}
+                                {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={14} />}
+                              </div>
+                              <div className="t">{p.title}</div>
+                              <div className="pr"><span className="p">{symbol}{convert(p.price, p.currency).toFixed(2)}</span><span className="s">{p.storeName}</span></div>
+                            </div>
+                          </Link>
+                          <button
+                            onClick={e => toggleWishlist(e, p.id)}
+                            disabled={wishlistPending === p.id}
+                            title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              left: '8px',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: 'rgba(13,13,13,0.78)',
+                              border: 'none',
+                              cursor: wishlistPending === p.id ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '15px',
+                              color: wishlistIds.has(p.id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
+                              backdropFilter: 'blur(4px)',
+                              transition: 'color 0.15s',
+                              zIndex: 1,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {wishlistIds.has(p.id) ? '♥' : '♡'}
+                          </button>
+                        </div>
                       )
                     })}
                     {stockTiles.map(t => (
