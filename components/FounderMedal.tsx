@@ -1,18 +1,28 @@
-// Shared "founding seller" round medallion, shown on the image of every
-// listing that belongs to a founding seller (William, 2026-07-26: "for
-// every listing" -- "wherever a founding sellers listing is showed i want
-// the round founders badge on their id card or on the image itself. this
-// badge travels with the listing everywhere it is placed").
+// Shared "founding seller" round medallion, shown on the ID CARD (the
+// caption/info panel) of every listing that belongs to a founding seller.
 //
-// This is NOT a new design -- it's the exact medallion already built and
-// shipped on the main /shop grid (app/shop/page.tsx's renderProductCard),
-// extracted here so every other listing surface (homepage reels, /search,
-// /origins/[slug], /specialities/[term], a seller's own storefront grid)
-// renders the identical badge instead of a one-off reinvention drifting
-// out of sync. Deliberately small and corner-anchored so it can never grow
-// to cover the product photo itself -- the "small enough to see but not
-// big enough to limit the sellers listing visibility" rule from the same
-// conversation.
+// Moved OFF the listing photo and onto the id card (William, 2026-07-26:
+// "i want the round founders badge on the id card instead of on the image
+// ... sellers will not be happy it is blocking the buyers view of their
+// listing ... nothing should block the buyers view of the listing. only
+// the heart like symbol.") -- this superseded the original 2026-07-26
+// brief earlier the same day ("on their id card or on the image itself"),
+// once sellers pushed back that the medal sitting on the photo covered
+// part of their product. The badge itself is unchanged (still the exact
+// medallion first built on the main /shop grid); only WHERE callers place
+// it changed. This component therefore no longer hardcodes its own
+// position -- it used to be `position:absolute;bottom:10;right:10` so it
+// could sit on top of an image, but every caller now renders it inline
+// inside the caption instead, so a fixed absolute position would either
+// do nothing (no positioned ancestor) or misplace it. Callers pass `style`
+// if they need any positioning of their own; by default it just sits
+// wherever it's placed in normal flow, sized small enough to read as an
+// icon next to the seller name/price line.
+//
+// Shared across every listing surface (homepage reels, /shop grid,
+// /search, /specialities/[term], a seller's own storefront grid) so they
+// all render the identical badge instead of a one-off reinvention
+// drifting out of sync.
 //
 // Driven purely by Seller.foundingBadge / CountryFounder (lib/founding.ts)
 // -- true only for the seller who was first to get an APPROVED listing
@@ -21,10 +31,12 @@
 // generic tooltip.
 export function FounderMedal({
   countryName,
-  size = 54,
+  size = 20,
+  style,
 }: {
   countryName?: string | null
   size?: number
+  style?: React.CSSProperties
 }) {
   const svgSize = Math.round(size * 0.85)
   return (
@@ -35,19 +47,18 @@ export function FounderMedal({
           : 'Founding Seller — the first verified seller from this country'
       }
       style={{
-        position: 'absolute',
-        bottom: 10,
-        right: 10,
+        display: 'inline-flex',
+        flexShrink: 0,
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(30,22,7,0.95), rgba(15,11,3,0.95))',
         border: '1px solid rgba(185,138,47,0.5)',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.55)',
-        display: 'flex',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
         alignItems: 'center',
         justifyContent: 'center',
-        pointerEvents: 'none',
+        verticalAlign: 'middle',
+        ...style,
       }}
     >
       <svg width={svgSize} height={svgSize} viewBox="0 0 200 200" aria-hidden="true">
