@@ -36,6 +36,7 @@ import { cultureHints } from '@/lib/cultureHints'
 import { countryImages } from '@/lib/countryImagery'
 import { SPECIALITIES, buyerLabel, specialitySlug } from '@/lib/specialities'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import { FounderMedal } from '@/components/FounderMedal'
 
 interface PreviewProduct {
   id: string
@@ -44,6 +45,8 @@ interface PreviewProduct {
   currency: string
   images: string[]
   stock: number
+  sellerFounding?: boolean
+  sellerFoundingCountry?: string | null
 }
 
 function flag(code: string): string {
@@ -329,6 +332,7 @@ function OriginCountryContent() {
                       ? <img src={p.images[0]} alt={p.name} />
                       : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 12 }}>No image</div>
                     }
+                    {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={40} />}
                   </div>
                   <div className="ocp-cbody">
                     <div className="ocp-cname">{p.name}</div>
