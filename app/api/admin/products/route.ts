@@ -53,7 +53,14 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { productId, action, note } = await req.json()
-  if (!productId || !['approve', 'reject'].includes(action)) {
+  // 'delist' added 2026-07-26 alongside instant-listing (William: "once
+  // listed we will review for banned products or something that should not
+  // be listed") -- it's the takedown half of that: 'approve'/'reject' still
+  // resolve a PENDING_REVIEW listing (now only the certificate/regulated-
+  // signal ones, since ordinary listings go live instantly and never reach
+  // this queue); 'delist' takes an already-live APPROVED listing down after
+  // the fact.
+  if (!productId || !['approve', 'reject', 'delist'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
@@ -85,10 +92,24 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
+  // A delist only makes sense against a listing that is currently live --
+  // guard against accidentally delisting something still in PENDING_REVIEW
+  // or already REJECTED, which should go through 'approve'/'reject' instead.
+  if (action === 'delist') {
+    const target = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { status: true },
+    })
+    if (!target) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (target.status !== 'APPROVED') {
+      return NextResponse.json({ error: 'Only a live (APPROVED) listing can be delisted.' }, { status: 409 })
+    }
+  }
+
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
-      status: action === 'approve' ? 'APPROVED' : 'REJECTED',
+      status: action === 'approve' ? 'APPROVED' : action === 'delist' ? 'DELISTED' : 'REJECTED',
     },
     include: {
       seller: {
@@ -111,6 +132,14 @@ export async function PATCH(req: NextRequest) {
       to: sellerEmail,
       subject: `Your listing has been approved - ${product.title}`,
       html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Your listing is live</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} - your product has been reviewed and approved.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div><div style="font-size:20px;font-weight:700;color:#FF6B00;margin-top:8px;">${Number(product.price).toFixed(2)}</div></div><div style="color:#00E676;font-size:14px;font-weight:600;">Your listing is now visible to buyers on Velor Marketplace.</div></div></div>`,
+    })
+  } else if (action === 'delist') {
+    await sendEmail({
+      from: 'Velor Marketplace <noreply@velorcommerce.store>',
+      reply_to: 'support@velorcommerce.store',
+      to: sellerEmail,
+      subject: `Your listing has been taken down - ${product.title}`,
+      html: `<div style="background:#0D0D0D;color:#fff;font-family:Inter,sans-serif;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;"><span style="color:#FF6B00;">Velor</span> Marketplace</div><div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:28px;"><div style="font-size:20px;font-weight:700;margin-bottom:8px;">Listing removed</div><div style="color:#999;margin-bottom:20px;">Hi ${sellerName} - on review, this listing has been removed from Velor Marketplace and is no longer visible to buyers.</div><div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${storeName}</div><div style="font-size:16px;font-weight:600;color:#fff;">${product.title}</div></div>${note ? `<div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-size:12px;color:#FF1744;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px;">Reason</div><div style="color:#fff;font-size:14px;line-height:1.6;">${note}</div></div>` : ''}<div style="color:#999;font-size:14px;line-height:1.6;">If you believe this was a mistake, contact support@velorcommerce.store</div></div></div>`,
     })
   } else {
     await sendEmail({
