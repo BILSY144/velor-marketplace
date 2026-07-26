@@ -27,12 +27,23 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 import { orderByCategoryActivity } from '@/lib/categoryOrdering'
 
+type CategoryProduct = {
+  id: string
+  title: string
+  price: number
+  currency: string
+  image: string | null
+  storeName: string
+  originCountry: string | null
+}
+
 type LatticeSummary = {
   totalCountries: number
   trading: number
   countries: { code: string; name: string; products: number; specialities: string[] }[]
   specialities: Record<string, { countries: number; products: number }>
   categories: Record<string, number>
+  categoryProducts: Record<string, CategoryProduct[]>
 }
 
 type LiveStream = {
@@ -808,7 +819,7 @@ const css = `
 `
 
 export default function HomePage() {
-  const { symbol } = useCurrencyDisplay()
+  const { symbol, convert } = useCurrencyDisplay()
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
   const [streams, setStreams] = useState<LiveStream[]>([])
   const rootRef = useRef<HTMLDivElement>(null)
@@ -892,6 +903,17 @@ export default function HomePage() {
     CULTURE_REELS,
     (reel) => reel.title,
     lattice?.categories ?? {},
+  )
+
+  // Real listings per category (William, same thread, "why can i not see my
+  // listing in the reel then" -- "at the very beginning of the reel"): the
+  // reordering above only moved which REEL comes first; it never put the
+  // seller's actual product INTO the reel. Keyed case-insensitively to match
+  // orderedReels above -- looked up per reel below and rendered as real
+  // tiles ahead of the example seats, capped to that reel's own seat count
+  // so a category never grows more seats than its curated default has.
+  const categoryProductsLower = new Map(
+    Object.entries(lattice?.categoryProducts ?? {}).map(([name, list]) => [name.toLowerCase(), list])
   )
 
   const orderedCountries = (() => {
@@ -1004,36 +1026,75 @@ export default function HomePage() {
               <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
             </div>
             <div className="vh-drag">
-              {reel.tiles.map(t => (
-                <Link className={'vh-ct' + (t.video ? ' vh-film' : '')} href="/founding" key={t.name + t.code}>
-                  {/* ID-card layout (William, 2026-07-17): same framed card as the
-                      country-page seat grid -- image pane with the "Your goods
-                      here" ribbon, then a caption block. These stay examples
-                      until real sellers claim the seats. Each rail is exactly 20
-                      seats (William, 2026-07-17) -- reserved for the top 20
-                      performing sellers; the film seat is labelled PREVIEW FILM
-                      with no country claim (footage is craft-generic, LAW #1). */}
-                  <div className="ph">
-                    {t.video ? (
-                      <video src={t.video} poster={t.img} muted loop playsInline preload="none" />
-                    ) : (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={t.img}
-                        alt={t.name}
-                        loading="lazy"
-                        onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
-                      />
-                    )}
-                    <div className="ribbon">{t.video ? 'Preview' : 'Your goods here'}</div>
-                  </div>
-                  <div className="cap">
-                    <div className="k">{t.video ? 'PREVIEW FILM' : <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</>}</div>
-                    <div className="t">{t.name}</div>
-                    <div className="pr"><span className="p">{symbol}0.00</span><span className="s">Seller name</span></div>
-                  </div>
-                </Link>
-              ))}
+              {(() => {
+                // Real listings claim the front seats of their category's
+                // reel (William, "why can i not see my listing in the reel
+                // then" -- "at the very beginning of the reel"). Capped to
+                // this reel's own seat count so a category never grows past
+                // its curated default; the example tiles fill whatever
+                // seats real listings haven't claimed yet.
+                const realProducts = (categoryProductsLower.get(reel.title.toLowerCase()) ?? []).slice(0, reel.tiles.length)
+                const stockTiles = reel.tiles.slice(0, Math.max(0, reel.tiles.length - realProducts.length))
+                return (
+                  <>
+                    {realProducts.map(p => {
+                      const code = p.originCountry && p.originCountry.length === 2 ? p.originCountry.toUpperCase() : null
+                      const countryName = code ? (WORLD_COUNTRIES.find(w => w.code === code)?.name ?? code) : null
+                      return (
+                        <Link className="vh-ct" href={`/shop/${p.id}`} key={p.id}>
+                          <div className="ph">
+                            {p.image ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={p.image}
+                                alt={p.title}
+                                loading="lazy"
+                                onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                              />
+                            ) : null}
+                            <div className="ribbon">Live listing</div>
+                          </div>
+                          <div className="cap">
+                            <div className="k">{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</div>
+                            <div className="t">{p.title}</div>
+                            <div className="pr"><span className="p">{symbol}{convert(p.price, p.currency).toFixed(2)}</span><span className="s">{p.storeName}</span></div>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                    {stockTiles.map(t => (
+                      <Link className={'vh-ct' + (t.video ? ' vh-film' : '')} href="/founding" key={t.name + t.code}>
+                        {/* ID-card layout (William, 2026-07-17): same framed card as the
+                            country-page seat grid -- image pane with the "Your goods
+                            here" ribbon, then a caption block. These stay examples
+                            until real sellers claim the seats. Each rail is exactly 20
+                            seats (William, 2026-07-17) -- reserved for the top 20
+                            performing sellers; the film seat is labelled PREVIEW FILM
+                            with no country claim (footage is craft-generic, LAW #1). */}
+                        <div className="ph">
+                          {t.video ? (
+                            <video src={t.video} poster={t.img} muted loop playsInline preload="none" />
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={t.img}
+                              alt={t.name}
+                              loading="lazy"
+                              onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
+                            />
+                          )}
+                          <div className="ribbon">{t.video ? 'Preview' : 'Your goods here'}</div>
+                        </div>
+                        <div className="cap">
+                          <div className="k">{t.video ? 'PREVIEW FILM' : <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</>}</div>
+                          <div className="t">{t.name}</div>
+                          <div className="pr"><span className="p">{symbol}0.00</span><span className="s">Seller name</span></div>
+                        </div>
+                      </Link>
+                    ))}
+                  </>
+                )
+              })()}
             </div>
           </div>
         </section>
