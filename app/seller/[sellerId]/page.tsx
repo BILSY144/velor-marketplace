@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { countryFlagUrl } from '@/lib/countryFlag'
+import { FounderMedal } from '@/components/FounderMedal'
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -133,6 +134,7 @@ export default async function SellerProfilePage({
     where: { id: sellerId, approved: true },
     include: {
       user: { select: { name: true } },
+      countryFounded: { select: { countryName: true } },
       products: {
         where: { status: 'APPROVED' },
         include: {
@@ -381,6 +383,7 @@ export default async function SellerProfilePage({
                       style={{
                         aspectRatio: '1',
                         background: '#111',
+                        position: 'relative',
                         overflow: 'hidden',
                       }}
                     >
@@ -404,6 +407,16 @@ export default async function SellerProfilePage({
                         >
                           No image
                         </div>
+                      )}
+                      {/* Founding-seller medal (William, 2026-07-26, "for every
+                          listing" -- "wherever a founding sellers listing is
+                          showed ... this badge travels with the listing
+                          everywhere it is placed"): every product here belongs
+                          to this one seller, so the flag is just the seller's
+                          own foundingBadge -- same shared medallion as every
+                          other listing surface. */}
+                      {seller.foundingBadge && (
+                        <FounderMedal countryName={seller.countryFounded?.countryName} size={40} />
                       )}
                     </div>
 
