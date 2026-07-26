@@ -352,7 +352,7 @@ function SearchContent() {
                             2026-07-26) -- moved off the image so nothing ever
                             blocks the buyer's view; only the wishlist heart
                             sits on the photo. */}
-                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={14} />}
+                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={28} />}
                       </div>
                       <p className="vsr-seller">by {item.sellerName ?? item.seller?.storeName ?? ''}</p>
                       <p className="vsr-price">{symbol}{convert(item.price, item.currency ?? item.seller?.currency ?? 'GBP').toFixed(2)}</p>
@@ -403,7 +403,7 @@ function SearchContent() {
                         {/* Founding-seller medal, small, in the id card (William,
                             2026-07-26) -- same treatment as every other listing
                             surface; only the wishlist heart sits on the photo. */}
-                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={14} />}
+                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={28} />}
                       </div>
                       <p className="vsr-name">{item.name}</p>
                       <p className="vsr-seller">by {item.sellerName}</p>
