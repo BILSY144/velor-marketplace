@@ -3,25 +3,19 @@ import { prisma } from '@/lib/prisma'
 import { requireCronSecret } from '@/lib/cronAuth'
 import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
 import { grantCountryFounderIfFirst } from '@/lib/founding'
+import { FORBIDDEN_PATTERNS, REGULATED_SIGNALS } from '@/lib/listingModeration'
 
-const FORBIDDEN_PATTERNS = [
-  /weapon|gun|knife|blade|explosive|bomb/i,
-  /adult|porn|xxx/i,
-  /drug|narcotic|steroid/i,
-  /counterfeit|fake|replica|knockoff/i,
-  /tobacco|cigarette|vape|nicotine/i,
-  /alcohol|liquor|spirits|wine|beer/i,
-]
-
-// Regulated-material signals: if these appear and the seller did NOT declare
-// the product as regulated, hold it for human review rather than approving.
-const REGULATED_SIGNALS = [
-  /\bcoral\b/i,
-  /python|crocodile|alligator|snakeskin|lizard\s*skin/i,
-  /\brosewood\b|\bagarwood\b/i,
-  /\bfur\b|\bfeather/i,
-  /\bbone\b|\bhorn\b|\bshell\b/i,
-]
+// NOTE (William, 2026-07-26): "i want every listing to be approved
+// automatically. so they dont wait for approval. then once listed we will
+// review for banned products... that is how ebay do it." Since
+// app/api/dashboard/products/route.ts now auto-approves a clean listing
+// the instant it's created, this cron no longer sees ordinary listings at
+// all -- only the narrow set that stays in PENDING_REVIEW on purpose (the
+// certificate track, or an undeclared regulated-material signal caught at
+// creation) plus any legacy row from before that change. It's the backstop
+// that eventually resolves those, not the normal path any more.
+// FORBIDDEN_PATTERNS/REGULATED_SIGNALS now live in lib/listingModeration.ts
+// (shared with the creation route) so the two lists never drift apart.
 
 const MIN_PRICE = 0.01
 const MAX_PRICE = 50000
