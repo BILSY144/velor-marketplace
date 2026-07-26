@@ -25,11 +25,19 @@ export const dynamic = 'force-dynamic'
 // seller's actual listing INTO the reel -- every tile inside was still the
 // static example photography from CULTURE_REELS. This field carries the
 // real listings themselves (id, title, price, currency, image, storeName,
-// originCountry) so the homepage can render the seller's own product as a
-// real tile at the front of their category's reel, ahead of the example
-// seats. Capped at MAX_PRODUCTS_PER_CATEGORY per category, most recent
-// first -- generous relative to a reel's ~20 seats today; revisit if a
-// single category's catalogue grows past that.
+// originCountry, sellerFounding, sellerFoundingCountry) so the homepage can
+// render the seller's own product as a real tile at the front of their
+// category's reel, ahead of the example seats. Capped at
+// MAX_PRODUCTS_PER_CATEGORY per category, most recent first -- generous
+// relative to a reel's ~20 seats today; revisit if a single category's
+// catalogue grows past that.
+//
+// sellerFounding/sellerFoundingCountry (William, 2026-07-26, "for every
+// listing" -- "wherever a founding sellers listing is showed i want the
+// round founders badge ... this badge travels with the listing everywhere
+// it is placed"): same two fields /api/shop/products already returns, so
+// the homepage tile can render the identical FounderMedal
+// (components/FounderMedal.tsx) as every other listing surface.
 //
 // Response shape:
 // {
@@ -38,7 +46,7 @@ export const dynamic = 'force-dynamic'
 //   countries: [{ code, name, products, specialities: [term...] }],
 //   specialities: { term: { countries, products } },
 //   categories: { categoryName: productCount },
-//   categoryProducts: { categoryName: [{ id, title, price, currency, image, storeName, originCountry }] }
+//   categoryProducts: { categoryName: [{ id, title, price, currency, image, storeName, originCountry, sellerFounding, sellerFoundingCountry }] }
 // }
 
 const MAX_PRODUCTS_PER_CATEGORY = 24
@@ -66,7 +74,14 @@ export async function GET() {
       specialities: true,
       category: true,
       createdAt: true,
-      seller: { select: { storeName: true, currency: true } },
+      seller: {
+        select: {
+          storeName: true,
+          currency: true,
+          foundingBadge: true,
+          countryFounded: { select: { countryName: true } },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -76,7 +91,17 @@ export async function GET() {
   const categories = new Map<string, number>()
   const categoryProducts = new Map<
     string,
-    { id: string; title: string; price: number; currency: string; image: string | null; storeName: string; originCountry: string | null }[]
+    {
+      id: string
+      title: string
+      price: number
+      currency: string
+      image: string | null
+      storeName: string
+      originCountry: string | null
+      sellerFounding: boolean
+      sellerFoundingCountry: string | null
+    }[]
   >()
 
   for (const p of products) {
@@ -105,6 +130,8 @@ export async function GET() {
           image: p.images?.[0] ?? null,
           storeName: p.seller?.storeName ?? 'Velor seller',
           originCountry: p.originCountry ?? null,
+          sellerFounding: !!p.seller?.countryFounded,
+          sellerFoundingCountry: p.seller?.countryFounded?.countryName ?? null,
         })
       }
       categoryProducts.set(p.category, list)
