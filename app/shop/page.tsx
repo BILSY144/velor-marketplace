@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
-import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { CATEGORY_NAMES as CATEGORIES, CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { countryImages, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
@@ -653,7 +653,7 @@ function ShopContent() {
                       <Link
                         key={h.code + h.term}
                         className="shsdrop-row"
-                        href={`/origins/${slugifyCountryName(h.name)}?craft=${encodeURIComponent(h.term)}`}
+                        href={`/shop?origin=${h.code}&speciality=${encodeURIComponent(h.term)}`}
                         onClick={() => setSearchOpen(false)}
                       >
                         <span style={{ width: 34, height: 34, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
@@ -678,7 +678,7 @@ function ShopContent() {
                       <Link
                         key={c.code}
                         className="shsdrop-row"
-                        href={`/origins/${slugifyCountryName(c.name)}`}
+                        href={`/shop?origin=${c.code}`}
                         onClick={() => setSearchOpen(false)}
                       >
                         <span style={{ fontSize: 18, width: 26, textAlign: 'center', flexShrink: 0 }}>{shopFlagOf(c.code)}</span>
