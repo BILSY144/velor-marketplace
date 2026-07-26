@@ -93,7 +93,13 @@ export default function AdminProductsPage() {
   const [activeTab, setActiveTab] = useState('PENDING_REVIEW')
   const [products, setProducts] = useState<AdminProduct[]>([])
   const [loading, setLoading] = useState(true)
-  const [rejectModal, setRejectModal] = useState<{ productId: string; productName: string } | null>(null)
+  // Shared by both the Reject (PENDING_REVIEW) and Delist (APPROVED) flows
+  // (William, 2026-07-26: ordinary listings now go live instantly with no
+  // pre-review -- see app/api/dashboard/products/route.ts -- so this page's
+  // job splits into resolving the narrow certificate/regulated-material
+  // hold queue, AND reviewing already-live listings after the fact and
+  // taking down anything that shouldn't have been listed, eBay-style).
+  const [noteModal, setNoteModal] = useState<{ productId: string; productName: string; action: 'reject' | 'delist' } | null>(null)
   const [rejectNote, setRejectNote] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -133,7 +139,7 @@ export default function AdminProductsPage() {
     }
   }, [activeTab, status, session])
 
-  const handleAction = async (productId: string, action: 'approve' | 'reject', note?: string) => {
+  const handleAction = async (productId: string, action: 'approve' | 'reject' | 'delist', note?: string) => {
     setActionLoading(productId)
     await fetch('/api/admin/products', {
       method: 'PATCH',
@@ -141,14 +147,14 @@ export default function AdminProductsPage() {
       body: JSON.stringify({ productId, action, note }),
     })
     setActionLoading(null)
-    setRejectModal(null)
+    setNoteModal(null)
     setRejectNote('')
     fetchProducts(activeTab)
   }
 
-  const openRejectModal = (productId: string, productName: string) => {
+  const openNoteModal = (productId: string, productName: string, action: 'reject' | 'delist') => {
     setRejectNote('')
-    setRejectModal({ productId, productName })
+    setNoteModal({ productId, productName, action })
   }
 
   if (status === 'loading' || (status === 'authenticated' && (session as any).user?.role !== 'ADMIN')) {
@@ -166,7 +172,7 @@ export default function AdminProductsPage() {
       <div className="adm-page">
         <div className="adm-header">
           <h1 className="adm-title">Product Moderation</h1>
-          <p className="adm-sub">Review and approve seller listings before they go live</p>
+          <p className="adm-sub">Ordinary listings now go live instantly. Pending Review is only certificate/regulated-material holds -- use Approved to review live listings and delist anything that shouldn&apos;t have been listed.</p>
         </div>
 
         <div className="adm-tabs">
@@ -209,7 +215,7 @@ export default function AdminProductsPage() {
                     {STATUS_LABELS[product.status]}
                   </span>
 
-                  {activeTab === 'PENDING_REVIEW' && (
+                  {(activeTab === 'PENDING_REVIEW' || (activeTab === 'ALL' && product.status === 'PENDING_REVIEW')) && (
                     <div className="adm-btns">
                       <button
                         className="adm-btn adm-approve"
@@ -225,9 +231,21 @@ export default function AdminProductsPage() {
                       <button
                         className="adm-btn adm-reject"
                         disabled={actionLoading === product.id}
-                        onClick={() => openRejectModal(product.id, product.name)}
+                        onClick={() => openNoteModal(product.id, product.name, 'reject')}
                       >
                         Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {(activeTab === 'APPROVED' || (activeTab === 'ALL' && product.status === 'APPROVED')) && (
+                    <div className="adm-btns">
+                      <button
+                        className="adm-btn adm-reject"
+                        disabled={actionLoading === product.id}
+                        onClick={() => openNoteModal(product.id, product.name, 'delist')}
+                      >
+                        {actionLoading === product.id ? <span className="adm-spinner" /> : 'Delist'}
                       </button>
                     </div>
                   )}
@@ -238,16 +256,18 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {rejectModal && (
+      {noteModal && (
         <div className="adm-overlay">
           <div className="adm-modal">
-            <div className="adm-modal-title">Reject Listing</div>
+            <div className="adm-modal-title">{noteModal.action === 'delist' ? 'Delist Listing' : 'Reject Listing'}</div>
             <div className="adm-modal-sub">
-              Adding a reason helps the seller understand what to fix. This note will be included in the email sent to them.
+              {noteModal.action === 'delist'
+                ? 'This listing is currently live and visible to buyers -- delisting removes it immediately. Adding a reason helps the seller understand why; this note will be included in the email sent to them.'
+                : 'Adding a reason helps the seller understand what to fix. This note will be included in the email sent to them.'}
             </div>
             <textarea
               className="adm-textarea"
-              placeholder="Reason for rejection (optional)"
+              placeholder={noteModal.action === 'delist' ? 'Reason for delisting (optional)' : 'Reason for rejection (optional)'}
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
             />
@@ -255,7 +275,7 @@ export default function AdminProductsPage() {
               <button
                 className="adm-btn adm-cancel"
                 onClick={() => {
-                  setRejectModal(null)
+                  setNoteModal(null)
                   setRejectNote('')
                 }}
               >
@@ -263,11 +283,13 @@ export default function AdminProductsPage() {
               </button>
               <button
                 className="adm-btn adm-confirm-reject"
-                disabled={actionLoading === rejectModal.productId}
-                onClick={() => handleAction(rejectModal.productId, 'reject', rejectNote)}
+                disabled={actionLoading === noteModal.productId}
+                onClick={() => handleAction(noteModal.productId, noteModal.action, rejectNote)}
               >
-                {actionLoading === rejectModal.productId ? (
+                {actionLoading === noteModal.productId ? (
                   <span className="adm-spinner adm-spinner-white" />
+                ) : noteModal.action === 'delist' ? (
+                  'Confirm Delist'
                 ) : (
                   'Confirm Rejection'
                 )}
