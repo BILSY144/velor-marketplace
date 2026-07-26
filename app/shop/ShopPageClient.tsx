@@ -385,8 +385,15 @@ function ShopContent() {
                           into pills in the card body below (William,
                           2026-07-26, "leaving only the founders round badge
                           in the listing image") -- the image now carries
-                          only the sale ribbon, the sold-out overlay, and the
-                          round FounderMedal. */}
+                          only the sale ribbon and the sold-out overlay. The
+                          FounderMedal that used to sit here too has since
+                          moved onto the id card, beside the seller name
+                          below (William, later the same day, "i want the
+                          round founders badge on the id card instead of on
+                          the image ... nothing should block the buyers view
+                          of the listing. only the heart like symbol.") -- the
+                          wishlist heart button is now the only thing this
+                          photo ever carries on top of it. */}
                       {p.stock <= 0 && (
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ background: '#000', color: '#fff', fontSize: '13px', fontWeight: 800, padding: '6px 18px', borderRadius: '4px', letterSpacing: '1.5px', border: '1px solid #fff' }}>
@@ -394,7 +401,6 @@ function ShopContent() {
                           </span>
                         </div>
                       )}
-                      {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} />}
                     </div>
                     <div style={{ padding: '12px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px' }}>{p.category}</div>
@@ -420,13 +426,19 @@ function ShopContent() {
                             <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
                           )}
                         </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: 'var(--muted)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: 'var(--muted)', maxWidth: '130px' }}>
+                          {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={16} />}
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
+                        </span>
                       </div>
                       {/* Founding Seller pill removed from this card entirely
                           (William, 2026-07-26, "remove the pill ... that
                           says founding seller of the united kingdom
                           completly remove it") -- founding status now shows
-                          ONLY as the round FounderMedal on the image above.
+                          ONLY as the small round FounderMedal beside the
+                          seller name above, never on the image (moved there
+                          later the same day -- see the image div's own
+                          comment above for the full quote).
                           Stock and handmade status are NOT shown here either
                           (William, same thread, "not on id cards" -- "can be
                           shown in the product page before a buyer goes to
@@ -898,6 +910,15 @@ function ShopContent() {
   )
 }
 
+// Renamed from ShopPage to ShopPageClient (William, 2026-07-26 SEO fix,
+// "how do we get around that" -- referring to the flagged gap that removing
+// /origins left no indexable per-country landing page): this file is now
+// the CLIENT half of a server/client split. The new app/shop/page.tsx is a
+// server component that owns generateMetadata (real per-country title/
+// description/canonical when ?origin= resolves to a known country) and
+// simply renders this component for the actual page body. Nothing about
+// the client logic below changed -- only where it lives and what it's
+// called.
 export default function ShopPageClient() {
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg)' }} />}>
