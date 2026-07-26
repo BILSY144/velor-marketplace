@@ -258,7 +258,7 @@ export default function SpecialityTermPage() {
                             (William, 2026-07-26) -- moved off the image so
                             nothing ever blocks the buyer's view; only the
                             wishlist heart sits on the photo. */}
-                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={14} />}
+                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
                       </div>
                       <div className="spt-cprice">{symbol}{convert(p.price, p.currency).toFixed(2)}</div>
                     </div>
