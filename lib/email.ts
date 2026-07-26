@@ -304,3 +304,59 @@ export function buildNewSellerAlertEmail(d: {
   ${WRAP_CLOSE}`;
   return { subject: `New seller signup: ${d.storeName}`, html };
 }
+
+// ---- Listing Held For Review ----
+//
+// William, 2026-07-26: ordinary listings now go live instantly with no
+// wait (see app/api/dashboard/products/route.ts) -- but a listing that
+// declares, or is auto-detected as possibly containing, a regulated
+// material still holds in PENDING_REVIEW rather than auto-approving,
+// since publishing that live without proof of legal sourcing is a real
+// legal risk. William asked that whenever that happens, it comes to him
+// by email immediately with the reason and the evidence, so he can decide
+// (with Claude) rather than it just sitting quietly in the admin queue.
+export function buildListingNeedsReviewAlertEmail(d: {
+  productId: string;
+  productTitle: string;
+  storeName: string;
+  sellerEmail: string;
+  originCountry: string | null;
+  materials: string | null;
+  description: string | null;
+  reason: string;
+}): { subject: string; html: string } {
+  const html = `${WRAP_OPEN}
+    <h2 style="color:#FF6B00;font-size:22px;margin:0 0 16px">A listing needs your review</h2>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
+      This listing did not go live automatically and is held in Pending Review. Here is the evidence.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Listing</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.productTitle)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Seller</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.storeName)} (${h(d.sellerEmail)})</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Origin country</td>
+        <td style="padding:8px 0;border-bottom:1px solid #2A2A2A;color:#FFF;font-size:14px;text-align:right">${h(d.originCountry || 'Not set')}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;color:#777;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">Declared materials</td>
+        <td style="padding:8px 0;color:#FFF;font-size:14px;text-align:right">${h(d.materials || 'None declared')}</td>
+      </tr>
+    </table>
+    <div style="background:#1A0A0A;border-left:3px solid #FF6B00;border-radius:0 6px 6px 0;padding:14px 16px;margin-bottom:20px">
+      <p style="margin:0 0 4px;color:#FF6B00;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700">Why it was flagged</p>
+      <p style="margin:0;color:#EEE;font-size:14px;line-height:1.6">${h(d.reason)}</p>
+    </div>
+    ${d.description ? `<div style="background:#111;border:1px solid #2A2A2A;border-radius:8px;padding:14px 16px;margin-bottom:24px">
+      <p style="margin:0 0 6px;color:#777;font-size:11px;letter-spacing:0.06em;text-transform:uppercase">Listing description</p>
+      <p style="margin:0;color:#BBB;font-size:13px;line-height:1.6">${h(d.description)}</p>
+    </div>` : ''}
+    <a href="https://velorcommerce.store/admin/products?status=PENDING_REVIEW" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Review this listing</a>
+    ${WRAP_CLOSE}`;
+  return { subject: `Review needed: ${d.productTitle}`, html };
+}
