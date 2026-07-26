@@ -403,7 +403,10 @@ function ShopContent() {
                       )}
                     </div>
                     <div style={{ padding: '12px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px' }}>{p.category}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: '3px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{p.category}</span>
+                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
+                      </div>
                       {/* Rating line dropped (William, 2026-07-26, "homepage
                           size is correct, please replicate to all other
                           pages") -- the homepage reel card this is being
@@ -427,7 +430,6 @@ function ShopContent() {
                           )}
                         </span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: 'var(--muted)', maxWidth: '130px' }}>
-                          {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={16} />}
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.sellerName}</span>
                         </span>
                       </div>
