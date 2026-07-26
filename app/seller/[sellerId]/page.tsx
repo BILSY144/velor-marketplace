@@ -359,11 +359,6 @@ export default async function SellerProfilePage({
             }}
           >
             {seller.products.map((product) => {
-              const pAvg =
-                product.reviews.length > 0
-                  ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
-                  : null
-
               return (
                 <Link
                   key={product.id}
@@ -420,8 +415,13 @@ export default async function SellerProfilePage({
                       )}
                     </div>
 
-                    {/* Info */}
-                    <div style={{ padding: '14px' }}>
+                    {/* Info -- brought down to the homepage reel card's
+                        compact size (William, 2026-07-26, "homepage size is
+                        correct, please replicate to all other pages"):
+                        tighter padding, tighter title spacing, and the
+                        rating dropped entirely since the homepage card never
+                        showed one either. */}
+                    <div style={{ padding: '12px' }}>
                       <div
                         style={{
                           fontSize: '11px',
@@ -429,7 +429,7 @@ export default async function SellerProfilePage({
                           color: 'var(--muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.06em',
-                          marginBottom: '6px',
+                          marginBottom: '4px',
                         }}
                       >
                         {product.category}
@@ -443,7 +443,7 @@ export default async function SellerProfilePage({
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
-                          marginBottom: '10px',
+                          marginBottom: '8px',
                           lineHeight: 1.3,
                         }}
                       >
@@ -469,12 +469,6 @@ export default async function SellerProfilePage({
                             currency: 'GBP',
                           }).format(product.price)}
                         </span>
-                        {pAvg !== null && (
-                          <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            <span style={{ color: 'var(--accent)' }}>{'★'}</span>{' '}
-                            {pAvg.toFixed(1)} ({product.reviews.length})
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
