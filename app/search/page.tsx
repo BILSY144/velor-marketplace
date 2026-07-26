@@ -11,6 +11,7 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES, slugifyCountryName } from '@/lib/worldCountries'
 import { countryImage, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
+import { FounderMedal } from '@/components/FounderMedal'
 
 interface SearchResult {
   id: string
@@ -21,6 +22,8 @@ interface SearchResult {
   category: string
   sellerId: string
   sellerName: string
+  sellerFounding?: boolean
+  sellerFoundingCountry?: string | null
 }
 
 const css = `
@@ -39,7 +42,7 @@ const css = `
 .vsr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
 .vsr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .15s,border-color .15s;display:block}
 .vsr-card:hover{transform:translateY(-3px);border-color:rgba(255,107,0,.5)}
-.vsr-img{aspect-ratio:1;background:var(--surface-2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.vsr-img{position:relative;aspect-ratio:1;background:var(--surface-2);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .vsr-img img{width:100%;height:100%;object-fit:cover}
 .vsr-body{padding:13px 15px}
 .vsr-cat{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 5px}
@@ -85,7 +88,7 @@ function matchCountries(q: string): { code: string; name: string }[] {
   return out
 }
 
-type OriginProduct = { id: string; name?: string; title?: string; price: number; currency?: string; images?: string[]; sellerName?: string; seller?: { storeName?: string; currency?: string } }
+type OriginProduct = { id: string; name?: string; title?: string; price: number; currency?: string; images?: string[]; sellerName?: string; seller?: { storeName?: string; currency?: string }; sellerFounding?: boolean; sellerFoundingCountry?: string | null }
 
 function SearchContent() {
   const { symbol, convert } = useCurrencyDisplay()
@@ -265,6 +268,7 @@ function SearchContent() {
                     ) : (
                       <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
                     )}
+                    {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={40} />}
                   </div>
                   <div className="vsr-body">
                     <p className="vsr-name">{item.name ?? item.title}</p>
@@ -307,6 +311,7 @@ function SearchContent() {
                     ) : (
                       <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
                     )}
+                    {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={40} />}
                   </div>
                   <div className="vsr-body">
                     <p className="vsr-cat">{item.category}</p>
