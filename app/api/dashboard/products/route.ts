@@ -3,6 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { checkProhibitedListingContent, prohibitedListingReason } from '@/lib/prohibitedListingContent'
 import { checkMessageContent } from '@/lib/messageFilter'
+import { checkForbiddenPatterns, detectRegulatedSignal } from '@/lib/listingModeration'
+import { grantCountryFounderIfFirst } from '@/lib/founding'
+import { sendEmail, buildListingNeedsReviewAlertEmail } from '@/lib/email'
+
+// William, 2026-07-26: "anything that needs a review, is brought to me by
+// email immediately... ill check the reason its flagged and make a
+// decision based on the evidence." Same address lib/provisionSeller.ts's
+// DIRECTOR_EMAIL already uses for every other direct-to-William alert.
+const DIRECTOR_EMAIL = 'willsinclair144@gmail.com'
 
 export async function GET() {
   const session = await auth()
@@ -177,6 +186,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Please add at least 3 product images' }, { status: 400 })
   }
 
+  // Instant-listing moderation (William, 2026-07-26: "i want every listing
+  // to be approved automatically. so they dont wait for approval. then
+  // once listed we will review for banned products... that is how ebay do
+  // it"). A hard-forbidden term (weapons, adult content, drugs,
+  // counterfeits, tobacco, alcohol) blocks creation outright -- same
+  // immediate-feedback pattern as checkProhibitedListingContent above, the
+  // listing is never created. See lib/listingModeration.ts.
+  const forbiddenMatch = checkForbiddenPatterns(String(name), description, materials)
+  if (forbiddenMatch) {
+    return NextResponse.json(
+      { error: 'This listing contains a term Velor does not allow (weapons, adult content, drugs, counterfeits, tobacco, or alcohol). Please remove it and resubmit.' },
+      { status: 400 }
+    )
+  }
+
+  // Certificate-track (seller declared regulated material) and an
+  // undeclared-but-detected regulated-material signal both still hold in
+  // PENDING_REVIEW for a human check before going live -- confirmed with
+  // William 2026-07-26: publishing possibly-protected-species material
+  // publicly, even briefly, without proof of legal sourcing is a real legal
+  // risk, unlike an ordinary quality issue that can just be taken down
+  // after the fact. Every other listing now goes straight to APPROVED with
+  // zero wait.
+  const regulatedSignalMatch = detectRegulatedSignal(String(name), description, materials)
+  const needsHumanReviewFirst = !!containsRegulatedMaterial || regulatedSignalMatch !== null
+  const initialStatus = needsHumanReviewFirst ? 'PENDING_REVIEW' : 'APPROVED'
+  const holdReason = containsRegulatedMaterial
+    ? 'Seller declared this listing contains a regulated material and requested the certificate track. It cannot go live until a valid export certificate (e.g. CITES) is verified.'
+    : regulatedSignalMatch
+      ? `Not declared as regulated by the seller, but the listing text matched a possible regulated-material term (pattern: ${regulatedSignalMatch}). Held for a human check rather than approved automatically.`
+      : ''
+
   const product = await prisma.product.create({
     data: {
       sellerId: seller.id,
@@ -189,7 +230,7 @@ export async function POST(req: NextRequest) {
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
-      status: 'PENDING_REVIEW',
+      status: initialStatus,
       weightGrams: weightGrams !== null ? Number(weightGrams) : null,
       lengthCm: lengthCm !== null ? Number(lengthCm) : null,
       widthCm: widthCm !== null ? Number(widthCm) : null,
@@ -205,6 +246,34 @@ export async function POST(req: NextRequest) {
       requiresCertificate: !!containsRegulatedMaterial,
     },
   })
+
+  // This is now the third code path (alongside the auto-moderate cron and
+  // the manual admin approval route) that can transition a product straight
+  // to APPROVED, so it must also grant country-founder credit the same way
+  // those two do -- see lib/founding.ts. Never blocks/affects the response:
+  // a P2002 (country already founded, or this seller already founded one)
+  // is expected and swallowed inside grantCountryFounderIfFirst itself.
+  if (initialStatus === 'APPROVED') {
+    await grantCountryFounderIfFirst(seller.id, product.id, originCountry)
+  } else {
+    // Held for review -- alert William immediately with the evidence, per
+    // his 2026-07-26 instruction, rather than letting it sit silently in
+    // the admin queue. Best-effort: a Resend outage must never block the
+    // seller's listing submission from completing.
+    sendEmail({
+      to: DIRECTOR_EMAIL,
+      ...buildListingNeedsReviewAlertEmail({
+        productId: product.id,
+        productTitle: product.title,
+        storeName: seller.storeName,
+        sellerEmail: session.user.email || 'unknown',
+        originCountry: product.originCountry,
+        materials: product.materials,
+        description: product.description,
+        reason: holdReason,
+      }),
+    }).catch((err) => console.error(`Failed to send review-needed alert for product ${product.id}:`, err))
+  }
 
   return NextResponse.json({ product }, { status: 201 })
 }
