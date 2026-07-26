@@ -26,6 +26,7 @@ import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 import { orderByCategoryActivity } from '@/lib/categoryOrdering'
+import { FounderMedal } from '@/components/FounderMedal'
 
 type CategoryProduct = {
   id: string
@@ -35,6 +36,8 @@ type CategoryProduct = {
   image: string | null
   storeName: string
   originCountry: string | null
+  sellerFounding: boolean
+  sellerFoundingCountry: string | null
 }
 
 type LatticeSummary = {
@@ -1060,6 +1063,13 @@ export default function HomePage() {
                                 onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
                               />
                             ) : null}
+                            {/* Founding-seller medal (William, 2026-07-26, "for every
+                                listing" -- "wherever a founding sellers listing is
+                                showed i want the round founders badge ... this badge
+                                travels with the listing everywhere it is placed"):
+                                same shared medallion as /shop, /search, /origins,
+                                /specialities and a seller's own storefront grid. */}
+                            {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} />}
                           </div>
                           <div className="cap">
                             <div className="k">{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</div>
