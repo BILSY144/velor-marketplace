@@ -761,20 +761,31 @@ export default function ProductPageClient() {
                 </div>
               </div>
 
-              {(product.seller.foundingBadge || product.seller.sellerBadge) && (
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                  {product.seller.foundingBadge && (
-                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#E9C46A', background: 'linear-gradient(135deg, rgba(93,69,16,0.55), rgba(41,29,8,0.55))', border: '1px solid rgba(185,138,47,0.75)', borderRadius: '999px', padding: '3px 10px' }}>
-                      Founding Seller
-                    </span>
-                  )}
-                  {product.seller.sellerBadge && (
-                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(255,107,0,0.12)', border: '1px solid var(--accent)', borderRadius: '999px', padding: '3px 10px' }}>
-                      {product.seller.sellerBadge}
-                    </span>
-                  )}
-                </div>
-              )}
+              {/* Founding Seller pill removed from this ID card (William,
+                  2026-07-26, "remove it completly ... in its place add the
+                  stock inventory pill and the handmade pill") -- founding
+                  status is now shown ONLY as the round FounderMedal on the
+                  listing image itself (components/FounderMedal.tsx), never
+                  duplicated here as text. This card keeps sellerBadge (an
+                  unrelated seller-tier badge) plus the two replacements:
+                  live stock count and handmade status, both sourced directly
+                  from the same product record already loaded above -- never
+                  fabricated. */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {product.seller.sellerBadge && (
+                  <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(255,107,0,0.12)', border: '1px solid var(--accent)', borderRadius: '999px', padding: '3px 10px' }}>
+                    {product.seller.sellerBadge}
+                  </span>
+                )}
+                <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: currentStock > 0 ? 'var(--green)' : 'var(--red)', background: currentStock > 0 ? 'rgba(46,204,113,0.12)' : 'rgba(220,38,38,0.12)', border: `1px solid ${currentStock > 0 ? 'var(--green)' : 'var(--red)'}`, borderRadius: '999px', padding: '3px 10px' }}>
+                  {currentStock > 0 ? `${currentStock} in stock` : 'Out of stock'}
+                </span>
+                {product.isHandmade && (
+                  <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(255,107,0,0.12)', border: '1px solid var(--accent)', borderRadius: '999px', padding: '3px 10px' }}>
+                    Handmade
+                  </span>
+                )}
+              </div>
 
               <div className="velor-pdp-seller-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px', textAlign: 'center' }}>
                 <div>
