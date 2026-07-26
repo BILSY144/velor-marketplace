@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
@@ -92,6 +93,7 @@ type OriginProduct = { id: string; name?: string; title?: string; price: number;
 
 function SearchContent() {
   const { symbol, convert } = useCurrencyDisplay()
+  const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
   const q = searchParams.get('q') ?? ''
@@ -102,6 +104,11 @@ function SearchContent() {
   const [craftHits, setCraftHits] = useState<CraftMatch[]>([])
   const [originGoods, setOriginGoods] = useState<{ country: { code: string; name: string }; products: OriginProduct[] } | null>(null)
   const [loading, setLoading] = useState(false)
+  // Wishlist heart (William, 2026-07-26: "add the wishlist heart to all
+  // listing boxes that link to wishlist" -- "repeat that on all pages for
+  // the heart"): same fetch/toggle pattern as /shop's ShopPageClient.tsx.
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+  const [wishlistPending, setWishlistPending] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -158,6 +165,74 @@ function SearchContent() {
     if (query.trim().length < 2) return
     router.push(`/search?q=${encodeURIComponent(query.trim())}`)
     runSearch(query.trim())
+  }
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/wishlist')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => {
+        const ids = new Set<string>(data.items.map((i: { product: { id: string } }) => i.product.id))
+        setWishlistIds(ids)
+      })
+      .catch(() => {})
+  }, [session])
+
+  async function toggleWishlist(e: React.MouseEvent, productId: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!session) {
+      router.push('/auth/sign-in?callbackUrl=/search')
+      return
+    }
+    setWishlistPending(productId)
+    const isIn = wishlistIds.has(productId)
+    try {
+      await fetch('/api/wishlist', {
+        method: isIn ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+      setWishlistIds(prev => {
+        const next = new Set(prev)
+        isIn ? next.delete(productId) : next.add(productId)
+        return next
+      })
+    } finally {
+      setWishlistPending(null)
+    }
+  }
+
+  function renderWishlistHeart(id: string) {
+    return (
+      <button
+        onClick={e => toggleWishlist(e, id)}
+        disabled={wishlistPending === id}
+        title={wishlistIds.has(id) ? 'Remove from wishlist' : 'Save to wishlist'}
+        style={{
+          position: 'absolute',
+          top: '8px',
+          left: '8px',
+          width: '28px',
+          height: '28px',
+          borderRadius: '50%',
+          background: 'rgba(13,13,13,0.78)',
+          border: 'none',
+          cursor: wishlistPending === id ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '15px',
+          color: wishlistIds.has(id) ? 'var(--red)' : 'rgba(255,255,255,0.65)',
+          backdropFilter: 'blur(4px)',
+          transition: 'color 0.15s',
+          zIndex: 1,
+          lineHeight: 1,
+        }}
+      >
+        {wishlistIds.has(id) ? '♥' : '♡'}
+      </button>
+    )
   }
 
   return (
@@ -260,22 +335,31 @@ function SearchContent() {
             <p className="vsr-note">Goods from {originGoods.country.name}</p>
             <div className="vsr-grid" style={{ marginBottom: 34 }}>
               {originGoods.products.map((item) => (
-                <Link key={item.id} className="vsr-card" href={`/shop/${item.id}`}>
-                  <div className="vsr-img">
-                    {(item.images && item.images[0]) ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={item.images[0]} alt={item.name ?? item.title ?? ''} />
-                    ) : (
-                      <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
-                    )}
-                    {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={40} />}
-                  </div>
-                  <div className="vsr-body">
-                    <p className="vsr-name">{item.name ?? item.title}</p>
-                    <p className="vsr-seller">by {item.sellerName ?? item.seller?.storeName ?? ''}</p>
-                    <p className="vsr-price">{symbol}{convert(item.price, item.currency ?? item.seller?.currency ?? 'GBP').toFixed(2)}</p>
-                  </div>
-                </Link>
+                <div key={item.id} className="vsr-card" style={{ position: 'relative' }}>
+                  <Link href={`/shop/${item.id}`} style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+                    <div className="vsr-img">
+                      {(item.images && item.images[0]) ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={item.images[0]} alt={item.name ?? item.title ?? ''} />
+                      ) : (
+                        <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
+                      )}
+                    </div>
+                    <div className="vsr-body">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <p className="vsr-name" style={{ margin: 0 }}>{item.name ?? item.title}</p>
+                        {/* Founding-seller medal, small, in the id card (William,
+                            2026-07-26) -- moved off the image so nothing ever
+                            blocks the buyer's view; only the wishlist heart
+                            sits on the photo. */}
+                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={14} />}
+                      </div>
+                      <p className="vsr-seller">by {item.sellerName ?? item.seller?.storeName ?? ''}</p>
+                      <p className="vsr-price">{symbol}{convert(item.price, item.currency ?? item.seller?.currency ?? 'GBP').toFixed(2)}</p>
+                    </div>
+                  </Link>
+                  {renderWishlistHeart(item.id)}
+                </div>
               ))}
             </div>
           </>
@@ -303,23 +387,31 @@ function SearchContent() {
             </p>
             <div className="vsr-grid">
               {results.map(item => (
-                <Link key={item.id} className="vsr-card" href={`/shop/${item.id}`}>
-                  <div className="vsr-img">
-                    {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.name} />
-                    ) : (
-                      <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
-                    )}
-                    {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={40} />}
-                  </div>
-                  <div className="vsr-body">
-                    <p className="vsr-cat">{item.category}</p>
-                    <p className="vsr-name">{item.name}</p>
-                    <p className="vsr-seller">by {item.sellerName}</p>
-                    <p className="vsr-price">{symbol}{convert(item.price, item.currency).toFixed(2)}</p>
-                  </div>
-                </Link>
+                <div key={item.id} className="vsr-card" style={{ position: 'relative' }}>
+                  <Link href={`/shop/${item.id}`} style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+                    <div className="vsr-img">
+                      {item.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.image} alt={item.name} />
+                      ) : (
+                        <span style={{ color: 'var(--muted)', fontSize: 12 }}>No image</span>
+                      )}
+                    </div>
+                    <div className="vsr-body">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <p className="vsr-cat" style={{ margin: 0 }}>{item.category}</p>
+                        {/* Founding-seller medal, small, in the id card (William,
+                            2026-07-26) -- same treatment as every other listing
+                            surface; only the wishlist heart sits on the photo. */}
+                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={14} />}
+                      </div>
+                      <p className="vsr-name">{item.name}</p>
+                      <p className="vsr-seller">by {item.sellerName}</p>
+                      <p className="vsr-price">{symbol}{convert(item.price, item.currency).toFixed(2)}</p>
+                    </div>
+                  </Link>
+                  {renderWishlistHeart(item.id)}
+                </div>
               ))}
             </div>
           </>
