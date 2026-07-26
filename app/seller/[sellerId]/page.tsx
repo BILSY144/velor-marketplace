@@ -213,9 +213,45 @@ export default async function SellerProfilePage({
                 color: '#000',
                 fontFamily: 'var(--font-display)',
                 flexShrink: 0,
+                position: 'relative',
               }}
             >
-              {sellerLogo ? <img src={sellerLogo} alt={seller.storeName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(seller.storeName)}
+              {sellerLogo ? <img src={sellerLogo} alt={seller.storeName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : initials(seller.storeName)}
+
+              {/* Founding-seller badge (William, 2026-07-26, "the round
+                  founders badge needs to be in the id card or on the
+                  listing image small enough to see but not big enough to
+                  limit the sellers listing visibility"): placed here on
+                  the ID card avatar rather than on listing-tile images --
+                  a corner badge on the avatar is always small and never
+                  overlaps a product photo, so it can't ever crowd out a
+                  listing's own visibility, which the listing-image option
+                  risked by nature. Driven purely by Seller.foundingBadge
+                  (lib/founding.ts) -- true only for the seller who was
+                  first to get an APPROVED listing from their country. */}
+              {seller.foundingBadge && (
+                <div
+                  title="Founding seller -- first to list from their country of origin"
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    right: '-2px',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: '#FFD54A',
+                    border: '2px solid var(--surface)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.35)',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#000" aria-hidden="true">
+                    <path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.56 5.82 21 7 14.14l-5-4.87 7.1-1.01L12 2z" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Info */}
