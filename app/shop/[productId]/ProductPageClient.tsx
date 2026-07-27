@@ -330,6 +330,11 @@ export default function ProductPageClient() {
   }, [lightboxOpen, product])
 
   async function toggleWishlist() {
+    // Preview-only listing -- looks and behaves like a normal wishlist
+    // button but does nothing (William, 2026-07-27: "all four buttons in
+    // product page need to show what they are but have zero
+    // functionality").
+    if (isPreviewOnly) return
     if (!session) {
       router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
       return
@@ -678,6 +683,7 @@ export default function ProductPageClient() {
             </button>
             <button
               onClick={() => {
+                if (isPreviewOnly) return
                 if (!session) {
                   router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
                   return
@@ -701,6 +707,7 @@ export default function ProductPageClient() {
               mobile-only, via the inverse of .velor-pdp-desktop-cta. */}
           <button
             onClick={() => {
+              if (isPreviewOnly) return
               if (!session) {
                 router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
                 return
