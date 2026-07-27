@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import GlobalHeader from './GlobalHeader'
 import GlobalFooter from './GlobalFooter'
@@ -8,6 +9,18 @@ import LanguageTranslator from './LanguageTranslator'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  // Explicit scroll-to-top on every route change (William, 2026-07-27:
+  // "when i browse different places it takes me to the bottom of the
+  // page"). Belt-and-braces alongside the globals.css scroll-behavior fix
+  // -- several pages (shop/search/product/etc.) are client components that
+  // fetch their real content after the initial route transition, so
+  // relying solely on Next's own one-time scroll-to-top isn't always
+  // reliable once that content streams in and changes page height. This
+  // fires on every pathname change, public pages and dashboard/admin alike,
+  // since ConditionalLayout wraps every route regardless of showChrome.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   const isPublic = !pathname.startsWith('/dashboard') && !pathname.startsWith('/auth') && !pathname.startsWith('/admin') && !pathname.startsWith('/pulse')
   // A single live room (/live/[room], e.g. /live/abc123) is deliberately
   // immersive -- full-bleed video with everything overlaid on it, the same
