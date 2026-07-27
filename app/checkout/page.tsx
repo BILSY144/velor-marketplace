@@ -47,7 +47,7 @@ interface CartItem {
 }
 interface ShippingRate {
   rateId: string; carrier: string; service: string;
-  amount: number; currency: string; estimatedDays: number | null;
+    amount: number; currency: string; amountGBP?: number; estimatedDays: number | null;
   isDDP: boolean;
   // True for the two placeholder rates ('quote-required' / 'pending-standard')
   // app/api/shipping/rates returns when there's no live carrier rate AND the
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
   // client-side estimate (same assumption the original single-seller code
   // made), same as before; the server independently converts each seller's
   // own shipping currency to GBP when the real charge is computed.
-  const shippingCost = Object.values(selectedRates).reduce((s, r) => s + (Number(r.amount) || 0), 0)
+    const shippingCost = Object.values(selectedRates).reduce((s, r) => s + (Number(r.amountGBP ?? r.amount) || 0), 0)
   const dutiesAmount = Object.values(sellerDuties).reduce((s, d) => s + (d.totalTaxGBP || 0), 0)
   const discountAmount = autoDiscount?.totalDiscountGBP ?? 0
   // NOTE: productSubtotal/total below are kept in each seller's native currency
