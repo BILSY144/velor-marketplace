@@ -299,9 +299,11 @@ export async function POST(request: NextRequest) {
             { status: 409 }
           )
         }
-        const config = await prisma.platformShippingConfig.findUnique({ where: { id: 'singleton' } })
-        const levyPercent = config?.levyPercent ?? 8
-        shippingGBP = platformRate.baseAmountGBP * (1 + levyPercent / 100)
+        // The old flat 8% levy (PlatformShippingConfig.levyPercent) was
+        // replaced 2026-07-27 by a flat per-item admin fee applied
+        // uniformly across all three shipping tiers below (search
+        // ADMIN_FEE_PER_ITEM_GBP in this file).
+        shippingGBP = platformRate.baseAmountGBP
       } else if (FALLBACK_RATE_IDS.has(shipEntry.rateId)) {
         // No live carrier rate AND no seller-set flat rate -- there is no
         // real price to charge. Block checkout instead of letting the order
@@ -339,6 +341,16 @@ export async function POST(request: NextRequest) {
         // what the buyer was actually quoted, not the bare carrier rate.
         shippingGBP = rateAmountGBP + group.handlingFeeGBP
       }
+
+      // Flat per-item admin fee, replacing the old 8% platform-default-rate-
+      // only levy (2026-07-27, agreed with William after the DDP rate
+      // survey). Applied uniformly across all three shipping tiers above --
+      // seller-flat-rate, platform-default-rate, and the live-quote branch
+      // just above -- since shippingGBP is already normalised to GBP by the
+      // time we get here. Quantity-multiplied, not flat-per-order.
+      const ADMIN_FEE_PER_ITEM_GBP = 1.20
+      const itemCount = group.items.reduce((sum, i) => sum + (i.quantity || 1), 0)
+      shippingGBP += ADMIN_FEE_PER_ITEM_GBP * itemCount
 
       // Duties/VAT recomputed entirely server-side via the same pure,
       // deterministic calculateLandedCost() that app/api/shipping/landed-cost
