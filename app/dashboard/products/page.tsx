@@ -156,6 +156,13 @@ const COUNTRIES = [
 { code: 'ZW', name: 'Zimbabwe' },
 ]
 
+// A colour/size option row (added 2026-07-27) -- see ProductVariant in
+// prisma/schema.prisma. tempId is a client-only key for React list
+// rendering/removal before the row has a real database id.
+interface VariantRow {
+tempId: string; color: string; size: string; stock: string; priceOverride: string;
+}
+
 interface Product {
 id: string; name: string; description: string; price: number; stock: number;
 category: string; images: string[]; status: string;
@@ -163,6 +170,7 @@ weightGrams: number | null; lengthCm: number | null; widthCm: number | null; hei
 hsCode: string | null; originCountry: string | null;
 isHandmade: boolean; makerStory: string | null;
 materials: string | null; requiresCertificate: boolean;
+variants?: { id: string; color: string | null; size: string | null; stock: number; priceOverride: number | null; sku: string | null }[];
 }
 
 const MIN_IMAGES = 3
@@ -503,12 +511,19 @@ const [loading, setLoading] = useState(true)
 const [showForm, setShowForm] = useState(false)
 const [editProduct, setEditProduct] = useState<Product | null>(null)
 const [form, setForm] = useState(emptyForm)
+// hasVariants toggles the "multiple colours/sizes" section; variantRows
+// holds the working list while it's open. Off by default -- a seller who
+// never touches this gets the exact same single-price/single-stock listing
+// flow as before this feature existed.
+const [hasVariants, setHasVariants] = useState(false)
+const [variantRows, setVariantRows] = useState<VariantRow[]>([])
 const [rulesAccepted, setRulesAccepted] = useState(false)
 const [saving, setSaving] = useState(false)
 const [error, setError] = useState('')
 const [sellerCurrency, setSellerCurrency] = useState('GBP')
 const [categoryStats, setCategoryStats] = useState<{ count: number; avgPrice: number; medianPrice: number } | null>(null)
 const [certProduct, setCertProduct] = useState<Product | null>(null)
+const [removingId, setRemovingId] = useState<string | null>(null)
 
 useEffect(() => {
 loadProducts()
@@ -532,9 +547,15 @@ setProducts(data.products ?? [])
 setLoading(false)
 }
 
+function newVariantRow(): VariantRow {
+return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, color: '', size: '', stock: '', priceOverride: '' }
+}
+
 function openNew() {
 setEditProduct(null)
 setForm({ ...emptyForm, currency: sellerCurrency })
+setHasVariants(false)
+setVariantRows([])
 setRulesAccepted(false)
 setError('')
 setShowForm(true)
@@ -556,6 +577,19 @@ isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 currency: sellerCurrency,
 })
+const existingVariants = p.variants ?? []
+setHasVariants(existingVariants.length > 0)
+setVariantRows(
+existingVariants.length > 0
+? existingVariants.map((v) => ({
+tempId: v.id,
+color: v.color ?? '',
+size: v.size ?? '',
+stock: String(v.stock),
+priceOverride: v.priceOverride !== null ? String(v.priceOverride) : '',
+}))
+: []
+)
 setRulesAccepted(false)
 setError('')
 setShowForm(true)
@@ -580,6 +614,19 @@ isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 currency: sellerCurrency,
 })
+const duplicatedVariants = p.variants ?? []
+setHasVariants(duplicatedVariants.length > 0)
+setVariantRows(
+duplicatedVariants.length > 0
+? duplicatedVariants.map((v) => ({
+tempId: newVariantRow().tempId,
+color: v.color ?? '',
+size: v.size ?? '',
+stock: String(v.stock),
+priceOverride: v.priceOverride !== null ? String(v.priceOverride) : '',
+}))
+: []
+)
 setRulesAccepted(false)
 setError('')
 setShowForm(true)
@@ -588,6 +635,25 @@ setShowForm(true)
 function set(k: keyof typeof emptyForm, v: string) {
 setForm(f => ({ ...f, [k]: v }))
 setError('')
+}
+
+// Never been ordered -> gone for good. Has order history -> delisted
+// (hidden from buyers, kept for receipts/disputes) -- the API decides which,
+// see app/api/dashboard/products/route.ts's DELETE handler for why.
+async function removeProduct(p: Product) {
+if (!confirm(`Remove "${p.name}"? If it has never sold, it will be deleted completely. If it has order history, it will be delisted and hidden from buyers instead -- this cannot be undone from here.`)) return
+setRemovingId(p.id)
+try {
+const res = await fetch('/api/dashboard/products?id=' + p.id, { method: 'DELETE' })
+const data = await res.json()
+if (!res.ok) { alert(data.error ?? 'Could not remove this listing'); return }
+if (data.mode === 'delisted') alert(data.message)
+await loadProducts()
+} catch {
+alert('Network error -- could not remove this listing')
+} finally {
+setRemovingId(null)
+}
 }
 
 // Picking an origin country auto-suggests the matching currency — the
@@ -631,6 +697,38 @@ if (!rulesAccepted) {
 setError('Please confirm this listing complies with the Seller Rules and Product Compliance Policy.')
 return
 }
+// Client-side variant validation mirrors the server check in
+// app/api/dashboard/products/route.ts's normalizeVariants -- gives an
+// immediate error instead of waiting on a round trip, but the server
+// check is the real backstop since this form isn't the only caller.
+let variantsPayload: { color: string | null; size: string | null; stock: number; priceOverride: number | null }[] | undefined
+if (hasVariants) {
+const seenKeys = new Set<string>()
+for (const row of variantRows) {
+const color = row.color.trim()
+const size = row.size.trim()
+if (!color && !size) {
+setError('Each variant needs a colour, a size, or both.')
+return
+}
+const key = `${color.toLowerCase()} ${size.toLowerCase()}`
+if (seenKeys.has(key)) {
+setError(`You have more than one variant for ${[color, size].filter(Boolean).join(' / ')} -- remove the duplicate.`)
+return
+}
+seenKeys.add(key)
+}
+if (variantRows.length === 0) {
+setError('Add at least one colour/size variant, or turn off "multiple colours or sizes" for a single listing.')
+return
+}
+variantsPayload = variantRows.map((row) => ({
+color: row.color.trim() || null,
+size: row.size.trim() || null,
+stock: Math.max(0, parseInt(row.stock, 10) || 0),
+priceOverride: row.priceOverride.trim() ? parseFloat(row.priceOverride) : null,
+}))
+}
 setSaving(true)
 try {
 const payload = {
@@ -649,6 +747,10 @@ makerStory: form.makerStory.trim() || null,
 materials: form.materials.trim() || null,
 containsRegulatedMaterial: form.containsRegulated === 'true',
 rulesAccepted: rulesAccepted,
+// hasVariants=false sends [] (explicitly clears any old variants, e.g.
+// a seller turning the toggle back off) -- see variantsProvided in the
+// API route for why the key must be present either way, never omitted.
+variants: hasVariants ? variantsPayload : [],
 }
 const url = editProduct ? '/api/dashboard/products?id=' + editProduct.id : '/api/dashboard/products'
 const method = editProduct ? 'PATCH' : 'POST'
@@ -755,7 +857,13 @@ Buyers worldwide see this converted live to their currency and reconfirmed at ch
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 <div>
 <label style={labelStyle}>Inventory No:</label>
+{hasVariants ? (
+<div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: 'var(--muted)', background: 'var(--bg)' }}>
+Set per variant below
+</div>
+) : (
 <input style={inputStyle} type="number" value={form.stock} onChange={e => set('stock', e.target.value)} />
+)}
 </div>
 <div>
 <label style={labelStyle}>Category</label>
@@ -771,6 +879,105 @@ Matches Velor&apos;s live categories — your listing goes straight to the right
 </div>
 </div>
 </div>
+
+{/* Variants: colour / size — lets a seller offer multiple options on
+one listing instead of duplicating the whole product per option. */}
+<div style={{ marginTop: '16px' }}>
+<label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
+<input
+type="checkbox"
+checked={hasVariants}
+onChange={(e) => {
+const checked = e.target.checked
+setHasVariants(checked)
+if (checked && variantRows.length === 0) setVariantRows([newVariantRow()])
+}}
+/>
+This item comes in multiple colours or sizes
+</label>
+{hasVariants && (
+<div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+<div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+Add one row per colour/size combination you sell. Buyers pick from these on the product page instead of you creating a separate listing for each.
+</div>
+{variantRows.map((row, idx) => (
+<div key={row.tempId} style={{
+display: 'grid', gridTemplateColumns: '1fr 1fr 90px 120px 32px', gap: '8px', alignItems: 'center',
+}}>
+<input
+style={inputStyle}
+placeholder="Colour (e.g. Red)"
+value={row.color}
+onChange={e => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], color: e.target.value }
+setVariantRows(next)
+}}
+/>
+<input
+style={inputStyle}
+placeholder="Size (e.g. Small)"
+value={row.size}
+onChange={e => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], size: e.target.value }
+setVariantRows(next)
+}}
+/>
+<input
+style={inputStyle}
+type="number"
+placeholder="Stock"
+value={row.stock}
+onChange={e => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], stock: e.target.value }
+setVariantRows(next)
+}}
+/>
+<input
+style={inputStyle}
+type="number"
+step="0.01"
+placeholder="Price override"
+value={row.priceOverride}
+onChange={e => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], priceOverride: e.target.value }
+setVariantRows(next)
+}}
+/>
+<button
+type="button"
+onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))}
+style={{
+background: 'none', border: '1px solid var(--border)', borderRadius: 6,
+width: 32, height: 32, cursor: 'pointer', color: 'var(--muted)', fontSize: '16px', lineHeight: 1,
+}}
+aria-label="Remove variant"
+title="Remove variant"
+>
+&times;
+</button>
+</div>
+))}
+<button
+type="button"
+onClick={() => setVariantRows([...variantRows, newVariantRow()])}
+style={{
+alignSelf: 'flex-start', background: 'none', border: '1px dashed var(--border)', borderRadius: 6,
+padding: '8px 14px', cursor: 'pointer', color: 'var(--accent)', fontSize: '12.5px', fontWeight: 600,
+}}
+>
++ Add another variant
+</button>
+<div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+Leave price override blank to use the price above for that variant. Total inventory shown to buyers is the sum of all variant stock.
+</div>
+</div>
+)}
+</div>
+
 <div style={{ marginTop: '16px' }}>
 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
 <input
@@ -1007,6 +1214,15 @@ color: '#FFD54A', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 
 padding: '7px 16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px',
 color: 'var(--text)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
 }}>Edit</button>
+<button
+onClick={() => removeProduct(p)}
+disabled={removingId === p.id}
+title="Delete this listing completely, or delist it if it has order history"
+style={{
+padding: '7px 16px', background: 'var(--bg)', border: '1px solid var(--red)', borderRadius: '6px',
+color: 'var(--red)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
+cursor: removingId === p.id ? 'default' : 'pointer', opacity: removingId === p.id ? 0.6 : 1,
+}}>{removingId === p.id ? 'Removing...' : 'Remove'}</button>
 </div>
 ))}
 {products.length === 0 && (
