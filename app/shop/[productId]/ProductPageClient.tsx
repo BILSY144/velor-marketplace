@@ -644,11 +644,11 @@ export default function ProductPageClient() {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
             <button
               onClick={addToCart}
-              disabled={currentStock === 0 || isPreviewOnly}
+              disabled={currentStock === 0}
               className="velor-pdp-tap velor-pdp-cta-primary"
-              style={{ flex: 1, padding: '0 14px', background: (currentStock === 0 || isPreviewOnly) ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+              style={{ flex: 1, padding: '0 14px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
             >
-              {isPreviewOnly ? 'Preview Only' : currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
+              {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
             </button>
             {/* No .velor-pdp-cta-primary here on purpose -- once Add to Cart
                 hides under 900px (sticky mobile bar covers it), this button's
@@ -670,11 +670,11 @@ export default function ProductPageClient() {
           <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <button
               onClick={buyNow}
-              disabled={currentStock === 0 || isPreviewOnly}
+              disabled={currentStock === 0}
               className="velor-pdp-tap"
-              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
             >
-              {isPreviewOnly ? 'Preview Only' : 'Buy Now'}
+              Buy Now
             </button>
             <button
               onClick={() => {
@@ -1021,19 +1021,19 @@ export default function ProductPageClient() {
         </div>
         <button
           onClick={buyNow}
-          disabled={currentStock === 0 || isPreviewOnly}
+          disabled={currentStock === 0}
           className="velor-pdp-tap"
-          style={{ flex: '0 0 auto', padding: '0 18px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', border: '2px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
+          style={{ flex: '0 0 auto', padding: '0 18px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', border: '2px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
         >
-          {isPreviewOnly ? 'Preview' : 'Buy Now'}
+          Buy Now
         </button>
         <button
           onClick={addToCart}
-          disabled={currentStock === 0 || isPreviewOnly}
+          disabled={currentStock === 0}
           className="velor-pdp-tap"
-          style={{ flex: '1.3 1 0', padding: '0 16px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', border: 'none', background: (currentStock === 0 || isPreviewOnly) ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
+          style={{ flex: '1.3 1 0', padding: '0 16px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', border: 'none', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
         >
-          {isPreviewOnly ? 'Preview Only' : currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
+          {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
         </button>
       </div>
 
