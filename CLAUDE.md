@@ -7,6 +7,29 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## UPDATE 2026-07-27 (later) -- Shipping-rate survey complete; DDP root cause found (unresolved); £1.20/item admin fee + two-tier auto-label shipping architecture AGREED with William but NOT YET BUILT; Stripe/Shippo billing setup in progress, blocked on Stripe identity verification
+
+**Shipping-rate survey: DONE.** `app/api/admin/shipping-rate-survey/route.ts` (commit `1b7abcf`) now uses a `REPRESENTATIVE_ORIGIN_ADDRESS` lookup with real city/zip/state for candidate origins -- fixes a false-negative where blank city/zip made some origins look like "no carrier coverage" when the real issue was an incomplete probe address. Full 247-destination x 6-weight-band survey run from GB; `PlatformShippingRate` table populated (75th-percentile calibration per zone/band); checkout verified end-to-end.
+
+**Problem found: platform-default rates are unusably high (£38-97) for this catalogue's typical £6-20 items.** Root cause confirmed: `lib/shippo.ts`'s `createShippoShipment()` hardcodes `incoterm: 'DDP'` for all international shipments, which restricts Shippo's returned rate pool to premium/express carriers only (cheap economy postal services generally don't offer DDP customs brokerage). **NOT YET FIXED -- William has not chosen an option yet.** Three options on the table: (1) drop DDP for low-value parcels, (2) add a cheaper carrier account, (3) suppress the platform-default tier entirely when it's disproportionate to item value. Pick this up before doing anything else shipping-related.
+
+**Live carrier-account origin coverage confirmed empirically (not assumed): GB, DE, CA only.** Bisect-tested 19 other candidate origins (US, CN, FR, ES, AU, JP, IN, BR, IT, NL, MX, HK, SG, AE, ZA, KR, TR, and others) with real representative addresses -- all returned zero live rates. This is a genuine carrier-account limitation (William needs to actually add carrier accounts per origin in Shippo), not a code bug. `SellerShippingProfile`'s existing comment claiming "US/UK/DE/FR/ES/CA/AU today" is now known to be WRONG/stale -- only GB/DE/CA actually work.
+
+**New architecture agreed with William, NOT YET BUILT:**
+- Replace the existing 8% levy with a flat **£1.20 PER ITEM** admin fee (quantity-multiplied, not flat-per-order -- e.g. 3 items in cart = £3.60), applied across ALL THREE shipping tiers (seller-flat-rate, live-quote, platform-default-rate). Needs changes in `app/api/shipping/rates/route.ts` (`flatRateOrFallback`/`platformDefaultRateGBP`) and `app/api/stripe/payment-intent/route.ts` (server-side re-verification branch).
+- **Two-tier shipping system:** Tier A = real-time auto-purchased Shippo label at `payment_intent.succeeded`, emailed to the seller to put on the package (GB/DE/CA origins only, for now -- the only origins with live carrier coverage). Tier B = existing self-ship-and-reimburse model using the platform-default estimate (everywhere else). Buyers see one unified shipping price regardless of tier; countries flip from B to A over time as William connects more carrier accounts.
+- Tier A auto-purchase wiring point: `purchaseLabel()` in `lib/shippo.ts` (currently NEVER called anywhere -- see its own code comment) needs to be wired into `app/api/stripe/webhook/route.ts`'s `payment_intent.succeeded` handler. `Shipment` model already has the fields needed (`shippoShipmentId`, `shippoRateId`, `shippoLabelId`, `trackingNumber`, `labelUrl`, etc). **Not started.**
+- Funding model William confirmed: Velor fronts the label cost first (Shippo charges Velor's card at label-purchase time, before that order's Stripe payout has settled) -- accepted as normal recoverable working capital (a revolving float sized roughly as average daily shipping spend x payout delay), not a growing cost. William is drawing on his existing iwoca relationship (already has a £1,000 loan from Velor's build-out) for the ~£500 needed to seed this.
+- Stripe Instant Payouts (1% fee, ~30 min settle, needs an eligible debit card as the payout destination) planned to shrink the settlement float further.
+
+**IN PROGRESS, blocked:** connecting William's business debit card to both billing surfaces.
+- **Shippo side: clear, unblocked.** apps.goshippo.com/settings/account/billing -> "Add payment method" button.
+- **Stripe side: blocked on identity verification.** Clicking "Edit" on the existing Monzo payout bank account (dashboard.stripe.com/.../settings/payouts) triggers a mandatory Stripe email verification link (sent to willsinclair144@gmail.com) before it'll allow any payout-account change. First attempt failed ("We couldn't verify your identity") -- root cause suspected to be a same-browser/same-device mismatch: Stripe requires the verification link be opened in the SAME browser session where the Dashboard is logged in. Next step: click "Verify identity" on the latest email from inside the same Chrome-MCP tab group as the Stripe Dashboard tab, then use the resulting unlocked Edit/Add flow to enter the card.
+
+**Not yet started:** the £1.20/item fee code, the Tier A auto-label webhook wiring, and (from earlier in this same working session, still open) Task #9 (enforce weight + listing-time shipping resolvability) and Task #10 (admin-configurable levy UI). Also still open from further back: mobile app variant support, a payout-rail fix mentioned once, expanding the buyer-facing `COUNTRIES` checkout dropdown beyond ~22 countries.
+
+---
+
 ## VERIFIED CHECKPOINT — 2026-07-27 (subscription tiers corrected)
 
 A prior session's context had stale tier info (Starter/Pro/Enterprise, 15%/8%/5%, from pre-2026-07-15 pricing). Verified live this session against three independent sources -- Stripe API directly, the live site's own code, and repo docs -- and all three agree:
