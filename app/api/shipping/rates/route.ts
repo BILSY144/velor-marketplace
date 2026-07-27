@@ -18,7 +18,7 @@ type Rate = {
   carrier: string
   service: string
   amount: string
-  currency: string
+  currency: string; amountGBP?: string
   estimatedDays: number | null
   isDDP: boolean
   isFallback: boolean
@@ -53,8 +53,8 @@ async function applyAdminFee(rates: Rate[], itemCount: number): Promise<Rate[]> 
   return Promise.all(rates.map(async (rate) => {
     if (rate.isFallback) return rate
     const cur = (rate.currency || 'GBP').toUpperCase()
-    const fee = cur === 'GBP' ? feeGBP : await convert(feeGBP, 'GBP', cur)
-    return { ...rate, amount: (parseFloat(rate.amount) + fee).toFixed(2) }
+    const fee = cur === 'GBP' ? feeGBP : await convert(feeGBP, 'GBP', cur); const finalAmount = parseFloat(rate.amount) + fee
+    return { ...rate, amount: finalAmount.toFixed(2), amountGBP: (cur === 'GBP' ? finalAmount : await convert(finalAmount, cur, 'GBP')).toFixed(2) }
   }))
 }
 
