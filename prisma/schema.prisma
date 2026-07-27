@@ -214,6 +214,17 @@ model SellerShippingProfile {
   // quote -- covers packaging materials and rate drift between quote time and
   // label purchase. Added server-side in app/api/shipping/rates; capped at 25.
   handlingFeeGBP Float @default(0)
+  // Seller-set flat international shipping price (GBP), added 2026-07-27 so
+  // Velor can operate for sellers dispatching from ANY of the ~190 origin
+  // countries, not just the handful with a live Shippo carrier account
+  // (US/UK/DE/FR/ES/CA/AU today). When app/api/shipping/rates can't get a
+  // real quote from Shippo for this seller's route, it uses this instead of
+  // the old $0.00 "Custom Quote" placeholder -- so buyers always see a real,
+  // honest price and sellers always get reimbursed for shipping. Null means
+  // "not set yet"; distinct from 0, which is a deliberate free-shipping
+  // choice. Re-read fresh from the DB at payment-intent time -- never
+  // trusted from the client, same pattern as every other shipping amount.
+  internationalFlatRateGBP Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
