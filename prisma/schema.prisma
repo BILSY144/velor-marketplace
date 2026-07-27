@@ -870,3 +870,65 @@ model AppInstall {
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
 }
+
+// --- Platform-default international shipping estimate (2026-07-27) ---
+// Added so checkout NEVER depends on an individual seller having configured
+// shipping. Every seller has always had the option to set their own flat
+// rate (SellerShippingProfile.internationalFlatRateGBP), but requiring that
+// before checkout works put a platform-wide problem in each seller's hands.
+// This is the platform-wide safety net underneath it: a zone x weight-band
+// GBP estimate, calibrated from real live Shippo quotes gathered by a one-off
+// admin survey (see app/api/admin/shipping-rate-survey), used automatically
+// whenever neither a live Shippo quote NOR a seller flat rate is available.
+// Priority order lives in app/api/shipping/rates/route.ts's
+// flatRateOrFallback(): live Shippo quote > seller flat rate > this platform
+// default > (only if even this has no data) the old quote-required block.
+
+// Raw live-quote data points collected by the one-off shipping-rate-survey
+// admin endpoint. Kept for audit / future recalibration -- NOT read directly
+// at checkout time (PlatformShippingRate below is the aggregated table
+// checkout actually uses).
+model ShippingRateBenchmark {
+  id                String   @id @default(cuid())
+  originCountry     String
+  destinationCountry String
+  zone              String
+  weightGrams       Int
+  carrier           String
+  service           String
+  amountGBP         Float
+  estimatedDays     Int?
+  surveyedAt        DateTime @default(now())
+
+  @@index([zone, weightGrams])
+  @@index([destinationCountry])
+}
+
+// The operative platform-default rate table checkout actually reads.
+// baseAmountGBP is the calibrated estimate BEFORE the levy (see
+// PlatformShippingConfig.levyPercent below) -- the levy is applied at read
+// time, not baked in, so changing the levy % instantly re-prices every
+// zone/weight combination without re-running the survey.
+model PlatformShippingRate {
+  id                 String   @id @default(cuid())
+  zone               String
+  weightBandMinGrams Int
+  weightBandMaxGrams Int
+  baseAmountGBP      Float
+  sampleSize         Int      @default(0)
+  lastSurveyedAt     DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([zone, weightBandMinGrams])
+}
+
+// Singleton config row (id is always "singleton"). levyPercent is the
+// admin-configurable buffer added on top of PlatformShippingRate estimates
+// only -- never on top of a live Shippo quote or a seller's own flat rate,
+// since those already carry real accuracy/ownership and don't need a
+// platform estimation-risk buffer. Default 8%, William's call 2026-07-27.
+model PlatformShippingConfig {
+  id          String   @id @default("singleton")
+  levyPercent Float    @default(8)
+  updatedAt   DateTime @updatedAt
+}
