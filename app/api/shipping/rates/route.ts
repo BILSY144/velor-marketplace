@@ -5,6 +5,7 @@ import {
   ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
 import { convert } from '@/lib/fx'
+import { computeZone, weightBandFor } from '@/lib/shipping-zones'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,21 +36,44 @@ const FALLBACK_QUOTE_RATE: Rate = {
 }
 
 // Velor only has live Shippo carrier accounts connected for a handful of
-// origin countries (US/UK/DE/FR/ES/CA/AU as of 2026-07-27) -- every seller
-// dispatching from anywhere else in the world hits FALLBACK_QUOTE_RATE,
-// which quotes 0.00 and used to let checkout complete with the buyer paying
-// nothing for shipping (see app/api/stripe/payment-intent, which now blocks
-// that). To actually operate globally without a live carrier for all ~190
-// countries, a seller can set their own flat international rate in
-// Settings -> Shipping (SellerShippingProfile.internationalFlatRateGBP).
-// Whenever we can't get a real Shippo quote, THIS is used instead of the
-// dead-end placeholder -- a real, honest price the buyer can actually pay
-// and the seller actually gets paid. Only FALLBACK_QUOTE_RATE (still
-// blocking at checkout) applies if the seller hasn't set one yet.
-function flatRateOrFallback(
-  profile: { internationalFlatRateGBP?: number | null } | null | undefined,
+// origin countries -- every seller dispatching from anywhere else in the
+// world used to hit FALLBACK_QUOTE_RATE, which quotes 0.00 and either let
+// checkout complete with the buyer paying nothing for shipping, or (after
+// the 2026-07-27 fix) blocked checkout outright for that seller. Priority
+// order when a real per-order Shippo quote can't be calculated:
+//   1. Seller's own flat international rate (SellerShippingProfile.
+//      internationalFlatRateGBP) -- most accurate, the seller set it
+//      deliberately for their own route.
+//   2. Platform-default estimate (PlatformShippingRate, see
+//      app/api/admin/shipping-rate-survey) -- a zone x weight-band GBP
+//      estimate calibrated from real live Shippo quotes, with an admin-
+//      configurable levy on top (PlatformShippingConfig.levyPercent) to
+//      buffer estimation risk. This is what makes checkout work for EVERY
+//      seller regardless of origin country, with no action required from
+//      them -- added 2026-07-27 specifically so buyers never again have to
+//      "hope the seller configured shipping."
+//   3. FALLBACK_QUOTE_RATE -- only reachable now if the platform table has
+//      no data yet for that zone/weight combo (survey still in progress).
+async function platformDefaultRateGBP(
+  originCountry: string, destinationCountry: string, weightGrams: number
+): Promise<number | null> {
+  const zone = computeZone(originCountry, destinationCountry)
+  const band = weightBandFor(weightGrams)
+  const row = await prisma.platformShippingRate.findUnique({
+    where: { zone_weightBandMinGrams: { zone, weightBandMinGrams: band.minGrams } },
+  })
+  if (!row) return null
+  const config = await prisma.platformShippingConfig.findUnique({ where: { id: 'singleton' } })
+  const levyPercent = config?.levyPercent ?? 8
+  return row.baseAmountGBP * (1 + levyPercent / 100)
+}
+
+async function flatRateOrFallback(
+  profile: { internationalFlatRateGBP?: number | null; country?: string } | null | undefined,
+  destinationCountry: string,
+  weightGrams: number,
   fallback: Rate = FALLBACK_QUOTE_RATE
-): Rate[] {
+): Promise<Rate[]> {
   const flat = profile?.internationalFlatRateGBP
   if (flat != null && Number.isFinite(flat)) {
     return [{
@@ -63,6 +87,27 @@ function flatRateOrFallback(
       isFallback: false,
     }]
   }
+
+  if (profile?.country) {
+    try {
+      const estimate = await platformDefaultRateGBP(profile.country, destinationCountry, weightGrams)
+      if (estimate != null) {
+        return [{
+          rateId: 'platform-default-rate',
+          carrier: 'Velor Estimated Shipping',
+          service: 'International (estimated)',
+          amount: estimate.toFixed(2),
+          currency: 'GBP',
+          estimatedDays: null,
+          isDDP: false,
+          isFallback: false,
+        }]
+      }
+    } catch (err) {
+      console.error('[shipping/rates] platformDefaultRateGBP failed', err)
+    }
+  }
+
   return [fallback]
 }
 
@@ -122,20 +167,32 @@ export async function POST(request: NextRequest) {
       }
 
       // When Shippo is not yet configured globally, every seller gets the
-      // same generic placeholder (unless they've set their own flat rate,
-      // which is honoured even here). Never show fake carrier names.
+      // same generic placeholder (unless they've set their own flat rate or
+      // a platform default estimate applies, both honoured even here).
+      // Never show fake carrier names. No per-item weight is available at
+      // this point (Shippo is disabled, so we never fetched products) --
+      // 500g is the same nominal default used elsewhere in this codebase
+      // (see buildParcelFromItems) when a real weight isn't known yet.
       if (!process.env.SHIPPO_API_KEY) {
         result.push({
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: flatRateOrFallback(
+          rates: await flatRateOrFallback(
             seller.shippingProfile,
+            shippingAddress.country,
+            500,
             { ...FALLBACK_QUOTE_RATE, rateId: 'pending-standard', carrier: 'Standard Shipping', service: 'Tracked Delivery', estimatedDays: 14 }
           ),
         })
         continue
       }
+
+      // Hoisted above the try block so the catch handler below can still use
+      // a real (or best-effort default) weight for the platform-default
+      // estimate rather than falling straight to the dead-end quote-required
+      // placeholder just because the live Shippo call itself threw.
+      let totalWeightGrams = 500 * items.reduce((sum: number, i: { quantity?: number }) => sum + (i.quantity || 1), 0)
 
       try {
         const itemProductIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
@@ -185,6 +242,12 @@ export async function POST(request: NextRequest) {
             quantity: item.quantity || 1,
           }
         })
+
+        totalWeightGrams = itemsWithDimensions.reduce(
+          (sum: number, i: { weightGrams?: number | null; quantity: number }) =>
+            sum + (i.weightGrams ?? 500) * i.quantity,
+          0
+        )
 
         const parcel = buildParcelFromItems(itemsWithDimensions)
 
@@ -266,7 +329,9 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: addressFrom.country,
-          rates: mapped.length ? mapped : flatRateOrFallback(p),
+          rates: mapped.length
+            ? mapped
+            : await flatRateOrFallback(p, addressTo.country, totalWeightGrams),
         })
       } catch (err) {
         console.error('[shipping/rates] Rate lookup failed for seller', sellerId, err)
@@ -274,7 +339,7 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: flatRateOrFallback(seller.shippingProfile),
+          rates: await flatRateOrFallback(seller.shippingProfile, shippingAddress.country, totalWeightGrams),
         })
       }
     }
