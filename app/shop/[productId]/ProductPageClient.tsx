@@ -97,6 +97,16 @@ interface RailItem {
 
 const RECENTLY_VIEWED_KEY = 'velor-recently-viewed'
 
+// Preview-only listing (William, 2026-07-27: "put a block on anyone
+// actually checking out at cart as this listing is a show piece ... let
+// people enter the product page but cannot go no further" + "let people
+// know this is a preview in product page"). This is William's own demo
+// product ("Your Listing" / williams workshop), not real inventory --
+// buyers can browse it like any other listing, but Add to Cart / Buy Now
+// are disabled and a preview notice shown, here only. Every other listing
+// on the site is completely unaffected.
+const PREVIEW_ONLY_PRODUCT_ID = 'cms260kvd0003epq3lnituxvw'
+
 function RailCard({ p, symbol, convert }: { p: RailItem; symbol: string; convert: (amount: number, from: string) => number }) {
   const title = p.title || p.name || 'Goods'
   const img = p.image || p.images?.[0]
@@ -416,11 +426,15 @@ export default function ProductPageClient() {
   // "Could not set up payment" error. Gating here instead closes that
   // dead-end before the buyer ever invests time filling out checkout.
   function addToCart() {
+    if (!product) return
+    // Preview-only listing -- never actually added to cart (William,
+    // 2026-07-27). Buttons below are disabled for this product too; this
+    // guard is the belt-and-braces backstop.
+    if (product.id === PREVIEW_ONLY_PRODUCT_ID) return
     if (!session) {
       router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
       return
     }
-    if (!product) return
     const cartId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id
     const price = selectedVariant ? selectedVariant.price : product.price
     const image = (selectedVariant?.image) || product.images[0] || ''
@@ -438,6 +452,7 @@ export default function ProductPageClient() {
   }
 
   function buyNow() {
+    if (product?.id === PREVIEW_ONLY_PRODUCT_ID) return
     if (!session) {
       router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
       return
@@ -448,6 +463,7 @@ export default function ProductPageClient() {
 
   const currentPrice = selectedVariant ? selectedVariant.price : product?.price ?? 0
   const currentStock = selectedVariant ? selectedVariant.stock : product?.stock ?? 0
+  const isPreviewOnly = product?.id === PREVIEW_ONLY_PRODUCT_ID
   // Automatic discounts only ever apply to the base product listing (they
   // are scoped by productId, not by variant), so only show the "was/now"
   // treatment when no variant is selected or the product has no variants.
@@ -541,6 +557,13 @@ export default function ProductPageClient() {
           <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{product.category}</div>
           <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '28px', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.25 }}>{product.title}</h1>
 
+          {isPreviewOnly && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', marginBottom: '16px', background: 'rgba(255,107,0,0.1)', border: '1px solid var(--accent)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--accent)' }}>
+              <span style={{ fontSize: '15px' }}>&#9432;</span>
+              Preview listing — shown to demonstrate Velor, not available for purchase.
+            </div>
+          )}
+
           {(product.avgRating ?? 0) != null && product.reviewCount > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <span style={{ color: 'var(--accent)', fontSize: '16px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
@@ -621,11 +644,11 @@ export default function ProductPageClient() {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
             <button
               onClick={addToCart}
-              disabled={currentStock === 0}
+              disabled={currentStock === 0 || isPreviewOnly}
               className="velor-pdp-tap velor-pdp-cta-primary"
-              style={{ flex: 1, padding: '0 14px', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+              style={{ flex: 1, padding: '0 14px', background: (currentStock === 0 || isPreviewOnly) ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
             >
-              {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
+              {isPreviewOnly ? 'Preview Only' : currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
             </button>
             {/* No .velor-pdp-cta-primary here on purpose -- once Add to Cart
                 hides under 900px (sticky mobile bar covers it), this button's
@@ -647,11 +670,11 @@ export default function ProductPageClient() {
           <div className="velor-pdp-desktop-cta" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <button
               onClick={buyNow}
-              disabled={currentStock === 0}
+              disabled={currentStock === 0 || isPreviewOnly}
               className="velor-pdp-tap"
-              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '0 14px', background: 'transparent', color: 'var(--text)', border: '2px solid var(--border)', borderRadius: '8px', fontWeight: 700, fontSize: '14.5px', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
             >
-              Buy Now
+              {isPreviewOnly ? 'Preview Only' : 'Buy Now'}
             </button>
             <button
               onClick={() => {
@@ -998,19 +1021,19 @@ export default function ProductPageClient() {
         </div>
         <button
           onClick={buyNow}
-          disabled={currentStock === 0}
+          disabled={currentStock === 0 || isPreviewOnly}
           className="velor-pdp-tap"
-          style={{ flex: '0 0 auto', padding: '0 18px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', border: '2px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+          style={{ flex: '0 0 auto', padding: '0 18px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', border: '2px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
         >
-          Buy Now
+          {isPreviewOnly ? 'Preview' : 'Buy Now'}
         </button>
         <button
           onClick={addToCart}
-          disabled={currentStock === 0}
+          disabled={currentStock === 0 || isPreviewOnly}
           className="velor-pdp-tap"
-          style={{ flex: '1.3 1 0', padding: '0 16px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', border: 'none', background: currentStock === 0 ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', cursor: currentStock === 0 ? 'not-allowed' : 'pointer' }}
+          style={{ flex: '1.3 1 0', padding: '0 16px', height: '46px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', border: 'none', background: (currentStock === 0 || isPreviewOnly) ? 'var(--border)' : (addedToCart ? 'var(--green)' : 'var(--accent)'), color: '#000', cursor: (currentStock === 0 || isPreviewOnly) ? 'not-allowed' : 'pointer' }}
         >
-          {currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
+          {isPreviewOnly ? 'Preview Only' : currentStock === 0 ? 'Out of Stock' : addedToCart ? 'Added!' : 'Add to Cart'}
         </button>
       </div>
 
