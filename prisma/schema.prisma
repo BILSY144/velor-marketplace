@@ -251,8 +251,42 @@ model Product {
   wishlistItems WishlistItem[]
   messages      Message[]
   reviews       Review[]
+  // Colour/size options for this listing (added 2026-07-27 so sellers no
+  // longer have to create a separate listing per colour/size -- see
+  // ProductVariant below). Empty for the vast majority of existing listings,
+  // which is intentional: Product.price/Product.stock stay the source of
+  // truth whenever a product has zero variant rows, so every listing that
+  // predates this feature keeps working exactly as it did before, no
+  // migration needed. A seller opts in per listing from the dashboard.
+  variants      ProductVariant[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+}
+
+// A single colour/size combination of a Product, with its own stock and an
+// optional price override. Deliberately lightweight (Shopify-style
+// "options on one product" rather than Amazon-style separate child
+// listings) -- origin, certificates, HS code, maker story etc. stay once on
+// the parent Product since they don't vary by colour/size, only stock/price/
+// images do. id is intentionally NOT referenced as a live foreign key from
+// OrderItem.variantId (see below) -- a variant can be edited or removed by
+// the seller after an order was placed without ever corrupting that order's
+// history, since OrderItem stores its own snapshot (variantId + color +
+// size) at the time of purchase, not a live relation.
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color         String?
+  size          String?
+  sku           String?
+  stock         Int      @default(0)
+  priceOverride Float?
+  images        String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, color, size])
 }
 
 model Order {
@@ -301,8 +335,14 @@ model OrderItem {
   quantity   Int
   price      Float
   commission Float?
+  // Snapshot of the variant purchased, resolved fresh from ProductVariant at
+  // order-creation time (lib/orders.ts) -- NOT a live foreign key, so
+  // editing/removing a variant later never corrupts past order history.
+  // size added 2026-07-27 alongside color (was previously missing, even
+  // though color already existed as scaffolding).
   variantId  String?
   color      String?
+  size       String?
 }
 
 
