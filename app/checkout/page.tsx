@@ -49,6 +49,14 @@ interface ShippingRate {
   rateId: string; carrier: string; service: string;
   amount: number; currency: string; estimatedDays: number | null;
   isDDP: boolean;
+  // True for the two placeholder rates ('quote-required' / 'pending-standard')
+  // app/api/shipping/rates returns when there's no live carrier rate AND the
+  // seller hasn't set a flat international rate (see Settings -> Shipping).
+  // These aren't a real payable price -- app/api/stripe/payment-intent
+  // blocks checkout if one of these is still selected, so the UI below
+  // shows "Quote required" instead of a misleading £0.00 and disables
+  // Continue to Payment rather than letting the buyer hit that block.
+  isFallback?: boolean;
 }
 // A mixed-seller cart ships as one parcel PER SELLER -- each seller has
 // their own dispatch address, so /api/shipping/rates returns one rate
@@ -360,6 +368,11 @@ export default function CheckoutPage() {
   // Every seller present in the cart must have a chosen shipping option
   // before payment can proceed -- one parcel, one rate, per seller.
   const allSellersHaveRates = sellerGroups.length > 0 && sellerGroups.every(g => selectedRates[g.sellerId])
+  // A fallback ('quote-required' / 'pending-standard') rate isn't a real,
+  // payable price -- app/api/stripe/payment-intent rejects it server-side.
+  // Surface that up front instead of letting the buyer hit "Continue to
+  // Payment" and only then find out.
+  const sellersNeedingQuote = sellerGroups.filter(g => selectedRates[g.sellerId]?.isFallback)
 
   async function proceedToPayment() {
     if (!allSellersHaveRates) return
@@ -605,14 +618,22 @@ export default function CheckoutPage() {
                                 {rate.estimatedDays ? rate.estimatedDays + ' business days' : 'Estimated delivery varies'}
                               </div>
                             </div>
-                            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                              {fmtRaw(rate.amount, rate.currency || 'GBP')}
+                            <div style={{ fontSize: '15px', fontWeight: 700, color: rate.isFallback ? 'var(--muted)' : 'var(--text)' }}>
+                              {rate.isFallback ? 'Quote required' : fmtRaw(rate.amount, rate.currency || 'GBP')}
                             </div>
                           </label>
                         ))}
                       </div>
                     </div>
                   ))}
+
+                  {sellersNeedingQuote.length > 0 && (
+                    <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px', lineHeight: 1.5 }}>
+                      {sellersNeedingQuote.length === 1
+                        ? `${sellersNeedingQuote[0].sellerName} hasn't set up shipping to your location yet, so checkout isn't available for their item(s) yet. Please contact the seller, or check back once they've configured shipping.`
+                        : `${sellersNeedingQuote.map(g => g.sellerName).join(', ')} haven't set up shipping to your location yet, so checkout isn't available for their item(s) yet. Please contact the sellers, or check back once they've configured shipping.`}
+                    </div>
+                  )}
 
                   {paymentSetupError && (
                     <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
@@ -624,16 +645,16 @@ export default function CheckoutPage() {
                     <>
                       <button
                         onClick={proceedToPayment}
-                        disabled={creatingIntent}
+                        disabled={creatingIntent || sellersNeedingQuote.length > 0}
                         style={{
                           marginTop: '20px', padding: '13px', width: '100%',
-                          background: creatingIntent ? 'var(--border)' : 'var(--accent)',
+                          background: (creatingIntent || sellersNeedingQuote.length > 0) ? 'var(--border)' : 'var(--accent)',
                           color: '#fff', border: 'none', borderRadius: '8px',
                           fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px',
-                          cursor: creatingIntent ? 'not-allowed' : 'pointer',
+                          cursor: (creatingIntent || sellersNeedingQuote.length > 0) ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        {creatingIntent ? 'Setting Up Payment...' : 'Continue to Payment'}
+                        {creatingIntent ? 'Setting Up Payment...' : sellersNeedingQuote.length > 0 ? 'Shipping Unavailable' : 'Continue to Payment'}
                       </button>
                       <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '8px', lineHeight: 1.4 }}>
                         Your total will be reconfirmed at today's exchange rate on the next screen — exactly what you see is exactly what you pay.
