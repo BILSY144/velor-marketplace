@@ -23,6 +23,7 @@ interface ShippingProfile {
   city: string; state: string; zip: string; country: string;
   phone: string; email: string; handlingDays: number;
   handlingFeeGBP: number;
+  internationalFlatRateGBP: number | '';
 }
 
 const empty: ShippingProfile = {
@@ -30,6 +31,7 @@ const empty: ShippingProfile = {
   city: '', state: '', zip: '', country: 'GB',
   phone: '', email: '', handlingDays: 1,
   handlingFeeGBP: 0,
+  internationalFlatRateGBP: '',
 }
 
 export default function ShippingSettingsPage() {
@@ -57,6 +59,7 @@ export default function ShippingSettingsPage() {
             email: d.profile.email ?? '',
             handlingDays: d.profile.handlingDays ?? 1,
             handlingFeeGBP: d.profile.handlingFeeGBP ?? 0,
+            internationalFlatRateGBP: d.profile.internationalFlatRateGBP ?? '',
           })
         }
       })
@@ -199,6 +202,27 @@ export default function ShippingSettingsPage() {
               with your payout. Max £25.
             </p>
           </div>
+        </div>
+
+        <div style={{ padding: '16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+          <label style={labelStyle}>International Flat Shipping Rate (£, recommended)</label>
+          <input style={{ ...inputStyle, maxWidth: '200px' }} type="number" min={0} max={500} step={0.5}
+            placeholder="e.g. 18.00"
+            value={form.internationalFlatRateGBP}
+            onChange={e => {
+              const raw = e.target.value
+              set('internationalFlatRateGBP', raw === '' ? '' : Math.min(Math.max(parseFloat(raw) || 0, 0), 500))
+            }}
+          />
+          <p style={{ color: 'var(--muted)', fontSize: '12px', margin: '10px 0 0', lineHeight: 1.6 }}>
+            Velor only has live carrier rates connected for a handful of countries (US, UK, Germany,
+            France, Spain, Canada, Australia). If you ship from anywhere else, buyers currently see a
+            &ldquo;contact seller for a quote&rdquo; message instead of a price at checkout, and can&apos;t buy
+            until that&apos;s resolved. Set a flat rate here and it&apos;s used automatically whenever we
+            can&apos;t calculate a live rate for your location — buyers see a real price immediately, you
+            get paid for shipping in full with every order. Leave blank only if you&apos;re fine with buyers
+            being unable to check out until you quote them manually.
+          </p>
         </div>
 
         {error && (
