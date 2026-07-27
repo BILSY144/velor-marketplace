@@ -7,6 +7,19 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## VERIFIED CHECKPOINT — 2026-07-27 (subscription tiers corrected)
+
+A prior session's context had stale tier info (Starter/Pro/Enterprise, 15%/8%/5%, from pre-2026-07-15 pricing). Verified live this session against three independent sources -- Stripe API directly, the live site's own code, and repo docs -- and all three agree:
+
+- **Enterprise is retired (2026-07-15).** Stripe product `prod_UoqXwy4RXYEoFl` ("Velor Enterprise") is `active: false`. `/dashboard/upgrade/enterprise` 404s on the live site. `app/dashboard/upgrade/page.tsx` and `components/dashboard/TierUpgradeView.tsx` only render Starter and Pro.
+- **Starter**: Free, 10% commission, up to 10 active listings. Go Live video shopping, full dashboard/analytics, buyer protection, standard search placement.
+- **Pro**: £49/mo (Stripe `price_1TpCiTDB5eA3Wfmu2kP5Ilwg`, confirmed live), 4% commission, unlimited listings. Absorbed every former Enterprise feature: dedicated AI account manager, full API access, free custom storefront, priority search placement, smart listing optimisation, advanced analytics, priority support, early feature access.
+- A one-time **"Velor Storefront Unlock"** product also exists in Stripe (`price_1TpFcdDB5eA3WfmuFoadKPfW`, £9.99 one-time) -- matches the standalone custom-storefront purchase for Starter sellers.
+- **Unconfirmed / needs a direct check**: `docs/SUBSCRIPTION_AND_TIERS.md` claims the 10-listing Starter cap is hard-enforced via a `LISTING_LIMITS` check in `app/api/dashboard/products/route.ts`, but that logic was not found in the file as fetched this session -- may have moved during a refactor, or enforcement may be incomplete. Confirm directly (e.g. try creating an 11th Starter listing) before relying on this being enforced.
+- `docs/SUBSCRIPTION_AND_TIERS.md` itself has the 2026-07-15 retirement note at the top but still shows the old three-tier 15/8/5% table further down as "retained as history" -- don't read that table as current.
+
+---
+
 ## OUTSTANDING -- NEXT SESSION (William asked this be logged for Tuesday 28 Jul 2026): research Amazon's product page for PDP design ideas
 
 William's request, verbatim: review Amazon's product page -- the same kind of page as the PDP work done this session (`app/shop/[productId]/ProductPageClient.tsx` + its lockstep twin `app/shop/preview/page.tsx`) -- and look closely at its design, layout, and what it actually offers on that page, so Velor's PDP can take further cues from it. Not yet started; this is a note-to-self for whoever picks this up Tuesday, not completed research.
