@@ -6,6 +6,7 @@ import { convert } from '@/lib/fx'
 import { findAutomaticDiscounts, DiscountCartItem } from '@/lib/discount'
 import { getRate } from '@/lib/shippo'
 import { calculateLandedCost } from '@/lib/duty-rates'
+import { computeZone, weightBandFor } from '@/lib/shipping-zones'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +69,7 @@ interface SellerGroup {
   shippingProfileCountry: string | null
   handlingFeeGBP: number
   internationalFlatRateGBP: number | null
-  items: { productId: string; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null }[]
+  items: { productId: string; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null; weightGrams: number | null }[]
   subtotalGBP: number
 }
 
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
         title: true,
         hsCode: true,
         originCountry: true,
+        weightGrams: true,
         seller: {
           select: {
             id: true,
@@ -197,6 +199,7 @@ export async function POST(request: NextRequest) {
         priceGBP: unitGBP,
         hsCode: product.hsCode ?? null,
         originCountry: product.originCountry ?? null,
+        weightGrams: product.weightGrams ?? null,
       })
       group.subtotalGBP += lineGBP
     }
@@ -240,6 +243,10 @@ export async function POST(request: NextRequest) {
       const discountedSubtotalGBP = Math.max(0, group.subtotalGBP - totalDiscountGBP)
 
       const shipEntry = shippingBySeller.get(group.sellerId)!
+      // Hoisted above the shipping-verification block so the platform-
+      // default-rate branch below can use it too (originally computed
+      // further down, only for duties).
+      const destinationCountry = String(shippingAddress?.country || '').toUpperCase()
 
       // Re-verify shipping server-side instead of trusting the client's
       // shippingAmount (2026-07-16 readiness audit finding: a tampered
@@ -263,6 +270,38 @@ export async function POST(request: NextRequest) {
           )
         }
         shippingGBP = group.internationalFlatRateGBP
+      } else if (shipEntry.rateId === 'platform-default-rate') {
+        // Platform-default zone/weight estimate (2026-07-27, see
+        // app/api/shipping/rates's flatRateOrFallback and
+        // app/api/admin/shipping-rate-survey) -- used when the seller has
+        // NOT set their own flat rate but a calibrated platform estimate
+        // exists for their zone/weight combo. Recomputed entirely
+        // server-side, including the levy, from the same tables the quote
+        // came from -- never trusted from the client, same principle as
+        // every other shipping amount here.
+        if (!group.shippingProfileCountry) {
+          return NextResponse.json(
+            { error: "This seller's shipping rate has changed. Please reselect shipping and try again." },
+            { status: 409 }
+          )
+        }
+        const totalWeightGrams = group.items.reduce(
+          (sum: number, i: SellerGroup['items'][number]) => sum + (i.weightGrams ?? 500) * i.quantity, 0
+        )
+        const zone = computeZone(group.shippingProfileCountry, destinationCountry)
+        const band = weightBandFor(totalWeightGrams)
+        const platformRate = await prisma.platformShippingRate.findUnique({
+          where: { zone_weightBandMinGrams: { zone, weightBandMinGrams: band.minGrams } },
+        })
+        if (!platformRate) {
+          return NextResponse.json(
+            { error: 'Your shipping estimate has expired. Please reselect shipping and try again.' },
+            { status: 409 }
+          )
+        }
+        const config = await prisma.platformShippingConfig.findUnique({ where: { id: 'singleton' } })
+        const levyPercent = config?.levyPercent ?? 8
+        shippingGBP = platformRate.baseAmountGBP * (1 + levyPercent / 100)
       } else if (FALLBACK_RATE_IDS.has(shipEntry.rateId)) {
         // No live carrier rate AND no seller-set flat rate -- there is no
         // real price to charge. Block checkout instead of letting the order
@@ -307,7 +346,6 @@ export async function POST(request: NextRequest) {
       // pre-discount subtotal (matching that route's own declaredValueGBP)
       // and a representative HS code (first item that has one), the same
       // "one customs declaration per parcel" approach used at quote time.
-      const destinationCountry = String(shippingAddress?.country || '').toUpperCase()
       const representativeHsCode = group.items.find((i) => i.hsCode)?.hsCode ?? null
       const landedCost = calculateLandedCost({
         hsCode: representativeHsCode,
