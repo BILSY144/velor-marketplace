@@ -7,6 +7,29 @@ is preserved in git history at commit 9fcce1d if it is ever needed._
 
 ---
 
+## UPDATE 2026-07-27 (even later) -- DDP fix + £1.20/item admin fee DEPLOYED; Shippo billing card added; Stripe Instant Payouts investigated (not actionable pre-launch); Tier A webhook wiring NOT STARTED -- session ended before any webhook code was written
+
+**Supersedes the shipping/billing status in the entry directly below (kept for history) -- William chose an option and this session built and deployed it.**
+
+**Stripe identity verification (the blocker described in the entry below): RESOLVED.** The verification email link worked when opened in the same Chrome session as the logged-in Stripe Dashboard. Landed on the existing Monzo bank account's edit form (sort code + account number only -- no card field, confirming Instant Payouts uses a separate payout-destination flow, not this form).
+
+**Stripe Instant Payouts: investigated, correctly NOT actionable yet -- not a bug, not blocked on missing work.** This account already has "Accelerated" payout speed (3 business days) to the Monzo account, not "Standard" (7 days). No "Instant Payouts" toggle exists anywhere in Settings -- per Stripe's own documentation, the debit-card entry step for Instant Payouts only appears mid-flow on the Balances page when clicking "Pay out" against an actual positive balance. Balance is currently GBP 0.00 (pre-launch, no real orders yet), so that flow cannot be triggered or tested. GB and debit-card payout destinations are both Stripe-eligible, so there is no platform-side blocker -- this is purely a timing issue that resolves itself once real orders start generating a balance. No further action needed until then.
+
+**Shippo billing: DONE.** Business debit card added as the payment method for label purchases at apps.goshippo.com/settings/account/billing (William entered the card himself in the browser; Claude did not touch the card fields, per standing policy). Shippo side is now fully unblocked for live label purchases.
+
+**DDP fix: DONE, DEPLOYED.** William chose option (1) from the three presented in the entry below -- drop the hardcoded DDP incoterm for low-value parcels. Implemented as a LOW_VALUE_DDP_THRESHOLD_GBP constant in lib/shippo.ts, with createShippoShipment() now choosing incoterm based on the shipment's declared value. Commit "Introduce low value threshold for DDP incoterm" (69beaef8), pushed via the GitHub web editor, Vercel deployment dpl_5vPTL4hwLb46GjHF46ncogrXAN8n -- READY, build completed clean, confirmed live via the Vercel API this session (2026-07-27 20:08 UTC). Not yet live-tested end-to-end this session -- i.e. no real low-value international checkout was run afterward to confirm the resulting rate actually drops into an affordable range. Build success and deploy READY were confirmed; live behaviour was not.
+
+**GBP 1.20/item admin fee: DONE, DEPLOYED, replacing the old flat 8% levy.** Implemented across both places that calculate it:
+- app/api/shipping/rates/route.ts -- added an applyAdminFee helper, quantity-multiplied per item. Commit "Implement flat per-item admin fee for shipping rates" (848662ba), Vercel deployment dpl_87hHYN8vT1eiDVYEqQpYMiwV7tk4 -- READY (2026-07-27 20:16 UTC).
+- app/api/stripe/payment-intent/route.ts -- removed the old duplicated levy calculation in the server-side re-verification branch, applies the same per-item fee once after the branch chain. Commit "Update shipping fee calculation to use per-item admin fee" (70c4ef12), Vercel deployment dpl_2xWe4GRSzgNJoNBgjPmqE7rCVk3W -- READY (2026-07-27 20:18 UTC), and this is the current production deployment as of this checkpoint.
+All three commits confirmed deployed cleanly (state READY) via the Vercel API this session. Not yet live-tested this session -- no real checkout was run to confirm the fee actually shows GBP 1.20 x quantity rather than the old 8%.
+
+**Task #24 (Tier A auto-label webhook wiring): NOT STARTED. Session ended here.** Had just begun inspecting the current app/api/stripe/webhook/route.ts handler and the unused purchaseLabel() function in lib/shippo.ts when the session stopped responding -- no code was read to completion, no diff was written, nothing was committed for this task. Resume by re-reading both files fresh (don't trust this summary for their current contents, per LAW #3) and wiring purchaseLabel() into the payment_intent.succeeded case for GB/DE/CA-origin orders, populating the Shipment model's shippoShipmentId/shippoRateId/shippoLabelId/trackingNumber/labelUrl fields, per the architecture agreed in the entry below.
+
+**Carried forward, unaffected by this session:** Task #9 (enforce weight + listing-time shipping resolvability) and Task #10 (admin-configurable levy UI) -- both still not started. Mobile app variant support, the payout-rail fix mentioned once, and expanding the buyer-facing COUNTRIES checkout dropdown beyond ~22 countries also remain open from further back.
+
+---
+
 ## UPDATE 2026-07-27 (later) -- Shipping-rate survey complete; DDP root cause found (unresolved); £1.20/item admin fee + two-tier auto-label shipping architecture AGREED with William but NOT YET BUILT; Stripe/Shippo billing setup in progress, blocked on Stripe identity verification
 
 **Shipping-rate survey: DONE.** `app/api/admin/shipping-rate-survey/route.ts` (commit `1b7abcf`) now uses a `REPRESENTATIVE_ORIGIN_ADDRESS` lookup with real city/zip/state for candidate origins -- fixes a false-negative where blank city/zip made some origins look like "no carrier coverage" when the real issue was an incomplete probe address. Full 247-destination x 6-weight-band survey run from GB; `PlatformShippingRate` table populated (75th-percentile calibration per zone/band); checkout verified end-to-end.
