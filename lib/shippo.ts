@@ -198,12 +198,15 @@ export async function getRate(rateId: string): Promise<ShippoRate> {
   return res.json()
 }
 
-// NOT CALLED ANYWHERE as of 2026-07-06 (William's decision: Velor is a pure
-// platform and never spends its own money on shipping). Kept only for
-// reference / possible future opt-in (e.g. a seller-funded label-purchase
-// feature that draws from the seller's own connected balance, not Velor's).
-// Do not wire this back up without an explicit new decision from William —
-// see docs/PAYOUTS.md.
+// WIRED UP 2026-07-27: called from lib/orders.ts's attemptAutoLabelPurchase,
+// for GB/DE/CA-origin sellers only (Tier A -- the only origins with live
+// Shippo carrier coverage as of the 2026-07-27 rate survey). This supersedes
+// the 2026-07-06 "Velor never buys shipping labels" decision -- see the
+// 2026-07-27 amendment in docs/PAYOUTS.md for the full reasoning (William
+// confirmed Velor now fronts label costs as recoverable working capital,
+// funded via an iwoca facility, recovered from the shipping amount already
+// collected from the buyer at checkout). Every other origin still never
+// calls this -- they stay on the Tier B self-ship-and-reimburse model.
 export async function purchaseLabel(rateId: string): Promise<ShippoTransaction> {
   const res = await fetch(SHIPPO_BASE + '/transactions/', {
     method: 'POST',
