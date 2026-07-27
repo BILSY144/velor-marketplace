@@ -67,6 +67,7 @@ interface SellerGroup {
   tier: string | null
   shippingProfileCountry: string | null
   handlingFeeGBP: number
+  internationalFlatRateGBP: number | null
   items: { productId: string; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null }[]
   subtotalGBP: number
 }
@@ -122,8 +123,10 @@ export async function POST(request: NextRequest) {
             // and handlingFeeGBP is the same packaging/rate-drift buffer
             // app/api/shipping/rates/route.ts adds on top of every live
             // carrier quote, needed here to reconstruct the exact amount the
-            // buyer was quoted.
-            shippingProfile: { select: { country: true, handlingFeeGBP: true } },
+            // buyer was quoted. internationalFlatRateGBP is re-read fresh
+            // here too, for the same reason -- see the 'seller-flat-rate'
+            // handling below, never trust the client's shippingAmount.
+            shippingProfile: { select: { country: true, handlingFeeGBP: true, internationalFlatRateGBP: true } },
           },
         },
       },
@@ -179,6 +182,10 @@ export async function POST(request: NextRequest) {
           tier: (product.seller.tier as unknown as string) ?? null,
           shippingProfileCountry: product.seller.shippingProfile?.country ?? null,
           handlingFeeGBP: Math.min(Math.max(Number(product.seller.shippingProfile?.handlingFeeGBP) || 0, 0), 25),
+          internationalFlatRateGBP:
+            product.seller.shippingProfile?.internationalFlatRateGBP != null
+              ? Math.min(Math.max(Number(product.seller.shippingProfile.internationalFlatRateGBP) || 0, 0), 500)
+              : null,
           items: [],
           subtotalGBP: 0,
         }
@@ -238,13 +245,41 @@ export async function POST(request: NextRequest) {
       // shippingAmount (2026-07-16 readiness audit finding: a tampered
       // request could previously set shippingAmount to anything, including
       // 0, for a real rateId -- shorting the seller on shipping
-      // reimbursement and letting the buyer dodge DDP duties). The two
-      // known fallback rate ids ('quote-required' / 'pending-standard')
-      // are always quoted at a fixed 0.00 by app/api/shipping/rates, so
-      // there's nothing to verify against Shippo -- force them to 0 rather
-      // than trusting the client either way.
+      // reimbursement and letting the buyer dodge DDP duties).
       let shippingGBP = 0
-      if (!FALLBACK_RATE_IDS.has(shipEntry.rateId)) {
+      if (shipEntry.rateId === 'seller-flat-rate') {
+        // Seller-set flat international rate (2026-07-27, see
+        // app/api/shipping/rates -- this is what lets Velor operate for
+        // sellers dispatching from any of the ~190 origin countries, not
+        // just the handful with a live carrier account). Never trust the
+        // client's shippingAmount -- re-read fresh from the DB (fetched
+        // into group.internationalFlatRateGBP above). If it's since changed
+        // or been unset, treat it like an expired rate rather than silently
+        // charging whatever the client claims or falling back to 0.
+        if (group.internationalFlatRateGBP == null) {
+          return NextResponse.json(
+            { error: "This seller's shipping rate has changed. Please reselect shipping and try again." },
+            { status: 409 }
+          )
+        }
+        shippingGBP = group.internationalFlatRateGBP
+      } else if (FALLBACK_RATE_IDS.has(shipEntry.rateId)) {
+        // No live carrier rate AND no seller-set flat rate -- there is no
+        // real price to charge. Block checkout instead of letting the order
+        // through with the buyer paying 0.00 for shipping and the seller
+        // getting nothing for it (2026-07-27 finding: this used to happen
+        // silently for every seller outside our connected carrier
+        // countries). The seller needs to add a flat international rate in
+        // Settings -> Shipping before this route can sell to this buyer.
+        return NextResponse.json(
+          {
+            error: "Shipping isn't available for this seller yet -- they haven't set an international shipping rate. Please contact the seller, or check back once they've configured shipping.",
+            shippingUnavailable: true,
+            sellerId: group.sellerId,
+          },
+          { status: 409 }
+        )
+      } else {
         let verifiedRate
         try {
           verifiedRate = await getRate(shipEntry.rateId)
