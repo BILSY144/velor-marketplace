@@ -31,8 +31,19 @@ html[data-theme='light'] {
   --muted: #6b6b76;
 }
 
+/* scroll-behavior was 'smooth' site-wide, which fights Next.js's own
+   scroll-to-top-on-navigation: the animated scroll to (0,0) can get
+   interrupted mid-flight as the new page's content streams/loads in,
+   landing the visitor partway down the page (William, 2026-07-27: "when i
+   browse different places it takes me to the bottom of the page"). 'auto'
+   (the browser default) makes route changes land at the top instantly and
+   reliably; ConditionalLayout.tsx now also explicitly scrolls to top on
+   every pathname change as a second, deterministic guarantee. The few
+   in-page "#anchor" links (app/about, app/press, app/sell) lose their
+   smooth-scroll animation and jump instantly instead -- an acceptable
+   trade-off for fixing a site-wide navigation bug. */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 body {
