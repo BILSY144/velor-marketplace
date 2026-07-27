@@ -48,6 +48,17 @@ export async function POST(request: NextRequest) {
     // server-side so it can never be abused as a hidden price hike.
     const rawFee = Number(body.handlingFeeGBP)
     const handlingFeeGBP = Number.isFinite(rawFee) ? Math.min(Math.max(rawFee, 0), 25) : 0
+    // Seller-set flat international shipping price -- the fallback used
+    // whenever Shippo can't calculate a live rate for this seller's route
+    // (see app/api/shipping/rates). Empty/blank means "not set" (null),
+    // distinct from an explicit 0 (free shipping). Clamped 0-500 to catch
+    // obvious typos without being restrictive for genuinely large/heavy items.
+    const rawFlat = body.internationalFlatRateGBP
+    let internationalFlatRateGBP: number | null = null
+    if (rawFlat !== null && rawFlat !== undefined && rawFlat !== '') {
+      const n = Number(rawFlat)
+      if (Number.isFinite(n)) internationalFlatRateGBP = Math.min(Math.max(n, 0), 500)
+    }
     const shipFromCountry = country || 'GB'
     const profile = await prisma.sellerShippingProfile.upsert({
       where: { sellerId: seller.id },
@@ -59,6 +70,7 @@ export async function POST(request: NextRequest) {
         zip, country: shipFromCountry,
         phone: phone || null,
         handlingFeeGBP,
+        internationalFlatRateGBP,
       },
       update: {
         name, company: company || null,
@@ -67,6 +79,7 @@ export async function POST(request: NextRequest) {
         zip, country: shipFromCountry,
         phone: phone || null,
         handlingFeeGBP,
+        internationalFlatRateGBP,
       },
     })
 
