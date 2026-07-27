@@ -202,6 +202,15 @@ export async function POST(request: NextRequest) {
           isFallback: false,
         }))
 
+        if (!mapped.length) {
+          console.warn(
+            '[shipping/rates] Shippo returned zero rates for seller', sellerId,
+            'from', addressFrom.country, 'to', addressTo.country,
+            'rawRateCount:', (shipment.rates || []).length,
+            'messages:', JSON.stringify(shipment.messages || [])
+          )
+        }
+
         // Seller's optional shipping buffer (packaging + rate-drift cover,
         // set in Settings -> Shipping, clamped 0-25 at write time and again
         // here). Added to every real quote so the amount the buyer pays is
