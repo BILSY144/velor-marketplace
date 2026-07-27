@@ -108,6 +108,14 @@ export function buildParcelFromItems(
 // Rate quoting only — this Shippo endpoint is free (no label is purchased).
 // Used to show buyers a live shipping cost at checkout. Velor's platform
 // Shippo balance is never charged by this call.
+// Parcels with a declared value below this get DDU (Delivered Duty
+// Unpaid) instead of DDP -- see the comment on the incoterm selection
+// inside createShippoShipment below for why. Threshold chosen 2026-07-27
+// (William's decision) to sit comfortably above this catalogue's typical
+// £6-20 item price while still keeping DDP (no customs surprise for the
+// buyer) for anything pricier.
+const LOW_VALUE_DDP_THRESHOLD_GBP = 50
+
 export async function createShippoShipment(params: {
   addressFrom: ShippoAddress
   addressTo: ShippoAddress
@@ -117,7 +125,7 @@ export async function createShippoShipment(params: {
   currency: string
   isInternational: boolean
 }): Promise<ShippoShipment> {
-  const { addressFrom, addressTo, parcels, customsItems, isInternational } = params
+  const { addressFrom, addressTo, parcels, customsItems, isInternational, declaredValue } = params
 
   const body: Record<string, unknown> = {
     address_from: addressFrom,
@@ -127,12 +135,27 @@ export async function createShippoShipment(params: {
   }
 
   if (isInternational && customsItems.length > 0) {
+    // DDP (Delivered Duty Paid) restricts Shippo's rate pool to premium/
+    // express carriers only -- cheap economy postal services generally
+    // don't support DDP customs brokerage. Forcing DDP on every
+    // international quote was producing unusably high platform-default
+    // rates (£38-97) against this catalogue's typical £6-20 items (see the
+    // 2026-07-27 rate survey). Below LOW_VALUE_DDP_THRESHOLD_GBP, drop to
+    // DDU (Delivered Duty Unpaid) so economy carriers are back in the rate
+    // pool -- the buyer may be asked to pay customs duty/tax on delivery
+    // instead of it being prepaid, which is normal and expected for
+    // low-value international parcels. Higher-value parcels keep DDP for a
+    // smoother, no-surprise-bill buyer experience. declaredValue is always
+    // passed in GBP by both callers (app/api/shipping/rates and the rate
+    // survey) -- the `currency` param only describes the rate response
+    // currency, never compare declaredValue against it.
+    const incoterm = declaredValue < LOW_VALUE_DDP_THRESHOLD_GBP ? 'DDU' : 'DDP'
     body.customs_declaration = {
       contents_type: 'MERCHANDISE',
       non_delivery_option: 'RETURN',
       certify: true,
       certify_signer: addressFrom.name,
-      incoterm: 'DDP',
+      incoterm,
       items: customsItems,
     }
   }
