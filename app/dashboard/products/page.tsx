@@ -885,6 +885,9 @@ Weight and dimensions are used for shipping labels. HS code is recommended if th
 <option value="">Select country</option>
 {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
 </select>
+<div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
+Please tell us the true cultural origin of this item, not your own location — this places your listing on the correct country page. Only a seller’s first listing under a not-yet-claimed country earns founding-seller status for that country.
+</div>
 </div>
 </div>
 
