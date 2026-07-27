@@ -42,6 +42,10 @@ export async function GET() {
           materials: true,
           requiresCertificate: true,
           createdAt: true,
+          variants: {
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, color: true, size: true, stock: true, priceOverride: true, sku: true },
+          },
           _count: { select: { orderItems: true } },
         },
       },
@@ -59,6 +63,14 @@ export async function GET() {
 // compressed data URL (see resizeAndCompressImage in the Add Product form).
 function isValidImage(u: unknown): u is string {
   return typeof u === 'string' && (u.startsWith('http') || u.startsWith('data:image/'))
+}
+
+interface VariantBody {
+  color?: string | null
+  size?: string | null
+  stock?: number
+  priceOverride?: number | null
+  sku?: string | null
 }
 
 interface ProductBody {
@@ -80,6 +92,49 @@ interface ProductBody {
   materials?: string | null
   containsRegulatedMaterial?: boolean
   rulesAccepted?: boolean
+  // Optional colour/size options (added 2026-07-27). Omitted or empty array
+  // means this listing has no variants -- price/stock above stay the only
+  // source of truth, exactly as every listing worked before this feature.
+  variants?: VariantBody[]
+}
+
+// Shared by POST and PATCH. Returns either a normalized, de-duplicated list
+// ready for createMany, or an error string to show the seller. Validation
+// lives here (not just relying on the DB's @@unique([productId, color,
+// size])) so a seller gets a clear message instead of a raw constraint
+// error.
+function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error: string } {
+  if (!Array.isArray(raw) || raw.length === 0) return { variants: [] }
+  const seen = new Set<string>()
+  const out: VariantBody[] = []
+  for (const v of raw) {
+    const color = typeof (v as VariantBody)?.color === 'string' ? (v as VariantBody).color!.trim() : ''
+    const size = typeof (v as VariantBody)?.size === 'string' ? (v as VariantBody).size!.trim() : ''
+    if (!color && !size) {
+      return { error: 'Each variant needs a colour, a size, or both.' }
+    }
+    const key = `${color.toLowerCase()} ${size.toLowerCase()}`
+    if (seen.has(key)) {
+      return { error: `You have more than one variant for ${[color, size].filter(Boolean).join(' / ')} -- each colour/size combination can only appear once.` }
+    }
+    seen.add(key)
+    const stock = Math.max(0, parseInt(String((v as VariantBody)?.stock ?? 0)) || 0)
+    const priceRaw = (v as VariantBody)?.priceOverride
+    const priceOverride = priceRaw !== null && priceRaw !== undefined && String(priceRaw).trim() !== ''
+      ? parseFloat(String(priceRaw))
+      : null
+    if (priceOverride !== null && (isNaN(priceOverride) || priceOverride <= 0)) {
+      return { error: 'Variant price override must be a positive number.' }
+    }
+    out.push({
+      color: color || null,
+      size: size || null,
+      stock,
+      priceOverride,
+      sku: typeof (v as VariantBody)?.sku === 'string' ? (v as VariantBody).sku!.trim().slice(0, 60) || null : null,
+    })
+  }
+  return { variants: out }
 }
 
 export async function POST(req: NextRequest) {
@@ -137,7 +192,14 @@ export async function POST(req: NextRequest) {
     name, description, price, stock, category, images, tags,
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
     isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
+    variants: rawVariants,
   } = body as ProductBody
+
+  const variantResult = normalizeVariants(rawVariants)
+  if ('error' in variantResult) {
+    return NextResponse.json({ error: variantResult.error }, { status: 400 })
+  }
+  const variants = variantResult.variants
 
   // Every listing submission must confirm compliance with the Seller Rules
   // and Product Compliance Policy (/legal/seller-rules). Enforced server-side
@@ -218,13 +280,23 @@ export async function POST(req: NextRequest) {
       ? `Not declared as regulated by the seller, but the listing text matched a possible regulated-material term (pattern: ${regulatedSignalMatch}). Held for a human check rather than approved automatically.`
       : ''
 
+  // When the seller has defined variants, Product.stock becomes a derived
+  // display total (sum of variant stock) rather than the authoritative
+  // number -- checkout resolves and decrements stock per-variant (see
+  // app/api/stripe/payment-intent/route.ts and lib/orders.ts). Products
+  // with no variants are completely unaffected: stock stays exactly what
+  // the seller typed in the form, same as before this feature existed.
+  const productStock = variants.length > 0
+    ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+    : Math.max(0, parseInt(String(stock || 0)))
+
   const product = await prisma.product.create({
     data: {
       sellerId: seller.id,
       title: String(name).trim(),
       description: String(description || '').trim(),
       price: parsedPrice,
-      stock: Math.max(0, parseInt(String(stock || 0))),
+      stock: productStock,
       category: String(category).trim(),
       images: validImages,
       tags: Array.isArray(tags)
@@ -244,6 +316,9 @@ export async function POST(req: NextRequest) {
       // track: it stays in enhanced review and cannot be approved until a
       // valid certificate is verified by admin (enforced at approval time).
       requiresCertificate: !!containsRegulatedMaterial,
+      ...(variants.length > 0
+        ? { variants: { create: variants.map((v) => ({ color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        : {}),
     },
   })
 
@@ -300,7 +375,20 @@ export async function PATCH(req: NextRequest) {
     name, description, price, stock, category, images, tags,
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
     isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
+    variants: rawVariants,
   } = body as ProductBody
+
+  // Distinguish "seller submitted the variants section" (key present, even
+  // as []) from "this caller doesn't know about variants at all" (key
+  // absent) -- only the former should touch existing variant rows, so a
+  // future partial-update caller can never silently wipe a seller's
+  // colour/size options just by not mentioning them.
+  const variantsProvided = 'variants' in body
+  const variantResult = normalizeVariants(rawVariants)
+  if ('error' in variantResult) {
+    return NextResponse.json({ error: variantResult.error }, { status: 400 })
+  }
+  const variants = variantResult.variants
 
   if (rulesAccepted !== true) {
     return NextResponse.json({ error: 'You must confirm this listing complies with the Seller Rules and Product Compliance Policy.' }, { status: 400 })
@@ -341,13 +429,20 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Please add at least 3 product images' }, { status: 400 })
   }
 
+  // Same derived-total rule as POST above: once a listing has variants,
+  // Product.stock just mirrors their sum for display -- checkout is
+  // authoritative against the variant rows themselves.
+  const productStock = variantsProvided && variants.length > 0
+    ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+    : Math.max(0, parseInt(String(stock || 0)))
+
   const product = await prisma.product.update({
     where: { id },
     data: {
       title: String(name).trim(),
       description: String(description || '').trim(),
       price: parsedPrice,
-      stock: Math.max(0, parseInt(String(stock || 0))),
+      stock: productStock,
       category: String(category).trim(),
       images: validImages,
       tags: Array.isArray(tags)
@@ -366,8 +461,68 @@ export async function PATCH(req: NextRequest) {
       // be taken off it by the seller unticking the box on a later edit --
       // only admin review can clear requiresCertificate.
       requiresCertificate: existing.requiresCertificate || !!containsRegulatedMaterial,
+      // Replace the variant set wholesale on every edit that includes the
+      // variants key. This intentionally mints new ProductVariant ids each
+      // time rather than diffing/reusing old ones -- simple and safe,
+      // because OrderItem never holds a live foreign key to a variant (see
+      // the schema comment): a past order's variantId/color/size is a
+      // permanent snapshot, so old variant rows disappearing here can never
+      // corrupt order history. The only edge case is a variant sitting in
+      // an unpaid buyer's cart at the exact moment the seller edits -- the
+      // checkout re-resolution in app/api/stripe/payment-intent/route.ts
+      // treats a since-removed variant as no longer available rather than
+      // erroring the whole checkout.
+      ...(variantsProvided
+        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        : {}),
     },
   })
 
   return NextResponse.json({ product })
+}
+
+// William, 2026-07-27: sellers previously had no way to fully remove a
+// listing -- only edit it. A listing that has never been ordered (e.g. a
+// test listing, or one created by mistake) is safe to hard-delete outright.
+// A listing with real order history CANNOT be hard-deleted: OrderItem.product
+// has no cascade/set-null (deliberately -- past orders must always resolve
+// to a real product row for receipts, disputes, and returns), so Postgres
+// would reject that delete with a foreign-key violation. For that case we
+// fall back to the same DELISTED status admins already use (see
+// app/api/admin/products/route.ts) -- it immediately hides the listing from
+// the storefront/buyers, which is what "remove" means to a seller in
+// practice, while keeping order history intact.
+export async function DELETE(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
+
+  const seller = await prisma.seller.findUnique({ where: { userId: session.user.id } })
+  if (!seller) return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
+
+  const existing = await prisma.product.findUnique({ where: { id } })
+  if (!existing || existing.sellerId !== seller.id) {
+    return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+  }
+
+  const orderCount = await prisma.orderItem.count({ where: { productId: id } })
+
+  if (orderCount === 0) {
+    // Never been ordered -- fully removable. Variants, certificates,
+    // reviews and wishlist entries cascade-delete with it (see schema.prisma);
+    // any Message referencing it has productId set to null instead of
+    // failing, so buyer/seller message history is preserved.
+    await prisma.product.delete({ where: { id } })
+    return NextResponse.json({ ok: true, mode: 'deleted' })
+  }
+
+  await prisma.product.update({ where: { id }, data: { status: 'DELISTED' } })
+  return NextResponse.json({
+    ok: true,
+    mode: 'delisted',
+    message: 'This listing has order history, so it has been delisted instead of deleted -- it is hidden from buyers, but its record is kept for past orders, receipts, and disputes.',
+  })
 }
