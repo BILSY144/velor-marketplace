@@ -35,6 +35,29 @@ const FALLBACK_QUOTE_RATE: Rate = {
   isFallback: true,
 }
 
+// Flat per-item admin fee, replacing the old 8% platform-default-rate-only
+// levy (2026-07-27, agreed with William after the DDP rate survey showed
+// platform-default rates were unusably high). Applied uniformly across all
+// three shipping-rate tiers (seller-flat-rate, live-quote, platform-
+// default-rate) via applyAdminFee() below, so buyers see consistent
+// pricing behaviour regardless of which tier a seller/destination
+// combination resolves to. Quantity-multiplied, not flat-per-order -- e.g.
+// 3 items in a seller's cart group = GBP3.60. Never applied to the
+// zero-cost FALLBACK_QUOTE_RATE ("Contact seller for shipping quote") --
+// isFallback is the signal used to skip it.
+const ADMIN_FEE_PER_ITEM_GBP = 1.20
+
+async function applyAdminFee(rates: Rate[], itemCount: number): Promise<Rate[]> {
+  if (!itemCount) return rates
+  const feeGBP = ADMIN_FEE_PER_ITEM_GBP * itemCount
+  return Promise.all(rates.map(async (rate) => {
+    if (rate.isFallback) return rate
+    const cur = (rate.currency || 'GBP').toUpperCase()
+    const fee = cur === 'GBP' ? feeGBP : await convert(feeGBP, 'GBP', cur)
+    return { ...rate, amount: (parseFloat(rate.amount) + fee).toFixed(2) }
+  }))
+}
+
 // Velor only has live Shippo carrier accounts connected for a handful of
 // origin countries -- every seller dispatching from anywhere else in the
 // world used to hit FALLBACK_QUOTE_RATE, which quotes 0.00 and either let
@@ -46,9 +69,10 @@ const FALLBACK_QUOTE_RATE: Rate = {
 //      deliberately for their own route.
 //   2. Platform-default estimate (PlatformShippingRate, see
 //      app/api/admin/shipping-rate-survey) -- a zone x weight-band GBP
-//      estimate calibrated from real live Shippo quotes, with an admin-
-//      configurable levy on top (PlatformShippingConfig.levyPercent) to
-//      buffer estimation risk. This is what makes checkout work for EVERY
+//      estimate calibrated from real live Shippo quotes. A flat GBP1.20-
+//      per-item admin fee (ADMIN_FEE_PER_ITEM_GBP) is layered on top of
+//      this and the other two tiers uniformly -- see applyAdminFee below.
+//      This is what makes checkout work for EVERY
 //      seller regardless of origin country, with no action required from
 //      them -- added 2026-07-27 specifically so buyers never again have to
 //      "hope the seller configured shipping."
@@ -63,9 +87,10 @@ async function platformDefaultRateGBP(
     where: { zone_weightBandMinGrams: { zone, weightBandMinGrams: band.minGrams } },
   })
   if (!row) return null
-  const config = await prisma.platformShippingConfig.findUnique({ where: { id: 'singleton' } })
-  const levyPercent = config?.levyPercent ?? 8
-  return row.baseAmountGBP * (1 + levyPercent / 100)
+  // The old flat 8% levy (PlatformShippingConfig.levyPercent) was replaced
+  // 2026-07-27 by a flat per-item admin fee applied uniformly across all
+  // three shipping tiers -- see ADMIN_FEE_PER_ITEM_GBP / applyAdminFee.
+  return row.baseAmountGBP
 }
 
 async function flatRateOrFallback(
@@ -166,6 +191,11 @@ export async function POST(request: NextRequest) {
         continue
       }
 
+      // Total quantity across this seller's cart items -- used below to
+      // scale the flat GBP1.20-per-item admin fee (ADMIN_FEE_PER_ITEM_GBP)
+      // uniformly across whichever shipping tier this seller resolves to.
+      const itemCount = items.reduce((sum: number, i: { quantity?: number }) => sum + (i.quantity || 1), 0)
+
       // When Shippo is not yet configured globally, every seller gets the
       // same generic placeholder (unless they've set their own flat rate or
       // a platform default estimate applies, both honoured even here).
@@ -178,12 +208,12 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: await flatRateOrFallback(
+          rates: await applyAdminFee(await flatRateOrFallback(
             seller.shippingProfile,
             shippingAddress.country,
             500,
             { ...FALLBACK_QUOTE_RATE, rateId: 'pending-standard', carrier: 'Standard Shipping', service: 'Tracked Delivery', estimatedDays: 14 }
-          ),
+          ), itemCount),
         })
         continue
       }
@@ -329,9 +359,10 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: addressFrom.country,
-          rates: mapped.length
-            ? mapped
-            : await flatRateOrFallback(p, addressTo.country, totalWeightGrams),
+          rates: await applyAdminFee(
+            mapped.length ? mapped : await flatRateOrFallback(p, addressTo.country, totalWeightGrams),
+            itemCount
+          ),
         })
       } catch (err) {
         console.error('[shipping/rates] Rate lookup failed for seller', sellerId, err)
@@ -339,7 +370,10 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: await flatRateOrFallback(seller.shippingProfile, shippingAddress.country, totalWeightGrams),
+          rates: await applyAdminFee(
+            await flatRateOrFallback(seller.shippingProfile, shippingAddress.country, totalWeightGrams),
+            itemCount
+          ),
         })
       }
     }
