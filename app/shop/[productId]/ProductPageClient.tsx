@@ -5,6 +5,7 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { FounderMedal } from '@/components/FounderMedal'
 
 interface Variant {
   id: string
@@ -42,7 +43,7 @@ interface Product {
   stock: number
   sellerId: string
   sellerName: string
-  seller?: { storeName: string; currency?: string; country?: string | null; storeLogo?: string | null; tier?: string; sellerBadge?: string | null; foundingBadge?: boolean } | null
+  seller?: { storeName: string; currency?: string; country?: string | null; storeLogo?: string | null; tier?: string; sellerBadge?: string | null; foundingBadge?: boolean; countryFounded?: { countryName?: string | null } | null } | null
   avgRating: number | null
   reviewCount: number
   variants: Variant[]
@@ -753,7 +754,18 @@ export default function ProductPageClient() {
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <Link href={`/seller/${product.sellerId}`} style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)', textDecoration: 'none' }}>{product.seller.storeName}</Link>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Link href={`/seller/${product.sellerId}`} style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)', textDecoration: 'none' }}>{product.seller.storeName}</Link>
+                    {/* Founding-seller medal (William, 2026-07-27, "on the
+                        product page the listing images dont need the badge,
+                        but it can be added in the sellers box"): moved into
+                        this seller trust card next to the store name, never
+                        on the listing image -- same shared medallion as
+                        every other listing surface. */}
+                    {product.seller.foundingBadge && (
+                      <FounderMedal countryName={product.seller.countryFounded?.countryName} size={28} />
+                    )}
+                  </div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
                     {product.seller.country ? `${product.seller.country} · ` : ''}
                     {product.sellerStats ? `Member since ${product.sellerStats.memberSinceYear}` : ''}
@@ -764,12 +776,12 @@ export default function ProductPageClient() {
               {/* Founding Seller pill removed from this ID card (William,
                   2026-07-26, "remove it completly ... in its place add the
                   stock inventory pill and the handmade pill") -- founding
-                  status is now shown ONLY as the round FounderMedal on the
-                  listing image itself (components/FounderMedal.tsx), never
-                  duplicated here as text. This card keeps sellerBadge (an
-                  unrelated seller-tier badge) plus the two replacements:
-                  live stock count and handmade status, both sourced directly
-                  from the same product record already loaded above -- never
+                  status as TEXT is never shown here; it's the round
+                  FounderMedal next to the store name above instead (William,
+                  2026-07-27). This card keeps sellerBadge (an unrelated
+                  seller-tier badge) plus the two replacements: live stock
+                  count and handmade status, both sourced directly from the
+                  same product record already loaded above -- never
                   fabricated. */}
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
                 {product.seller.sellerBadge && (
