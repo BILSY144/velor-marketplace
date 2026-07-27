@@ -1,6 +1,16 @@
 # Velor Marketplace — Payout Escrow (LOCKED SPEC)
 
-Status: FINAL and DEPLOYED 2026-07-03, amended 2026-07-06 and 2026-07-10 (see below). Commit 1e72cec + shipping-model amendment + trusted-graduation amendment. Do not re-litigate; changes require an explicit new decision from William.
+Status: FINAL and DEPLOYED 2026-07-03, amended 2026-07-06, 2026-07-10, and 2026-07-27 (see below). Commit 1e72cec + shipping-model amendment + trusted-graduation amendment + Tier A auto-label amendment. Do not re-litigate; changes require an explicit new decision from William.
+
+## AMENDMENT — 2026-07-27 (Tier A: Velor now fronts Shippo label costs for GB/DE/CA-origin sellers -- reverses the 2026-07-06 "pure platform" rule for those origins only)
+
+**Decision:** William confirmed a new two-tier shipping model after the 2026-07-27 platform-default rate survey found DDP-only quoting was producing unusably high (£38-97) estimated rates against this catalogue's typical £6-20 items. For the three origins with live Shippo carrier coverage (GB, DE, CA), Velor now auto-purchases a real Shippo shipping label at the moment payment succeeds and emails it to the seller -- funded by Velor's own Shippo balance. This is accepted as normal, recoverable working capital (a revolving float sized roughly as average daily shipping spend x payout delay), seeded via William's existing iwoca facility (~£500), not a growing cost -- Velor already collects the shipping amount from the buyer at checkout, so the float is recovered on each order, not spent permanently.
+
+**What changed:** `lib/shippo.ts`'s `purchaseLabel()` (previously dead code, guarded by a "do not wire this up" comment) is now called from a new `attemptAutoLabelPurchase()` helper in `lib/orders.ts`, invoked once per seller inside `createOrderFromPaymentIntent()` right after that seller's Order is created. Gated strictly to `SellerShippingProfile.country` in {GB, DE, CA} -- every other origin is untouched and stays on the existing Tier B self-ship-and-reimburse model (seller ships with their own carrier account and money, reimbursed via the platform-default estimate, reports tracking via "Mark as Shipped"). Buyers see one unified shipping price at checkout regardless of tier; countries move from Tier B to Tier A over time as William connects more Shippo carrier accounts. Entirely best-effort and isolated: a Shippo outage, a missing shipping profile, or a zero-rate response is logged and silently falls through to Tier B -- never rolls back or fails an already-paid order.
+
+**Files touched:** `lib/shippo.ts` (comment on `purchaseLabel` updated to reflect it's now called), `lib/orders.ts` (`attemptAutoLabelPurchase` added and wired into `createOrderFromPaymentIntent`).
+
+---
 
 ## AMENDMENT — 2026-07-10 (Faster graduation to trusted: 5 orders / 14 days, was 10 / 30)
 
