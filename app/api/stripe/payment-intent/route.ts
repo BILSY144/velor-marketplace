@@ -12,6 +12,14 @@ export const dynamic = 'force-dynamic'
 const PLATFORM_COMMISSION_RATE = 0.1
 const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0.04 } // ENTERPRISE retired 2026-07-15: legacy rows read as Pro
 
+// Preview-only listing (William, 2026-07-27, same brief as
+// app/shop/[productId]/ProductPageClient.tsx's PREVIEW_ONLY_PRODUCT_ID):
+// the UI already disables Add to Cart/Buy Now for this product, but this
+// server-side check is the real backstop -- it's what actually stops a
+// checkout, whether the item reached the cart from before this change or
+// via a direct API call.
+const PREVIEW_ONLY_PRODUCT_ID = 'cms260kvd0003epq3lnituxvw'
+
 // Stripe metadata values are capped at 500 chars each. These caps keep the
 // JSON-encoded shippingAddress well under that limit even with every field
 // filled in, so a long address can never silently break checkout.
@@ -135,6 +143,12 @@ export async function POST(request: NextRequest) {
       const product = productMap.get(item.productId)
       if (!product) {
         return NextResponse.json({ error: 'Product not found: ' + item.productId }, { status: 400 })
+      }
+      if (product.id === PREVIEW_ONLY_PRODUCT_ID) {
+        return NextResponse.json(
+          { error: 'This is a preview listing shown to demonstrate Velor and is not available for purchase.' },
+          { status: 400 }
+        )
       }
       if (!product.seller) {
         return NextResponse.json({ error: 'Product has no seller: ' + item.productId }, { status: 400 })
