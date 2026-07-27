@@ -34,6 +34,38 @@ const FALLBACK_QUOTE_RATE: Rate = {
   isFallback: true,
 }
 
+// Velor only has live Shippo carrier accounts connected for a handful of
+// origin countries (US/UK/DE/FR/ES/CA/AU as of 2026-07-27) -- every seller
+// dispatching from anywhere else in the world hits FALLBACK_QUOTE_RATE,
+// which quotes 0.00 and used to let checkout complete with the buyer paying
+// nothing for shipping (see app/api/stripe/payment-intent, which now blocks
+// that). To actually operate globally without a live carrier for all ~190
+// countries, a seller can set their own flat international rate in
+// Settings -> Shipping (SellerShippingProfile.internationalFlatRateGBP).
+// Whenever we can't get a real Shippo quote, THIS is used instead of the
+// dead-end placeholder -- a real, honest price the buyer can actually pay
+// and the seller actually gets paid. Only FALLBACK_QUOTE_RATE (still
+// blocking at checkout) applies if the seller hasn't set one yet.
+function flatRateOrFallback(
+  profile: { internationalFlatRateGBP?: number | null } | null | undefined,
+  fallback: Rate = FALLBACK_QUOTE_RATE
+): Rate[] {
+  const flat = profile?.internationalFlatRateGBP
+  if (flat != null && Number.isFinite(flat)) {
+    return [{
+      rateId: 'seller-flat-rate',
+      carrier: 'Seller Shipping',
+      service: 'International (seller-set rate)',
+      amount: flat.toFixed(2),
+      currency: 'GBP',
+      estimatedDays: null,
+      isDDP: false,
+      isFallback: false,
+    }]
+  }
+  return [fallback]
+}
+
 // A mixed-seller cart ships as one parcel PER SELLER (see lib/orders.ts and
 // docs on the Shipment model) -- each seller dispatches their own items from
 // their own address, with their own carrier account. The buyer must
@@ -90,13 +122,17 @@ export async function POST(request: NextRequest) {
       }
 
       // When Shippo is not yet configured globally, every seller gets the
-      // same generic placeholder. Never show fake carrier names.
+      // same generic placeholder (unless they've set their own flat rate,
+      // which is honoured even here). Never show fake carrier names.
       if (!process.env.SHIPPO_API_KEY) {
         result.push({
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: [{ ...FALLBACK_QUOTE_RATE, rateId: 'pending-standard', carrier: 'Standard Shipping', service: 'Tracked Delivery', estimatedDays: 14 }],
+          rates: flatRateOrFallback(
+            seller.shippingProfile,
+            { ...FALLBACK_QUOTE_RATE, rateId: 'pending-standard', carrier: 'Standard Shipping', service: 'Tracked Delivery', estimatedDays: 14 }
+          ),
         })
         continue
       }
@@ -230,7 +266,7 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: addressFrom.country,
-          rates: mapped.length ? mapped : [FALLBACK_QUOTE_RATE],
+          rates: mapped.length ? mapped : flatRateOrFallback(p),
         })
       } catch (err) {
         console.error('[shipping/rates] Rate lookup failed for seller', sellerId, err)
@@ -238,7 +274,7 @@ export async function POST(request: NextRequest) {
           sellerId,
           sellerName: seller.storeName,
           originCountry: seller.shippingProfile?.country ?? null,
-          rates: [FALLBACK_QUOTE_RATE],
+          rates: flatRateOrFallback(seller.shippingProfile),
         })
       }
     }
