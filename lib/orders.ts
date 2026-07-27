@@ -2,6 +2,10 @@ import Stripe from 'stripe'
 import { Prisma, Order } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, buildOrderConfirmationEmail } from '@/lib/email'
+import {
+  createShippoShipment, purchaseLabel, buildParcelFromItems, pickBestRate, createTrack,
+  ShippoAddress, ShippoCustomsItem,
+} from '@/lib/shippo'
 
 interface PricedItem {
   productId: string
@@ -50,6 +54,180 @@ interface SellerBreakdownEntry {
 // seller's order creation fails (e.g. a stock race), the others still
 // succeed; the failed one is retried on the next webhook delivery or the
 // next call to this function for the same PaymentIntent.
+
+// Tier A auto-label purchase: real-time Shippo label bought at order-
+// creation time for sellers dispatching from GB/DE/CA -- the only origins
+// with live Shippo carrier coverage as of the 2026-07-27 rate survey (see
+// CLAUDE.md). Everyone else stays on the existing Tier B self-ship-and-
+// reimburse model (the seller ships with their own carrier account, using
+// the platform-default estimate, then reports tracking via "Mark as
+// Shipped"). Funded by Velor's own Shippo balance -- this supersedes the
+// 2026-07-06 "Velor never buys shipping labels" decision in docs/PAYOUTS.md
+// (see the 2026-07-27 amendment there for the full reasoning: Velor fronts
+// the cost as recoverable working capital, funded via William's iwoca
+// facility, and recovers it from the shipping amount already collected
+// from the buyer at checkout).
+//
+// Silent no-op (not an error) whenever Tier A doesn't apply: no shipping
+// profile, non-GB/DE/CA origin, no buyer country, or Shippo returning zero
+// live rates for this route. The caller wraps this whole function in its
+// own try/catch and only ever logs failures -- this must never roll back
+// or fail an already-successful, already-paid order.
+async function attemptAutoLabelPurchase(
+  order: Order,
+  sellerId: string,
+  sellerItems: PricedItem[],
+  shippingAddressJson: Prisma.InputJsonValue
+): Promise<void> {
+  const seller = await prisma.seller.findUnique({
+    where: { id: sellerId },
+    include: { shippingProfile: true, user: { select: { email: true } } },
+  })
+  const profile = seller?.shippingProfile
+  if (!profile) return // no dispatch address on file -- Tier B, nothing to do
+
+  const TIER_A_ORIGINS = new Set(['GB', 'DE', 'CA'])
+  if (!TIER_A_ORIGINS.has(profile.country.toUpperCase())) return // Tier B origin
+
+  const shippingAddress = (shippingAddressJson || {}) as Record<string, unknown>
+  const destinationCountry = String(shippingAddress.country || '').toUpperCase()
+  if (!destinationCountry) return // no buyer address -- can't quote, Tier B fallback stands
+
+  const productIds = sellerItems.map((i) => i.productId)
+  const productDims = productIds.length
+    ? await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true, weightGrams: true, lengthCm: true, widthCm: true,
+          heightCm: true, price: true, originCountry: true,
+        },
+      })
+    : []
+  const productMap = new Map(productDims.map((p) => [p.id, p]))
+
+  const addressFrom: ShippoAddress = {
+    name: profile.name,
+    company: profile.company || undefined,
+    street1: profile.street1,
+    street2: profile.street2 || undefined,
+    city: profile.city,
+    state: profile.state || undefined,
+    zip: profile.zip,
+    country: profile.country,
+    phone: profile.phone || undefined,
+  }
+
+  const addressTo: ShippoAddress = {
+    name: (shippingAddress.name as string) || order.customerName || 'Customer',
+    street1: (shippingAddress.street1 as string) || (shippingAddress.line1 as string) || '',
+    street2: (shippingAddress.street2 as string) || (shippingAddress.line2 as string) || undefined,
+    city: (shippingAddress.city as string) || '',
+    state: (shippingAddress.state as string) || (shippingAddress.county as string) || undefined,
+    zip: (shippingAddress.zip as string) || (shippingAddress.postalCode as string) || '',
+    country: destinationCountry,
+    phone: (shippingAddress.phone as string) || undefined,
+    email: (shippingAddress.email as string) || undefined,
+  }
+
+  const isInternational = destinationCountry !== addressFrom.country
+
+  const itemsWithDimensions = sellerItems.map((item) => {
+    const pr = productMap.get(item.productId)
+    return {
+      weightGrams: pr?.weightGrams,
+      lengthCm: pr?.lengthCm,
+      widthCm: pr?.widthCm,
+      heightCm: pr?.heightCm,
+      quantity: Math.round(Number(item.quantity)) || 1,
+    }
+  })
+  const parcel = buildParcelFromItems(itemsWithDimensions)
+
+  const customsItems: ShippoCustomsItem[] = sellerItems.map((item) => {
+    const pr = productMap.get(item.productId)
+    return {
+      description: 'Product',
+      quantity: Math.round(Number(item.quantity)) || 1,
+      net_weight: String((pr?.weightGrams || 200) / 1000),
+      mass_unit: 'kg',
+      value_amount: String(item.priceGBP || pr?.price || 0),
+      value_currency: 'GBP',
+      origin_country: pr?.originCountry || addressFrom.country,
+    }
+  })
+
+  const declaredValue = sellerItems.reduce(
+    (sum, item) => sum + (Number(item.priceGBP) || 0) * (Math.round(Number(item.quantity)) || 1),
+    0
+  )
+
+  const shipment = await createShippoShipment({
+    addressFrom, addressTo, parcels: [parcel],
+    customsItems, declaredValue, currency: 'GBP', isInternational,
+  })
+
+  const chosen = pickBestRate(shipment.rates || [])
+  if (!chosen) {
+    console.warn('[attemptAutoLabelPurchase] Shippo returned zero rates for order', order.id, 'seller', sellerId)
+    return // Tier B fallback stands -- the seller ships manually, reimbursed via the platform-default estimate they were quoted
+  }
+
+  const transaction = await purchaseLabel(chosen.object_id)
+  if (transaction.status !== 'SUCCESS') {
+    console.error('[attemptAutoLabelPurchase] Shippo transaction did not succeed for order', order.id, transaction)
+    return
+  }
+
+  const shipmentData = {
+    sellerId,
+    shippoShipmentId: shipment.object_id,
+    shippoRateId: chosen.object_id,
+    shippoLabelId: transaction.object_id,
+    trackingNumber: transaction.tracking_number,
+    trackingUrl: transaction.tracking_url_provider,
+    carrier: chosen.provider || 'Carrier',
+    labelUrl: transaction.label_url,
+    status: 'LABEL_PURCHASED' as const,
+  }
+  await prisma.shipment.upsert({
+    where: { orderId: order.id },
+    create: { orderId: order.id, ...shipmentData },
+    update: shipmentData,
+  })
+
+  // Best-effort, isolated from the label purchase above: registers the
+  // tracking number with Shippo's free /tracks endpoint so the existing
+  // delivery webhook keeps working the same way it does for Tier B's
+  // manually-reported tracking numbers.
+  try {
+    await createTrack(chosen.provider || '', transaction.tracking_number)
+    await prisma.shipment.update({ where: { orderId: order.id }, data: { trackRegistered: true } })
+  } catch (trackErr) {
+    console.error('[attemptAutoLabelPurchase] tracking registration failed for order', order.id, trackErr)
+  }
+
+  if (seller?.user?.email) {
+    try {
+      const html = `
+        <p>Hi ${seller.storeName},</p>
+        <p>Good news -- a new order came in and Velor has already purchased and paid for the shipping label. No need to buy your own postage for this one.</p>
+        <p><strong>Order:</strong> ${order.id}<br/>
+        <strong>Carrier:</strong> ${chosen.provider || 'Carrier'}<br/>
+        <strong>Tracking number:</strong> ${transaction.tracking_number}</p>
+        <p><a href="${transaction.label_url}">Download and print the shipping label (PDF)</a></p>
+        <p>Please attach it to the package and drop it off as usual. Tracking updates will appear on your Velor dashboard automatically.</p>
+      `
+      await sendEmail({
+        to: seller.user.email,
+        subject: `Shipping label ready for order ${order.id}`,
+        html,
+      })
+    } catch (emailErr) {
+      console.error('[attemptAutoLabelPurchase] seller label email failed for order', order.id, emailErr)
+    }
+  }
+}
+
 export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
   const md = (pi.metadata || {}) as Record<string, string>
 
@@ -231,6 +409,21 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
       } catch (emailErr) {
         console.error('[createOrderFromPaymentIntent] order confirmation email failed for order', order.id, emailErr)
       }
+    }
+
+    // Tier A: GB/DE/CA-origin sellers get a real Shippo label auto-purchased
+    // and emailed to them right now, funded by Velor's own Shippo balance
+    // (2026-07-27 decision superseding the 2026-07-06 "pure platform" rule --
+    // see docs/PAYOUTS.md). Every other origin stays Tier B (self-ship,
+    // reimbursed via the platform-default estimate) -- attemptAutoLabelPurchase
+    // itself decides which tier applies and is a total no-op for Tier B
+    // sellers. Best-effort and fully isolated: a Shippo outage or a seller
+    // with no shipping profile must never roll back or fail an
+    // already-successful, already-paid order.
+    try {
+      await attemptAutoLabelPurchase(order, sb.i, sellerItems, shippingAddress)
+    } catch (labelErr) {
+      console.error('[createOrderFromPaymentIntent] auto label purchase failed for order', order.id, labelErr)
     }
   }
 
