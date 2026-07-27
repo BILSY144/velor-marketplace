@@ -29,17 +29,52 @@ export const maxDuration = 300
 
 const CONCURRENCY = 8
 
+// Real city/zip/state for candidate ORIGIN countries only (2026-07-27 fix --
+// a blank city/zip silently failed carrier-side address validation for
+// several origins during a live spot-check, making them look like "no
+// carrier coverage" when the real issue was an incomplete probe address, not
+// an account limitation). Destination side has always used blank city/zip
+// and that's fine -- it's only pickup-side rating that needs a real
+// city/zip/state to resolve service area and accessorials. Add more entries
+// here as new candidate origins are spot-checked.
+const REPRESENTATIVE_ORIGIN_ADDRESS: Record<string, { city: string; zip: string; state?: string }> = {
+  GB: { city: 'London', zip: 'SW1A 1AA' },
+  US: { city: 'New York', zip: '10001', state: 'NY' },
+  DE: { city: 'Berlin', zip: '10115' },
+  FR: { city: 'Paris', zip: '75001' },
+  ES: { city: 'Madrid', zip: '28001' },
+  CA: { city: 'Toronto', zip: 'M5H 2N2', state: 'ON' },
+  AU: { city: 'Sydney', zip: '2000', state: 'NSW' },
+  CN: { city: 'Shenzhen', zip: '518000', state: 'Guangdong' },
+  JP: { city: 'Tokyo', zip: '100-0001' },
+  IN: { city: 'Mumbai', zip: '400001', state: 'MH' },
+  BR: { city: 'Sao Paulo', zip: '01310-100', state: 'SP' },
+  IT: { city: 'Rome', zip: '00100' },
+  NL: { city: 'Amsterdam', zip: '1011 AB' },
+  MX: { city: 'Mexico City', zip: '01000' },
+  HK: { city: 'Hong Kong', zip: '999077' },
+  SG: { city: 'Singapore', zip: '018956' },
+  AE: { city: 'Dubai', zip: '00000' },
+  ZA: { city: 'Johannesburg', zip: '2000' },
+  KR: { city: 'Seoul', zip: '04524' },
+  TR: { city: 'Istanbul', zip: '34000' },
+}
+
 // Minimal representative address -- Shippo's rate-shopping only needs enough
 // to identify pickup/delivery country; sellers' own real addresses are used
 // for actual orders (see app/api/shipping/rates/route.ts). This survey
 // exists purely to calibrate the platform-default ESTIMATE, not to quote or
-// ship a real parcel.
+// ship a real parcel. Origin side uses a real city/zip/state where we have
+// one on file (see REPRESENTATIVE_ORIGIN_ADDRESS above); destination side
+// stays blank -- proven fine across the full 247-country main survey.
 function genericAddress(country: string, isOrigin: boolean): ShippoAddress {
+  const rep = isOrigin ? REPRESENTATIVE_ORIGIN_ADDRESS[country] : undefined
   return {
     name: isOrigin ? 'Velor Marketplace Seller' : 'Velor Marketplace Buyer',
     street1: '1 Main Street',
-    city: '',
-    zip: '',
+    city: rep?.city ?? '',
+    zip: rep?.zip ?? '',
+    state: rep?.state,
     country,
     phone: '+00 000 000 0000',
     email: 'noreply@velorcommerce.store',
