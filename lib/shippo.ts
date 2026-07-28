@@ -82,13 +82,13 @@ export function buildParcelFromItems(
   }>
 ): ShippoParcel {
   const totalWeightG = items.reduce(
-    (sum, item) => sum + (item.weightGrams ?? 500) * item.quantity,
+      (sum, item) => sum + (item.weightGrams ?? 450) * item.quantity,
     0
   )
-  const maxLen = Math.max(...items.map(i => i.lengthCm ?? 20))
-  const maxWid = Math.max(...items.map(i => i.widthCm ?? 15))
+    const maxLen = Math.max(...items.map(i => i.lengthCm ?? 18))
+    const maxWid = Math.max(...items.map(i => i.widthCm ?? 13))
   const totalHeight = items.reduce(
-    (sum, item) => sum + (item.heightCm ?? 10) * item.quantity,
+      (sum, item) => sum + (item.heightCm ?? 7) * item.quantity,
     0
   )
   // Dimensional weight: carriers charge whichever is greater — actual vs volumetric
