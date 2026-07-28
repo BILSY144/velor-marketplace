@@ -20,6 +20,8 @@ William's directive this session, verbatim gist: Velor takes on the shipping hea
 
 Nothing on this list may be silently dropped. If a future session finds an item stale, correct THIS table with evidence, per LAW #1/#3.
 
+**STANDING DIRECTIVE (William, 2026-07-28, verbatim: "every set up we do, i want a label generated for the seller ok. thats our system"):** every shipping origin/lane Velor brings online MUST be wired into the auto-label path -- label purchased at payment_intent.succeeded and emailed to the seller, who only prints and ships. Rate quoting alone does NOT complete a lane. Tier B (self-ship + reimburse) is a temporary state for lanes not yet wired, never the end state. This is Velor's differentiator vs other marketplaces; treat any new shipping integration (Easyship, YunExpress, carrier accounts) as incomplete until its label generation is proven live.
+
 William's explicit directive (verbatim): "global shipping non negotiable" -- full, cheap, worldwide shipping coverage for buyers is a hard requirement, not an aspiration. This is the single highest-priority item in this file until resolved. Do not start other work before addressing this unless William says otherwise. William said this is late-night/parked for now -- pick it up first next session.
 
 ## The problem
