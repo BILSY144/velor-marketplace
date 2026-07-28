@@ -192,6 +192,169 @@ isHandmade: '', makerStory: '', materials: '', containsRegulated: '',
 videoUrl: '', madeToOrder: '', leadTimeDays: '', sizeGuide: '',
 }
 
+// Preview-before-submit (2026-07-29, the last item of William's approved
+// listing-form spec): a full-screen "how buyers will see it" overlay on the
+// final step, mirroring the real PDP's compact buy-box layout -- gallery
+// with thumbnails, option pickers that switch price/photos exactly like the
+// live product page, made-to-order line, story card. Purely visual: the CTA
+// buttons are inert, and Publish hands back to the real form submit.
+function ListingPreviewOverlay({ form, variantRows, hasVariants, currency, countryName, canPublish, saving, publishLabel, onClose, onPublish }: {
+  form: typeof emptyForm; variantRows: VariantRow[]; hasVariants: boolean; currency: string; countryName: string;
+  canPublish: boolean; saving: boolean; publishLabel: string; onClose: () => void; onPublish: () => void;
+}) {
+  const rows = hasVariants ? variantRows.filter(r => r.label.trim() || r.color.trim() || r.size.trim()) : []
+  const labels = Array.from(new Set(rows.map(r => r.label.trim()).filter(Boolean)))
+  const colors = Array.from(new Set(rows.map(r => r.color.trim()).filter(Boolean)))
+  const sizes = Array.from(new Set(rows.map(r => r.size.trim()).filter(Boolean)))
+  const [selLabel, setSelLabel] = useState('')
+  const [selColor, setSelColor] = useState('')
+  const [selSize, setSelSize] = useState('')
+  const matches = (r: VariantRow, l: string, c: string, s: string) =>
+    (labels.length === 0 || !l || r.label.trim() === l) &&
+    (colors.length === 0 || !c || r.color.trim() === c) &&
+    (sizes.length === 0 || !s || r.size.trim() === s)
+  const fullPick = rows.length > 0 &&
+    (labels.length === 0 || !!selLabel) && (colors.length === 0 || !!selColor) && (sizes.length === 0 || !!selSize)
+  const selVariant = fullPick ? rows.find(r => matches(r, selLabel, selColor, selSize)) ?? null : null
+  const comboExists = (l: string, c: string, s: string) => rows.some(r => matches(r, l, c, s))
+  const mto = form.madeToOrder === 'true'
+  const priceNum = parseFloat(selVariant?.priceOverride || form.price) || parseFloat(form.price) || 0
+  const sym = symbolFor((currency || 'GBP') as never) || ''
+  const listingImgs = form.images.map(u => u.trim()).filter(Boolean)
+  const gallery = Array.from(new Set([...(selVariant?.images ?? []), ...listingImgs]))
+  const [imgIdx, setImgIdx] = useState(0)
+  const shownIdx = Math.min(imgIdx, Math.max(0, gallery.length - 1))
+  const embed = videoEmbedUrl(form.videoUrl.trim())
+  const [showVideo, setShowVideo] = useState(false)
+  const pill = (active: boolean, dead: boolean): React.CSSProperties => ({
+    padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: dead ? 'not-allowed' : 'pointer',
+    border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+    background: active ? 'rgba(255,107,0,0.10)' : '#fff', color: dead ? '#b5b5b5' : active ? 'var(--accent)' : '#1a1a1a',
+    textDecoration: dead ? 'line-through' : 'none',
+  })
+  const pickRow = (title: string, opts: string[], sel: string, setSel: (v: string) => void, exists: (v: string) => boolean) => (
+    <div key={title}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#666', marginBottom: 6 }}>{title}{sel ? <span style={{ color: '#1a1a1a' }}> — {sel}</span> : ''}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {opts.map(o => {
+          const dead = !exists(o)
+          const v = rows.find(r => matches(r, title === 'Option' ? o : selLabel, title === 'Colour' ? o : selColor, title === 'Size' ? o : selSize))
+          return (
+            <button key={o} type="button" disabled={dead} onClick={() => { setSel(sel === o ? '' : o); setImgIdx(0); setShowVideo(false) }} style={pill(sel === o, dead)}>
+              {o}{title === 'Option' && v?.priceOverride ? ` · ${sym}${parseFloat(v.priceOverride).toFixed(2)}` : ''}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#fafafa', overflowY: 'auto' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#fff', borderBottom: '1px solid #e8e8e8', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span style={{ background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', padding: '4px 10px', borderRadius: 999 }}>PREVIEW</span>
+        <span style={{ fontSize: 13.5, color: '#444' }}>This is how buyers will see your listing. Buttons here are for show — nothing can be bought from a preview.</span>
+        <button type="button" onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: '1px solid #ddd', borderRadius: 999, padding: '7px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', color: '#1a1a1a' }}>Back to editing</button>
+        <button type="button" onClick={onPublish} disabled={!canPublish || saving} title={!canPublish ? 'Tick the Seller Rules confirmation on the final step first' : undefined}
+          style={{ background: !canPublish || saving ? '#d8d8d8' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 800, cursor: !canPublish || saving ? 'not-allowed' : 'pointer' }}>
+          {saving ? 'Saving...' : publishLabel}
+        </button>
+      </div>
+      {!canPublish && (
+        <div style={{ maxWidth: 1060, margin: '10px auto 0', padding: '0 24px', fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
+          To publish from here, first tick the Seller Rules confirmation on the final step.
+        </div>
+      )}
+      <div style={{ maxWidth: 1060, margin: '0 auto', padding: '22px 24px 60px', fontFamily: 'var(--font-body)', color: '#1a1a1a' }}>
+        <div style={{ fontSize: 12.5, color: '#888', marginBottom: 14 }}>VELOR / Shop / {form.category || 'Category'} / {form.name.trim() ? form.name.trim().slice(0, 40) : 'Your listing'}{form.name.trim().length > 40 ? '...' : ''}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'flex-start' }}>
+          <div style={{ flex: '1 1 380px', minWidth: 0, maxWidth: 520 }}>
+            {showVideo && embed ? (
+              <iframe src={embed} title="Listing video" allow="encrypted-media; picture-in-picture" allowFullScreen style={{ width: '100%', aspectRatio: '1', border: '1px solid #eee', borderRadius: 12, background: '#000' }} />
+            ) : gallery.length > 0 ? (
+              <img src={gallery[shownIdx]} alt={form.name || 'Listing photo'} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 12, border: '1px solid #eee', background: '#fff' }} />
+            ) : (
+              <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, border: '1.5px dashed #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Your photos appear here</div>
+            )}
+            {(gallery.length > 1 || embed) && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                {gallery.map((u, i) => (
+                  <img key={u} src={u} alt="" onClick={() => { setImgIdx(i); setShowVideo(false) }}
+                    style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: !showVideo && i === shownIdx ? '2px solid var(--accent)' : '1px solid #e2e2e2' }} />
+                ))}
+                {embed && (
+                  <button type="button" onClick={() => setShowVideo(true)} style={{ width: 56, height: 56, borderRadius: 8, cursor: 'pointer', border: showVideo ? '2px solid var(--accent)' : '1px solid #e2e2e2', background: '#111', color: '#fff', fontSize: 20 }}>▶</button>
+                )}
+              </div>
+            )}
+          </div>
+          <div style={{ flex: '1 1 340px', minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>{form.category || 'Category'}</div>
+            <h1 style={{ fontFamily: HALO.fontSerif, fontWeight: 600, fontSize: 22, lineHeight: 1.3, margin: '0 0 10px' }}>{form.name.trim() || 'Your listing title'}</h1>
+            <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 4 }}>{sym}{priceNum > 0 ? priceNum.toFixed(2) : '0.00'} <span style={{ fontSize: 13, fontWeight: 600, color: '#999' }}>{currency}</span></div>
+            <div style={{ fontSize: 11.5, color: '#999', marginBottom: 12 }}>Buyers abroad see this converted live to their own currency.</div>
+            {mto ? (
+              <div style={{ fontSize: 13.5, color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>Made to order — crafted when you buy{form.leadTimeDays ? `, ships in ~${form.leadTimeDays} days` : ''}</div>
+            ) : (
+              <div style={{ fontSize: 13.5, color: 'var(--green)', fontWeight: 600, marginBottom: 4 }}>In stock</div>
+            )}
+            {countryName && <div style={{ fontSize: 13, color: '#555', marginBottom: 14 }}>Dispatched from {countryName} · Shipping cost &amp; arrival estimate shown at checkout</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
+              {labels.length > 0 && pickRow('Option', labels, selLabel, setSelLabel, l => comboExists(l, selColor, selSize))}
+              {colors.length > 0 && pickRow('Colour', colors, selColor, setSelColor, c => comboExists(selLabel, c, selSize))}
+              {sizes.length > 0 && pickRow('Size', sizes, selSize, setSelSize, s => comboExists(selLabel, selColor, s))}
+              {rows.length > 0 && !selVariant && <div style={{ fontSize: 12, color: '#999' }}>Buyers pick a version before they can add to cart.</div>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#666' }}>Qty</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: 999, overflow: 'hidden' }}>
+                <span style={{ padding: '6px 13px', fontSize: 15, color: '#999' }}>-</span><span style={{ padding: '6px 6px', fontSize: 14, fontWeight: 700 }}>1</span><span style={{ padding: '6px 13px', fontSize: 15, color: '#999' }}>+</span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 360 }}>
+              <div style={{ background: 'var(--accent)', color: '#fff', textAlign: 'center', padding: '12px 0', borderRadius: 999, fontWeight: 800, fontSize: 14.5, opacity: rows.length > 0 && !selVariant ? 0.45 : 1 }}>Add to Cart</div>
+              <div style={{ border: '1.5px solid var(--accent)', color: 'var(--accent)', textAlign: 'center', padding: '11px 0', borderRadius: 999, fontWeight: 800, fontSize: 14.5, opacity: rows.length > 0 && !selVariant ? 0.45 : 1 }}>Buy Now</div>
+              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', fontSize: 12.5, color: '#777', marginTop: 2 }}>
+                <span>♡ Add to Wishlist</span><span>✉ Message Seller</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 16, borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '10px 0', margin: '18px 0 0', fontSize: 11.5, color: '#666', flexWrap: 'wrap' }}>
+              <span>Buyer protection — money held until delivery</span><span>Secure Stripe checkout</span><span>Verified seller</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 26, alignItems: 'flex-start' }}>
+          <div style={{ flex: '2 1 420px', background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '18px 20px' }}>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontSize: 18, margin: '0 0 8px' }}>Description</h2>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: '#333', whiteSpace: 'pre-wrap' }}>{form.description.trim() || 'Your description appears here.'}</div>
+            {form.sizeGuide.trim() && (
+              <div style={{ marginTop: 14, borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Size guide</div>
+                <div style={{ fontSize: 13, lineHeight: 1.6, color: '#444', whiteSpace: 'pre-wrap' }}>{form.sizeGuide.trim()}</div>
+              </div>
+            )}
+          </div>
+          <div style={{ flex: '1 1 280px', background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '18px 20px' }}>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontSize: 18, margin: '0 0 10px' }}>Details</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13, color: '#333' }}>
+              {form.materials.trim() && <div><strong>Materials:</strong> {form.materials.trim()}</div>}
+              {countryName && <div><strong>Origin:</strong> {countryName}</div>}
+              {form.isHandmade === 'true' && <div><strong>Handmade</strong> by the seller</div>}
+              {mto && <div><strong>Made to order</strong>{form.leadTimeDays ? ` — ~${form.leadTimeDays} day lead time` : ''}</div>}
+              {!form.materials.trim() && !countryName && form.isHandmade !== 'true' && <div style={{ color: '#999' }}>Materials and origin appear here.</div>}
+            </div>
+          </div>
+        </div>
+        {form.makerStory.trim() && (
+          <div style={{ marginTop: 20, background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '18px 20px' }}>
+            <h2 style={{ fontFamily: HALO.fontSerif, fontSize: 18, margin: '0 0 8px' }}>The story behind this piece</h2>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: '#333', whiteSpace: 'pre-wrap' }}>{form.makerStory.trim()}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const inputStyle = {
 width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.75)',
 border: '1px solid rgba(26,26,29,0.12)', borderRadius: '10px', color: 'var(--text)',
@@ -580,6 +743,8 @@ const [form, setForm] = useState(emptyForm)
 // flow as before this feature existed.
 const [hasVariants, setHasVariants] = useState(false)
 const [variantRows, setVariantRows] = useState<VariantRow[]>([])
+// Preview-before-submit overlay (final piece of the approved listing spec).
+const [previewOpen, setPreviewOpen] = useState(false)
 // Quick-grid builder inputs (sizes x colours -> generated option rows).
 const [matrixSizes, setMatrixSizes] = useState('')
 const [matrixColors, setMatrixColors] = useState('')
@@ -1605,6 +1770,11 @@ Back
 Next
 </button>
 )}
+{step === 5 && (
+<button type="button" onClick={() => setPreviewOpen(true)} style={{ padding: '11px 20px', background: 'transparent', color: 'var(--accent)', border: '1.5px solid var(--accent)', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}>
+Preview listing
+</button>
+)}
 <button type="submit" disabled={saving || !rulesAccepted} style={{ display: step === 5 ? 'inline-block' : 'none',
 padding: '11px 22px', background: saving || !rulesAccepted ? 'rgba(26,26,29,0.14)' : accentColor, color: isElevated ? '#000' : '#FFF4E8',
 border: 'none', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', letterSpacing: '0.03em',
@@ -1643,6 +1813,21 @@ boxShadow: saving || !rulesAccepted ? 'none' : `0 10px 26px ${accentColor}40`,
 </div>
 </div>
 </div>
+)}
+
+{previewOpen && showForm && (
+<ListingPreviewOverlay
+form={form}
+variantRows={variantRows}
+hasVariants={hasVariants}
+currency={form.currency || sellerCurrency}
+countryName={COUNTRIES.find(c => c.code === form.originCountry)?.name ?? ''}
+canPublish={rulesAccepted}
+saving={saving}
+publishLabel={editProduct ? 'Save Changes' : 'Publish listing'}
+onClose={() => setPreviewOpen(false)}
+onPublish={() => { setPreviewOpen(false); handleSubmit({ preventDefault: () => {} } as React.FormEvent) }}
+/>
 )}
 
 {certProduct && <CertificatePanel product={certProduct} onClose={() => { setCertProduct(null); loadProducts() }} />}
