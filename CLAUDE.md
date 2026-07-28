@@ -1,3 +1,34 @@
+# TOP PRIORITY -- GLOBAL SHIPPING (added 2026-07-28) -- READ THIS FIRST, SUPERSEDES ALL OTHER WORK
+
+William's explicit directive (verbatim): "global shipping non negotiable" -- full, cheap, worldwide shipping coverage for buyers is a hard requirement, not an aspiration. This is the single highest-priority item in this file until resolved. Do not start other work before addressing this unless William says otherwise. William said this is late-night/parked for now -- pick it up first next session.
+
+## The problem
+- A seller ("The Eastern Wisdom", China-origin) complained that a light (~200g) parcel was quoted GBP 23-24 shipping to a UK buyer -- unusably expensive and drives buyers away.
+- Root cause: Velor's only live shipping provider is Shippo. Shippo's carrier catalog (both wholesale "Shippo Accounts" and user-held "Your Accounts" bring-your-own-carrier tabs) has NO cheap China-origin economy/postal option -- only DHL Express / FedEx / UPS / CouriersPlease for the generic "Multiple Countries" tier, all of which price a light parcel at Western-express rates regardless of actual weight.
+- William challenged this with his own consumer experience: he pays about GBP 3.50 shipping via CJPacket for a ~200g China-origin item. This is real and correctly reported, but CJPacket itself is NOT available to Velor -- it is CJ Dropshipping's own proprietary/in-house consolidator brand, resold only to people ordering through cjdropshipping.com. Confirmed via tracking-aggregator sites (AfterShip etc.) that list it purely as a trackable carrier name, not a bookable third-party account/API.
+- BUT the underlying category of carrier CJPacket is built on top of is real and does generalize: Yanwen, 4PX, and China Post/ePacket are genuine, widely-used China-origin economy consolidators used across the dropshipping/ecommerce industry -- NOT proprietary to CJ. The problem is access, not existence.
+
+## What's confirmed so far (2026-07-28 research)
+- Checked Shippo's full carrier catalog directly -- no Yanwen / 4PX / China Post / ePacket / YunExpress.
+- Checked EasyPost's full carrier catalog directly (easypost.com/carriers) -- same result, no China-origin economy carriers listed.
+- Yanwen's own materials describe access as mediated through marketplace/platform partnerships (Alibaba, Amazon, eBay sellers, Walmart, DHL, UPS, USPS, Royal Mail) rather than a self-serve merchant API open to an arbitrary third-party marketplace like Velor.
+- One unconfirmed but promising lead: Easyship (easyship.com -- a DIFFERENT company from EasyPost, easy to confuse the two) advertises 550+ couriers including SF Express (a China-origin carrier), a real shipping API, and a free tier with no minimum volume commitment. Their carrier list page did not explicitly confirm Yanwen/4PX/China Post/ePacket in the visible partial list -- this needs a developer signup to verify for real before treating it as a solution.
+- No other China-origin-specific carrier aggregator or direct-to-consolidator API integration has been investigated yet (e.g. a fully custom/direct integration with Yanwen or 4PX's own merchant API, bypassing aggregators entirely, has not been researched).
+
+## What needs doing next session (in priority order) -- NON-NEGOTIABLE per William
+1. Sign up for Easyship developer/API access and pull their FULL carrier list -- confirm or rule out Yanwen, 4PX, China Post/ePacket, YunExpress specifically (not just SF Express).
+2. If Easyship (or any alternative) has a real China-origin economy carrier: get sample live rate quotes for a realistic light parcel (~180-200g) from a China origin to a UK/US/EU destination, and compare directly against Shippo's current quote for the identical parcel -- confirm the price gap is actually closed before building anything.
+3. If confirmed viable, design how a second shipping provider plugs into the existing architecture (app/api/shipping/rates/route.ts currently calls Shippo only) -- likely: route rate requests to Easyship (or whichever provider wins) specifically for China-origin sellers/listings, keep Shippo for everyone else, and merge results in the same response shape the checkout page already consumes.
+4. If no aggregator pans out, evaluate a direct/custom integration with Yanwen or 4PX's own merchant API as a fallback (more engineering effort, not yet scoped).
+5. In parallel, as a stopgap (NOT a replacement -- William wants the real global system, not just a workaround) sellers like "The Eastern Wisdom" can use the existing SellerShippingProfile.internationalFlatRateGBP override to set a more realistic flat rate while the real integration is built -- not yet actioned, needs seller outreach.
+6. Once a cheap China-origin lane is wired up and verified, extend TIER_A_ORIGINS / the equivalent origin-coverage logic so it's actually live for checkout, and document the change in docs/PAYOUTS.md per the established pattern.
+
+## Status
+NOT STARTED (research/scoping only, as of 2026-07-28). This is queued as the TOP PRIORITY for the next working session per William's explicit instruction -- pick this up first, before anything else in this file.
+
+---
+
+
 # Velor Marketplace — Working Memory
 
 _Auto-loaded each session. Rewritten 2026-07-08 as a clean, current file. The
