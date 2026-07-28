@@ -63,6 +63,24 @@ interface Product {
   originCountry?: string | null
   specialities?: string[]
   sellerStats?: SellerStats
+  // 2026-07-28 Amazon-comparison pass: real per-product social proof from
+  // the API (OrderItem / WishlistItem counts) -- rendered only when > 0.
+  soldCount?: number
+  wishlistCount?: number
+}
+
+// ISO2 -> flag emoji (pure codepoint math, no assets) and English country
+// name via Intl -- used by the origin block. Only ever called with a
+// 2-letter code; anything else is skipped upstream rather than guessed.
+function flagEmoji(code: string): string {
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)))
+}
+function countryNameFromCode(code: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase()) || code
+  } catch {
+    return code
+  }
 }
 
 import { addToCart as addToSharedCart } from '@/lib/cart'
@@ -247,6 +265,7 @@ export default function ProductPageClient() {
   const [contactSent, setContactSent] = useState(false)
   const [contactError, setContactError] = useState('')
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
   const [sellerRail, setSellerRail] = useState<RailItem[]>([])
   const [relatedRail, setRelatedRail] = useState<RailItem[]>([])
   const [recentlyViewed, setRecentlyViewed] = useState<RailItem[]>([])
@@ -585,11 +604,23 @@ export default function ProductPageClient() {
             </div>
           )}
 
-          {(product.avgRating ?? 0) != null && product.reviewCount > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px', fontSize: '13px' }}>
-              <span style={{ color: 'var(--accent)', fontSize: '14px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
-              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
-              <span style={{ color: 'var(--muted)' }}>({product.reviewCount} reviews)</span>
+          {(product.reviewCount > 0 || (product.soldCount ?? 0) > 0 || (product.wishlistCount ?? 0) > 0) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px', fontSize: '13px', flexWrap: 'wrap' }}>
+              {product.reviewCount > 0 && (
+                <>
+                  <span style={{ color: 'var(--accent)', fontSize: '14px' }}>{'★'.repeat(Math.round(product.avgRating ?? 0))}</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{product.avgRating ?? 0}</span>
+                  <span style={{ color: 'var(--muted)' }}>({product.reviewCount} reviews)</span>
+                </>
+              )}
+              {/* Real social proof only -- both counts come from live order/
+                  wishlist rows and hide entirely at zero. */}
+              {(product.soldCount ?? 0) > 0 && (
+                <span style={{ color: 'var(--muted)' }}>{product.reviewCount > 0 ? '· ' : ''}{product.soldCount} sold</span>
+              )}
+              {(product.wishlistCount ?? 0) > 0 && (
+                <span style={{ color: 'var(--muted)' }}>· ♡ {product.wishlistCount} wishlisted</span>
+              )}
             </div>
           )}
 
@@ -716,9 +747,122 @@ export default function ProductPageClient() {
               <span style={{ fontSize: '15px' }}>&#9993;</span>
               Message Seller
             </button>
+            {/* Request customisation -- artisan-marketplace move Amazon has no
+                answer to: reuses the existing seller-messaging modal with the
+                message prefilled, nothing new server-side. */}
+            <button
+              onClick={() => {
+                if (isPreviewOnly) return
+                if (!session) {
+                  router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+                  return
+                }
+                setContactMessage(`Hi, I'd like to ask about a custom version of "${product.title}". `)
+                setShowContactModal(true)
+                setContactSent(false)
+                setContactError('')
+              }}
+              aria-label="Request customisation"
+              className="velor-pdp-quietlink"
+            >
+              <span style={{ fontSize: '15px' }}>&#9998;</span>
+              Request Customisation
+            </button>
+            <button
+              onClick={async () => {
+                const url = `https://velorcommerce.store/shop/${productId}`
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ title: product.title, url })
+                    return
+                  }
+                } catch { /* user dismissed the share sheet -- fall through */ }
+                try {
+                  await navigator.clipboard.writeText(url)
+                  setShareCopied(true)
+                  setTimeout(() => setShareCopied(false), 2000)
+                } catch {}
+              }}
+              aria-label="Share this listing"
+              className="velor-pdp-quietlink"
+              style={shareCopied ? { color: 'var(--green)' } : undefined}
+            >
+              <span style={{ fontSize: '15px' }}>&#8683;</span>
+              {shareCopied ? 'Link copied!' : 'Share'}
+            </button>
+          </div>
+
+          {/* Payment trust line -- text-only (honest, no mock card art);
+              everything listed is genuinely supported by the Stripe checkout. */}
+          <div style={{ fontSize: '11.5px', color: 'var(--muted)', marginBottom: '10px', lineHeight: 1.5 }}>
+            🔒 Secure checkout — Visa · Mastercard · Amex · Apple Pay · Google Pay, processed by Stripe
+          </div>
+
+          {/* Origin block -- ties the PDP into Velor's shop-by-origin identity
+              (flag strip, header dropdown, /shop?origin=CODE). Rendered only
+              when the product carries a real 2-letter origin code. */}
+          {product.originCountry && product.originCountry.trim().length === 2 && (
+            <Link
+              href={`/shop?origin=${product.originCountry.trim().toUpperCase()}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text)', textDecoration: 'none', border: '1px solid var(--border)', borderRadius: '999px', padding: '7px 14px', marginBottom: '6px' }}
+            >
+              <span style={{ fontSize: '16px' }}>{flagEmoji(product.originCountry.trim())}</span>
+              Made in {countryNameFromCode(product.originCountry.trim())}
+              <span style={{ color: 'var(--accent)' }}>Explore more →</span>
+            </Link>
+          )}
+
+          {/* Report listing -- marketplace hygiene; routed to Velor (never the
+              seller) via the customer-service inbox. */}
+          <div style={{ marginTop: '4px' }}>
+            <a
+              href={`mailto:customerservice@velorcommerce.co.uk?subject=${encodeURIComponent(`Report listing: ${product.title} (${productId})`)}`}
+              style={{ fontSize: '11.5px', color: 'var(--muted)', textDecoration: 'underline' }}
+            >
+              Report this listing
+            </a>
           </div>
         </div>
       </div>
+
+      {/* Product JSON-LD (2026-07-28): machine-readable listing data for
+          search-engine rich results (price, availability, rating). Every
+          value mirrors what the page itself renders from the API -- nothing
+          is invented; aggregateRating is emitted only when real reviews
+          exist. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.title,
+            image: product.images,
+            description: product.description,
+            sku: product.id,
+            ...(product.seller?.storeName ? { brand: { '@type': 'Brand', name: product.seller.storeName } } : {}),
+            ...(product.materials ? { material: product.materials } : {}),
+            ...(product.originCountry ? { countryOfOrigin: product.originCountry } : {}),
+            offers: {
+              '@type': 'Offer',
+              url: `https://velorcommerce.store/shop/${product.id}`,
+              priceCurrency: 'GBP',
+              price: (onSale ? (product.discountedPrice as number) : currentPrice).toFixed(2),
+              availability: currentStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+              itemCondition: 'https://schema.org/NewCondition',
+            },
+            ...(product.reviewCount > 0
+              ? {
+                  aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: product.avgRating ?? 0,
+                    reviewCount: product.reviewCount,
+                  },
+                }
+              : {}),
+          }),
+        }}
+      />
 
       {/* Full-width info row (2026-07-25, William: "theres a lot of unneccassary
           waisted space on the page we need to utilize it"). The trust/delivery

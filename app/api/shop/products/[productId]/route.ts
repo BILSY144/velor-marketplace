@@ -66,7 +66,12 @@ export async function GET(
   // sellerAvgRating/sellerReviewCount aggregate Reviews across the seller's
   // whole catalogue, matching what a buyer would find by visiting the actual
   // storefront at /seller/[sellerId].
-  const [totalSalesAgg, sellerReviewAgg] = await Promise.all([
+  // productSoldAgg + wishlistCount (2026-07-28 PDP additions, William-approved
+  // Amazon-comparison pass): per-PRODUCT social proof under the same LAW #1
+  // rule as everything else here -- computed live from real OrderItem /
+  // WishlistItem rows, never fabricated; the client renders them only when
+  // they are genuinely > 0.
+  const [totalSalesAgg, sellerReviewAgg, productSoldAgg, wishlistCount] = await Promise.all([
     prisma.orderItem.aggregate({
       _sum: { quantity: true },
       where: {
@@ -79,6 +84,14 @@ export async function GET(
       _count: { _all: true },
       where: { product: { sellerId: product.seller.id } },
     }),
+    prisma.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        productId: product.id,
+        order: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } },
+      },
+    }),
+    prisma.wishlistItem.count({ where: { productId: product.id } }),
   ])
 
   const sellerStats = {
@@ -101,5 +114,7 @@ export async function GET(
     discountedPrice: discount?.discountedPriceGBP ?? null,
     percentOff: discount?.percentOff ?? null,
     sellerStats,
+    soldCount: productSoldAgg._sum.quantity ?? 0,
+    wishlistCount,
   })
 }
