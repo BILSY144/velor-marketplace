@@ -44,7 +44,7 @@ export async function GET() {
           createdAt: true,
           variants: {
             orderBy: { createdAt: 'asc' },
-            select: { id: true, label: true, color: true, size: true, stock: true, priceOverride: true, sku: true },
+            select: { id: true, label: true, color: true, size: true, images: true, stock: true, priceOverride: true, sku: true },
           },
           _count: { select: { orderItems: true } },
         },
@@ -67,6 +67,7 @@ function isValidImage(u: unknown): u is string {
 
 interface VariantBody {
   label?: string | null
+  images?: string[]
   color?: string | null
   size?: string | null
   stock?: number
@@ -146,10 +147,13 @@ function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error:
     if (priceOverride !== null && (isNaN(priceOverride) || priceOverride <= 0)) {
       return { error: 'Variant price override must be a positive number.' }
     }
+    const rawImgs = Array.isArray((v as VariantBody)?.images) ? ((v as VariantBody).images as string[]) : []
+    const images = rawImgs.filter((u) => typeof u === 'string' && isValidImage(u)).slice(0, 1)
     out.push({
       label: label || null,
       color: color || null,
       size: size || null,
+      images,
       stock,
       priceOverride,
       sku: typeof (v as VariantBody)?.sku === 'string' ? (v as VariantBody).sku!.trim().slice(0, 60) || null : null,
@@ -354,7 +358,7 @@ export async function POST(req: NextRequest) {
       leadTimeDays: madeToOrder ? parsedLeadTime : null,
       sizeGuide: sizeGuide ? String(sizeGuide).trim().slice(0, 4000) || null : null,
       ...(variants.length > 0
-        ? { variants: { create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        ? { variants: { create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })
@@ -527,7 +531,7 @@ export async function PATCH(req: NextRequest) {
       // treats a since-removed variant as no longer available rather than
       // erroring the whole checkout.
       ...(variantsProvided
-        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })

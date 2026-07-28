@@ -322,6 +322,10 @@ export default function ProductPageClient() {
   // the flat button list.
   const [selColor, setSelColor] = useState<string | null>(null)
   const [selSize, setSelSize] = useState<string | null>(null)
+  // When the picked option carries its own photo, the gallery shows it
+  // until the buyer taps a thumbnail themselves.
+  const [variantImageActive, setVariantImageActive] = useState(false)
+  useEffect(() => { if (selectedVariant?.image) setVariantImageActive(true) }, [selectedVariant?.id])
   const [qty, setQty] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
@@ -639,7 +643,7 @@ export default function ProductPageClient() {
             aria-label="Open full-size image"
             style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
-            <img src={images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src={variantImageActive && selectedVariant?.image ? selectedVariant.image : images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
                 {product.percentOff}% OFF
@@ -672,7 +676,7 @@ export default function ProductPageClient() {
             {images.map((img, i) => (
               <div
                 key={i}
-                onClick={() => setMainImage(i)}
+                onClick={() => { setMainImage(i); setVariantImageActive(false) }}
                 style={{
                   width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer',
                   border: mainImage === i ? '2px solid var(--accent)' : '2px solid var(--border)',
@@ -1145,9 +1149,11 @@ export default function ProductPageClient() {
             </div>
           )}
 
-          {product.isHandmade && (
+          {(product.isHandmade || product.makerStory) && (
             <div style={{ padding: '14px', background: 'var(--surface)', borderRadius: '10px', border: '1px solid var(--accent)', fontSize: '13px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '8px' }}>Handmade / Artisan-made</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '8px' }}>
+                {product.isHandmade ? 'Handmade / Artisan-made' : 'The story behind this piece'}
+              </div>
               {product.makerStory && <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.5 }}>{product.makerStory}</p>}
             </div>
           )}

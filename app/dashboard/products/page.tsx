@@ -160,7 +160,7 @@ const COUNTRIES = [
 // prisma/schema.prisma. tempId is a client-only key for React list
 // rendering/removal before the row has a real database id.
 interface VariantRow {
-tempId: string; label: string; color: string; size: string; stock: string; priceOverride: string;
+tempId: string; label: string; color: string; size: string; stock: string; priceOverride: string; image: string;
 }
 
 interface Product {
@@ -170,7 +170,7 @@ weightGrams: number | null; lengthCm: number | null; widthCm: number | null; hei
 hsCode: string | null; originCountry: string | null;
 isHandmade: boolean; makerStory: string | null;
 materials: string | null; requiresCertificate: boolean;
-variants?: { id: string; label: string | null; color: string | null; size: string | null; stock: number; priceOverride: number | null; sku: string | null }[];
+variants?: { id: string; label: string | null; color: string | null; size: string | null; images?: string[]; stock: number; priceOverride: number | null; sku: string | null }[];
 videoUrl?: string | null; madeToOrder?: boolean; leadTimeDays?: number | null; sizeGuide?: string | null;
 }
 
@@ -238,6 +238,28 @@ img.src = reader.result as string
 reader.onerror = () => reject(new Error('Could not read this file.'))
 reader.readAsDataURL(file)
 })
+}
+
+// Compact per-option photo uploader (2026-07-28: each option is its own
+// little product -- "Red" shows the red photo on the buyer's page).
+function VariantPhotoBox({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+const [busy, setBusy] = useState(false)
+return (
+<label htmlFor={id} title={value ? 'Change photo' : 'Add a photo of this option'} style={{
+width: 56, height: 56, borderRadius: 10, flexShrink: 0, cursor: 'pointer',
+border: value ? '1px solid var(--border)' : '1px dashed var(--border)', background: 'var(--bg)',
+display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+}}>
+{value ? <img src={value} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+: <span style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1 }}>{busy ? '...' : '+'}</span>}
+<input id={id} type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+const file = e.target.files?.[0]; e.target.value = ''
+if (!file) return
+setBusy(true)
+try { onChange(await resizeAndCompressImage(file)) } catch {} finally { setBusy(false) }
+}} />
+</label>
+)
 }
 
 function ImageUploadBox({
@@ -566,7 +588,7 @@ setLoading(false)
 }
 
 function newVariantRow(): VariantRow {
-return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, label: '', color: '', size: '', stock: '', priceOverride: '' }
+return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, label: '', color: '', size: '', stock: '', priceOverride: '', image: '' }
 }
 
 function openNew() {
@@ -626,6 +648,7 @@ existingVariants.length > 0
 ? existingVariants.map((v) => ({
 tempId: v.id,
 label: v.label ?? '',
+image: v.images?.[0] ?? '',
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -668,6 +691,7 @@ duplicatedVariants.length > 0
 ? duplicatedVariants.map((v) => ({
 tempId: newVariantRow().tempId,
 label: v.label ?? '',
+image: v.images?.[0] ?? '',
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -769,7 +793,7 @@ return
 // app/api/dashboard/products/route.ts's normalizeVariants -- gives an
 // immediate error instead of waiting on a round trip, but the server
 // check is the real backstop since this form isn't the only caller.
-let variantsPayload: { label: string | null; color: string | null; size: string | null; stock: number; priceOverride: number | null }[] | undefined
+let variantsPayload: { label: string | null; color: string | null; size: string | null; images: string[]; stock: number; priceOverride: number | null }[] | undefined
 if (hasVariants) {
 const seenKeys = new Set<string>()
 for (const row of variantRows) {
@@ -795,6 +819,7 @@ variantsPayload = variantRows.map((row) => ({
 label: row.label.trim() || null,
 color: row.color.trim() || null,
 size: row.size.trim() || null,
+images: row.image ? [row.image] : [],
 stock: Math.max(0, parseInt(row.stock, 10) || 0),
 priceOverride: row.priceOverride.trim() ? parseFloat(row.priceOverride) : null,
 }))
@@ -1103,77 +1128,47 @@ Generate grid
 Creates a row for every size &times; colour combination (e.g. 4 sizes &times; 3 colours = 12 rows) — then just fill in the stock for each.
 </div>
 </div>
-{variantRows.map((row, idx) => (
+{variantRows.map((row, idx) => {
+const upd = (patch: Partial<VariantRow>) => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], ...patch }
+setVariantRows(next)
+}
+const optionTitle = [row.label.trim(), row.color.trim(), row.size.trim()].filter(Boolean).join(' · ') || `Option ${idx + 1}`
+return (
 <div key={row.tempId} style={{
-display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 80px 100px 32px', gap: '8px', alignItems: 'center',
+border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)', padding: '12px',
+display: 'flex', flexDirection: 'column', gap: '10px',
 }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+<VariantPhotoBox id={`variant-photo-${row.tempId}`} value={row.image} onChange={(v) => upd({ image: v })} />
+<div style={{ flex: 1, minWidth: 0 }}>
+<div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>{optionTitle}</div>
 <input
 style={inputStyle}
-placeholder='Option name (e.g. "Dragon design")'
+placeholder='Option name — "Dragon design", "Lavender", "Set of 3"...'
 value={row.label}
-onChange={e => {
-const next = [...variantRows]
-next[idx] = { ...next[idx], label: e.target.value }
-setVariantRows(next)
-}}
+onChange={e => upd({ label: e.target.value })}
 />
-<input
-style={inputStyle}
-placeholder="Colour (optional)"
-value={row.color}
-onChange={e => {
-const next = [...variantRows]
-next[idx] = { ...next[idx], color: e.target.value }
-setVariantRows(next)
-}}
-/>
-<input
-style={inputStyle}
-placeholder="Size (optional)"
-value={row.size}
-onChange={e => {
-const next = [...variantRows]
-next[idx] = { ...next[idx], size: e.target.value }
-setVariantRows(next)
-}}
-/>
-<input
-style={inputStyle}
-type="number"
-placeholder="Stock"
-value={row.stock}
-onChange={e => {
-const next = [...variantRows]
-next[idx] = { ...next[idx], stock: e.target.value }
-setVariantRows(next)
-}}
-/>
-<input
-style={inputStyle}
-type="number"
-step="0.01"
-placeholder="Price"
-value={row.priceOverride}
-onChange={e => {
-const next = [...variantRows]
-next[idx] = { ...next[idx], priceOverride: e.target.value }
-setVariantRows(next)
-}}
-/>
+</div>
 <button
 type="button"
 onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))}
-style={{
-background: 'none', border: '1px solid var(--border)', borderRadius: 6,
-width: 32, height: 32, cursor: 'pointer', color: 'var(--muted)', fontSize: '16px', lineHeight: 1,
-}}
-aria-label="Remove variant"
-title="Remove variant"
+style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--muted)', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}
+aria-label="Remove option" title="Remove option"
 >
 &times;
 </button>
 </div>
-))}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 110px', gap: '8px' }}>
+<input style={inputStyle} placeholder="Colour (optional)" value={row.color} onChange={e => upd({ color: e.target.value })} />
+<input style={inputStyle} placeholder="Size (optional)" value={row.size} onChange={e => upd({ size: e.target.value })} />
+<input style={inputStyle} type="number" placeholder="Stock" value={row.stock} onChange={e => upd({ stock: e.target.value })} />
+<input style={inputStyle} type="number" step="0.01" placeholder="Price" value={row.priceOverride} onChange={e => upd({ priceOverride: e.target.value })} />
+</div>
+</div>
+)
+})}
 <button
 type="button"
 onClick={() => setVariantRows([...variantRows, newVariantRow()])}
@@ -1263,18 +1258,17 @@ onChange={(e) => set('isHandmade', e.target.checked ? 'true' : '')}
 />
 This is a handmade or artisan-made product
 </label>
-{form.isHandmade === 'true' && (
-<div style={{ marginTop: '10px' }}>
-<label style={labelStyle}>Maker &amp; origin story (optional)</label>
+</div>
+
+<div style={{ marginTop: '16px' }}>
+<label style={labelStyle}>The story behind this piece (optional — but stories sell)</label>
 <textarea
-style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' as const }}
+style={{ ...inputStyle, minHeight: '90px', resize: 'vertical' as const }}
 value={form.makerStory}
 onChange={(e) => set('makerStory', e.target.value)}
-placeholder="Who made this, where, and what tradition does it come from? Shown to buyers on the product page."
+placeholder="Who made this, where, and what tradition does it come from? Buyers on Velor come for exactly this — it's shown on your product page."
 maxLength={2000}
 />
-</div>
-)}
 </div>
 
 {/* Materials & regulated-material declaration — see /legal/seller-rules */}
