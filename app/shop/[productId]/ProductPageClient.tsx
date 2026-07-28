@@ -760,8 +760,8 @@ export default function ProductPageClient() {
 
           {(product.variants && product.variants.length > 0) && (() => {
             const vs = product.variants
-            const colors = [...new Set(vs.map(v => v.color).filter(Boolean))] as string[]
-            const sizes = [...new Set(vs.map(v => v.size).filter(Boolean))] as string[]
+            const colors = Array.from(new Set(vs.map(v => v.color).filter(Boolean))) as string[]
+            const sizes = Array.from(new Set(vs.map(v => v.size).filter(Boolean))) as string[]
             const dimensional = colors.length > 0 || sizes.length > 0
             const pillStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
               padding: '7px 15px', borderRadius: '999px', fontSize: '13px', fontWeight: 600,
