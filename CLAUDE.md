@@ -21,6 +21,19 @@ William's directive this session, verbatim gist: Velor takes on the shipping hea
 
 Also fixed same session (found via the homepage lift not firing): legacy category 'Toys & Games' was missing from LEGACY_CATEGORY_MIGRATION, so relisted products carrying it matched no reel -- added to both maps (0ebf5db), migration renames rows on every deploy. NOTE: Vercel dropped one GitHub push webhook this session (17fe9e8 never deployed until an empty retrigger commit) -- if a push gets no deployment within ~5 min, push an empty commit.
 
+## EASYSHIP HOOKUP -- CODE COMPLETE + DEPLOYED 2026-07-28 (commit b01471f, READY); ACTIVATION RUNBOOK
+
+Built and deployed dormant (no-op until env vars exist). Components: lib/easyship.ts (rates + 2-step label purchase), dual-provider attemptAutoLabelPurchase (cheapest same-currency wins, cross-provider fallback, ALL tracking numbers registered with Shippo /tracks so the one delivery webhook drives escrow for both providers), Shipment.labelProvider + easyshipShipmentId columns, app/api/webhooks/easyship (async label URL backfill; HMAC once EASYSHIP_WEBHOOK_SECRET set), Easyship rates merged into buyer checkout quotes for enabled origins, and read-only probe GET /api/admin/easyship-check?origin[EQUALS]CC (Bearer ADMIN_SECRET).
+
+ACTIVATION SEQUENCE (in order, per lane):
+1. William: Easyship dashboard -> API connection "Velor Marketplace" -> copy Access Token -> Vercel env EASYSHIP_API_KEY (Prod+Preview, Sensitive). NOT DONE YET.
+2. Probe: /api/admin/easyship-check?origin[EQUALS]GB (and per candidate origin) -- verifies key + API shapes + real rates. Item-level customs field names were NOT fully verifiable from their docs; the probe's 422 messages name any wrong field -- fix lib/easyship.ts items mapping if needed.
+3. William: add business debit card in Easyship Settings -> Payment Methods (one-time; labels then charge automatically -- William explicitly does card entry himself). Required before any REAL label purchase.
+4. Set EASYSHIP_ORIGINS in Vercel (comma ISO codes, e.g. "GB") -- lanes switch on without deploys. Start GB, compare probe rates vs Shippo, then expand origin by origin toward William's "all countries possible" directive (Easyship Global Accounts: one account, many origins, GBP rates; signup ship-from list showed dozens of countries).
+5. Configure Easyship webhook (dashboard) -> https://velorcommerce.store/api/webhooks/easyship + set EASYSHIP_WEBHOOK_SECRET in Vercel.
+6. E2E proof per lane before calling it live (real order or controlled test), per the every-lane-ends-in-a-label standing directive.
+(replace [EQUALS] with the equals sign -- table-safe encoding)
+
 Nothing on this list may be silently dropped. If a future session finds an item stale, correct THIS table with evidence, per LAW #1/#3.
 
 **STANDING DIRECTIVE (William, 2026-07-28, verbatim: "every set up we do, i want a label generated for the seller ok. thats our system"):** every shipping origin/lane Velor brings online MUST be wired into the auto-label path -- label purchased at payment_intent.succeeded and emailed to the seller, who only prints and ships. Rate quoting alone does NOT complete a lane. Tier B (self-ship + reimburse) is a temporary state for lanes not yet wired, never the end state. This is Velor's differentiator vs other marketplaces; treat any new shipping integration (Easyship, YunExpress, carrier accounts) as incomplete until its label generation is proven live.
