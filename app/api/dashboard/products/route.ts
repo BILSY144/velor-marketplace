@@ -148,7 +148,9 @@ function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error:
       return { error: 'Variant price override must be a positive number.' }
     }
     const rawImgs = Array.isArray((v as VariantBody)?.images) ? ((v as VariantBody).images as string[]) : []
-    const images = rawImgs.filter((u) => typeof u === 'string' && isValidImage(u)).slice(0, 1)
+    // Cap 6 photos per option (William, 2026-07-28: multiple photos per
+    // version -- "make it up to 6"). Mirrors MAX_VARIANT_IMAGES in the form.
+    const images = rawImgs.filter((u) => typeof u === 'string' && isValidImage(u)).slice(0, 6)
     out.push({
       label: label || null,
       color: color || null,

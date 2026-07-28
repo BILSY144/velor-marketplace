@@ -129,6 +129,10 @@ export async function GET(
       price: v.priceOverride ?? product.price,
       stock: v.stock,
       image: v.images[0] ?? null,
+      // Full photo set for this option (2026-07-28, William: up to 6 photos
+      // per version) -- the PDP leads the gallery with these when the buyer
+      // picks this option. `image` above stays for cart-line thumbnails.
+      images: v.images,
     })),
     avgRating: Math.round(avgRating * 10) / 10,
     discountedPrice: discount?.discountedPriceGBP ?? null,

@@ -160,8 +160,13 @@ const COUNTRIES = [
 // prisma/schema.prisma. tempId is a client-only key for React list
 // rendering/removal before the row has a real database id.
 interface VariantRow {
-tempId: string; label: string; color: string; size: string; stock: string; priceOverride: string; image: string;
+tempId: string; label: string; color: string; size: string; stock: string; priceOverride: string; images: string[];
 }
+
+// Photos allowed per version/option (William, 2026-07-28: "make it up to 6
+// but instead of having 6 boxes taking up space visually, just add a plus
+// sign so they can add more if they want to").
+const MAX_VARIANT_IMAGES = 6
 
 interface Product {
 id: string; name: string; description: string; price: number; stock: number;
@@ -249,25 +254,50 @@ if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`
 return null
 }
 
-// Compact per-option photo uploader (2026-07-28: each option is its own
-// little product -- "Red" shows the red photo on the buyer's page).
-function VariantPhotoBox({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+// Per-option photo strip (2026-07-28: each option is its own little
+// product -- "Red" shows the red photos on the buyer's page). Up to
+// MAX_VARIANT_IMAGES photos per version: uploaded photos render as small
+// thumbnails with a remove overlay, and a single "+" box adds the next one
+// -- never a row of empty boxes taking up space (William's exact ask).
+function VariantPhotoStrip({ id, images, onChange }: { id: string; images: string[]; onChange: (v: string[]) => void }) {
 const [busy, setBusy] = useState(false)
+const boxStyle = {
+width: 56, height: 56, borderRadius: 10, flexShrink: 0 as const,
+display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' as const,
+}
 return (
-<label htmlFor={id} title={value ? 'Change photo' : 'Add a photo of this option'} style={{
-width: 56, height: 56, borderRadius: 10, flexShrink: 0, cursor: 'pointer',
-border: value ? '1px solid var(--border)' : '1px dashed var(--border)', background: 'var(--bg)',
-display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, flexShrink: 0, maxWidth: 190 }}>
+{images.map((img, i) => (
+<div key={i} style={{ ...boxStyle, position: 'relative', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+<img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+<button
+type="button"
+onClick={() => onChange(images.filter((_, j) => j !== i))}
+aria-label="Remove photo" title="Remove photo"
+style={{
+position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: 999,
+background: 'rgba(26,26,29,0.72)', color: '#fff', border: 'none', cursor: 'pointer',
+fontSize: 10, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+}}
+>
+&times;
+</button>
+</div>
+))}
+{images.length < MAX_VARIANT_IMAGES && (
+<label htmlFor={id} title={images.length === 0 ? 'Add a photo of this option' : 'Add another photo'} style={{
+...boxStyle, cursor: 'pointer', border: '1px dashed var(--border)', background: 'var(--bg)',
 }}>
-{value ? <img src={value} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-: <span style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1 }}>{busy ? '...' : '+'}</span>}
+<span style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1 }}>{busy ? '...' : '+'}</span>
 <input id={id} type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
 const file = e.target.files?.[0]; e.target.value = ''
 if (!file) return
 setBusy(true)
-try { onChange(await resizeAndCompressImage(file)) } catch {} finally { setBusy(false) }
+try { onChange([...images, await resizeAndCompressImage(file)].slice(0, MAX_VARIANT_IMAGES)) } catch {} finally { setBusy(false) }
 }} />
 </label>
+)}
+</div>
 )
 }
 
@@ -602,7 +632,7 @@ setLoading(false)
 }
 
 function newVariantRow(): VariantRow {
-return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, label: '', color: '', size: '', stock: '', priceOverride: '', image: '' }
+return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, label: '', color: '', size: '', stock: '', priceOverride: '', images: [] }
 }
 
 function openNew() {
@@ -618,7 +648,12 @@ const d = JSON.parse(raw)
 if (d && d.form && (d.form.name || d.form.description)) {
 setForm({ ...emptyForm, ...d.form, currency: d.form.currency || sellerCurrency })
 setHasVariants(!!d.hasVariants)
-setVariantRows(Array.isArray(d.variantRows) ? d.variantRows : [])
+// Older drafts saved a single `image` string per row -- migrate to the
+// images[] shape so a restored draft never loses the seller's photo.
+setVariantRows(Array.isArray(d.variantRows) ? d.variantRows.map((r: VariantRow & { image?: string }) => ({
+...newVariantRow(), ...r,
+images: Array.isArray(r.images) ? r.images.slice(0, MAX_VARIANT_IMAGES) : (r.image ? [r.image] : []),
+})) : [])
 setRulesAccepted(false)
 setError('')
 setDraftRestored(true)
@@ -667,7 +702,7 @@ existingVariants.length > 0
 ? existingVariants.map((v) => ({
 tempId: v.id,
 label: v.label ?? '',
-image: v.images?.[0] ?? '',
+images: (v.images ?? []).slice(0, MAX_VARIANT_IMAGES),
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -715,7 +750,7 @@ duplicatedVariants.length > 0
 ? duplicatedVariants.map((v) => ({
 tempId: newVariantRow().tempId,
 label: v.label ?? '',
-image: v.images?.[0] ?? '',
+images: (v.images ?? []).slice(0, MAX_VARIANT_IMAGES),
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -843,7 +878,7 @@ variantsPayload = variantRows.map((row) => ({
 label: row.label.trim() || null,
 color: row.color.trim() || null,
 size: row.size.trim() || null,
-images: row.image ? [row.image] : [],
+images: row.images.slice(0, MAX_VARIANT_IMAGES),
 stock: Math.max(0, parseInt(row.stock, 10) || 0),
 priceOverride: row.priceOverride.trim() ? parseFloat(row.priceOverride) : null,
 }))
@@ -910,7 +945,7 @@ const strengthPct = Math.round((strengthDone / strengthChecks.length) * 100)
 const STEP_TIPS: Record<number, { title: string; tip: string }> = {
 1: { title: 'Photos & video', tip: 'Photos are your shop window. Natural light, plain background, and at least one photo showing scale (in a hand, on a table). A short video of the piece — or you making it — is the single biggest trust-builder on Velor.' },
 2: { title: 'The basics', tip: 'Write the title the way a buyer would search: what it is, the material, the tradition. Your price is what you receive — buyers see it converted to their own currency automatically.' },
-3: { title: 'Options & sizes', tip: 'One listing can hold every version you make — designs, colours, sizes, sets — each with its own photo, price, and stock. Buyers pick on your product page; you never list the same piece twice.' },
+3: { title: 'Options & sizes', tip: 'One listing can hold every version you make — designs, colours, sizes, sets — each with its own photos (up to 6), price, and stock. Buyers pick on your product page; you never list the same piece twice.' },
 4: { title: 'Shipping', tip: 'Weight and box size are what generate your prepaid shipping label the moment a buyer pays — measure the parcel, not the piece. The HS code helps customs for international orders.' },
 5: { title: 'Story & submit', tip: 'Buyers come to Velor for the story — who made it, where, and what tradition it carries. Two or three honest sentences outsell a paragraph of marketing.' },
 }
@@ -1091,7 +1126,7 @@ Matches Velor&apos;s live categories — your listing goes straight to the right
 <div style={{ display: step === 3 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
 <div style={{ marginBottom: '14px' }}>
 <h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>Every version, one listing</h3>
-<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Designs, colours, sizes, sets — give each its own photo, price and stock, and buyers pick right on your page. Skip this entirely if your piece comes one way.</div>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Designs, colours, sizes, sets — give each its own photos (up to 6), price and stock, and buyers pick right on your page. Skip this entirely if your piece comes one way.</div>
 </div>
 {/* Options & variants (2026-07-28 overhaul, William: "single listing which
 has the option of different varients and prices... not just for clothes
@@ -1117,7 +1152,7 @@ border: hasVariants ? '2px solid var(--accent)' : '1px solid var(--border)',
 background: hasVariants ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
 }}>
 <div style={{ fontSize: '14px', fontWeight: 800, color: hasVariants ? 'var(--accent)' : 'var(--text)', marginBottom: 4 }}>Multiple versions</div>
-<div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>Different types, sizes or colours — each version gets its own photo, price and stock, all in this one listing.</div>
+<div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>Different types, sizes or colours — each version gets its own photos (up to 6), price and stock, all in this one listing.</div>
 </button>
 </div>
 {hasVariants && (
@@ -1199,7 +1234,7 @@ if (existingKeys.has(key)) continue
 generated.push({ ...newVariantRow(), color: c, size: sz })
 }
 }
-const keep = variantRows.filter(r => r.label.trim() || r.color.trim() || r.size.trim() || r.stock.trim() || r.priceOverride.trim())
+const keep = variantRows.filter(r => r.label.trim() || r.color.trim() || r.size.trim() || r.stock.trim() || r.priceOverride.trim() || r.images.length > 0)
 setVariantRows([...keep, ...generated])
 }}
 style={{ background: 'var(--accent)', color: '#160a00', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -1243,7 +1278,7 @@ aria-label="Remove version" title="Remove version"
 </button>
 </div>
 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-<VariantPhotoBox id={`variant-photo-${row.tempId}`} value={row.image} onChange={(v) => upd({ image: v })} />
+<VariantPhotoStrip id={`variant-photo-${row.tempId}`} images={row.images} onChange={(v) => upd({ images: v })} />
 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
 {diffKinds.type && (
 <input

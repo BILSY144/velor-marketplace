@@ -16,6 +16,9 @@ interface Variant {
   price: number
   stock: number
   image?: string
+  // Full photo set for this option (up to 6, 2026-07-28) -- when the buyer
+  // picks the option, these lead the gallery ahead of the listing's photos.
+  images?: string[]
 }
 
 interface Review {
@@ -322,10 +325,13 @@ export default function ProductPageClient() {
   // the flat button list.
   const [selColor, setSelColor] = useState<string | null>(null)
   const [selSize, setSelSize] = useState<string | null>(null)
-  // When the picked option carries its own photo, the gallery shows it
-  // until the buyer taps a thumbnail themselves.
-  const [variantImageActive, setVariantImageActive] = useState(false)
-  useEffect(() => { if (selectedVariant?.image) setVariantImageActive(true) }, [selectedVariant?.id])
+  // When the picked option carries its own photos, they are placed at the
+  // front of the gallery (see the `images` computation below) and the view
+  // jumps to the first of them -- the buyer sees the version they actually
+  // picked, then can still browse every photo via the thumbnails.
+  useEffect(() => {
+    if (selectedVariant?.images?.length || selectedVariant?.image) setMainImage(0)
+  }, [selectedVariant?.id])
   const [qty, setQty] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
@@ -427,12 +433,28 @@ export default function ProductPageClient() {
     } catch {}
   }, [product?.id])
 
+  // Gallery photo list: the picked option's own photos (up to 6, 2026-07-28
+  // seller multi-photo versions) lead, followed by the listing's photos that
+  // aren't already in the option's set. No option picked (or an option with
+  // no photos) -> plain listing gallery. Computed here, above the lightbox
+  // effect that needs its length.
+  const baseImages = product && product.images.length > 0 ? product.images : ['/placeholder.png']
+  const variantPhotos = selectedVariant?.images?.length
+    ? selectedVariant.images
+    : selectedVariant?.image ? [selectedVariant.image] : []
+  const images = variantPhotos.length > 0
+    ? [...variantPhotos, ...baseImages.filter((img) => !variantPhotos.includes(img))]
+    : baseImages
+  // The combined list shrinks when an option is deselected -- clamp instead
+  // of ever rendering images[out-of-range].
+  const shownImage = mainImage < images.length ? mainImage : 0
+
   // Lightbox keyboard controls (Escape closes, arrows navigate). Declared
   // above any early return so hook order stays stable regardless of loading/
   // notFound state, per the Rules of Hooks.
   useEffect(() => {
     if (!lightboxOpen || !product) return
-    const imgCount = product.images.length || 1
+    const imgCount = images.length || 1
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setLightboxOpen(false)
       else if (e.key === 'ArrowLeft') setMainImage(i => (i - 1 + imgCount) % imgCount)
@@ -440,7 +462,7 @@ export default function ProductPageClient() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [lightboxOpen, product])
+  }, [lightboxOpen, product, images.length])
 
   async function toggleWishlist() {
     // Preview-only listing -- looks and behaves like a normal wishlist
@@ -590,7 +612,6 @@ export default function ProductPageClient() {
   // are scoped by productId, not by variant), so only show the "was/now"
   // treatment when no variant is selected or the product has no variants.
   const onSale = !selectedVariant && product?.discountedPrice != null && product.discountedPrice < product.price
-  const images = product && product.images.length > 0 ? product.images : ['/placeholder.png']
 
   if (loading) {
     return (
@@ -643,7 +664,7 @@ export default function ProductPageClient() {
             aria-label="Open full-size image"
             style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '1', borderRadius: '16px', overflow: 'hidden', background: 'transparent', position: 'relative' }}
           >
-            <img src={variantImageActive && selectedVariant?.image ? selectedVariant.image : images[mainImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src={images[shownImage]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             {onSale && (
               <div style={{ position: 'absolute', top: 16, left: 16, background: 'var(--accent)', color: '#000', fontSize: '13px', fontWeight: 800, padding: '6px 14px', borderRadius: '6px', letterSpacing: '0.3px' }}>
                 {product.percentOff}% OFF
@@ -676,10 +697,10 @@ export default function ProductPageClient() {
             {images.map((img, i) => (
               <div
                 key={i}
-                onClick={() => { setMainImage(i); setVariantImageActive(false) }}
+                onClick={() => setMainImage(i)}
                 style={{
                   width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer',
-                  border: mainImage === i ? '2px solid var(--accent)' : '2px solid var(--border)',
+                  border: shownImage === i ? '2px solid var(--accent)' : '2px solid var(--border)',
                   flexShrink: 0,
                 }}
               >
@@ -1373,7 +1394,7 @@ export default function ProductPageClient() {
               ‹
             </button>
           )}
-          <img src={images[mainImage]} alt={product.title} style={{ maxWidth: '92vw', maxHeight: '86vh', objectFit: 'contain' }} />
+          <img src={images[shownImage]} alt={product.title} style={{ maxWidth: '92vw', maxHeight: '86vh', objectFit: 'contain' }} />
           {images.length > 1 && (
             <button
               onClick={() => setMainImage(i => (i + 1) % images.length)}
