@@ -148,7 +148,7 @@ async function attemptAutoLabelPurchase(
     return {
       description: 'Product',
       quantity: Math.round(Number(item.quantity)) || 1,
-      net_weight: String((pr?.weightGrams || 200) / 1000),
+        net_weight: String((pr?.weightGrams || 180) / 1000),
       mass_unit: 'kg',
       value_amount: String(item.priceGBP || pr?.price || 0),
       value_currency: 'GBP',
