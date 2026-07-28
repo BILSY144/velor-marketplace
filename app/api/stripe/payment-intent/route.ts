@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
           )
         }
         const totalWeightGrams = group.items.reduce(
-          (sum: number, i: SellerGroup['items'][number]) => sum + (i.weightGrams ?? 500) * i.quantity, 0
+          (sum: number, i: SellerGroup['items'][number]) => sum + (i.weightGrams ?? 450) * i.quantity, 0
         )
         const zone = computeZone(group.shippingProfileCountry, destinationCountry)
         const band = weightBandFor(totalWeightGrams)
