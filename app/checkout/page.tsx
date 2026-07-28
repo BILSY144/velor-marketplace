@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { useCart } from '@/lib/cart'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -14,18 +15,23 @@ const CURRENCIES: Record<string, string> = {
   AU: 'AUD', CA: 'CAD', JP: 'JPY', SG: 'SGD', AE: 'AED', CN: 'CNY',
 }
 
+// Buyer shipping destinations: the FULL world list (William, 2026-07-28,
+// checklist item 11 -- "Velor is a GLOBAL marketplace", LAW #2), replacing
+// the old hand-picked 22-country list. Derived from the same
+// WORLD_COUNTRIES source the rest of the site uses, minus destinations no
+// mainstream carrier will currently deliver to from Velor's origins
+// (comprehensive sanctions and/or suspended carrier service -- not a
+// political statement, a deliverability fact; revisit as service resumes):
+// KP North Korea, IR Iran, SY Syria, CU Cuba (US-linked carrier
+// restrictions), SD Sudan, RU Russia + BY Belarus (UK carriers suspended
+// service since 2022). GB stays pinned first; the rest sort alphabetically.
+const DESTINATION_EXCLUSIONS = new Set(['KP', 'IR', 'SY', 'CU', 'SD', 'RU', 'BY'])
 const COUNTRIES = [
-  { code: 'GB', name: 'United Kingdom' }, { code: 'US', name: 'United States' },
-  { code: 'DE', name: 'Germany' }, { code: 'FR', name: 'France' },
-  { code: 'IT', name: 'Italy' }, { code: 'ES', name: 'Spain' },
-  { code: 'NL', name: 'Netherlands' }, { code: 'BE', name: 'Belgium' },
-  { code: 'SE', name: 'Sweden' }, { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' }, { code: 'FI', name: 'Finland' },
-  { code: 'PL', name: 'Poland' }, { code: 'CH', name: 'Switzerland' },
-  { code: 'AT', name: 'Austria' }, { code: 'AU', name: 'Australia' },
-  { code: 'CA', name: 'Canada' }, { code: 'JP', name: 'Japan' },
-  { code: 'SG', name: 'Singapore' }, { code: 'AE', name: 'UAE' },
-  { code: 'HK', name: 'Hong Kong' }, { code: 'IN', name: 'India' },
+  { code: 'GB', name: 'United Kingdom' },
+  ...WORLD_COUNTRIES
+    .filter((c) => c.code !== 'GB' && !DESTINATION_EXCLUSIONS.has(c.code))
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name)),
 ]
 
 // Full global list for the phone country-code selector -- intentionally
