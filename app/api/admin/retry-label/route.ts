@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
 import { attemptAutoLabelPurchase } from '@/lib/orders'
+import { createTrack, normalizeCarrierToken } from '@/lib/shippo'
 
 // Admin repair endpoint (added 2026-07-28): re-run the Tier A auto-label
 // purchase for an order whose original attempt failed. The attempt normally
@@ -34,6 +35,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 })
   }
   if (order.shipment?.shippoLabelId) {
+    // Label already bought -- never buy a second one. But if the best-effort
+    // tracking registration failed at purchase time (e.g. the 'Hermes UK'
+    // display-name-vs-token 400 on the first live Tier A order), repair just
+    // that piece here so the delivery webhook (and therefore escrow release)
+    // works for this shipment.
+    const existing = await prisma.shipment.findUnique({
+      where: { orderId },
+      select: { trackRegistered: true, carrier: true, trackingNumber: true, status: true },
+    })
+    if (existing && !existing.trackRegistered && existing.trackingNumber) {
+      try {
+        await createTrack(normalizeCarrierToken(existing.carrier || ''), existing.trackingNumber)
+        await prisma.shipment.update({ where: { orderId }, data: { trackRegistered: true } })
+        return NextResponse.json({ ok: true, repaired: 'trackRegistered', shipmentStatus: existing.status })
+      } catch (trackErr) {
+        return NextResponse.json(
+          { ok: false, error: 'label exists; tracking registration retry failed: ' + (trackErr instanceof Error ? trackErr.message : 'unknown') },
+          { status: 502 }
+        )
+      }
+    }
     return NextResponse.json(
       { error: 'A label has already been purchased for this order', shipmentStatus: order.shipment.status },
       { status: 409 }

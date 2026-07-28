@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, buildOrderConfirmationEmail } from '@/lib/email'
 import {
   createShippoShipment, purchaseLabel, buildParcelFromItems, pickBestRate, createTrack,
-  ShippoAddress, ShippoCustomsItem,
+  normalizeCarrierToken, ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
 
 interface PricedItem {
