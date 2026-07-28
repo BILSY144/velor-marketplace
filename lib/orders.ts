@@ -73,7 +73,7 @@ interface SellerBreakdownEntry {
 // live rates for this route. The caller wraps this whole function in its
 // own try/catch and only ever logs failures -- this must never roll back
 // or fail an already-successful, already-paid order.
-async function attemptAutoLabelPurchase(
+export async function attemptAutoLabelPurchase(
   order: Order,
   sellerId: string,
   sellerItems: PricedItem[],
@@ -123,7 +123,13 @@ async function attemptAutoLabelPurchase(
     street2: (shippingAddress.street2 as string) || (shippingAddress.line2 as string) || undefined,
     city: (shippingAddress.city as string) || '',
     state: (shippingAddress.state as string) || (shippingAddress.county as string) || undefined,
-    zip: (shippingAddress.zip as string) || (shippingAddress.postalCode as string) || '',
+    // 'postcode' added 2026-07-28: checkout's payment-intent metadata stores
+    // the buyer's postcode under `postcode` (see app/checkout/page.tsx),
+    // while the client-side rates call uses `zip`. Reading only zip/postalCode
+    // here sent Shippo an empty postcode at label time, so the FIRST live
+    // Tier A order (cms4u5jfo0001woyre0rf4i7v) got zero rates while checkout
+    // had quoted the same route fine seconds earlier.
+    zip: (shippingAddress.zip as string) || (shippingAddress.postalCode as string) || (shippingAddress.postcode as string) || '',
     country: destinationCountry,
     phone: (shippingAddress.phone as string) || undefined,
     email: (shippingAddress.email as string) || undefined,
