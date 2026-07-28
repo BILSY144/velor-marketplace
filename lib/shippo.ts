@@ -234,9 +234,9 @@ const CARRIER_TOKEN_MAP: Record<string, string> = {
   'fedex': 'fedex',
   'usps': 'usps',
   'dpd': 'dpd',
-  'hermes': 'evri',
-  'hermes uk': 'evri',  // Shippo label rates name the carrier 'Hermes UK'; its tracking token is 'evri' (2026-07-28, first live Tier A order)
-  'evri': 'evri',
+  'hermes': 'hermes_uk',
+  'hermes uk': 'hermes_uk',  // Shippo label rates name the carrier 'Hermes UK'; its tracking token is 'evri' (2026-07-28, first live Tier A order)
+  'evri': 'hermes_uk',
   'canada post': 'canada_post',
   'australia post': 'australia_post',
   'auspost': 'australia_post',

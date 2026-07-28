@@ -45,8 +45,11 @@ export async function POST(req: NextRequest) {
       select: { trackRegistered: true, carrier: true, trackingNumber: true, status: true },
     })
     if (existing && !existing.trackRegistered && existing.trackingNumber) {
+      // Optional admin-supplied token override -- lets ops probe Shippo's
+      // accepted tracking tokens live without a deploy per guess.
+      const overrideToken = typeof body?.carrierToken === 'string' ? body.carrierToken : null
       try {
-        await createTrack(normalizeCarrierToken(existing.carrier || ''), existing.trackingNumber)
+        await createTrack(overrideToken || normalizeCarrierToken(existing.carrier || ''), existing.trackingNumber)
         await prisma.shipment.update({ where: { orderId }, data: { trackRegistered: true } })
         return NextResponse.json({ ok: true, repaired: 'trackRegistered', shipmentStatus: existing.status })
       } catch (trackErr) {
