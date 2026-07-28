@@ -43,10 +43,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ enabled: false, note: 'EASYSHIP_API_KEY not set in this environment' })
   }
 
+  // Config visibility (added 2026-07-28 to verify activation env vars took
+  // effect without exposing any secret values).
+  const configuredOrigins = (process.env.EASYSHIP_ORIGINS || '')
+    .split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+  const webhookSecretConfigured = !!process.env.EASYSHIP_WEBHOOK_SECRET
+
   const { searchParams } = new URL(request.url)
   const origin = (searchParams.get('origin') || '').toUpperCase()
   if (!origin) {
-    return NextResponse.json({ enabled: true, note: 'pass ?origin=GB (and optional &dest=US&grams=200) to probe rates' })
+    return NextResponse.json({
+      enabled: true,
+      configuredOrigins,
+      webhookSecretConfigured,
+      note: 'pass ?origin=GB (and optional &dest=US&grams=200) to probe rates',
+    })
   }
   const dest = (searchParams.get('dest') || 'US').toUpperCase()
   const grams = Math.max(1, Number(searchParams.get('grams') || 200))
