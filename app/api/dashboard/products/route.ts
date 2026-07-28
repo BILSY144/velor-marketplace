@@ -44,7 +44,7 @@ export async function GET() {
           createdAt: true,
           variants: {
             orderBy: { createdAt: 'asc' },
-            select: { id: true, color: true, size: true, stock: true, priceOverride: true, sku: true },
+            select: { id: true, label: true, color: true, size: true, stock: true, priceOverride: true, sku: true },
           },
           _count: { select: { orderItems: true } },
         },
@@ -66,6 +66,7 @@ function isValidImage(u: unknown): u is string {
 }
 
 interface VariantBody {
+  label?: string | null
   color?: string | null
   size?: string | null
   stock?: number
@@ -96,6 +97,24 @@ interface ProductBody {
   // means this listing has no variants -- price/stock above stay the only
   // source of truth, exactly as every listing worked before this feature.
   variants?: VariantBody[]
+  // 2026-07-28 listing-form overhaul (spec in CLAUDE.md): free video link,
+  // made-to-order with lead time, and a seller-written size guide.
+  videoUrl?: string | null
+  madeToOrder?: boolean
+  leadTimeDays?: number | string | null
+  sizeGuide?: string | null
+}
+
+// Video is LINK-ONLY for now (William, 2026-07-28: "the video can be a link
+// for now as its free. we can add the cost version later"). Only YouTube and
+// Vimeo URLs are accepted so the PDP can embed a known-safe player -- an
+// arbitrary URL would be an open redirect / mixed-content risk.
+function normalizeVideoUrl(raw: unknown): { videoUrl: string | null } | { error: string } {
+  if (raw === null || raw === undefined || String(raw).trim() === '') return { videoUrl: null }
+  const url = String(raw).trim().slice(0, 300)
+  const ok = /^https:\/\/(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+|vimeo\.com\/\d+)/.test(url)
+  if (!ok) return { error: 'Video must be a YouTube or Vimeo link (e.g. https://youtube.com/watch?v=... or https://vimeo.com/...).' }
+  return { videoUrl: url }
 }
 
 // Shared by POST and PATCH. Returns either a normalized, de-duplicated list
@@ -108,14 +127,15 @@ function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error:
   const seen = new Set<string>()
   const out: VariantBody[] = []
   for (const v of raw) {
+    const label = typeof (v as VariantBody)?.label === 'string' ? (v as VariantBody).label!.trim().slice(0, 80) : ''
     const color = typeof (v as VariantBody)?.color === 'string' ? (v as VariantBody).color!.trim() : ''
     const size = typeof (v as VariantBody)?.size === 'string' ? (v as VariantBody).size!.trim() : ''
-    if (!color && !size) {
-      return { error: 'Each variant needs a colour, a size, or both.' }
+    if (!label && !color && !size) {
+      return { error: 'Each option needs a name (e.g. "Dragon design"), a colour, a size, or some combination.' }
     }
-    const key = `${color.toLowerCase()} ${size.toLowerCase()}`
+    const key = `${label.toLowerCase()}|${color.toLowerCase()}|${size.toLowerCase()}`
     if (seen.has(key)) {
-      return { error: `You have more than one variant for ${[color, size].filter(Boolean).join(' / ')} -- each colour/size combination can only appear once.` }
+      return { error: `You have more than one option for ${[label, color, size].filter(Boolean).join(' / ')} -- each option can only appear once.` }
     }
     seen.add(key)
     const stock = Math.max(0, parseInt(String((v as VariantBody)?.stock ?? 0)) || 0)
@@ -127,6 +147,7 @@ function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error:
       return { error: 'Variant price override must be a positive number.' }
     }
     out.push({
+      label: label || null,
       color: color || null,
       size: size || null,
       stock,
@@ -193,6 +214,7 @@ export async function POST(req: NextRequest) {
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
     isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
     variants: rawVariants,
+    videoUrl: rawVideoUrl, madeToOrder, leadTimeDays, sizeGuide,
   } = body as ProductBody
 
   const variantResult = normalizeVariants(rawVariants)
@@ -200,6 +222,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: variantResult.error }, { status: 400 })
   }
   const variants = variantResult.variants
+
+  const videoResult = normalizeVideoUrl(rawVideoUrl)
+  if ('error' in videoResult) {
+    return NextResponse.json({ error: videoResult.error }, { status: 400 })
+  }
+  const parsedLeadTime = leadTimeDays !== null && leadTimeDays !== undefined && String(leadTimeDays).trim() !== ''
+    ? Math.min(120, Math.max(1, parseInt(String(leadTimeDays)) || 0)) || null
+    : null
 
   // Every listing submission must confirm compliance with the Seller Rules
   // and Product Compliance Policy (/legal/seller-rules). Enforced server-side
@@ -319,8 +349,12 @@ export async function POST(req: NextRequest) {
       // track: it stays in enhanced review and cannot be approved until a
       // valid certificate is verified by admin (enforced at approval time).
       requiresCertificate: !!containsRegulatedMaterial,
+      videoUrl: videoResult.videoUrl,
+      madeToOrder: !!madeToOrder,
+      leadTimeDays: madeToOrder ? parsedLeadTime : null,
+      sizeGuide: sizeGuide ? String(sizeGuide).trim().slice(0, 4000) || null : null,
       ...(variants.length > 0
-        ? { variants: { create: variants.map((v) => ({ color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        ? { variants: { create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })
@@ -379,7 +413,16 @@ export async function PATCH(req: NextRequest) {
     weightGrams, lengthCm, widthCm, heightCm, hsCode, originCountry,
     isHandmade, makerStory, materials, containsRegulatedMaterial, rulesAccepted,
     variants: rawVariants,
+    videoUrl: rawVideoUrl, madeToOrder, leadTimeDays, sizeGuide,
   } = body as ProductBody
+
+  const videoResult = normalizeVideoUrl(rawVideoUrl)
+  if ('error' in videoResult) {
+    return NextResponse.json({ error: videoResult.error }, { status: 400 })
+  }
+  const parsedLeadTime = leadTimeDays !== null && leadTimeDays !== undefined && String(leadTimeDays).trim() !== ''
+    ? Math.min(120, Math.max(1, parseInt(String(leadTimeDays)) || 0)) || null
+    : null
 
   // Distinguish "seller submitted the variants section" (key present, even
   // as []) from "this caller doesn't know about variants at all" (key
@@ -468,6 +511,10 @@ export async function PATCH(req: NextRequest) {
       // be taken off it by the seller unticking the box on a later edit --
       // only admin review can clear requiresCertificate.
       requiresCertificate: existing.requiresCertificate || !!containsRegulatedMaterial,
+      videoUrl: videoResult.videoUrl,
+      madeToOrder: !!madeToOrder,
+      leadTimeDays: madeToOrder ? parsedLeadTime : null,
+      sizeGuide: sizeGuide ? String(sizeGuide).trim().slice(0, 4000) || null : null,
       // Replace the variant set wholesale on every edit that includes the
       // variants key. This intentionally mints new ProductVariant ids each
       // time rather than diffing/reusing old ones -- simple and safe,
@@ -480,7 +527,7 @@ export async function PATCH(req: NextRequest) {
       // treats a since-removed variant as no longer available rather than
       // erroring the whole checkout.
       ...(variantsProvided
-        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })

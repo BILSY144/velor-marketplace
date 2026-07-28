@@ -256,6 +256,16 @@ model Product {
   isHandmade    Boolean       @default(false)
   makerStory    String?       @db.Text
   materials     String?
+  // 2026-07-28 listing-form overhaul (William-approved spec in CLAUDE.md):
+  // videoUrl -- free video-by-link (YouTube/Vimeo) shown on the PDP; true
+  // upload deferred until "established properly and making good profit"
+  // (William). madeToOrder + leadTimeDays -- artisan made-when-ordered
+  // listings; stock stays as the seller's capacity number so checkout logic
+  // is untouched. sizeGuide -- seller's own measurements text for garments.
+  videoUrl      String?
+  madeToOrder   Boolean       @default(false)
+  leadTimeDays  Int?
+  sizeGuide     String?       @db.Text
   requiresCertificate Boolean @default(false)
   certificates  ProductCertificate[]
   orderItems    OrderItem[]
@@ -288,6 +298,11 @@ model ProductVariant {
   id            String   @id @default(cuid())
   productId     String
   product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // 2026-07-28: generic named option ("Dragon design", "Lavender", "Set of
+  // 3") -- one listing, many versions with their own price/stock/photos,
+  // for ALL product types (William), not just colour/size. A variant needs
+  // label OR color OR size; colour+size clothing rows keep working as-is.
+  label         String?
   color         String?
   size          String?
   sku           String?

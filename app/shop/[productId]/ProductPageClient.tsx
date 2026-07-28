@@ -67,6 +67,22 @@ interface Product {
   // the API (OrderItem / WishlistItem counts) -- rendered only when > 0.
   soldCount?: number
   wishlistCount?: number
+  // 2026-07-28 listing-form overhaul: link-only video, made-to-order, size
+  // guide -- all seller-entered, rendered only when present.
+  videoUrl?: string | null
+  madeToOrder?: boolean
+  leadTimeDays?: number | null
+  sizeGuide?: string | null
+}
+
+// YouTube/Vimeo URL -> privacy-friendly embed URL. Returns null for anything
+// unrecognised (the API already validates on save; this is defence in depth).
+function toEmbedUrl(raw: string): string | null {
+  const yt = raw.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/)
+  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}`
+  const vimeo = raw.match(/vimeo\.com\/(\d+)/)
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`
+  return null
 }
 
 // ISO2 -> flag emoji (pure codepoint math, no assets) and English country
@@ -618,6 +634,18 @@ export default function ProductPageClient() {
               Tap to zoom
             </div>
           </div>
+          {product.videoUrl && toEmbedUrl(product.videoUrl) && (
+            <div style={{ width: 'min(100%, 560px, 62vh)', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+              <iframe
+                src={toEmbedUrl(product.videoUrl) as string}
+                title={`${product.title} — video`}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                allow="accelerometer; encrypted-media; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px' }}>
             {images.map((img, i) => (
               <div
@@ -695,8 +723,12 @@ export default function ProductPageClient() {
               buyer decides on, as quiet text lines instead of boxed cards --
               all sourced from the same real fields as before. */}
           <div style={{ margin: '6px 0 14px', display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', lineHeight: 1.5 }}>
-            <div style={{ fontWeight: 700, color: currentStock > 0 ? 'var(--green)' : 'var(--red)' }}>
-              {currentStock === 0 ? 'Out of stock' : currentStock < 5 ? `In stock — only ${currentStock} left` : 'In stock'}
+            <div style={{ fontWeight: 700, color: currentStock > 0 ? (product.madeToOrder ? 'var(--accent)' : 'var(--green)') : 'var(--red)' }}>
+              {currentStock === 0
+                ? (product.madeToOrder ? 'Not taking orders right now' : 'Out of stock')
+                : product.madeToOrder
+                  ? `Made to order — crafted when you buy${product.leadTimeDays ? `, ships in ~${product.leadTimeDays} days` : ''}`
+                  : currentStock < 5 ? `In stock — only ${currentStock} left` : 'In stock'}
             </div>
             <div style={{ color: 'var(--muted)' }}>
               {product.seller?.country ? `Dispatched from ${product.seller.country} within 1–3 business days` : 'Usually dispatched within 1–3 business days'}
@@ -720,6 +752,11 @@ export default function ProductPageClient() {
                     }}
                   >
                     {v.name}
+                    {v.price !== product.price && (
+                      <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, opacity: 0.85 }}>
+                        {symbol}{convert(v.price, product.seller?.currency || 'GBP').toFixed(2)}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1056,6 +1093,13 @@ export default function ProductPageClient() {
                 {product.weightGrams && <SpecRow label="Weight" value={`${product.weightGrams} g`} />}
                 {product.specialities && product.specialities.length > 0 && <SpecRow label="Speciality" value={product.specialities.join(', ')} />}
               </div>
+            </div>
+          )}
+
+          {product.sizeGuide && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
+              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, marginBottom: '10px' }}>Size guide</h2>
+              <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '14px', whiteSpace: 'pre-wrap', margin: 0 }}>{product.sizeGuide}</p>
             </div>
           )}
         </div>

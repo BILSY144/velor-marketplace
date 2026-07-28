@@ -31,6 +31,10 @@ export async function GET(
           _count: { select: { products: { where: { status: 'APPROVED' } } } },
         },
       },
+      // 2026-07-28: variants were stored by the dashboard since 2026-07-27
+      // but never returned to the storefront -- the PDP's option buttons had
+      // no data. Now included and mapped below to the shape the PDP renders.
+      variants: { orderBy: { createdAt: 'asc' } },
       reviews: {
         orderBy: { createdAt: 'desc' },
         take: 20,
@@ -110,6 +114,16 @@ export async function GET(
     // actually satisfied, since Prisma nests it under _count.reviews; fixed
     // here rather than silently left to render "undefined reviews").
     reviewCount: product._count.reviews,
+    // PDP option shape: display name from label (generic options) or
+    // colour/size; price falls back to the base listing price when the
+    // seller set no per-option override.
+    variants: product.variants.map((v) => ({
+      id: v.id,
+      name: v.label || [v.color, v.size].filter(Boolean).join(' / ') || 'Option',
+      price: v.priceOverride ?? product.price,
+      stock: v.stock,
+      image: v.images[0] ?? null,
+    })),
     avgRating: Math.round(avgRating * 10) / 10,
     discountedPrice: discount?.discountedPriceGBP ?? null,
     percentOff: discount?.percentOff ?? null,

@@ -160,7 +160,7 @@ const COUNTRIES = [
 // prisma/schema.prisma. tempId is a client-only key for React list
 // rendering/removal before the row has a real database id.
 interface VariantRow {
-tempId: string; color: string; size: string; stock: string; priceOverride: string;
+tempId: string; label: string; color: string; size: string; stock: string; priceOverride: string;
 }
 
 interface Product {
@@ -170,7 +170,8 @@ weightGrams: number | null; lengthCm: number | null; widthCm: number | null; hei
 hsCode: string | null; originCountry: string | null;
 isHandmade: boolean; makerStory: string | null;
 materials: string | null; requiresCertificate: boolean;
-variants?: { id: string; color: string | null; size: string | null; stock: number; priceOverride: number | null; sku: string | null }[];
+variants?: { id: string; label: string | null; color: string | null; size: string | null; stock: number; priceOverride: number | null; sku: string | null }[];
+videoUrl?: string | null; madeToOrder?: boolean; leadTimeDays?: number | null; sizeGuide?: string | null;
 }
 
 const MIN_IMAGES = 3
@@ -183,6 +184,7 @@ name: '', description: '', price: '', stock: '', category: '',
 images: ['', '', '', '', '', '', '', ''],
 weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '', currency: '',
 isHandmade: '', makerStory: '', materials: '', containsRegulated: '',
+videoUrl: '', madeToOrder: '', leadTimeDays: '', sizeGuide: '',
 }
 
 const inputStyle = {
@@ -517,6 +519,9 @@ const [form, setForm] = useState(emptyForm)
 // flow as before this feature existed.
 const [hasVariants, setHasVariants] = useState(false)
 const [variantRows, setVariantRows] = useState<VariantRow[]>([])
+// Quick-grid builder inputs (sizes x colours -> generated option rows).
+const [matrixSizes, setMatrixSizes] = useState('')
+const [matrixColors, setMatrixColors] = useState('')
 const [rulesAccepted, setRulesAccepted] = useState(false)
 const [saving, setSaving] = useState(false)
 const [error, setError] = useState('')
@@ -548,7 +553,7 @@ setLoading(false)
 }
 
 function newVariantRow(): VariantRow {
-return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, color: '', size: '', stock: '', priceOverride: '' }
+return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, label: '', color: '', size: '', stock: '', priceOverride: '' }
 }
 
 function openNew() {
@@ -575,6 +580,8 @@ heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
+videoUrl: p.videoUrl ?? '', madeToOrder: p.madeToOrder ? 'true' : '',
+leadTimeDays: p.leadTimeDays != null ? String(p.leadTimeDays) : '', sizeGuide: p.sizeGuide ?? '',
 currency: sellerCurrency,
 })
 const existingVariants = p.variants ?? []
@@ -583,6 +590,7 @@ setVariantRows(
 existingVariants.length > 0
 ? existingVariants.map((v) => ({
 tempId: v.id,
+label: v.label ?? '',
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -612,6 +620,8 @@ heightCm: p.heightCm !== null ? String(p.heightCm) : '',
 hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
+videoUrl: p.videoUrl ?? '', madeToOrder: p.madeToOrder ? 'true' : '',
+leadTimeDays: p.leadTimeDays != null ? String(p.leadTimeDays) : '', sizeGuide: p.sizeGuide ?? '',
 currency: sellerCurrency,
 })
 const duplicatedVariants = p.variants ?? []
@@ -620,6 +630,7 @@ setVariantRows(
 duplicatedVariants.length > 0
 ? duplicatedVariants.map((v) => ({
 tempId: newVariantRow().tempId,
+label: v.label ?? '',
 color: v.color ?? '',
 size: v.size ?? '',
 stock: String(v.stock),
@@ -705,28 +716,30 @@ return
 // app/api/dashboard/products/route.ts's normalizeVariants -- gives an
 // immediate error instead of waiting on a round trip, but the server
 // check is the real backstop since this form isn't the only caller.
-let variantsPayload: { color: string | null; size: string | null; stock: number; priceOverride: number | null }[] | undefined
+let variantsPayload: { label: string | null; color: string | null; size: string | null; stock: number; priceOverride: number | null }[] | undefined
 if (hasVariants) {
 const seenKeys = new Set<string>()
 for (const row of variantRows) {
+const label = row.label.trim()
 const color = row.color.trim()
 const size = row.size.trim()
-if (!color && !size) {
-setError('Each variant needs a colour, a size, or both.')
+if (!label && !color && !size) {
+setError('Each option needs a name (e.g. "Dragon design"), a colour, a size, or some combination.')
 return
 }
-const key = `${color.toLowerCase()} ${size.toLowerCase()}`
+const key = `${label.toLowerCase()}|${color.toLowerCase()}|${size.toLowerCase()}`
 if (seenKeys.has(key)) {
-setError(`You have more than one variant for ${[color, size].filter(Boolean).join(' / ')} -- remove the duplicate.`)
+setError(`You have more than one option for ${[label, color, size].filter(Boolean).join(' / ')} -- remove the duplicate.`)
 return
 }
 seenKeys.add(key)
 }
 if (variantRows.length === 0) {
-setError('Add at least one colour/size variant, or turn off "multiple colours or sizes" for a single listing.')
+setError('Add at least one option, or turn off the options section for a single-version listing.')
 return
 }
 variantsPayload = variantRows.map((row) => ({
+label: row.label.trim() || null,
 color: row.color.trim() || null,
 size: row.size.trim() || null,
 stock: Math.max(0, parseInt(row.stock, 10) || 0),
@@ -751,6 +764,10 @@ makerStory: form.makerStory.trim() || null,
 materials: form.materials.trim() || null,
 containsRegulatedMaterial: form.containsRegulated === 'true',
 rulesAccepted: rulesAccepted,
+videoUrl: form.videoUrl.trim() || null,
+madeToOrder: form.madeToOrder === 'true',
+leadTimeDays: form.madeToOrder === 'true' && form.leadTimeDays.trim() ? parseInt(form.leadTimeDays, 10) : null,
+sizeGuide: form.sizeGuide.trim() || null,
 // hasVariants=false sends [] (explicitly clears any old variants, e.g.
 // a seller turning the toggle back off) -- see variantsProvided in the
 // API route for why the key must be present either way, never omitted.
@@ -884,8 +901,10 @@ Matches Velor&apos;s live categories — your listing goes straight to the right
 </div>
 </div>
 
-{/* Variants: colour / size — lets a seller offer multiple options on
-one listing instead of duplicating the whole product per option. */}
+{/* Options & variants (2026-07-28 overhaul, William: "single listing which
+has the option of different varients and prices... not just for clothes
+all listings"): generic named options -- each with its own price and
+stock -- plus a size x colour matrix builder for clothing sellers. */}
 <div style={{ marginTop: '16px' }}>
 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
 <input
@@ -897,20 +916,66 @@ setHasVariants(checked)
 if (checked && variantRows.length === 0) setVariantRows([newVariantRow()])
 }}
 />
-This item comes in multiple colours or sizes
+This item comes in different options — designs, colours, sizes, sets — each with its own price and stock
 </label>
 {hasVariants && (
 <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
 <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-Add one row per colour/size combination you sell. Buyers pick from these on the product page instead of you creating a separate listing for each.
+One listing, many versions — buyers pick an option on your product page instead of you listing the same product several times. Name each option anything that fits (&quot;Dragon design&quot;, &quot;Lavender&quot;, &quot;Set of 3&quot;) and/or use colour and size. Leave price blank to charge the main price above.
+</div>
+{/* Clothes/shoes shortcut: tick nothing, type sizes + colours, generate
+the whole grid in one click instead of hand-adding every row. */}
+<div style={{ border: '1px dashed var(--border)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+<div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>Quick grid for sizes &amp; colours</div>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'center' }}>
+<input style={inputStyle} placeholder="Sizes, comma-separated (e.g. S, M, L, XL)" value={matrixSizes} onChange={e => setMatrixSizes(e.target.value)} />
+<input style={inputStyle} placeholder="Colours, comma-separated (e.g. Red, Black)" value={matrixColors} onChange={e => setMatrixColors(e.target.value)} />
+<button
+type="button"
+onClick={() => {
+const sizes = matrixSizes.split(',').map(x => x.trim()).filter(Boolean)
+const colors = matrixColors.split(',').map(x => x.trim()).filter(Boolean)
+if (sizes.length === 0 && colors.length === 0) return
+const sizeList = sizes.length > 0 ? sizes : ['']
+const colorList = colors.length > 0 ? colors : ['']
+const existingKeys = new Set(variantRows.map(r => `${r.label.trim().toLowerCase()}|${r.color.trim().toLowerCase()}|${r.size.trim().toLowerCase()}`))
+const generated: VariantRow[] = []
+for (const c of colorList) {
+for (const sz of sizeList) {
+const key = `|${c.toLowerCase()}|${sz.toLowerCase()}`
+if (existingKeys.has(key)) continue
+generated.push({ ...newVariantRow(), color: c, size: sz })
+}
+}
+const keep = variantRows.filter(r => r.label.trim() || r.color.trim() || r.size.trim() || r.stock.trim() || r.priceOverride.trim())
+setVariantRows([...keep, ...generated])
+}}
+style={{ background: 'var(--accent)', color: '#160a00', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+>
+Generate grid
+</button>
+</div>
+<div style={{ fontSize: '10.5px', color: 'var(--muted)' }}>
+Creates a row for every size &times; colour combination (e.g. 4 sizes &times; 3 colours = 12 rows) — then just fill in the stock for each.
+</div>
 </div>
 {variantRows.map((row, idx) => (
 <div key={row.tempId} style={{
-display: 'grid', gridTemplateColumns: '1fr 1fr 90px 120px 32px', gap: '8px', alignItems: 'center',
+display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 80px 100px 32px', gap: '8px', alignItems: 'center',
 }}>
 <input
 style={inputStyle}
-placeholder="Colour (e.g. Red)"
+placeholder='Option name (e.g. "Dragon design")'
+value={row.label}
+onChange={e => {
+const next = [...variantRows]
+next[idx] = { ...next[idx], label: e.target.value }
+setVariantRows(next)
+}}
+/>
+<input
+style={inputStyle}
+placeholder="Colour (optional)"
 value={row.color}
 onChange={e => {
 const next = [...variantRows]
@@ -920,7 +985,7 @@ setVariantRows(next)
 />
 <input
 style={inputStyle}
-placeholder="Size (e.g. Small)"
+placeholder="Size (optional)"
 value={row.size}
 onChange={e => {
 const next = [...variantRows]
@@ -943,7 +1008,7 @@ setVariantRows(next)
 style={inputStyle}
 type="number"
 step="0.01"
-placeholder="Price override"
+placeholder="Price"
 value={row.priceOverride}
 onChange={e => {
 const next = [...variantRows]
@@ -973,13 +1038,72 @@ alignSelf: 'flex-start', background: 'none', border: '1px dashed var(--border)',
 padding: '8px 14px', cursor: 'pointer', color: 'var(--accent)', fontSize: '12.5px', fontWeight: 600,
 }}
 >
-+ Add another variant
++ Add another option
 </button>
 <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-Leave price override blank to use the price above for that variant. Total inventory shown to buyers is the sum of all variant stock.
+Leave price blank to use the main price above for that option. Total inventory shown to buyers is the sum of all option stock. Each option needs a name, colour, or size (any combination).
 </div>
 </div>
 )}
+</div>
+
+{/* Video by link (William, 2026-07-28: free for now; paid upload later).
+Validated server-side to YouTube/Vimeo only. */}
+<div style={{ marginTop: '16px' }}>
+<label style={labelStyle}>Product video (optional — YouTube or Vimeo link)</label>
+<input
+style={inputStyle}
+type="url"
+placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+value={form.videoUrl}
+onChange={e => set('videoUrl', e.target.value)}
+/>
+<div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
+A short video of the piece — or you making it — plays on your product page. Listings with video build far more buyer trust. Upload to YouTube (free) and paste the link here.
+</div>
+</div>
+
+{/* Made to order -- for artisans who craft on demand rather than holding
+stock. Inventory number becomes their order capacity. */}
+<div style={{ marginTop: '16px' }}>
+<label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
+<input
+type="checkbox"
+checked={form.madeToOrder === 'true'}
+onChange={(e) => set('madeToOrder', e.target.checked ? 'true' : '')}
+/>
+Made to order — I craft this when a buyer orders it
+</label>
+{form.madeToOrder === 'true' && (
+<div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '180px 1fr', gap: '10px', alignItems: 'center' }}>
+<input
+style={inputStyle}
+type="number"
+min="1"
+max="120"
+placeholder="Days to make &amp; ship"
+value={form.leadTimeDays}
+onChange={e => set('leadTimeDays', e.target.value)}
+/>
+<div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+Buyers see &quot;Made to order — crafted when you buy, ships in ~X days&quot; instead of a stock count. Set Inventory No above to how many orders you can take on at once.
+</div>
+</div>
+)}
+</div>
+
+{/* Size guide -- free-text measurements table, shown on the product page. */}
+<div style={{ marginTop: '16px' }}>
+<label style={labelStyle}>Size guide (optional — for garments, shoes, jewellery)</label>
+<textarea
+style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' as const }}
+placeholder={"e.g.\nS — chest 92cm, length 66cm\nM — chest 98cm, length 69cm\nL — chest 104cm, length 72cm"}
+value={form.sizeGuide}
+onChange={e => set('sizeGuide', e.target.value)}
+/>
+<div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
+Shown as a &quot;Size guide&quot; section on your product page — fewer wrong-size returns.
+</div>
 </div>
 
 <div style={{ marginTop: '16px' }}>
