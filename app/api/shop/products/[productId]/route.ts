@@ -120,6 +120,12 @@ export async function GET(
     variants: product.variants.map((v) => ({
       id: v.id,
       name: v.label || [v.color, v.size].filter(Boolean).join(' / ') || 'Option',
+      // Raw dimensions so the PDP can render separate Colour / Size pickers
+      // (William, 2026-07-28: "when the buyer picks a size or colour it can
+      // then add to the cart") instead of one combined button per row.
+      label: v.label ?? null,
+      color: v.color ?? null,
+      size: v.size ?? null,
       price: v.priceOverride ?? product.price,
       stock: v.stock,
       image: v.images[0] ?? null,

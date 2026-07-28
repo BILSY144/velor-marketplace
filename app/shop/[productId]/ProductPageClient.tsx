@@ -10,6 +10,9 @@ import { FounderMedal } from '@/components/FounderMedal'
 interface Variant {
   id: string
   name: string
+  label?: string | null
+  color?: string | null
+  size?: string | null
   price: number
   stock: number
   image?: string
@@ -313,6 +316,12 @@ export default function ProductPageClient() {
   const [notFound, setNotFound] = useState(false)
   const [mainImage, setMainImage] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
+  // Dimension picks (2026-07-28): when a listing's options carry colour
+  // and/or size, buyers pick each dimension separately (Colour row + Size
+  // row) and the two picks resolve to one variant. Label-only options keep
+  // the flat button list.
+  const [selColor, setSelColor] = useState<string | null>(null)
+  const [selSize, setSelSize] = useState<string | null>(null)
   const [qty, setQty] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
@@ -345,7 +354,16 @@ export default function ProductPageClient() {
         if (r.status === 404) { setNotFound(true); return null }
         return r.ok ? r.json() : Promise.reject()
       })
-      .then(data => { if (data) { setProduct(data); if (data.variants?.length) setSelectedVariant(data.variants[0]) } })
+      .then(data => {
+        if (!data) return
+        setProduct(data)
+        if (data.variants?.length) {
+          const first = (data.variants as Variant[]).find(v => v.stock > 0) ?? data.variants[0]
+          setSelectedVariant(first)
+          setSelColor(first.color ?? null)
+          setSelSize(first.size ?? null)
+        }
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [productId])
@@ -558,7 +576,11 @@ export default function ProductPageClient() {
   }
 
   const currentPrice = selectedVariant ? selectedVariant.price : product?.price ?? 0
-  const currentStock = selectedVariant ? selectedVariant.stock : product?.stock ?? 0
+  const currentStock = selectedVariant
+    ? selectedVariant.stock
+    : (product?.variants?.length ?? 0) > 0
+      ? 0 // options exist but no valid combination picked -- can't buy yet
+      : product?.stock ?? 0
   const isPreviewOnly = product?.id === PREVIEW_ONLY_PRODUCT_ID
   // Automatic discounts only ever apply to the base product listing (they
   // are scoped by productId, not by variant), so only show the "was/now"
@@ -736,32 +758,97 @@ export default function ProductPageClient() {
             <div style={{ color: 'var(--muted)' }}>Shipping cost &amp; arrival estimate shown at checkout</div>
           </div>
 
-          {(product.variants && product.variants.length > 0) && (
-            <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '7px', fontWeight: 600 }}>Variant</div>
-              <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                {product.variants.map(v => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariant(v)}
-                    style={{
-                      padding: '7px 15px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', minHeight: '34px',
-                      border: selectedVariant?.id === v.id ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
-                      background: selectedVariant?.id === v.id ? 'rgba(255,107,0,0.12)' : 'transparent',
-                      color: selectedVariant?.id === v.id ? 'var(--accent)' : 'var(--text)',
-                    }}
-                  >
-                    {v.name}
-                    {v.price !== product.price && (
-                      <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, opacity: 0.85 }}>
-                        {symbol}{convert(v.price, product.seller?.currency || 'GBP').toFixed(2)}
-                      </span>
-                    )}
-                  </button>
-                ))}
+          {(product.variants && product.variants.length > 0) && (() => {
+            const vs = product.variants
+            const colors = [...new Set(vs.map(v => v.color).filter(Boolean))] as string[]
+            const sizes = [...new Set(vs.map(v => v.size).filter(Boolean))] as string[]
+            const dimensional = colors.length > 0 || sizes.length > 0
+            const pillStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
+              padding: '7px 15px', borderRadius: '999px', fontSize: '13px', fontWeight: 600,
+              cursor: disabled ? 'not-allowed' : 'pointer', minHeight: '34px',
+              border: active ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
+              background: active ? 'rgba(255,107,0,0.12)' : 'transparent',
+              color: disabled ? 'var(--border)' : active ? 'var(--accent)' : 'var(--text)',
+              textDecoration: disabled ? 'line-through' : 'none',
+            })
+            if (!dimensional) {
+              // Label-only options: flat list, one button per named option.
+              return (
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '7px', fontWeight: 600 }}>Option</div>
+                  <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+                    {vs.map(v => (
+                      <button key={v.id} onClick={() => setSelectedVariant(v)} style={pillStyle(selectedVariant?.id === v.id, v.stock === 0)} disabled={v.stock === 0}>
+                        {v.name}
+                        {v.price !== product.price && (
+                          <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, opacity: 0.85 }}>
+                            {symbol}{convert(v.price, product.seller?.currency || 'GBP').toFixed(2)}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+            // Colour and/or Size pickers -- the two picks resolve to a
+            // variant; combinations with no row (or zero stock) are disabled.
+            const resolve = (c: string | null, sz: string | null) =>
+              vs.find(v => (colors.length === 0 || v.color === c) && (sizes.length === 0 || v.size === sz)) ?? null
+            const pick = (c: string | null, sz: string | null) => {
+              setSelColor(c); setSelSize(sz)
+              setSelectedVariant(resolve(c, sz))
+            }
+            return (
+              <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {colors.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '7px', fontWeight: 600 }}>
+                      Colour{selColor ? <span style={{ color: 'var(--text)' }}> — {selColor}</span> : ''}
+                    </div>
+                    <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+                      {colors.map(c => {
+                        const anyForColor = vs.some(v => v.color === c && v.stock > 0)
+                        return (
+                          <button key={c} onClick={() => pick(c, selSize)} disabled={!anyForColor} style={pillStyle(selColor === c, !anyForColor)}>
+                            {c}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                {sizes.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '7px', fontWeight: 600 }}>
+                      Size{selSize ? <span style={{ color: 'var(--text)' }}> — {selSize}</span> : ''}
+                    </div>
+                    <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+                      {sizes.map(sz => {
+                        const match = colors.length > 0 && selColor ? vs.find(v => v.color === selColor && v.size === sz) : vs.find(v => v.size === sz)
+                        const available = !!match && match.stock > 0
+                        return (
+                          <button key={sz} onClick={() => pick(selColor, sz)} disabled={!available} style={pillStyle(selSize === sz, !available)}>
+                            {sz}
+                            {match && match.price !== product.price && (
+                              <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, opacity: 0.85 }}>
+                                {symbol}{convert(match.price, product.seller?.currency || 'GBP').toFixed(2)}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                {!selectedVariant && (
+                  <div style={{ fontSize: '12px', color: 'var(--red)', fontWeight: 600 }}>
+                    {colors.length > 0 && sizes.length > 0 ? 'Pick a colour and size to add to cart' : colors.length > 0 ? 'Pick a colour to add to cart' : 'Pick a size to add to cart'}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <div style={{ fontSize: '12.5px', color: 'var(--muted)', fontWeight: 600 }}>Qty</div>
