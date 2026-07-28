@@ -1,5 +1,25 @@
 # TOP PRIORITY -- GLOBAL SHIPPING (added 2026-07-28) -- READ THIS FIRST, SUPERSEDES ALL OTHER WORK
 
+## 2026-07-28 ROLLOUT CHECKLIST (William: "complete 100% set up, nothing left out... guaranteed to work fully") -- every item verified live with evidence before it is marked done; anything unproven stays listed here
+
+William's directive this session, verbatim gist: Velor takes on the shipping heavy lifting globally -- the seller only prints the label and ships; cheap for buyers, easy for sellers, ALL countries not just China. Architecture: the Tier A auto-label mechanic (BUILT, see Task #24 correction below) + origin-by-origin carrier coverage + per-lane economy carriers.
+
+| # | Item | Status 2026-07-28 | Evidence |
+|---|------|-------------------|----------|
+| 1 | Stripe webhook payment_intent.succeeded subscribed | VERIFIED | Stripe API: we_1ToBoGDB5eA3WfmuW5U3pbhP, 8 events, enabled |
+| 2 | Auto-label code wired end to end | VERIFIED (code) | lib/orders.ts attemptAutoLabelPurchase <- createOrderFromPaymentIntent <- webhook; commit 328d948 deployed |
+| 3 | Shippo billing card | DONE per 07-27 checkpoint | not re-verified this session |
+| 4 | FedEx account -> Shippo | IN PROGRESS | account-ready email 07-27 21:58; retry pending Shippo login (session expired; William logging in) |
+| 5 | UPS account -> Shippo | IN PROGRESS | UPS signup verification emails 07-27 23:12; not yet connected |
+| 6 | Rate survey + TIER_A_ORIGINS expansion | PENDING carriers | expand only origins with verified live rates; log in docs/PAYOUTS.md |
+| 7 | END-TO-END LIVE PROOF (real order -> label -> seller email -> tracking) | NOT DONE -- the only honest "guaranteed" gate | needs a real small order to a GB seller; William's go-ahead required (real money) |
+| 8 | Cheap CN lane: YunExpress marketplace application | NOT STARTED (research done, see below) | Easyship ruled OUT for mainland CN (not a supported origin; HK yes -- 11-country pre-negotiated list per Easyship support docs 2026-07-28) |
+| 9 | Cheap HK lane: Easyship account | AWAITING WILLIAM signup | Claude cannot create accounts |
+| 10 | CN platform-default rate recalibration (honest Tier B pricing until #8 lands) | NOT STARTED | proposal: verify real economy rates with sellers first |
+| 11 | Buyer checkout COUNTRIES dropdown full-world expansion | NOT STARTED | long-standing open item; required for "global" claim |
+
+Nothing on this list may be silently dropped. If a future session finds an item stale, correct THIS table with evidence, per LAW #1/#3.
+
 William's explicit directive (verbatim): "global shipping non negotiable" -- full, cheap, worldwide shipping coverage for buyers is a hard requirement, not an aspiration. This is the single highest-priority item in this file until resolved. Do not start other work before addressing this unless William says otherwise. William said this is late-night/parked for now -- pick it up first next session.
 
 ## The problem
@@ -84,7 +104,7 @@ Reusable technical finding for ANY future Shippo carrier-connection form: Shippo
 - app/api/stripe/payment-intent/route.ts -- removed the old duplicated levy calculation in the server-side re-verification branch, applies the same per-item fee once after the branch chain. Commit "Update shipping fee calculation to use per-item admin fee" (70c4ef12), Vercel deployment dpl_2xWe4GRSzgNJoNBgjPmqE7rCVk3W -- READY (2026-07-27 20:18 UTC), and this is the current production deployment as of this checkpoint.
 All three commits confirmed deployed cleanly (state READY) via the Vercel API this session. Not yet live-tested this session -- no real checkout was run to confirm the fee actually shows GBP 1.20 x quantity rather than the old 8%.
 
-**Task #24 (Tier A auto-label webhook wiring): NOT STARTED. Session ended here.** Had just begun inspecting the current app/api/stripe/webhook/route.ts handler and the unused purchaseLabel() function in lib/shippo.ts when the session stopped responding -- no code was read to completion, no diff was written, nothing was committed for this task. Resume by re-reading both files fresh (don't trust this summary for their current contents, per LAW #3) and wiring purchaseLabel() into the payment_intent.succeeded case for GB/DE/CA-origin orders, populating the Shipment model's shippoShipmentId/shippoRateId/shippoLabelId/trackingNumber/labelUrl fields, per the architecture agreed in the entry below.
+**Task #24 (Tier A auto-label webhook wiring): DONE -- this "NOT STARTED" note went stale within hours.** Verified against the actual code 2026-07-28 (LAW #3): lib/orders.ts now contains attemptAutoLabelPurchase(), called from createOrderFromPaymentIntent() (which the payment_intent.succeeded webhook case calls) -- Tier A GB/DE/CA-origin orders get a Shippo label auto-purchased, Shipment row populated (shippoShipmentId/RateId/LabelId/trackingNumber/labelUrl, status LABEL_PURCHASED), tracking registered via createTrack, and the label PDF emailed to the seller. Deployed via the "Add auto-label purchase functionality for orders" commit (328d948, deployment READY 2026-07-28 morning). Webhook subscription re-verified live via Stripe API 2026-07-28: we_1ToBoGDB5eA3WfmuW5U3pbhP has payment_intent.succeeded enabled. NOT YET LIVE-TESTED with a real paid order -- that end-to-end proof is the open gate (see the 2026-07-28 global-shipping rollout checklist below).
 
 **Carried forward, unaffected by this session:** Task #9 (enforce weight + listing-time shipping resolvability) and Task #10 (admin-configurable levy UI) -- both still not started. Mobile app variant support, the payout-rail fix mentioned once, and expanding the buyer-facing COUNTRIES checkout dropdown beyond ~22 countries also remain open from further back.
 
