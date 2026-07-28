@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { canBrandLogo } from '@/lib/store-themes'
+import { isR2Configured, uploadDataUrlToR2 } from '@/lib/r2'
 
 // Max stored logo size. The client resizes/compresses before upload, so this is a safety cap.
 const MAX_LEN = 200_000
@@ -26,9 +27,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Image too large' }, { status: 413 })
   }
 
+  // Store the logo bytes in R2 and keep only the https URL in the DB
+  // (no-op until R2 env vars exist; upload failure falls back to the
+  // data URL exactly as before).
+  let stored = dataUrl
+  if (isR2Configured()) {
+    const uploaded = await uploadDataUrlToR2(dataUrl, `sellers/${seller.id}/logo`)
+    if (uploaded) stored = uploaded
+  }
+
   await prisma.seller.update({
     where: { id: seller.id },
-    data: { storeLogo: dataUrl } as unknown as Record<string, unknown>,
+    data: { storeLogo: stored } as unknown as Record<string, unknown>,
   })
   return NextResponse.json({ ok: true })
 }

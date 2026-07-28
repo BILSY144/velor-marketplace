@@ -6,6 +6,7 @@ import { checkMessageContent } from '@/lib/messageFilter'
 import { checkForbiddenPatterns, detectRegulatedSignal } from '@/lib/listingModeration'
 import { grantCountryFounderIfFirst } from '@/lib/founding'
 import { sendEmail, buildListingNeedsReviewAlertEmail } from '@/lib/email'
+import { imagesToR2 } from '@/lib/r2'
 
 // William, 2026-07-26: "anything that needs a review, is brought to me by
 // email immediately... ill check the reason its flagged and make a
@@ -329,6 +330,17 @@ export async function POST(req: NextRequest) {
     ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
     : Math.max(0, parseInt(String(stock || 0)))
 
+  // Move uploaded photo bytes to R2 object storage so the DB stores only
+  // small https URLs (Velor Social prerequisite, 2026-07-29). No-op until
+  // the R2 env vars exist in Vercel; an individual upload failure keeps
+  // that image's original data URL, so a storage hiccup can never lose a
+  // seller's photo or block a listing.
+  const storedImages = await imagesToR2(validImages, `products/${seller.id}`)
+  const storedVariants = await Promise.all(variants.map(async (v) => ({
+    ...v,
+    images: await imagesToR2(v.images ?? [], `products/${seller.id}/variants`),
+  })))
+
   const product = await prisma.product.create({
     data: {
       sellerId: seller.id,
@@ -337,7 +349,7 @@ export async function POST(req: NextRequest) {
       price: parsedPrice,
       stock: productStock,
       category: String(category).trim(),
-      images: validImages,
+      images: storedImages,
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
@@ -359,8 +371,8 @@ export async function POST(req: NextRequest) {
       madeToOrder: !!madeToOrder,
       leadTimeDays: madeToOrder ? parsedLeadTime : null,
       sizeGuide: sizeGuide ? String(sizeGuide).trim().slice(0, 4000) || null : null,
-      ...(variants.length > 0
-        ? { variants: { create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+      ...(storedVariants.length > 0
+        ? { variants: { create: storedVariants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })
@@ -492,6 +504,15 @@ export async function PATCH(req: NextRequest) {
     ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
     : Math.max(0, parseInt(String(stock || 0)))
 
+  // Same R2 offload as POST: new/changed data-URL photos move to R2,
+  // already-hosted URLs (including previously-migrated R2 ones) pass
+  // through untouched. No-op until R2 env vars exist.
+  const storedImages = await imagesToR2(validImages, `products/${existing.sellerId}`)
+  const storedVariants = await Promise.all(variants.map(async (v) => ({
+    ...v,
+    images: await imagesToR2(v.images ?? [], `products/${existing.sellerId}/variants`),
+  })))
+
   const product = await prisma.product.update({
     where: { id },
     data: {
@@ -500,7 +521,7 @@ export async function PATCH(req: NextRequest) {
       price: parsedPrice,
       stock: productStock,
       category: String(category).trim(),
-      images: validImages,
+      images: storedImages,
       tags: Array.isArray(tags)
         ? tags.filter((t: unknown) => typeof t === 'string')
         : [],
@@ -533,7 +554,7 @@ export async function PATCH(req: NextRequest) {
       // treats a since-removed variant as no longer available rather than
       // erroring the whole checkout.
       ...(variantsProvided
-        ? { variants: { deleteMany: {}, create: variants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
+        ? { variants: { deleteMany: {}, create: storedVariants.map((v) => ({ label: v.label ?? null, color: v.color, size: v.size, images: v.images ?? [], stock: v.stock, priceOverride: v.priceOverride, sku: v.sku })) } }
         : {}),
     },
   })
