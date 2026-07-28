@@ -240,6 +240,15 @@ reader.readAsDataURL(file)
 })
 }
 
+// YouTube/Vimeo link -> embed URL for the in-form video preview box.
+function videoEmbedUrl(raw: string): string | null {
+const yt = raw.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/)
+if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}`
+const vimeo = raw.match(/vimeo\.com\/(\d+)/)
+if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`
+return null
+}
+
 // Compact per-option photo uploader (2026-07-28: each option is its own
 // little product -- "Red" shows the red photo on the buyer's page).
 function VariantPhotoBox({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
@@ -544,6 +553,11 @@ const [variantRows, setVariantRows] = useState<VariantRow[]>([])
 // Quick-grid builder inputs (sizes x colours -> generated option rows).
 const [matrixSizes, setMatrixSizes] = useState('')
 const [matrixColors, setMatrixColors] = useState('')
+// What makes the versions different (2026-07-29, William: "i have 1 product
+// but 6 different types and prices... nothing seperates that apart from
+// worded text"). Pure UI shaping -- picks which fields each version card
+// shows; the saved rows are the same label/color/size as before.
+const [diffKinds, setDiffKinds] = useState<{ type: boolean; size: boolean; color: boolean }>({ type: true, size: false, color: false })
 // Guided steps (2026-07-28 "major uplift"): 1 Photos & video, 2 Basics,
 // 3 Options & sizes, 4 Shipping, 5 Story & compliance. All steps stay
 // mounted (display toggling) so nothing typed is ever lost moving around.
@@ -643,6 +657,11 @@ currency: sellerCurrency,
 })
 const existingVariants = p.variants ?? []
 setHasVariants(existingVariants.length > 0)
+setDiffKinds({
+type: existingVariants.some(v => v.label) || existingVariants.length === 0,
+size: existingVariants.some(v => v.size),
+color: existingVariants.some(v => v.color),
+})
 setVariantRows(
 existingVariants.length > 0
 ? existingVariants.map((v) => ({
@@ -686,6 +705,11 @@ currency: sellerCurrency,
 })
 const duplicatedVariants = p.variants ?? []
 setHasVariants(duplicatedVariants.length > 0)
+setDiffKinds({
+type: duplicatedVariants.some(v => v.label) || duplicatedVariants.length === 0,
+size: duplicatedVariants.some(v => v.size),
+color: duplicatedVariants.some(v => v.color),
+})
 setVariantRows(
 duplicatedVariants.length > 0
 ? duplicatedVariants.map((v) => ({
@@ -1074,25 +1098,55 @@ has the option of different varients and prices... not just for clothes
 all listings"): generic named options -- each with its own price and
 stock -- plus a size x colour matrix builder for clothing sellers. */}
 <div style={{ marginTop: '16px' }}>
-<label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
-<input
-type="checkbox"
-checked={hasVariants}
-onChange={(e) => {
-const checked = e.target.checked
-setHasVariants(checked)
-if (checked && variantRows.length === 0) setVariantRows([newVariantRow()])
-}}
-/>
-This item comes in different options — designs, colours, sizes, sets — each with its own price and stock
-</label>
+{/* The seller's own question, asked directly -- two big choice cards. */}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+<button type="button" onClick={() => setHasVariants(false)} style={{
+textAlign: 'left', padding: '16px', borderRadius: 12, cursor: 'pointer',
+border: !hasVariants ? '2px solid var(--accent)' : '1px solid var(--border)',
+background: !hasVariants ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
+}}>
+<div style={{ fontSize: '14px', fontWeight: 800, color: !hasVariants ? 'var(--accent)' : 'var(--text)', marginBottom: 4 }}>One version</div>
+<div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>This piece comes one way — one price, one stock count.</div>
+</button>
+<button type="button" onClick={() => {
+setHasVariants(true)
+if (variantRows.length === 0) setVariantRows([newVariantRow()])
+}} style={{
+textAlign: 'left', padding: '16px', borderRadius: 12, cursor: 'pointer',
+border: hasVariants ? '2px solid var(--accent)' : '1px solid var(--border)',
+background: hasVariants ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
+}}>
+<div style={{ fontSize: '14px', fontWeight: 800, color: hasVariants ? 'var(--accent)' : 'var(--text)', marginBottom: 4 }}>Multiple versions</div>
+<div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>Different types, sizes or colours — each version gets its own photo, price and stock, all in this one listing.</div>
+</button>
+</div>
 {hasVariants && (
-<div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-<div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-One listing, many versions — buyers pick an option on your product page instead of you listing the same product several times. Name each option anything that fits (&quot;Dragon design&quot;, &quot;Lavender&quot;, &quot;Set of 3&quot;) and/or use colour and size. Leave price blank to charge the main price above.
+<div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+<div>
+<div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text)', marginBottom: 7 }}>What makes your versions different?</div>
+<div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+{([
+{ key: 'type', label: 'Type / design' },
+{ key: 'size', label: 'Size' },
+{ key: 'color', label: 'Colour' },
+] as const).map(k => (
+<button key={k.key} type="button"
+onClick={() => setDiffKinds(d => ({ ...d, [k.key]: !d[k.key] }))}
+style={{ padding: '8px 16px', borderRadius: 999, cursor: 'pointer', fontSize: '13px', fontWeight: 700,
+border: diffKinds[k.key] ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+background: diffKinds[k.key] ? 'rgba(255,107,0,0.10)' : 'transparent',
+color: diffKinds[k.key] ? 'var(--accent)' : 'var(--muted)' }}>
+{diffKinds[k.key] ? '✓ ' : ''}{k.label}
+</button>
+))}
+</div>
+<div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: 6 }}>
+Pick any that apply — e.g. a teapot in 6 designs at 6 prices is just &quot;Type / design&quot;; a shirt is &quot;Size&quot; + &quot;Colour&quot;.
+</div>
 </div>
 {/* Clothes/shoes shortcut: tick nothing, type sizes + colours, generate
 the whole grid in one click instead of hand-adding every row. */}
+{(diffKinds.size || diffKinds.color) && (
 <div style={{ border: '1px dashed var(--border)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>Quick grid for sizes &amp; colours</div>
 {/* Tap-to-fill pills (William: "sellers need dropdown pills for easy
@@ -1154,46 +1208,58 @@ Generate grid
 </button>
 </div>
 <div style={{ fontSize: '10.5px', color: 'var(--muted)' }}>
-Creates a row for every size &times; colour combination (e.g. 4 sizes &times; 3 colours = 12 rows) — then just fill in the stock for each.
+Creates a version for every size &times; colour combination (e.g. 4 sizes &times; 3 colours = 12 versions) — then just fill in the stock for each.
 </div>
 </div>
+)}
 {variantRows.map((row, idx) => {
 const upd = (patch: Partial<VariantRow>) => {
 const next = [...variantRows]
 next[idx] = { ...next[idx], ...patch }
 setVariantRows(next)
 }
-const optionTitle = [row.label.trim(), row.color.trim(), row.size.trim()].filter(Boolean).join(' · ') || `Option ${idx + 1}`
+const summary = [row.label.trim(), row.color.trim(), row.size.trim()].filter(Boolean).join(' · ')
+const priceTxt = row.priceOverride.trim() ? `${form.currency === 'GBP' ? '£' : ''}${row.priceOverride.trim()}` : 'main price'
+const dimCols = [diffKinds.color, diffKinds.size].filter(Boolean).length
 return (
 <div key={row.tempId} style={{
 border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)', padding: '12px',
 display: 'flex', flexDirection: 'column', gap: '10px',
 }}>
-<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-<VariantPhotoBox id={`variant-photo-${row.tempId}`} value={row.image} onChange={(v) => upd({ image: v })} />
-<div style={{ flex: 1, minWidth: 0 }}>
-<div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>{optionTitle}</div>
-<input
-style={inputStyle}
-placeholder='Option name — "Dragon design", "Lavender", "Set of 3"...'
-value={row.label}
-onChange={e => upd({ label: e.target.value })}
-/>
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+<span style={{ background: 'var(--accent)', color: '#160a00', fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.06em', borderRadius: 999, padding: '3px 10px', textTransform: 'uppercase' }}>Version {idx + 1}</span>
+<span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }}>
+{summary || 'Fill in below'}{summary ? ` — ${priceTxt}` : ''}
+</span>
 </div>
 <button
 type="button"
 onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))}
-style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--muted)', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}
-aria-label="Remove option" title="Remove option"
+style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--muted)', fontSize: '15px', lineHeight: 1, flexShrink: 0 }}
+aria-label="Remove version" title="Remove version"
 >
 &times;
 </button>
 </div>
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 110px', gap: '8px' }}>
-<input style={inputStyle} placeholder="Colour (optional)" value={row.color} onChange={e => upd({ color: e.target.value })} />
-<input style={inputStyle} placeholder="Size (optional)" value={row.size} onChange={e => upd({ size: e.target.value })} />
+<div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+<VariantPhotoBox id={`variant-photo-${row.tempId}`} value={row.image} onChange={(v) => upd({ image: v })} />
+<div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+{diffKinds.type && (
+<input
+style={inputStyle}
+placeholder='What is this version called? — "Dragon design", "Set of 3"...'
+value={row.label}
+onChange={e => upd({ label: e.target.value })}
+/>
+)}
+<div style={{ display: 'grid', gridTemplateColumns: `${dimCols > 0 ? 'repeat(' + dimCols + ', 1fr) ' : ''}90px 110px`, gap: '8px' }}>
+{diffKinds.color && <input style={inputStyle} placeholder="Colour" value={row.color} onChange={e => upd({ color: e.target.value })} />}
+{diffKinds.size && <input style={inputStyle} placeholder="Size" value={row.size} onChange={e => upd({ size: e.target.value })} />}
 <input style={inputStyle} type="number" placeholder="Stock" value={row.stock} onChange={e => upd({ stock: e.target.value })} />
 <input style={inputStyle} type="number" step="0.01" placeholder="Price" value={row.priceOverride} onChange={e => upd({ priceOverride: e.target.value })} />
+</div>
+</div>
 </div>
 </div>
 )
@@ -1206,7 +1272,7 @@ alignSelf: 'flex-start', background: 'none', border: '1px dashed var(--border)',
 padding: '8px 14px', cursor: 'pointer', color: 'var(--accent)', fontSize: '12.5px', fontWeight: 600,
 }}
 >
-+ Add another option
++ Add version {variantRows.length + 1}
 </button>
 <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
 Leave price blank to use the main price above for that option. Total inventory shown to buyers is the sum of all option stock. Each option needs a name, colour, or size (any combination).
@@ -1215,20 +1281,43 @@ Leave price blank to use the main price above for that option. Total inventory s
 )}
 </div>
 
-{/* Video by link (William, 2026-07-28: free for now; paid upload later).
-Validated server-side to YouTube/Vimeo only. */}
+{/* Video by link (William, 2026-07-28: free for now; paid upload later;
+2026-07-29: "should be upload boxes not text") -- an upload-box-style
+card with a live preview once the link resolves. Server still
+validates YouTube/Vimeo only. */}
 <div style={{ marginTop: '16px' }}>
-<label style={labelStyle}>Product video (optional — YouTube or Vimeo link)</label>
+<label style={labelStyle}>Product video (optional)</label>
+{videoEmbedUrl(form.videoUrl.trim()) ? (
+<div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface)' }}>
+<div style={{ aspectRatio: '16/9', background: '#000' }}>
+<iframe src={videoEmbedUrl(form.videoUrl.trim()) as string} title="Product video preview" style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen loading="lazy" />
+</div>
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px' }}>
+<div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--green)' }}>✓ Video added — this plays on your product page</div>
+<button type="button" onClick={() => set('videoUrl', '')} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: 'var(--muted)', fontSize: '12px', fontWeight: 600 }}>Remove</button>
+</div>
+</div>
+) : (
+<div style={{ border: '1px dashed var(--border)', borderRadius: 12, background: 'var(--bg)', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+<div style={{ width: 56, height: 56, borderRadius: 10, flexShrink: 0, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+<span style={{ fontSize: '20px', color: 'var(--accent)' }}>▶</span>
+</div>
+<div style={{ flex: 1, minWidth: '220px' }}>
+<div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>Add a product video — free</div>
+<div style={{ fontSize: '11.5px', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 8 }}>Film the piece or you making it, upload to YouTube (free), paste the link — it plays on your product page and builds serious buyer trust.</div>
 <input
-style={inputStyle}
+style={{ ...inputStyle, fontSize: '13px' }}
 type="url"
-placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+placeholder="Paste YouTube or Vimeo link here..."
 value={form.videoUrl}
 onChange={e => set('videoUrl', e.target.value)}
 />
-<div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-A short video of the piece — or you making it — plays on your product page. Listings with video build far more buyer trust. Upload to YouTube (free) and paste the link here.
+{form.videoUrl.trim() !== '' && !videoEmbedUrl(form.videoUrl.trim()) && (
+<div style={{ fontSize: '11px', color: 'var(--red)', marginTop: 4 }}>That doesn&apos;t look like a YouTube or Vimeo link yet.</div>
+)}
 </div>
+</div>
+)}
 </div>
 
 {/* Made to order -- for artisans who craft on demand rather than holding
@@ -1261,8 +1350,9 @@ Buyers see &quot;Made to order — crafted when you buy, ships in ~X days&quot; 
 </div>
 
 {/* Size guide -- free-text measurements table, shown on the product page. */}
+{(diffKinds.size && hasVariants) || form.category === 'Garments' ? (
 <div style={{ marginTop: '16px' }}>
-<label style={labelStyle}>Size guide (optional — for garments, shoes, jewellery)</label>
+<label style={labelStyle}>Size guide (optional — your measurements, shown next to the size picker)</label>
 <textarea
 style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' as const }}
 placeholder={"e.g.\nS — chest 92cm, length 66cm\nM — chest 98cm, length 69cm\nL — chest 104cm, length 72cm"}
@@ -1273,6 +1363,7 @@ onChange={e => set('sizeGuide', e.target.value)}
 Shown as a &quot;Size guide&quot; section on your product page — fewer wrong-size returns.
 </div>
 </div>
+) : null}
 
 </div>
 
