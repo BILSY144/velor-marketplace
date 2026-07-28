@@ -86,6 +86,10 @@ export const CATEGORY_NAMES: string[] = CATEGORIES.map((c) => c.name)
 // values on deploy. Not used at runtime by the app itself.
 export const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
   'Electronics': 'Precision Craft',
+  // 'Toys & Games' added 2026-07-28: the original map missed it, found live
+  // when a relisted williams-workshop product carried the legacy name and
+  // silently matched no homepage reel (no lift, no injection).
+  'Toys & Games': 'Handcrafted Toys, Dolls & Puppets',
   'Home & Garden': 'Home Craft & Décor',
   'Beauty & Health': 'Light, Scent & Self',
   'Sports & Outdoors': 'Outdoor & Field Craft',
