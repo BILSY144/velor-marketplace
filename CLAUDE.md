@@ -7,16 +7,19 @@ William's directive this session, verbatim gist: Velor takes on the shipping hea
 | # | Item | Status 2026-07-28 | Evidence |
 |---|------|-------------------|----------|
 | 1 | Stripe webhook payment_intent.succeeded subscribed | VERIFIED | Stripe API: we_1ToBoGDB5eA3WfmuW5U3pbhP, 8 events, enabled |
-| 2 | Auto-label code wired end to end | VERIFIED (code) | lib/orders.ts attemptAutoLabelPurchase <- createOrderFromPaymentIntent <- webhook; commit 328d948 deployed |
-| 3 | Shippo billing card | DONE per 07-27 checkpoint | not re-verified this session |
-| 4 | FedEx account -> Shippo | IN PROGRESS | account-ready email 07-27 21:58; retry pending Shippo login (session expired; William logging in) |
-| 5 | UPS account -> Shippo | IN PROGRESS | UPS signup verification emails 07-27 23:12; not yet connected |
-| 6 | Rate survey + TIER_A_ORIGINS expansion | PENDING carriers | expand only origins with verified live rates; log in docs/PAYOUTS.md |
-| 7 | END-TO-END LIVE PROOF (real order -> label -> seller email -> tracking) | NOT DONE -- the only honest "guaranteed" gate | needs a real small order to a GB seller; William's go-ahead required (real money) |
-| 8 | Cheap CN lane: YunExpress marketplace application | NOT STARTED (research done, see below) | Easyship ruled OUT for mainland CN (not a supported origin; HK yes -- 11-country pre-negotiated list per Easyship support docs 2026-07-28) |
-| 9 | Cheap HK lane: Easyship account | AWAITING WILLIAM signup | Claude cannot create accounts |
+| 2 | Auto-label code wired end to end | VERIFIED LIVE | see item 7 |
+| 3 | Shippo billing card | VERIFIED LIVE | real label charged to it (item 7) |
+| 4 | FedEx account -> Shippo | DONE -- CONNECTED + QUOTING | "VELOR" account active in Your Accounts; FedEx rates appeared live at checkout (GBP 13.04/13.07/18.79 GB domestic). CRITICAL FINDING: a UK FedEx account adds GB-lane options only -- 10-origin survey probe (US/CN/HK/FR/ES/AU/JP/IN/IT/NL -> GB) returned ZERO rates, so per-country UK carrier signups can NOT deliver world origin coverage. UPS UK would be the same; deprioritized. |
+| 5 | UPS account -> Shippo | DEPRIORITIZED | same GB-only limitation as FedEx (see item 4); signup half-done if ever wanted |
+| 6 | Rate survey + TIER_A_ORIGINS expansion | PENDING new origin rails (Easyship/YunExpress), not more UK carriers | survey verified working (GB->US succeeded) |
+| 7 | END-TO-END LIVE PROOF | **DONE 2026-07-28 -- FULL CHAIN VERIFIED WITH A REAL PAID ORDER** | Order cms4u5jfo0001woyre0rf4i7v (hand made toys, GBP 4.91, williams workshop GB->GB): payment -> webhook -> Order row PAID -> label purchased (Hermes UK, tracking H01M8A0097008786, Shipment LABEL_PURCHASED, shippoLabelId d6e44aa9...) -> "Shipping label ready" email DELIVERED to seller (Resend 95ee5ceb, 16:11 UTC, William confirmed receipt) -> buyer "Order confirmed" email DELIVERED (Resend 2029626d) -> tracking registered (hermes_uk token). TWO REAL BUGS found+fixed by this test: (a) postcode metadata key mismatch (checkout stores 'postcode', label path read only zip/postalCode -> Shippo quoted empty postcode, zero rates; fixed 17fe9e8), (b) Shippo /tracks needs carrier TOKEN not display name ('Hermes UK' -> 'hermes_uk'; 'evri' is NOT accepted; fixed e0be170+). New admin repair route POST /api/admin/retry-label {orderId, carrierToken?} re-runs a failed label attempt or repairs trackRegistered; never double-buys. Remaining unobserved: physical delivery -> webhook DELIVERED stamp -> escrow release (plays out in transit; Shippo also auto-creates tracking webhooks for own-purchased labels per their docs). |
+| 8 | Cheap CN lane: YunExpress marketplace application | DRAFTED, awaiting William approval to submit | Easyship ruled OUT for mainland CN (not a supported origin; HK yes -- 11-country pre-negotiated list per Easyship support docs 2026-07-28) |
+| 9 | Cheap HK lane + multi-origin: Easyship account | AWAITING WILLIAM signup | Claude cannot create accounts; biggest single origin-coverage lever (~11 origins) |
 | 10 | CN platform-default rate recalibration (honest Tier B pricing until #8 lands) | NOT STARTED | proposal: verify real economy rates with sellers first |
-| 11 | Buyer checkout COUNTRIES dropdown full-world expansion | NOT STARTED | long-standing open item; required for "global" claim |
+| 11 | Buyer checkout COUNTRIES dropdown full-world expansion | NOT STARTED | currently 22 destinations only (app/checkout/page.tsx COUNTRIES) |
+| 12 | Email deliverability: transactional mail lands in Junk | OPEN (found via item 7: both order emails junked in William's own Outlook) | harden velorcommerce.store sending domain -- DMARC alignment, warm-up; buyers on other providers may junk too |
+
+Also fixed same session (found via the homepage lift not firing): legacy category 'Toys & Games' was missing from LEGACY_CATEGORY_MIGRATION, so relisted products carrying it matched no reel -- added to both maps (0ebf5db), migration renames rows on every deploy. NOTE: Vercel dropped one GitHub push webhook this session (17fe9e8 never deployed until an empty retrigger commit) -- if a push gets no deployment within ~5 min, push an empty commit.
 
 Nothing on this list may be silently dropped. If a future session finds an item stale, correct THIS table with evidence, per LAW #1/#3.
 
