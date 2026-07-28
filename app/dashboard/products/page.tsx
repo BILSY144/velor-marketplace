@@ -522,6 +522,11 @@ const [variantRows, setVariantRows] = useState<VariantRow[]>([])
 // Quick-grid builder inputs (sizes x colours -> generated option rows).
 const [matrixSizes, setMatrixSizes] = useState('')
 const [matrixColors, setMatrixColors] = useState('')
+// Guided steps (2026-07-28 "major uplift"): 1 Photos & video, 2 Basics,
+// 3 Options & sizes, 4 Shipping, 5 Story & compliance. All steps stay
+// mounted (display toggling) so nothing typed is ever lost moving around.
+const [step, setStep] = useState(1)
+const [draftRestored, setDraftRestored] = useState(false)
 const [rulesAccepted, setRulesAccepted] = useState(false)
 const [saving, setSaving] = useState(false)
 const [error, setError] = useState('')
@@ -545,6 +550,14 @@ fetch(`/api/dashboard/category-stats?category=${encodeURIComponent(form.category
 .catch(() => setCategoryStats(null))
 }, [form.category])
 
+// Draft autosave: new listings only (edits always load from the server).
+useEffect(() => {
+if (!showForm || editProduct) return
+try {
+localStorage.setItem('velor-listing-draft', JSON.stringify({ form, hasVariants, variantRows }))
+} catch {}
+}, [form, hasVariants, variantRows, showForm, editProduct])
+
 async function loadProducts() {
 setLoading(true)
 const data = await fetch('/api/dashboard/products').then(r => r.json())
@@ -558,6 +571,26 @@ return { tempId: `v${Date.now()}${Math.random().toString(36).slice(2, 8)}`, labe
 
 function openNew() {
 setEditProduct(null)
+setStep(1)
+setDraftRestored(false)
+// Draft autosave restore -- a seller who closed the form (or lost the tab)
+// picks up exactly where they left off. Cleared on successful create.
+try {
+const raw = localStorage.getItem('velor-listing-draft')
+if (raw) {
+const d = JSON.parse(raw)
+if (d && d.form && (d.form.name || d.form.description)) {
+setForm({ ...emptyForm, ...d.form, currency: d.form.currency || sellerCurrency })
+setHasVariants(!!d.hasVariants)
+setVariantRows(Array.isArray(d.variantRows) ? d.variantRows : [])
+setRulesAccepted(false)
+setError('')
+setDraftRestored(true)
+setShowForm(true)
+return
+}
+}
+} catch {}
 setForm({ ...emptyForm, currency: sellerCurrency })
 setHasVariants(false)
 setVariantRows([])
@@ -568,6 +601,8 @@ setShowForm(true)
 
 function openEdit(p: Product) {
 setEditProduct(p)
+setStep(1)
+setDraftRestored(false)
 const imgs = (p.images ?? []).slice(0, MAX_IMAGES)
 while (imgs.length < MAX_IMAGES) imgs.push('')
 setForm({
@@ -608,6 +643,8 @@ setShowForm(true)
 // listing — a genuine time-saver for sellers with large catalogues.
 function openDuplicate(p: Product) {
 setEditProduct(null)
+setStep(1)
+setDraftRestored(false)
 const imgs = (p.images ?? []).slice(0, MAX_IMAGES)
 while (imgs.length < MAX_IMAGES) imgs.push('')
 setForm({
@@ -708,7 +745,23 @@ if (!rulesAccepted) {
 setError('Please confirm this listing complies with the Seller Rules and Product Compliance Policy.')
 return
 }
+if (validImageCount < MIN_IMAGES) {
+setStep(1)
+setError(`Please add at least ${MIN_IMAGES} product photos.`)
+return
+}
+if (!form.name.trim() || !form.price || !form.category) {
+setStep(2)
+setError('Please fill in the name, price, and category.')
+return
+}
+if (!form.originCountry) {
+setStep(4)
+setError('Please select the origin country.')
+return
+}
 if (!form.weightGrams || !form.lengthCm || !form.widthCm || !form.heightCm) {
+setStep(4)
 setError('Please add weight and dimensions (weight, length, width, height) so shipping can be calculated.')
 return
 }
@@ -776,6 +829,7 @@ variants: hasVariants ? variantsPayload : [],
 const url = editProduct ? '/api/dashboard/products?id=' + editProduct.id : '/api/dashboard/products'
 const method = editProduct ? 'PATCH' : 'POST'
 const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+if (res.ok && !editProduct) { try { localStorage.removeItem('velor-listing-draft') } catch {} }
 const data = await res.json()
 if (!res.ok) { setError(data.error ?? 'Save failed'); return }
 setShowForm(false)
@@ -845,9 +899,65 @@ background: isElevated ? `${accentColor}18` : 'var(--bg)', border: `1px solid ${
   for the full list of prohibited items (including ivory, tortoiseshell, and protected bird feathers). Listings that violate this policy are blocked automatically.
 </div>
 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+{/* Guided step navigation + listing strength (2026-07-28 major uplift:
+William, "its still box looking atm which needs a major uplift"). All
+steps stay mounted via display toggling so typed values persist. */}
+{(() => {
+const stepTitles = ['Photos & video', 'The basics', 'Options & sizes', 'Shipping', 'Story & submit']
+const checks: { done: boolean; hint: string }[] = [
+{ done: validImageCount >= MIN_IMAGES, hint: `Add at least ${MIN_IMAGES} photos` },
+{ done: validImageCount >= 5, hint: '5+ photos show the piece properly' },
+{ done: form.videoUrl.trim().length > 0, hint: 'A video builds real buyer trust' },
+{ done: form.name.trim().length >= 15, hint: 'A fuller title helps buyers find it' },
+{ done: form.description.trim().length >= 80, hint: 'Describe the piece in a few sentences' },
+{ done: !!form.category, hint: 'Pick a category' },
+{ done: !!form.originCountry, hint: 'Set the origin country' },
+{ done: !!(form.weightGrams && form.lengthCm && form.widthCm && form.heightCm), hint: 'Weight & dimensions unlock shipping' },
+{ done: form.materials.trim().length > 0, hint: 'List the materials' },
+{ done: form.isHandmade !== 'true' || form.makerStory.trim().length > 0, hint: 'Tell the maker story' },
+]
+const done = checks.filter(c => c.done).length
+const pct = Math.round((done / checks.length) * 100)
+const nextHints = checks.filter(c => !c.done).slice(0, 2)
+return (
+<div style={{ marginBottom: '4px' }}>
+<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+{stepTitles.map((t, i) => (
+<button key={t} type="button" onClick={() => setStep(i + 1)}
+style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 999, cursor: 'pointer', fontSize: '12px', fontWeight: 700,
+border: step === i + 1 ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+background: step === i + 1 ? 'rgba(255,107,0,0.10)' : 'transparent',
+color: step === i + 1 ? 'var(--accent)' : 'var(--muted)' }}>
+<span style={{ width: 17, height: 17, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', background: step === i + 1 ? 'var(--accent)' : 'var(--border)', color: step === i + 1 ? '#160a00' : 'var(--muted)' }}>{i + 1}</span>
+{t}
+</button>
+))}
+</div>
+<div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10 }}>
+<div style={{ fontSize: '11.5px', fontWeight: 800, color: pct >= 70 ? 'var(--green)' : 'var(--accent)', whiteSpace: 'nowrap' }}>Listing strength {pct}%</div>
+<div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+<div style={{ width: `${pct}%`, height: '100%', background: pct >= 70 ? 'var(--green)' : 'var(--accent)', transition: 'width .3s' }} />
+</div>
+{nextHints.length > 0 && (
+<div style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '45%' }}>
+Next: {nextHints.map(h => h.hint).join(' · ')}
+</div>
+)}
+</div>
+{draftRestored && (
+<div style={{ marginTop: 8, fontSize: '11.5px', color: 'var(--green)', fontWeight: 600 }}>
+Draft restored — you're picking up where you left off.
+</div>
+)}
+</div>
+)
+})()}
+
+{/* STEP 2: The basics */}
+<div style={{ display: step === 2 ? 'flex' : 'none', flexDirection: 'column', gap: '18px' }}>
 <div>
 <label style={labelStyle}>Name *</label>
-<input style={inputStyle} value={form.name} onChange={e => set('name', e.target.value)} required />
+<input style={inputStyle} value={form.name} onChange={e => set('name', e.target.value)} />
 </div>
 <div>
 <label style={labelStyle}>Description</label>
@@ -901,6 +1011,10 @@ Matches Velor&apos;s live categories — your listing goes straight to the right
 </div>
 </div>
 
+</div>
+
+{/* STEP 3: Options & sizes */}
+<div style={{ display: step === 3 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
 {/* Options & variants (2026-07-28 overhaul, William: "single listing which
 has the option of different varients and prices... not just for clothes
 all listings"): generic named options -- each with its own price and
@@ -927,6 +1041,36 @@ One listing, many versions — buyers pick an option on your product page instea
 the whole grid in one click instead of hand-adding every row. */}
 <div style={{ border: '1px dashed var(--border)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>Quick grid for sizes &amp; colours</div>
+{/* Tap-to-fill pills (William: "sellers need dropdown pills for easy
+use" + "need to cover oversize people too") -- size sets through 6XL
+and common colours, no typing needed. */}
+<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+{[
+{ label: 'XS–2XL', value: 'XS, S, M, L, XL, 2XL' },
+{ label: 'Plus 2XL–6XL', value: '2XL, 3XL, 4XL, 5XL, 6XL' },
+{ label: 'Full XS–6XL', value: 'XS, S, M, L, XL, 2XL, 3XL, 4XL, 5XL, 6XL' },
+{ label: 'UK shoes 3–13', value: 'UK 3, UK 4, UK 5, UK 6, UK 7, UK 8, UK 9, UK 10, UK 11, UK 12, UK 13' },
+{ label: 'One size', value: 'One Size' },
+].map(pz => (
+<button key={pz.label} type="button" onClick={() => setMatrixSizes(pz.value)}
+style={{ padding: '5px 11px', borderRadius: 999, border: matrixSizes === pz.value ? '1.5px solid var(--accent)' : '1px solid var(--border)', background: matrixSizes === pz.value ? 'rgba(255,107,0,0.10)' : 'transparent', color: matrixSizes === pz.value ? 'var(--accent)' : 'var(--muted)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}>
+{pz.label}
+</button>
+))}
+</div>
+<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+{['Black', 'White', 'Red', 'Blue', 'Green', 'Brown', 'Beige', 'Grey', 'Natural', 'Multicolour'].map(c => {
+const current = matrixColors.split(',').map(x => x.trim()).filter(Boolean)
+const active = current.includes(c)
+return (
+<button key={c} type="button"
+onClick={() => setMatrixColors(active ? current.filter(x => x !== c).join(', ') : [...current, c].join(', '))}
+style={{ padding: '5px 11px', borderRadius: 999, border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)', background: active ? 'rgba(255,107,0,0.10)' : 'transparent', color: active ? 'var(--accent)' : 'var(--muted)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}>
+{c}
+</button>
+)
+})}
+</div>
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'center' }}>
 <input style={inputStyle} placeholder="Sizes, comma-separated (e.g. S, M, L, XL)" value={matrixSizes} onChange={e => setMatrixSizes(e.target.value)} />
 <input style={inputStyle} placeholder="Colours, comma-separated (e.g. Red, Black)" value={matrixColors} onChange={e => setMatrixColors(e.target.value)} />
@@ -1106,7 +1250,11 @@ Shown as a &quot;Size guide&quot; section on your product page — fewer wrong-s
 </div>
 </div>
 
-<div style={{ marginTop: '16px' }}>
+</div>
+
+{/* STEP 5: Story & compliance */}
+<div style={{ display: step === 5 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
+<div style={{ marginTop: '0px' }}>
 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
 <input
 type="checkbox"
@@ -1157,6 +1305,10 @@ Regulated materials need valid permits (for example CITES export permits) before
 </div>
 )}
 </div>
+</div>
+
+{/* STEP 1: Photos & video */}
+<div style={{ display: step === 1 ? 'flex' : 'none', flexDirection: 'column', gap: '18px' }}>
 <div>
 <label style={labelStyle}>Product Photos</label>
 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1183,8 +1335,11 @@ return (
 })()}
 </div>
 
-{/* Shipping section */}
-<div style={{ borderTop: '1px solid var(--border)', paddingTop: '18px' }}>
+</div>
+
+{/* STEP 4: Shipping */}
+<div style={{ display: step === 4 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
+<div style={{ borderTop: 'none', paddingTop: '0px' }}>
 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>Shipping & Customs</div>
 <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '14px' }}>
 Weight and dimensions are used for shipping labels. HS code is recommended if this item may ever ship internationally — Velor is a global marketplace, so a buyer anywhere could order it.
@@ -1193,19 +1348,19 @@ Weight and dimensions are used for shipping labels. HS code is recommended if th
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
 <div>
 <label style={labelStyle}>Weight (g)</label>
-<input style={inputStyle} type="number" value={form.weightGrams} onChange={e => set('weightGrams', e.target.value)} placeholder="450" required />
+<input style={inputStyle} type="number" value={form.weightGrams} onChange={e => set('weightGrams', e.target.value)} placeholder="450" />
 </div>
 <div>
 <label style={labelStyle}>Length (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.lengthCm} onChange={e => set('lengthCm', e.target.value)} placeholder="18" required />
+<input style={inputStyle} type="number" step="0.1" value={form.lengthCm} onChange={e => set('lengthCm', e.target.value)} placeholder="18" />
 </div>
 <div>
 <label style={labelStyle}>Width (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.widthCm} onChange={e => set('widthCm', e.target.value)} placeholder="13" required />
+<input style={inputStyle} type="number" step="0.1" value={form.widthCm} onChange={e => set('widthCm', e.target.value)} placeholder="13" />
 </div>
 <div>
 <label style={labelStyle}>Height (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.heightCm} onChange={e => set('heightCm', e.target.value)} placeholder="7" required />
+<input style={inputStyle} type="number" step="0.1" value={form.heightCm} onChange={e => set('heightCm', e.target.value)} placeholder="7" />
 </div>
 </div>
 
@@ -1254,6 +1409,8 @@ Recommended: enter your product&apos;s HS code to see duty rate guidance for int
 )}
 </div>
 
+</div>
+
 {error && (
 <div style={{ padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
 {error}
@@ -1261,7 +1418,7 @@ Recommended: enter your product&apos;s HS code to see duty rate guidance for int
 )}
 
 {/* Seller Rules acknowledgment — required on every save, enforced server-side too */}
-<label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>
+<label style={{ display: step === 5 ? 'flex' : 'none', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>
 <input
 type="checkbox"
 checked={rulesAccepted}
@@ -1273,11 +1430,21 @@ I confirm this listing is accurate and complies with the <a href="/legal/seller-
 </span>
 </label>
 
-<div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+<div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
 <HaloButton type="button" variant="soft" onClick={() => setShowForm(false)}>
 Cancel
 </HaloButton>
-<button type="submit" disabled={saving || !rulesAccepted} style={{
+{step > 1 && (
+<button type="button" onClick={() => setStep(step - 1)} style={{ padding: '11px 20px', background: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}>
+Back
+</button>
+)}
+{step < 5 && (
+<button type="button" onClick={() => setStep(step + 1)} style={{ padding: '11px 22px', background: accentColor, color: isElevated ? '#000' : '#FFF4E8', border: 'none', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', letterSpacing: '0.03em', cursor: 'pointer', boxShadow: `0 10px 26px ${accentColor}40` }}>
+Next
+</button>
+)}
+<button type="submit" disabled={saving || !rulesAccepted} style={{ display: step === 5 ? 'inline-block' : 'none',
 padding: '11px 22px', background: saving || !rulesAccepted ? 'rgba(26,26,29,0.14)' : accentColor, color: isElevated ? '#000' : '#FFF4E8',
 border: 'none', borderRadius: '999px', fontFamily: HALO.fontDisplay, fontWeight: 800, fontSize: '13px', letterSpacing: '0.03em',
 cursor: saving || !rulesAccepted ? 'not-allowed' : 'pointer',
