@@ -687,8 +687,8 @@ const css = `
 .vh-value.v1{font-family:'Abril Fatface',serif;font-weight:400;font-size:23px;letter-spacing:.02em}
 .vh-value.v2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:22px;letter-spacing:.015em}
 .vh-value.v3{font-family:'Caveat',cursive;font-weight:600;font-size:28px}
-.vh-valuesep{display:none}
-@media (max-width:700px){.vh-annbar{padding:12px 16px;gap:6px 16px}.vh-value.v1{font-size:16px}.vh-value.v2{font-size:15.5px}.vh-value.v3{font-size:20px}}
+.vh-value.v4{font-family:'Fraunces',serif;font-weight:600;font-size:21px;letter-spacing:.01em}
+@media (max-width:700px){.vh-annbar{padding:12px 16px;gap:6px 16px}.vh-value.v1{font-size:16px}.vh-value.v2{font-size:15.5px}.vh-value.v3{font-size:20px}.vh-value.v4{font-size:15.5px}}
 .vh-sellertop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#0b0b0b;border:2px solid var(--accent);padding:14px 22px;animation:vhPulseGlow 2.2s ease-in-out infinite}
 .vh-sellertop .txt{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;max-width:70ch;line-height:1.5}
 .vh-sellertop .txt b{color:var(--accent)}
@@ -948,9 +948,8 @@ export default function HomePage() {
           handwriting for the hands. */}
       <div className="vh-annbar">
         <span className="vh-value v1">Never factory-made</span>
-        <span className="vh-valuesep" aria-hidden="true" />
         <span className="vh-value v2">Real cultural goods</span>
-        <span className="vh-valuesep" aria-hidden="true" />
+        <span className="vh-value v4">Cultural meaning in every piece</span>
         <span className="vh-value v3">Made by hand, always</span>
       </div>
 
