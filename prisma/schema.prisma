@@ -942,6 +942,30 @@ model PlatformShippingRate {
   @@unique([zone, weightBandMinGrams])
 }
 
+// PDP delivery-estimate cache (2026-07-29, from William's Amazon-comparison
+// direction: live shipping cost + arrival estimate on the product page).
+// One row per seller x destination country x weight band, filled by
+// /api/shipping/estimate calling the SAME /api/shipping/rates engine
+// checkout uses (so PDP numbers can never drift from checkout numbers),
+// then reused for 24h so product pages never hammer Shippo/Easyship.
+model ShippingEstimate {
+  id                 String   @id @default(cuid())
+  sellerId           String
+  destCountry        String
+  weightBandMinGrams Int
+  amountGBP          Float
+  carrier            String
+  service            String
+  estimatedDays      Int?
+  // true when the number came from the seller-flat-rate / platform-default
+  // tier rather than a live carrier quote -- the UI words it as "estimated".
+  isEstimate         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([sellerId, destCountry, weightBandMinGrams])
+}
+
 // Singleton config row (id is always "singleton"). levyPercent is the
 // admin-configurable buffer added on top of PlatformShippingRate estimates
 // only -- never on top of a live Shippo quote or a seller's own flat rate,

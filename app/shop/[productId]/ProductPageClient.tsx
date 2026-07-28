@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { FounderMedal } from '@/components/FounderMedal'
+import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 interface Variant {
   id: string
@@ -146,6 +147,65 @@ const RECENTLY_VIEWED_KEY = 'velor-recently-viewed'
 // are disabled and a preview notice shown, here only. Every other listing
 // on the site is completely unaffected.
 const PREVIEW_ONLY_PRODUCT_ID = 'cms260kvd0003epq3lnituxvw'
+
+// Live delivery estimate with a deliver-to picker (2026-07-29, from
+// William's Amazon-comparison direction -- "the big one"). Backed by
+// /api/shipping/estimate, which quotes through the SAME rates engine
+// checkout uses (cached 24h per seller/country/weight band), so the number
+// a buyer sees here is the number checkout charges for that lane. The
+// picked country persists in localStorage (velor-deliver-to); first visit
+// defaults to the visitor's own country via their IP, resolved server-side.
+function DeliveryEstimate({ productId, symbol, convert }: { productId: string; symbol: string; convert: (amount: number, from: string) => number }) {
+  const [country, setCountry] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [est, setEst] = useState<{ available: boolean; amountGBP?: number; estimatedDays?: number | null; isEstimate?: boolean } | null>(null)
+  useEffect(() => {
+    let dead = false
+    const saved = localStorage.getItem('velor-deliver-to') || ''
+    setLoading(true)
+    fetch(`/api/shipping/estimate?productId=${productId}${saved ? `&country=${saved}` : ''}`)
+      .then(r => r.json())
+      .then(d => { if (dead) return; setCountry(d.country || saved || 'GB'); setEst(d); setLoading(false) })
+      .catch(() => { if (!dead) { setCountry(saved || 'GB'); setEst(null); setLoading(false) } })
+    return () => { dead = true }
+  }, [productId])
+  const pick = (c: string) => {
+    setCountry(c)
+    try { localStorage.setItem('velor-deliver-to', c) } catch { /* private mode */ }
+    setLoading(true)
+    fetch(`/api/shipping/estimate?productId=${productId}&country=${c}`)
+      .then(r => r.json())
+      .then(d => { setEst(d); setLoading(false) })
+      .catch(() => { setEst(null); setLoading(false) })
+  }
+  return (
+    <div style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <span>Deliver to</span>
+      <select
+        value={country}
+        onChange={e => pick(e.target.value)}
+        aria-label="Deliver to country"
+        style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 4px', fontSize: '12.5px', background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', maxWidth: 150 }}
+      >
+        {!country && <option value="">Country...</option>}
+        {WORLD_COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+      </select>
+      <span>
+        {loading ? (
+          <span style={{ opacity: 0.7 }}>checking delivery...</span>
+        ) : est?.available && typeof est.amountGBP === 'number' ? (
+          <>
+            — shipping {est.isEstimate ? 'est. ' : ''}
+            <strong style={{ color: 'var(--text)' }}>{symbol}{convert(est.amountGBP, 'GBP').toFixed(2)}</strong>
+            {typeof est.estimatedDays === 'number' ? ` · ~${est.estimatedDays} day${est.estimatedDays === 1 ? '' : 's'} in transit` : ''}
+          </>
+        ) : (
+          <span>— exact cost shown at checkout</span>
+        )}
+      </span>
+    </div>
+  )
+}
 
 function RailCard({ p, symbol, convert }: { p: RailItem; symbol: string; convert: (amount: number, from: string) => number }) {
   const title = p.title || p.name || 'Goods'
@@ -780,7 +840,7 @@ export default function ProductPageClient() {
             <div style={{ color: 'var(--muted)' }}>
               {product.seller?.country ? `Dispatched from ${product.seller.country} within 1–3 business days` : 'Usually dispatched within 1–3 business days'}
             </div>
-            <div style={{ color: 'var(--muted)' }}>Shipping cost &amp; arrival estimate shown at checkout</div>
+            <DeliveryEstimate productId={product.id} symbol={symbol} convert={convert} />
           </div>
 
           {(product.variants && product.variants.length > 0) && (() => {

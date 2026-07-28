@@ -305,7 +305,7 @@ export default function ShopPreviewPage() {
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 700 }}>Dispatch &amp; delivery</div>
                 <div style={{ fontSize: '12.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  Example: dispatched from your listed country. Usually dispatched within 1–3 business days. Real shipping cost and estimated arrival are calculated at checkout.
+                  Example: dispatched from your listed country. Usually dispatched within 1–3 business days. Buyers see a live &quot;Deliver to&quot; picker here with the real shipping cost and transit estimate for their own country, reconfirmed at checkout.
                 </div>
               </div>
             </div>
