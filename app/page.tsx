@@ -684,11 +684,11 @@ const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
 .vh-annbar{background:var(--accent);color:#0b0b0b;text-align:center;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:10px 18px;flex-wrap:wrap}
 .vh-value{line-height:1.2;white-space:nowrap}
-.vh-value.v1{font-family:var(--font-display);font-weight:800;font-size:13.5px;letter-spacing:.14em;text-transform:uppercase}
-.vh-value.v2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:16px;letter-spacing:.01em}
-.vh-value.v3{font-family:'Caveat',cursive;font-weight:600;font-size:20px}
+.vh-value.v1{font-family:'Abril Fatface',serif;font-weight:400;font-size:17px;letter-spacing:.02em}
+.vh-value.v2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:16.5px;letter-spacing:.015em}
+.vh-value.v3{font-family:'Caveat',cursive;font-weight:600;font-size:21px}
 .vh-valuesep{width:5px;height:5px;border-radius:50%;background:rgba(11,11,11,.5);flex:0 0 auto}
-@media (max-width:700px){.vh-annbar{gap:6px 12px}.vh-value.v1{font-size:12px}.vh-value.v2{font-size:14.5px}.vh-value.v3{font-size:18px}}
+@media (max-width:700px){.vh-annbar{gap:6px 12px}.vh-value.v1{font-size:14.5px}.vh-value.v2{font-size:14.5px}.vh-value.v3{font-size:18px}}
 .vh-sellertop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#0b0b0b;border:2px solid var(--accent);padding:14px 22px;animation:vhPulseGlow 2.2s ease-in-out infinite}
 .vh-sellertop .txt{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;max-width:70ch;line-height:1.5}
 .vh-sellertop .txt b{color:var(--accent)}
@@ -941,8 +941,11 @@ export default function HomePage() {
 
       {/* The orange bar (William, 2026-07-28): the apply-now copy is gone,
           replaced by the three values Velor stands for, each set in a
-          typeface that speaks it — grotesk for the refusal, serif for the
-          authenticity, handwriting for the hands. */}
+          characterful typeface of its own (William: "needs real definition
+          to stand out from the rest of the text on the website" — no block
+          fonts, nothing reused from the site's regular type): fat-face
+          didone for the refusal, serif italic for the authenticity,
+          handwriting for the hands. */}
       <div className="vh-annbar">
         <span className="vh-value v1">Never factory-made</span>
         <span className="vh-valuesep" aria-hidden="true" />
