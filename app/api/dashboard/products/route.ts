@@ -237,6 +237,9 @@ export async function POST(req: NextRequest) {
   if (!name || !category || price === null || !originCountry) {
     return NextResponse.json({ error: 'name, category, price, and origin country are required' }, { status: 400 })
   }
+  if (weightGrams === null || weightGrams === undefined || lengthCm === null || lengthCm === undefined || widthCm === null || widthCm === undefined || heightCm === null || heightCm === undefined) {
+    return NextResponse.json({ error: 'weight and dimensions are required' }, { status: 400 })
+  }
 
   const parsedPrice = parseFloat(String(price))
   if (isNaN(parsedPrice) || parsedPrice <= 0) {
@@ -417,6 +420,10 @@ export async function PATCH(req: NextRequest) {
   // listing can be created without one.
   if (!name || !category || price === null || !originCountry) {
     return NextResponse.json({ error: 'name, category, price, and origin country are required' }, { status: 400 })
+  }
+  if (weightGrams === null || weightGrams === undefined || lengthCm === null || lengthCm === undefined || widthCm === null || widthCm === undefined || heightCm === null || heightCm === undefined) {
+    return NextResponse.json({ error: 'weight and dimensions are required' }, { status: 400 })
+  }
   }
 
   const parsedPrice = parseFloat(String(price))
