@@ -86,20 +86,30 @@ export function toEasyshipAddress(a: {
   phone?: string | null
   email?: string | null
 }): EasyshipAddress {
-  return {
+  // LIVE-VERIFIED 2026-07-28: Easyship 422s on explicit nulls for optional
+  // fields ("contact_phone does not allow null values") -- optional fields
+  // must be OMITTED when absent, so build the object incrementally and only
+  // set keys that have real values. postal_code stays nullable per the
+  // docs' explicit "required, nullable".
+  const addr: EasyshipAddress = {
     line_1: trunc(a.street1, 35) || 'N/A',
-    line_2: trunc(a.street2, 35) ?? null,
     // state is a required KEY (may be empty string for countries without
     // regions); Easyship mandates real content only for AU/CA/CN/ID/MX/MY/TH/US/VN.
     state: trunc(a.state, 200) ?? '',
     city: trunc(a.city, 200) || 'N/A',
     postal_code: a.zip || null,
     country_alpha2: (a.country || '').toUpperCase(),
-    company_name: trunc(a.company, 27) ?? null,
     contact_name: trunc(a.name, 22) || 'Velor Seller',
-    contact_phone: trunc(a.phone, 20) ?? null,
-    contact_email: trunc(a.email, 50) ?? undefined,
   }
+  const line2 = trunc(a.street2, 35)
+  if (line2) addr.line_2 = line2
+  const company = trunc(a.company, 27)
+  if (company) addr.company_name = company
+  const phone = trunc(a.phone, 20)
+  if (phone) addr.contact_phone = phone
+  const email = trunc(a.email, 50)
+  if (email) addr.contact_email = email
+  return addr
 }
 
 async function easyshipFetch(path: string, init: RequestInit): Promise<unknown> {
