@@ -309,8 +309,8 @@ export async function POST(request: NextRequest) {
         })
 
         const declaredValue = items.reduce(
-          (sum: number, item: { price?: number; quantity: number }) =>
-            sum + (item.price || 0) * (item.quantity || 1),
+          (sum: number, item: { productId: string; price?: number; quantity: number }) =>
+            sum + (item.price || productMap.get(item.productId)?.price || 0) * (item.quantity || 1),
           0
         )
 
