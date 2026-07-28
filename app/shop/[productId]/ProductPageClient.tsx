@@ -194,6 +194,48 @@ function Rail({ heading, items, symbol, convert, viewAllHref }: { heading: strin
   )
 }
 
+// Payment method badges (2026-07-28, William: "can we get a bit of colour
+// to the secure payout section... maybe the payment companies logos").
+// Small inline-SVG card chips in each brand's colours -- no external image
+// requests, crisp on any DPI, and consistent across light/dark themes.
+// Every method shown is genuinely supported by the Stripe checkout.
+function PaymentBadges() {
+  const chip: React.CSSProperties = { borderRadius: '4px', border: '1px solid rgba(0,0,0,0.12)', display: 'block' }
+  return (
+    <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', verticalAlign: 'middle' }}>
+      {/* Visa */}
+      <svg width="38" height="24" viewBox="0 0 38 24" style={chip} aria-label="Visa">
+        <rect width="38" height="24" rx="4" fill="#fff" />
+        <text x="19" y="16.5" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="800" fontStyle="italic" fill="#1A1F71">VISA</text>
+      </svg>
+      {/* Mastercard */}
+      <svg width="38" height="24" viewBox="0 0 38 24" style={chip} aria-label="Mastercard">
+        <rect width="38" height="24" rx="4" fill="#fff" />
+        <circle cx="15.5" cy="12" r="7" fill="#EB001B" />
+        <circle cx="22.5" cy="12" r="7" fill="#F79E1B" fillOpacity="0.92" />
+        <path d="M19 6.4a7 7 0 0 1 0 11.2 7 7 0 0 1 0-11.2z" fill="#FF5F00" />
+      </svg>
+      {/* American Express */}
+      <svg width="38" height="24" viewBox="0 0 38 24" style={chip} aria-label="American Express">
+        <rect width="38" height="24" rx="4" fill="#2E77BC" />
+        <text x="19" y="15.5" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="8.5" fontWeight="800" fill="#fff">AMEX</text>
+      </svg>
+      {/* Apple Pay */}
+      <svg width="44" height="24" viewBox="0 0 44 24" style={chip} aria-label="Apple Pay">
+        <rect width="44" height="24" rx="4" fill="#000" />
+        <path transform="translate(9.5,6.5) scale(0.5)" d="M13 3.2c.7-.9 1.2-2.1 1-3.2-1 .1-2.2.7-2.9 1.5-.6.8-1.2 2-1 3.1 1.1.1 2.2-.6 2.9-1.4zm1 1.7c-1.6-.1-3 .9-3.7.9-.8 0-2-.9-3.2-.9C5.4 5 3.9 5.9 3.1 7.3c-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 3 2.4 1.2 0 1.6-.8 3.1-.8 1.4 0 1.8.8 3.1.8 1.3 0 2.1-1.2 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.8 0-2.4 1.9-3.5 2-3.6-1.1-1.6-2.8-1.8-3.2-1.9z" fill="#fff" />
+        <text x="27.5" y="16" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" fill="#fff">Pay</text>
+      </svg>
+      {/* Google Pay */}
+      <svg width="44" height="24" viewBox="0 0 44 24" style={chip} aria-label="Google Pay">
+        <rect width="44" height="24" rx="4" fill="#fff" />
+        <text x="14" y="16" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="800" fill="#4285F4">G</text>
+        <text x="28" y="16" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" fill="#5F6368">Pay</text>
+      </svg>
+    </span>
+  )
+}
+
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: '14px' }}>
@@ -792,10 +834,13 @@ export default function ProductPageClient() {
             </button>
           </div>
 
-          {/* Payment trust line -- text-only (honest, no mock card art);
-              everything listed is genuinely supported by the Stripe checkout. */}
-          <div style={{ fontSize: '11.5px', color: 'var(--muted)', marginBottom: '10px', lineHeight: 1.5 }}>
-            🔒 Secure checkout — Visa · Mastercard · Amex · Apple Pay · Google Pay, processed by Stripe
+          {/* Payment trust row -- brand-colour card chips (inline SVG, see
+              PaymentBadges); everything shown is genuinely supported by the
+              Stripe checkout. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--muted)', fontWeight: 600 }}>🔒 Secure checkout</span>
+            <PaymentBadges />
+            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>via <span style={{ fontWeight: 800, color: '#635BFF' }}>Stripe</span></span>
           </div>
 
           {/* Origin block -- ties the PDP into Velor's shop-by-origin identity
