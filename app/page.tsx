@@ -683,7 +683,7 @@ function flagOf(code: string): string {
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
 .vh-annbar{background:var(--accent);color:#fff;text-align:center;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap}
-.vh-value{line-height:1.2;white-space:nowrap}
+.vh-value{line-height:1.2;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.45),0 0 1px rgba(0,0,0,.35)}
 .vh-value.v1{font-family:'Abril Fatface',serif;font-weight:400;font-size:23px;letter-spacing:.02em}
 .vh-value.v2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:22px;letter-spacing:.015em}
 .vh-value.v3{font-family:'Caveat',cursive;font-weight:600;font-size:28px}
@@ -949,7 +949,7 @@ export default function HomePage() {
       <div className="vh-annbar">
         <span className="vh-value v1">Never factory-made</span>
         <span className="vh-value v2">Real cultural goods</span>
-        <span className="vh-value v4">Cultural meaning in every piece</span>
+        <span className="vh-value v4">Every piece tells a story</span>
         <span className="vh-value v3">Made by hand, always</span>
       </div>
 
