@@ -277,6 +277,15 @@ export async function attemptAutoLabelPurchase(
     const shippoCurrency = (shippoBest.currency || 'GBP').toUpperCase()
     if (shippoCurrency === easyBest.currency && easyBest.totalCharge < shippoAmount) useEasyship = true
   }
+  // TEST OVERRIDE (2026-07-28): EASYSHIP_FORCE=1 makes Easyship win whenever
+  // it has a rate, regardless of price. Exists ONLY to run the per-lane E2E
+  // label proof on a GB origin (where Shippo/Evri normally wins on price)
+  // without needing a non-GB seller. REMOVE the env var after the proof --
+  // cheapest-wins must be the steady state.
+  if (easyBest && process.env.EASYSHIP_FORCE === '1') {
+    console.warn('[attemptAutoLabelPurchase] EASYSHIP_FORCE=1 active -- forcing Easyship for order', order.id)
+    useEasyship = true
+  }
 
   interface PurchasedLabel {
     provider: 'SHIPPO' | 'EASYSHIP'
