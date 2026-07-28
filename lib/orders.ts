@@ -6,6 +6,25 @@ import {
   createShippoShipment, purchaseLabel, buildParcelFromItems, pickBestRate, createTrack,
   normalizeCarrierToken, ShippoAddress, ShippoCustomsItem,
 } from '@/lib/shippo'
+import {
+  isEasyshipEnabled, getEasyshipRates, purchaseEasyshipLabel, toEasyshipAddress,
+} from '@/lib/easyship'
+
+// Origins served by each label provider. Shippo's set is the empirically
+// verified GB/DE/CA (2026-07-27 survey). Easyship origins are configured via
+// the EASYSHIP_ORIGINS env var (comma-separated ISO codes, e.g. "GB,HK,US")
+// so lanes can be switched on WITHOUT a deploy -- but only after each lane
+// is live-verified via /api/admin/easyship-check, per the standing
+// every-lane-verified rule. Empty/unset means Easyship buys no labels.
+const SHIPPO_ORIGINS = new Set(['GB', 'DE', 'CA'])
+function easyshipOrigins(): Set<string> {
+  return new Set(
+    (process.env.EASYSHIP_ORIGINS || '')
+      .split(',')
+      .map((c) => c.trim().toUpperCase())
+      .filter((c) => /^[A-Z]{2}$/.test(c))
+  )
+}
 
 interface PricedItem {
   productId: string
@@ -86,8 +105,10 @@ export async function attemptAutoLabelPurchase(
   const profile = seller?.shippingProfile
   if (!profile) return // no dispatch address on file -- Tier B, nothing to do
 
-  const TIER_A_ORIGINS = new Set(['GB', 'DE', 'CA'])
-  if (!TIER_A_ORIGINS.has(profile.country.toUpperCase())) return // Tier B origin
+  const originCode = profile.country.toUpperCase()
+  const shippoEligible = SHIPPO_ORIGINS.has(originCode)
+  const easyshipEligible = isEasyshipEnabled() && easyshipOrigins().has(originCode)
+  if (!shippoEligible && !easyshipEligible) return // Tier B origin -- no label provider covers it yet
 
   const shippingAddress = (shippingAddressJson || {}) as Record<string, unknown>
   const destinationCountry = String(shippingAddress.country || '').toUpperCase()
@@ -167,32 +188,167 @@ export async function attemptAutoLabelPurchase(
     0
   )
 
-  const shipment = await createShippoShipment({
-    addressFrom, addressTo, parcels: [parcel],
-    customsItems, declaredValue, currency: 'GBP', isInternational,
-  })
+  // ---- Gather the best candidate rate from each eligible provider ----
+  let shippoShipmentObj: Awaited<ReturnType<typeof createShippoShipment>> | null = null
+  let shippoBest: ReturnType<typeof pickBestRate> = null
+  if (shippoEligible) {
+    try {
+      shippoShipmentObj = await createShippoShipment({
+        addressFrom, addressTo, parcels: [parcel],
+        customsItems, declaredValue, currency: 'GBP', isInternational,
+      })
+      shippoBest = pickBestRate(shippoShipmentObj.rates || [])
+    } catch (shippoErr) {
+      console.error('[attemptAutoLabelPurchase] Shippo rate fetch failed for order', order.id, shippoErr)
+    }
+  }
 
-  const chosen = pickBestRate(shipment.rates || [])
-  if (!chosen) {
-    console.warn('[attemptAutoLabelPurchase] Shippo returned zero rates for order', order.id, 'seller', sellerId)
+  const totalWeightKg = parseFloat(parcel.weight) || 0.18
+  const boxCm = {
+    length: parseFloat(parcel.length) || 20,
+    width: parseFloat(parcel.width) || 15,
+    height: parseFloat(parcel.height) || 10,
+  }
+  const easyshipParams = {
+    originAddress: toEasyshipAddress({
+      name: profile.name, company: profile.company, street1: profile.street1,
+      street2: profile.street2, city: profile.city, state: profile.state,
+      zip: profile.zip, country: profile.country, phone: profile.phone,
+      email: seller?.user?.email ?? null,
+    }),
+    destinationAddress: toEasyshipAddress({
+      name: (shippingAddress.name as string) || order.customerName || 'Customer',
+      street1: (shippingAddress.street1 as string) || (shippingAddress.line1 as string) || '',
+      street2: (shippingAddress.street2 as string) || (shippingAddress.line2 as string) || null,
+      city: (shippingAddress.city as string) || '',
+      state: (shippingAddress.state as string) || (shippingAddress.county as string) || null,
+      zip: (shippingAddress.zip as string) || (shippingAddress.postalCode as string) || (shippingAddress.postcode as string) || null,
+      country: destinationCountry,
+      phone: (shippingAddress.phone as string) || null,
+      email: (shippingAddress.email as string) || order.customerEmail || null,
+    }),
+    totalWeightKg,
+    boxCm,
+    items: sellerItems.map((item) => {
+      const pr = productMap.get(item.productId)
+      return {
+        quantity: Math.round(Number(item.quantity)) || 1,
+        description: 'Handmade cultural goods',
+        declared_currency: 'GBP',
+        declared_customs_value: Number(item.priceGBP) || Number(pr?.price) || 1,
+        origin_country_alpha2: pr?.originCountry || originCode,
+      }
+    }),
+  }
+
+  let easyBest: { id: string; name: string; totalCharge: number; currency: string } | null = null
+  if (easyshipEligible) {
+    try {
+      const esRates = await getEasyshipRates(easyshipParams)
+      const cheapest = esRates
+        .filter((r) => r.courier_service?.id && Number(r.total_charge) > 0)
+        .sort((a, b) => Number(a.total_charge) - Number(b.total_charge))[0]
+      if (cheapest) {
+        easyBest = {
+          id: cheapest.courier_service.id,
+          name: cheapest.courier_service.name || 'Courier',
+          totalCharge: Number(cheapest.total_charge),
+          currency: (cheapest.currency || 'GBP').toUpperCase(),
+        }
+      }
+    } catch (esErr) {
+      console.error('[attemptAutoLabelPurchase] Easyship rate fetch failed for order', order.id, esErr)
+    }
+  }
+
+  if (!shippoBest && !easyBest) {
+    console.warn('[attemptAutoLabelPurchase] no provider returned rates for order', order.id, 'seller', sellerId)
     return // Tier B fallback stands -- the seller ships manually, reimbursed via the platform-default estimate they were quoted
   }
 
-  const transaction = await purchaseLabel(chosen.object_id)
-  if (transaction.status !== 'SUCCESS') {
-    console.error('[attemptAutoLabelPurchase] Shippo transaction did not succeed for order', order.id, transaction)
-    return
+  // ---- Choose the provider: cheapest wins when directly comparable ----
+  // Cross-currency comparison is deliberately NOT attempted -- when the two
+  // providers quote in different currencies, Shippo (the longer-proven path)
+  // wins. Same currency: strictly cheaper wins.
+  let useEasyship = false
+  if (easyBest && !shippoBest) useEasyship = true
+  else if (easyBest && shippoBest) {
+    const shippoAmount = parseFloat(shippoBest.amount)
+    const shippoCurrency = (shippoBest.currency || 'GBP').toUpperCase()
+    if (shippoCurrency === easyBest.currency && easyBest.totalCharge < shippoAmount) useEasyship = true
+  }
+
+  interface PurchasedLabel {
+    provider: 'SHIPPO' | 'EASYSHIP'
+    carrier: string
+    trackingNumber: string | null
+    trackingUrl: string | null
+    labelUrl: string | null
+    shippoShipmentId?: string | null
+    shippoRateId?: string | null
+    shippoLabelId?: string | null
+    easyshipShipmentId?: string | null
+  }
+
+  async function buyShippo(): Promise<PurchasedLabel> {
+    if (!shippoBest || !shippoShipmentObj) throw new Error('no Shippo rate available')
+    const transaction = await purchaseLabel(shippoBest.object_id)
+    if (transaction.status !== 'SUCCESS') {
+      throw new Error('Shippo transaction did not succeed: ' + JSON.stringify(transaction).slice(0, 400))
+    }
+    return {
+      provider: 'SHIPPO',
+      carrier: shippoBest.provider || 'Carrier',
+      trackingNumber: transaction.tracking_number,
+      trackingUrl: transaction.tracking_url_provider,
+      labelUrl: transaction.label_url,
+      shippoShipmentId: shippoShipmentObj.object_id,
+      shippoRateId: shippoBest.object_id,
+      shippoLabelId: transaction.object_id,
+    }
+  }
+
+  async function buyEasyship(): Promise<PurchasedLabel> {
+    if (!easyBest) throw new Error('no Easyship rate available')
+    const res = await purchaseEasyshipLabel({ ...easyshipParams, courierServiceId: easyBest.id })
+    if (res.labelState === 'failed') throw new Error('Easyship label generation failed for shipment ' + res.easyshipShipmentId)
+    return {
+      provider: 'EASYSHIP',
+      carrier: res.courierName,
+      trackingNumber: res.trackingNumber,
+      trackingUrl: res.trackingPageUrl,
+      labelUrl: res.labelUrl,
+      easyshipShipmentId: res.easyshipShipmentId,
+    }
+  }
+
+  // Purchase on the chosen provider; if it throws, fall back to the other
+  // (never buys twice: the fallback only runs when the first purchase failed
+  // before completing).
+  let bought: PurchasedLabel
+  try {
+    bought = useEasyship ? await buyEasyship() : await buyShippo()
+  } catch (firstErr) {
+    console.error('[attemptAutoLabelPurchase] primary provider failed for order', order.id, firstErr)
+    try {
+      bought = useEasyship ? await buyShippo() : await buyEasyship()
+    } catch (secondErr) {
+      console.error('[attemptAutoLabelPurchase] fallback provider also failed for order', order.id, secondErr)
+      return
+    }
   }
 
   const shipmentData = {
     sellerId,
-    shippoShipmentId: shipment.object_id,
-    shippoRateId: chosen.object_id,
-    shippoLabelId: transaction.object_id,
-    trackingNumber: transaction.tracking_number,
-    trackingUrl: transaction.tracking_url_provider,
-    carrier: chosen.provider || 'Carrier',
-    labelUrl: transaction.label_url,
+    labelProvider: bought.provider,
+    shippoShipmentId: bought.shippoShipmentId ?? null,
+    shippoRateId: bought.shippoRateId ?? null,
+    shippoLabelId: bought.shippoLabelId ?? null,
+    easyshipShipmentId: bought.easyshipShipmentId ?? null,
+    trackingNumber: bought.trackingNumber,
+    trackingUrl: bought.trackingUrl,
+    carrier: bought.carrier,
+    labelUrl: bought.labelUrl,
     status: 'LABEL_PURCHASED' as const,
   }
   await prisma.shipment.upsert({
@@ -203,24 +359,33 @@ export async function attemptAutoLabelPurchase(
 
   // Best-effort, isolated from the label purchase above: registers the
   // tracking number with Shippo's free /tracks endpoint so the existing
-  // delivery webhook keeps working the same way it does for Tier B's
-  // manually-reported tracking numbers.
-  try {
-    await createTrack(chosen.provider || '', transaction.tracking_number)
-    await prisma.shipment.update({ where: { orderId: order.id }, data: { trackRegistered: true } })
-  } catch (trackErr) {
-    console.error('[attemptAutoLabelPurchase] tracking registration failed for order', order.id, trackErr)
+  // delivery webhook (app/api/webhooks/shippo, matched by tracking number)
+  // drives delivery confirmation and escrow release for BOTH providers'
+  // labels. /tracks takes a carrier TOKEN, not a display name ('Hermes UK'
+  // -> 'hermes_uk'; found live on the first Tier A order). A missing or
+  // failed registration leaves trackRegistered false for the
+  // confirm-deliveries cron to retry.
+  if (bought.trackingNumber) {
+    try {
+      await createTrack(normalizeCarrierToken(bought.carrier || ''), bought.trackingNumber)
+      await prisma.shipment.update({ where: { orderId: order.id }, data: { trackRegistered: true } })
+    } catch (trackErr) {
+      console.error('[attemptAutoLabelPurchase] tracking registration failed for order', order.id, trackErr)
+    }
   }
 
   if (seller?.user?.email) {
     try {
+      const labelLine = bought.labelUrl
+        ? `<p><a href="${bought.labelUrl}">Download and print the shipping label (PDF)</a></p>`
+        : `<p>Your label is being generated and will appear in your Velor dashboard within a few minutes.</p>`
       const html = `
         <p>Hi ${seller.storeName},</p>
         <p>Good news -- a new order came in and Velor has already purchased and paid for the shipping label. No need to buy your own postage for this one.</p>
         <p><strong>Order:</strong> ${order.id}<br/>
-        <strong>Carrier:</strong> ${chosen.provider || 'Carrier'}<br/>
-        <strong>Tracking number:</strong> ${transaction.tracking_number}</p>
-        <p><a href="${transaction.label_url}">Download and print the shipping label (PDF)</a></p>
+        <strong>Carrier:</strong> ${bought.carrier || 'Carrier'}<br/>
+        <strong>Tracking number:</strong> ${bought.trackingNumber ?? 'assigned shortly'}</p>
+        ${labelLine}
         <p>Please attach it to the package and drop it off as usual. Tracking updates will appear on your Velor dashboard automatically.</p>
       `
       await sendEmail({

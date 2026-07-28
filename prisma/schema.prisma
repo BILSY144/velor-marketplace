@@ -366,6 +366,11 @@ model Shipment {
   shippoShipmentId  String?
   shippoRateId      String?
   shippoLabelId     String?
+  // Which provider bought this label: 'SHIPPO' | 'EASYSHIP' | null (Tier B
+  // self-ship, no Velor-purchased label). Added 2026-07-28 with the
+  // Easyship adapter (additive column, safe with db push).
+  labelProvider     String?
+  easyshipShipmentId String?
   trackingNumber    String?
   trackingUrl       String?
   carrier           String?

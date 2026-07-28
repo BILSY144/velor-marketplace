@@ -6,6 +6,20 @@ import {
 } from '@/lib/shippo'
 import { convert } from '@/lib/fx'
 import { computeZone, weightBandFor } from '@/lib/shipping-zones'
+import { isEasyshipEnabled, getEasyshipRates, toEasyshipAddress } from '@/lib/easyship'
+
+// Origins whose buyer-facing quotes include Easyship's live rates. Shares
+// the EASYSHIP_ORIGINS env var with lib/orders.ts' label purchase so a lane
+// quotes and labels through the same provider set -- flip lanes on without
+// a deploy, but only after live verification via /api/admin/easyship-check.
+function easyshipRateOrigins(): Set<string> {
+  return new Set(
+    (process.env.EASYSHIP_ORIGINS || '')
+      .split(',')
+      .map((c) => c.trim().toUpperCase())
+      .filter((c) => /^[A-Z]{2}$/.test(c))
+  )
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -330,6 +344,67 @@ export async function POST(request: NextRequest) {
           isDDP: isInternational,
           isFallback: false,
         }))
+
+        // Easyship live rates (2026-07-28): merged as additional options for
+        // origins switched on via EASYSHIP_ORIGINS. Pure addition -- with
+        // the env vars unset this block is a no-op and the response is
+        // exactly the Shippo-only behaviour. rateIds are 'easyship:'-
+        // prefixed; nothing downstream dereferences buyer-chosen rateIds
+        // against Shippo (label purchase re-quotes independently).
+        if (isEasyshipEnabled() && easyshipRateOrigins().has(addressFrom.country.toUpperCase())) {
+          try {
+            const esRates = await getEasyshipRates({
+              originAddress: toEasyshipAddress({
+                name: p.name, company: p.company, street1: p.street1, street2: p.street2,
+                city: p.city, state: p.state, zip: p.zip, country: p.country, phone: p.phone,
+              }),
+              destinationAddress: toEasyshipAddress({
+                name: shippingAddress.name || 'Customer',
+                street1: shippingAddress.street1 || shippingAddress.line1 || '',
+                street2: shippingAddress.street2 || shippingAddress.line2 || null,
+                city: shippingAddress.city || '',
+                state: shippingAddress.state || shippingAddress.county || null,
+                zip: shippingAddress.zip || shippingAddress.postalCode || shippingAddress.postcode || null,
+                country: shippingAddress.country,
+                phone: shippingAddress.phone || null,
+                email: shippingAddress.email || null,
+              }),
+              totalWeightKg: totalWeightGrams / 1000,
+              boxCm: {
+                length: parseFloat(parcel.length) || 20,
+                width: parseFloat(parcel.width) || 15,
+                height: parseFloat(parcel.height) || 10,
+              },
+              items: items.map((item: { productId: string; quantity: number; price?: number }) => ({
+                quantity: item.quantity || 1,
+                description: 'Handmade cultural goods',
+                declared_currency: 'GBP',
+                declared_customs_value: item.price || productMap.get(item.productId)?.price || 1,
+                origin_country_alpha2: productMap.get(item.productId)?.originCountry || addressFrom.country,
+              })),
+            })
+            const esMapped: Rate[] = esRates
+              .filter((r) => r.courier_service?.id && Number(r.total_charge) > 0)
+              .slice(0, 6)
+              .map((r) => ({
+                rateId: 'easyship:' + r.courier_service.id,
+                carrier: r.courier_service.umbrella_name || r.courier_service.name || 'Courier',
+                service: r.courier_service.name || 'Standard',
+                amount: Number(r.total_charge).toFixed(2),
+                currency: (r.currency || 'GBP').toUpperCase(),
+                estimatedDays: typeof r.max_delivery_time === 'number' ? r.max_delivery_time : null,
+                isDDP: false,
+                isFallback: false,
+              }))
+            if (esMapped.length) {
+              mapped = [...mapped, ...esMapped]
+                .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
+                .slice(0, 8)
+            }
+          } catch (esErr) {
+            console.error('[shipping/rates] Easyship rates failed for seller', sellerId, esErr)
+          }
+        }
 
         if (!mapped.length) {
           console.warn(
