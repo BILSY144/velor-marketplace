@@ -866,6 +866,31 @@ setSaving(false)
 }
 }
 
+// Listing-strength checks (component-level so the guidance sidebar and the
+// form column share them). Honest checks only.
+const strengthChecks: { done: boolean; hint: string }[] = [
+{ done: form.images.map(u => u.trim()).filter(Boolean).length >= MIN_IMAGES, hint: `At least ${MIN_IMAGES} photos` },
+{ done: form.images.map(u => u.trim()).filter(Boolean).length >= 5, hint: '5+ photos to show it properly' },
+{ done: form.videoUrl.trim().length > 0, hint: 'A short video (link is free)' },
+{ done: form.name.trim().length >= 15, hint: 'A fuller title (15+ characters)' },
+{ done: form.description.trim().length >= 80, hint: 'A few sentences of description' },
+{ done: !!form.category, hint: 'Category picked' },
+{ done: !!form.originCountry, hint: 'Origin country set' },
+{ done: !!(form.weightGrams && form.lengthCm && form.widthCm && form.heightCm), hint: 'Weight & dimensions (for shipping)' },
+{ done: form.materials.trim().length > 0, hint: 'Materials listed' },
+{ done: form.makerStory.trim().length > 0, hint: 'The story behind the piece' },
+]
+const strengthDone = strengthChecks.filter(c => c.done).length
+const strengthPct = Math.round((strengthDone / strengthChecks.length) * 100)
+
+const STEP_TIPS: Record<number, { title: string; tip: string }> = {
+1: { title: 'Photos & video', tip: 'Photos are your shop window. Natural light, plain background, and at least one photo showing scale (in a hand, on a table). A short video of the piece — or you making it — is the single biggest trust-builder on Velor.' },
+2: { title: 'The basics', tip: 'Write the title the way a buyer would search: what it is, the material, the tradition. Your price is what you receive — buyers see it converted to their own currency automatically.' },
+3: { title: 'Options & sizes', tip: 'One listing can hold every version you make — designs, colours, sizes, sets — each with its own photo, price, and stock. Buyers pick on your product page; you never list the same piece twice.' },
+4: { title: 'Shipping', tip: 'Weight and box size are what generate your prepaid shipping label the moment a buyer pays — measure the parcel, not the piece. The HS code helps customs for international orders.' },
+5: { title: 'Story & submit', tip: 'Buyers come to Velor for the story — who made it, where, and what tradition it carries. Two or three honest sentences outsell a paragraph of marketing.' },
+}
+
 const hsInfo = hsChapterInfo(form.hsCode)
 const dutyGuide = form.hsCode?.length >= 2 ? DUTY_GUIDANCE[form.hsCode.slice(0, 2)] : null
 const validImageCount = form.images.map(u => u.trim()).filter(Boolean).length
@@ -875,6 +900,7 @@ if (loading) return <div style={{ padding: '40px', color: 'var(--text)', fontFam
 
 return (
 <div style={{ padding: '32px 40px', fontFamily: 'var(--font-body)', position: 'relative', zIndex: 1 }}>
+{!showForm && (
 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
 <div>
 <div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 4 }}>Sell</div>
@@ -885,34 +911,29 @@ return (
 </div>
 <HaloButton variant="accent" onClick={openNew}>Add Product</HaloButton>
 </div>
+)}
 
 {showForm && (
-<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(2px)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
-<div style={tierCardStyle(theme, { padding: '32px', maxWidth: '640px', width: '100%', position: 'relative', overflow: 'hidden' })}>
-{isElevated && (
-<div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isPro ? 'linear-gradient(90deg, #FFD54A, #FF6B00)' : '#4FC3F7' }} />
-)}
-<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-<div style={{
-width: 36, height: 36, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-background: isElevated ? `${accentColor}18` : 'var(--bg)', border: `1px solid ${isElevated ? accentColor : 'var(--border)'}`,
-}}>
-<svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M4 7l8-4 8 4-8 4-8-4Z" stroke={isElevated ? accentColor : 'var(--text)'} strokeWidth="1.6" strokeLinejoin="round" />
-<path d="M4 7v10l8 4 8-4V7" stroke={isElevated ? accentColor : 'var(--text)'} strokeWidth="1.6" strokeLinejoin="round" />
-<path d="M12 11v10" stroke={isElevated ? accentColor : 'var(--text)'} strokeWidth="1.6" />
-</svg>
-</div>
 <div>
-<h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-{editProduct ? 'Edit Product' : 'New Product'}
-</h2>
-<div style={{ fontSize: '12.5px', color: 'var(--muted)', marginTop: 2 }}>
-{editProduct ? "Update this listing's details" : 'List a new item on Velor Marketplace'}
+{/* Full listing PAGE (2026-07-29, William: "this is going to be a page,
+not a box and beautifully lade out easy to use with better fonts and
+instructions") -- editorial header, form column + guidance sidebar. */}
+<button type="button" onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 18, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+<span style={{ fontSize: '15px' }}>&larr;</span> Back to products
+</button>
+<div style={{ marginBottom: '26px' }}>
+<div style={{ fontFamily: HALO.fontDisplay, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: HALO.accent, marginBottom: 6 }}>
+{editProduct ? 'Edit listing' : 'New listing'}
+</div>
+<h1 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '34px', color: HALO.ink, margin: 0, lineHeight: 1.15 }}>
+{editProduct ? 'Edit your listing' : 'Tell the world about your piece'}
+</h1>
+<div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: 8, maxWidth: '58ch', lineHeight: 1.6 }}>
+Five short steps. Your work saves automatically as you go — leave and come back any time.
 </div>
 </div>
-</div>
-<div style={{ height: 1, background: 'var(--border)', margin: '20px 0 22px' }} />
+<div style={{ display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'flex-start' }}>
+<div style={{ flex: '1 1 560px', minWidth: 0, maxWidth: '720px' }}>
 <div style={{
   background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8,
   padding: '14px 16px', marginBottom: 18, fontSize: '13px', lineHeight: 1.5, color: 'var(--text)',
@@ -980,6 +1001,10 @@ Draft restored — you're picking up where you left off.
 
 {/* STEP 2: The basics */}
 <div style={{ display: step === 2 ? 'flex' : 'none', flexDirection: 'column', gap: '18px' }}>
+<div style={{ marginBottom: '2px' }}>
+<h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>The essentials</h3>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Name it the way a buyer would search for it, describe it honestly, and set your price — the rest of the world sees it in their own currency.</div>
+</div>
 <div>
 <label style={labelStyle}>Name *</label>
 <input style={inputStyle} value={form.name} onChange={e => set('name', e.target.value)} />
@@ -1040,6 +1065,10 @@ Matches Velor&apos;s live categories — your listing goes straight to the right
 
 {/* STEP 3: Options & sizes */}
 <div style={{ display: step === 3 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
+<div style={{ marginBottom: '14px' }}>
+<h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>Every version, one listing</h3>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Designs, colours, sizes, sets — give each its own photo, price and stock, and buyers pick right on your page. Skip this entirely if your piece comes one way.</div>
+</div>
 {/* Options & variants (2026-07-28 overhaul, William: "single listing which
 has the option of different varients and prices... not just for clothes
 all listings"): generic named options -- each with its own price and
@@ -1249,6 +1278,10 @@ Shown as a &quot;Size guide&quot; section on your product page — fewer wrong-s
 
 {/* STEP 5: Story & compliance */}
 <div style={{ display: step === 5 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
+<div style={{ marginBottom: '14px' }}>
+<h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>The story only you can tell</h3>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>This is why buyers choose Velor over a supermarket shelf. Who made it, where, and what tradition it carries — then confirm the rules and you're live.</div>
+</div>
 <div style={{ marginTop: '0px' }}>
 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }}>
 <input
@@ -1303,6 +1336,10 @@ Regulated materials need valid permits (for example CITES export permits) before
 
 {/* STEP 1: Photos & video */}
 <div style={{ display: step === 1 ? 'flex' : 'none', flexDirection: 'column', gap: '18px' }}>
+<div style={{ marginBottom: '2px' }}>
+<h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>Show it off</h3>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>At least {MIN_IMAGES} photos — the first one is your cover. Add a video link if you have one; it plays right on your product page.</div>
+</div>
 <div>
 <label style={labelStyle}>Product Photos</label>
 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1333,6 +1370,10 @@ return (
 
 {/* STEP 4: Shipping */}
 <div style={{ display: step === 4 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
+<div style={{ marginBottom: '14px' }}>
+<h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>Getting it to the buyer</h3>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Weigh and measure the packed parcel — Velor generates your prepaid shipping label from these the moment a buyer pays. You just print it and hand the parcel over.</div>
+</div>
 <div style={{ borderTop: 'none', paddingTop: '0px' }}>
 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>Shipping & Customs</div>
 <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '14px' }}>
@@ -1448,6 +1489,32 @@ boxShadow: saving || !rulesAccepted ? 'none' : `0 10px 26px ${accentColor}40`,
 </button>
 </div>
 </form>
+</div>
+
+{/* Guidance sidebar: live strength checklist + step-specific coaching. */}
+<div style={{ flex: '0 1 300px', minWidth: '260px', position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+<div style={{ border: '1px solid var(--border)', borderRadius: 14, background: 'var(--surface)', padding: '18px' }}>
+<div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+<div style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontSize: '17px', color: HALO.ink }}>Listing strength</div>
+<div style={{ fontSize: '15px', fontWeight: 800, color: strengthPct >= 70 ? 'var(--green)' : 'var(--accent)' }}>{strengthPct}%</div>
+</div>
+<div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden', marginBottom: 14 }}>
+<div style={{ width: `${strengthPct}%`, height: '100%', background: strengthPct >= 70 ? 'var(--green)' : 'var(--accent)', transition: 'width .3s' }} />
+</div>
+<div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+{strengthChecks.map((c, i) => (
+<div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: c.done ? 'var(--muted)' : 'var(--text)' }}>
+<span style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, background: c.done ? 'rgba(46,204,113,0.15)' : 'var(--bg)', border: c.done ? '1px solid var(--green)' : '1px solid var(--border)', color: c.done ? 'var(--green)' : 'var(--muted)' }}>{c.done ? '✓' : ''}</span>
+<span style={{ textDecoration: c.done ? 'line-through' : 'none', opacity: c.done ? 0.7 : 1 }}>{c.hint}</span>
+</div>
+))}
+</div>
+</div>
+<div style={{ border: '1px solid var(--accent)', borderRadius: 14, background: 'rgba(255,107,0,0.05)', padding: '16px 18px' }}>
+<div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 6 }}>Step {step} — {STEP_TIPS[step].title}</div>
+<div style={{ fontSize: '12.5px', color: 'var(--text)', lineHeight: 1.65 }}>{STEP_TIPS[step].tip}</div>
+</div>
+</div>
 </div>
 </div>
 )}
