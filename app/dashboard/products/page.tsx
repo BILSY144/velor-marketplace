@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES, COUNTRY_TO_CURRENCY, symbolFor } from '@/lib/currency'
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
 import { HALO, HaloButton } from '@/lib/halo'
@@ -232,6 +233,10 @@ function ListingPreviewOverlay({ form, variantRows, hasVariants, currency, count
     background: active ? 'rgba(255,107,0,0.10)' : '#fff', color: dead ? '#b5b5b5' : active ? 'var(--accent)' : '#1a1a1a',
     textDecoration: dead ? 'line-through' : 'none',
   })
+  // Rendered through a portal to <body>: the dashboard page root creates a
+  // stacking context (position:relative + zIndex:1), which would otherwise
+  // trap this fixed overlay UNDER the dashboard's sticky header (z:20) --
+  // found live on first verification, 2026-07-29.
   const pickRow = (title: string, opts: string[], sel: string, setSel: (v: string) => void, exists: (v: string) => boolean) => (
     <div key={title}>
       <div style={{ fontSize: 12, fontWeight: 700, color: '#666', marginBottom: 6 }}>{title}{sel ? <span style={{ color: '#1a1a1a' }}> — {sel}</span> : ''}</div>
@@ -248,7 +253,7 @@ function ListingPreviewOverlay({ form, variantRows, hasVariants, currency, count
       </div>
     </div>
   )
-  return (
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#fafafa', overflowY: 'auto' }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#fff', borderBottom: '1px solid #e8e8e8', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <span style={{ background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', padding: '4px 10px', borderRadius: 999 }}>PREVIEW</span>
@@ -351,7 +356,8 @@ function ListingPreviewOverlay({ form, variantRows, hasVariants, currency, count
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
