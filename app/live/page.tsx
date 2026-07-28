@@ -19,11 +19,36 @@ type StreamCard = {
   products: { id: string; title: string; price: number; images: string[] }[]
 }
 
+// The full Velor Live preview reel. Moved here from the homepage 2026-07-28
+// (William: the live reel comes off the homepage and lives solely on this
+// page, behind the header's Live button).
+const vf = (path: string) => `https://videos.pexels.com/video-files/${path}`
+
 const PREVIEWS = [
   { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Ceramics, live from the wheel' },
-  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk', s: 'Shop the stalls as they open' },
+  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Shop the stalls as they open' },
+  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'From the Andes, as it is woven' },
   { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'Coffee, brewed on sand', s: 'Watch it made, buy the set' },
   { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'From the kiln to your basket' },
+  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'The stalls of old Delhi' },
+  // The 15 HD craft films (William, 2026-07-17: "added to the velor live
+  // reel at the top"). Craft-generic footage carries NO flag tag -- claiming
+  // a country on it would be a fabricated origin (LAW #1).
+  { src: vf('12681572/12681572-hd_1920_1080_24fps.mp4'), flag: '', t: 'Thrown on the wheel', s: 'Ceramics, live from the wheel' },
+  { src: vf('32655899/13923463_1280_720_25fps.mp4'), flag: '', t: 'On the loom', s: 'Weaving, thread by thread' },
+  { src: vf('34711974/14713477_720_1280_30fps.mp4'), flag: '', t: 'The wok, live', s: 'Street kitchens at full flame' },
+  { src: vf('35822699/15189596_1280_720_25fps.mp4'), flag: '', t: "The goldsmith's bench", s: 'Jewellery, made by hand' },
+  { src: vf('8507896/8507896-hd_1080_1920_25fps.mp4'), flag: '', t: 'The pour', s: 'Tea, poured properly' },
+  { src: vf('6748677/6748677-hd_1920_1080_25fps.mp4'), flag: '', t: 'Candle making', s: 'Light, poured and set' },
+  { src: vf('34740027/14727180_1280_720_30fps.mp4'), flag: '', t: 'Saddle stitch', s: 'Leather, sewn by hand' },
+  { src: vf('7519297/7519297-hd_720_1366_25fps.mp4'), flag: '', t: 'Glass, blown', s: 'Shaped in fire' },
+  { src: vf('37789666/16029515_1280_720_59fps.mp4'), flag: '', t: 'Carved by hand', s: 'Wood, worked in daylight' },
+  { src: vf('31638148/13478949_1280_720_24fps.mp4'), flag: '', t: 'The forge, live', s: 'Iron, struck while hot' },
+  { src: vf('7344854/7344854-hd_1080_1920_25fps.mp4'), flag: '', t: 'Ink & nib', s: 'Writing, the slow way' },
+  { src: vf('36147273/15329473_1280_720_25fps.mp4'), flag: '', t: 'The spice souk', s: 'Sold by the kilo' },
+  { src: vf('37864529/16064058_1366_720_50fps.mp4'), flag: '', t: 'The luthier', s: 'A violin takes shape' },
+  { src: vf('28987854/12538074_1280_720_24fps.mp4'), flag: '', t: 'Lantern night', s: 'Festivals after dark' },
+  { src: vf('8322334/8322334-hd_1366_720_25fps.mp4'), flag: '', t: 'The watchmaker', s: 'Seconds, by hand' },
 ]
 
 const css = `
@@ -132,7 +157,7 @@ export default function LiveHubPage() {
                   <video src={p.src} autoPlay muted loop playsInline preload="metadata" />
                   <div className="vl-scrim" />
                   <div className="vl-chip">Preview</div>
-                  <div className="vl-flag">{p.flag}</div>
+                  {p.flag ? <div className="vl-flag">{p.flag}</div> : null}
                   <div className="vl-meta"><div className="t">{p.t}</div><div className="s">{p.s}</div></div>
                 </div>
               ))}

@@ -2,17 +2,20 @@
 
 // Homepage v2 — rebuilt 2026-07-09 to William's buyer-first brief:
 // ~90% buyer, one slim seller band at the bottom. No hero manifesto — the
-// page opens on VELOR LIVE (the live-shopping rail) and then swipeable
-// culture reels: real cultural items, photographed, tagged with their
-// country. Editorial showcase tiles, NOT product cards — no prices, no
-// seller names, nothing that fakes a listing. Tiles swap to real product
-// cards as sellers list (the lattice API already feeds live counts).
+// page opens straight on the swipeable culture reels: real cultural items,
+// photographed, tagged with their country. Editorial showcase tiles, NOT
+// product cards — no prices, no seller names, nothing that fakes a listing.
+// Tiles swap to real product cards as sellers list (the lattice API already
+// feeds live counts). Reel titles carry no sub-line (William, 2026-07-28:
+// "the short description moved from all reels").
 //
-// Framing (William, 2026-07-08): Velor IS a shopping channel. Sections are
-// numbered like channels (CH 01 the live network, CH 02+ the culture reels,
-// countries are "190 channels"), and the seller band pitches both rails:
-// sell live on the channel AND with always-on listings. Layout is full-bleed
-// — no max-width, the page uses the whole viewport.
+// VELOR LIVE was removed from this page 2026-07-28 (William: only sellers'
+// listings live on the homepage) — the live rail, real streams plus the
+// film previews, now lives solely at /live, reached from the header's Live
+// button.
+//
+// Framing (William, 2026-07-08): Velor IS a shopping channel. Layout is
+// full-bleed — no max-width, the page uses the whole viewport.
 //
 // Standing rules honoured: zero-state honest; Preview labels, never fake
 // LIVE badges; culture not raw materials; opener language; buyer pages
@@ -51,25 +54,10 @@ type LatticeSummary = {
   categoryProducts: Record<string, CategoryProduct[]>
 }
 
-type LiveStream = {
-  id: string
-  title: string
-  roomName: string
-  status: string
-  sellerName: string
-  products: { id: string; title: string; price: number; images: string[] }[]
-}
-
 const px = (id: number, slug?: string) =>
   slug
     ? `https://images.pexels.com/photos/${id}/pexels-photo-${id}/${slug}.jpeg?auto=compress&cs=tinysrgb&w=800`
     : `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`
-
-// HD craft films for the one PREVIEW FILM seat on each 20-seat rail.
-const vf = (path: string) => `https://videos.pexels.com/video-files/${path}`
-// Poster frame for a film seat -- paints instantly; the film itself only
-// plays (and downloads) when the IntersectionObserver scrolls it into view.
-const vp = (path: string) => `https://images.pexels.com/videos/${path}?auto=compress&cs=tinysrgb&w=800`
 
 // The culture reels — each tile is a real cultural item with its country.
 // Stock photography stands in until real listings replace it, tile by tile.
@@ -684,35 +672,6 @@ const CULTURE_REELS: {
   },
 ]
 
-// Film previews for the VELOR LIVE rail — replaced by real streams the
-// moment /api/live returns them.
-const LIVE_PREVIEWS = [
-  { src: 'https://videos.pexels.com/video-files/9363591/9363591-sd_360_640_25fps.mp4', flag: 'CN', t: 'Throwing the tea set', s: 'Ceramics, live from the wheel' },
-  { src: 'https://videos.pexels.com/video-files/34499603/14618073_360_640_30fps.mp4', flag: 'MA', t: 'The spice souk, Marrakech', s: 'Shop the stalls as they open' },
-  { src: 'https://videos.pexels.com/video-files/33350906/14200976_360_640_24fps.mp4', flag: 'PE', t: 'Alpaca, on the loom', s: 'From the Andes, as it is woven' },
-  { src: 'https://videos.pexels.com/video-files/7681482/7681482-sd_360_640_25fps.mp4', flag: 'TR', t: 'Coffee, brewed on sand', s: 'Watch it made, buy the set' },
-  { src: 'https://videos.pexels.com/video-files/9733033/9733033-sd_360_640_24fps.mp4', flag: 'JP', t: 'Glaze, fire, finish', s: 'From the kiln to your basket' },
-  { src: 'https://videos.pexels.com/video-files/35766889/15164187_360_640_30fps.mp4', flag: 'IN', t: 'Market day', s: 'The stalls of old Delhi' },
-  // The 15 HD craft films (William, 2026-07-17: "added to the velor live
-  // reel at the top"). Craft-generic footage carries NO flag tag -- claiming
-  // a country on it would be a fabricated origin (LAW #1).
-  { src: vf('12681572/12681572-hd_1920_1080_24fps.mp4'), flag: '', t: 'Thrown on the wheel', s: 'Ceramics, live from the wheel' },
-  { src: vf('32655899/13923463_1280_720_25fps.mp4'), flag: '', t: 'On the loom', s: 'Weaving, thread by thread' },
-  { src: vf('34711974/14713477_720_1280_30fps.mp4'), flag: '', t: 'The wok, live', s: 'Street kitchens at full flame' },
-  { src: vf('35822699/15189596_1280_720_25fps.mp4'), flag: '', t: "The goldsmith's bench", s: 'Jewellery, made by hand' },
-  { src: vf('8507896/8507896-hd_1080_1920_25fps.mp4'), flag: '', t: 'The pour', s: 'Tea, poured properly' },
-  { src: vf('6748677/6748677-hd_1920_1080_25fps.mp4'), flag: '', t: 'Candle making', s: 'Light, poured and set' },
-  { src: vf('34740027/14727180_1280_720_30fps.mp4'), flag: '', t: 'Saddle stitch', s: 'Leather, sewn by hand' },
-  { src: vf('7519297/7519297-hd_720_1366_25fps.mp4'), flag: '', t: 'Glass, blown', s: 'Shaped in fire' },
-  { src: vf('37789666/16029515_1280_720_59fps.mp4'), flag: '', t: 'Carved by hand', s: 'Wood, worked in daylight' },
-  { src: vf('31638148/13478949_1280_720_24fps.mp4'), flag: '', t: 'The forge, live', s: 'Iron, struck while hot' },
-  { src: vf('7344854/7344854-hd_1080_1920_25fps.mp4'), flag: '', t: 'Ink & nib', s: 'Writing, the slow way' },
-  { src: vf('36147273/15329473_1280_720_25fps.mp4'), flag: '', t: 'The spice souk', s: 'Sold by the kilo' },
-  { src: vf('37864529/16064058_1366_720_50fps.mp4'), flag: '', t: 'The luthier', s: 'A violin takes shape' },
-  { src: vf('28987854/12538074_1280_720_24fps.mp4'), flag: '', t: 'Lantern night', s: 'Festivals after dark' },
-  { src: vf('8322334/8322334-hd_1366_720_25fps.mp4'), flag: '', t: 'The watchmaker', s: 'Seconds, by hand' },
-]
-
 const REEL_FIRST = ['CN', 'JP', 'MA', 'TR', 'IN', 'PE', 'MX', 'IT', 'KR', 'GH', 'ET', 'UZ', 'NP', 'EC', 'PT', 'VN', 'GR', 'AR', 'TH', 'NG']
 
 
@@ -742,19 +701,10 @@ const css = `
 .vh-drag::-webkit-scrollbar{display:none}
 .vh-drag.dragging{cursor:grabbing}
 .vh-drag.dragging *{pointer-events:none}
-.vh-livesec{background:var(--surface);border-bottom:1px solid var(--border);padding:44px 0 40px}
-.vh-livehead{display:flex;align-items:baseline;gap:18px;margin-bottom:8px;flex-wrap:wrap}
-.vh-livehead h1{font-size:44px;font-weight:700;letter-spacing:.04em}
-.vh-livehead h1 .o{color:var(--accent)}
-.vh-livedot{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent);border:1px solid rgba(255,107,0,.4);border-radius:999px;padding:6px 12px}
-.vh-livedot .d{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:vhpulse 1.6s infinite}
-@keyframes vhpulse{0%,100%{opacity:1}50%{opacity:.3}}
-.vh-livestrap{font-size:14.5px;color:var(--muted);margin:0 0 26px;max-width:64ch;line-height:1.6}
 .vh-tile{position:relative;flex:0 0 218px;aspect-ratio:9/16;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
 .vh-tile video{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
 .vh-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 36%,rgba(0,0,0,.78) 100%)}
 .vh-chip{position:absolute;top:12px;left:12px;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:4px 8px;color:#fff}
-.vh-chip.islive{background:var(--accent);color:#160a00;border-color:var(--accent)}
 .vh-flagtag{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;letter-spacing:.08em;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:3px 7px;color:#fff}
 .vh-tile .meta{position:absolute;left:14px;right:14px;bottom:14px}
 .vh-tile .meta .t{font-size:13.5px;font-weight:500;line-height:1.3;margin-bottom:5px}
@@ -816,7 +766,6 @@ const css = `
 .vh-comingsoon h3{font-size:16px;margin:0 0 6px}
 .vh-comingsoon p{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0;max-width:58ch}
 @media(max-width:960px){
-.vh-livehead h1{font-size:32px}
 .vh-tile{flex:0 0 168px}
 .vh-ct{flex:0 0 172px}
 .vh-steps{grid-template-columns:1fr}
@@ -828,14 +777,12 @@ export default function HomePage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [lattice, setLattice] = useState<LatticeSummary | null>(null)
-  const [streams, setStreams] = useState<LiveStream[]>([])
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [wishlistPending, setWishlistPending] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/lattice').then(r => (r.ok ? r.json() : null)).then(d => { if (d) setLattice(d) }).catch(() => {})
-    fetch('/api/live').then(r => (r.ok ? r.json() : null)).then(d => { if (d?.streams) setStreams(d.streams) }).catch(() => {})
   }, [])
 
   // Wishlist heart (William, 2026-07-26: "add the wishlist heart to all
@@ -918,7 +865,7 @@ export default function HomePage() {
       })
     })
     return () => cleanups.forEach(fn => fn())
-  }, [streams.length])
+  }, [lattice])
 
   // Pause off-screen video.
   useEffect(() => {
@@ -933,7 +880,7 @@ export default function HomePage() {
     }, { rootMargin: '120px' })
     document.querySelectorAll('.vh-tile, .vh-film').forEach(el => io.observe(el))
     return () => io.disconnect()
-  }, [streams.length])
+  }, [lattice])
 
   const byCode = new Map((lattice?.countries ?? []).map(c => [c.code, c]))
 
@@ -983,8 +930,6 @@ export default function HomePage() {
     return out
   })()
 
-  const liveOnAir = streams.filter(s => s.status === 'LIVE')
-
   return (
     <div className="vh" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
@@ -993,52 +938,11 @@ export default function HomePage() {
 
       
 
-      {/* ============ VELOR LIVE — the top of the page ============ */}
-      <div className="vh-livesec">
-        <div className="vh-wrap">
-          <div className="vh-livehead">
-            <h1>VEL<span className="o">O</span>R LIVE</h1>
-            <span className="vh-livedot"><span className="d" />{liveOnAir.length > 0 ? `${liveOnAir.length} on air now` : 'Channels open with our founding sellers'}</span>
-          </div>
-          <p className="vh-livestrap">
-            The world&apos;s shopping channel. Sellers broadcast from the workshop, the market stall,
-            the kitchen — you watch it made, ask anything, and buy without leaving the stream. Their
-            listings sit one tap below the broadcast, selling around the clock.
-          </p>
-          <div className="vh-drag">
-            {liveOnAir.map(s => (
-              <Link key={s.id} className="vh-tile" href={`/live/${s.roomName}`}>
-                {s.products[0]?.images?.[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.products[0].images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
-                ) : (
-                  // No featured product photo yet -- this used to render as a
-                  // flat, empty grey box with nothing but the LIVE chip on it.
-                  // Show a broadcast-style placeholder instead of nothing.
-                  <div style={{ width: '100%', height: '100%', background: 'radial-gradient(circle at 50% 35%, #2a1608 0%, #0d0d0d 70%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent)' }} />
-                    </span>
-                  </div>
-                )}
-                <div className="vh-scrim" />
-                <div className="vh-chip islive">LIVE</div>
-                <div className="meta"><div className="t">{s.title}</div><div className="s">{s.sellerName}</div></div>
-              </Link>
-            ))}
-            {LIVE_PREVIEWS.map(r => (
-              <Link className="vh-tile" href="/live" key={r.src}>
-                <video src={r.src} autoPlay muted loop playsInline preload="metadata" />
-                <div className="vh-scrim" />
-                <div className="vh-chip">Preview</div>
-                {r.flag ? <div className="vh-flagtag">{r.flag}</div> : null}
-                <div className="meta"><div className="t">{r.t}</div><div className="s">{r.s}</div></div>
-              </Link>
-            ))}
-          </div>
-          <div className="vh-swipehint">Drag to browse &middot; <Link href="/live" style={{ color: 'var(--accent)' }}>Open Velor Live &rarr;</Link></div>
-        </div>
-      </div>
+      {/* VELOR LIVE moved off the homepage 2026-07-28 (William: "remove the
+          velor live reel from the homepage... so only sellers listings live
+          in the homepage"). The live rail — real streams plus the film
+          previews — now lives solely at /live, reached via the header's Live
+          button. */}
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
       {orderedReels.map((reel, ri) => reel.comingSoon ? (
@@ -1047,7 +951,6 @@ export default function HomePage() {
             <div className="vh-shead">
               <div>
                 <h2>{reel.title}</h2>
-                <p className="sub">{reel.line}</p>
               </div>
             </div>
             {/* No tile rail here on purpose (William, 2026-07-19): we only
@@ -1071,7 +974,6 @@ export default function HomePage() {
             <div className="vh-shead">
               <div>
                 <h2>{reel.title}</h2>
-                <p className="sub">{reel.line}</p>
               </div>
               <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
             </div>
