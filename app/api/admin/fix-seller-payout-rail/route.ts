@@ -39,6 +39,17 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)
   const sellerId = typeof body?.sellerId === 'string' ? body.sellerId : null
   const country = typeof body?.country === 'string' ? body.country.trim() : null
+  // resetStripeAccount (added 2026-07-28, the Hong Kong seller
+  // g16619999957@163.com): a Stripe Express account's country is fixed at
+  // creation, and until the same-day fix in app/api/stripe/connect/route.ts
+  // every account was created defaulted to GB. For a seller whose existing
+  // account is locked to the wrong country, pass true to also clear
+  // Seller.stripeAccountId -- their next "set up payouts" click then
+  // creates a fresh account under their (now corrected) real country. The
+  // old account is left orphaned at Stripe, never deleted (LAW-#1-adjacent
+  // caution: deletion is irreversible and this route can't verify the old
+  // account holds nothing of value).
+  const resetStripeAccount = body?.resetStripeAccount === true
 
   if (!sellerId || !country) {
     return NextResponse.json({ error: 'sellerId and country are both required' }, { status: 400 })
@@ -56,14 +67,18 @@ export async function POST(req: NextRequest) {
 
   const updated = await prisma.seller.update({
     where: { id: sellerId },
-    data: { country, payoutRail: newRail },
+    data: {
+      country,
+      payoutRail: newRail,
+      ...(resetStripeAccount ? { stripeAccountId: null } : {}),
+    },
   })
 
   return NextResponse.json({
     ok: true,
     sellerId,
     email: seller.user?.email ?? null,
-    before: { country: seller.country, payoutRail: seller.payoutRail },
-    after: { country: updated.country, payoutRail: updated.payoutRail },
+    before: { country: seller.country, payoutRail: seller.payoutRail, stripeAccountId: seller.stripeAccountId },
+    after: { country: updated.country, payoutRail: updated.payoutRail, stripeAccountId: updated.stripeAccountId },
   })
 }

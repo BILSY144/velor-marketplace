@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { countryToCode } from '@/lib/payoutRail';
 export const dynamic = 'force-dynamic';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
 // Was 'https://velor-marketplace.vercel.app' -- a stale placeholder from
@@ -48,12 +49,38 @@ export async function POST() {
     // operates as a registered company can still be switched later
     // (disconnect creates a fresh account); the default onboarding must
     // never demand business status from a private individual.
-    const account = await stripe.accounts.create({
-      type: 'express',
-      business_type: 'individual',
-      business_profile: sellerBusinessProfile(seller.id),
-      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
-    });
+    //
+    // country (fix 2026-07-28, William: "go and fix it"): this create call
+    // used to omit `country`, so Stripe defaulted EVERY seller's Express
+    // account to the platform's own country (GB). For any non-GB seller the
+    // onboarding form then hard-locks the address country to United Kingdom
+    // -- found live when Hong Kong seller g16619999957@163.com could not
+    // change their home-address country on the Stripe form. Pass the
+    // seller's real country; if Stripe rejects the full card_payments
+    // capability set for that country (recipient-only cross-border payout
+    // countries), retry as a transfers-only recipient account rather than
+    // failing the seller entirely.
+    const sellerCountryCode = countryToCode(seller.country) ?? 'GB';
+    let account: Stripe.Account;
+    try {
+      account = await stripe.accounts.create({
+        type: 'express',
+        country: sellerCountryCode,
+        business_type: 'individual',
+        business_profile: sellerBusinessProfile(seller.id),
+        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+      });
+    } catch (createErr) {
+      console.error('[stripe/connect POST] full-capability create failed for country ' + sellerCountryCode + ', retrying as recipient-only', createErr);
+      account = await stripe.accounts.create({
+        type: 'express',
+        country: sellerCountryCode,
+        business_type: 'individual',
+        business_profile: sellerBusinessProfile(seller.id),
+        tos_acceptance: { service_agreement: 'recipient' },
+        capabilities: { transfers: { requested: true } },
+      });
+    }
     const accountLink = await stripe.accountLinks.create({ account: account.id, refresh_url: BASE_URL + '/dashboard/stripe-connect/refresh', return_url: BASE_URL + '/dashboard/stripe-connect/return', type: 'account_onboarding' });
 
     try {
