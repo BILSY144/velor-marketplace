@@ -58,7 +58,31 @@ export interface EasyshipItem {
   actual_weight?: number // kg
   dimensions?: { length: number; width: number; height: number } // cm
   hs_code?: string | null
+  category?: string | null
   origin_country_alpha2?: string | null
+}
+
+// LIVE-VERIFIED 2026-07-28: Easyship 422s unless every item carries a
+// category OR an hs_code ("items[0].category can't be blank if hs_code is
+// blank"). Velor products don't store HS codes, so default the Easyship
+// item category -- home_decor is the closest generic for handmade cultural
+// goods. Also strips explicit nulls (same OpenAPI no-null rule as
+// addresses).
+function normalizeItems(items: EasyshipItem[]): Record<string, unknown>[] {
+  return items.map((it) => {
+    const out: Record<string, unknown> = {
+      quantity: it.quantity,
+      description: it.description,
+      declared_currency: it.declared_currency,
+      declared_customs_value: it.declared_customs_value,
+    }
+    if (it.actual_weight) out.actual_weight = it.actual_weight
+    if (it.dimensions) out.dimensions = it.dimensions
+    if (it.hs_code) out.hs_code = it.hs_code
+    else out.category = it.category || 'home_decor'
+    if (it.origin_country_alpha2) out.origin_country_alpha2 = it.origin_country_alpha2
+    return out
+  })
 }
 
 export interface EasyshipRate {
@@ -146,7 +170,7 @@ export async function getEasyshipRates(params: {
         {
           total_actual_weight: params.totalWeightKg,
           box: { length: params.boxCm.length, width: params.boxCm.width, height: params.boxCm.height },
-          items: params.items,
+          items: normalizeItems(params.items),
         },
       ],
       calculate_tax_and_duties: false,
@@ -204,7 +228,7 @@ export async function purchaseEasyshipLabel(params: {
       {
         total_actual_weight: params.totalWeightKg,
         box: { length: params.boxCm.length, width: params.boxCm.width, height: params.boxCm.height },
-        items: params.items,
+        items: normalizeItems(params.items),
       },
     ],
   }
