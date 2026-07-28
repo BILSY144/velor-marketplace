@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
   const configuredOrigins = (process.env.EASYSHIP_ORIGINS || '')
     .split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
   const webhookSecretConfigured = !!process.env.EASYSHIP_WEBHOOK_SECRET
+  const easyshipForceActive = process.env.EASYSHIP_FORCE === '1'
 
   const { searchParams } = new URL(request.url)
   const origin = (searchParams.get('origin') || '').toUpperCase()
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       enabled: true,
       configuredOrigins,
       webhookSecretConfigured,
+      easyshipForceActive,
       note: 'pass ?origin=GB (and optional &dest=US&grams=200) to probe rates',
     })
   }
