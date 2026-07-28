@@ -697,6 +697,10 @@ if (!rulesAccepted) {
 setError('Please confirm this listing complies with the Seller Rules and Product Compliance Policy.')
 return
 }
+if (!form.weightGrams || !form.lengthCm || !form.widthCm || !form.heightCm) {
+setError('Please add weight and dimensions (weight, length, width, height) so shipping can be calculated.')
+return
+}
 // Client-side variant validation mirrors the server check in
 // app/api/dashboard/products/route.ts's normalizeVariants -- gives an
 // immediate error instead of waiting on a round trip, but the server
@@ -1065,19 +1069,19 @@ Weight and dimensions are used for shipping labels. HS code is recommended if th
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
 <div>
 <label style={labelStyle}>Weight (g)</label>
-<input style={inputStyle} type="number" value={form.weightGrams} onChange={e => set('weightGrams', e.target.value)} placeholder="500" />
+<input style={inputStyle} type="number" value={form.weightGrams} onChange={e => set('weightGrams', e.target.value)} placeholder="450" required />
 </div>
 <div>
 <label style={labelStyle}>Length (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.lengthCm} onChange={e => set('lengthCm', e.target.value)} placeholder="20" />
+<input style={inputStyle} type="number" step="0.1" value={form.lengthCm} onChange={e => set('lengthCm', e.target.value)} placeholder="18" required />
 </div>
 <div>
 <label style={labelStyle}>Width (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.widthCm} onChange={e => set('widthCm', e.target.value)} placeholder="15" />
+<input style={inputStyle} type="number" step="0.1" value={form.widthCm} onChange={e => set('widthCm', e.target.value)} placeholder="13" required />
 </div>
 <div>
 <label style={labelStyle}>Height (cm)</label>
-<input style={inputStyle} type="number" step="0.1" value={form.heightCm} onChange={e => set('heightCm', e.target.value)} placeholder="10" />
+<input style={inputStyle} type="number" step="0.1" value={form.heightCm} onChange={e => set('heightCm', e.target.value)} placeholder="7" required />
 </div>
 </div>
 
