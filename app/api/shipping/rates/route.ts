@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
           rates: await applyAdminFee(await flatRateOrFallback(
             seller.shippingProfile,
             shippingAddress.country,
-            500,
+            450,
             { ...FALLBACK_QUOTE_RATE, rateId: 'pending-standard', carrier: 'Standard Shipping', service: 'Tracked Delivery', estimatedDays: 14 }
           ), itemCount),
         })
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
       // a real (or best-effort default) weight for the platform-default
       // estimate rather than falling straight to the dead-end quote-required
       // placeholder just because the live Shippo call itself threw.
-      let totalWeightGrams = 500 * items.reduce((sum: number, i: { quantity?: number }) => sum + (i.quantity || 1), 0)
+      let totalWeightGrams = 450 * items.reduce((sum: number, i: { quantity?: number }) => sum + (i.quantity || 1), 0)
 
       try {
         const itemProductIds = items.map((i: { productId: string }) => i.productId).filter(Boolean)
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
 
         totalWeightGrams = itemsWithDimensions.reduce(
           (sum: number, i: { weightGrams?: number | null; quantity: number }) =>
-            sum + (i.weightGrams ?? 500) * i.quantity,
+            sum + (i.weightGrams ?? 450) * i.quantity,
           0
         )
 
@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
           return {
             description: item.name || 'Product',
             quantity: item.quantity || 1,
-            net_weight: String((pr?.weightGrams || 200) / 1000),
+            net_weight: String((pr?.weightGrams || 180) / 1000),
             mass_unit: 'kg',
             value_amount: String(item.price || pr?.price || 0),
             value_currency: 'GBP',
