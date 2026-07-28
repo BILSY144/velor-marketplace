@@ -27,6 +27,22 @@ William compared the live PDP side-by-side with an Amazon PDP (Wooden Robin, ama
 ALSO SHIPPED same evening (0793dfa + retrigger f409368 -- Vercel dropped the webhook again, empty-commit rule applied): real sold-count + wishlist-count social proof (live OrderItem/WishlistItem aggregates via the product API, hidden at zero), Share (navigator.share -> clipboard fallback), Request Customisation (prefills the existing seller-message modal), payment trust line (text-only, all genuinely Stripe-supported), origin pill linking /shop?origin=CODE (renders only for real 2-letter originCountry; NOTE Windows Chrome shows region letters not flag glyphs -- swap to the flag image assets later if William wants), Report this listing (mailto customerservice@), and Product JSON-LD for Google rich results (mirrors page-rendered values only; aggregateRating only when real reviews exist). All verified live on /shop/cms2tasir0002q82gkdsz7m84.
 STILL OPEN from the Amazon comparison (William-approved direction, not yet built): live delivery estimate + shipping cost on the PDP using the Shippo/Easyship rates stack with a deliver-to picker (the big one); public Q&A; review photos + helpful votes. Next Tuesday 2026-08-04: Google Play app rejection (trigger trig_01Y3andksLyF64LsUSDcG29Y, William: "it has to be done").
 
+## SELLER LISTING FORM OVERHAUL -- WILLIAM-APPROVED SPEC 2026-07-28 (~22:5x UTC), BUILD IN STAGES
+
+William (verbatim gist): the add-a-listing page "is a box, very boring and doesnt offer full potential. expecially when it comes to varients or clothes and sizes... including adding a video to the listing"; and "options of adding a single listing which has the option of different varients and prices into 1 listing so they dont have to list multiple times for a product... not just for clothes all listings."
+
+APPROVED SCOPE (all of it; each stage deployable, tick off with evidence):
+1. GENERIC VARIANTS ("Options") -- ProductVariant gains a free `label` (e.g. "Dragon design", "Lavender", "Set of 3"); seller names the option group; per-option price/stock/photo (fields already exist: priceOverride/stock/images). NOT colour/size-only; colour+size become one use of the same system. PDP variant buttons already render name+price shape.
+2. CLOTHES MATRIX BUILDER -- tick sizes x tick colours -> auto-generate the variant grid with stock inputs.
+3. VIDEO BY LINK (v1) -- Product.videoUrl (YouTube/Vimeo URL, validated), embedded player on PDP gallery. TRUE UPLOAD (R2/S3) deferred to phase 2, needs storage decision.
+4. MADE-TO-ORDER -- Product.madeToOrder Boolean + leadTimeDays Int?; PDP shows "crafted when you order - ships in X days" instead of stock urgency; stock checks bypassed for MTO listings (checkout + auto-label unaffected -- label still generates on payment).
+5. SIZE GUIDE -- Product.sizeGuide Text?, accordion on PDP.
+6. STEPPED FORM REDESIGN -- Photos & video / Basics / Options & sizes / Shipping details / Your story, with live LISTING STRENGTH METER (honest checks only: photo count, description length, weight present for shipping, video added, story added).
+7. DRAFT SAVE + PREVIEW before submit.
+PHASE 2 (approved direction, later): personalisation options (name/engraving + price), true video upload, CSV bulk import.
+
+Schema changes are ADDITIVE ONLY (build runs prisma db push). Existing listings keep working unchanged (variants empty => Product.price/stock source of truth -- preserve that rule). Files: prisma/schema.prisma, app/dashboard/products/page.tsx (1240 lines, has VariantRow scaffolding from 2026-07-27), product create/update API routes, app/api/shop/products/[productId]/route.ts (variant name mapping), app/shop/[productId]/ProductPageClient.tsx (video embed, MTO line, size guide).
+
 ## EASYSHIP HOOKUP -- CODE COMPLETE + DEPLOYED 2026-07-28 (commit b01471f, READY); ACTIVATION RUNBOOK
 
 Built and deployed dormant (no-op until env vars exist). Components: lib/easyship.ts (rates + 2-step label purchase), dual-provider attemptAutoLabelPurchase (cheapest same-currency wins, cross-provider fallback, ALL tracking numbers registered with Shippo /tracks so the one delivery webhook drives escrow for both providers), Shipment.labelProvider + easyshipShipmentId columns, app/api/webhooks/easyship (async label URL backfill; HMAC once EASYSHIP_WEBHOOK_SECRET set), Easyship rates merged into buyer checkout quotes for enabled origins, and read-only probe GET /api/admin/easyship-check?origin[EQUALS]CC (Bearer ADMIN_SECRET).
