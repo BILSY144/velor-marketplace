@@ -36,6 +36,15 @@ previous 924-line version (154KB, twelve same-day check-ins, and a stale
 "READ THIS FIRST" block that sent new sessions to fix an already-closed bug)
 is preserved in git history at commit 9fcce1d if it is ever needed._
 
+## UPDATE 2026-07-28 -- Homepage: reel sub-lines removed, Velor Live moved off homepage to /live only, orange bar now three value slogans (all DEPLOYED, live-verified)
+
+Three William directives, all shipped and verified live on velorcommerce.store this session:
+- Reel sub-descriptions removed from every culture reel (titles stand alone, incl. the opening-soon rail). Commit 66c8df1.
+- VELOR LIVE section removed from the homepage entirely (William: "only sellers listings live in the homepage") -- the live rail now lives solely at /live, reached from the header's existing Live button. The full preview reel (6 flagged films + the 15 HD craft films from 2026-07-17) was ported into app/live/page.tsx's PREVIEWS so nothing curated was lost; /live still shows real streams first when anyone is on air. Dead homepage code removed (LiveStream type, LIVE_PREVIEWS, /api/live fetch, vf/vp helpers, live CSS). Same commit 66c8df1.
+- Orange announcement bar: apply-now copy (and the emoji swipe hint) replaced with three value slogans, each in its own characterful typeface per William ("needs real definition... no block fonts"): "Never factory-made" (Abril Fatface), "Real cultural goods" (Playfair Display italic), "Made by hand, always" (Caveat). Caveat + Abril Fatface added to the Google Fonts URL in app/layout.tsx. First reel given extra top padding (34px) under the bar per William ("brought down a touch"). Commits debfe8c, 841c322 -- deployment dpl_HF4pnyMot3qkuWBKAmGzHcHfeiC2 READY, homepage + /live verified live.
+
+KNOWN, not yet actioned: the homepage's only h1 was "VELOR LIVE", so the page now has no h1 -- flagged to William (SEO agent may also flag it); fix needs his go-ahead. Pushes this session were direct git pushes with a session PAT from the cloud sandbox (network available there; PAT not stored).
+
 UPDATE 2026-07-27 (latest) -- Tier A carrier-account world-coverage rollout started; FedEx UK business account connected to Shippo but blocked on address-verification error, believed new-account propagation delay
 
 William's direction: expand Tier A (real-time auto-purchased Shippo label at payment_intent.succeeded, currently GB/DE/CA only per TIER_A_ORIGINS in lib/orders.ts) to full world coverage by connecting real, user-held carrier accounts to Shippo's "Your Accounts" (bring-your-own-carrier) tab one carrier at a time -- verbatim: "take me to the pages 1 by 1 until we have world coverage and its wired up to our systems." Shippo's own wholesale "Shippo Accounts" tab was already found unreliable earlier in this project and should not be used for this rollout.
