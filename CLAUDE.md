@@ -6,7 +6,7 @@ BEFORE ANY OTHER WORK -- including APP DAY work if the next session is Tuesday (
 
 RULES FOR EVERY SESSION: (1) At session start, TELL William the current state in 2-3 plain sentences (dyslexia-friendly, short) -- NEVER ask him to explain where things stand. (2) Update THIS dashboard at every checkpoint -- move items between sections; the long history below is archive, this is the truth. (3) A stale dashboard is a LAW #1 violation.
 
-## MANDATORY FIRST TASK (see the rule section directly below): EU VAT-base fix in lib/duty-rates.ts. Nothing else starts before it. Mark done here + there with commit SHA.
+## MANDATORY FIRST TASK (full spec in the rule section at the very top of this file): EU VAT-base fix in lib/duty-rates.ts. Nothing else starts before it. Mark done here + there with commit SHA.
 
 ## DONE AND LIVE-PROVEN (do not re-do, do not doubt without live evidence)
 - Checkout end to end: seller free shipping WINS over live quotes (bf79301), rates auto-fetch (e44bb40), honest payment-failed page (b8a6c8a), duty quote = charge, server-side prices (1886dcd), snapshot prices converted (8aa2750). Door God CN->GB priced right in a REAL Stripe attempt: 6.77 + 1.35 VAT + FREE shipping = 8.12.
