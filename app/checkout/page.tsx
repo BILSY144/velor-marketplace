@@ -371,6 +371,21 @@ export default function CheckoutPage() {
     await fetchRatesAndDuties()
   }
 
+  // AUTO-FETCH shipping prices (William, 2026-07-29: a buyer whose seller
+  // already set the price -- above all FREE shipping -- should never have
+  // to press "Get Shipping Rates" to discover it). The moment the address
+  // fields a quote needs are filled, rates fetch themselves, debounced so
+  // typing doesn't fire a request per keystroke. Applies to every tier --
+  // live carrier quotes appear automatically too. The old button remains
+  // only as a retry affordance when a fetch fails.
+  const addressReadyForRates = !!(address.line1.trim() && address.city.trim() && address.postalCode.trim() && address.country)
+  useEffect(() => {
+    if (!addressReadyForRates || items.length === 0) return
+    const t = setTimeout(() => { void fetchRatesAndDuties() }, 800)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address.line1, address.city, address.postalCode, address.country, items.length])
+
   // Every seller present in the cart must have a chosen shipping option
   // before payment can proceed -- one parcel, one rate, per seller.
   const allSellersHaveRates = sellerGroups.length > 0 && sellerGroups.every(g => selectedRates[g.sellerId])
@@ -568,14 +583,27 @@ export default function CheckoutPage() {
                       {rateError}
                     </div>
                   )}
-                  <button type="submit" disabled={loadingRates} style={{
-                    padding: '12px', background: loadingRates ? 'var(--border)' : 'var(--accent)',
-                    color: '#fff', border: 'none', borderRadius: '6px',
-                    fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px',
-                    cursor: loadingRates ? 'not-allowed' : 'pointer',
-                  }}>
-                    {loadingRates ? 'Fetching Rates...' : 'Get Shipping Rates'}
-                  </button>
+                  {/* Shipping prices load AUTOMATICALLY once the address is
+                      complete (2026-07-29) -- no button to press. A manual
+                      retry button appears only if the auto-fetch failed. */}
+                  {loadingRates ? (
+                    <div style={{ padding: '12px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
+                      Calculating your shipping…
+                    </div>
+                  ) : rateError ? (
+                    <button type="submit" style={{
+                      padding: '12px', background: 'var(--accent)',
+                      color: '#fff', border: 'none', borderRadius: '6px',
+                      fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px',
+                      cursor: 'pointer',
+                    }}>
+                      Try shipping rates again
+                    </button>
+                  ) : sellerGroups.length === 0 ? (
+                    <div style={{ padding: '10px 12px', color: 'var(--muted)', fontSize: '13px' }}>
+                      Shipping prices appear automatically once your address is complete.
+                    </div>
+                  ) : null}
                 </form>
               </div>
 
@@ -613,7 +641,12 @@ export default function CheckoutPage() {
                             />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
-                                {rate.carrier} — {rate.service}
+                                {/* Seller-provided free shipping reads as
+                                    exactly that (2026-07-29) -- not a
+                                    carrier/service string with 0.00. */}
+                                {rate.rateId === 'seller-flat-rate' && Number(rate.amount) <= 0.005
+                                  ? 'FREE shipping — provided by the seller'
+                                  : <>{rate.carrier} — {rate.service}</>}
                                 {rate.isDDP && (
                                   <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(0,230,118,0.15)', color: 'var(--green)', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
                                     DDP
@@ -624,8 +657,12 @@ export default function CheckoutPage() {
                                 {rate.estimatedDays ? rate.estimatedDays + ' business days' : 'Estimated delivery varies'}
                               </div>
                             </div>
-                            <div style={{ fontSize: '15px', fontWeight: 700, color: rate.isFallback ? 'var(--muted)' : 'var(--text)' }}>
-                              {rate.isFallback ? 'Quote required' : fmtRaw(rate.amount, rate.currency || 'GBP')}
+                            <div style={{ fontSize: '15px', fontWeight: 700, color: rate.isFallback ? 'var(--muted)' : Number(rate.amount) <= 0.005 && rate.rateId === 'seller-flat-rate' ? 'var(--green)' : 'var(--text)' }}>
+                              {rate.isFallback
+                                ? 'Quote required'
+                                : rate.rateId === 'seller-flat-rate' && Number(rate.amount) <= 0.005
+                                  ? 'FREE'
+                                  : fmtRaw(rate.amount, rate.currency || 'GBP')}
                             </div>
                           </label>
                         ))}
