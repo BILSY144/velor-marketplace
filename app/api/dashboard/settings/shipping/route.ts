@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { codeToCountryName } from '@/lib/worldCountries'
 import { getPayoutRail } from '@/lib/payoutRail'
+import { isAutoLabelOrigin } from '@/lib/labelOrigins'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,7 @@ export async function GET() {
     if (!seller) {
       return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
     }
-    return NextResponse.json({ profile: seller.shippingProfile })
+    return NextResponse.json({ profile: seller.shippingProfile, autoLabelOrigin: isAutoLabelOrigin(seller.shippingProfile?.country) })
   } catch (err) {
     console.error('[dashboard/settings/shipping GET]', err)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
@@ -60,6 +61,11 @@ export async function POST(request: NextRequest) {
       if (Number.isFinite(n)) internationalFlatRateGBP = Math.min(Math.max(n, 0), 500)
     }
     const shipFromCountry = country || 'GB'
+    // TEMPORARY NON-NEGOTIABLE RULE (William, 2026-07-29): out-of-label
+    // origins always save FREE shipping (0) -- the seller bakes postage
+    // into the product price. Mirrors the point-of-use enforcement in
+    // app/api/shipping/rates; see lib/labelOrigins.ts.
+    if (!isAutoLabelOrigin(shipFromCountry)) internationalFlatRateGBP = 0
     const profile = await prisma.sellerShippingProfile.upsert({
       where: { sellerId: seller.id },
       create: {

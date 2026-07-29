@@ -121,7 +121,17 @@ async function flatRateOrFallback(
   weightGrams: number,
   fallback: Rate = FALLBACK_QUOTE_RATE
 ): Promise<Rate[]> {
-  const flat = profile?.internationalFlatRateGBP
+  // TEMPORARY NON-NEGOTIABLE RULE (William, 2026-07-29): a seller
+  // dispatching from a country where Velor cannot auto-purchase labels
+  // MUST offer free shipping (real postage baked into the product price).
+  // Enforced at the point of use so it covers every seller past and
+  // future: on out-of-label origins the flat tier is ALWAYS 0 regardless
+  // of what is stored, and the platform-default estimate tier (the scary
+  // GBP 40+ numbers) can never reach a buyer again. Fee-free per the
+  // seller-provided-shipping rule (8060c4f).
+  const enforcedOriginCode = (profile?.country || '').toUpperCase()
+  const enforcedAutoLabel = ['GB', 'DE', 'CA'].includes(enforcedOriginCode) || easyshipRateOrigins().has(enforcedOriginCode)
+  const flat = enforcedAutoLabel ? profile?.internationalFlatRateGBP : 0
   if (flat != null && Number.isFinite(flat)) {
     return [{
       rateId: 'seller-flat-rate',

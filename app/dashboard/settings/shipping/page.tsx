@@ -40,11 +40,15 @@ export default function ShippingSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  // TEMPORARY RULE (William, 2026-07-29): out-of-label origins are locked
+  // to free shipping -- see lib/labelOrigins.ts. Flag arrives from the GET.
+  const [autoLabelOrigin, setAutoLabelOrigin] = useState(true)
 
   useEffect(() => {
     fetch('/api/dashboard/settings/shipping')
       .then(r => r.json())
       .then(d => {
+        if (typeof d.autoLabelOrigin === 'boolean') setAutoLabelOrigin(d.autoLabelOrigin)
         if (d.profile) {
           setForm({
             name: d.profile.name ?? '',
@@ -212,6 +216,11 @@ export default function ShippingSettingsPage() {
             listings instantly (the save purges the estimate cache). */}
         <div style={{ padding: '16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
           <label style={labelStyle}>How should buyers see your shipping price?</label>
+          {!autoLabelOrigin && (
+            <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
+              Free shipping is the standard for your country while Velor cannot yet buy shipping labels there. Include your real postage cost in each item price -- buyers then see FREE shipping and no surprise charges. Temporary: every option unlocks when label coverage reaches your country.
+            </p>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', margin: '10px 0 12px' }}>
             {([
               { key: 'velor', title: "Velor sets the price", desc: 'Live carrier rates where connected; our estimate elsewhere. Estimates can be high on some routes.' },
@@ -225,12 +234,15 @@ export default function ShippingSettingsPage() {
                   key={opt.key}
                   type="button"
                   onClick={() => {
+                    if (!autoLabelOrigin && opt.key !== 'free') return
                     if (opt.key === 'velor') set('internationalFlatRateGBP', '')
                     else if (opt.key === 'free') set('internationalFlatRateGBP', 0)
                     else set('internationalFlatRateGBP', Number(form.internationalFlatRateGBP) > 0 ? form.internationalFlatRateGBP : 10)
                   }}
                   style={{
-                    textAlign: 'left', padding: '12px 14px', borderRadius: '10px', cursor: 'pointer',
+                    textAlign: 'left', padding: '12px 14px', borderRadius: '10px',
+                    cursor: (!autoLabelOrigin && opt.key !== 'free') ? 'not-allowed' : 'pointer',
+                    opacity: (!autoLabelOrigin && opt.key !== 'free') ? 0.45 : 1,
                     border: active ? '2px solid var(--accent)' : '1px solid var(--border)',
                     background: active ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
                     color: 'var(--text)',
