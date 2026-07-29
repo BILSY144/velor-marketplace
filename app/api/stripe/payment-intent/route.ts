@@ -372,6 +372,8 @@ export async function POST(request: NextRequest) {
         destinationCountry,
         declaredValueGBP: group.subtotalGBP,
         shippingCostGBP: shippingGBP,
+        // EU low-value flat duty (since 2026-07-01) is charged PER ITEM.
+        itemCount: group.items.reduce((sum, i) => sum + (i.quantity || 1), 0),
       })
       const dutiesGBP = landedCost.totalTaxGBP
 

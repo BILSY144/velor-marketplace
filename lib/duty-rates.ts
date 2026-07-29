@@ -7,6 +7,12 @@ export interface LandedCostParams {
   destinationCountry: string
   declaredValueGBP: number
   shippingCostGBP: number
+  // Number of items in the consignment. Needed since 1 July 2026: the EU's
+  // transitional low-value customs duty is a flat EUR 3 PER ITEM on goods
+  // <= EUR 150 entering the EU from outside (Council Regulation, agreed
+  // 2025-12-12, final sign-off 2026-02-11; runs until the 2028 customs
+  // reform). Defaults to 1 when omitted.
+  itemCount?: number
 }
 
 export interface LandedCostResult {
@@ -76,6 +82,14 @@ const EU = new Set([
   'NL','PL','PT','RO','SE','SI','SK',
 ])
 
+// EU transitional low-value customs duty, LIVE SINCE 1 JULY 2026: flat
+// EUR 3 per item on goods with intrinsic value <= EUR 150 entering the EU
+// from OUTSIDE the EU (replaces the old sub-EUR-150 duty-free treatment;
+// intra-EU shipments are unaffected). GBP approximation consistent with
+// this file's other thresholds (~EUR 150 = ~GBP 130). Runs until the 2028
+// EU customs reform -- revisit then.
+const EU_LOW_VALUE_FLAT_DUTY_GBP = 2.60
+
 // HS chapter (first 2 digits) to product category key
 const CHAPTER_TO_CAT: Record<string, string> = {
   '39': 'plastics', '40': 'rubber',
@@ -130,6 +144,7 @@ function getRegion(country: string): Region {
 
 export function calculateLandedCost(params: LandedCostParams): LandedCostResult {
   const { hsCode, originCountry, destinationCountry, declaredValueGBP, shippingCostGBP } = params
+  const itemCount = Math.max(1, Math.floor(Number(params.itemCount) || 1))
 
   if (originCountry === destinationCountry) {
     return {
@@ -150,11 +165,19 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
   const belowDeMinimis = declaredValueGBP < deMinimis
 
   if (belowDeMinimis) {
-    // Below de minimis: no customs duty, but collect VAT at source (DDP model)
+    // Below de minimis: historically no customs duty, VAT collected at
+    // source (DDP model). SINCE 1 JULY 2026 the EU is the exception: goods
+    // <= EUR 150 entering the EU from OUTSIDE it pay a flat EUR 3 per item
+    // (see EU_LOW_VALUE_FLAT_DUTY_GBP above). Intra-EU stays duty-free.
+    const euFlatDutyApplies = EU.has(destinationCountry) && !EU.has(originCountry)
+    const dutyAmount = euFlatDutyApplies
+      ? parseFloat((EU_LOW_VALUE_FLAT_DUTY_GBP * itemCount).toFixed(2))
+      : 0
     const vatAmount = parseFloat((declaredValueGBP * vatRate).toFixed(2))
     return {
       dutyRate: 0, vatRate,
-      dutyAmountGBP: 0, vatAmountGBP: vatAmount, totalTaxGBP: vatAmount,
+      dutyAmountGBP: dutyAmount, vatAmountGBP: vatAmount,
+      totalTaxGBP: parseFloat((dutyAmount + vatAmount).toFixed(2)),
       belowDeMinimis: true, deMinimisGBP: deMinimis, category,
       isDomestic: false,
     }

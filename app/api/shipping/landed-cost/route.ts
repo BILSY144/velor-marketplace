@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
     const byId = new Map(products.map((p) => [p.id, p]))
 
     let declaredValueGBP = 0
+    let totalItemCount = 0
     let representativeHsCode: string | null = null
     for (const item of cartItems as Array<{ productId?: string; quantity?: number }>) {
       const product = item.productId ? byId.get(item.productId) : undefined
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
       const unitGBP =
         sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
       declaredValueGBP += unitGBP * qty
+      totalItemCount += qty
       if (!representativeHsCode && product.hsCode) representativeHsCode = product.hsCode
     }
 
@@ -76,6 +78,8 @@ export async function POST(request: NextRequest) {
       destinationCountry,
       declaredValueGBP,
       shippingCostGBP: shippingCostGBP ?? 0,
+      // EU low-value flat duty (since 2026-07-01) is charged PER ITEM.
+      itemCount: totalItemCount,
     })
 
     return NextResponse.json(result)
