@@ -173,7 +173,15 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
     const dutyAmount = euFlatDutyApplies
       ? parseFloat((EU_LOW_VALUE_FLAT_DUTY_GBP * itemCount).toFixed(2))
       : 0
-    const vatAmount = parseFloat((declaredValueGBP * vatRate).toFixed(2))
+    // VAT base is the FULL consideration -- goods + shipping + any duty --
+    // mirroring the above-threshold branch's (cif + duty) logic. Import VAT
+    // (EU) and HMRC's OMP deemed-supplier VAT (GB) are both charged on the
+    // full amount paid including delivery, not the goods price alone.
+    // Previously this line used declaredValueGBP only, slightly
+    // under-collecting on EU lanes (the EUR-3 flat duty and shipping
+    // escaped VAT) and excluding delivery from the GB deemed-supplier base.
+    const vatBase = declaredValueGBP + shippingCostGBP + dutyAmount
+    const vatAmount = parseFloat((vatBase * vatRate).toFixed(2))
     return {
       dutyRate: 0, vatRate,
       dutyAmountGBP: dutyAmount, vatAmountGBP: vatAmount,
