@@ -3,13 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 import { buildOutreachEmail } from '@/lib/outreachEmail';
 import { langForCountry } from '@/lib/outreachI18n';
-import { isAllowedOutreachCountry } from '@/lib/outreachCountryGate';
 import { requireCronSecret } from '@/lib/cronAuth';
 
 const MAX_PER_RUN = Number(process.env.OUTREACH_MAX_PER_RUN) || 30;
-// TEMPORARY (William, 2026-07-29): volume matched to his "20 potential seller
-// messages... 2 times a week" -- a hard trailing-7-day budget across all runs.
-const WEEKLY_CAP = Number(process.env.OUTREACH_WEEKLY_CAP) || 40;
 const MONITOR = process.env.MONITOR_EMAIL || 'willsinclair144@gmail.com';
 const SELLER_FROM = 'Velor Seller Team <noreply@velorcommerce.store>';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
@@ -47,16 +43,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: 'outreach disabled' });
   }
 
-  // TEMPORARY weekly budget (see WEEKLY_CAP above): counts every outreach
-  // email sent in the trailing 7 days; once spent, runs no-op until it frees.
-  const sentThisWeek = await prisma.outreachLog.count({
-    where: { sentAt: { gte: new Date(Date.now() - 7 * 24 * 3600 * 1000) } },
-  });
-  if (sentThisWeek >= WEEKLY_CAP) {
-    return NextResponse.json({ ok: true, skipped: 'weekly cap reached', sentThisWeek, cap: WEEKLY_CAP });
-  }
-  const weeklyBudget = WEEKLY_CAP - sentThisWeek;
-
   let initialSent = 0, followup1Sent = 0, followup2Sent = 0;
   const errors: string[] = [];
   // Distribution of languages actually sent this run, for the director briefing.
@@ -90,11 +76,9 @@ export async function GET(req: NextRequest) {
   const newProspects = await prisma.sellerProspect.findMany({
     where: { email: { not: null }, status: 'prospected', outreachLogs: { none: {} }, qualified: true },
     orderBy: { score: 'desc' },
-    take: MAX_PER_RUN * 5,
+    take: MAX_PER_RUN,
   });
-  // TEMPORARY country gate (lib/outreachCountryGate.ts): label + Stripe countries only.
-  const newAllowed = newProspects.filter(p => isAllowedOutreachCountry(p.country)).slice(0, Math.min(MAX_PER_RUN, weeklyBudget));
-  for (const prospect of newAllowed) {
+  for (const prospect of newProspects) {
     if (!prospect.email) continue;
     try {
       await sendTo(prospect as ProspectRow, 'initial');
@@ -103,7 +87,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Stage 2: Followup 1 (3+ days after initial)
-  const budget1 = Math.min(MAX_PER_RUN, weeklyBudget) - initialSent;
+  const budget1 = MAX_PER_RUN - initialSent;
   if (budget1 > 0) {
     const followup1Due = await prisma.sellerProspect.findMany({
       where: { email: { not: null }, status: 'prospected', qualified: true,
@@ -111,10 +95,9 @@ export async function GET(req: NextRequest) {
           some: { emailType: 'initial', sentAt: { lte: new Date(Date.now() - FOLLOWUP1_DELAY_MS) } },
           none: { emailType: 'followup1' },
         } },
-      orderBy: { score: 'desc' }, take: budget1 * 5,
+      orderBy: { score: 'desc' }, take: budget1,
     });
-    const followup1Allowed = followup1Due.filter(p => isAllowedOutreachCountry(p.country)).slice(0, budget1);
-    for (const prospect of followup1Allowed) {
+    for (const prospect of followup1Due) {
       if (!prospect.email) continue;
       try {
         await sendTo(prospect as ProspectRow, 'followup1');
@@ -124,7 +107,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Stage 3: Followup 2 (5+ days after followup1) - marks status 'outreached'
-  const budget2 = Math.min(MAX_PER_RUN, weeklyBudget) - initialSent - followup1Sent;
+  const budget2 = MAX_PER_RUN - initialSent - followup1Sent;
   if (budget2 > 0) {
     const followup2Due = await prisma.sellerProspect.findMany({
       where: { email: { not: null }, status: 'prospected', qualified: true,
@@ -132,10 +115,9 @@ export async function GET(req: NextRequest) {
           some: { emailType: 'followup1', sentAt: { lte: new Date(Date.now() - FOLLOWUP2_DELAY_MS) } },
           none: { emailType: 'followup2' },
         } },
-      orderBy: { score: 'desc' }, take: budget2 * 5,
+      orderBy: { score: 'desc' }, take: budget2,
     });
-    const followup2Allowed = followup2Due.filter(p => isAllowedOutreachCountry(p.country)).slice(0, budget2);
-    for (const prospect of followup2Allowed) {
+    for (const prospect of followup2Due) {
       if (!prospect.email) continue;
       try {
         await sendTo(prospect as ProspectRow, 'followup2');
