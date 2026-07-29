@@ -300,6 +300,9 @@ export async function attemptAutoLabelPurchase(
     shippoRateId?: string | null
     shippoLabelId?: string | null
     easyshipShipmentId?: string | null
+    // What Velor paid for the label, GBP (null when the provider quoted a
+    // non-GBP currency we cannot trust without fx).
+    costGBP: number | null
   }
 
   async function buyShippo(): Promise<PurchasedLabel> {
@@ -314,6 +317,7 @@ export async function attemptAutoLabelPurchase(
       trackingNumber: transaction.tracking_number,
       trackingUrl: transaction.tracking_url_provider,
       labelUrl: transaction.label_url,
+      costGBP: (String(shippoBest.currency || 'GBP').toUpperCase() === 'GBP' && Number.isFinite(parseFloat(shippoBest.amount))) ? parseFloat(shippoBest.amount) : null,
       shippoShipmentId: shippoShipmentObj.object_id,
       shippoRateId: shippoBest.object_id,
       shippoLabelId: transaction.object_id,
@@ -331,6 +335,7 @@ export async function attemptAutoLabelPurchase(
       trackingUrl: res.trackingPageUrl,
       labelUrl: res.labelUrl,
       easyshipShipmentId: res.easyshipShipmentId,
+      costGBP: Number.isFinite(Number(easyBest.totalCharge)) ? Number(easyBest.totalCharge) : null,
     }
   }
 
@@ -361,6 +366,7 @@ export async function attemptAutoLabelPurchase(
     trackingUrl: bought.trackingUrl,
     carrier: bought.carrier,
     labelUrl: bought.labelUrl,
+    labelCostGBP: bought.costGBP,
     status: 'LABEL_PURCHASED' as const,
   }
   await prisma.shipment.upsert({
@@ -368,6 +374,39 @@ export async function attemptAutoLabelPurchase(
     create: { orderId: order.id, ...shipmentData },
     update: shipmentData,
   })
+
+  // LABEL-COST DEDUCTION (William, 2026-07-29): when the buyer paid less
+  // shipping than the label Velor just bought (e.g. the seller chose FREE
+  // shipping on an auto-label lane and baked postage into the item price),
+  // the shortfall comes out of the seller share -- never out of Velor.
+  // Normal auto-label lanes are untouched: there the buyer paid the
+  // carrier price, so the deficit rounds to zero (5p guard for drift).
+  // Multi-seller carts: metadata shippingGBP is cart-level, so a mixed
+  // cart under-deducts rather than over-deducts -- the safe direction.
+  // Best-effort like everything after the purchase: failures only log.
+  if (bought.costGBP != null && order.stripePaymentId) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
+      const pi = await stripe.paymentIntents.retrieve(order.stripePaymentId)
+      const md = (pi.metadata || {}) as Record<string, string>
+      const buyerShippingGBP = Number(md.shippingGBP) || 0
+      const deficit = Math.round(Math.max(0, bought.costGBP - buyerShippingGBP) * 100) / 100
+      if (deficit >= 0.05) {
+        let breakdown: Array<{ i: string; e: number }> = []
+        try { breakdown = JSON.parse(md.sellerBreakdown || '[]') } catch { breakdown = [] }
+        const entry = breakdown.find((sb) => sb && sb.i === sellerId)
+        if (entry) {
+          entry.e = Math.max(0, Math.round((Number(entry.e) - deficit) * 100) / 100)
+          await stripe.paymentIntents.update(pi.id, { metadata: { sellerBreakdown: JSON.stringify(breakdown) } })
+        }
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { sellerEarnings: Math.max(0, Math.round((order.sellerEarnings - deficit) * 100) / 100) },
+        })
+        console.log('[attemptAutoLabelPurchase] label cost deducted from seller share', order.id, 'deficit', deficit)
+      }
+    } catch (err) { console.error('[attemptAutoLabelPurchase] label-cost deduction failed (label unaffected)', order.id, err) }
+  }
 
   // Best-effort, isolated from the label purchase above: registers the
   // tracking number with Shippo's free /tracks endpoint so the existing

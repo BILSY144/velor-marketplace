@@ -463,8 +463,14 @@ export async function POST(request: NextRequest) {
         const originCode = (addressFrom.country || '').toUpperCase()
         const autoLabelOrigin = ['GB', 'DE', 'CA'].includes(originCode) || easyshipRateOrigins().has(originCode)
         const isInternationalLane = shippingAddress.country.toUpperCase() !== originCode
+        // 2026-07-29 (William): a seller-set flat rate (including FREE 0)
+        // now replaces live quotes on EVERY international lane -- auto-label
+        // origins included, so label-area sellers get a real free-shipping
+        // option too. On auto-label origins Velor still buys the label and
+        // its cost is deducted from the seller share at purchase time
+        // (lib/orders.ts) -- the seller bakes it into the item price.
         const sellerProvidesShipping =
-          isInternationalLane && !autoLabelOrigin &&
+          isInternationalLane &&
           p?.internationalFlatRateGBP != null && Number.isFinite(p.internationalFlatRateGBP)
 
         result.push({
