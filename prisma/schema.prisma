@@ -55,10 +55,55 @@ model User {
   sessions          Session[]
   seller            Seller?
   wishlistItems     WishlistItem[]
+  follows           Follow[]
+  collections       Collection[]
   setupToken            String?   @unique
   setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Velor Social foundations (2026-07-29, LAW #4 build order stage 3).
+// DORMANT AT LAUNCH: the /api/social/* routes 403 unless the
+// VELOR_SOCIAL_ENABLED env var is exactly 'true', which William only sets
+// after the OSA pack (docs/osa/) is signed. Additive-only schema.
+// Privacy posture per docs/osa/dpia-velor-social.md: collections are
+// PRIVATE BY DEFAULT; follows are not publicly listed at launch.
+// ---------------------------------------------------------------------------
+
+model Follow {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sellerId  String
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, sellerId])
+  @@index([sellerId])
+}
+
+model Collection {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isPublic  Boolean          @default(false)
+  items     CollectionItem[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([collectionId, productId])
 }
 
 model Account {
@@ -142,6 +187,7 @@ model Seller {
   products                      Product[]
   orders                        Order[]
   shipments                     Shipment[]
+  followers                     Follow[]
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
@@ -272,6 +318,7 @@ model Product {
   wishlistItems WishlistItem[]
   messages      Message[]
   reviews       Review[]
+  collectionItems CollectionItem[]
   // Colour/size options for this listing (added 2026-07-27 so sellers no
   // longer have to create a separate listing per colour/size -- see
   // ProductVariant below). Empty for the vast majority of existing listings,
