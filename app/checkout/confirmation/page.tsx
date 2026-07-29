@@ -64,6 +64,18 @@ function ConfirmationContent() {
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<StoredOrder | null>(null)
   const [saved, setSaved] = useState(false)
+  // Stripe redirect-based payment methods (Klarna, Revolut Pay, etc.) send
+  // the buyer back here with ?redirect_status=failed when the payment was
+  // cancelled or declined. Found live 2026-07-29: William cancelled a Klarna
+  // checkout mid-flow and this page still said "Order Confirmed!" and
+  // emptied his basket -- the server never created an order (it checks
+  // pi.status === 'succeeded'), but the page lied. Never show success for a
+  // failed redirect, and never clear the cart for one.
+  const redirectStatus = searchParams.get('redirect_status')
+  const paymentFailed = redirectStatus === 'failed'
+  // 409 from /api/orders means Stripe reports the payment as not (yet)
+  // succeeded -- distinct from a network error, and NOT proof of success.
+  const [paymentNotCompleted, setPaymentNotCompleted] = useState(false)
   // The REAL order id, fetched from /api/orders below -- replaces the old
   // fabricated 'VLR-'+Date.now() string that was never persisted anywhere
   // (2026-07-16 readiness audit finding: a buyer or reporter quoting that
@@ -73,10 +85,11 @@ function ConfirmationContent() {
   const [orderNumberFailed, setOrderNumberFailed] = useState(false)
 
   useEffect(() => {
-    // Payment succeeded to reach this page -- empty the basket so the header
-    // badge clears (William, 2026-07-17: "once order has been successful in
-    // checkout the cart icon should disappear but its still there").
-    clearCart()
+    // Only empty the basket when the payment did not come back failed --
+    // a buyer whose Klarna/redirect payment was cancelled keeps their cart
+    // so they can retry (William, 2026-07-17: "once order has been
+    // successful in checkout the cart icon should disappear").
+    if (!paymentFailed) clearCart()
     const param = searchParams.get('order')
     if (param) {
       try { setOrder(JSON.parse(decodeURIComponent(param))); return } catch {}
@@ -85,7 +98,7 @@ function ConfirmationContent() {
     if (stored) {
       try { setOrder(JSON.parse(stored)) } catch {}
     }
-  }, [searchParams])
+  }, [searchParams, paymentFailed])
 
   // Nudge order creation on mount — idempotent and safe: this no longer
   // sends any price/total/item data. It only tells the server which
@@ -96,7 +109,7 @@ function ConfirmationContent() {
   // thing this page can't do in that case is show the real order number
   // immediately, which is why the rest of the UI never depends on it.
   useEffect(() => {
-    if (!order || saved || !order.paymentIntentId) return
+    if (!order || saved || !order.paymentIntentId || paymentFailed) return
     setSaved(true)
 
     fetch('/api/orders', {
@@ -105,6 +118,13 @@ function ConfirmationContent() {
       body: JSON.stringify({ paymentIntentId: order.paymentIntentId }),
     })
       .then(async (res) => {
+        if (res.status === 409) {
+          // Stripe says this payment has NOT succeeded -- e.g. a cancelled
+          // Klarna flow that landed here without redirect_status. Be honest:
+          // this is not a confirmed order.
+          setPaymentNotCompleted(true)
+          return
+        }
         if (!res.ok) throw new Error('order lookup failed')
         const data = await res.json()
         const firstId = Array.isArray(data.orderIds) ? data.orderIds[0] : null
@@ -112,7 +132,74 @@ function ConfirmationContent() {
         else setOrderNumberFailed(true)
       })
       .catch(() => setOrderNumberFailed(true))
-  }, [order, saved])
+  }, [order, saved, paymentFailed])
+
+  if (paymentFailed || paymentNotCompleted) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Inter, sans-serif', color: '#FFFFFF' }}>
+        <div style={{ borderBottom: '1px solid #2A2A2A', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <a href="/" style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 20, color: '#FF6B00', textDecoration: 'none', letterSpacing: '-0.5px' }}>
+            VELOR
+          </a>
+          <span style={{ color: '#2A2A2A' }}>|</span>
+          <span style={{ color: '#999999', fontSize: 14 }}>Checkout</span>
+        </div>
+        <div style={{ maxWidth: 560, margin: '0 auto', padding: '64px 24px', textAlign: 'center' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'rgba(255,107,0,0.10)', border: '2px solid #FF6B00',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 20px',
+          }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 30, fontWeight: 800, margin: '0 0 10px' }}>
+            Payment not completed
+          </h1>
+          <p style={{ color: '#999999', fontSize: 15, lineHeight: 1.6, margin: '0 0 8px' }}>
+            Your payment was cancelled or didn&apos;t go through, so no order was
+            placed and <strong style={{ color: '#FFFFFF' }}>no money was taken</strong>.
+          </p>
+          <p style={{ color: '#999999', fontSize: 14, lineHeight: 1.6, margin: '0 0 32px' }}>
+            Your basket is exactly as you left it &mdash; head back to checkout
+            whenever you&apos;re ready to try again.
+          </p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <a
+              href="/checkout"
+              style={{
+                flex: '1 1 200px', maxWidth: 260, padding: '14px 24px', borderRadius: 8,
+                background: '#FF6B00', color: '#FFFFFF', textAlign: 'center',
+                fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, fontWeight: 700,
+                textDecoration: 'none', display: 'block',
+              }}
+            >
+              Return to Checkout
+            </a>
+            <a
+              href="/shop"
+              style={{
+                flex: '1 1 200px', maxWidth: 260, padding: '14px 24px', borderRadius: 8,
+                background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF',
+                textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block',
+              }}
+            >
+              Continue Shopping
+            </a>
+          </div>
+          <p style={{ textAlign: 'center', color: '#999999', fontSize: 12, marginTop: 28 }}>
+            Charged anyway, or need help? Email{' '}
+            <a href="mailto:customerservice@velorcommerce.store" style={{ color: '#FF6B00', textDecoration: 'none' }}>
+              customerservice@velorcommerce.store
+            </a>
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!order) {
     return (
