@@ -206,6 +206,9 @@ model Seller {
   sellerScoreUpdatedAt          DateTime?
   scoreBreakdown                Json?
   rankingScore                   Float     @default(0)
+  // Recomputed daily with the ranking: true when the seller is visibly
+  // active in the social layer (journal posts / drop participation).
+  activeMaker                    Boolean   @default(false)
   storeTheme                    String    @default("classic")
   storefrontUnlocked            Boolean   @default(false)
   storeLogo                     String?

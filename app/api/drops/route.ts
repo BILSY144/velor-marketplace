@@ -20,13 +20,15 @@ export async function GET() {
       product: {
         select: {
           id: true, title: true, images: true, originCountry: true,
-          seller: { select: { id: true, storeName: true } },
+          seller: { select: { id: true, storeName: true, activeMaker: true } },
         },
       },
     },
     orderBy: { createdAt: 'asc' },
     take: 60,
   })
+  // Active makers first (the visibility reward, William-approved 2026-07-29)
+  items.sort((a, b) => Number(b.product.seller.activeMaker) - Number(a.product.seller.activeMaker))
   // NO prices in drop cards on purpose: cards tease the piece and link to
   // the PDP where the price-display rule (seller-currency conversion)
   // already applies. Adding prices here first requires the fx wiring.

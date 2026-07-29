@@ -9,7 +9,13 @@ const BADGE_MIN_ORDERS = 10 // completed (delivered) orders required to unlock a
 // Additive on top of the 0-100 merit score, bounded so a well-performing free
 // seller can still outrank a poorly-performing paid seller. This does NOT affect
 // the buyer-facing sellerScore/sellerBadge fields — those stay pure merit.
-const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 8 } // ENTERPRISE retired 2026-07-15: legacy rows boost as Pro
+const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 8 }
+// ACTIVE MAKER BOOST (William-approved 2026-07-29): visibility is the
+// reward for embracing the social layer -- cash stays sales-linked only
+// (plan LAW #4, the Flip lesson). Bounded like the tier boost.
+const ACTIVE_MAKER_BOOST = 5
+const ACTIVE_WINDOW_DAYS = 30
+const ACTIVE_MIN_POSTS = 2 // ENTERPRISE retired 2026-07-15: legacy rows boost as Pro
 
 export type ScoreBreakdown = {
   rating: number
@@ -89,7 +95,15 @@ export async function computeSellerScore(sellerId: string) {
     ratingScore + fulfilmentScore + disputeScore + cancelScore + volumeScore + responseScore
   )
   const badge = badgeFor(score, deliveredOrders)
-  const rankingScore = score + (TIER_BOOST[(seller as { tier?: string }).tier ?? 'STARTER'] ?? 0)
+  // Active maker: 2+ published journal posts in the last 30 days, or a
+  // piece in the current weekly drop window (7 days either side).
+  const activeSince = new Date(Date.now() - ACTIVE_WINDOW_DAYS * 24 * 3600 * 1000)
+  const [recentPosts, dropParticipation] = await Promise.all([
+    prisma.journalPost.count({ where: { sellerId, status: 'PUBLISHED', createdAt: { gte: activeSince } } }),
+    prisma.dropItem.count({ where: { sellerId, drop: { scheduledAt: { gte: new Date(Date.now() - 7 * 24 * 3600 * 1000), lte: new Date(Date.now() + 7 * 24 * 3600 * 1000) } } } }),
+  ])
+  const activeMaker = recentPosts >= ACTIVE_MIN_POSTS || dropParticipation > 0
+  const rankingScore = score + (TIER_BOOST[(seller as { tier?: string }).tier ?? 'STARTER'] ?? 0) + (activeMaker ? ACTIVE_MAKER_BOOST : 0)
 
   const breakdown: ScoreBreakdown = {
     rating: Math.round(ratingScore),
@@ -117,10 +131,11 @@ export async function computeSellerScore(sellerId: string) {
       sellerScoreUpdatedAt: new Date(),
       scoreBreakdown: breakdown as unknown as object,
       rankingScore,
+      activeMaker,
     } as unknown as Record<string, unknown>,
   })
 
-  return { score, badge, rankingScore, breakdown }
+  return { score, badge, rankingScore, breakdown, activeMaker }
 }
 
 // Recompute every approved seller (used by the daily cron).

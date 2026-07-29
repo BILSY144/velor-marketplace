@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        seller: { select: { id: true, storeName: true, tier: true, sellerScore: true, sellerBadge: true, currency: true, country: true, foundingBadge: true, countryFounded: { select: { countryName: true } } } },
+        seller: { select: { id: true, storeName: true, tier: true, sellerScore: true, sellerBadge: true, activeMaker: true, currency: true, country: true, foundingBadge: true, countryFounded: { select: { countryName: true } } } },
         reviews: { select: { rating: true } },
         _count: { select: { reviews: true } },
       },

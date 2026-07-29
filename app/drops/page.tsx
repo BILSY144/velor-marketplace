@@ -25,11 +25,13 @@ export default async function DropsPage() {
     where: { dropId: drop.id, product: { status: 'APPROVED' } },
     select: {
       id: true,
-      product: { select: { id: true, title: true, images: true, originCountry: true, seller: { select: { storeName: true } } } },
+      product: { select: { id: true, title: true, images: true, originCountry: true, seller: { select: { storeName: true, activeMaker: true } } } },
     },
     orderBy: { createdAt: 'asc' },
     take: 60,
   })
+  // Active makers first -- the visibility reward for embracing the social layer
+  items.sort((a, b) => Number(b.product.seller.activeMaker) - Number(a.product.seller.activeMaker))
   return (
     <main style={{ maxWidth: 1080, margin: '0 auto', padding: '40px 20px 80px' }}>
       <section style={{ padding: '28px 24px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 }}>
