@@ -61,6 +61,7 @@ model User {
   blocksReceived    UserBlock[] @relation("BlocksReceived")
   productQuestions  ProductQuestion[]
   reviewVotes       ReviewVote[]
+  notifications     Notification[]
   setupToken            String?   @unique
   setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
@@ -1192,4 +1193,21 @@ model DropDigestSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+// In-app notification bell (Velor Social plan section 7: "a table + a
+// badge"). Fan-out happens at write time (e.g. journal post -> followers).
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // NEW_JOURNAL_POST | NEW_FOLLOWER | DROP_OPEN | ... (extensible)
+  type      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
 }

@@ -11,6 +11,7 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage, pexelsUrl, matchCraftImagery } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
+import NotificationBell from '@/components/NotificationBell'
 
 function navFlag(code: string): string {
   return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1))
@@ -603,6 +604,7 @@ export default function GlobalHeader() {
 
           {/* Right cluster */}
           <div className="velor-right" style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+            <NotificationBell />
             <Link href="/account/wishlist" className="velor-desktop-nav" style={{ ...navLink, padding: 0 }} title="Wishlist">
               ♡
             </Link>

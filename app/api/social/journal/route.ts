@@ -148,6 +148,28 @@ export async function POST(req: NextRequest) {
     },
     select: { id: true, createdAt: true },
   })
+
+  // Web bell fan-out (Velor Social plan section 7): every follower of this
+  // maker gets the new post in their notification bell. Best-effort -- a
+  // fan-out failure never fails the post itself.
+  try {
+    const [follows, sellerRow] = await Promise.all([
+      prisma.follow.findMany({ where: { sellerId }, select: { userId: true }, take: 5000 }),
+      prisma.seller.findUnique({ where: { id: sellerId }, select: { storeName: true } }),
+    ])
+    if (follows.length) {
+      await prisma.notification.createMany({
+        data: follows.map(f => ({
+          userId: f.userId,
+          type: 'NEW_JOURNAL_POST',
+          title: (sellerRow?.storeName || 'A maker you follow') + ' posted from the workshop',
+          body: title || text.slice(0, 120),
+          href: '/workshop',
+        })),
+      })
+    }
+  } catch (err) { console.error('[journal] bell fan-out failed', err) }
+
   return NextResponse.json({ ok: true, post }, { status: 201 })
 }
 
