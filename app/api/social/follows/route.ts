@@ -44,13 +44,31 @@ export async function POST(req: NextRequest) {
   if (typeof sellerId !== 'string' || !sellerId) {
     return NextResponse.json({ error: 'sellerId required' }, { status: 400 })
   }
-  const seller = await prisma.seller.findUnique({ where: { id: sellerId }, select: { id: true, approved: true } })
+  const seller = await prisma.seller.findUnique({ where: { id: sellerId }, select: { id: true, approved: true, userId: true, storeName: true } })
   if (!seller || !seller.approved) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
-  await prisma.follow.upsert({
+  const existing = await prisma.follow.findUnique({
     where: { userId_sellerId: { userId: session.user.id, sellerId } },
-    create: { userId: session.user.id, sellerId },
-    update: {},
+    select: { id: true },
   })
+  if (!existing) {
+    await prisma.follow.create({ data: { userId: session.user.id, sellerId } })
+    // Bell fan-out: tell the maker they have a new follower (only on a
+    // GENUINELY new follow -- re-follows stay silent). Follower identity
+    // is not revealed (privacy posture above). Best-effort.
+    if (seller.userId) {
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: seller.userId,
+            type: 'NEW_FOLLOWER',
+            title: 'Someone new is following ' + (seller.storeName || 'your shop'),
+            body: 'Your next journal post and drop pieces reach one more person.',
+            href: '/dashboard/journal',
+          },
+        })
+      } catch (err) { console.error('[follows] bell fan-out failed', err) }
+    }
+  }
   return NextResponse.json({ ok: true, following: true })
 }
 

@@ -1165,6 +1165,8 @@ model Drop {
   scheduledAt  DateTime
   // Set when the pre-drop digest email has gone out for this drop.
   digestSentAt DateTime?
+  // Set when the drop-open bell notifications have gone out for this drop.
+  bellNotifiedAt DateTime?
   items        DropItem[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
