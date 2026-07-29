@@ -20,6 +20,7 @@ RULES FOR EVERY SESSION: (1) At session start, TELL William the current state in
 - Site: 18 founding follow-ups sent; Eastern Wisdom set FREE shipping (fee-free seller shipping rule live, 8060c4f).
 
 ## SCHEDULED / AUTOMATIC (needs no prompting)
+- OUTREACH IS NOW COUNTRY-GATED + WEEKLY-CAPPED (TEMPORARY, William 2026-07-29, commit 3b968ee): lib/outreachCountryGate.ts limits ALL outreach emails (initial + followups) to countries with BOTH auto label generation AND Stripe payouts (GB US CA AU FR DE NL BE HK SG NZ); unknown country = no email; Payoneer-only countries excluded for now. Trailing-7-day OUTREACH_WEEKLY_CAP (default 40) implements his "20 messages twice a week". Runs server-side on existing Vercel crons -- NO laptop needed. STILL OFF: OUTREACH_ENABLED=false in Vercel -- William must flip it to start sending. Widen/remove the gate when global shipping covers more origins. ALSO 2026-07-29: manual ecomConnect DM scouting for label-country sellers is nearly exhausted -- the whole craft-industry member pool holds only 2 uncontacted label-country people (US: Derrick Kirunda, Lawrence Dunford); the community skews Payoneer countries, so the email scout pipeline is the channel for label-country sellers.
 - Fri 2026-08-01 06:0x UTC: first monthly bookkeeping run -> plain-English email to William.
 - Tue 2026-08-04: APP DAY (whole session; Google Play rejection fix trig_01Y3andksLyF64LsUSDcG29Y first) -- AFTER the mandatory VAT-base task if not yet done.
 - SEO agent runs 2x daily; shipping-statements task monthly.
