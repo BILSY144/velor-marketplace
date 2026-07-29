@@ -9,10 +9,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 
 interface CollectionItem {
   productId: string
-  product: { title: string; images: string[]; price: number; status: string }
+  product: { title: string; images: string[]; price: number; status: string; seller?: { currency?: string | null } | null }
 }
 
 interface Collection {
@@ -27,6 +28,9 @@ interface Collection {
 export default function CollectionsPage() {
   const { status } = useSession()
   const router = useRouter()
+  // Prices are stored in the seller's own currency -- convert to the
+  // visitor's display currency exactly like the PDP and shop grid do.
+  const { symbol, convert } = useCurrencyDisplay()
   const [collections, setCollections] = useState<Collection[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'disabled'>('loading')
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -148,7 +152,7 @@ export default function CollectionsPage() {
                       <div style={{ padding: '8px 10px 4px' }}>
                         <div style={{ fontSize: '13px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.product.title}</div>
                         <div style={{ fontSize: '12.5px', color: 'var(--muted)' }}>
-                          £{Number(it.product.price).toFixed(2)}
+                          {symbol}{convert(Number(it.product.price), it.product.seller?.currency || 'GBP').toFixed(2)}
                           {it.product.status !== 'APPROVED' && <span> · no longer available</span>}
                         </div>
                       </div>

@@ -33,7 +33,11 @@ export async function GET() {
       items: {
         select: {
           productId: true,
-          product: { select: { title: true, images: true, price: true, status: true } },
+          // seller.currency: prices are stored in the SELLER'S currency --
+          // every price consumer must convert via lib/useCurrencyDisplay,
+          // never print the raw number with a hardcoded symbol (caught live
+          // by William 2026-07-29: a $9 USD listing rendered as "£9.00").
+          product: { select: { title: true, images: true, price: true, status: true, seller: { select: { currency: true } } } },
         },
         orderBy: { createdAt: 'desc' },
         take: 8,
