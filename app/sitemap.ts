@@ -151,6 +151,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // re-add the index page or its nav links.
     { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
+    // /workshop added 2026-07-29 (commit 7b520baa, "Workshop Feed (Velor
+    // Social stage 5)") -- a real, chronological maker-journal feed with
+    // its own layout.tsx metadata (title/description/canonical/OG/Twitter,
+    // added the same cycle by the standing SEO agent -- see
+    // app/workshop/layout.tsx) and a real internal link from
+    // GlobalHeader's main nav (commit c6ee186a, "William approved
+    // 2026-07-29", desktop + mobile panel). Missing from this sitemap
+    // until now; same gap class as /mission (2026-07-23) and /safety
+    // (2026-07-29). changeFrequency 'daily' mirrors /live above -- both
+    // are newest-first feeds that genuinely change often, unlike the
+    // static monthly pages below.
+    { url: `${base}/workshop`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
     // /mission added 2026-07-23 (commit dbab69cc) -- a static, real-content
     // page (mission/values/seller-guidelines) with its own generateMetadata
