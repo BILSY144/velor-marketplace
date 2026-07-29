@@ -94,6 +94,15 @@ function h(text: string) {
 // the image, same copper/globe style); new regions are added here as their
 // files land in public/email-assets/hero-<region>.jpg.
 const HERO_REGIONS: Array<{ file: string; codes: string[]; names: string[] }> = [
+  // Western-world hero (2026-07-30, William: new image for western emails --
+  // a potter at the wheel in a bright British studio, ChatGPT-generated,
+  // committed as public/email-assets/outreach-hero-west.jpg). First entry
+  // wins, so anglophone west matches here before any other region.
+  {
+    file: 'outreach-hero-west.jpg',
+    codes: ['GB', 'UK', 'US', 'USA', 'CA', 'AU', 'NZ'],
+    names: ['UNITED KINGDOM', 'GREAT BRITAIN', 'ENGLAND', 'SCOTLAND', 'WALES', 'UNITED STATES', 'AMERICA', 'CANADA', 'AUSTRALIA', 'NEW ZEALAND'],
+  },
   {
     file: 'hero-morocco.jpg',
     codes: ['MA', 'EG', 'AE', 'SA', 'JO', 'QA', 'KW', 'TN', 'DZ', 'BH', 'OM', 'LB'],
