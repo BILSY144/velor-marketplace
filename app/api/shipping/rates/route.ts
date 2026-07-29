@@ -438,12 +438,33 @@ export async function POST(request: NextRequest) {
           }))
         }
 
+        // SELLER'S OWN RATE WINS on self-ship lanes (William, 2026-07-29,
+        // found live at checkout: Shippo's CN express quote (~GBP 24) was
+        // beating The Eastern Wisdom's FREE seller rate because live quotes
+        // always outranked the flat tier -- the PDP said FREE while checkout
+        // charged GBP 24.31). Rule: on an INTERNATIONAL lane where Velor
+        // does NOT auto-purchase the label (origin outside the Shippo
+        // GB/DE/CA + Easyship auto-label set -- the seller ships it
+        // themselves either way), a seller who set their own flat rate has
+        // CHOSEN their shipping, so their price replaces the live quote.
+        // Auto-label origins keep live quotes first: there Velor genuinely
+        // buys the label at carrier price, and undercutting it would leave
+        // the label unfunded.
+        const originCode = (addressFrom.country || '').toUpperCase()
+        const autoLabelOrigin = ['GB', 'DE', 'CA'].includes(originCode) || easyshipRateOrigins().has(originCode)
+        const isInternationalLane = shippingAddress.country.toUpperCase() !== originCode
+        const sellerProvidesShipping =
+          isInternationalLane && !autoLabelOrigin &&
+          p?.internationalFlatRateGBP != null && Number.isFinite(p.internationalFlatRateGBP)
+
         result.push({
           sellerId,
           sellerName: seller.storeName,
           originCountry: addressFrom.country,
           rates: await applyAdminFee(
-            mapped.length ? mapped : await flatRateOrFallback(p, addressTo.country, totalWeightGrams),
+            sellerProvidesShipping
+              ? await flatRateOrFallback(p, addressTo.country, totalWeightGrams)
+              : mapped.length ? mapped : await flatRateOrFallback(p, addressTo.country, totalWeightGrams),
             itemCount
           ),
         })
