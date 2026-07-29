@@ -75,7 +75,10 @@ export async function GET(request: NextRequest) {
   // deploy. Recomputing is cheap and re-caches the truthful number.
   // Universal seller-arranged era (2026-07-29): the only truthful estimate
   // is FREE, so any cached row with a non-zero amount is stale -- recompute.
-  const cachedIsPlatformDefault = !!cached && (cached.carrier === 'Velor Estimated Shipping' || cached.amountGBP > 0)
+  // Universal seller-arranged era: the only valid cached rows are the
+  // seller-set tier ('Seller Shipping', free or the seller's own price).
+  // Anything else (platform-default, old live carrier quotes) is stale.
+  const cachedIsPlatformDefault = !!cached && cached.carrier !== 'Seller Shipping'
   if (cached && !cachedIsPlatformDefault && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS) {
       return NextResponse.json({
         country,

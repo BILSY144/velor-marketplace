@@ -129,9 +129,11 @@ async function flatRateOrFallback(
   // of what is stored, and the platform-default estimate tier (the scary
   // GBP 40+ numbers) can never reach a buyer again. Fee-free per the
   // seller-provided-shipping rule (8060c4f).
-  // Universal seller-arranged era (2026-07-29): every seller ships FREE,
-  // postage baked into the item price. Stored flat rates are ignored.
-  const flat = 0
+  // Universal seller-arranged era (2026-07-29, William: sellers choose
+  // FREE shipping or their own price shown in cart -- Velor has ZERO
+  // shipping responsibility, we are just the platform). The seller's
+  // stored choice applies; a seller who never set one defaults to FREE.
+  const flat = (profile?.internationalFlatRateGBP != null && Number.isFinite(profile.internationalFlatRateGBP)) ? profile.internationalFlatRateGBP : 0
   if (flat != null && Number.isFinite(flat)) {
     return [{
       rateId: 'seller-flat-rate',

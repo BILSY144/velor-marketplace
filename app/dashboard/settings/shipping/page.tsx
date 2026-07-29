@@ -218,7 +218,7 @@ export default function ShippingSettingsPage() {
           <label style={labelStyle}>How should buyers see your shipping price?</label>
           {!autoLabelOrigin && (
             <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
-              While Velor is new, every seller arranges their own shipping: include your real postage cost in each item price, and buyers see FREE shipping with no surprise charges. Add the tracking number in your dashboard once an order ships. When Velor introduces its own shipping deals, more options unlock here.
+              While Velor is new, every seller arranges their own shipping. Choose FREE shipping (postage baked into your item prices) or set your own shipping price that buyers see in the cart. Either way you send the parcel and add the tracking number in your dashboard once shipped. Velor-arranged shipping returns when we strike carrier deals.
             </p>
           )}
           {autoLabelOrigin && form.internationalFlatRateGBP !== '' && (
@@ -239,15 +239,15 @@ export default function ShippingSettingsPage() {
                   key={opt.key}
                   type="button"
                   onClick={() => {
-                    if (!autoLabelOrigin && opt.key !== 'free') return
+                    if (!autoLabelOrigin && opt.key === 'velor') return
                     if (opt.key === 'velor') set('internationalFlatRateGBP', '')
                     else if (opt.key === 'free') set('internationalFlatRateGBP', 0)
                     else set('internationalFlatRateGBP', Number(form.internationalFlatRateGBP) > 0 ? form.internationalFlatRateGBP : 10)
                   }}
                   style={{
                     textAlign: 'left', padding: '12px 14px', borderRadius: '10px',
-                    cursor: (!autoLabelOrigin && opt.key !== 'free') ? 'not-allowed' : 'pointer',
-                    opacity: (!autoLabelOrigin && opt.key !== 'free') ? 0.45 : 1,
+                    cursor: (!autoLabelOrigin && opt.key === 'velor') ? 'not-allowed' : 'pointer',
+                    opacity: (!autoLabelOrigin && opt.key === 'velor') ? 0.45 : 1,
                     border: active ? '2px solid var(--accent)' : '1px solid var(--border)',
                     background: active ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
                     color: 'var(--text)',

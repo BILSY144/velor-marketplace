@@ -66,8 +66,11 @@ export async function POST(request: NextRequest) {
     // origins always save FREE shipping (0) -- the seller bakes postage
     // into the product price. Mirrors the point-of-use enforcement in
     // app/api/shipping/rates; see lib/labelOrigins.ts.
-    // Universal seller-arranged era (2026-07-29): FREE for everyone.
-    internationalFlatRateGBP = 0
+    // Universal seller-arranged era (2026-07-29): the seller chooses FREE
+    // or their own shipping price (0-500 clamp above). 'Velor sets the
+    // price' is retired while Velor carries zero shipping responsibility --
+    // a blank value therefore also means FREE at quote time, never a
+    // platform-generated price.
     const profile = await prisma.sellerShippingProfile.upsert({
       where: { sellerId: seller.id },
       create: {

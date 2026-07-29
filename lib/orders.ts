@@ -104,10 +104,11 @@ export async function attemptAutoLabelPurchase(
   // 2026-07-29 FINAL (William): universal seller-arranged shipping while
   // Velor is young -- Velor buys NO labels for anyone. Sellers ship
   // themselves and add tracking in /dashboard/orders. All the label
-  // machinery below is retained DORMANT for when Velor does shipping deals
-  // later and flips lanes back on.
-  return
-  // eslint-disable-next-line no-unreachable
+  // machinery below is retained DORMANT: set VELOR_ARRANGED_SHIPPING=true
+  // in Vercel when Velor strikes carrier deals and lanes come back on.
+  // (An env gate, not a bare return, so TypeScript keeps type-checking
+  // and narrowing the dormant code -- a bare return broke the build.)
+  if (process.env.VELOR_ARRANGED_SHIPPING !== 'true') return
   const seller = await prisma.seller.findUnique({
     where: { id: sellerId },
     include: { shippingProfile: true, user: { select: { email: true } } },
