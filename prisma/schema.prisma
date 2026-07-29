@@ -391,6 +391,11 @@ model Order {
   subtotal          Float
   platformFee       Float           @default(0)
   sellerEarnings    Float           @default(0)
+  // UK deemed-supplier VAT held by VELOR for remittance to HMRC (imports
+  // <= GBP 135 sold to UK buyers via the marketplace). Never part of
+  // sellerEarnings or platformFee -- a separate pot. GBP. Additive
+  // 2026-07-29; see docs/VAT-OMP-POSITION.md.
+  vatCollected      Float           @default(0)
   currency          String          @default("gbp")
   customerEmail     String
   customerName      String?

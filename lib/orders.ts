@@ -36,7 +36,9 @@ interface PricedItem {
 // app/api/stripe/payment-intent/route.ts. Short keys because the whole
 // array is one Stripe metadata value (500-char cap). i=sellerId,
 // c=commissionRate, s=subtotalGBP (pre-discount), d=discountGBP,
-// h=shippingGBP, u=dutiesGBP, o=thisSeller'sTotalGBP, e=sellerShareGBP.
+// h=shippingGBP, u=dutiesGBP, o=thisSeller'sTotalGBP, e=sellerShareGBP,
+// v=vatHeldByVelorGBP (UK deemed-supplier VAT, Velor's pot for HMRC --
+// optional: absent on PaymentIntents created before 2026-07-29).
 interface SellerBreakdownEntry {
   i: string
   c: number
@@ -46,6 +48,7 @@ interface SellerBreakdownEntry {
   u: number
   o: number
   e: number
+  v?: number
 }
 
 // Creates one Order + OrderItems per SELLER for a successfully-paid
@@ -486,7 +489,10 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
     const sellerItems = itemsBySeller.get(sb.i) || []
     if (sellerItems.length === 0) continue // every one of this seller's products was deleted -- nothing to create
 
-    const platformFee = Math.max(0, sb.o - sb.e)
+    // The VAT Velor holds for HMRC (sb.v) is NEITHER platform fee NOR
+    // seller earnings -- it lives in its own pot (Order.vatCollected).
+    const vatCollected = Math.max(0, Number(sb.v) || 0)
+    const platformFee = Math.max(0, sb.o - sb.e - vatCollected)
 
     let order
     try {
@@ -500,6 +506,7 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
             subtotal: sb.o,
             platformFee,
             sellerEarnings: sb.e,
+            vatCollected,
             currency: 'gbp',
             status: 'PAID',
             stripePaymentId: pi.id,

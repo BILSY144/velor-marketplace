@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
     // is deliberately NOT stored here -- the payout cron now looks it up
     // fresh from the database by the Order's own sellerId instead, which is
     // both smaller and always current rather than a checkout-time snapshot.
-    const sellerBreakdown: Array<{ i: string; c: number; s: number; d: number; h: number; u: number; o: number; e: number }> = []
+    const sellerBreakdown: Array<{ i: string; c: number; s: number; d: number; h: number; u: number; o: number; e: number; v: number }> = []
 
     for (const group of groups.values()) {
       const discountCartItems: DiscountCartItem[] = group.items
@@ -375,10 +375,29 @@ export async function POST(request: NextRequest) {
       })
       const dutiesGBP = landedCost.totalTaxGBP
 
+      // VAT ROUTE (William, 2026-07-29: "we need to set up the vat route and
+      // it goes to a seperate pot"). Where UK law makes the MARKETPLACE the
+      // deemed supplier -- goods imported into the UK with an intrinsic
+      // consignment value of GBP 135 or less, sold via an OMP -- the tax the
+      // buyer pays belongs to VELOR (for remittance to HMRC), never to the
+      // seller. Held per order in Order.vatCollected, excluded from
+      // sellerEarnings AND from commission (commission was always on the
+      // discounted goods subtotal only). Lanes outside the deemed-supplier
+      // rule (> GBP 135, or non-UK destinations) keep the pass-through
+      // model: the estimate goes to the seller to cover a duties-paid
+      // shipment. See docs/VAT-OMP-POSITION.md.
+      const originCode = (group.shippingProfileCountry || 'GB').toUpperCase()
+      const vatHeldByVelor =
+        destinationCountry.toUpperCase() === 'GB' &&
+        originCode !== 'GB' &&
+        discountedSubtotalGBP <= 135 &&
+        dutiesGBP > 0
+      const vatGBP = vatHeldByVelor ? dutiesGBP : 0
+
       const commissionRate = TIER_COMMISSION[group.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
       const sellerTotalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP
       const applicationFeeAmount = Math.round(discountedSubtotalGBP * commissionRate * 100)
-      const sellerShareGBP = sellerTotalGBP - discountedSubtotalGBP * commissionRate
+      const sellerShareGBP = sellerTotalGBP - discountedSubtotalGBP * commissionRate - vatGBP
 
       grandSubtotalGBP += group.subtotalGBP
       grandDiscountedSubtotalGBP += discountedSubtotalGBP
@@ -399,6 +418,7 @@ export async function POST(request: NextRequest) {
         u: round2(dutiesGBP),
         o: round2(sellerTotalGBP),
         e: round2(sellerShareGBP),
+        v: round2(vatGBP),
       })
     }
 
