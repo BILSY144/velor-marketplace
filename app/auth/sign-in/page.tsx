@@ -16,7 +16,10 @@ function SignInForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+    // Default landing is the HOMEPAGE (William, 2026-07-29): buyers were
+  // being dumped on the seller dashboard. Sellers still arrive at their
+  // dashboard whenever a protected page set callbackUrl, or via the header.
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
     const result = await signIn('credentials', {
       email,
       password,

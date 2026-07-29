@@ -26,7 +26,8 @@ export default function JoinPage() {
       if (!r.ok) { setError(j.error || 'Something went wrong'); setLoading(false); return }
       const res = await signIn('credentials', { email, password, redirect: false })
       if (res?.error) { setError('Account created -- please sign in'); router.push('/auth/sign-in'); return }
-      router.push('/shop')
+      // Buyers land on the homepage after joining (William, 2026-07-29).
+      router.push('/')
       router.refresh()
     } catch {
       setError('Something went wrong -- please try again'); setLoading(false)
