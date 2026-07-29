@@ -125,6 +125,43 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   )
 }
 
+// Share cards (Velor Social stage 3, 2026-07-29): storefront links shared
+// out render a real preview -- the store's logo or its latest listing photo,
+// never an invented image. The seller profile is a followable channel; make
+// its link worth sharing.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ sellerId: string }>
+}) {
+  const { sellerId } = await params
+  const s = await prisma.seller.findFirst({
+    where: { id: sellerId, approved: true },
+    select: {
+      storeName: true,
+      description: true,
+      country: true,
+      storeLogo: true,
+      products: { where: { status: 'APPROVED' }, select: { images: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+    },
+  })
+  if (!s) return { title: 'Velor — Global Marketplace' }
+  const title = `${s.storeName} | Velor`
+  const description = (s.description || `${s.storeName}${s.country ? ` — authentic goods from ${s.country}` : ''} on Velor, the global marketplace for culture and heritage.`)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160)
+  const candidate = [s.storeLogo, ...(s.products[0]?.images || [])].find(u => typeof u === 'string' && u.startsWith('http'))
+  const url = `https://velorcommerce.store/seller/${sellerId}`
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: 'Velor', type: 'website', ...(candidate ? { images: [{ url: candidate, alt: s.storeName }] } : {}) },
+    twitter: { card: candidate ? 'summary_large_image' : 'summary', title, description, ...(candidate ? { images: [candidate] } : {}) },
+  }
+}
+
 export default async function SellerProfilePage({
   params,
 }: {
