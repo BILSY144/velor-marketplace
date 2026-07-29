@@ -16,6 +16,10 @@ export interface LandedCostParams {
 }
 
 export interface LandedCostResult {
+  // true means any import charges are settled between the buyer, the
+  // carrier and the seller (door/DDP arrangements) -- Velor collects
+  // nothing at checkout for this lane.
+  importChargesAtDoor: boolean
   dutyRate: number
   vatRate: number
   dutyAmountGBP: number
@@ -151,7 +155,7 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
       dutyRate: 0, vatRate: 0,
       dutyAmountGBP: 0, vatAmountGBP: 0, totalTaxGBP: 0,
       belowDeMinimis: true, deMinimisGBP: 0, category: 'domestic',
-      isDomestic: true,
+      isDomestic: true, importChargesAtDoor: false,
     }
   }
 
@@ -163,6 +167,28 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
   const dutyRate = rateMap[region]
 
   const belowDeMinimis = declaredValueGBP < deMinimis
+
+  // UK-ONLY COLLECTION (William, 2026-07-29 late, zero-shipping-
+  // responsibility model): Velor ships nothing DDP any more, so import
+  // charges in every destination EXCEPT the UK are settled outside the
+  // checkout (buyer at the door, or the seller shipping duties-paid and
+  // baking the cost into the price). Collecting at checkout would
+  // double-charge buyers and leave Velor holding money it cannot remit
+  // (no IOSS / foreign registrations). The ONE lane Velor must still
+  // collect is where UK law makes the MARKETPLACE liable regardless of
+  // who ships: HMRC deemed-supplier (goods from outside the UK,
+  // consignment up to GBP 135, GB buyer) -- 20 percent VAT on goods plus
+  // delivery, held in Order.vatCollected. Above GBP 135 into GB the
+  // buyer also settles at the door. Revisit (IOSS, AU/NZ marketplace
+  // GST) with the accountant when volume justifies.
+  if (destinationCountry !== 'GB' || !belowDeMinimis) {
+    return {
+      dutyRate: 0, vatRate: 0,
+      dutyAmountGBP: 0, vatAmountGBP: 0, totalTaxGBP: 0,
+      belowDeMinimis, deMinimisGBP: deMinimis, category,
+      isDomestic: false, importChargesAtDoor: true,
+    }
+  }
 
   if (belowDeMinimis) {
     // Below de minimis: historically no customs duty, VAT collected at
@@ -187,7 +213,7 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
       dutyAmountGBP: dutyAmount, vatAmountGBP: vatAmount,
       totalTaxGBP: parseFloat((dutyAmount + vatAmount).toFixed(2)),
       belowDeMinimis: true, deMinimisGBP: deMinimis, category,
-      isDomestic: false,
+      isDomestic: false, importChargesAtDoor: false,
     }
   }
 
@@ -204,6 +230,6 @@ export function calculateLandedCost(params: LandedCostParams): LandedCostResult 
     vatAmountGBP: vatAmount,
     totalTaxGBP: total,
     belowDeMinimis: false, deMinimisGBP: deMinimis, category,
-    isDomestic: false,
+    isDomestic: false, importChargesAtDoor: false,
   }
 }

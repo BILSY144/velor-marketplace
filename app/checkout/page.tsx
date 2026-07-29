@@ -823,7 +823,7 @@ export default function CheckoutPage() {
             {dutiesAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                 <span style={{ color: 'var(--muted)' }}>
-                  Duties and Taxes (DDP)
+                  UK VAT (collected by Velor as marketplace)
                   {Object.values(sellerDuties).some(d => d.belowDeMinimis) && <span style={{ color: 'var(--green)', fontSize: '11px', marginLeft: '4px' }}>below threshold</span>}
                 </span>
                 <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.dutiesAmount) : fmtRaw(dutiesAmount)}</span>
@@ -831,6 +831,11 @@ export default function CheckoutPage() {
             )}
             {Object.values(sellerDuties).length > 0 && Object.values(sellerDuties).every(d => d.isDomestic) && (
               <div style={{ fontSize: '12px', color: 'var(--green)', textAlign: 'right' }}>Domestic — no import duties</div>
+            )}
+            {Object.values(sellerDuties).length > 0 && !Object.values(sellerDuties).every(d => d.isDomestic) && dutiesAmount === 0 && (
+              <div style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'right' }}>
+                Any import charges for your country are settled on delivery, unless your seller ships duties-paid.
+              </div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
               <span style={{ color: 'var(--text)' }}>Total</span>
