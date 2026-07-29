@@ -138,6 +138,23 @@ export default function AccountPage() {
           </div>
         </div>
 
+        {/* Quick links -- Velor Social (2026-07-29): private collections and
+            the sellers-you-follow list live under the account. Both pages
+            show an honest "not switched on" state if the flag is off. */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '40px' }}>
+          {[
+            { href: '/orders', label: 'My orders' },
+            { href: '/account/wishlist', label: 'Wishlist' },
+            { href: '/account/collections', label: 'Collections' },
+            { href: '/account/following', label: 'Following' },
+            { href: '/messages', label: 'Messages' },
+          ].map(l => (
+            <Link key={l.href} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', minHeight: '40px', padding: '8px 18px', borderRadius: '999px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: '13.5px', fontWeight: 600, textDecoration: 'none' }}>
+              {l.label}
+            </Link>
+          ))}
+        </div>
+
         {/* Account settings */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '28px', marginBottom: '40px' }}>
           <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, margin: '0 0 24px' }}>Account Settings</h2>

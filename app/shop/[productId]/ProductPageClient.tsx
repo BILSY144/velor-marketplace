@@ -7,6 +7,8 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { FounderMedal } from '@/components/FounderMedal'
 import ReportContentButton from '@/components/ReportContentButton'
+import FollowSellerButton from '@/components/FollowSellerButton'
+import SaveToCollectionButton from '@/components/SaveToCollectionButton'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 interface Variant {
@@ -1042,6 +1044,10 @@ export default function ProductPageClient() {
               <span style={{ fontSize: '15px' }}>&#8683;</span>
               {shareCopied ? 'Link copied!' : 'Share'}
             </button>
+            {/* Velor Social (2026-07-29): private collections. Renders
+                nothing while the feature flag is off; the preview-only
+                showcase listing stays inert like its other buttons. */}
+            {!isPreviewOnly && <SaveToCollectionButton productId={productId} compact />}
           </div>
 
           {/* Payment trust row -- brand-colour card chips (inline SVG, see
@@ -1221,9 +1227,15 @@ export default function ProductPageClient() {
                 </div>
               </div>
 
-              <Link href={`/seller/${product.sellerId}`} className="velor-pdp-tap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text)', textDecoration: 'none', boxSizing: 'border-box' }}>
-                Visit Store
-              </Link>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Link href={`/seller/${product.sellerId}`} className="velor-pdp-tap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text)', textDecoration: 'none', boxSizing: 'border-box' }}>
+                  Visit Store
+                </Link>
+                {/* Velor Social (2026-07-29, OSA pack signed + flag flipped):
+                    follow the maker from their trust card. Renders nothing
+                    while the feature flag is off. */}
+                <FollowSellerButton sellerId={product.sellerId} compact />
+              </div>
             </div>
           )}
 

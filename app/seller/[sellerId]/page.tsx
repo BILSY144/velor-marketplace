@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { countryFlagUrl } from '@/lib/countryFlag'
 import { FounderMedal } from '@/components/FounderMedal'
 import { SellerWishlistHeart } from '@/components/SellerWishlistHeart'
+import FollowSellerButton from '@/components/FollowSellerButton'
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -284,6 +285,13 @@ export default async function SellerProfilePage({
                   <StarRating rating={avgRating} count={totalReviews} />
                 </div>
               )}
+
+              {/* Velor Social (2026-07-29, OSA pack signed + flag flipped):
+                  follow this maker. Client component; renders nothing while
+                  the feature flag is off, so this page is safe either way. */}
+              <div style={{ marginBottom: '12px' }}>
+                <FollowSellerButton sellerId={sellerId} />
+              </div>
 
               <div
                 style={{
