@@ -223,7 +223,7 @@ export default function ShippingSettingsPage() {
           )}
           {autoLabelOrigin && form.internationalFlatRateGBP !== '' && (
             <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--muted)' }}>
-              With your own price (including free shipping), Velor still buys your shipping label automatically -- the label cost is deducted from your earnings on that order, so include it in your item prices.
+              With your own price (including free shipping), you arrange the shipping yourself and add the tracking number in your dashboard once the order ships. Include your real postage cost in your item prices.
             </p>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', margin: '10px 0 12px' }}>
