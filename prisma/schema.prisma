@@ -325,6 +325,7 @@ model Product {
   reviews       Review[]
   collectionItems CollectionItem[]
   journalPosts  JournalPost[]
+  dropItems     DropItem[]
   questions     ProductQuestion[]
   // Colour/size options for this listing (added 2026-07-27 so sellers no
   // longer have to create a separate listing per colour/size -- see
@@ -1146,4 +1147,44 @@ model PlatformShippingConfig {
   id          String   @id @default("singleton")
   levyPercent Float    @default(8)
   updatedAt   DateTime @updatedAt
+}
+
+// Weekly Drop -- "Fresh from the Workshop" (Velor Social stage 6, plan
+// docs/velor-social-5-year-plan.md section 12 item 5, built 2026-07-29).
+// The appointment mechanic: one moment a week when new pieces go live
+// together. All models additive; applied by the deploy db push.
+model Drop {
+  id           String     @id @default(cuid())
+  title        String     @default("Fresh from the Workshop")
+  scheduledAt  DateTime
+  // Set when the pre-drop digest email has gone out for this drop.
+  digestSentAt DateTime?
+  items        DropItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([scheduledAt])
+}
+
+model DropItem {
+  id        String   @id @default(cuid())
+  dropId    String
+  drop      Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sellerId  String
+  createdAt DateTime @default(now())
+
+  @@unique([dropId, productId])
+  @@index([dropId])
+  @@index([sellerId])
+}
+
+// Opt-in list for the weekly drop digest email. Deliberately its own
+// table (not a User flag): guests can subscribe, consent is explicit
+// (PECR-friendly), and unsubscribe is a one-click delete.
+model DropDigestSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
 }
