@@ -30,6 +30,21 @@ STILL OPEN from the Amazon comparison: public Q&A; review photos + helpful votes
 
 ## STANDING STRATEGY (William, 2026-07-28, verbatim gist): "im trying to make this so easy for the seller to use. thats the plan to get them hooked so they talk about us seeing as we have no marketing budget. so word of mouth is our strengh... we aint amazon with its massive budget so we have to put our all into the experience both seller and buyer." EVERY seller- and buyer-facing surface is judged by one bar: would a user tell someone about it? Ease-of-use > feature count. Apply to all future UI work.
 
+## LAW #4 -- VELOR SOCIAL IS THE APPROVED LONG-TERM STRATEGY (William, 2026-07-29: "were working on the social media aspect of velor the set up going global all in the plan")
+
+**docs/velor-social-5-year-plan.md is CANONICAL and William-approved for build.** Every future session working on anything social, community, feed, follows, collections, journal, drops, or growth-mechanics MUST read that document first and build in ITS order, not improvise. The non-negotiables baked into the plan, restated here so they survive any summary:
+
+1. BUILD ORDER IS THE PLAN'S ORDER: R2 image migration (DONE 2026-07-28) -> OSA safety paperwork -> Collections + Follows + share cards -> Maker Journal -> Workshop Feed -> Drop #1 + Founding Makers circle. Do not ship a later stage before an earlier one.
+2. NO UGC SURFACE GOES LIVE before the OSA paperwork (risk assessments, named owner, report buttons, complaints route) is done and William has signed it off. This is UK law, not preference.
+3. NEVER bolt an algorithmic feed onto the store -- the hook is IDENTITY + INVESTMENT (Ravelry/Strava/Letterboxd model). "Healthy by design" is a brand asset; addictive mechanics are both off-strategy and regulatorily radioactive.
+4. GROWTH SPEND ONLY ON COMPLETED SALES -- referrals/creator commissions are paid on transactions, never on posting/engagement (Flip died of engagement bounties; fake engagement is illegal under UK DMCC / US FTC).
+5. GLOBAL IS THE SPINE (LAW #2 applies doubly here): diaspora "shop your heritage" buyers, one dense craft community per country at a time.
+6. Team growth is REVENUE-TRIGGERED, never optimism-triggered (plan section 9).
+
+If a future session believes something in the plan is stale or wrong, it corrects the PLAN DOC with evidence and logs it here -- it does not silently deviate. Mixing this strategy up or quietly dropping stages is a LAW #1 violation.
+
+---
+
 ## VELOR SOCIAL -- WILLIAM'S BIG IDEA, 5-YEAR PLAN DELIVERED 2026-07-29 (~02:3x UTC)
 
 William revealed his idea after listing-page satisfaction: "Velor the social media" -- feed + community + sharing, all of it. His framing (verbatim gist): main goal "get people hooked, which also exposes the options of buying products from our sellers"; "we are GLOBAL" (top understanding); "a system that pays for its self self growth"; "5 year plan"; "all the social medias sell factory made goods. we are different were going after the real makers and artisans the big companies dont entertain. thats a big market for us."
