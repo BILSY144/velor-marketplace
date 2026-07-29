@@ -8,7 +8,7 @@ import Link from 'next/link'
 // Honesty rules, same standard as every other page in this app:
 // - No fee percentages or fabricated stats. 190 = WORLD_COUNTRIES length,
 //   reused from /about, the only number on this page that isn't plain prose.
-// - The site is pre-launch to buyers (opens 6 August 2026) with no filler
+// - The site is pre-launch to buyers (opens to buyers in the coming weeks) with no filler
 //   or placeholder listings — this page says that plainly rather than
 //   implying an established live catalogue.
 // - No claims about supplier certification schemes, charities, or NGO
@@ -180,7 +180,7 @@ export default function MissionPage() {
               Velor is a new marketplace. Our payment and escrow pipeline is live and tested -- a real
               end-to-end transaction has gone through Stripe, from payment to buyer confirmation to
               payout -- but we haven&apos;t opened publicly to buyers yet, and by design we don&apos;t
-              fill the shop with filler or placeholder listings while we wait. Buyers arrive on 6 August
+              fill the shop with filler or placeholder listings while we wait. Buyers arrive in the coming weeks
               2026, once our founding sellers -- real, identity-verified makers -- are onboarded and
               ready.
             </p>

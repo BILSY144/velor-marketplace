@@ -17,7 +17,7 @@
 // Every claim remains verifiably true of the live platform: free listing on the
 // Starter plan, 10% commission only on completed sales, 190+ shipping
 // destinations, live prices in 20 currencies, escrow-protected payments,
-// payouts via Stripe or Payoneer, buyers arrive 6 August 2026. The unsubscribe
+// payouts via Stripe or Payoneer, buyers arrive in the coming weeks. The unsubscribe
 // link is mandatory in every email.
 //
 // RENDERING (2026-07-09, William): the visual design below is unchanged from
@@ -270,13 +270,13 @@ function ctaButton(url: string, label: string): string {
 // the brand reads identically; only the words change. Every claim is true of
 // the live platform, same discipline as the maker copy.
 const MULTIPLIER_COPY = {
-  subjectInitial: 'A founding-seller partnership for your artisans on Velor -- before buyers arrive 6 August',
+  subjectInitial: 'A founding-seller partnership for your artisans on Velor -- before buyers arrive',
   subjectFollowup1: 'How your artisans join Velor as founding sellers (4 steps)',
   subjectFollowup2: 'Last call: founding-seller places for your artisans on Velor',
   badge: 'PARTNER INVITATION',
   headline: 'Bring your artisans to a global marketplace built for them',
   intro:
-    'Velor is a new global marketplace for authentic cultural goods -- every listing carries its maker and country of origin, and buyers arrive on 6 August 2026. We are inviting a small number of artisan organizations to join as founding partners before launch: every one of your member makers can claim a founding-seller place, free.',
+    'Velor is a new global marketplace for authentic cultural goods -- every listing carries its maker and country of origin, and buyers arrive in the coming weeks. We are inviting a small number of artisan organizations to join as founding partners before launch: every one of your member makers can claim a founding-seller place, free.',
   b1t: 'Founding Pro plan, free for your members',
   b1b: 'Each maker you bring gets the Pro seller plan (normally £49/mo) free as a founding seller -- their own storefront, listings, and payouts.',
   b2t: 'Built for where your makers are',
@@ -285,8 +285,8 @@ const MULTIPLIER_COPY = {
   f1s1: 'Reply to this email or apply at the link below -- tell us roughly how many makers you represent.',
   f1s2: 'We set up founding-seller places for your members (free Pro plan for every one).',
   f1s3: 'Makers list their goods -- each listing carries the maker’s name and country of origin.',
-  f1s4: 'Buyers arrive 6 August. Payouts are escrow-protected and released on delivery.',
-  f2Line1: 'Buyers arrive on Velor on 6 August, and founding-partner places close before then. This is our last note about it.',
+  f1s4: 'Buyers arrive in the coming weeks. Payouts are escrow-protected and released on delivery.',
+  f2Line1: 'Buyers arrive on Velor in the coming weeks, and founding-partner places close before launch. This is our last note about it.',
   f2Line2: 'If bringing your artisans to a global marketplace -- free, in their own language, with their craft and country on every listing -- is interesting, reply to this email and we will set it up together.',
   cta: 'Start the partnership',
   ctaNote: 'Or simply reply to this email -- a real person reads every reply, in any language.',
@@ -418,9 +418,9 @@ export function buildOutreachEmail(d: {
   const makerSubject =
     emailType === 'initial'
       ? lang === 'en' && isBrand
-        ? `Founding seller invitation: ${p.category} on Velor before buyers arrive 6 August`
+        ? `Founding seller invitation: ${p.category} on Velor before buyers arrive`
         : lang === 'en'
-          ? `${p.name}, a founding seller spot on Velor — free before buyers arrive 6 August`
+          ? `${p.name}, a founding seller spot on Velor — free before buyers arrive`
           : c.subjectInitial
       : emailType === 'followup1'
         ? c.subjectFollowup1

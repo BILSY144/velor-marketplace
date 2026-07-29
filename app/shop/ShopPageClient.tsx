@@ -855,7 +855,7 @@ function ShopContent() {
             <div style={{ maxWidth: 760, margin: '0 auto', padding: '70px 20px 90px', textAlign: 'center' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, fontSize: 12, letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 600, marginBottom: 22 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
-                Buyers arrive 6 August
+                Buyers arrive in the coming weeks
               </div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 38, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 18px' }}>
                 {category ? <>No {category} listings yet.<br />This shelf is next.</> : <>The shelves are built.<br />The world is on its way.</>}

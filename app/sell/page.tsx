@@ -12,7 +12,7 @@
 // windows or release timing — the full payout schedule lives in the seller
 // agreement shown at signup. This page says payouts follow the agreement.
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
@@ -103,7 +103,7 @@ function gbp(n: number) {
 }
 
 export default function SellPage() {
-  const [sales, setSales] = useState(1000); const LAUNCH_AT = new Date('2026-08-06T00:00:00+01:00').getTime(); const [now, setNow] = useState<number | null>(null); useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id) }, []); const msLeft = now !== null ? Math.max(0, LAUNCH_AT - now) : null; const dLeft = msLeft !== null ? Math.floor(msLeft / 86400000) : null; const hLeft = msLeft !== null ? Math.floor((msLeft % 86400000) / 3600000) : null; const mLeft = msLeft !== null ? Math.floor((msLeft % 3600000) / 60000) : null; const sLeft = msLeft !== null ? Math.floor((msLeft % 60000) / 1000) : null
+  const [sales, setSales] = useState(1000); 
 
 
 
@@ -118,7 +118,7 @@ export default function SellPage() {
       <div className="vs-wrap">
         <div className="vs-hero">
           <div>
-            <div className="vs-eyebrow"><span className="vs-dot" /> Sell on Velor &middot; buyers arrive 6 August</div>
+            <div className="vs-eyebrow"><span className="vs-dot" /> Sell on Velor &middot; buyers arrive in the coming weeks</div>
             <h1>Your country&apos;s shopping channel.</h1>
             <p className="vs-lede">
               Velor is a live shopping channel with a marketplace built in. Your listings sell
@@ -146,7 +146,7 @@ export default function SellPage() {
         </div>
       </div>
 
-      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive 6 August. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-count"><div className="vs-countbox"><div className="v">{dLeft ?? '—'}</div><div className="l">Days</div></div><div className="vs-countbox"><div className="v">{hLeft ?? '—'}</div><div className="l">Hours</div></div><div className="vs-countbox"><div className="v">{mLeft ?? '—'}</div><div className="l">Minutes</div></div><div className="vs-countbox"><div className="v">{sLeft ?? '—'}</div><div className="l">Seconds</div></div><span className="vs-countlabel">until buyers arrive on Velor</span></div><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day between now and 6 August costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps the full Pro tier free for life — unlimited listings, the dedicated AI account manager, full API access, a free custom storefront, priority search placement, advanced analytics and early access to new features — a deal no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Between now and 6 August, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
+      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive in the coming weeks. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day before buyers arrive costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps the full Pro tier free for life — unlimited listings, the dedicated AI account manager, full API access, a free custom storefront, priority search placement, advanced analytics and early access to new features — a deal no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Until buyers arrive, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
         <div className="vs-wrap">
           <div className="vs-calc">
             <div className="toplbl">The honest maths</div>

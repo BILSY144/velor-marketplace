@@ -14,7 +14,7 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 //   190 countries   = WORLD_COUNTRIES.length (lib/worldCountries.ts)
 //   20 currencies    = SUPPORTED_CURRENCIES.length (lib/currencyData.ts)
 //   19 languages     = Object.keys(OUTREACH_V2).length (lib/outreachI18n.ts)
-//   6 August 2026    = the same launch date used sitewide (/sell, /founding)
+//   Buyer launch: date removed 2026-07-29 (William) -- all copy says "in the coming weeks"
 //   Company details  = Velor Commerce Ltd no. 17268133, same as /about footer
 //
 // Deliberately NOT claimed here: app store links. The mobile app has a
@@ -63,12 +63,12 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 export const metadata = {
   title: 'Press — Velor',
   description:
-    'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers 6 August 2026.',
+    'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers in the coming weeks.',
   alternates: { canonical: 'https://velorcommerce.store/press' },
   openGraph: {
     title: 'Press — Velor',
     description:
-      'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers 6 August 2026.',
+      'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers in the coming weeks.',
     url: 'https://velorcommerce.store/press',
     siteName: 'Velor',
     locale: 'en_GB',
@@ -79,7 +79,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Press — Velor',
     description:
-      'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers 6 August 2026.',
+      'Velor is a global marketplace for authentic cultural goods, built and run by a solo founder working with AI agents. Launching to buyers in the coming weeks.',
     images: ['https://velorcommerce.store/opengraph-image'],
   },
 }
@@ -89,7 +89,7 @@ const CURRENCY_COUNT = SUPPORTED_CURRENCIES.length
 const LANGUAGE_COUNT = Object.keys(OUTREACH_V2).length
 
 const facts = [
-  { v: '6 Aug', l: 'Launch date', note: 'The date buyers arrive on Velor' },
+  { v: 'Soon', l: 'Buyer launch', note: 'Velor opens to buyers in the coming weeks' },
   { v: String(COUNTRY_COUNT), l: 'Countries', note: 'Sellers can list from, and ship to, any of them' },
   { v: String(CURRENCY_COUNT), l: 'Currencies', note: 'Prices convert live, reconfirmed at checkout' },
   { v: String(LANGUAGE_COUNT), l: 'Languages', note: 'Sellers are recruited and supported in their own language' },
@@ -160,7 +160,7 @@ export default function PressPage() {
           <p className="pr-lede">
             Velor (velorcommerce.store) is a global marketplace for authentic cultural goods —
             every listing carries its maker&apos;s name and country of origin. It opens to buyers
-            on 6 August 2026, built and operated almost entirely by one person working alongside
+            in the coming weeks, built and operated almost entirely by one person working alongside
             AI agents. This page is the press kit: the story, the real numbers, the release, and
             how to reach us.
           </p>
@@ -224,7 +224,7 @@ export default function PressPage() {
           <div className="pr-shead">
             <h2>See the platform live</h2>
             <p style={{ color: 'var(--muted)', fontSize: 14.5, margin: '9px 0 0' }}>
-              Velor is live today, ahead of the 6 August buyer launch — the founding-seller
+              Velor is live today, ahead of the buyer launch — the founding-seller
               programme, the shopping experience, and the seller pitch are all real and running.
             </p>
           </div>
@@ -246,7 +246,7 @@ export default function PressPage() {
             <h3>New Global Marketplace Velor Launches to Put the Maker — and the Country — Back on the Label</h3>
             <p>
               <b>UNITED KINGDOM</b> — Velor (velorcommerce.store), a new online marketplace for
-              authentic cultural goods, opens to buyers on 6 August 2026. Built around a single
+              authentic cultural goods, opens to buyers in the coming weeks. Built around a single
               premise — that every product should carry its maker&apos;s name and country of
               origin — Velor connects independent artisans, cooperatives and small heritage
               brands directly with customers worldwide.
@@ -267,7 +267,7 @@ export default function PressPage() {
               showing the loom, the wheel or the forge behind each product.
             </p>
             <p>
-              Velor is operated by Velor Commerce Ltd, United Kingdom. Buyers arrive 6 August 2026.
+              Velor is operated by Velor Commerce Ltd, United Kingdom. Buyers arrive in the coming weeks.
             </p>
           </div>
         </section>

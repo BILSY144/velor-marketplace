@@ -253,7 +253,7 @@ export default function ApplyPage() {
       <div className="ap-wrap">
         <div className="ap-hero">
           <div>
-            <div className="ap-eyebrow"><span className="ap-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
+            <div className="ap-eyebrow"><span className="ap-dot" /> Founding sellers &middot; buyers arrive in the coming weeks</div>
             <h1 className="ap-h1">Be the first from your country.</h1>
             <p className="ap-lede">
               Velor is the world&apos;s shopping channel — sellers broadcast live and sell in the

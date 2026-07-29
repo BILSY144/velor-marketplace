@@ -184,7 +184,7 @@ export default function FoundingPage() {
       <div className="vf-wrap">
         <div className="vf-hero">
           <div>
-            <div className="vf-eyebrow"><span className="vf-dot" /> Founding sellers &middot; buyers arrive 6 August</div>
+            <div className="vf-eyebrow"><span className="vf-dot" /> Founding sellers &middot; buyers arrive in the coming weeks</div>
             <h1>Be the first from your country.</h1>
             <p>
               {trading > 0
