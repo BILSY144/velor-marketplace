@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { FounderMedal } from '@/components/FounderMedal'
+import ReportContentButton from '@/components/ReportContentButton'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 interface Variant {
@@ -1066,15 +1067,11 @@ export default function ProductPageClient() {
             </Link>
           )}
 
-          {/* Report listing -- marketplace hygiene; routed to Velor (never the
-              seller) via the customer-service inbox. */}
+          {/* Report listing (2026-07-29): upgraded from a mailto link to the
+              real in-product report route (/api/reports) per the signed
+              online safety policy -- recorded, ticketed, 24-48h review. */}
           <div style={{ marginTop: '4px' }}>
-            <a
-              href={`mailto:customerservice@velorcommerce.co.uk?subject=${encodeURIComponent(`Report listing: ${product.title} (${productId})`)}`}
-              style={{ fontSize: '11.5px', color: 'var(--muted)', textDecoration: 'underline' }}
-            >
-              Report this listing
-            </a>
+            <ReportContentButton contentType="LISTING" contentId={productId} label="Report this listing" />
           </div>
         </div>
       </div>
@@ -1331,6 +1328,7 @@ export default function ProductPageClient() {
                             badge is always true, never decorative. */}
                         <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--green)', background: 'rgba(46,204,113,0.12)', padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.02em' }}>VERIFIED PURCHASE</span>
                         <span style={{ color: 'var(--muted)', fontSize: '12px', marginLeft: 'auto' }}>{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
+                        <ReportContentButton contentType="REVIEW" contentId={r.id} />
                       </div>
                       <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
                     </div>

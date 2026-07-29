@@ -15,8 +15,19 @@ export async function GET(req: Request) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+  // Block/mute (2026-07-29, signed online safety policy): members this user
+  // has blocked disappear from their inbox entirely.
+  const myBlocks = await prisma.userBlock.findMany({
+    where: { blockerId: user.id },
+    select: { blockedId: true },
+  });
+  const mutedIds = myBlocks.map((b) => b.blockedId);
+
   const messages = await prisma.message.findMany({
-    where: { OR: [{ senderId: user.id }, { receiverId: user.id }] },
+    where: {
+      OR: [{ senderId: user.id }, { receiverId: user.id }],
+      ...(mutedIds.length ? { NOT: [{ senderId: { in: mutedIds } }, { receiverId: { in: mutedIds } }] } : {}),
+    },
     include: {
       sender: { select: { id: true, image: true } },
       receiver: { select: { id: true, image: true } },
@@ -124,6 +135,31 @@ export async function POST(req: Request) {
 
   const receiver = await prisma.user.findUnique({ where: { id: receiverUserId } });
   if (!receiver) return NextResponse.json({ error: 'Receiver not found' }, { status: 404 });
+
+  // Block/mute (2026-07-29, signed online safety policy): a block in either
+  // direction ends the channel. The receiver-blocked-sender case returns the
+  // same generic wording as delivery problems would -- it deliberately does
+  // not confirm to a sender that they have been blocked.
+  const block = await prisma.userBlock.findFirst({
+    where: {
+      OR: [
+        { blockerId: receiverUserId, blockedId: user.id },
+        { blockerId: user.id, blockedId: receiverUserId },
+      ],
+    },
+    select: { blockerId: true },
+  });
+  if (block) {
+    if (block.blockerId === user.id) {
+      return NextResponse.json({ error: 'You have blocked this member. Unblock them to send a message.' }, { status: 403 });
+    }
+    return NextResponse.json({ error: 'This message cannot be delivered.' }, { status: 403 });
+  }
+
+  // New-account rate limit (2026-07-29, signed online safety policy).
+  const { checkNewAccountMessageLimit } = await import('@/lib/newAccountLimits');
+  const limitError = await checkNewAccountMessageLimit(user.id, user.createdAt);
+  if (limitError) return NextResponse.json({ error: limitError }, { status: 429 });
 
   const check = checkMessageContent(content);
   if (check.blocked) {

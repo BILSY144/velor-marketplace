@@ -37,6 +37,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Our Mission', href: '/mission' },
       { label: 'Press', href: '/press' },
       { label: 'Help centre', href: '/help' },
+      { label: 'Safety & reporting', href: '/safety' },
       { label: 'Contact us', href: '/contact' },
       { label: 'Privacy', href: '/legal/privacy' },
       { label: 'Terms', href: '/legal/terms' },

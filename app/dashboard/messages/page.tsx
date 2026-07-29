@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSellerTier, PlanBadge } from '@/lib/dashboard-theme';
 import { HALO } from '@/lib/halo';
+import ReportContentButton from '@/components/ReportContentButton';
 
 // The API sends a privacy-safe display name only (store name for sellers,
 // "First L." for buyers) -- it never sends the other party's email address.
@@ -45,6 +46,8 @@ export default function DashboardMessagesPage() {
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [blocking, setBlocking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -84,6 +87,7 @@ export default function DashboardMessagesPage() {
   async function sendMessage() {
     if (!selected || !draft.trim() || sending) return;
     setSending(true);
+    setSendError('');
     const res = await fetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,8 +101,35 @@ export default function DashboardMessagesPage() {
       const data = await res.json() as { message: Message };
       setMessages((prev) => [...prev, data.message]);
       setDraft('');
+    } else {
+      // Blocks / new-account limits / content filter return real reasons
+      // (2026-07-29 safety build) -- show them instead of failing silently.
+      const data = await res.json().catch(() => ({} as { error?: string }));
+      setSendError(data.error || 'Message could not be sent.');
     }
     setSending(false);
+  }
+
+  // Block/mute (2026-07-29, signed online safety policy).
+  async function blockOther() {
+    if (!selected || blocking) return;
+    const name = otherUser?.name ?? selected.otherUser.name;
+    if (!window.confirm(`Block ${name}? They will no longer be able to message you, and this conversation will be hidden.`)) return;
+    setBlocking(true);
+    try {
+      const r = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: selected.otherUser.id }),
+      });
+      if (r.ok) {
+        setSelected(null);
+        setMessages([]);
+        await fetchConversations();
+      }
+    } finally {
+      setBlocking(false);
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -215,6 +246,26 @@ export default function DashboardMessagesPage() {
                   <div style={{ fontSize: 12, color: 'var(--muted)' }}>Re: {selected.product.title}</div>
                 )}
               </div>
+              {/* Safety controls (2026-07-29, signed online safety policy). */}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <ReportContentButton
+                  contentType="MESSAGE"
+                  contentId={
+                    [...messages].reverse().find((m) => m.senderId !== currentUserId)?.id
+                      ?? selected.conversationId
+                  }
+                  label="Report"
+                  style={{ fontSize: '12px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void blockOther()}
+                  disabled={blocking}
+                  style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, color: 'var(--muted)', textDecoration: 'underline', cursor: blocking ? 'wait' : 'pointer' }}
+                >
+                  {blocking ? 'Blocking…' : 'Block'}
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -254,6 +305,9 @@ export default function DashboardMessagesPage() {
             </div>
 
             {/* Compose */}
+            {sendError && (
+              <div style={{ padding: '8px 20px 0', fontSize: 13, color: 'var(--red)' }}>{sendError}</div>
+            )}
             <div style={{ padding: '12px 20px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
               <textarea
                 value={draft}

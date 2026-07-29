@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ReportContentButton from '@/components/ReportContentButton'
 
 interface Msg {
   id: string
@@ -97,6 +98,8 @@ export default function MessagesPage() {
   const [activeKey, setActiveKey] = useState<string | null>(null)
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState('')
+  const [blocking, setBlocking] = useState(false)
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -146,8 +149,9 @@ export default function MessagesPage() {
   async function sendReply() {
     if (!reply.trim() || !activeThread) return
     setSending(true)
+    setSendError('')
     try {
-      await fetch('/api/messages', {
+      const r = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,10 +160,38 @@ export default function MessagesPage() {
           ...(activeThread.product ? { productId: activeThread.product.id } : {}),
         }),
       })
+      if (!r.ok) {
+        // Blocks and new-account limits (2026-07-29 safety build) return
+        // real reasons -- surface them instead of silently swallowing.
+        const data = await r.json().catch(() => ({}))
+        setSendError(data.error || 'Message could not be sent.')
+        return
+      }
       setReply('')
       await loadMessages()
     } finally {
       setSending(false)
+    }
+  }
+
+  // Block/mute (2026-07-29, signed online safety policy): blocking a member
+  // hides the whole conversation and stops messages both ways.
+  async function blockOther() {
+    if (!activeThread || blocking) return
+    if (!window.confirm(`Block ${activeThread.otherName}? They will no longer be able to message you, and this conversation will be hidden.`)) return
+    setBlocking(true)
+    try {
+      const r = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: activeThread.otherId }),
+      })
+      if (r.ok) {
+        setActiveKey(null)
+        await loadMessages()
+      }
+    } finally {
+      setBlocking(false)
     }
   }
 
@@ -277,6 +309,31 @@ export default function MessagesPage() {
                   </Link>
                 )}
               </div>
+              {/* Safety controls (2026-07-29, signed online safety policy):
+                  every conversation carries its own report route + block. */}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <ReportContentButton
+                  contentType="MESSAGE"
+                  contentId={
+                    [...activeThread.messages].reverse().find(m => m.senderId !== myId)?.id
+                      ?? activeThread.lastMessage.id
+                  }
+                  label="Report"
+                  style={{ fontSize: '12px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void blockOther()}
+                  disabled={blocking}
+                  style={{
+                    background: 'none', border: 'none', padding: 0,
+                    fontSize: 12, color: 'var(--muted)', textDecoration: 'underline',
+                    cursor: blocking ? 'wait' : 'pointer',
+                  }}
+                >
+                  {blocking ? 'Blocking…' : 'Block'}
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -322,8 +379,13 @@ export default function MessagesPage() {
             </div>
 
             {/* Reply input */}
+            {sendError && (
+              <p style={{ margin: 0, padding: '8px 20px', fontSize: 13, color: 'var(--red)', borderTop: '1px solid var(--border)' }}>
+                {sendError}
+              </p>
+            )}
             <div style={{
-              padding: '12px 20px', borderTop: '1px solid var(--border)',
+              padding: '12px 20px', borderTop: sendError ? 'none' : '1px solid var(--border)',
               display: 'flex', gap: 10, flexShrink: 0,
             }}>
               <textarea

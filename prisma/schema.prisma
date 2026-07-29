@@ -57,6 +57,8 @@ model User {
   wishlistItems     WishlistItem[]
   follows           Follow[]
   collections       Collection[]
+  blocksMade        UserBlock[] @relation("BlocksMade")
+  blocksReceived    UserBlock[] @relation("BlocksReceived")
   setupToken            String?   @unique
   setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
@@ -785,6 +787,50 @@ model LiveStreamReport {
 
   @@unique([streamId, reporterEmail])
   @@index([streamId])
+}
+
+// ---------------------------------------------------------------------------
+// Online Safety tooling (2026-07-29, built per the SIGNED online safety
+// policy's build list in docs/osa/online-safety-policy.md): a report route
+// for EVERY kind of user-generated content (reviews, messages, listings,
+// streams, sellers), open to signed-in users AND non-users alike, plus
+// block/mute between members. Additive-only.
+// ---------------------------------------------------------------------------
+
+model ContentReport {
+  id             String    @id @default(cuid())
+  // REVIEW | MESSAGE | LISTING | STREAM | SELLER | OTHER
+  contentType    String
+  contentId      String?
+  // Non-users reporting from /safety may only know the page address.
+  contentUrl     String?
+  reporterEmail  String
+  reporterUserId String?
+  reason         String
+  details        String?   @db.Text
+  // OPEN | RESOLVED | DISMISSED
+  status         String    @default("OPEN")
+  resolution     String?   @db.Text
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+
+  // One report per person per piece of content (NULL contentId rows are
+  // distinct under Postgres semantics, which is what we want for URL-only
+  // reports from non-users).
+  @@unique([contentType, contentId, reporterEmail])
+  @@index([status, createdAt])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 enum CertificateType {

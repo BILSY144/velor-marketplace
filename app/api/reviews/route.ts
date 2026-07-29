@@ -56,6 +56,13 @@ export async function POST(request: Request) {
   if (existing) {
     return NextResponse.json({ error: 'You have already reviewed this product' }, { status: 409 })
   }
+  // New-account rate limit (2026-07-29, signed online safety policy).
+  const reviewer = await prisma.user.findUnique({ where: { id: session.user.id }, select: { createdAt: true } })
+  if (reviewer) {
+    const { checkNewAccountReviewLimit } = await import('@/lib/newAccountLimits')
+    const limitError = await checkNewAccountReviewLimit(session.user.id, reviewer.createdAt)
+    if (limitError) return NextResponse.json({ error: limitError }, { status: 429 })
+  }
   const review = await prisma.review.create({
     data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '' }
   })
