@@ -237,6 +237,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       items: [
         { href: '/dashboard/products', label: 'Products', icon: ICONS.products },
         { href: '/dashboard/journal', label: 'Journal', icon: ICONS.journal },
+        { href: '/dashboard/drops', label: 'Weekly Drop', icon: ICONS.journal },
         { href: '/dashboard/storefront', label: 'Storefront', icon: ICONS.storefront },
         { href: '/dashboard/discount-codes', label: 'Discounts', icon: ICONS.discounts },
         { href: '/dashboard/live', label: 'Go Live', icon: ICONS.live, special: 'live' },
