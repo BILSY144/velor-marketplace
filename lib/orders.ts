@@ -101,6 +101,13 @@ export async function attemptAutoLabelPurchase(
   sellerItems: PricedItem[],
   shippingAddressJson: Prisma.InputJsonValue
 ): Promise<void> {
+  // 2026-07-29 FINAL (William): universal seller-arranged shipping while
+  // Velor is young -- Velor buys NO labels for anyone. Sellers ship
+  // themselves and add tracking in /dashboard/orders. All the label
+  // machinery below is retained DORMANT for when Velor does shipping deals
+  // later and flips lanes back on.
+  return
+  // eslint-disable-next-line no-unreachable
   const seller = await prisma.seller.findUnique({
     where: { id: sellerId },
     include: { shippingProfile: true, user: { select: { email: true } } },

@@ -129,9 +129,9 @@ async function flatRateOrFallback(
   // of what is stored, and the platform-default estimate tier (the scary
   // GBP 40+ numbers) can never reach a buyer again. Fee-free per the
   // seller-provided-shipping rule (8060c4f).
-  const enforcedOriginCode = (profile?.country || '').toUpperCase()
-  const enforcedAutoLabel = ['GB', 'DE', 'CA'].includes(enforcedOriginCode) || easyshipRateOrigins().has(enforcedOriginCode)
-  const flat = enforcedAutoLabel ? profile?.internationalFlatRateGBP : 0
+  // Universal seller-arranged era (2026-07-29): every seller ships FREE,
+  // postage baked into the item price. Stored flat rates are ignored.
+  const flat = 0
   if (flat != null && Number.isFinite(flat)) {
     return [{
       rateId: 'seller-flat-rate',
@@ -473,8 +473,12 @@ export async function POST(request: NextRequest) {
         // lane, domestic included -- not just international. A seller who
         // chose FREE ships free to their neighbours too; the label-cost
         // deduction in lib/orders.ts keeps auto-label lanes funded.
-        const sellerProvidesShipping =
-          p?.internationalFlatRateGBP != null && Number.isFinite(p.internationalFlatRateGBP)
+        // 2026-07-29 FINAL (William: 'the seller arranges shipping, thats
+        // for everyone'): EVERY seller on EVERY lane self-arranges shipping
+        // while Velor is young -- Velor buys no labels and quotes no
+        // carrier prices. When Velor does shipping deals later, this flips
+        // back per-origin. Live-quote plumbing below is retained dormant.
+        const sellerProvidesShipping = true
 
         result.push({
           sellerId,

@@ -218,7 +218,7 @@ export default function ShippingSettingsPage() {
           <label style={labelStyle}>How should buyers see your shipping price?</label>
           {!autoLabelOrigin && (
             <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
-              Free shipping is the standard for your country while Velor cannot yet buy shipping labels there. Include your real postage cost in each item price -- buyers then see FREE shipping and no surprise charges. Temporary: every option unlocks when label coverage reaches your country.
+              While Velor is new, every seller arranges their own shipping: include your real postage cost in each item price, and buyers see FREE shipping with no surprise charges. Add the tracking number in your dashboard once an order ships. When Velor introduces its own shipping deals, more options unlock here.
             </p>
           )}
           {autoLabelOrigin && form.internationalFlatRateGBP !== '' && (

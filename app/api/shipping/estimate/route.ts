@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
   // unreachable for out-of-label sellers, so any such cached row is stale
   // scary pricing -- William hit a live GBP 44.69 ghost right after the
   // deploy. Recomputing is cheap and re-caches the truthful number.
-  const cachedIsPlatformDefault = !!cached && cached.carrier === 'Velor Estimated Shipping'
+  // Universal seller-arranged era (2026-07-29): the only truthful estimate
+  // is FREE, so any cached row with a non-zero amount is stale -- recompute.
+  const cachedIsPlatformDefault = !!cached && (cached.carrier === 'Velor Estimated Shipping' || cached.amountGBP > 0)
   if (cached && !cachedIsPlatformDefault && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS) {
       return NextResponse.json({
         country,
