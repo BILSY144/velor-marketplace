@@ -161,6 +161,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // static /about page.
     { url: `${base}/mission`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/help`, changeFrequency: 'monthly', priority: 0.6 },
+    // /safety added 2026-07-29 (commit 876f1151) -- a static, real-content
+    // trust-and-safety page (report content / appeal a decision, per the
+    // signed Online Safety Act policy) with its own layout.tsx metadata
+    // (title/description/canonical/OG/Twitter, added the same cycle by the
+    // standing SEO agent -- see app/safety/layout.tsx) and a real internal
+    // link from GlobalFooter's "Company" column. Missing from this sitemap
+    // until now; same gap class and fix as /mission (2026-07-23).
+    { url: `${base}/safety`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/press`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${base}/contact`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/track`, changeFrequency: 'monthly', priority: 0.4 },
