@@ -83,7 +83,7 @@ function SignInForm() {
           Sign in
         </h1>
         <p style={{ color: '#999999', fontSize: '14px', margin: '0 0 32px' }}>
-          Access your seller dashboard
+          Follow makers, save pieces, track your orders -- and sellers, this is your door too
         </p>
 
         {error && (
@@ -221,10 +221,10 @@ function SignInForm() {
         >
           No account yet?{' '}
           <Link
-            href="/auth/sign-up"
+            href="/auth/join"
             style={{ color: '#FF6B00', textDecoration: 'none', fontWeight: 600 }}
           >
-            Apply to sell
+            Create your account
           </Link>
         </p>
       </div>

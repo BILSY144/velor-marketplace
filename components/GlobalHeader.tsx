@@ -729,7 +729,7 @@ export default function GlobalHeader() {
                   ) : (
                     <>
                       <Link href="/auth/sign-in" style={menuItem}>Sign in</Link>
-                      <Link href="/auth/sign-up" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
+                      <Link href="/auth/join" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
                         Create account
                       </Link>
                       <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
@@ -908,7 +908,7 @@ export default function GlobalHeader() {
           ) : (
             <>
               <Link href="/auth/sign-in" style={menuItem}>Sign in</Link>
-              <Link href="/auth/sign-up" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Create account</Link>
+              <Link href="/auth/join" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Create account</Link>
             </>
           )}
         </div>
