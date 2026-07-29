@@ -1,3 +1,9 @@
+# TUESDAY 2026-08-04 IS APP DAY (William, 2026-07-29, verbatim gist: "next tuesday we are going to work solely on the app and make it more like the website and easy to use")
+
+The whole Tuesday session works SOLELY on the mobile app: bring it up to the website's standard and ease of use -- including everything the website gained this week that the app lacks (Velor Social: Follows/Collections/Journal/Workshop feed; safety: report buttons + block/mute; the listing-form overhaul patterns; PDP density work). The already-scheduled Google Play rejection fix (trigger trig_01Y3andksLyF64LsUSDcG29Y, "it has to be done") lands the same day -- do it first, then the app uplift. Read mobile/DEVLOG.md on the mobile-app branch before touching anything (canonical app log); production OTA ships ONLY from mobile-app branch (build 5 has no LiveKit native module -- main's mobile/ would crash store installs).
+
+STATUS 2026-07-29 inbox sweep: Easyship enterprise written proposal NOT yet received (chase if silent by ~31 Jul); YunExpress silent; the 3 CN sellers' flat-rate replies not yet in (give them a day). APPLE developer case 20000117679399: Devara (28 Jul) wrongly advised "create a new Apple Account + individual enrollment" -- reply SENT from William's Gmail 2026-07-29 (William approved verbatim): organisation enrollment for Velor Commerce Ltd required, self-serve re-enrollment redirects back to declined 3BC6GF58WA, asked them to reset/clear it or name the supported route. Watch the Gmail thread.
+
 # TOP PRIORITY -- GLOBAL SHIPPING (added 2026-07-28) -- READ THIS FIRST, SUPERSEDES ALL OTHER WORK
 
 ## 2026-07-28 ROLLOUT CHECKLIST (William: "complete 100% set up, nothing left out... guaranteed to work fully") -- every item verified live with evidence before it is marked done; anything unproven stays listed here
