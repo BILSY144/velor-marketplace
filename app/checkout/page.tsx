@@ -454,7 +454,16 @@ export default function CheckoutPage() {
           // hit a dead end. The confirmation page now fetches the REAL
           // order id from /api/orders once the order exists.
           paymentIntentId: piId,
-          items,
+          // PRICE-DISPLAY RULE (CLAUDE.md): cart item prices live in the
+          // SELLER'S OWN currency (The Eastern Wisdom prices in USD). The
+          // confirmation page formats item.price with the order's charge
+          // currency, so store each price CONVERTED to that currency here --
+          // otherwise a $9.00 listing renders as "£9.00" beside a £6.77
+          // subtotal (caught live by William, 2026-07-29).
+          items: items.map(i => ({
+            ...i,
+            price: convert(i.price, itemCurrencies[i.productId] || 'GBP'),
+          })),
           shipping: {
             firstName: address.name.split(' ')[0] ?? address.name,
             lastName: address.name.split(' ').slice(1).join(' ') ?? '',
