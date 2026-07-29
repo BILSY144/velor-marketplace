@@ -5,6 +5,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: 'Watch & shop',
     links: [
       { label: 'Velor Live', href: '/live' },
+      { label: 'Workshop feed', href: '/workshop' },
       { label: 'Browse the shop', href: '/shop' },
       { label: 'Shop by country', href: '/shop' },
       { label: 'Search', href: '/search' },

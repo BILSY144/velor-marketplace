@@ -66,7 +66,8 @@ export default function FollowingPage() {
         </Link>
       </div>
       <p style={{ fontSize: '14px', color: 'var(--muted)', margin: '0 0 30px' }}>
-        Private to you — sellers see follower counts, never names.
+        Private to you — sellers see follower counts, never names. Their workshop
+        entries appear in <Link href="/workshop" style={{ color: 'var(--accent)' }}>your feed</Link>.
       </p>
 
       {state === 'loading' && <p style={{ color: 'var(--muted)' }}>Loading…</p>}

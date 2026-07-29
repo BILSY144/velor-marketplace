@@ -147,6 +147,7 @@ export default function AccountPage() {
             { href: '/account/wishlist', label: 'Wishlist' },
             { href: '/account/collections', label: 'Collections' },
             { href: '/account/following', label: 'Following' },
+            { href: '/workshop', label: 'Workshop feed' },
             { href: '/messages', label: 'Messages' },
           ].map(l => (
             <Link key={l.href} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', minHeight: '40px', padding: '8px 18px', borderRadius: '999px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: '13.5px', fontWeight: 600, textDecoration: 'none' }}>
