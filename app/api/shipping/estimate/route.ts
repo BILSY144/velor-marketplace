@@ -68,7 +68,13 @@ export async function GET(request: NextRequest) {
     const cached = await prisma.shippingEstimate.findUnique({
       where: { sellerId_destCountry_weightBandMinGrams: { sellerId: product.sellerId, destCountry: country, weightBandMinGrams: band.minGrams } },
     })
-    if (cached && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS) {
+    // 2026-07-29: NEVER serve cached PLATFORM-DEFAULT rows (carrier 'Velor
+  // Estimated Shipping). Since the free-shipping enforcement that tier is
+  // unreachable for out-of-label sellers, so any such cached row is stale
+  // scary pricing -- William hit a live GBP 44.69 ghost right after the
+  // deploy. Recomputing is cheap and re-caches the truthful number.
+  const cachedIsPlatformDefault = !!cached && cached.carrier === 'Velor Estimated Shipping'
+  if (cached && !cachedIsPlatformDefault && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS) {
       return NextResponse.json({
         country,
         available: true,
