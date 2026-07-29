@@ -7,6 +7,7 @@ import { countryFlagUrl } from '@/lib/countryFlag'
 import { FounderMedal } from '@/components/FounderMedal'
 import { SellerWishlistHeart } from '@/components/SellerWishlistHeart'
 import FollowSellerButton from '@/components/FollowSellerButton'
+import SellerJournal from '@/components/SellerJournal'
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -521,9 +522,16 @@ export default async function SellerProfilePage({
                             fontFamily: 'var(--font-display)',
                           }}
                         >
+                          {/* Prices are stored in the SELLER'S currency
+                              (CLAUDE.md price-display rule, 2026-07-29) --
+                              this previously hardcoded GBP and showed a
+                              USD listing as pounds. Server components can't
+                              read the visitor's display currency, so show
+                              the honest listed price in its real currency;
+                              the PDP converts per-visitor. */}
                           {new Intl.NumberFormat('en-GB', {
                             style: 'currency',
-                            currency: 'GBP',
+                            currency: (seller.currency || 'GBP').toUpperCase(),
                           }).format(product.price)}
                         </span>
                       </div>
@@ -536,6 +544,12 @@ export default async function SellerProfilePage({
             })}
           </div>
         )}
+
+        {/* Maker Journal (Velor Social stage 4, 2026-07-29): the seller's
+            public process diary -- the storefront is the first "view over
+            the journal" the plan calls for. Client component; renders
+            nothing while the feature flag is off. */}
+        <SellerJournal sellerId={sellerId} storeName={seller.storeName} />
       </div>
     </div>
   )

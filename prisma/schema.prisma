@@ -190,6 +190,7 @@ model Seller {
   orders                        Order[]
   shipments                     Shipment[]
   followers                     Follow[]
+  journalPosts                  JournalPost[]
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
@@ -321,6 +322,7 @@ model Product {
   messages      Message[]
   reviews       Review[]
   collectionItems CollectionItem[]
+  journalPosts  JournalPost[]
   // Colour/size options for this listing (added 2026-07-27 so sellers no
   // longer have to create a separate listing per colour/size -- see
   // ProductVariant below). Empty for the vast majority of existing listings,
@@ -831,6 +833,35 @@ model UserBlock {
 
   @@unique([blockerId, blockedId])
   @@index([blockedId])
+}
+
+// ---------------------------------------------------------------------------
+// Maker Journal (Velor Social stage 4, 2026-07-29, plan section 3: "the
+// studio journal that sells" -- sellers document their process; the future
+// Workshop Feed is a VIEW over these journals, never a separate posting
+// surface). UGC safety per the signed OSA pack: text through the shared
+// content filter, images through R2, report route (contentType JOURNAL),
+// posting caps. Gated by VELOR_SOCIAL_ENABLED like all /api/social routes.
+// ---------------------------------------------------------------------------
+
+model JournalPost {
+  id        String   @id @default(cuid())
+  sellerId  String
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title     String?
+  body      String   @db.Text
+  images    String[] @default([])
+  videoUrl  String?
+  // Optional link to one of the seller's own listings ("the journal that
+  // sells" -- process post -> piece for sale).
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // PUBLISHED | HIDDEN (HIDDEN = taken down by moderation, kept for audit)
+  status    String   @default("PUBLISHED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sellerId, status, createdAt])
 }
 
 enum CertificateType {

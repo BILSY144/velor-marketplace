@@ -21,6 +21,7 @@ export const REPORT_CONTENT_TYPES: Record<string, string> = {
   MESSAGE: 'A message',
   STREAM: 'A live stream',
   SELLER: 'A seller or storefront',
+  JOURNAL: 'A maker journal post',
   OTHER: 'Something else',
 }
 
