@@ -2,6 +2,39 @@
 
 BEFORE ANY OTHER WORK -- including APP DAY work if the next session is Tuesday (this comes first even then): fix the EU VAT base in lib/duty-rates.ts. The below-de-minimis branch charges VAT on the GOODS PRICE ONLY; the strict import-VAT rule is VAT on goods + shipping + duty -- so EU-bound quotes slightly UNDER-collect (about 60p-70p on a small French order: the EUR-3 flat duty and shipping escape VAT). Change the below-threshold branch so the VAT base = declaredValueGBP + shippingCostGBP + dutyAmountGBP (mirroring the above-threshold branch's cif+duty logic), behaviour-test all four lanes exactly like commit 09f4ccd did (CN->FR, GB->DE x2 items, FR->DE intra-EU, CN->GB), and CHECK THE UK LANE CAREFULLY: CN->GB deemed-supplier VAT would also pick up shipping in the base -- correct under HMRC OMP rules (VAT on the full consideration incl. delivery) but it changes the vatCollected pot amounts; verify the Door God free-shipping case still comes to exactly 1.35 (it should -- shipping is 0). Then mark this section DONE with the commit SHA. Only after that does any other work start.
 
+# CURRENT STATE DASHBOARD -- READ THIS FIRST, MAINTAIN IT ALWAYS (created 2026-07-29 late; William: "everytime i enter a new session i have to explain everything again" -- NEVER AGAIN)
+
+RULES FOR EVERY SESSION: (1) At session start, TELL William the current state in 2-3 plain sentences (dyslexia-friendly, short) -- NEVER ask him to explain where things stand. (2) Update THIS dashboard at every checkpoint -- move items between sections; the long history below is archive, this is the truth. (3) A stale dashboard is a LAW #1 violation.
+
+## MANDATORY FIRST TASK (see the rule section directly below): EU VAT-base fix in lib/duty-rates.ts. Nothing else starts before it. Mark done here + there with commit SHA.
+
+## DONE AND LIVE-PROVEN (do not re-do, do not doubt without live evidence)
+- Checkout end to end: seller free shipping WINS over live quotes (bf79301), rates auto-fetch (e44bb40), honest payment-failed page (b8a6c8a), duty quote = charge, server-side prices (1886dcd), snapshot prices converted (8aa2750). Door God CN->GB priced right in a REAL Stripe attempt: 6.77 + 1.35 VAT + FREE shipping = 8.12.
+- VAT POT (db1ab38): UK deemed-supplier VAT (<= GBP 135 imports to GB) held by Velor in Order.vatCollected, never paid to sellers. Position paper: docs/VAT-OMP-POSITION.md.
+- EU EUR-3/item low-value duty (live EU law since 1 Jul 2026) in the duty engine (09f4ccd), all four lanes behaviour-tested.
+- BOOKKEEPING SYSTEM: QuickBooks set up as VELOR COMMERCE LTD; Monzo + Tide current + Tide saver connected via bank feeds (verified on the Banking page); monthly task trig_01AQesV4ahCgtH1Lh71nxuCx (1st of month, first run 2026-08-01 back-captures from June). Intuit MCP connector is US-ONLY -- can NEVER work for UK QuickBooks; never suggest reconnecting it.
+- Velor Social stages 1-5 live (Collections/Follows/share cards/Journal/Workshop feed); OSA pack signed; safety tooling live-proven; Q&A + review photos/helpful votes live; PDP Amazon-comparison list COMPLETE.
+- Site: 18 founding follow-ups sent; Eastern Wisdom set FREE shipping (fee-free seller shipping rule live, 8060c4f).
+
+## SCHEDULED / AUTOMATIC (needs no prompting)
+- Fri 2026-08-01 06:0x UTC: first monthly bookkeeping run -> plain-English email to William.
+- Tue 2026-08-04: APP DAY (whole session; Google Play rejection fix trig_01Y3andksLyF64LsUSDcG29Y first) -- AFTER the mandatory VAT-base task if not yet done.
+- SEO agent runs 2x daily; shipping-statements task monthly.
+
+## WAITING ON OTHERS (check inboxes, do not rebuild)
+- Apple Developer case 20000117679399 (Gmail); Easyship enterprise written proposal (chase ~31 Jul); YunExpress; PetLuv Magic + hushlume flat rates (nudge in a few days); replies to the 18 follow-ups; The Eastern Wisdom's answer to the buyer's framing question; Trolley/Payoneer historical threads (see archive).
+
+## DECISIONS ONLY WILLIAM CAN MAKE (raise gently, never nag twice a session)
+- Launch date: 6 Aug likely slipping, NO public copy changed yet -- site/press/Play all still say 6 August.
+- Accountant + UK VAT registration timing (docs/VAT-OMP-POSITION.md is the brief; offer to shortlist 3 fixed-fee UK ecommerce accountants).
+- Micro-order margin: fee-free seller-shipping micro-orders can lose ~5p to Stripe's flat 20p (options: min order value, or accept).
+- Buyer/seller duty-copy wording (drafted 2026-07-29, NOT yet approved or added).
+- ~17-maker 22-Jul wave follow-ups (drafted concept, awaiting his go-ahead).
+
+## NOT YET LIVE-TESTED (honest gaps, not failures)
+- First completed real order on the free-shipping lane (William got to Klarna cancel; card retry would be Velor's first CN->GB order).
+- First organic review with photos/helpful votes; new listing writing to R2; seller PATCH answer flow; Easyship label purchase (first real order on its lanes).
+
 # TUESDAY 2026-08-04 IS APP DAY (William, 2026-07-29, verbatim gist: "next tuesday we are going to work solely on the app and make it more like the website and easy to use")
 
 The whole Tuesday session works SOLELY on the mobile app: bring it up to the website's standard and ease of use -- including everything the website gained this week that the app lacks (Velor Social: Follows/Collections/Journal/Workshop feed; safety: report buttons + block/mute; the listing-form overhaul patterns; PDP density work). The already-scheduled Google Play rejection fix (trigger trig_01Y3andksLyF64LsUSDcG29Y, "it has to be done") lands the same day -- do it first, then the app uplift. Read mobile/DEVLOG.md on the mobile-app branch before touching anything (canonical app log); production OTA ships ONLY from mobile-app branch (build 5 has no LiveKit native module -- main's mobile/ would crash store installs).
