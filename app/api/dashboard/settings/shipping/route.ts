@@ -83,6 +83,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Any shipping-settings change (flat rate, buffer, dispatch address)
+    // changes the quotes buyers should see, so drop this seller's cached
+    // PDP delivery estimates immediately -- otherwise a seller fixing an
+    // atrocious platform-default price would keep showing the old number
+    // for up to 24h (ShippingEstimate TTL). Added 2026-07-29 alongside the
+    // PDP delivery-estimate feature.
+    await prisma.shippingEstimate.deleteMany({ where: { sellerId: seller.id } }).catch(() => {})
+
     // Keep Seller.country and Seller.payoutRail in lockstep with the real
     // ship-from address (William, 2026-07-25 -- see the note on
     // app/api/dashboard/settings/route.ts). This is now the only place a
