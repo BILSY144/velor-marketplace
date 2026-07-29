@@ -30,6 +30,18 @@ function isEstimateTier(rateId: string): boolean {
   return rateId === 'seller-flat-rate' || rateId === 'platform-default-rate' || rateId === 'pending-standard'
 }
 
+// Seller-set-rate flags (William, 2026-07-29: buyers must see the SELLER'S
+// price plainly -- above all when it's free -- instead of an "estimate").
+// Since the same day, seller-provided shipping carries NO admin fee
+// (applyAdminFee skips the seller-flat-rate tier), so a free seller rate
+// quotes exactly 0.00. Cached rows written BEFORE the fee change may still
+// hold the old fee-inflated amount for up to the cache TTL -- purge them
+// via POST /api/admin/purge-shipping-estimates after deploying fee changes.
+function sellerRateFlags(service: string, amountGBP: number): { sellerSet: boolean; freeShipping: boolean } {
+  const sellerSet = /seller-set/i.test(service)
+  return { sellerSet, freeShipping: sellerSet && amountGBP <= 0.005 }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const productId = request.nextUrl.searchParams.get('productId') || ''
@@ -65,6 +77,7 @@ export async function GET(request: NextRequest) {
         service: cached.service,
         estimatedDays: cached.estimatedDays,
         isEstimate: cached.isEstimate,
+        ...sellerRateFlags(cached.service, cached.amountGBP),
         cached: true,
       })
     }
@@ -126,6 +139,7 @@ export async function GET(request: NextRequest) {
         service: best.service,
         estimatedDays: best.estimatedDays,
         isEstimate: best.isEstimate,
+        ...sellerRateFlags(best.service, best.amountGBP),
         cached: false,
       })
     }
@@ -141,6 +155,7 @@ export async function GET(request: NextRequest) {
         service: cached.service,
         estimatedDays: cached.estimatedDays,
         isEstimate: true,
+        ...sellerRateFlags(cached.service, cached.amountGBP),
         cached: true,
       })
     }

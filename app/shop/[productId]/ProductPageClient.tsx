@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -30,6 +30,8 @@ interface Review {
   id: string
   rating: number
   comment: string
+  images?: string[]
+  helpfulCount?: number
   createdAt: string
   user: { name: string; image?: string | null }
 }
@@ -162,7 +164,7 @@ const PREVIEW_ONLY_PRODUCT_ID = 'cms260kvd0003epq3lnituxvw'
 function DeliveryEstimate({ productId, symbol, convert }: { productId: string; symbol: string; convert: (amount: number, from: string) => number }) {
   const [country, setCountry] = useState('')
   const [loading, setLoading] = useState(true)
-  const [est, setEst] = useState<{ available: boolean; amountGBP?: number; estimatedDays?: number | null; isEstimate?: boolean } | null>(null)
+  const [est, setEst] = useState<{ available: boolean; amountGBP?: number; estimatedDays?: number | null; isEstimate?: boolean; sellerSet?: boolean; freeShipping?: boolean } | null>(null)
   useEffect(() => {
     let dead = false
     const saved = localStorage.getItem('velor-deliver-to') || ''
@@ -198,11 +200,26 @@ function DeliveryEstimate({ productId, symbol, convert }: { productId: string; s
         {loading ? (
           <span style={{ opacity: 0.7 }}>checking delivery...</span>
         ) : est?.available && typeof est.amountGBP === 'number' ? (
-          <>
-            — shipping {est.isEstimate ? 'est. ' : ''}
-            <strong style={{ color: 'var(--text)' }}>{symbol}{convert(est.amountGBP, 'GBP').toFixed(2)}</strong>
-            {typeof est.estimatedDays === 'number' ? ` · ~${est.estimatedDays} day${est.estimatedDays === 1 ? '' : 's'} in transit` : ''}
-          </>
+          est.freeShipping ? (
+            // Seller offers free shipping (William, 2026-07-29): say so
+            // plainly. Seller-provided shipping carries NO Velor fee --
+            // free means the buyer pays nothing at all for delivery.
+            <>
+              — <strong style={{ color: 'var(--green)' }}>FREE shipping</strong> from the seller
+            </>
+          ) : est.sellerSet ? (
+            <>
+              — seller&apos;s shipping rate{' '}
+              <strong style={{ color: 'var(--text)' }}>{symbol}{convert(est.amountGBP, 'GBP').toFixed(2)}</strong>
+              {typeof est.estimatedDays === 'number' ? ` · ~${est.estimatedDays} day${est.estimatedDays === 1 ? '' : 's'} in transit` : ''}
+            </>
+          ) : (
+            <>
+              — shipping {est.isEstimate ? 'est. ' : ''}
+              <strong style={{ color: 'var(--text)' }}>{symbol}{convert(est.amountGBP, 'GBP').toFixed(2)}</strong>
+              {typeof est.estimatedDays === 'number' ? ` · ~${est.estimatedDays} day${est.estimatedDays === 1 ? '' : 's'} in transit` : ''}
+            </>
+          )
         ) : (
           <span>— exact cost shown at checkout</span>
         )}
@@ -420,6 +437,32 @@ export default function ProductPageClient() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewError, setReviewError] = useState('')
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
+  // Review photos (2026-07-29, Amazon-comparison item): up to 4, same
+  // +-to-add strip pattern as the listing form; stored in R2 server-side.
+  const [reviewImages, setReviewImages] = useState<string[]>([])
+  const reviewFileRef = useRef<HTMLInputElement>(null)
+  // Helpful votes: live counts + which reviews I've voted, kept locally so
+  // the button flips instantly.
+  const [helpfulOverrides, setHelpfulOverrides] = useState<Record<string, { count: number; voted: boolean }>>({})
+
+  async function toggleHelpful(reviewId: string, baseCount: number) {
+    if (!session) {
+      router.push(`/auth/sign-in?callbackUrl=/shop/${productId}`)
+      return
+    }
+    try {
+      const r = await fetch('/api/reviews/helpful', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (r.ok && typeof d.helpfulCount === 'number') {
+        setHelpfulOverrides(prev => ({ ...prev, [reviewId]: { count: d.helpfulCount, voted: !!d.voted } }))
+      }
+    } catch { /* best-effort */ }
+    void baseCount
+  }
 
   useEffect(() => {
     if (!productId) return
@@ -587,7 +630,7 @@ export default function ProductPageClient() {
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, rating: reviewRating, comment: reviewComment.trim() }),
+        body: JSON.stringify({ productId, rating: reviewRating, comment: reviewComment.trim(), images: reviewImages }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -1351,6 +1394,35 @@ export default function ProductPageClient() {
                         <ReportContentButton contentType="REVIEW" contentId={r.id} />
                       </div>
                       <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{r.comment}</p>
+                      {/* Review photos (2026-07-29): buyer-supplied, click
+                          to view full size. */}
+                      {(r.images?.length ?? 0) > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                          {r.images!.map((img, i) => (
+                            <a key={i} href={img} target="_blank" rel="noopener noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={img} alt="Buyer photo" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                      {/* Helpful votes (2026-07-29): one per person, never
+                          your own review -- most helpful list first. */}
+                      <button
+                        type="button"
+                        onClick={() => void toggleHelpful(r.id, helpfulOverrides[r.id]?.count ?? r.helpfulCount ?? 0)}
+                        style={{
+                          marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '5px 14px', minHeight: '32px', borderRadius: '999px',
+                          border: '1px solid var(--border)',
+                          background: helpfulOverrides[r.id]?.voted ? 'rgba(255,107,0,0.08)' : 'transparent',
+                          color: helpfulOverrides[r.id]?.voted ? 'var(--accent)' : 'var(--muted)',
+                          fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
+                        Helpful{(helpfulOverrides[r.id]?.count ?? r.helpfulCount ?? 0) > 0 ? ` (${helpfulOverrides[r.id]?.count ?? r.helpfulCount})` : ''}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -1398,6 +1470,59 @@ export default function ProductPageClient() {
                     rows={4}
                     style={{ width: '100%', padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', fontFamily: 'Inter, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '12px' }}
                   />
+                  {/* Review photos (2026-07-29): up to 4, +-to-add strip --
+                      thumbnails with a corner remove, one + box, never a
+                      row of empty placeholders. */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
+                    {reviewImages.map((img, i) => (
+                      <div key={i} style={{ position: 'relative', width: '56px', height: '56px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button
+                          type="button"
+                          aria-label="Remove photo"
+                          onClick={() => setReviewImages(prev => prev.filter((_, x) => x !== i))}
+                          style={{ position: 'absolute', top: 1, right: 1, width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 11, lineHeight: 1, cursor: 'pointer' }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {reviewImages.length < 4 && (
+                      <button
+                        type="button"
+                        onClick={() => reviewFileRef.current?.click()}
+                        aria-label="Add photos to your review"
+                        style={{ width: '56px', height: '56px', borderRadius: '8px', border: '1.5px dashed var(--border)', background: 'transparent', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }}
+                      >
+                        +
+                      </button>
+                    )}
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Add photos (optional, up to 4)</span>
+                    <input
+                      ref={reviewFileRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const files = e.target.files
+                        if (files) {
+                          Array.from(files).slice(0, 4 - reviewImages.length).forEach(f => {
+                            if (!f.type.startsWith('image/')) return
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              if (typeof reader.result === 'string') {
+                                setReviewImages(prev => prev.length < 4 ? [...prev, reader.result as string] : prev)
+                              }
+                            }
+                            reader.readAsDataURL(f)
+                          })
+                        }
+                        e.target.value = ''
+                      }}
+                    />
+                  </div>
                   {reviewError && (
                     <p style={{ color: 'var(--red)', fontSize: '13px', margin: '0 0 12px' }}>{reviewError}</p>
                   )}

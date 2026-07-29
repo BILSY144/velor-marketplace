@@ -204,24 +204,63 @@ export default function ShippingSettingsPage() {
           </div>
         </div>
 
+        {/* Shipping-price choice (William, 2026-07-29: "the seller should
+            have an option to use our shipping or they set it up and it
+            shows on product page automatically" + a one-tap free-shipping
+            button). Mapping: Velor's pricing = blank (null), free = 0,
+            own rate = a number. Whatever the seller picks shows on their
+            listings instantly (the save purges the estimate cache). */}
         <div style={{ padding: '16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-          <label style={labelStyle}>International Flat Shipping Rate (£, recommended)</label>
-          <input style={{ ...inputStyle, maxWidth: '200px' }} type="number" min={0} max={500} step={0.5}
-            placeholder="e.g. 18.00"
-            value={form.internationalFlatRateGBP}
-            onChange={e => {
-              const raw = e.target.value
-              set('internationalFlatRateGBP', raw === '' ? '' : Math.min(Math.max(parseFloat(raw) || 0, 0), 500))
-            }}
-          />
+          <label style={labelStyle}>How should buyers see your shipping price?</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', margin: '10px 0 12px' }}>
+            {([
+              { key: 'velor', title: "Velor sets the price", desc: 'Live carrier rates where connected; our estimate elsewhere. Estimates can be high on some routes.' },
+              { key: 'free', title: 'Free shipping', desc: 'Buyers pay nothing for shipping — you build postage into your item prices and cover the sending cost.' },
+              { key: 'own', title: 'My own flat rate', desc: 'One price you choose, used whenever we have no live carrier rate for your location.' },
+            ] as const).map(opt => {
+              const current = form.internationalFlatRateGBP === '' ? 'velor' : Number(form.internationalFlatRateGBP) === 0 ? 'free' : 'own'
+              const active = current === opt.key
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    if (opt.key === 'velor') set('internationalFlatRateGBP', '')
+                    else if (opt.key === 'free') set('internationalFlatRateGBP', 0)
+                    else set('internationalFlatRateGBP', Number(form.internationalFlatRateGBP) > 0 ? form.internationalFlatRateGBP : 10)
+                  }}
+                  style={{
+                    textAlign: 'left', padding: '12px 14px', borderRadius: '10px', cursor: 'pointer',
+                    border: active ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    background: active ? 'rgba(255,107,0,0.06)' : 'var(--surface)',
+                    color: 'var(--text)',
+                  }}
+                >
+                  <span style={{ display: 'block', fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>
+                    {active ? '● ' : '○ '}{opt.title}
+                  </span>
+                  <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>{opt.desc}</span>
+                </button>
+              )
+            })}
+          </div>
+          {form.internationalFlatRateGBP !== '' && Number(form.internationalFlatRateGBP) > 0 && (
+            <div>
+              <label style={labelStyle}>Your international flat rate (£)</label>
+              <input style={{ ...inputStyle, maxWidth: '200px' }} type="number" min={0.5} max={500} step={0.5}
+                value={form.internationalFlatRateGBP}
+                onChange={e => {
+                  const raw = e.target.value
+                  set('internationalFlatRateGBP', raw === '' ? 0.5 : Math.min(Math.max(parseFloat(raw) || 0.5, 0.5), 500))
+                }}
+              />
+            </div>
+          )}
           <p style={{ color: 'var(--muted)', fontSize: '12px', margin: '10px 0 0', lineHeight: 1.6 }}>
-            Velor only has live carrier rates connected for a handful of countries (US, UK, Germany,
-            France, Spain, Canada, Australia). If you ship from anywhere else, buyers currently see a
-            &ldquo;contact seller for a quote&rdquo; message instead of a price at checkout, and can&apos;t buy
-            until that&apos;s resolved. Set a flat rate here and it&apos;s used automatically whenever we
-            can&apos;t calculate a live rate for your location — buyers see a real price immediately, you
-            get paid for shipping in full with every order. Leave blank only if you&apos;re fine with buyers
-            being unable to check out until you quote them manually.
+            Your choice shows on your listings immediately. When you provide the shipping —
+            free or your own rate — buyers pay exactly what you set, with no Velor fee added,
+            and your rate is paid to you in full with every order. Only when Velor sets the
+            price do buyers pay a small £1.20-per-item handling fee (paid by the buyer, never you).
           </p>
         </div>
 

@@ -344,13 +344,20 @@ export async function POST(request: NextRequest) {
 
       // Flat per-item admin fee, replacing the old 8% platform-default-rate-
       // only levy (2026-07-27, agreed with William after the DDP rate
-      // survey). Applied uniformly across all three shipping tiers above --
-      // seller-flat-rate, platform-default-rate, and the live-quote branch
-      // just above -- since shippingGBP is already normalised to GBP by the
-      // time we get here. Quantity-multiplied, not flat-per-order.
-      const ADMIN_FEE_PER_ITEM_GBP = 1.20
-      const itemCount = group.items.reduce((sum, i) => sum + (i.quantity || 1), 0)
-      shippingGBP += ADMIN_FEE_PER_ITEM_GBP * itemCount
+      // survey). Quantity-multiplied, not flat-per-order.
+      //
+      // SELLER-PROVIDED SHIPPING IS FEE-FREE (William, 2026-07-29: "if they
+      // provide the shipping, we do not charge the GBP1.20 admin fee") --
+      // when the seller set their own flat rate (including 0.00 free
+      // shipping) the buyer pays exactly the seller's price. The fee
+      // applies only where Velor arranges the price: live carrier quotes
+      // and the platform-default tier. app/api/shipping/rates's
+      // applyAdminFee skips the same tier -- keep both in sync.
+      if (shipEntry.rateId !== 'seller-flat-rate') {
+        const ADMIN_FEE_PER_ITEM_GBP = 1.20
+        const itemCount = group.items.reduce((sum, i) => sum + (i.quantity || 1), 0)
+        shippingGBP += ADMIN_FEE_PER_ITEM_GBP * itemCount
+      }
 
       // Duties/VAT recomputed entirely server-side via the same pure,
       // deterministic calculateLandedCost() that app/api/shipping/landed-cost

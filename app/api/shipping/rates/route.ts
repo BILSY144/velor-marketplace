@@ -59,6 +59,13 @@ const FALLBACK_QUOTE_RATE: Rate = {
 // 3 items in a seller's cart group = GBP3.60. Never applied to the
 // zero-cost FALLBACK_QUOTE_RATE ("Contact seller for shipping quote") --
 // isFallback is the signal used to skip it.
+//
+// SELLER-PROVIDED SHIPPING IS FEE-FREE (William, 2026-07-29: "if they
+// provide the shipping, we do not charge the GBP1.20 admin fee"): when a
+// seller sets their own flat rate -- including 0.00 free shipping -- the
+// buyer pays exactly the seller's price. The fee applies only where VELOR
+// arranges the price (live carrier quotes + the platform default tier).
+// The payment-intent route mirrors this rule -- keep both in sync.
 const ADMIN_FEE_PER_ITEM_GBP = 1.20
 
 async function applyAdminFee(rates: Rate[], itemCount: number): Promise<Rate[]> {
@@ -66,6 +73,7 @@ async function applyAdminFee(rates: Rate[], itemCount: number): Promise<Rate[]> 
   const feeGBP = ADMIN_FEE_PER_ITEM_GBP * itemCount
   return Promise.all(rates.map(async (rate) => {
     if (rate.isFallback) return rate
+    if (rate.rateId === 'seller-flat-rate') return rate
     const cur = (rate.currency || 'GBP').toUpperCase()
     const fee = cur === 'GBP' ? feeGBP : await convert(feeGBP, 'GBP', cur); const finalAmount = parseFloat(rate.amount) + fee
     return { ...rate, amount: finalAmount.toFixed(2), amountGBP: (cur === 'GBP' ? finalAmount : await convert(finalAmount, cur, 'GBP')).toFixed(2) }

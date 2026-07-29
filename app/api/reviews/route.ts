@@ -63,8 +63,21 @@ export async function POST(request: Request) {
     const limitError = await checkNewAccountReviewLimit(session.user.id, reviewer.createdAt)
     if (limitError) return NextResponse.json({ error: limitError }, { status: 429 })
   }
+  // Review photos (2026-07-29): buyer-supplied, capped at 4, stored in R2
+  // like every other image -- never base64 into Postgres (R2 migration
+  // rule). imagesToR2 falls back to the data URL on upload failure so a
+  // storage hiccup can never lose the review.
+  const rawImages = Array.isArray(body.images)
+    ? (body.images as unknown[]).filter((u): u is string => typeof u === 'string' && !!u).slice(0, 4)
+    : []
+  let storedImages: string[] = []
+  if (rawImages.length > 0) {
+    const { imagesToR2 } = await import('@/lib/r2')
+    storedImages = await imagesToR2(rawImages, `reviews/${productId}`)
+  }
+
   const review = await prisma.review.create({
-    data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '' }
+    data: { productId, userId: session.user.id, rating: Number(rating), comment: comment || '', images: storedImages }
   })
   try {
     const p = await prisma.product.findUnique({ where: { id: productId }, select: { sellerId: true } })

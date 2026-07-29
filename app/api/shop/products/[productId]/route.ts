@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { computeListingDiscount } from '@/lib/discount'
+import { maskPersonalName } from '@/lib/messageIdentity'
 
 export async function GET(
   _request: Request,
@@ -36,10 +37,14 @@ export async function GET(
       // no data. Now included and mapped below to the shape the PDP renders.
       variants: { orderBy: { createdAt: 'asc' } },
       reviews: {
-        orderBy: { createdAt: 'desc' },
+        // Most-helpful first (2026-07-29, Amazon-comparison item), newest
+        // as the tiebreak -- deterministic utility ordering, not an
+        // engagement algorithm.
+        orderBy: [{ votes: { _count: 'desc' } }, { createdAt: 'desc' }],
         take: 20,
         include: {
           user: { select: { name: true, image: true } },
+          _count: { select: { votes: true } },
         },
       },
       _count: { select: { reviews: true } },
@@ -114,6 +119,19 @@ export async function GET(
     // actually satisfied, since Prisma nests it under _count.reviews; fixed
     // here rather than silently left to render "undefined reviews").
     reviewCount: product._count.reviews,
+    // 2026-07-29: (a) reviewer names masked "First L." -- the standing
+    // buyer-privacy rule; this route previously leaked full sign-up names
+    // while GET /api/reviews masked them; (b) review photos + helpful-vote
+    // counts for the PDP (Amazon-comparison item).
+    reviews: product.reviews.map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment,
+      images: r.images,
+      createdAt: r.createdAt,
+      helpfulCount: r._count.votes,
+      user: { name: maskPersonalName(r.user.name), image: r.user.image },
+    })),
     // PDP option shape: display name from label (generic options) or
     // colour/size; price falls back to the base listing price when the
     // seller set no per-option override.

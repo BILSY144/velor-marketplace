@@ -60,6 +60,7 @@ model User {
   blocksMade        UserBlock[] @relation("BlocksMade")
   blocksReceived    UserBlock[] @relation("BlocksReceived")
   productQuestions  ProductQuestion[]
+  reviewVotes       ReviewVote[]
   setupToken            String?   @unique
   setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
@@ -664,9 +665,26 @@ model Review {
   userId    String
   rating    Int
   comment   String   @default("")
+  // Review photos (2026-07-29, Amazon-comparison item): buyer-supplied,
+  // stored in R2 like every other image (never base64 in Postgres).
+  images    String[] @default([])
   createdAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes     ReviewVote[]
+}
+
+// "Helpful" votes on reviews (2026-07-29): one per person per review, never
+// on your own review. Most-helpful reviews list first on the PDP.
+model ReviewVote {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
 }
 
 model ShipmentEvent {
