@@ -9,6 +9,7 @@ import { FounderMedal } from '@/components/FounderMedal'
 import ReportContentButton from '@/components/ReportContentButton'
 import FollowSellerButton from '@/components/FollowSellerButton'
 import SaveToCollectionButton from '@/components/SaveToCollectionButton'
+import ProductQnA from '@/components/ProductQnA'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 
 interface Variant {
@@ -1288,6 +1289,13 @@ export default function ProductPageClient() {
         </div>
 
         <div style={{ height: '24px' }} />
+
+        {/* Public Q&A (2026-07-29, Amazon-comparison item): buyers ask the
+            seller on the listing; answers are public. Hidden on the
+            preview-only showcase listing like its other interactive parts. */}
+        {!isPreviewOnly && (
+          <ProductQnA productId={productId} sellerName={product.seller?.storeName} />
+        )}
 
         {(product.reviews.length > 0 || session) && (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>

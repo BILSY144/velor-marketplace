@@ -22,7 +22,7 @@ export default function ReportContentButton({
   label = 'Report',
   style,
 }: {
-  contentType: 'LISTING' | 'REVIEW' | 'MESSAGE' | 'SELLER' | 'JOURNAL' | 'STREAM'
+  contentType: 'LISTING' | 'REVIEW' | 'MESSAGE' | 'SELLER' | 'JOURNAL' | 'STREAM' | 'QUESTION'
   contentId: string
   label?: string
   style?: React.CSSProperties

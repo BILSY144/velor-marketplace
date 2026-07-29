@@ -59,6 +59,7 @@ model User {
   collections       Collection[]
   blocksMade        UserBlock[] @relation("BlocksMade")
   blocksReceived    UserBlock[] @relation("BlocksReceived")
+  productQuestions  ProductQuestion[]
   setupToken            String?   @unique
   setupTokenExpiresAt   DateTime?
   createdAt         DateTime  @default(now())
@@ -323,6 +324,7 @@ model Product {
   reviews       Review[]
   collectionItems CollectionItem[]
   journalPosts  JournalPost[]
+  questions     ProductQuestion[]
   // Colour/size options for this listing (added 2026-07-27 so sellers no
   // longer have to create a separate listing per colour/size -- see
   // ProductVariant below). Empty for the vast majority of existing listings,
@@ -833,6 +835,28 @@ model UserBlock {
 
   @@unique([blockerId, blockedId])
   @@index([blockedId])
+}
+
+// ---------------------------------------------------------------------------
+// Public Q&A on listings (2026-07-29, from William's Amazon PDP comparison).
+// Buyers ask on the listing; ONLY the listing's own seller answers; only
+// answered questions are shown publicly (the asker also sees their own
+// pending ones). UGC safety per the signed OSA pack: shared content filter
+// on questions AND answers, report route (contentType QUESTION), caps.
+// ---------------------------------------------------------------------------
+
+model ProductQuestion {
+  id         String    @id @default(cuid())
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   String    @db.Text
+  answer     String?   @db.Text
+  answeredAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([productId, answeredAt])
 }
 
 // ---------------------------------------------------------------------------

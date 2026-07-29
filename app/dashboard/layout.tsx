@@ -246,6 +246,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: 'Fulfil',
       items: [
         { href: '/dashboard/orders', label: 'Orders', icon: ICONS.orders },
+        { href: '/dashboard/questions', label: 'Questions', icon: ICONS.support },
         { href: '/dashboard/returns', label: 'Returns', icon: ICONS.returns },
         { href: '/dashboard/disputes', label: 'Disputes', icon: ICONS.disputes },
         { href: '/dashboard/messages', label: 'Messages', icon: ICONS.messages },
