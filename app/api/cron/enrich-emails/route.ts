@@ -23,7 +23,11 @@ function pickBest(emails: string[], host: string): string | null {
   const rootHost = host.replace(/^www\./, '');
   const valid = emails.filter((e) => {
     if (/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(e)) return false;
-    if (e.includes('@sentry') || e.includes('.wixpress') || e.includes('example.') || e.includes('@shopify') || e.includes('godaddy')) return false;
+    const junk = ['sentry', 'ingest.', 'wixpress', 'example.', 'domain.com', 'shopify.com',
+      'myshopify.com', 'godaddy', 'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+      'mailer-daemon', 'postmaster@', 'abuse@', 'privacy@', 'dmca@', 'webmaster@',
+      'notifyboost', 'amazonses', 'cloudflare', 'etsy.com', 'ebay.', 'unsubscribe'];
+    if (junk.some((j) => e.includes(j))) return false;
     return true;
   });
   const dom = (e: string) => (e.split('@')[1] || '');

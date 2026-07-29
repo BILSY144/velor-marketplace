@@ -249,10 +249,28 @@ const BING_TARGETS = [
 ];
 // ââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
+// Junk-address gate (2026-07-30, William: no wasted emails, connect with the
+// right people). Machine, vendor and placeholder addresses never reach the
+// prospect table with an email set -- enrichment can still find a real one.
+const JUNK_EMAIL_PATTERNS = [
+  'noreply', 'no-reply', 'donotreply', 'do-not-reply', 'mailer-daemon',
+  'postmaster@', 'abuse@', 'privacy@', 'dmca@', 'webmaster@', 'unsubscribe',
+  'sentry', 'ingest.', 'wixpress', 'example.com', 'example.org', 'domain.com',
+  'notifyboost', 'amazonses', 'cloudflare', 'godaddy', 'shopify.com',
+  'myshopify.com', 'etsy.com', 'ebay.', 'yourdomain', 'sitemap',
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
+];
+function isJunkEmail(email: string): boolean {
+  const low = email.toLowerCase();
+  return JUNK_EMAIL_PATTERNS.some((p) => low.includes(p));
+}
+
 function extractEmail(text: string | null): string | null {
   if (!text) return null;
   const m = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-  return m ? m[0] : null;
+  if (!m) return null;
+  const e = m[0].toLowerCase();
+  return isJunkEmail(e) ? null : e;
 }
 
 function scoreEtsy(sales: number, reviews: number, listings: number): number {
@@ -634,6 +652,34 @@ const BRAVE_CRAFTS: Array<{ craft: string; category: string }> = [
   { craft: 'vietnamese rattan lantern artisan', category: 'Light, scent & self' },
   { craft: 'tunisian olive oil soap artisan', category: 'Light, scent & self' },
   { craft: 'greek olive oil soap artisan', category: 'Light, scent & self' },
+  // Western-world push (2026-07-30, William: massive outreach push,
+  // especially the western world -- UK/US/CA/EU/AU/NZ makers weighted heavily)
+  { craft: 'british studio pottery handmade', category: 'Ceramics & porcelain' },
+  { craft: 'cornish pottery studio handmade', category: 'Ceramics & porcelain' },
+  { craft: 'american ceramic artist studio shop', category: 'Ceramics & porcelain' },
+  { craft: 'canadian pottery studio handmade', category: 'Ceramics & porcelain' },
+  { craft: 'australian ceramic studio handmade', category: 'Ceramics & porcelain' },
+  { craft: 'irish pottery studio handmade', category: 'Ceramics & porcelain' },
+  { craft: 'french ceramic artisan studio', category: 'Ceramics & porcelain' },
+  { craft: 'dutch delft pottery artisan', category: 'Ceramics & porcelain' },
+  { craft: 'scottish harris tweed weaver', category: 'Rugs, cloth & thread' },
+  { craft: 'welsh wool blanket weaver mill', category: 'Rugs, cloth & thread' },
+  { craft: 'american quilt maker handmade', category: 'Rugs, cloth & thread' },
+  { craft: 'irish aran knitwear handmade', category: 'Rugs, cloth & thread' },
+  { craft: 'scandinavian handwoven textiles studio', category: 'Rugs, cloth & thread' },
+  { craft: 'new zealand wool weaver handmade', category: 'Rugs, cloth & thread' },
+  { craft: 'british silversmith jewellery studio', category: 'Adornment' },
+  { craft: 'american handmade jewelry silversmith studio', category: 'Adornment' },
+  { craft: 'australian handmade jewellery studio', category: 'Adornment' },
+  { craft: 'canadian goldsmith handmade studio', category: 'Adornment' },
+  { craft: 'italian murano glass jewellery artisan', category: 'Adornment' },
+  { craft: 'british candle maker handmade studio', category: 'Light, scent & self' },
+  { craft: 'french savon artisanal soap maker', category: 'Light, scent & self' },
+  { craft: 'american soap maker handmade studio', category: 'Light, scent & self' },
+  { craft: 'british stained glass artist studio', category: 'Light, scent & self' },
+  { craft: 'cornish sea salt artisan producer', category: 'Tea, coffee & pantry' },
+  { craft: 'scottish smokehouse artisan producer', category: 'Tea, coffee & pantry' },
+  { craft: 'italian artisan olive oil small producer', category: 'Tea, coffee & pantry' },
 ];
 
 // Four ways of framing each craft as a shop search. Framings are the OUTER
@@ -646,7 +692,7 @@ const BRAVE_FRAMINGS: Array<(craft: string) => string> = [
   (c) => `${c} workshop shop buy online`,
 ];
 
-const BRAVE_QUERIES_PER_RUN = 30;
+const BRAVE_QUERIES_PER_RUN = 45;
 
 // Multiplier targets (2026-07-15, William's global-reach directive): artisan
 // cooperatives, fair-trade organizations, and craft associations. Each one
@@ -688,7 +734,7 @@ function braveQueriesForRun(): Array<{ query: string; category: string; multipli
   // schedule), wrapping around when the matrix is exhausted. Deterministic
   // per slot: a mid-window retry of the same cron slot re-runs the same
   // queries rather than skipping a slice.
-  const slot = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+  const slot = Math.floor(Date.now() / (3 * 60 * 60 * 1000));
   const start = (slot * BRAVE_QUERIES_PER_RUN) % all.length;
   const window: Array<{ query: string; category: string; multiplier?: boolean }> = [];
   for (let i = 0; i < Math.min(BRAVE_QUERIES_PER_RUN, all.length); i++) {

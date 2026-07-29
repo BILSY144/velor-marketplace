@@ -11,6 +11,23 @@ const SELLER_FROM = 'Velor Seller Team <noreply@velorcommerce.store>';
 const FOLLOWUP1_DELAY_MS = 3 * 86_400_000;
 const FOLLOWUP2_DELAY_MS = 5 * 86_400_000;
 
+// Western-world priority (2026-07-30, William: massive outreach push,
+// especially the western world). Western prospects are picked first each
+// run; everyone else still follows, sorted by score.
+const WESTERN_COUNTRIES = new Set([
+  'gb', 'uk', 'united kingdom', 'great britain', 'england', 'scotland', 'wales', 'northern ireland',
+  'us', 'usa', 'united states', 'united states of america', 'america',
+  'ca', 'canada', 'au', 'australia', 'nz', 'new zealand', 'ie', 'ireland',
+  'de', 'germany', 'fr', 'france', 'it', 'italy', 'es', 'spain', 'pt', 'portugal',
+  'nl', 'netherlands', 'be', 'belgium', 'at', 'austria', 'ch', 'switzerland',
+  'se', 'sweden', 'dk', 'denmark', 'fi', 'finland', 'no', 'norway',
+  'pl', 'poland', 'gr', 'greece', 'cz', 'czech republic', 'is', 'iceland', 'lu', 'luxembourg',
+]);
+function isWesternCountry(country: string | null): boolean {
+  if (!country) return false;
+  return WESTERN_COUNTRIES.has(country.trim().toLowerCase());
+}
+
 type SellerTypeStr = 'individual' | 'brand' | 'multiplier';
 function safeSellerType(raw: string): SellerTypeStr {
   // 'multiplier' must survive: it routes the prospect to the English
@@ -73,11 +90,18 @@ export async function GET(req: NextRequest) {
   // /api/cron/qualify-prospects) -- a prospect must pass that check before it
   // is ever allowed to receive the first email. Unscreened (qualified: null)
   // and rejected (qualified: false) prospects are excluded, never guessed in.
-  const newProspects = await prisma.sellerProspect.findMany({
+  // Overfetch, boost western countries, then take the top MAX_PER_RUN.
+  // outreachLogs none guarantees these are 30 NEW people every push.
+  const newPool = await prisma.sellerProspect.findMany({
     where: { email: { not: null }, status: 'prospected', outreachLogs: { none: {} }, qualified: true },
     orderBy: { score: 'desc' },
-    take: MAX_PER_RUN,
+    take: MAX_PER_RUN * 4,
   });
+  const newProspects = newPool
+    .map((p) => ({ p, w: isWesternCountry(p.country) ? 1 : 0 }))
+    .sort((a, b) => (b.w - a.w) || ((b.p.score ?? 0) - (a.p.score ?? 0)))
+    .slice(0, MAX_PER_RUN)
+    .map((x) => x.p);
   for (const prospect of newProspects) {
     if (!prospect.email) continue;
     try {
