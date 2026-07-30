@@ -82,12 +82,12 @@ const P = {
 // the seller has no entries of their own; the first real entry replaces
 // them. Images are the thumbs cut from his design file.
 const EXAMPLE_ROWS = [
-  { img: '/community/journal/mj-1.jpg', title: 'Day 128 – A New Design, A New Beginning', status: 'PUBLISHED', date: '26 May 2026', views: '2.8K', likes: '412', comments: '92', clicks: '186', sales: '28', edited: '26 May 2026', editedAt: '07:45 AM' },
-  { img: '/community/journal/mj-2.jpg', title: 'Natural Dyes Bring Life to the Threads', status: 'PUBLISHED', date: '21 May 2026', views: '3.4K', likes: '512', comments: '113', clicks: '214', sales: '34', edited: '21 May 2026', editedAt: '09:15 AM' },
-  { img: '/community/journal/mj-3.jpg', title: 'Behind the Weave – My Daily Rituals', status: 'PUBLISHED', date: '15 May 2026', views: '4.9K', likes: '680', comments: '145', clicks: '268', sales: '51', edited: '15 May 2026', editedAt: '11:30 AM' },
-  { img: '/community/journal/mj-4.jpg', title: 'Weaving Colours of My Ancestors', status: 'SCHEDULED', date: '1 Jun 2026', dateAt: '08:00 AM', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '25 May 2026', editedAt: '04:20 PM' },
-  { img: '/community/journal/mj-5.jpg', title: 'Tools I Use Every Day in My Workshop', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '24 May 2026', editedAt: '10:10 AM' },
-  { img: '/community/journal/mj-6.jpg', title: 'A Visit to the Market in Cusco', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '22 May 2026', editedAt: '02:05 PM' },
+  { img: 'https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'Day 128 – A New Design, A New Beginning', status: 'PUBLISHED', date: '26 May 2026', views: '2.8K', likes: '412', comments: '92', clicks: '186', sales: '28', edited: '26 May 2026', editedAt: '07:45 AM' },
+  { img: 'https://images.pexels.com/photos/33539680/pexels-photo-33539680.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'Natural Dyes Bring Life to the Threads', status: 'PUBLISHED', date: '21 May 2026', views: '3.4K', likes: '512', comments: '113', clicks: '214', sales: '34', edited: '21 May 2026', editedAt: '09:15 AM' },
+  { img: 'https://images.pexels.com/photos/37966508/pexels-photo-37966508.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'Behind the Weave – My Daily Rituals', status: 'PUBLISHED', date: '15 May 2026', views: '4.9K', likes: '680', comments: '145', clicks: '268', sales: '51', edited: '15 May 2026', editedAt: '11:30 AM' },
+  { img: 'https://images.pexels.com/photos/37966505/pexels-photo-37966505.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'Weaving Colours of My Ancestors', status: 'SCHEDULED', date: '1 Jun 2026', dateAt: '08:00 AM', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '25 May 2026', editedAt: '04:20 PM' },
+  { img: 'https://images.pexels.com/photos/34189664/pexels-photo-34189664.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'Tools I Use Every Day in My Workshop', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '24 May 2026', editedAt: '10:10 AM' },
+  { img: 'https://images.pexels.com/photos/16963295/pexels-photo-16963295.jpeg?auto=compress&cs=tinysrgb&w=400', title: 'A Visit to the Market in Cusco', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '22 May 2026', editedAt: '02:05 PM' },
 ] as const
 
 export default function CreatorJournalsPage() {

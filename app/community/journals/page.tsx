@@ -7,7 +7,7 @@
  * Quispe "Day 128 -- A New Design, A New Beginning" journal entry. Every
  * image is extracted directly from his design file
  * (public/community/journal/*.jpg; the maker portrait reuses
- * public/community/passport.jpg from the hub design -- same person).
+ * publichttps://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240 from the hub design -- same person).
  * All copy, names and figures mirror the design 1:1 at William's explicit
  * instruction ("exactly the same so when seller starts, it replaces
  * placeholders") -- this showcase content is the placeholder set that real
@@ -88,31 +88,31 @@ export default function SellerJournalPage() {
   }
 
   const products = [
-    { img: '/community/journal/prod-1.jpg', name: 'Handwoven Table Runner', price: '£84', loves: '612' },
-    { img: '/community/journal/prod-2.jpg', name: 'Sacred Valley Cushion Cover', price: '£62', loves: '421' },
-    { img: '/community/journal/prod-3.jpg', name: 'Andean Wall Hanging', price: '£128', loves: '733' },
-    { img: '/community/journal/prod-4.jpg', name: 'Handwoven Shoulder Bag', price: '£92', loves: '389' },
+    { img: 'https://images.pexels.com/photos/33539680/pexels-photo-33539680.jpeg?auto=compress&cs=tinysrgb&w=500', name: 'Handwoven Table Runner', price: '£84', loves: '612' },
+    { img: 'https://images.pexels.com/photos/37966505/pexels-photo-37966505.jpeg?auto=compress&cs=tinysrgb&w=500', name: 'Sacred Valley Cushion Cover', price: '£62', loves: '421' },
+    { img: 'https://images.pexels.com/photos/5503299/pexels-photo-5503299.jpeg?auto=compress&cs=tinysrgb&w=500', name: 'Andean Wall Hanging', price: '£128', loves: '733' },
+    { img: 'https://images.pexels.com/photos/37966508/pexels-photo-37966508.jpeg?auto=compress&cs=tinysrgb&w=500', name: 'Handwoven Shoulder Bag', price: '£92', loves: '389' },
   ]
 
   const comments = [
-    { img: '/community/journal/cavatar-1.jpg', name: 'Emily R.', cc: 'CA', country: 'Canada', time: '2h ago', text: 'Your work is incredible Maria. The time, patience and love you put into each piece is so inspiring.', loves: '128' },
-    { img: '/community/journal/cavatar-2.jpg', name: 'Thomas L.', cc: 'US', country: 'United States', time: '4h ago', text: "I just received the table runner I ordered from you and it's even more beautiful in person. Thank you!", loves: '96' },
-    { img: '/community/journal/cavatar-3.jpg', name: 'Aiko S.', cc: 'JP', country: 'Japan', time: '6h ago', text: 'Your journals are my favourite. I learn so much from your process.', loves: '74' },
+    { img: 'https://images.pexels.com/photos/36157389/pexels-photo-36157389.jpeg?auto=compress&cs=tinysrgb&w=120', name: 'Emily R.', cc: 'CA', country: 'Canada', time: '2h ago', text: 'Your work is incredible Maria. The time, patience and love you put into each piece is so inspiring.', loves: '128' },
+    { img: 'https://images.pexels.com/photos/8330375/pexels-photo-8330375.jpeg?auto=compress&cs=tinysrgb&w=120', name: 'Thomas L.', cc: 'US', country: 'United States', time: '4h ago', text: "I just received the table runner I ordered from you and it's even more beautiful in person. Thank you!", loves: '96' },
+    { img: 'https://images.pexels.com/photos/36919208/pexels-photo-36919208.jpeg?auto=compress&cs=tinysrgb&w=120', name: 'Aiko S.', cc: 'JP', country: 'Japan', time: '6h ago', text: 'Your journals are my favourite. I learn so much from your process.', loves: '74' },
   ]
 
   const moreJournals = [
-    { img: '/community/journal/mj-1.jpg', day: 'Day 127', title: 'Natural Dyes Bring Life', loves: '2.2K' },
-    { img: '/community/journal/mj-2.jpg', day: 'Day 126', title: 'A Special Order From Japan', loves: '1.9K' },
-    { img: '/community/journal/mj-3.jpg', day: 'Day 125', title: 'Finishing The Details', loves: '2.1K' },
-    { img: '/community/journal/mj-4.jpg', day: 'Day 124', title: 'Preparing The Yarn', loves: '1.8K' },
-    { img: '/community/journal/mj-5.jpg', day: 'Day 123', title: 'A Visit To The Market', loves: '1.6K' },
-    { img: '/community/journal/mj-6.jpg', day: 'Day 122', title: 'New Ideas Blooming', loves: '1.7K' },
+    { img: 'https://images.pexels.com/photos/33539680/pexels-photo-33539680.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 127', title: 'Natural Dyes Bring Life', loves: '2.2K' },
+    { img: 'https://images.pexels.com/photos/27084601/pexels-photo-27084601.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 126', title: 'A Special Order From Japan', loves: '1.9K' },
+    { img: 'https://images.pexels.com/photos/34189664/pexels-photo-34189664.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 125', title: 'Finishing The Details', loves: '2.1K' },
+    { img: 'https://images.pexels.com/photos/35729525/pexels-photo-35729525.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 124', title: 'Preparing The Yarn', loves: '1.8K' },
+    { img: 'https://images.pexels.com/photos/16963295/pexels-photo-16963295.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 123', title: 'A Visit To The Market', loves: '1.6K' },
+    { img: 'https://images.pexels.com/photos/38429574/pexels-photo-38429574.jpeg?auto=compress&cs=tinysrgb&w=400', day: 'Day 122', title: 'New Ideas Blooming', loves: '1.7K' },
   ]
 
   const alsoLoved = [
-    { img: '/community/journal/pal-1.jpg', title: 'Day 124 - Natural Dyes Bring Life', loves: '2.1K' },
-    { img: '/community/journal/pal-2.jpg', title: 'Day 120 - Preparing The Wool', loves: '1.8K' },
-    { img: '/community/journal/pal-3.jpg', title: 'Day 115 - Inspiration From Nature', loves: '1.6K' },
+    { img: 'https://images.pexels.com/photos/33539680/pexels-photo-33539680.jpeg?auto=compress&cs=tinysrgb&w=200', title: 'Day 124 - Natural Dyes Bring Life', loves: '2.1K' },
+    { img: 'https://images.pexels.com/photos/37966505/pexels-photo-37966505.jpeg?auto=compress&cs=tinysrgb&w=200', title: 'Day 120 - Preparing The Wool', loves: '1.8K' },
+    { img: 'https://images.pexels.com/photos/34189664/pexels-photo-34189664.jpeg?auto=compress&cs=tinysrgb&w=200', title: 'Day 115 - Inspiration From Nature', loves: '1.6K' },
   ]
 
   const stats = [
@@ -157,7 +157,7 @@ export default function SellerJournalPage() {
               </p>
               <div className="jp-meta">
                 <span className="jp-meta-item">
-                  <img className="jp-meta-avatar" src="/community/passport.jpg" alt="Maria Quispe" />
+                  <img className="jp-meta-avatar" src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
                   <span>
                     <span className="jp-meta-strong">Maria Quispe<Verified size={13} /></span>
                     <span className="jp-meta-sub">Peru &middot; Textile Weaver</span>
@@ -180,7 +180,7 @@ export default function SellerJournalPage() {
               </div>
             </div>
             <div className="jp-hero-media">
-              <img src="/community/journal/hero.jpg" alt="Maria Quispe weaving at her loom" loading="eager" />
+              <img src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Maria Quispe weaving at her loom" loading="eager" />
             </div>
           </div>
 
@@ -193,7 +193,7 @@ export default function SellerJournalPage() {
               <Ico d={P.share} size={15} /> {shared ? 'Link copied' : 'Share'}
             </button>
             <span className="jp-loved">
-              <img src="/community/journal/loved.jpg" alt="" aria-hidden="true" />
+              <img src="https://images.pexels.com/photos/28351286/pexels-photo-28351286.jpeg?auto=compress&cs=tinysrgb&w=120" alt="" aria-hidden="true" />
               <span>Loved by 2.8K people</span>
             </span>
           </div>
@@ -220,11 +220,11 @@ export default function SellerJournalPage() {
               <span className="jp-showless">Show less</span>
             </div>
             <div className="jp-gallery">
-              <img className="jp-gal-main" src="/community/journal/gal-main.jpg" alt="Naturally dyed yarns" loading="lazy" />
+              <img className="jp-gal-main" src="https://images.pexels.com/photos/33539680/pexels-photo-33539680.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Naturally dyed yarns" loading="lazy" />
               <div className="jp-gal-thumbs">
-                <img src="/community/journal/thumb-1.jpg" alt="Weaving in progress" loading="lazy" />
-                <img src="/community/journal/thumb-2.jpg" alt="Finished textile detail" loading="lazy" />
-                <img src="/community/journal/thumb-3.jpg" alt="The Sacred Valley" loading="lazy" />
+                <img src="https://images.pexels.com/photos/37966508/pexels-photo-37966508.jpeg?auto=compress&cs=tinysrgb&w=300" alt="Weaving in progress" loading="lazy" />
+                <img src="https://images.pexels.com/photos/37966505/pexels-photo-37966505.jpeg?auto=compress&cs=tinysrgb&w=300" alt="Finished textile detail" loading="lazy" />
+                <img src="https://images.pexels.com/photos/35729525/pexels-photo-35729525.jpeg?auto=compress&cs=tinysrgb&w=300" alt="The Sacred Valley" loading="lazy" />
               </div>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function SellerJournalPage() {
           {/* maker card */}
           <div className="jp-card">
             <div className="jp-maker">
-              <img className="jp-maker-avatar" src="/community/passport.jpg" alt="Maria Quispe" />
+              <img className="jp-maker-avatar" src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
               <div>
                 <div className="jp-maker-name">Maria Quispe<Verified size={14} /></div>
                 <div className="jp-maker-craft">Textile Weaver</div>
@@ -352,7 +352,7 @@ export default function SellerJournalPage() {
           <div className="jp-card">
             <h3 className="jp-sidetitle">Today&rsquo;s Workshop</h3>
             <Link href="/live" className="jp-live" onClick={(e) => e.stopPropagation()}>
-              <img src="/community/journal/live.jpg" alt="Maria live in her studio" loading="lazy" />
+              <img src="https://images.pexels.com/photos/10377676/pexels-photo-10377676.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Maria live in her studio" loading="lazy" />
             </Link>
             <div className="jp-live-title">Weaving a New Pattern</div>
             <p className="jp-note">Maria is live right now in her studio.</p>
@@ -401,8 +401,14 @@ export default function SellerJournalPage() {
               <Link href="/community/collections" className="jp-viewall">View all collections</Link>
             </div>
             <div className="jp-colls">
-              <Link href="/community/collections" className="jp-coll"><img src="/community/journal/coll-1.jpg" alt="Sacred Valley Collection, 12 items" loading="lazy" /></Link>
-              <Link href="/community/collections" className="jp-coll"><img src="/community/journal/coll-2.jpg" alt="Natural Dye Collection, 8 items" loading="lazy" /></Link>
+              <Link href="/community/collections" className="jp-coll" style={{ position: 'relative', display: 'block' }}>
+                <img src="https://images.pexels.com/photos/35729525/pexels-photo-35729525.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Sacred Valley Collection, 12 items" loading="lazy" />
+                <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '18px 10px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', color: '#fff', fontSize: 12, fontWeight: 600 }}>Sacred Valley Collection <span style={{ opacity: 0.75, fontWeight: 400 }}>· 12 items</span></span>
+              </Link>
+              <Link href="/community/collections" className="jp-coll" style={{ position: 'relative', display: 'block' }}>
+                <img src="https://images.pexels.com/photos/5503299/pexels-photo-5503299.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Natural Dye Collection, 8 items" loading="lazy" />
+                <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '18px 10px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', color: '#fff', fontSize: 12, fontWeight: 600 }}>Natural Dye Collection <span style={{ opacity: 0.75, fontWeight: 400 }}>· 8 items</span></span>
+              </Link>
             </div>
           </div>
 
