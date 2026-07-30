@@ -38,14 +38,14 @@ interface JournalPost {
 const card: React.CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',
-  borderRadius: '14px',
+  borderRadius: 0,
   padding: '24px',
 }
 
 const input: React.CSSProperties = {
   width: '100%',
   padding: '11px 13px',
-  borderRadius: '10px',
+  borderRadius: 0,
   border: '1px solid var(--border)',
   background: 'var(--surface-2)',
   color: 'var(--text)',
@@ -246,7 +246,7 @@ function JournalComposer() {
         <>
           <form ref={formRef} onSubmit={publish} style={{ ...card, marginBottom: '30px' }}>
             {editingId && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, padding: '8px 12px', borderRadius: 10, background: 'var(--surface-2)', fontSize: 13 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, padding: '8px 12px', borderRadius: 0, background: 'var(--surface-2)', fontSize: 13 }}>
                 <span style={{ fontWeight: 700, color: 'var(--accent)' }}>Editing an entry</span>
                 <button type="button" onClick={resetForm} style={{ background: 'none', border: 'none', color: 'var(--muted)', textDecoration: 'underline', cursor: 'pointer', fontSize: 12.5 }}>
                   Cancel edit
@@ -276,14 +276,14 @@ function JournalComposer() {
                 never a row of empty placeholders. */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
               {images.map((img, i) => (
-                <div key={i} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                <div key={i} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <button
                     type="button"
                     aria-label="Remove photo"
                     onClick={() => setImages(prev => prev.filter((_, x) => x !== i))}
-                    style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 12, lineHeight: 1, cursor: 'pointer' }}
+                    style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: 0, border: 'none', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 12, lineHeight: 1, cursor: 'pointer' }}
                   >
                     ×
                   </button>
@@ -294,7 +294,7 @@ function JournalComposer() {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   aria-label="Add photos"
-                  style={{ width: '72px', height: '72px', borderRadius: '10px', border: '1.5px dashed var(--border)', background: 'transparent', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer' }}
+                  style={{ width: '72px', height: '72px', borderRadius: 0, border: '1.5px dashed var(--border)', background: 'transparent', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer' }}
                 >
                   +
                 </button>
@@ -374,7 +374,7 @@ function JournalComposer() {
                         disabled={full}
                         style={{
                           padding: '7px 14px',
-                          borderRadius: 999,
+                          borderRadius: 0,
                           border: `1.5px solid ${on ? 'var(--accent)' : 'var(--border)'}`,
                           background: on ? 'var(--accent)' : 'transparent',
                           color: on ? '#fff' : 'var(--text)',
@@ -424,7 +424,7 @@ function JournalComposer() {
                     onClick={() => setPublishMode(mode)}
                     style={{
                       padding: '8px 16px',
-                      borderRadius: 999,
+                      borderRadius: 0,
                       border: `1.5px solid ${publishMode === mode ? 'var(--accent)' : 'var(--border)'}`,
                       background: publishMode === mode ? 'var(--accent)' : 'transparent',
                       color: publishMode === mode ? '#fff' : 'var(--text)',
@@ -455,7 +455,7 @@ function JournalComposer() {
             <button
               type="submit"
               disabled={posting || !body.trim()}
-              style={{ minHeight: '44px', padding: '0 28px', borderRadius: '999px', border: 'none', background: 'var(--accent)', color: '#fff', fontSize: '14.5px', fontWeight: 700, cursor: posting || !body.trim() ? 'not-allowed' : 'pointer', opacity: posting || !body.trim() ? 0.6 : 1 }}
+              style={{ minHeight: '44px', padding: '0 28px', borderRadius: 0, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: '14.5px', fontWeight: 700, cursor: posting || !body.trim() ? 'not-allowed' : 'pointer', opacity: posting || !body.trim() ? 0.6 : 1 }}
             >
               {posting
                 ? 'Saving…'
