@@ -913,6 +913,14 @@ model JournalPost {
   // sells" -- process post -> piece for sale).
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // Journal-page build-out (William's Makers' Circle design, 2026-07-30):
+  // optional story sections matching the public journal page's tabs, and
+  // up to four shoppable listings per entry ("Shop products from this
+  // journal"). All additive; productId above stays as the primary link.
+  makingProcess String?  @db.Text
+  notesTips     String?  @db.Text
+  behindScenes  String?  @db.Text
+  productIds    String[] @default([])
   // PUBLISHED | HIDDEN (HIDDEN = taken down by moderation, kept for audit)
   status    String   @default("PUBLISHED")
   createdAt DateTime @default(now())
