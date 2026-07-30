@@ -163,6 +163,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // are newest-first feeds that genuinely change often, unlike the
     // static monthly pages below.
     { url: `${base}/workshop`, changeFrequency: 'daily', priority: 0.6 },
+    // /drops added 2026-07-30 by the standing SEO agent. Real, live route
+    // (commit 26671523, "Drops page redesigned: a market square," 2026-07-29)
+    // with its own real generateMetadata already in place (title/description/
+    // canonical/OG -- see app/drops/layout.tsx, added the same session, not
+    // this cycle) and a prominent internal link in GlobalHeader's main nav,
+    // desktop + mobile (commit 6c338319, "Drops nav links... in the main
+    // header"). Verified not auth-gated: middleware.ts's protected-route
+    // matcher does not cover /drops, and app/drops/page.tsx is a plain async
+    // server component (no 'use client', no session check) that renders real
+    // content -- the current drop's live items -- for any visitor, signed in
+    // or not. Missing from this sitemap until now; same gap class as
+    // /workshop (2026-07-29) and /safety (2026-07-29) before it. changeFrequency
+    // 'weekly' reflects the page's own real cadence (one drop cycle per week,
+    // per DROP_LIVE_HOURS in lib/drops.ts), distinct from /workshop's/live's
+    // daily-updating feed.
+    { url: `${base}/drops`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
     // /mission added 2026-07-23 (commit dbab69cc) -- a static, real-content
     // page (mission/values/seller-guidelines) with its own generateMetadata
