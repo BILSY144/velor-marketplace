@@ -2,14 +2,55 @@
 
 // The living per-seller journal page in William's journal-page design.
 // Rendered by /community/journals/[sellerId] with the seller's REAL
-// published entries -- the layout the showcase page demonstrates, minus
-// every placeholder. Sections a maker hasn't written yet show honest
-// awaiting-content slots; figures are genuine and start small.
+// published entries -- the layout the showcase page (/community/journals)
+// demonstrates, minus every placeholder. Sections a maker hasn't written
+// yet show honest awaiting-content slots; figures are genuine and start
+// small.
+//
+// 2026-07-30: William re-sent the design with "exactly the same design,
+// pixel for pixel exact dimentions" -- this file was rebuilt section by
+// section against that design (and the static showcase page's own JSX,
+// which is an already-approved 1:1 replication of the same PNG) so this
+// REAL page carries the same structure, spacing and classes (all shared
+// via ./jpStyles). Every number and word on this page stays real, per the
+// project's absolute no-fabricated-data rule -- where the design shows
+// something Velor has no honest data source for, this file either
+// substitutes the closest real equivalent (documented inline) or shows an
+// honest "hasn't happened yet" state, never an invented figure:
+//   - "Featured Journal" chip -> the entry's real category (or a plain
+//     fallback) instead of a static label.
+//   - Engagement row's "Loved by N people" avatar stack -> omitted (no
+//     real per-person avatar data behind it); the like count is already
+//     shown in the engagement stats immediately to its left.
+//   - Per-product "loves" count -> real WishlistItem count for that
+//     product, not a fabricated figure.
+//   - Comments -> real, published JournalComment rows with masked buyer
+//     names ("First L."), same privacy rule as reviews.
+//   - Sidebar "Rating / Followers / Journals / Sales / Response / Years"
+//     stat grid -> Rating/Followers/Journals/Sales/Years are all real;
+//     "Response rate" has no tracked data anywhere on Velor, so this
+//     slot is a real "Listings" count instead.
+//   - "Today's Workshop" live card -> shows the seller's real LIVE stream
+//     if one is running, otherwise an honest "not live right now" state.
+//   - "People Also Loved" -> no cross-journal recommendation engine
+//     exists, so this card is retitled "More From The Circle" and shows
+//     other makers' real recent journal entries instead.
+//   - "Buyer Love" testimonial -> a real 5-star (or best available)
+//     review with real written text, or an honest empty state.
+//   - "Maria's Collections" -> Velor has no seller-curated public
+//     collections feature at all (Collections are private buyer
+//     wishlists, per the social-layer DPIA), so this card is omitted
+//     entirely rather than showing a feature that doesn't exist.
 
 import { useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { jpCss } from './jpStyles'
 import { countryToCode } from '@/lib/payoutRail'
+import { buyerLabel } from '@/lib/specialities'
+
+interface CommentEntry { id: string; body: string; createdAt: string; name: string }
 
 interface JournalEntry {
   id: string
@@ -26,6 +67,7 @@ interface JournalEntry {
   productIds: string[]
   likes: number
   comments: number
+  commentList: CommentEntry[]
 }
 
 interface SellerInfo {
@@ -37,11 +79,18 @@ interface SellerInfo {
   foundingBadge: boolean
   currency: string
   memberSince: number
+  specialities: string[]
   followers: number
   listings: number
+  avgRating: number | null
+  reviewCount: number
+  totalSales: number
 }
 
-interface TaggedProduct { id: string; title: string; price: number; image: string | null }
+interface TaggedProduct { id: string; title: string; price: number; image: string | null; loves: number }
+interface BuyerLove { text: string; rating: number; name: string }
+interface LiveInfo { title: string; roomName: string; watching: number }
+interface OtherMakerPost { id: string; sellerId: string; storeName: string; title: string; image: string | null; likes: number }
 
 const P = {
   heart: 'M12 21C7 16.5 3.5 13.2 3.5 9.6A4.6 4.6 0 0 1 8.1 5c1.6 0 3 .8 3.9 2a4.9 4.9 0 0 1 3.9-2 4.6 4.6 0 0 1 4.6 4.6c0 3.6-3.5 6.9-8.5 11.4z',
@@ -54,11 +103,17 @@ const P = {
   laurel: 'M12 4v9M12 13c-3 0-5 2-5 5 3 0 5-2 5-5zM12 13c3 0 5 2 5 5-3 0-5-2-5-5z',
   back: 'M19 12H5M12 19l-7-7 7-7',
   doc: 'M6 2h9l4 4v16H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM14 2v5h5M9 12h7M9 16h7',
+  play: 'M8 5v14l11-7z',
+  star: 'M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7L5.8 21l1.6-7L2 9.3l7.1-.7L12 2z',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-6 8-6s8 2 8 6',
+  quote: 'M10 8c-3 0-5 2-5 5v3h5v-5H7c0-1.5 1.2-3 3-3V8zM19 8c-3 0-5 2-5 5v3h5v-5h-3c0-1.5 1.2-3 3-3V8z',
+  globe2: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18',
+  mic: 'M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v5',
 }
 
-function Ico({ d, size = 12 }: { d: string; size?: number }) {
+function Ico({ d, size = 12, fill = false }: { d: string; size?: number; fill?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={fill ? 0 : 1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={d} />
     </svg>
   )
@@ -89,6 +144,14 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  if (diff < 3600000) return `${Math.max(1, Math.floor(diff / 60000))}m ago`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+  if (diff < 7 * 86400000) return `${Math.floor(diff / 86400000)}d ago`
+  return fmtDate(iso)
+}
+
 function money(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amount)
@@ -97,20 +160,99 @@ function money(amount: number, currency: string): string {
   }
 }
 
+/* Follow toggle, styled to the exact jp-followbtn/jp-msgbtn pair the design
+   uses in the sidebar maker card and the "Never Miss A Story" card -- kept
+   local (rather than the shared FollowSellerButton) so it can carry those
+   exact classes/dimensions instead of its own independent styling. Same
+   /api/social/follows contract: renders nothing while the feature is off
+   or state is unknown, so it never shows a dead button. */
+function JournalFollowButton({ sellerId, wide = false }: { sellerId: string; wide?: boolean }) {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [following, setFollowing] = useState<boolean | null>(null)
+  const [enabled, setEnabled] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const r = await fetch('/api/social/follows')
+        if (r.status === 403) return
+        if (r.status === 401) { if (!cancelled) { setEnabled(true); setFollowing(false) } ; return }
+        if (!r.ok) return
+        const data = await r.json()
+        if (!cancelled) {
+          setEnabled(true)
+          setFollowing(Array.isArray(data.follows) && data.follows.some((f: { sellerId: string }) => f.sellerId === sellerId))
+        }
+      } catch { /* stay hidden */ }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [sellerId])
+
+  if (!enabled || following === null) return null
+
+  async function toggle() {
+    if (busy) return
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`); return }
+    setBusy(true)
+    const was = following
+    setFollowing(!was)
+    try {
+      const r = await fetch('/api/social/follows', {
+        method: was ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerId }),
+      })
+      if (!r.ok) setFollowing(was)
+    } catch { setFollowing(was) } finally { setBusy(false) }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggle()}
+      disabled={busy}
+      aria-pressed={!!following}
+      className={`jp-followbtn ${wide ? 'jp-followbtn-wide' : ''}`}
+      style={{ font: 'inherit', cursor: busy ? 'wait' : 'pointer' }}
+    >
+      {following ? 'Following' : 'Follow'}
+    </button>
+  )
+}
+
 /* eslint-disable @next/next/no-img-element */
 
 type Tab = 'story' | 'making' | 'photos' | 'notes' | 'behind'
 
-export default function SellerJournalView({ seller, posts, products }: { seller: SellerInfo; posts: JournalEntry[]; products: TaggedProduct[] }) {
+const STORY_TRUNCATE = 420
+
+export default function SellerJournalView({
+  seller, posts, products, buyerLove, live, otherMakerPosts,
+}: {
+  seller: SellerInfo
+  posts: JournalEntry[]
+  products: TaggedProduct[]
+  buyerLove: BuyerLove | null
+  live: LiveInfo | null
+  otherMakerPosts: OtherMakerPost[]
+}) {
   const [currentId, setCurrentId] = useState(posts[0].id)
   const [tab, setTab] = useState<Tab>('story')
   const [shared, setShared] = useState(false)
+  const [storyExpanded, setStoryExpanded] = useState(false)
   const viewed = useRef<Set<string>>(new Set())
 
   const entry = posts.find(p => p.id === currentId) ?? posts[0]
   const entryTitle = entry.title || entry.body.slice(0, 60)
   const flag = flagFor(seller.country)
-  const totalLikes = posts.reduce((s, p) => s + p.likes, 0)
+  const craft = seller.specialities[0] ? buyerLabel(seller.specialities[0]) : 'Independent Maker'
+
+  useEffect(() => { setStoryExpanded(false) }, [entry.id])
 
   // Real view counting -- once per entry per visit.
   useEffect(() => {
@@ -164,20 +306,38 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
     ? <img className="jp-meta-avatar" src={seller.storeLogo} alt={seller.storeName} />
     : <span className="jp-meta-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FF8A2B, #FF6B00)', color: '#fff', fontWeight: 700 }}>{seller.storeName.charAt(0).toUpperCase()}</span>
 
+  const storyFull = tab === 'story'
+  const storyText = entry.body
+  const storyIsLong = storyText.length > STORY_TRUNCATE
+  const storyShown = storyFull && storyIsLong && !storyExpanded ? `${storyText.slice(0, STORY_TRUNCATE)}…` : storyText
+
+  const stats: { l: string; v: string; star: boolean }[] = [
+    { l: 'Rating', v: seller.avgRating !== null ? seller.avgRating.toFixed(1) : 'New', star: true },
+    { l: 'Followers', v: fmtK(seller.followers), star: false },
+    { l: 'Journals', v: fmtK(posts.length), star: false },
+    { l: 'Sales', v: fmtK(seller.totalSales), star: false },
+    { l: 'Listings', v: fmtK(seller.listings), star: false },
+    { l: 'On Velor', v: `${Math.max(0, new Date().getFullYear() - seller.memberSince)} Yr${new Date().getFullYear() - seller.memberSince === 1 ? '' : 's'}`, star: false },
+  ]
+
   return (
     <main className="jp-page">
       <style>{jpCss}</style>
 
       <nav className="jp-crumbs" aria-label="Breadcrumb">
-        <Link href="/">Home</Link> <span aria-hidden="true">/</span>{' '}
-        <Link href="/community">The Makers&rsquo; Circle</Link> <span aria-hidden="true">/</span>{' '}
+        <Link href="/community">The Makers&rsquo; Circle</Link>
+        <span aria-hidden="true">&rsaquo;</span>
+        <Link href="/community/journals">Journals</Link>
+        <span aria-hidden="true">&rsaquo;</span>
+        <Link href={`/seller/${seller.id}`}>{seller.storeName}</Link>
+        <span aria-hidden="true">&rsaquo;</span>
         <span className="jp-crumb-here">{entryTitle}</span>
       </nav>
 
       <div className="jp-grid">
         <div className="jp-main">
           <Link href="/community" className="jp-back">
-            <Ico d={P.back} size={13} /> Back to The Makers&rsquo; Circle
+            <Ico d={P.back} size={12} /> Back to Journals
           </Link>
 
           {/* hero */}
@@ -191,7 +351,7 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
                   {avatar}
                   <span>
                     <span className="jp-meta-strong">{seller.storeName}<Verified size={13} /></span>
-                    <span className="jp-meta-sub">{seller.country || 'Velor maker'}</span>
+                    <span className="jp-meta-sub">{seller.country || 'Velor maker'} &middot; {craft}</span>
                   </span>
                 </span>
                 <span className="jp-meta-item">
@@ -212,10 +372,28 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
                 )}
               </div>
             </div>
-            <div className="jp-hero-media">
+            <div className="jp-hero-media" style={{ position: 'relative' }}>
               {gallery[0]
                 ? <img src={gallery[0]} alt={entryTitle} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', minHeight: 220, background: 'var(--mc-card2)', color: 'var(--mc-muted)' }}><Ico d={P.doc} size={26} /></div>}
+              {entry.videoUrl && (
+                <a
+                  href={entry.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Watch the process video"
+                  style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <span style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(20,17,12,0.72)', border: '1.5px solid rgba(255,255,255,0.55)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ico d={P.play} size={22} fill />
+                  </span>
+                </a>
+              )}
+              {gallery.length > 0 && (
+                <span style={{ position: 'absolute', right: 12, bottom: 12, padding: '4px 10px', borderRadius: 999, background: 'rgba(20,17,12,0.72)', color: '#fff', fontSize: 11.5, fontWeight: 700 }}>
+                  1/{gallery.length}
+                </span>
+              )}
             </div>
           </div>
 
@@ -248,7 +426,23 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
 
           <div className="jp-story">
             <div className="jp-story-text">
-              {tab === 'story' && <p style={{ whiteSpace: 'pre-wrap' }}>{entry.body}</p>}
+              {tab === 'story' && (
+                <>
+                  <p style={{ whiteSpace: 'pre-wrap' }}>{storyShown}</p>
+                  {storyIsLong && (
+                    <span
+                      className="jp-showless"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setStoryExpanded(v => !v)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStoryExpanded(v => !v) }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {storyExpanded ? 'Show less' : 'Show more'}
+                    </span>
+                  )}
+                </>
+              )}
               {tab === 'making' && (entry.makingProcess ? <p style={{ whiteSpace: 'pre-wrap' }}>{entry.makingProcess}</p> : awaiting('the making process'))}
               {tab === 'notes' && (entry.notesTips ? <p style={{ whiteSpace: 'pre-wrap' }}>{entry.notesTips}</p> : awaiting('notes and tips'))}
               {tab === 'behind' && (entry.behindScenes ? <p style={{ whiteSpace: 'pre-wrap' }}>{entry.behindScenes}</p> : awaiting('a behind-the-scenes look'))}
@@ -289,6 +483,7 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
                     <span className="jp-prod-name">{pr.title}</span>
                     <span className="jp-prod-price">{money(pr.price, seller.currency)}</span>
                     <span className="jp-prod-foot">
+                      <span className="jp-prod-loves"><Ico d={P.heart} size={11} /> {fmtK(pr.loves)}</span>
                       <span className="jp-prod-view">View product <span aria-hidden="true">&rarr;</span></span>
                     </span>
                   </Link>
@@ -297,12 +492,48 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
             )}
           </section>
 
+          {/* comments -- real, published */}
+          <section className="jp-section" id="comments">
+            <div className="jp-sechead">
+              <h2 className="jp-sectitle">Comments ({fmtK(entry.comments)})</h2>
+              <span className="jp-sort">Sort by: <span className="jp-sort-val">Newest</span> <span aria-hidden="true">&#9662;</span></span>
+            </div>
+            <Link href="/auth/join" className="jp-cinput">
+              <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
+              <span className="jp-cinput-ph">Write a comment...</span>
+              <span className="jp-cinput-send" aria-hidden="true"><Ico d={P.send} size={12} /></span>
+            </Link>
+            {entry.commentList.length === 0 ? (
+              <p className="jp-note" style={{ margin: 0 }}>No comments yet &mdash; be the first to tell {seller.storeName} what you think.</p>
+            ) : (
+              <>
+                <div className="jp-comments">
+                  {entry.commentList.map((c) => (
+                    <div key={c.id} className="jp-comment">
+                      <span className="jp-comment-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mc-card2)', color: 'var(--mc-gold)' }} aria-hidden="true"><Ico d={P.user} size={13} /></span>
+                      <div className="jp-comment-body">
+                        <div className="jp-comment-top">
+                          <span className="jp-comment-name">{c.name}</span>
+                          <span className="jp-comment-time">{timeAgo(c.createdAt)}</span>
+                        </div>
+                        <p className="jp-comment-text">{c.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {entry.comments > entry.commentList.length && (
+                  <a href="#comments" className="jp-viewall">View all comments <span aria-hidden="true">&rarr;</span></a>
+                )}
+              </>
+            )}
+          </section>
+
           {/* more entries */}
           {posts.length > 1 && (
             <section className="jp-section">
               <div className="jp-sechead">
                 <h2 className="jp-sectitle">More Journal Entries From {seller.storeName}</h2>
-                <Link href="/workshop" className="jp-viewall">View the Workshop feed <span aria-hidden="true">&rarr;</span></Link>
+                <Link href="/workshop" className="jp-viewall">View all journals <span aria-hidden="true">&rarr;</span></Link>
               </div>
               <div className="jp-mj-rail">
                 {posts.filter(p => p.id !== entry.id).slice(0, 6).map(p => (
@@ -330,29 +561,28 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
         <aside className="jp-side">
           <div className="jp-card">
             <div className="jp-maker">
-              {seller.storeLogo
-                ? <img className="jp-maker-avatar" src={seller.storeLogo} alt={seller.storeName} />
-                : <span className="jp-maker-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FF8A2B, #FF6B00)', color: '#fff', fontWeight: 700, fontSize: 22 }}>{seller.storeName.charAt(0).toUpperCase()}</span>}
-              <span>
+              <Link href={`/seller/${seller.id}`} aria-label={`Visit ${seller.storeName}'s storefront`}>
+                {seller.storeLogo
+                  ? <img className="jp-maker-avatar" src={seller.storeLogo} alt={seller.storeName} />
+                  : <span className="jp-maker-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FF8A2B, #FF6B00)', color: '#fff', fontWeight: 700, fontSize: 22 }}>{seller.storeName.charAt(0).toUpperCase()}</span>}
+              </Link>
+              <div>
                 <div className="jp-maker-name">{seller.storeName}<Verified size={14} /></div>
+                <div className="jp-maker-craft">{craft}</div>
                 <div className="jp-maker-loc">{flag && <span aria-hidden="true">{flag} </span>}{seller.country || 'Velor maker'}</div>
-              </span>
+              </div>
             </div>
             <div className="jp-maker-actions">
-              <Link href={`/seller/${seller.id}`} className="jp-followbtn">Visit Store</Link>
+              <JournalFollowButton sellerId={seller.id} />
               <Link href="/messages" className="jp-msgbtn" aria-label={`Message ${seller.storeName}`}><Ico d={P.send} size={14} /></Link>
             </div>
             <div className="jp-stats">
-              {[
-                { l: 'Journal entries', v: fmtK(posts.length) },
-                { l: 'Journal likes', v: fmtK(totalLikes) },
-                { l: 'Followers', v: fmtK(seller.followers) },
-                { l: 'Listings', v: fmtK(seller.listings) },
-                { l: 'Member since', v: String(seller.memberSince) },
-                { l: 'Country', v: seller.country || '—' },
-              ].map(s => (
+              {stats.map((s) => (
                 <div key={s.l} className="jp-stat">
-                  <span className="jp-stat-num">{s.v}</span>
+                  <span className="jp-stat-num">
+                    {s.v}
+                    {s.star && <span className="jp-stat-star"><Ico d={P.star} size={11} fill /></span>}
+                  </span>
                   <span className="jp-stat-label">{s.l}</span>
                 </div>
               ))}
@@ -374,15 +604,95 @@ export default function SellerJournalView({ seller, posts, products }: { seller:
             <p className="jp-note" style={{ margin: 0 }}>
               {seller.description || `${seller.storeName} is telling their story one entry at a time.`}
             </p>
-            <Link href={`/seller/${seller.id}`} className="jp-viewall" style={{ display: 'inline-block', marginTop: 10 }}>Visit the storefront <span aria-hidden="true">&rarr;</span></Link>
+            <Link href={`/seller/${seller.id}`} className="jp-viewall">Visit the storefront <span aria-hidden="true">&rarr;</span></Link>
           </div>
 
+          {/* Today's Workshop -- real live status, or an honest not-live state */}
+          <div className="jp-card">
+            <h3 className="jp-sidetitle">Today&rsquo;s Workshop</h3>
+            {live ? (
+              <>
+                <div className="jp-live-title">{live.title}</div>
+                <p className="jp-note">{seller.storeName} is live right now in their studio.</p>
+                <div className="jp-live-foot">
+                  <span className="jp-live-watching"><Ico d={P.heart} size={12} /> {fmtK(live.watching)} watching</span>
+                  <Link href={`/live/${live.roomName}`} className="jp-goldbtn">Watch Live</Link>
+                </div>
+              </>
+            ) : (
+              <p className="jp-note" style={{ margin: 0 }}>{seller.storeName} isn&rsquo;t live right now &mdash; <Link href="/live" className="jp-viewall" style={{ marginTop: 0 }}>see who&rsquo;s live on Velor</Link>.</p>
+            )}
+          </div>
+
+          {/* More From The Circle -- real substitute for "People Also Loved" */}
+          <div className="jp-card">
+            <h3 className="jp-sidetitle">More From The Circle</h3>
+            {otherMakerPosts.length === 0 ? (
+              <p className="jp-note" style={{ margin: 0 }}>No other journals from The Makers&rsquo; Circle yet &mdash; you&rsquo;re seeing one of the very first.</p>
+            ) : (
+              <div className="jp-pal">
+                {otherMakerPosts.map((a) => (
+                  <Link key={a.id} href={`/community/journals/${a.sellerId}`} className="jp-pal-row">
+                    {a.image
+                      ? <img src={a.image} alt="" aria-hidden="true" loading="lazy" />
+                      : <span style={{ width: 48, height: 48, borderRadius: 9, background: 'var(--mc-card2)', flexShrink: 0 }} aria-hidden="true" />}
+                    <span className="jp-pal-text">
+                      <span className="jp-pal-title">{a.storeName} &mdash; {a.title}</span>
+                      <span className="jp-prod-loves"><Ico d={P.heart} size={10} /> {fmtK(a.likes)}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Buyer Love -- a real review, or an honest empty state */}
+          <div className="jp-card">
+            <h3 className="jp-sidetitle">Buyer Love</h3>
+            {buyerLove ? (
+              <>
+                <div className="jp-quote-ico" aria-hidden="true"><Ico d={P.quote} size={18} fill /></div>
+                <p className="jp-quote">&ldquo;{buyerLove.text}&rdquo;</p>
+                <div className="jp-quote-by">&mdash; {buyerLove.name}</div>
+              </>
+            ) : (
+              <p className="jp-note" style={{ margin: 0 }}>No buyer reviews have arrived for {seller.storeName} yet &mdash; the first one will be featured here.</p>
+            )}
+          </div>
+
+          {/* never miss a story */}
           <div className="jp-card">
             <h3 className="jp-sidetitle">Never Miss A Story</h3>
-            <p className="jp-note">Follow {seller.storeName} from their storefront and new journal entries ring your bell.</p>
-            <Link href={`/seller/${seller.id}`} className="jp-goldbtn" style={{ display: 'inline-flex' }}>Follow on the storefront</Link>
+            <p className="jp-note">Follow {seller.storeName} to get notified when they share new journals, go live and add new products.</p>
+            <Link href="/auth/join" className="jp-email" aria-label={`Create an account to follow ${seller.storeName}`}>
+              <span>Enter your email</span>
+            </Link>
+            <div className="jp-nms-actions">
+              <JournalFollowButton sellerId={seller.id} wide />
+              <Link href={`/seller/${seller.id}`} className="jp-msgbtn" aria-label={`Visit ${seller.storeName}'s storefront`}><Ico d={P.heart} size={14} /></Link>
+            </div>
           </div>
         </aside>
+      </div>
+
+      {/* trust strip -- standing platform facts, not seller-specific data */}
+      <div className="jp-trust">
+        {(
+          [
+            { t: 'Real People, Real Stories', s: 'Every maker has a story worth sharing', i: 'user' },
+            { t: '190 Countries Connected', s: 'A global community of independent makers', i: 'globe2' },
+            { t: 'Live Interaction', s: 'Watch, ask & shop live with makers', i: 'mic' },
+            { t: 'Preserve Culture', s: 'Keeping traditions alive for generations', i: 'laurel' },
+          ] as { t: string; s: string; i: keyof typeof P }[]
+        ).map((item) => (
+          <div key={item.t} className="jp-trust-item">
+            <span className="jp-trust-ico" aria-hidden="true"><Ico d={P[item.i]} size={15} /></span>
+            <div>
+              <div className="jp-trust-title">{item.t}</div>
+              <div className="jp-trust-sub">{item.s}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   )
