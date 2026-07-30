@@ -239,7 +239,7 @@ export default function CommunityPage() {
             {featured.map((c) => (
               <article key={c.key} className="mc-fcard">
                 <div className="mc-fcard-media">
-                  <img src={c.img} alt={c.name} loading="lazy" />
+                  <div className="mc-ph"><Ico d={PATHS.camera} size={22} /></div>
                 </div>
                 <div className="mc-fcard-body">
                   <h3 className="mc-fcard-name">
@@ -276,7 +276,7 @@ export default function CommunityPage() {
                 <div className="mc-journal-viewed"><Ico d={PATHS.eye} size={12} /> Viewed in 17 countries</div>
               </div>
               <div className="mc-journal-media">
-                <img src="/community/journal.jpg" alt="Creator journal video" loading="lazy" />
+                <div className="mc-ph mc-ph-fill"><Ico d={PATHS.play} size={26} /></div>
                 <Link href="/community/journals" className="mc-arrow mc-arrow-l" aria-label="Previous journal" onClick={(e) => e.stopPropagation()}>&lsaquo;</Link>
                 <Link href="/community/journals" className="mc-arrow mc-arrow-r" aria-label="Next journal" onClick={(e) => e.stopPropagation()}>&rsaquo;</Link>
               </div>
@@ -328,7 +328,7 @@ export default function CommunityPage() {
               {videos.map((v) => (
                 <Link key={v.title} href="/community/videos" className="mc-vcard" onClick={(e) => e.stopPropagation()}>
                   <div className="mc-vthumb">
-                    <img src={v.img} alt={v.title} loading="lazy" />
+                    <div className="mc-ph"><Ico d={PATHS.play} size={18} /></div>
                   </div>
                   <div className="mc-vcard-meta">
                     <div className="mc-vcard-title">{v.title}</div>
@@ -344,10 +344,10 @@ export default function CommunityPage() {
             <div className="mc-live">
               <div className="mc-live-left">
                 <div className="mc-live-frame">
-                  <img src="/community/live.jpg" alt="Live shopping stream" loading="lazy" />
+                  <div className="mc-ph"><Ico d={PATHS.play} size={26} /></div>
                 </div>
                 <div className="mc-live-productbar">
-                  <img className="mc-live-thumb" src="/community/vase.jpg" alt="" aria-hidden="true" />
+                  <span className="mc-live-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.vase} size={16} /></span>
                   <div className="mc-live-pmeta">
                     <div className="mc-live-pname">Handmade Ceramic Vase</div>
                     <div className="mc-vcard-sub">By Arjun &ndash; India</div>
@@ -362,7 +362,7 @@ export default function CommunityPage() {
                 <div className="mc-chat-body">
                   {chat.map((m) => (
                     <div key={m.name} className="mc-chat-msg">
-                      <img className="mc-chat-avatar" src={m.img} alt="" aria-hidden="true" />
+                      <span className="mc-chat-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={12} /></span>
                       <div>
                         <div className="mc-chat-name">{m.name}</div>
                         <div className="mc-chat-text">{m.msg}</div>
@@ -406,7 +406,7 @@ export default function CommunityPage() {
                 </div>
                 {panelRows.map((r) => (
                   <Link key={r.label} href={r.href} className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
-                    <img className="mc-panel-thumb" src={r.img} alt="" aria-hidden="true" />
+                    <span className="mc-panel-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.grid} size={13} /></span>
                     <span className="mc-panel-text">
                       <span className="mc-panel-label">{r.label}</span>
                       <span className="mc-panel-sub">{r.sub}</span>
@@ -423,7 +423,7 @@ export default function CommunityPage() {
             <div className="mc-coll-grid">
               {collections.map((c) => (
                 <Link key={c.name} href="/account/collections" className="mc-coll-tile" onClick={(e) => e.stopPropagation()}>
-                  <img src={c.img} alt={c.name} loading="lazy" />
+                  <span className="mc-coll-ph mc-ph" aria-hidden="true"><Ico d={PATHS.grid} size={18} /></span>
                   <span className="mc-coll-name">{c.name}</span>
                   <span className="mc-coll-by">{c.items}<br />{c.by}</span>
                 </Link>
@@ -454,7 +454,7 @@ export default function CommunityPage() {
               </div>
               <div className="mc-challenge-winner">
                 <div className="mc-challenge-label">Last Month Winner</div>
-                <img className="mc-winner-avatar" src="/community/winner.jpg" alt="Abdul Karim" loading="lazy" />
+                <span className="mc-winner-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={20} /></span>
                 <div className="mc-winner-name">Abdul Karim</div>
                 <div className="mc-winner-country"><span aria-hidden="true">{flagFor('MA')}</span> Morocco</div>
                 <div className="mc-laurel"><Ico d={PATHS.laurel} size={14} /> Artisan of the Month <Ico d={PATHS.laurel} size={14} /></div>
@@ -467,7 +467,7 @@ export default function CommunityPage() {
             <div className="mc-lessons">
               {lessons.map((l) => (
                 <Link key={l.title} href="/community/learning" className="mc-lesson" onClick={(e) => e.stopPropagation()}>
-                  <img className="mc-lesson-thumb" src={l.img} alt="" aria-hidden="true" loading="lazy" />
+                  <span className="mc-lesson-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.play} size={12} /></span>
                   <span className="mc-lesson-title">{l.title}</span>
                   <span className="mc-lesson-time">{l.t}</span>
                 </Link>
@@ -504,7 +504,7 @@ export default function CommunityPage() {
             <SectionHead title="Maker Passport" href="/community/passport" icon="passport" />
             <div className="mc-passport">
               <div className="mc-passport-id">
-                <img className="mc-passport-avatar" src="/community/passport.jpg" alt="Maria Quispe" loading="lazy" />
+                <span className="mc-passport-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={26} /></span>
                 <div>
                   <div className="mc-passport-name">Maria Quispe<Verified /></div>
                   <div className="mc-passport-craft">
@@ -820,4 +820,13 @@ html[data-theme='light'] .mc-live-productbar { background: var(--surface-2); }
 .mc-trust-ico { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1.3px solid var(--mc-gold); color: var(--mc-gold); flex-shrink: 0; }
 .mc-trust-title { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--mc-text); }
 .mc-trust-sub { font-size: 12px; color: var(--mc-muted); }
+
+/* awaiting-content media slots (placeholder images removed per William
+   2026-07-30 -- only the hero collage, story banner and globe keep photos;
+   these slots fill with real maker content as sellers join) */
+.mc-ph { display: flex; align-items: center; justify-content: center; background: var(--mc-card2); color: rgba(212,175,55,0.5); }
+.mc-fcard-media .mc-ph, .mc-vthumb .mc-ph, .mc-live-frame .mc-ph { width: 100%; height: 100%; }
+.mc-ph-fill { position: absolute; inset: 0; }
+.mc-coll-ph { width: 100%; aspect-ratio: 99 / 79; }
+.mc-ph-circle { display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--mc-gold); color: var(--mc-gold); border-radius: 50%; background: var(--mc-card2); }
 `
