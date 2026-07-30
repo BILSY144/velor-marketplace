@@ -256,11 +256,6 @@ export default function CommunityPageClient({
   ]
 
   const topCountry = topCountries[0] ?? null
-  // Once a real maker is spotlighted, "view full passport" should go to
-  // their real page -- there's no dedicated passport-listing feature built
-  // yet, so the seller's own real journal/storefront page is the honest
-  // destination instead of the still-placeholder /community/passport route.
-  const passportHref = passport ? `/seller/${passport.sellerId}` : '/community/passport'
 
   return (
     <main className="mc-page">
@@ -647,10 +642,13 @@ export default function CommunityPageClient({
 
         {/* ============ MAKER PASSPORT + STORY BANNER ============ */}
         <div className="mc-row2">
-          <SectionBox href={passportHref}>
-            <SectionHead title="Maker Passport" href={passportHref} icon="passport" />
+          <SectionBox href="/community/passport">
+            <SectionHead title="Maker Passport" href="/community/passport" icon="passport" />
             {passport ? (
               <div className="mc-passport">
+                <p className="mc-note" style={{ marginBottom: 10 }}>
+                  Automatically ranked by community following, not chosen by Velor &mdash; see every maker&rsquo;s passport.
+                </p>
                 <div className="mc-passport-id">
                   {passport.storeLogo ? (
                     <img className="mc-passport-avatar" src={passport.storeLogo} alt={passport.name} loading="lazy" />

@@ -107,16 +107,6 @@ const SECTIONS: Record<string, SectionDef> = {
       'Follow the countries you love and see their newest makers, pieces and journals first. Today every country has its own shopping channel -- following arrives with this page.',
     links: [{ label: 'Browse country channels', href: '/shop' }],
   },
-  passport: {
-    title: 'Maker passport',
-    kicker: 'A record of real work',
-    description:
-      'Every verified maker earns a Velor passport: orders completed, followers, journal entries, years preserving their craft. Founding sellers carry the founding stamp for life. The passport page is being designed now.',
-    links: [
-      { label: 'Meet our sellers', href: '/shop' },
-      { label: 'Earn your own passport', href: '/apply' },
-    ],
-  },
 }
 
 export default function CommunitySectionPage() {

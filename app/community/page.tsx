@@ -33,6 +33,16 @@
 //    products: { some: { status: 'APPROVED' } }, matching the same
 //    real-activity gate already used correctly in
 //    app/api/sellers/featured/route.ts.
+//  - 2026-07-30 (William: "make a real passport directory page. i dont
+//    want it to be seen as favouritism"): Maker Passport used to spotlight
+//    exactly one seller with no page behind it -- "View all" just routed
+//    to that one seller's own page, so every other qualifying maker was
+//    invisible. Added a real directory at app/community/passport/page.tsx
+//    listing every qualifying seller, ranked purely by follower count --
+//    the same automatic criterion the hub spotlight already used, now
+//    visible and explained in the UI as automatic, not editorial. Also
+//    fixed the same journal-video-only undercount bug in the passport
+//    "Videos" stat that Workshop Videos had (root-caused the same day).
 //
 // Community Challenge and Live Shopping still have no backing model/feature
 // (no contest, submission, voting, or live-chat table) and stay the
@@ -411,9 +421,14 @@ export default async function CommunityPage() {
 
   let passport: MakerPassport | null = null
   if (topSeller) {
-    const videoCount = await prisma.journalPost.count({
-      where: { sellerId: topSeller.id, videoUrl: { not: null } },
-    })
+    // Same "Videos" undercount bug as Workshop Videos had: a seller's video
+    // can live on a journal post OR a product listing (Product.videoUrl) --
+    // count both real sources, not just journal posts.
+    const [journalVideoCount, productVideoCount] = await Promise.all([
+      prisma.journalPost.count({ where: { sellerId: topSeller.id, videoUrl: { not: null } } }),
+      prisma.product.count({ where: { sellerId: topSeller.id, videoUrl: { not: null }, status: 'APPROVED' } }),
+    ])
+    const videoCount = journalVideoCount + productVideoCount
     passport = {
       sellerId: topSeller.id,
       name: topSeller.storeName,
