@@ -113,9 +113,15 @@ export function hasAllThemes(tier: string | undefined, unlocked: boolean | undef
   return tier === 'PRO' || tier === 'ENTERPRISE' || unlocked === true
 }
 
-// A custom store logo is bundled with a paid design: Pro/Enterprise, or the one-time
-// Starter unlock. Open to everyone while PREVIEW_OPEN is on so the owner can test it.
-export function canBrandLogo(tier: string | undefined, unlocked: boolean | undefined): boolean {
-  if (PREVIEW_OPEN) return true
-  return hasAllThemes(tier, unlocked)
+// A custom store logo is bundled with a paid design (Pro/Enterprise, or the
+// one-time Starter unlock) for storefront BRANDING purposes -- but this same
+// field (Seller.storeLogo) doubles as the seller's personal avatar on their
+// Creator Journal pages (see SellerJournalView.tsx). William, 2026-07-30:
+// "every seller should have the ability to upload a photo for their
+// journals" -- so unlike theme selection, logo upload is never paywalled and
+// does NOT depend on PREVIEW_OPEN. If storefront branding is ever split from
+// the journal avatar (a dedicated Seller.avatar field), this permanent
+// open access should move with the avatar half, not the branding half.
+export function canBrandLogo(_tier: string | undefined, _unlocked: boolean | undefined): boolean {
+  return true
 }
