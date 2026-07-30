@@ -32,6 +32,7 @@ interface JournalPost {
   notesTips: string | null
   behindScenes: string | null
   productIds: string[]
+  product?: { id: string } | null
   _count: { likes: number; comments: number }
 }
 
@@ -168,6 +169,7 @@ export default function CreatorJournalsPage() {
         notesTips: p.notesTips,
         behindScenes: p.behindScenes,
         productIds: p.productIds,
+        productId: p.product?.id,
         category: p.category,
         status,
         scheduledAt: status === 'SCHEDULED' ? p.scheduledAt : null,
