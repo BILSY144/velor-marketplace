@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import GlobalHeader from './GlobalHeader'
 import GlobalFooter from './GlobalFooter'
-import CountryOriginStrip from './CountryOriginStrip'
 import VelorAssistant from './VelorAssistant'
 import LanguageTranslator from './LanguageTranslator'
 
@@ -37,10 +36,12 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   return (
     <>
       {showChrome && <GlobalHeader />}
-      {/* Shop-by-origin flag strip sits directly under the header on every
-          public page. Do not remove: it is the buyer's entry point into
-          browsing by country of origin. */}
-      {showChrome && <CountryOriginStrip />}
+      {/* The shop-by-origin flag strip was RETIRED here by William
+          (2026-07-30, with the new header live): "lets remove the flags as
+          the search bar does that job already... and origins achieves that
+          too". Country browsing now happens via header search, the mega
+          menu's Origins column, and /shop. components/CountryOriginStrip.tsx
+          is kept unmounted in case he ever wants the strip back. */}
       {children}
       {showChrome && <GlobalFooter />}
       {/* Velor AI assistant on every public (buyer + prospective-seller) page.

@@ -462,7 +462,7 @@ export default function GlobalHeader() {
                   gap: 8,
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
-                  borderRadius: 999,
+                  borderRadius: 0,
                   padding: '9px 16px',
                 }}
               >
@@ -504,7 +504,7 @@ export default function GlobalHeader() {
                     background: 'var(--accent)',
                     color: '#160a00',
                     border: 'none',
-                    borderRadius: 999,
+                    borderRadius: 0,
                     padding: '5px 14px',
                     fontSize: 13,
                     fontWeight: 700,

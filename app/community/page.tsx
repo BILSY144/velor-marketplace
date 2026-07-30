@@ -682,7 +682,7 @@ html[data-theme='light'] .mc-fcard { background: var(--surface); box-shadow: var
 .mc-dot-on { background: var(--mc-gold); opacity: 1; }
 
 /* ask */
-.mc-ask-search { display: flex; align-items: center; gap: 10px; background: var(--mc-card2); border-radius: 999px; padding: 11px 18px; color: var(--mc-muted); font-size: 13.5px; margin-bottom: 12px; }
+.mc-ask-search { display: flex; align-items: center; gap: 10px; background: var(--mc-card2); border-radius: 0; padding: 11px 18px; color: var(--mc-muted); font-size: 13.5px; margin-bottom: 12px; }
 .mc-ask-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .mc-ask-row { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 10px; padding: 9px 13px; color: var(--mc-text); font-size: 13.5px; }
 .mc-ask-row:hover { background: rgba(212,175,55,0.12); }
