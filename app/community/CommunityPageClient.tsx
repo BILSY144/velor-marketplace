@@ -7,15 +7,25 @@
  * verbatim: "take everything out of my design and replicate it exactly the
  * same non negoatiable"). Every image on this page is extracted directly
  * from his design file (public/community/*.jpg + community-globe.jpg); all
- * copy, names, figures and layout mirror the design 1:1 EXCEPT the three
- * sections below marked "real data" -- William, 2026-08-01, confirmed
- * swapping "Featured Today", the Creator Journals preview, and the Ask The
- * Maker preview to live data now that real sellers/journals/questions
- * exist. Everything else (Workshop Videos, Live Shopping, Around the
- * World, Buyer's Collections, Community Challenge, Learning Centre, Follow
- * Countries, Maker Passport) stays the design's own placeholder content,
- * kept at his explicit instruction until each of those has real
- * infrastructure behind it.
+ * copy, names, figures and layout mirror the design 1:1 EXCEPT the sections
+ * below now driven by real data:
+ *
+ *  - 2026-08-01: Featured Today, Creator Journals preview, Ask The Maker
+ *    preview.
+ *  - 2026-08-02: Around the World, Workshop Videos, Follow Countries,
+ *    Maker Passport -- all real, all with honest empty states. Learning
+ *    Centre shows real YouTube videos of outside craftspeople, explicitly
+ *    labelled as guest content (not Velor sellers), as a bridge until
+ *    makers upload their own.
+ *
+ * Live Shopping and Community Challenge stay the design's own placeholder
+ * content -- no real-time chat or contest/voting model exists yet. Buyer's
+ * Collections ALSO stays a placeholder, deliberately: a real Collection
+ * model exists, but docs/osa/dpia-velor-social.md (the signed data
+ * protection assessment) scopes collections as having "no public browsing
+ * surface at launch" to avoid over-exposing buyer activity -- turning this
+ * into a public feed needs William's explicit sign-off, not just a data
+ * swap.
  *
  * Every section box is clickable and routes to /community/<section>
  * (placeholders in app/community/[section]/page.tsx until each section's
@@ -57,6 +67,51 @@ export interface AskRow {
   q: string
   n: number
   href: string
+}
+
+export interface WorldStats {
+  countries: number
+  makers: number
+  liveNow: number
+  products: number
+  journalEntries: number
+}
+
+export interface CountryRow {
+  name: string
+  cc: string | null
+  count: number
+}
+
+export interface WorkshopVideo {
+  id: string
+  title: string
+  image: string | null
+  sellerName: string
+  country: string
+  href: string
+}
+
+export interface GuestLesson {
+  href: string
+  thumb: string
+  title: string
+  country: string
+}
+
+export interface MakerPassport {
+  sellerId: string
+  name: string
+  storeLogo: string | null
+  country: string
+  cc: string | null
+  founding: boolean
+  badge: string
+  memberSince: string
+  orders: number
+  followers: number
+  videos: number
+  journalEntries: number
 }
 
 /* ---------- helpers ---------- */
@@ -153,45 +208,37 @@ function SectionBox({ href, children, className }: { href: string; children: Rea
 
 /* eslint-disable @next/next/no-img-element */
 
+const BADGE_LABEL: Record<string, string> = {
+  NEW: 'New Seller',
+  ESTABLISHED: 'Established',
+  TRUSTED: 'Trusted',
+  TOP_RATED: 'Top Rated',
+}
+
 export default function CommunityPageClient({
   featuredCards,
   journalPreview,
   askRows,
+  worldStats,
+  topCountries,
+  workshopVideos,
+  guestLessons,
+  passport,
 }: {
   featuredCards: FeaturedCard[]
   journalPreview: JournalPreview | null
   askRows: AskRow[]
+  worldStats: WorldStats
+  topCountries: CountryRow[]
+  workshopVideos: WorkshopVideo[]
+  guestLessons: GuestLesson[]
+  passport: MakerPassport | null
 }) {
-  const crafts: { label: string; icon: keyof typeof PATHS }[] = [
-    { label: 'All', icon: 'grid' },
-    { label: 'Textile', icon: 'weave' },
-    { label: 'Pottery', icon: 'vase' },
-    { label: 'Wood', icon: 'wood' },
-    { label: 'Metal', icon: 'metal' },
-    { label: 'Tea', icon: 'tea' },
-    { label: 'Embroidery', icon: 'needle' },
-    { label: 'Leather', icon: 'leather' },
-  ]
-
-  const videos = [
-    { img: pexelsUrl(33539680, null, 500), title: 'Natural Dyeing Process', country: 'Peru' },
-    { img: pexelsUrl(19015377, null, 500), title: 'Hand Building Pottery', country: 'Italy' },
-    { img: pexelsUrl(31004832, null, 500), title: 'Forging a Knife', country: 'Japan' },
-    { img: pexelsUrl(33653647, 'free-photo-of-colorful-traditional-turkish-kilim-pattern', 500), title: 'Handwoven Carpet', country: 'Turkey' },
-  ]
-
   const chat = [
     { img: pexelsUrl(36157389, null, 120), name: 'Emma', msg: 'How long does it take to make one?' },
     { img: pexelsUrl(8330375, null, 120), name: 'Rafael', msg: 'Do you ship to Europe?' },
     { img: pexelsUrl(36919208, null, 120), name: 'Julia', msg: "It's beautiful!" },
     { img: pexelsUrl(28351286, null, 120), name: 'Mia', msg: 'Can I order this in blue?' },
-  ]
-
-  const panelRows = [
-    { img: pexelsUrl(37966508, null, 120), label: 'Live Sellers', sub: '23 live now', href: '/live' },
-    { img: pexelsUrl(16963295, null, 120), label: 'Latest Videos', sub: 'New this week', href: '/community/videos' },
-    { img: pexelsUrl(34189664, null, 120), label: 'Latest Journals', sub: '18 new entries', href: '/community/journals' },
-    { img: pexelsUrl(37966505, null, 120), label: 'Newest Products', sub: '56 new items', href: '/shop' },
   ]
 
   const collections = [
@@ -201,29 +248,12 @@ export default function CommunityPageClient({
     { img: pexelsUrl(6831008, null, 500), name: 'Himalayan Crafts', items: '15 items', by: 'by James' },
   ]
 
-  const lessons = [
-    { img: pexelsUrl(37357057, null, 200), title: 'How Moroccan Leather is Dyed', t: '10:24' },
-    { img: pexelsUrl(18198515, null, 200), title: 'How Japanese Ceramics are Fired', t: '13:18' },
-    { img: pexelsUrl(35729525, null, 200), title: 'Why Peruvian Alpaca Wool is Special', t: '9:47' },
-    { img: pexelsUrl(30982437, null, 200), title: 'History of Turkish Carpets', t: '11:02' },
-  ]
-
-  const followCountries = [
-    { cc: 'JP', name: 'Japan', state: 'Following' },
-    { cc: 'IN', name: 'India', state: 'Follow' },
-    { cc: 'GR', name: 'Greece', state: 'Follow' },
-    { cc: 'MX', name: 'Mexico', state: 'Following' },
-    { cc: 'MA', name: 'Morocco', state: 'Follow' },
-  ]
-
-  const passportStats = [
-    { n: '1,245', l: 'Orders Completed' },
-    { n: '3.8K', l: 'Followers' },
-    { n: '87', l: 'Videos' },
-    { n: '128', l: 'Journal Entries' },
-    { n: '28', l: 'Years Preserving Craft' },
-    { n: 'Gold', l: 'Verification Level' },
-  ]
+  const topCountry = topCountries[0] ?? null
+  // Once a real maker is spotlighted, "view full passport" should go to
+  // their real page -- there's no dedicated passport-listing feature built
+  // yet, so the seller's own real journal/storefront page is the honest
+  // destination instead of the still-placeholder /community/passport route.
+  const passportHref = passport ? `/seller/${passport.sellerId}` : '/community/passport'
 
   return (
     <main className="mc-page">
@@ -354,27 +384,27 @@ export default function CommunityPageClient({
         <div className="mc-row2">
           <SectionBox href="/community/videos">
             <SectionHead title="Workshop Videos" href="/community/videos" icon="camera" />
-            <div className="mc-crafts" aria-hidden="true">
-              {crafts.map((c, i) => (
-                <span key={c.label} className={`mc-craft ${i === 0 ? 'mc-craft-on' : ''}`}>
-                  <Ico d={PATHS[c.icon]} size={15} />
-                  <span>{c.label}</span>
-                </span>
-              ))}
-            </div>
-            <div className="mc-video-grid">
-              {videos.map((v) => (
-                <Link key={v.title} href="/community/videos" className="mc-vcard" onClick={(e) => e.stopPropagation()}>
-                  <div className="mc-vthumb">
-                    <img src={v.img} alt={v.title} loading="lazy" />
-                  </div>
-                  <div className="mc-vcard-meta">
-                    <div className="mc-vcard-title">{v.title}</div>
-                    <div className="mc-vcard-sub">{v.country}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {workshopVideos.length === 0 ? (
+              <p className="mc-note">No workshop videos yet &mdash; makers add these from their journal.</p>
+            ) : (
+              <div className="mc-video-grid">
+                {workshopVideos.map((v) => (
+                  <Link key={v.id} href={v.href} className="mc-vcard" onClick={(e) => e.stopPropagation()}>
+                    <div className="mc-vthumb">
+                      {v.image ? (
+                        <img src={v.image} alt={v.title} loading="lazy" />
+                      ) : (
+                        <div className="mc-ph" aria-hidden="true"><Ico d={PATHS.play} size={18} /></div>
+                      )}
+                    </div>
+                    <div className="mc-vcard-meta">
+                      <div className="mc-vcard-title">{v.title}</div>
+                      <div className="mc-vcard-sub">{v.sellerName} &middot; {v.country}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </SectionBox>
 
           <SectionBox href="/community/live-shopping">
@@ -424,10 +454,10 @@ export default function CommunityPageClient({
             <div className="mc-world">
               <div className="mc-world-left">
                 <div className="mc-world-stats">
-                  <div className="mc-stat"><span className="mc-stat-num">190</span><span className="mc-stat-label">Countries</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">12.4K</span><span className="mc-stat-label">Makers</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">2.8K</span><span className="mc-stat-label">Live Now</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">328</span><span className="mc-stat-label">Products</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">{worldStats.countries}</span><span className="mc-stat-label">Countries</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">{worldStats.makers}</span><span className="mc-stat-label">Makers</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">{worldStats.liveNow}</span><span className="mc-stat-label">Live Now</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">{worldStats.products}</span><span className="mc-stat-label">Products</span></div>
                 </div>
                 <div className="mc-globe-wrap" aria-hidden="true">
                   <img className="mc-globe" src="/community-globe.jpg" alt="" loading="lazy" />
@@ -437,21 +467,47 @@ export default function CommunityPageClient({
                 </Link>
               </div>
               <div className="mc-world-panel">
-                <div className="mc-world-country">
-                  <span className="mc-flag" aria-hidden="true">{flagFor('PE')}</span>
-                  <span className="mc-world-cname">PERU</span>
-                  <span className="mc-chip-gold">Following</span>
-                </div>
-                {panelRows.map((r) => (
-                  <Link key={r.label} href={r.href} className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
-                    <img className="mc-panel-thumb" src={r.img} alt="" aria-hidden="true" loading="lazy" />
-                    <span className="mc-panel-text">
-                      <span className="mc-panel-label">{r.label}</span>
-                      <span className="mc-panel-sub">{r.sub}</span>
-                    </span>
-                    <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
-                  </Link>
-                ))}
+                {topCountry ? (
+                  <div className="mc-world-country">
+                    {topCountry.cc && <span className="mc-flag" aria-hidden="true">{flagFor(topCountry.cc)}</span>}
+                    <span className="mc-world-cname">{topCountry.name.toUpperCase()}</span>
+                    <span className="mc-chip-gold">{topCountry.count} maker{topCountry.count === 1 ? '' : 's'}</span>
+                  </div>
+                ) : (
+                  <p className="mc-note">No makers yet.</p>
+                )}
+                <Link href="/live" className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="mc-panel-thumb mc-ph mc-ph-circle" aria-hidden="true"><Ico d={PATHS.play} size={14} /></span>
+                  <span className="mc-panel-text">
+                    <span className="mc-panel-label">Live Sellers</span>
+                    <span className="mc-panel-sub">{worldStats.liveNow} live now</span>
+                  </span>
+                  <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
+                </Link>
+                <Link href="/community/videos" className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="mc-panel-thumb mc-ph mc-ph-circle" aria-hidden="true"><Ico d={PATHS.camera} size={14} /></span>
+                  <span className="mc-panel-text">
+                    <span className="mc-panel-label">Workshop Videos</span>
+                    <span className="mc-panel-sub">{workshopVideos.length} shared</span>
+                  </span>
+                  <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
+                </Link>
+                <Link href="/community/journals" className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="mc-panel-thumb mc-ph mc-ph-circle" aria-hidden="true"><Ico d={PATHS.passport} size={14} /></span>
+                  <span className="mc-panel-text">
+                    <span className="mc-panel-label">Latest Journals</span>
+                    <span className="mc-panel-sub">{worldStats.journalEntries} entr{worldStats.journalEntries === 1 ? 'y' : 'ies'}</span>
+                  </span>
+                  <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
+                </Link>
+                <Link href="/shop" className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="mc-panel-thumb mc-ph mc-ph-circle" aria-hidden="true"><Ico d={PATHS.grid} size={14} /></span>
+                  <span className="mc-panel-text">
+                    <span className="mc-panel-label">Products Listed</span>
+                    <span className="mc-panel-sub">{worldStats.products} listed</span>
+                  </span>
+                  <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
+                </Link>
               </div>
             </div>
           </SectionBox>
@@ -502,34 +558,48 @@ export default function CommunityPageClient({
 
           <SectionBox href="/community/learning">
             <SectionHead title="Learning Centre" href="/community/learning" icon="cap" />
+            <p className="mc-note" style={{ marginBottom: 8 }}>
+              Guest videos from the wider craft world &mdash; not Velor sellers &mdash; while makers build up their own.
+            </p>
             <div className="mc-lessons">
-              {lessons.map((l) => (
-                <Link key={l.title} href="/community/learning" className="mc-lesson" onClick={(e) => e.stopPropagation()}>
-                  <img className="mc-lesson-thumb" src={l.img} alt="" aria-hidden="true" loading="lazy" />
+              {guestLessons.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mc-lesson"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <img className="mc-lesson-thumb" src={l.thumb} alt="" aria-hidden="true" loading="lazy" />
                   <span className="mc-lesson-title">{l.title}</span>
-                  <span className="mc-lesson-time">{l.t}</span>
-                </Link>
+                  <span className="mc-lesson-time">{l.country}</span>
+                </a>
               ))}
             </div>
           </SectionBox>
 
           <SectionBox href="/community/countries">
             <SectionHead title="Follow Countries" href="/community/countries" icon="shield" />
-            <div className="mc-countries">
-              {followCountries.map((c) => (
-                <div key={c.cc} className="mc-country-row">
-                  <span className="mc-flag" aria-hidden="true">{flagFor(c.cc)}</span>
-                  <span className="mc-country-name">{c.name}</span>
+            {topCountries.length === 0 ? (
+              <p className="mc-note">No maker countries yet.</p>
+            ) : (
+              <div className="mc-countries">
+                {topCountries.map((c) => (
                   <Link
-                    href={`/shop?origin=${c.cc}`}
-                    className={c.state === 'Following' ? 'mc-chip-gold' : 'mc-chip-follow'}
+                    key={c.name}
+                    href={c.cc ? `/shop?origin=${c.cc}` : '/shop'}
+                    className="mc-country-row"
+                    style={{ textDecoration: 'none' }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {c.state}
+                    {c.cc && <span className="mc-flag" aria-hidden="true">{flagFor(c.cc)}</span>}
+                    <span className="mc-country-name">{c.name}</span>
+                    <span className="mc-chip-follow">{c.count} maker{c.count === 1 ? '' : 's'}</span>
                   </Link>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
             <Link href="/shop" className="mc-outbtn mc-outbtn-wide" onClick={(e) => e.stopPropagation()}>
               Browse Countries
             </Link>
@@ -538,33 +608,50 @@ export default function CommunityPageClient({
 
         {/* ============ MAKER PASSPORT + STORY BANNER ============ */}
         <div className="mc-row2">
-          <SectionBox href="/community/passport">
-            <SectionHead title="Maker Passport" href="/community/passport" icon="passport" />
-            <div className="mc-passport">
-              <div className="mc-passport-id">
-                <img className="mc-passport-avatar" src={pexelsUrl(24645287, 'free-photo-of-elderly-person-holding-embroidered-blankets', 300)} alt="Maria Quispe" loading="lazy" />
-                <div>
-                  <div className="mc-passport-name">Maria Quispe<Verified /></div>
-                  <div className="mc-passport-craft">
-                    <span aria-hidden="true">{flagFor('PE')}</span> Peru &nbsp;&middot;&nbsp; Textile Weaving
+          <SectionBox href={passportHref}>
+            <SectionHead title="Maker Passport" href={passportHref} icon="passport" />
+            {passport ? (
+              <div className="mc-passport">
+                <div className="mc-passport-id">
+                  {passport.storeLogo ? (
+                    <img className="mc-passport-avatar" src={passport.storeLogo} alt={passport.name} loading="lazy" />
+                  ) : (
+                    <span className="mc-passport-avatar mc-ph mc-ph-circle" aria-hidden="true" style={{ fontFamily: 'var(--font-serif)', fontSize: 24 }}>
+                      {passport.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div>
+                    <div className="mc-passport-name">{passport.name}<Verified /></div>
+                    <div className="mc-passport-craft">
+                      {passport.cc && <span aria-hidden="true">{flagFor(passport.cc)}</span>} {passport.country}
+                    </div>
                   </div>
                 </div>
+                <div className="mc-passport-stats">
+                  {[
+                    { n: String(passport.orders), l: 'Orders Completed' },
+                    { n: String(passport.followers), l: 'Followers' },
+                    { n: String(passport.videos), l: 'Videos' },
+                    { n: String(passport.journalEntries), l: 'Journal Entries' },
+                    { n: passport.memberSince, l: 'Member Since' },
+                    { n: BADGE_LABEL[passport.badge] || passport.badge, l: 'Seller Badge' },
+                  ].map((s) => (
+                    <div key={s.l} className="mc-pstat">
+                      <span className={`mc-pstat-num ${s.l === 'Seller Badge' ? 'mc-pstat-gold' : ''}`}>{s.n}</span>
+                      <span className="mc-pstat-label">{s.l}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mc-passport-foot">
+                  {passport.founding && <span className="mc-chip-gold">Founding Seller</span>}
+                  <Link href={`/seller/${passport.sellerId}`} className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
+                    <Ico d={PATHS.play} size={10} /> View Full Passport
+                  </Link>
+                </div>
               </div>
-              <div className="mc-passport-stats">
-                {passportStats.map((s) => (
-                  <div key={s.l} className="mc-pstat">
-                    <span className={`mc-pstat-num ${s.n === 'Gold' ? 'mc-pstat-gold' : ''}`}>{s.n}</span>
-                    <span className="mc-pstat-label">{s.l}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mc-passport-foot">
-                <span className="mc-chip-gold">Founding Seller</span>
-                <Link href="/community/passport" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
-                  <Ico d={PATHS.play} size={10} /> View Full Passport
-                </Link>
-              </div>
-            </div>
+            ) : (
+              <p className="mc-note">No makers yet &mdash; the first approved seller will appear here.</p>
+            )}
           </SectionBox>
 
           <section className="mc-banner">
