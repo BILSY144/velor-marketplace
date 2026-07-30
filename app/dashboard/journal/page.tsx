@@ -379,7 +379,7 @@ export default function CreatorJournalsPage() {
                 )}
                 {/* Showcase rows from William's design while the journal is
                     empty -- the seller's first real entry replaces them. */}
-                {state === 'ready' && posts.length === 0 && EXAMPLE_ROWS.map(ex => (
+                {state === 'ready' && tab === 'all' && !search && !catFilter && pageClamped === 1 && shown.length < 6 && EXAMPLE_ROWS.slice(0, 6 - shown.length).map(ex => (
                   <tr key={ex.title} className="dj-example">
                     <td>
                       <div className="dj-jcell">
@@ -483,8 +483,10 @@ export default function CreatorJournalsPage() {
                 {posts.length === 0
                   ? 'Example entries — write your first journal and it takes their place.'
                   : filtered.length === 0
-                    ? 'Showing 0 journals'
-                    : `Showing ${(pageClamped - 1) * pageSize + 1} to ${Math.min(pageClamped * pageSize, filtered.length)} of ${filtered.length} journals`}
+                    ? 'Nothing matches these filters.'
+                    : tab === 'all' && !search && !catFilter && pageClamped === 1 && shown.length < 6
+                      ? `Showing ${filtered.length} journal${filtered.length === 1 ? '' : 's'} — example entries fill the rest until you write more.`
+                      : `Showing ${(pageClamped - 1) * pageSize + 1} to ${Math.min(pageClamped * pageSize, filtered.length)} of ${filtered.length} journals`}
               </span>
               <div className="dj-pager">
                 <button type="button" className="dj-pagebtn" disabled={pageClamped <= 1} onClick={() => setPage(pageClamped - 1)} aria-label="Previous page">&lsaquo;</button>
@@ -640,8 +642,8 @@ html[data-theme='light'] .dj-page {
 .dj-table tbody tr:last-child td { border-bottom: none; }
 .dj-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 .dj-jcell { display: flex; align-items: center; gap: 12px; min-width: 240px; }
-.dj-thumb { width: clamp(78px, 5.1vw, 100px); aspect-ratio: 3 / 2; height: auto; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-.dj-thumb-empty { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; background: var(--dj-panel2); color: var(--dj-muted); }
+.dj-thumb { width: clamp(100px, 6.5vw, 124px); aspect-ratio: 3 / 2; height: auto; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.dj-thumb-empty { display: inline-flex; align-items: center; justify-content: center; background: var(--dj-panel2); color: var(--dj-muted); }
 .dj-jtitle { font-size: 13.5px; font-weight: 600; color: var(--dj-text); line-height: 1.4; }
 .dj-subline { display: block; font-size: 11px; color: var(--dj-muted); }
 .dj-dash { color: var(--dj-muted); }
