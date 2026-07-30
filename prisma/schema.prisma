@@ -195,6 +195,7 @@ model Seller {
   followers                     Follow[]
   journalPosts                  JournalPost[]
   collections                   SellerCollection[]
+  likes                         SellerLike[]
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
@@ -988,6 +989,20 @@ model SellerCollection {
   updatedAt  DateTime @updatedAt
 
   @@index([sellerId])
+}
+
+// A buyer liking a seller (the journal page's "Never Miss A Story" heart
+// icon, William 2026-08-01: distinct from Follow -- a lightweight signal
+// separate from actually following for updates). One like per person per
+// seller, same shape as JournalLike.
+model SellerLike {
+  id        String   @id @default(cuid())
+  sellerId  String
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([sellerId, userId])
 }
 
 enum CertificateType {

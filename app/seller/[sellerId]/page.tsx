@@ -234,6 +234,36 @@ export default async function SellerProfilePage({
     if (journalPosts.length > 0) {
       const postIds = journalPosts.map((p) => p.id)
 
+      // Whether the signed-in buyer has already liked each entry (William,
+      // 2026-07-30: "the heart button at the bottom of my journal page does
+      // not work" -- it had no click handler at all; this is the real state
+      // now behind it). Empty set for a signed-out visitor -- every entry
+      // just renders unliked, same honest pattern as everywhere else here.
+      const viewerSession = await auth()
+      const likedPostIds = viewerSession?.user?.id
+        ? new Set(
+            (
+              await prisma.journalLike.findMany({
+                where: { postId: { in: postIds }, userId: viewerSession.user.id },
+                select: { postId: true },
+              })
+            ).map((l) => l.postId)
+          )
+        : new Set<string>()
+
+      // Whether the signed-in buyer already likes THIS SELLER (the "Never
+      // Miss A Story" card's heart icon, William 2026-08-01 -- previously a
+      // dead link to this same page; now a real SellerLike toggle, separate
+      // from Follow). False for a signed-out visitor.
+      const sellerLikedByMe = viewerSession?.user?.id
+        ? Boolean(
+            await prisma.sellerLike.findFirst({
+              where: { sellerId: seller.id, userId: viewerSession.user.id },
+              select: { id: true },
+            })
+          )
+        : false
+
       const [followers, commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, inboundMessages] = await Promise.all([
         prisma.follow.count({ where: { sellerId: seller.id } }),
         // A handful of real, published comments per entry -- enough for the
@@ -388,6 +418,7 @@ export default async function SellerProfilePage({
             reviewCount: sellerReviewAgg._count._all,
             totalSales: totalSalesAgg._sum?.quantity ?? 0,
             responseRate,
+            likedByMe: sellerLikedByMe,
           }}
           posts={journalPosts.map((p) => ({
             id: p.id,
@@ -403,6 +434,7 @@ export default async function SellerProfilePage({
             behindScenes: p.behindScenes,
             productIds: p.productIds,
             likes: p._count.likes,
+            likedByMe: likedPostIds.has(p.id),
             comments: p._count.comments,
             commentList: commentsByPost[p.id] ?? [],
           }))}

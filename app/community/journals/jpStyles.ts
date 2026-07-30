@@ -70,6 +70,10 @@ html[data-theme='light'] .jp-page {
 .jp-engage-stat svg { color: var(--mc-gold); }
 .jp-share { background: none; border: none; padding: 0; font-family: inherit; color: var(--mc-text); cursor: pointer; }
 .jp-share:hover { color: var(--mc-gold); }
+.jp-like { background: none; border: none; padding: 0; font-family: inherit; color: var(--mc-text); cursor: pointer; }
+.jp-like:hover svg { color: var(--red); }
+.jp-like[aria-pressed="true"] { color: var(--red); }
+.jp-like[aria-pressed="true"] svg { color: var(--red); }
 .jp-loved { display: inline-flex; align-items: center; gap: 9px; margin-left: auto; font-size: 12px; color: var(--mc-muted); }
 .jp-loved img { height: 26px; width: auto; border-radius: 999px; }
 
@@ -147,6 +151,7 @@ html[data-theme='light'] .jp-page {
 .jp-followbtn-wide { width: 100%; }
 .jp-msgbtn { display: inline-flex; align-items: center; justify-content: center; width: 38px; min-height: 38px; border-radius: 7px; border: 1px solid var(--mc-goldline); color: var(--mc-gold); flex-shrink: 0; }
 .jp-msgbtn:hover { border-color: var(--mc-gold); }
+.jp-heartbtn[aria-pressed="true"] { color: var(--red); border-color: var(--red); }
 .jp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .jp-stat { background: var(--mc-card2); border-radius: 10px; padding: 9px 6px; text-align: center; }
 .jp-stat-num { display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font-serif); font-size: 16px; color: var(--mc-text); }

@@ -68,6 +68,9 @@ interface JournalEntry {
   behindScenes: string | null
   productIds: string[]
   likes: number
+  // Whether the signed-in buyer has already liked this entry, computed
+  // server-side (JournalLike model) -- false for a signed-out visitor.
+  likedByMe: boolean
   comments: number
   commentList: CommentEntry[]
 }
@@ -91,6 +94,9 @@ interface SellerInfo {
   // model), null when they've never received a message yet -- shown as
   // "New", same honest-empty pattern as avgRating.
   responseRate: number | null
+  // Whether the signed-in buyer already likes this seller (SellerLike model,
+  // "Never Miss A Story" heart) -- false for a signed-out visitor.
+  likedByMe: boolean
 }
 
 interface TaggedProduct { id: string; title: string; price: number; image: string | null; loves: number }
@@ -236,6 +242,101 @@ function JournalFollowButton({ sellerId, wide = false }: { sellerId: string; wid
       style={{ font: 'inherit', cursor: busy ? 'wait' : 'pointer' }}
     >
       {following ? 'Following' : 'Follow'}
+    </button>
+  )
+}
+
+/* Real like toggle for a journal entry (William, 2026-07-30: "the heart
+   button at the bottom of my journal page does not work" -- it was a plain
+   span with no click handler and no API behind it). Backed by the
+   JournalLike model via /api/social/journal/[postId]/like, same
+   sign-in-gate/optimistic-toggle/rollback-on-failure pattern as
+   JournalFollowButton above. Keyed by postId at the call site so switching
+   entries (People Also Loved / More Journal Entries) always starts from
+   that entry's own real server-computed state rather than carrying over
+   the previous entry's. */
+function JournalLikeButton({ postId, likes, liked: initialLiked }: { postId: string; likes: number; liked: boolean }) {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [liked, setLiked] = useState(initialLiked)
+  const [count, setCount] = useState(likes)
+  const [busy, setBusy] = useState(false)
+
+  async function toggle() {
+    if (busy) return
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`); return }
+    setBusy(true)
+    const was = liked
+    setLiked(!was)
+    setCount((c) => c + (was ? -1 : 1))
+    try {
+      const r = await fetch(`/api/social/journal/${postId}/like`, { method: was ? 'DELETE' : 'POST' })
+      if (!r.ok) { setLiked(was); setCount((c) => c + (was ? 1 : -1)) }
+    } catch {
+      setLiked(was)
+      setCount((c) => c + (was ? 1 : -1))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggle()}
+      disabled={busy}
+      aria-pressed={liked}
+      aria-label={liked ? 'Unlike this entry' : 'Like this entry'}
+      className="jp-engage-stat jp-like"
+      style={{ font: 'inherit', cursor: busy ? 'wait' : 'pointer' }}
+    >
+      <Ico d={P.heart} size={15} fill={liked} /> {fmtK(count)}
+    </button>
+  )
+}
+
+/* Liking the SELLER (not an entry) -- the heart icon next to FOLLOW in the
+   "Never Miss A Story" card (William, 2026-08-01: "just needs to show red
+   when clicked and i guess api routed to buyers likes"). Was previously a
+   dead <Link> to this same page. Backed by the SellerLike model via
+   /api/social/sellers/[sellerId]/like, same sign-in-gate/optimistic-toggle
+   pattern as the buttons above -- distinct from Follow, which is the
+   separate update-notification action right next to it. */
+function SellerLikeButton({ sellerId, liked: initialLiked }: { sellerId: string; liked: boolean }) {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [liked, setLiked] = useState(initialLiked)
+  const [busy, setBusy] = useState(false)
+
+  async function toggle() {
+    if (busy) return
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`); return }
+    setBusy(true)
+    const was = liked
+    setLiked(!was)
+    try {
+      const r = await fetch(`/api/social/sellers/${sellerId}/like`, { method: was ? 'DELETE' : 'POST' })
+      if (!r.ok) setLiked(was)
+    } catch {
+      setLiked(was)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggle()}
+      disabled={busy}
+      aria-pressed={liked}
+      aria-label={liked ? 'Unlike this maker' : 'Like this maker'}
+      className="jp-msgbtn jp-heartbtn"
+      style={{ cursor: busy ? 'wait' : 'pointer' }}
+    >
+      <Ico d={P.heart} size={14} fill={liked} />
     </button>
   )
 }
@@ -416,7 +517,7 @@ export default function SellerJournalView({
 
           {/* engagement */}
           <div className="jp-engage">
-            <span className="jp-engage-stat"><Ico d={P.heart} size={15} /> {fmtK(entry.likes)}</span>
+            <JournalLikeButton key={entry.id} postId={entry.id} likes={entry.likes} liked={entry.likedByMe} />
             <span className="jp-engage-stat"><Ico d={P.comment} size={15} /> {fmtK(entry.comments)}</span>
             <span className="jp-engage-stat"><Ico d={P.eye} size={15} /> {fmtK(entry.viewCount)}</span>
             <button type="button" className="jp-engage-stat jp-share" onClick={share}>
@@ -751,7 +852,7 @@ export default function SellerJournalView({
             </Link>
             <div className="jp-nms-actions">
               <JournalFollowButton sellerId={seller.id} wide />
-              <Link href={`/seller/${seller.id}`} className="jp-msgbtn" aria-label={`Visit ${seller.storeName}'s storefront`}><Ico d={P.heart} size={14} /></Link>
+              <SellerLikeButton sellerId={seller.id} liked={seller.likedByMe} />
             </div>
           </div>
         </aside>
