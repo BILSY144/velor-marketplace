@@ -269,10 +269,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // The design's sidebar, in its exact order. Items the design names
   // without a dashboard page of their own map to the nearest real
   // destination: Workshop Videos -> the public Workshop feed (where a
-  // maker's process videos and entries appear), Followers -> Analytics
-  // (audience figures; follower identities stay private by design),
-  // Reviews -> the seller's public storefront, where their reviews
-  // render exactly as buyers see them.
+  // maker's process videos and entries appear), Reviews -> the seller's
+  // public storefront, where their reviews render exactly as buyers see
+  // them. Followers used to fall back to Analytics -- William, 2026-08-01:
+  // "when clicking followers it should take me to a page what lists all my
+  // followers or at least show the followers and name of followers" -- so
+  // it now goes to its own real page (app/dashboard/followers), listing
+  // the actual Follow rows with the same privacy-masked buyer names used
+  // everywhere else a seller sees a buyer's identity.
   const mainItems: NavItem[] = [
     { href: '/dashboard', label: 'Overview', icon: ICONS.home },
     { href: '/dashboard/orders', label: 'Orders', icon: ICONS.orders, count: stats?.orders },
@@ -282,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/workshop', label: 'Workshop Videos', icon: ICONS.video },
     { href: '/dashboard/questions', label: 'Questions & Answers', icon: ICONS.support, count: stats?.questions },
     { href: '/dashboard/messages', label: 'Messages', icon: ICONS.messages, count: stats?.messages },
-    { href: '/dashboard/analytics', label: 'Followers', icon: ICONS.followers, count: stats?.followers },
+    { href: '/dashboard/followers', label: 'Followers', icon: ICONS.followers, count: stats?.followers },
     { href: sellerId ? `/seller/${sellerId}` : '/dashboard/analytics', label: 'Reviews', icon: ICONS.star },
     { href: '/dashboard/analytics', label: 'Analytics', icon: ICONS.analytics },
     paymentsItem,

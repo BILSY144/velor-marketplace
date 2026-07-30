@@ -1,9 +1,17 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import ReportContentButton from '@/components/ReportContentButton'
+
+// A seller a buyer landed here to contact (via ?sellerId=... from a
+// storefront/journal page's "Message this seller" button) with no existing
+// thread yet -- resolved from /api/sellers/[sellerId]/contact-info since
+// Message.receiverId is a User id while the referring page only has the
+// seller's own Seller id. Never a fabricated conversation: just the real
+// recipient identity, waiting for the buyer's first real message.
+interface PendingRecipient { userId: string; name: string; image: string | null }
 
 interface Msg {
   id: string
@@ -91,11 +99,13 @@ function Avatar({ name, image, size = 36 }: { name: string; image: string | null
   )
 }
 
-export default function MessagesPage() {
+function MessagesPageInner() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [threads, setThreads] = useState<Thread[]>([])
   const [activeKey, setActiveKey] = useState<string | null>(null)
+  const [pending, setPending] = useState<PendingRecipient | null>(null)
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
@@ -104,10 +114,38 @@ export default function MessagesPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/auth/sign-in')
+    if (status === 'unauthenticated') {
+      const sellerId = searchParams.get('sellerId')
+      router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(sellerId ? `/messages?sellerId=${sellerId}` : '/messages')}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router])
 
   const myId = (session?.user as { id?: string } | undefined)?.id ?? ''
+
+  // Arriving with ?sellerId=... (e.g. a journal/storefront "Message this
+  // seller" button): open the existing thread with them if one exists,
+  // otherwise stand up a real-but-empty conversation with their real
+  // identity so the buyer can send the first message.
+  useEffect(() => {
+    const sellerId = searchParams.get('sellerId')
+    if (!sellerId || status !== 'authenticated' || loading) return
+    let cancelled = false
+    fetch(`/api/sellers/${sellerId}/contact-info`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((info: { userId: string; storeName: string; storeLogo: string | null } | null) => {
+        if (cancelled || !info) return
+        const existing = threads.find((t) => t.otherId === info.userId)
+        if (existing) {
+          setActiveKey(existing.key)
+        } else {
+          setPending({ userId: info.userId, name: info.storeName, image: info.storeLogo })
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, loading])
 
   async function loadMessages() {
     if (!myId) return
@@ -147,7 +185,7 @@ export default function MessagesPage() {
   const totalUnread = threads.reduce((n, t) => n + t.unreadCount, 0)
 
   async function sendReply() {
-    if (!reply.trim() || !activeThread) return
+    if (!reply.trim() || (!activeThread && !pending)) return
     setSending(true)
     setSendError('')
     try {
@@ -155,9 +193,9 @@ export default function MessagesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          receiverId: activeThread.otherId,
+          receiverId: activeThread ? activeThread.otherId : pending!.userId,
           content: reply.trim(),
-          ...(activeThread.product ? { productId: activeThread.product.id } : {}),
+          ...(activeThread?.product ? { productId: activeThread.product.id } : {}),
         }),
       })
       if (!r.ok) {
@@ -168,7 +206,15 @@ export default function MessagesPage() {
         return
       }
       setReply('')
+      const wasPending = pending
+      setPending(null)
       await loadMessages()
+      // The first message to a pending recipient just created their real
+      // thread -- select it now that it exists, rather than leaving the
+      // buyer back at "select a conversation" after sending successfully.
+      if (wasPending) {
+        setActiveKey([myId, wasPending.userId].sort().join('_'))
+      }
     } finally {
       setSending(false)
     }
@@ -235,7 +281,7 @@ export default function MessagesPage() {
             threads.map(t => (
               <button
                 key={t.key}
-                onClick={() => setActiveKey(t.key)}
+                onClick={() => { setActiveKey(t.key); setPending(null) }}
                 style={{
                   width: '100%', textAlign: 'left',
                   background: activeKey === t.key ? 'var(--surface)' : 'transparent',
@@ -420,6 +466,65 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
+        ) : pending ? (
+          // Arrived via ?sellerId=... with no existing thread yet -- the
+          // real recipient, waiting for the buyer's first real message.
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+            <div style={{
+              padding: '12px 20px', borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
+            }}>
+              <Avatar name={pending.name} image={pending.image} size={36} />
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+                {pending.name}
+              </p>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 20px' }}>
+              <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0, textAlign: 'center' }}>
+                Start the conversation with {pending.name} below.
+              </p>
+            </div>
+            {sendError && (
+              <p style={{ margin: 0, padding: '8px 20px', fontSize: 13, color: 'var(--red)', borderTop: '1px solid var(--border)' }}>
+                {sendError}
+              </p>
+            )}
+            <div style={{
+              padding: '12px 20px', borderTop: sendError ? 'none' : '1px solid var(--border)',
+              display: 'flex', gap: 10, flexShrink: 0,
+            }}>
+              <textarea
+                value={reply}
+                onChange={e => setReply(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    void sendReply()
+                  }
+                }}
+                placeholder={`Write a message to ${pending.name}... (Enter to send, Shift+Enter for new line)`}
+                rows={2}
+                style={{
+                  flex: 1, background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '10px 14px', color: 'var(--text)',
+                  fontSize: 14, fontFamily: 'var(--font-body)', resize: 'none' as const, outline: 'none',
+                }}
+              />
+              <button
+                onClick={() => void sendReply()}
+                disabled={sending || !reply.trim()}
+                style={{
+                  background: sending || !reply.trim() ? 'var(--border)' : 'var(--accent)',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  padding: '0 20px', fontSize: 14, fontWeight: 600,
+                  cursor: sending || !reply.trim() ? 'not-allowed' : 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {sending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
+          </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
@@ -432,5 +537,13 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesPageInner />
+    </Suspense>
   )
 }

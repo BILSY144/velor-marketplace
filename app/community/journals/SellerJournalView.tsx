@@ -724,7 +724,7 @@ export default function SellerJournalView({
             </div>
             <div className="jp-maker-actions">
               <JournalFollowButton sellerId={seller.id} />
-              <Link href="/messages" className="jp-msgbtn" aria-label={`Message ${seller.storeName}`}><Ico d={P.send} size={14} /></Link>
+              <Link href={`/messages?sellerId=${seller.id}`} className="jp-msgbtn" aria-label={`Message ${seller.storeName}`}><Ico d={P.send} size={14} /></Link>
             </div>
             <div className="jp-stats">
               {stats.map((s) => (
