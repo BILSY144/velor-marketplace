@@ -591,9 +591,7 @@ function AskTheMakerBoard({ sellerId, sellerName }: { sellerId: string; sellerNa
       <div className="jp-sechead">
         <h2 className="jp-sectitle">Ask {sellerName}</h2>
       </div>
-      <p className="jp-note" style={{ margin: '0 0 12px' }}>
-        Real questions, answered by {sellerName} or other buyers &mdash; not tied to any one story.
-      </p>
+      <p className="jp-note" style={{ margin: '0 0 12px' }}>Real questions, answered by {sellerName} or other buyers &mdash; not tied to any one story.</p>
       {session ? (
         <form onSubmit={ask} className="jp-cinput">
           <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
