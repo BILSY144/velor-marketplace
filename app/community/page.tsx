@@ -24,6 +24,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { pexelsUrl } from '@/lib/countryImagery'
 
 /* ---------- helpers ---------- */
 
@@ -203,12 +204,15 @@ export default function CommunityPage() {
 
       {/* ============ HERO ============ */}
       <header className="mc-hero">
+        {/* Hero + story-banner imagery: William reverted these two to the
+            earlier verified-Pexels picks ("your previous images as they were
+            better", 2026-07-30); everything else stays from his design file. */}
         <div className="mc-hero-collage" aria-hidden="true">
-          <img src="/community/hero-1.jpg" alt="" loading="eager" />
-          <img src="/community/hero-2.jpg" alt="" loading="eager" />
+          <img src={pexelsUrl(37619027, 'free-photo-of-hand-block-printing-on-yellow-fabric', 900)} alt="" loading="eager" />
+          <img src={pexelsUrl(9412408, null, 900)} alt="" loading="eager" />
           <div className="mc-hero-centercell" />
-          <img src="/community/hero-3.jpg" alt="" loading="eager" />
-          <img src="/community/hero-4.jpg" alt="" loading="eager" />
+          <img src={pexelsUrl(23436813, 'free-photo-of-man-holding-a-japanese-knife', 900)} alt="" loading="eager" />
+          <img src={pexelsUrl(31508160, null, 900)} alt="" loading="eager" />
         </div>
         <div className="mc-hero-scrim" aria-hidden="true" />
         <div className="mc-hero-inner">
@@ -526,7 +530,7 @@ export default function CommunityPage() {
           </SectionBox>
 
           <section className="mc-banner">
-            <img className="mc-banner-img" src="/community/banner.jpg" alt="" aria-hidden="true" loading="lazy" />
+            <img className="mc-banner-img" src={pexelsUrl(34495354, null, 1400)} alt="" aria-hidden="true" loading="lazy" />
             <div className="mc-banner-scrim" aria-hidden="true" />
             <div className="mc-banner-inner">
               <h2 className="mc-banner-title">
@@ -802,8 +806,8 @@ html[data-theme='light'] .mc-live-productbar { background: var(--surface-2); }
 
 /* banner */
 .mc-banner { position: relative; border-radius: 18px; overflow: hidden; min-height: 300px; display: flex; align-items: center; box-shadow: var(--mc-shadow); background: #12100a; }
-.mc-banner-img { position: absolute; right: 0; top: 0; height: 100%; width: 46%; object-fit: cover; }
-.mc-banner-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, #12100a 0%, #12100a 46%, rgba(18,16,10,0.55) 62%, rgba(18,16,10,0.1) 100%); }
+.mc-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mc-banner-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,8,6,0.85) 0%, rgba(10,8,6,0.55) 60%, rgba(10,8,6,0.3) 100%); }
 .mc-banner-inner { position: relative; padding: 30px; max-width: 520px; }
 .mc-banner-title { font-size: clamp(22px, 2.6vw, 31px); color: #fff; margin-bottom: 10px; }
 .mc-banner-sub { color: rgba(255,255,255,0.85); font-size: 13.5px; margin-bottom: 18px; }
