@@ -13,6 +13,19 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+interface SellerCollectionItem {
+  id: string
+  name: string
+  productIds: string[]
+  createdAt: string
+}
+
+interface DashboardProduct {
+  id: string
+  title: string
+  images: string[]
+}
+
 interface JournalPost {
   id: string
   title: string | null
@@ -106,6 +119,21 @@ export default function CreatorJournalsPage() {
   const [renameTo, setRenameTo] = useState('')
   const [sellerId, setSellerId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+
+  // Manage Collections (William, 2026-07-30: "wired up exactly like
+  // Maria's page" -- her design's "Maria's Collections" sidebar card).
+  // Lazy-loaded the first time the panel opens, same as categories are
+  // always-loaded-from-posts but this needs its own fetch since
+  // collections aren't derived from journal entries.
+  const [collectionsOpen, setCollectionsOpen] = useState(false)
+  const [collectionsLoaded, setCollectionsLoaded] = useState(false)
+  const [collections, setCollections] = useState<SellerCollectionItem[]>([])
+  const [dashboardProducts, setDashboardProducts] = useState<DashboardProduct[]>([])
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null)
+  const [collectionName, setCollectionName] = useState('')
+  const [collectionProductIds, setCollectionProductIds] = useState<string[]>([])
+  const [collectionsError, setCollectionsError] = useState('')
+  const [savingCollection, setSavingCollection] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -214,6 +242,87 @@ export default function CreatorJournalsPage() {
     await load()
   }
 
+  async function loadCollections() {
+    setCollectionsError('')
+    try {
+      const [collRes, prodRes] = await Promise.all([
+        fetch('/api/dashboard/collections'),
+        fetch('/api/dashboard/products'),
+      ])
+      const collData = collRes.ok ? await collRes.json() : null
+      const prodData = prodRes.ok ? await prodRes.json() : null
+      setCollections(Array.isArray(collData?.collections) ? collData.collections : [])
+      const list = Array.isArray(prodData?.products) ? prodData.products : Array.isArray(prodData) ? prodData : []
+      setDashboardProducts(list.map((p: DashboardProduct) => ({ id: p.id, title: p.title, images: p.images })))
+      setCollectionsLoaded(true)
+    } catch {
+      setCollectionsError('Could not load collections.')
+    }
+  }
+
+  function toggleCollectionsPanel() {
+    setCollectionsOpen((v) => {
+      const next = !v
+      if (next && !collectionsLoaded) void loadCollections()
+      return next
+    })
+  }
+
+  function startNewCollection() {
+    setEditingCollectionId('new')
+    setCollectionName('')
+    setCollectionProductIds([])
+  }
+
+  function startEditCollection(c: SellerCollectionItem) {
+    setEditingCollectionId(c.id)
+    setCollectionName(c.name)
+    setCollectionProductIds(c.productIds)
+  }
+
+  function toggleCollectionProduct(productId: string) {
+    setCollectionProductIds((prev) => (
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    ))
+  }
+
+  async function saveCollection() {
+    if (!collectionName.trim()) { setCollectionsError('Give the collection a name.'); return }
+    setSavingCollection(true)
+    setCollectionsError('')
+    try {
+      const isNew = editingCollectionId === 'new'
+      const res = await fetch('/api/dashboard/collections', {
+        method: isNew ? 'POST' : 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          isNew
+            ? { name: collectionName, productIds: collectionProductIds }
+            : { id: editingCollectionId, name: collectionName, productIds: collectionProductIds },
+        ),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) { setCollectionsError(data?.error || 'Could not save that collection.'); return }
+      setEditingCollectionId(null)
+      await loadCollections()
+    } catch {
+      setCollectionsError('Could not save that collection.')
+    } finally {
+      setSavingCollection(false)
+    }
+  }
+
+  async function deleteCollection(id: string) {
+    if (!window.confirm('Delete this collection? The products themselves are not affected.')) return
+    await fetch('/api/dashboard/collections', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (editingCollectionId === id) setEditingCollectionId(null)
+    await loadCollections()
+  }
+
   function share(p: JournalPost) {
     const url = sellerId ? `${window.location.origin}/seller/${sellerId}` : `${window.location.origin}/workshop`
     navigator.clipboard?.writeText(url).then(() => {
@@ -278,11 +387,79 @@ export default function CreatorJournalsPage() {
           <button type="button" className="dj-ghostbtn" onClick={() => setCatsOpen(v => !v)}>
             <Ico d={P.folder} size={15} /> Manage Categories
           </button>
+          <button type="button" className="dj-ghostbtn" onClick={toggleCollectionsPanel}>
+            <Ico d={P.bag} size={15} /> Manage Collections
+          </button>
           <Link href="/dashboard/journal/new" className="dj-primarybtn">
             <Ico d={P.plus} size={14} /> Create New Journal
           </Link>
         </div>
       </div>
+
+      {/* Manage Collections (William, 2026-07-30: "wired up exactly like
+          Maria's page" -- her design's "Maria's Collections" sidebar card).
+          Group your own products into named public showcases; shown on
+          your journal/storefront page the moment you save one. */}
+      {collectionsOpen && (
+        <div className="dj-cats">
+          {collectionsError && <p className="dj-sub" style={{ margin: '0 0 10px', color: '#e5484d' }}>{collectionsError}</p>}
+          {collections.length === 0 && editingCollectionId === null ? (
+            <p className="dj-sub" style={{ margin: '0 0 10px' }}>No collections yet &mdash; group your products into a named showcase (like &ldquo;Sacred Valley Collection&rdquo;) and it appears on your journal page.</p>
+          ) : (
+            <div className="dj-cats-list">
+              {collections.map((c) => (
+                <button key={c.id} type="button" className={`dj-cat ${editingCollectionId === c.id ? 'dj-cat-on' : ''}`} onClick={() => startEditCollection(c)}>
+                  {c.name} <span className="dj-dash">({c.productIds.length})</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {editingCollectionId === null ? (
+            <button type="button" className="dj-ghostbtn" style={{ marginTop: 12 }} onClick={startNewCollection}>
+              <Ico d={P.plus} size={14} /> New collection
+            </button>
+          ) : (
+            <div className="dj-cats-edit" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+              <input
+                className="dj-input"
+                value={collectionName}
+                onChange={(e) => setCollectionName(e.target.value)}
+                maxLength={60}
+                placeholder="Collection name"
+                aria-label="Collection name"
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '10px 0' }}>
+                {dashboardProducts.length === 0 ? (
+                  <p className="dj-sub" style={{ margin: 0 }}>You don&rsquo;t have any listed products yet &mdash; add one first, then group it into a collection here.</p>
+                ) : (
+                  dashboardProducts.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`dj-cat ${collectionProductIds.includes(p.id) ? 'dj-cat-on' : ''}`}
+                      onClick={() => toggleCollectionProduct(p.id)}
+                    >
+                      {p.title}
+                    </button>
+                  ))
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button type="button" className="dj-primarybtn" disabled={savingCollection} onClick={() => void saveCollection()}>
+                  {savingCollection ? 'Saving...' : 'Save collection'}
+                </button>
+                <button type="button" className="dj-ghostbtn" onClick={() => setEditingCollectionId(null)}>Cancel</button>
+                {editingCollectionId !== 'new' && (
+                  <button type="button" className="dj-ghostbtn" style={{ color: '#e5484d', borderColor: '#e5484d' }} onClick={() => void deleteCollection(editingCollectionId)}>
+                    Delete collection
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {catsOpen && (
         <div className="dj-cats">

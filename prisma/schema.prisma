@@ -194,6 +194,7 @@ model Seller {
   shipments                     Shipment[]
   followers                     Follow[]
   journalPosts                  JournalPost[]
+  collections                   SellerCollection[]
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
@@ -964,6 +965,29 @@ model JournalComment {
   createdAt DateTime    @default(now())
 
   @@index([postId])
+}
+
+// A seller's own public showcase grouping of their products (Maria's
+// design's "Maria's Collections" sidebar card, 2026-07-30, William: "wired
+// up exactly like Maria's page"). NOT the same thing as the Collection
+// model above -- that one is a buyer's private saved-items folder
+// (optionally made public), scoped under a DPIA for buyer data. This one
+// is pure seller merchandising: no personal data at all, just the
+// seller's own product IDs grouped under a name they choose, managed from
+// the Creator Journals dashboard's "Manage Collections" panel and shown
+// on their journal/storefront page. productIds follows the same simple
+// String[] pattern already used on JournalPost rather than a join table,
+// for consistency with the rest of this schema.
+model SellerCollection {
+  id         String   @id @default(cuid())
+  sellerId   String
+  seller     Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name       String
+  productIds String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sellerId])
 }
 
 enum CertificateType {

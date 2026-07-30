@@ -14,9 +14,9 @@
 // REAL page carries the same structure, spacing and classes (all shared
 // via ./jpStyles). Every number and word on this page stays real, per the
 // project's absolute no-fabricated-data rule -- where the design shows
-// something Velor has no honest data source for, this file either
-// substitutes the closest real equivalent (documented inline) or shows an
-// honest "hasn't happened yet" state, never an invented figure:
+// something Velor once had no honest data source for, this file either
+// builds the real feature behind it or shows an honest "hasn't happened
+// yet" state, never an invented figure:
 //   - "Featured Journal" chip -> the entry's real category (or a plain
 //     fallback) instead of a static label.
 //   - Engagement row's "Loved by N people" avatar stack -> omitted (no
@@ -27,20 +27,22 @@
 //   - Comments -> real, published JournalComment rows with masked buyer
 //     names ("First L."), same privacy rule as reviews.
 //   - Sidebar "Rating / Followers / Journals / Sales / Response / Years"
-//     stat grid -> Rating/Followers/Journals/Sales/Years are all real;
-//     "Response rate" has no tracked data anywhere on Velor, so this
-//     slot is a real "Listings" count instead.
+//     stat grid -> every figure is real, including Response: the real %
+//     of buyers this seller has ever replied to (Message model), computed
+//     server-side in app/seller/[sellerId]/page.tsx.
 //   - "Today's Workshop" live card -> shows the seller's real LIVE stream
 //     if one is running, otherwise an honest "not live right now" state.
-//   - "People Also Loved" -> no cross-journal recommendation engine
-//     exists, so this card is retitled "More From The Circle" and shows
-//     other makers' real recent journal entries instead.
+//   - "People Also Loved" -> the SAME maker's other entries ranked by
+//     real like count (not a cross-seller recommendation engine, which
+//     Velor doesn't have and Maria's design doesn't actually ask for --
+//     her own "People Also Loved" list is other days from HER journal).
 //   - "Buyer Love" testimonial -> a real 5-star (or best available)
 //     review with real written text, or an honest empty state.
-//   - "Maria's Collections" -> Velor has no seller-curated public
-//     collections feature at all (Collections are private buyer
-//     wishlists, per the social-layer DPIA), so this card is omitted
-//     entirely rather than showing a feature that doesn't exist.
+//   - "Collections" -> a real SellerCollection (sellers group their own
+//     products into named public showcases from the Creator Journals
+//     dashboard's "Manage Collections" panel), separate from a buyer's
+//     private Collection/wishlist model. Honest empty state if the seller
+//     hasn't made one yet.
 
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
@@ -85,12 +87,25 @@ interface SellerInfo {
   avgRating: number | null
   reviewCount: number
   totalSales: number
+  // Real % of buyers this seller has replied to at least once (Message
+  // model), null when they've never received a message yet -- shown as
+  // "New", same honest-empty pattern as avgRating.
+  responseRate: number | null
 }
 
 interface TaggedProduct { id: string; title: string; price: number; image: string | null; loves: number }
 interface BuyerLove { text: string; rating: number; name: string }
 interface LiveInfo { title: string; roomName: string; watching: number }
-interface OtherMakerPost { id: string; sellerId: string; storeName: string; title: string; image: string | null; likes: number }
+// A seller's own public product showcase (Maria's "Maria's Collections"
+// card). Real SellerCollection rows, managed from the Creator Journals
+// dashboard's "Manage Collections" panel -- not the buyer-private
+// Collection/wishlist model elsewhere in the schema.
+interface CollectionSummary { id: string; name: string; itemCount: number; coverImage: string | null }
+// Maria's "People Also Loved" card is the SAME maker's other entries,
+// ranked by real engagement -- not a cross-seller recommendation engine,
+// which Velor doesn't have. Clicking one switches the entry in place
+// (setCurrentId), same as "More Journal Entries" below it.
+interface PeopleAlsoLovedEntry { id: string; title: string; image: string | null; likes: number }
 
 const P = {
   heart: 'M12 21C7 16.5 3.5 13.2 3.5 9.6A4.6 4.6 0 0 1 8.1 5c1.6 0 3 .8 3.9 2a4.9 4.9 0 0 1 3.9-2 4.6 4.6 0 0 1 4.6 4.6c0 3.6-3.5 6.9-8.5 11.4z',
@@ -232,7 +247,7 @@ type Tab = 'story' | 'making' | 'photos' | 'notes' | 'behind'
 const STORY_TRUNCATE = 420
 
 export default function SellerJournalView({
-  seller, posts, products, allProducts, buyerLove, live, otherMakerPosts,
+  seller, posts, products, allProducts, buyerLove, live, peopleAlsoLoved, collections,
 }: {
   seller: SellerInfo
   posts: JournalEntry[]
@@ -240,7 +255,8 @@ export default function SellerJournalView({
   allProducts: TaggedProduct[]
   buyerLove: BuyerLove | null
   live: LiveInfo | null
-  otherMakerPosts: OtherMakerPost[]
+  peopleAlsoLoved: PeopleAlsoLovedEntry[]
+  collections: CollectionSummary[]
 }) {
   const [currentId, setCurrentId] = useState(posts[0].id)
   const [tab, setTab] = useState<Tab>('story')
@@ -317,7 +333,7 @@ export default function SellerJournalView({
     { l: 'Followers', v: fmtK(seller.followers), star: false },
     { l: 'Journals', v: fmtK(posts.length), star: false },
     { l: 'Sales', v: fmtK(seller.totalSales), star: false },
-    { l: 'Listings', v: fmtK(seller.listings), star: false },
+    { l: 'Response', v: seller.responseRate !== null ? `${seller.responseRate}%` : 'New', star: false },
     { l: 'On Velor', v: `${Math.max(0, new Date().getFullYear() - seller.memberSince)} Yr${new Date().getFullYear() - seller.memberSince === 1 ? '' : 's'}`, star: false },
   ]
 
@@ -640,6 +656,30 @@ export default function SellerJournalView({
             {allProducts.length > 0 && <a href="#shop-all" className="jp-viewall">Shop {seller.storeName}&rsquo;s products <span aria-hidden="true">&rarr;</span></a>}
           </div>
 
+          {/* Collections -- real SellerCollection rows the seller has
+              grouped from the Creator Journals dashboard's "Manage
+              Collections" panel. Card only appears once they've made one,
+              same honest-empty pattern as everywhere else on this page. */}
+          {collections.length > 0 && (
+            <div className="jp-card">
+              <div className="jp-sechead">
+                <h3 className="jp-sidetitle">{seller.storeName}&rsquo;s Collections</h3>
+              </div>
+              <div className="jp-colls">
+                {collections.map((c) => (
+                  <Link key={c.id} href={`/seller/${seller.id}/collections/${c.id}`} className="jp-coll" style={{ position: 'relative', display: 'block' }}>
+                    {c.coverImage
+                      ? <img src={c.coverImage} alt={c.name} loading="lazy" />
+                      : <span style={{ display: 'block', width: '100%', aspectRatio: '110 / 98', background: 'var(--mc-card2)' }} aria-hidden="true" />}
+                    <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '18px 10px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', color: '#fff', fontSize: 12, fontWeight: 600 }}>
+                      {c.name} <span style={{ opacity: 0.75, fontWeight: 400 }}>&middot; {c.itemCount} item{c.itemCount === 1 ? '' : 's'}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Today's Workshop -- real live status, or an honest not-live state */}
           <div className="jp-card">
             <h3 className="jp-sidetitle">Today&rsquo;s Workshop</h3>
@@ -657,23 +697,32 @@ export default function SellerJournalView({
             )}
           </div>
 
-          {/* More From The Circle -- real substitute for "People Also Loved" */}
+          {/* People Also Loved -- the same maker's other entries, ranked by
+              real likes rather than recency (William, 2026-07-30: wired up
+              exactly like Maria's design instead of substituted). Clicking
+              switches the entry in place, same as "More Journal Entries". */}
           <div className="jp-card">
-            <h3 className="jp-sidetitle">More From The Circle</h3>
-            {otherMakerPosts.length === 0 ? (
-              <p className="jp-note" style={{ margin: 0 }}>No other journals from The Makers&rsquo; Circle yet &mdash; you&rsquo;re seeing one of the very first.</p>
+            <h3 className="jp-sidetitle">People Also Loved</h3>
+            {peopleAlsoLoved.length === 0 ? (
+              <p className="jp-note" style={{ margin: 0 }}>No other entries from {seller.storeName} yet &mdash; you&rsquo;re seeing their first.</p>
             ) : (
               <div className="jp-pal">
-                {otherMakerPosts.map((a) => (
-                  <Link key={a.id} href={`/seller/${a.sellerId}`} className="jp-pal-row">
+                {peopleAlsoLoved.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className="jp-pal-row"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit', padding: 0, width: '100%' }}
+                    onClick={() => { setCurrentId(a.id); setTab('story'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                  >
                     {a.image
                       ? <img src={a.image} alt="" aria-hidden="true" loading="lazy" />
                       : <span style={{ width: 48, height: 48, borderRadius: 9, background: 'var(--mc-card2)', flexShrink: 0 }} aria-hidden="true" />}
                     <span className="jp-pal-text">
-                      <span className="jp-pal-title">{a.storeName} &mdash; {a.title}</span>
+                      <span className="jp-pal-title">{a.title}</span>
                       <span className="jp-prod-loves"><Ico d={P.heart} size={10} /> {fmtK(a.likes)}</span>
                     </span>
-                  </Link>
+                  </button>
                 ))}
               </div>
             )}

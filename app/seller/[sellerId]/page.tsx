@@ -234,7 +234,7 @@ export default async function SellerProfilePage({
     if (journalPosts.length > 0) {
       const postIds = journalPosts.map((p) => p.id)
 
-      const [followers, commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, otherMakerPosts] = await Promise.all([
+      const [followers, commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, inboundMessages] = await Promise.all([
         prisma.follow.count({ where: { sellerId: seller.id } }),
         // A handful of real, published comments per entry -- enough for the
         // design's comment list without an unbounded fetch.
@@ -268,24 +268,55 @@ export default async function SellerProfilePage({
           },
           orderBy: { startedAt: 'desc' },
         }),
-        // Other makers' recent published entries -- the honest substitute
-        // for a cross-recommendation card with no real recommendation
-        // engine behind it on Velor today.
-        prisma.journalPost.findMany({
-          where: {
-            sellerId: { not: seller.id },
-            seller: { approved: true },
-            OR: [{ status: 'PUBLISHED' }, { status: 'SCHEDULED', scheduledAt: { lte: new Date() } }],
-          },
-          select: {
-            id: true, title: true, body: true, images: true, sellerId: true,
-            seller: { select: { storeName: true } },
-            _count: { select: { likes: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 3,
+        // Every buyer message this seller has ever received -- the raw
+        // material for a genuine Response rate stat (William, 2026-07-30:
+        // "wired up exactly like Maria's page"). Oldest first so the FIRST
+        // message from each buyer is easy to find below.
+        prisma.message.findMany({
+          where: { receiverId: seller.userId },
+          select: { senderId: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
         }),
       ])
+
+      // Response rate: the real % of buyers this seller has replied to at
+      // least once, not a fabricated figure. For every distinct buyer who
+      // ever messaged this seller, check whether the seller sent ANY
+      // message back to that same buyer after that buyer's first message.
+      // No messages ever received -> null ("New"), same honest-empty
+      // pattern as avgRating below.
+      let responseRate: number | null = null
+      if (inboundMessages.length > 0) {
+        const firstInboundAt = new Map<string, Date>()
+        for (const m of inboundMessages) {
+          if (!firstInboundAt.has(m.senderId)) firstInboundAt.set(m.senderId, m.createdAt)
+        }
+        const buyerIds = Array.from(firstInboundAt.keys())
+        const outboundReplies = await prisma.message.findMany({
+          where: { senderId: seller.userId, receiverId: { in: buyerIds } },
+          select: { receiverId: true, createdAt: true },
+        })
+        const repliedTo = new Set<string>()
+        for (const m of outboundReplies) {
+          const firstIn = firstInboundAt.get(m.receiverId)
+          if (firstIn && m.createdAt > firstIn) repliedTo.add(m.receiverId)
+        }
+        responseRate = Math.round((repliedTo.size / buyerIds.length) * 100)
+      }
+
+      // "People Also Loved" (Maria's design): the SAME maker's entries
+      // surfaced by real engagement rather than recency -- not a
+      // cross-seller recommendation engine, which Velor doesn't have. The
+      // buyer can switch which entry they're reading client-side without a
+      // page reload (SellerJournalView's own currentId state), so this
+      // list is a fixed "most-liked from this maker" widget rather than
+      // scoped to "other than whichever entry happens to be open" -- there
+      // is no single server-known "current entry" to exclude. Derived from
+      // journalPosts already fetched above, no extra query.
+      const peopleAlsoLoved = journalPosts
+        .slice()
+        .sort((a, b) => b._count.likes - a._count.likes)
+        .slice(0, 3)
 
       // Specialities live on Product, not Seller -- the "craft" subtitle is
       // derived from what the seller actually lists, never invented.
@@ -299,6 +330,29 @@ export default async function SellerProfilePage({
       // already fetched above -- no extra query needed.
       const taggedIds = new Set(journalPosts.flatMap((p) => p.productIds))
       const taggedProducts = seller.products.filter((p) => taggedIds.has(p.id))
+
+      // Collections (Maria's design's "Maria's Collections" card, William
+      // 2026-07-30: "wired up exactly like Maria's page"): real
+      // SellerCollection rows the seller made from the Creator Journals
+      // dashboard. Cover image and item count are resolved against the
+      // seller's own APPROVED products already fetched above, so a product
+      // that's since been removed or unapproved quietly drops out of both
+      // the count and the cover -- never an inflated or dead figure.
+      const sellerCollectionRows = await prisma.sellerCollection.findMany({
+        where: { sellerId: seller.id },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, name: true, productIds: true },
+      })
+      const productImageById = new Map(seller.products.map((p) => [p.id, p.images[0] || null]))
+      const collectionSummaries = sellerCollectionRows.map((c) => {
+        const liveProductIds = c.productIds.filter((id) => productImageById.has(id))
+        return {
+          id: c.id,
+          name: c.name,
+          itemCount: liveProductIds.length,
+          coverImage: liveProductIds.map((id) => productImageById.get(id)).find((img): img is string => Boolean(img)) ?? null,
+        }
+      })
 
       // JournalComment has no Prisma relation to User (userId is a bare
       // scalar), so commenter names are resolved with one batched lookup.
@@ -333,6 +387,7 @@ export default async function SellerProfilePage({
             avgRating: sellerReviewAgg._count._all > 0 ? Math.round((sellerReviewAgg._avg.rating ?? 0) * 10) / 10 : null,
             reviewCount: sellerReviewAgg._count._all,
             totalSales: totalSalesAgg._sum?.quantity ?? 0,
+            responseRate,
           }}
           posts={journalPosts.map((p) => ({
             id: p.id,
@@ -355,14 +410,13 @@ export default async function SellerProfilePage({
           allProducts={seller.products.map((pr) => ({ id: pr.id, title: pr.title, price: pr.price, image: pr.images[0] || null, loves: pr._count.wishlistItems }))}
           buyerLove={topReviewRow ? { text: topReviewRow.comment, rating: topReviewRow.rating, name: maskPersonalName(topReviewRow.user.name) } : null}
           live={liveStream ? { title: liveStream.title, roomName: liveStream.roomName, watching: liveStream._count.viewerSessions } : null}
-          otherMakerPosts={otherMakerPosts.map((p) => ({
+          peopleAlsoLoved={peopleAlsoLoved.map((p) => ({
             id: p.id,
-            sellerId: p.sellerId,
-            storeName: p.seller.storeName,
             title: p.title || p.body.slice(0, 44),
             image: p.images[0] || null,
             likes: p._count.likes,
           }))}
+          collections={collectionSummaries}
         />
       )
     }
