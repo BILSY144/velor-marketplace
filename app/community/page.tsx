@@ -122,10 +122,10 @@ function SectionBox({ href, children, className }: { href: string; children: Rea
 
 export default function CommunityPage() {
   const featured = [
-    { key: 'f1', img: '/community/feat-1.jpg', name: 'Fatima', verified: false, cc: 'MA', country: 'Morocco', line: 'Making hand-painted tagines.', cta: 'Watch live', ctaIcon: true, href: '/live' },
-    { key: 'f2', img: '/community/feat-2.jpg', name: 'Hiroshi', verified: true, cc: 'JP', country: 'Japan', line: 'New workshop journal uploaded. Making Samurai kitchen knives.', cta: 'View journal', ctaIcon: false, href: '/workshop' },
-    { key: 'f3', img: '/community/feat-3.jpg', name: 'Saul', verified: true, cc: 'MX', country: 'Mexico', line: 'Answered 12 buyer questions today.', cta: 'Ask a question', ctaIcon: false, href: '/community/ask' },
-    { key: 'f4', img: '/community/feat-4.jpg', name: 'Lhamo', verified: true, cc: 'NP', country: 'Nepal', line: 'Traditional Himalayan weaving.', cta: 'Watch video', ctaIcon: true, href: '/community/videos' },
+    { key: 'f1', img: pexelsUrl(35509025, null, 700), name: 'Fatima', verified: false, cc: 'MA', country: 'Morocco', line: 'Making hand-painted tagines.', cta: 'Watch live', ctaIcon: true, href: '/live' },
+    { key: 'f2', img: pexelsUrl(27084601, null, 700), name: 'Hiroshi', verified: true, cc: 'JP', country: 'Japan', line: 'New workshop journal uploaded. Making Samurai kitchen knives.', cta: 'View journal', ctaIcon: false, href: '/workshop' },
+    { key: 'f3', img: pexelsUrl(36103768, 'free-photo-of-colorful-mexican-talavera-pottery-display', 700), name: 'Saul', verified: true, cc: 'MX', country: 'Mexico', line: 'Answered 12 buyer questions today.', cta: 'Ask a question', ctaIcon: false, href: '/community/ask' },
+    { key: 'f4', img: pexelsUrl(14106294, null, 700), name: 'Lhamo', verified: true, cc: 'NP', country: 'Nepal', line: 'Traditional Himalayan weaving.', cta: 'Watch video', ctaIcon: true, href: '/community/videos' },
   ]
 
   const askRows = [
@@ -147,38 +147,38 @@ export default function CommunityPage() {
   ]
 
   const videos = [
-    { img: '/community/vid-1.jpg', title: 'Natural Dyeing Process', country: 'Peru' },
-    { img: '/community/vid-2.jpg', title: 'Hand Building Pottery', country: 'Italy' },
-    { img: '/community/vid-3.jpg', title: 'Forging a Knife', country: 'Japan' },
-    { img: '/community/vid-4.jpg', title: 'Handwoven Carpet', country: 'Turkey' },
+    { img: pexelsUrl(33539680, null, 500), title: 'Natural Dyeing Process', country: 'Peru' },
+    { img: pexelsUrl(19015377, null, 500), title: 'Hand Building Pottery', country: 'Italy' },
+    { img: pexelsUrl(31004832, null, 500), title: 'Forging a Knife', country: 'Japan' },
+    { img: pexelsUrl(33653647, 'free-photo-of-colorful-traditional-turkish-kilim-pattern', 500), title: 'Handwoven Carpet', country: 'Turkey' },
   ]
 
   const chat = [
-    { img: '/community/chat-1.jpg', name: 'Emma', msg: 'How long does it take to make one?' },
-    { img: '/community/chat-2.jpg', name: 'Rafael', msg: 'Do you ship to Europe?' },
-    { img: '/community/chat-3.jpg', name: 'Julia', msg: "It's beautiful!" },
-    { img: '/community/chat-4.jpg', name: 'Mia', msg: 'Can I order this in blue?' },
+    { img: pexelsUrl(36157389, null, 120), name: 'Emma', msg: 'How long does it take to make one?' },
+    { img: pexelsUrl(8330375, null, 120), name: 'Rafael', msg: 'Do you ship to Europe?' },
+    { img: pexelsUrl(36919208, null, 120), name: 'Julia', msg: "It's beautiful!" },
+    { img: pexelsUrl(28351286, null, 120), name: 'Mia', msg: 'Can I order this in blue?' },
   ]
 
   const panelRows = [
-    { img: '/community/panel-1.jpg', label: 'Live Sellers', sub: '23 live now', href: '/live' },
-    { img: '/community/panel-2.jpg', label: 'Latest Videos', sub: 'New this week', href: '/community/videos' },
-    { img: '/community/panel-3.jpg', label: 'Latest Journals', sub: '18 new entries', href: '/workshop' },
-    { img: '/community/panel-4.jpg', label: 'Newest Products', sub: '56 new items', href: '/shop' },
+    { img: pexelsUrl(37966508, null, 120), label: 'Live Sellers', sub: '23 live now', href: '/live' },
+    { img: pexelsUrl(16963295, null, 120), label: 'Latest Videos', sub: 'New this week', href: '/community/videos' },
+    { img: pexelsUrl(34189664, null, 120), label: 'Latest Journals', sub: '18 new entries', href: '/workshop' },
+    { img: pexelsUrl(37966505, null, 120), label: 'Newest Products', sub: '56 new items', href: '/shop' },
   ]
 
   const collections = [
-    { img: '/community/coll-1.jpg', name: 'My Dream Japanese Home', items: '18 items', by: 'by Olivia' },
-    { img: '/community/coll-2.jpg', name: 'Traditional Mexican Kitchen', items: '24 items', by: 'by Daniel' },
-    { img: '/community/coll-3.jpg', name: 'African Handmade', items: '31 items', by: 'by Sarah' },
-    { img: '/community/coll-4.jpg', name: 'Himalayan Crafts', items: '15 items', by: 'by James' },
+    { img: pexelsUrl(14705063, null, 500), name: 'My Dream Japanese Home', items: '18 items', by: 'by Olivia' },
+    { img: pexelsUrl(37215000, 'free-photo-of-gourmet-seafood-and-avocado-molcajete-feast', 500), name: 'Traditional Mexican Kitchen', items: '24 items', by: 'by Daniel' },
+    { img: pexelsUrl(29828564, null, 500), name: 'African Handmade', items: '31 items', by: 'by Sarah' },
+    { img: pexelsUrl(6831008, null, 500), name: 'Himalayan Crafts', items: '15 items', by: 'by James' },
   ]
 
   const lessons = [
-    { img: '/community/lrn-1.jpg', title: 'How Moroccan Leather is Dyed', t: '10:24' },
-    { img: '/community/lrn-2.jpg', title: 'How Japanese Ceramics are Fired', t: '13:18' },
-    { img: '/community/lrn-3.jpg', title: 'Why Peruvian Alpaca Wool is Special', t: '9:47' },
-    { img: '/community/lrn-4.jpg', title: 'History of Turkish Carpets', t: '11:02' },
+    { img: pexelsUrl(37357057, null, 200), title: 'How Moroccan Leather is Dyed', t: '10:24' },
+    { img: pexelsUrl(18198515, null, 200), title: 'How Japanese Ceramics are Fired', t: '13:18' },
+    { img: pexelsUrl(35729525, null, 200), title: 'Why Peruvian Alpaca Wool is Special', t: '9:47' },
+    { img: pexelsUrl(30982437, null, 200), title: 'History of Turkish Carpets', t: '11:02' },
   ]
 
   const followCountries = [
@@ -239,7 +239,7 @@ export default function CommunityPage() {
             {featured.map((c) => (
               <article key={c.key} className="mc-fcard">
                 <div className="mc-fcard-media">
-                  <div className="mc-ph"><Ico d={PATHS.camera} size={22} /></div>
+                  <img src={c.img} alt={c.name} loading="lazy" />
                 </div>
                 <div className="mc-fcard-body">
                   <h3 className="mc-fcard-name">
@@ -276,7 +276,7 @@ export default function CommunityPage() {
                 <div className="mc-journal-viewed"><Ico d={PATHS.eye} size={12} /> Viewed in 17 countries</div>
               </div>
               <div className="mc-journal-media">
-                <div className="mc-ph mc-ph-fill"><Ico d={PATHS.play} size={26} /></div>
+                <img src={pexelsUrl(18977427, null, 800)} alt="Creator journal video" loading="lazy" />
                 <Link href="/community/journals" className="mc-arrow mc-arrow-l" aria-label="Previous journal" onClick={(e) => e.stopPropagation()}>&lsaquo;</Link>
                 <Link href="/community/journals" className="mc-arrow mc-arrow-r" aria-label="Next journal" onClick={(e) => e.stopPropagation()}>&rsaquo;</Link>
               </div>
@@ -328,7 +328,7 @@ export default function CommunityPage() {
               {videos.map((v) => (
                 <Link key={v.title} href="/community/videos" className="mc-vcard" onClick={(e) => e.stopPropagation()}>
                   <div className="mc-vthumb">
-                    <div className="mc-ph"><Ico d={PATHS.play} size={18} /></div>
+                    <img src={v.img} alt={v.title} loading="lazy" />
                   </div>
                   <div className="mc-vcard-meta">
                     <div className="mc-vcard-title">{v.title}</div>
@@ -344,10 +344,10 @@ export default function CommunityPage() {
             <div className="mc-live">
               <div className="mc-live-left">
                 <div className="mc-live-frame">
-                  <div className="mc-ph"><Ico d={PATHS.play} size={26} /></div>
+                  <img src={pexelsUrl(10377676, null, 800)} alt="Live shopping stream" loading="lazy" />
                 </div>
                 <div className="mc-live-productbar">
-                  <span className="mc-live-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.vase} size={16} /></span>
+                  <img className="mc-live-thumb" src={pexelsUrl(6243343, null, 200)} alt="" aria-hidden="true" loading="lazy" />
                   <div className="mc-live-pmeta">
                     <div className="mc-live-pname">Handmade Ceramic Vase</div>
                     <div className="mc-vcard-sub">By Arjun &ndash; India</div>
@@ -362,7 +362,7 @@ export default function CommunityPage() {
                 <div className="mc-chat-body">
                   {chat.map((m) => (
                     <div key={m.name} className="mc-chat-msg">
-                      <span className="mc-chat-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={12} /></span>
+                      <img className="mc-chat-avatar" src={m.img} alt="" aria-hidden="true" loading="lazy" />
                       <div>
                         <div className="mc-chat-name">{m.name}</div>
                         <div className="mc-chat-text">{m.msg}</div>
@@ -406,7 +406,7 @@ export default function CommunityPage() {
                 </div>
                 {panelRows.map((r) => (
                   <Link key={r.label} href={r.href} className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
-                    <span className="mc-panel-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.grid} size={13} /></span>
+                    <img className="mc-panel-thumb" src={r.img} alt="" aria-hidden="true" loading="lazy" />
                     <span className="mc-panel-text">
                       <span className="mc-panel-label">{r.label}</span>
                       <span className="mc-panel-sub">{r.sub}</span>
@@ -423,7 +423,7 @@ export default function CommunityPage() {
             <div className="mc-coll-grid">
               {collections.map((c) => (
                 <Link key={c.name} href="/account/collections" className="mc-coll-tile" onClick={(e) => e.stopPropagation()}>
-                  <span className="mc-coll-ph mc-ph" aria-hidden="true"><Ico d={PATHS.grid} size={18} /></span>
+                  <img src={c.img} alt={c.name} loading="lazy" />
                   <span className="mc-coll-name">{c.name}</span>
                   <span className="mc-coll-by">{c.items}<br />{c.by}</span>
                 </Link>
@@ -454,7 +454,7 @@ export default function CommunityPage() {
               </div>
               <div className="mc-challenge-winner">
                 <div className="mc-challenge-label">Last Month Winner</div>
-                <span className="mc-winner-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={20} /></span>
+                <img className="mc-winner-avatar" src={pexelsUrl(38112321, null, 200)} alt="Abdul Karim" loading="lazy" />
                 <div className="mc-winner-name">Abdul Karim</div>
                 <div className="mc-winner-country"><span aria-hidden="true">{flagFor('MA')}</span> Morocco</div>
                 <div className="mc-laurel"><Ico d={PATHS.laurel} size={14} /> Artisan of the Month <Ico d={PATHS.laurel} size={14} /></div>
@@ -467,7 +467,7 @@ export default function CommunityPage() {
             <div className="mc-lessons">
               {lessons.map((l) => (
                 <Link key={l.title} href="/community/learning" className="mc-lesson" onClick={(e) => e.stopPropagation()}>
-                  <span className="mc-lesson-thumb mc-ph" aria-hidden="true"><Ico d={PATHS.play} size={12} /></span>
+                  <img className="mc-lesson-thumb" src={l.img} alt="" aria-hidden="true" loading="lazy" />
                   <span className="mc-lesson-title">{l.title}</span>
                   <span className="mc-lesson-time">{l.t}</span>
                 </Link>
@@ -504,7 +504,7 @@ export default function CommunityPage() {
             <SectionHead title="Maker Passport" href="/community/passport" icon="passport" />
             <div className="mc-passport">
               <div className="mc-passport-id">
-                <span className="mc-passport-avatar mc-ph-circle" aria-hidden="true"><Ico d={PATHS.user} size={26} /></span>
+                <img className="mc-passport-avatar" src={pexelsUrl(24645287, 'free-photo-of-elderly-person-holding-embroidered-blankets', 300)} alt="Maria Quispe" loading="lazy" />
                 <div>
                   <div className="mc-passport-name">Maria Quispe<Verified /></div>
                   <div className="mc-passport-craft">
