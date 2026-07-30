@@ -10,7 +10,17 @@
 import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 
+// 'en' added 2026-07-30 (William: seller-authored copy can be in the
+// seller's own language -- app/apply's own copy says "English is not
+// required" -- and a buyer with English selected saw untranslated Chinese
+// on a seller's store). English is now a real translation TARGET too, not
+// just "do nothing": LanguageTranslator only ever requests it for the
+// handful of genuinely non-Latin-script text nodes on a page, never for
+// the site's own already-English copy -- see the isForeignScript() filter
+// there, which is what keeps this from re-translating the entire site
+// into itself on every default page view.
 const LANG_NAMES: Record<string, string> = {
+  en: 'English',
   es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', pt: 'Portuguese',
   nl: 'Dutch', pl: 'Polish', tr: 'Turkish', ru: 'Russian', ar: 'Arabic',
   hi: 'Hindi', bn: 'Bengali', vi: 'Vietnamese', th: 'Thai', id: 'Indonesian',

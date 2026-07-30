@@ -96,6 +96,14 @@ interface SellerInfo {
   specialities: string[]
   followers: number
   listings: number
+  // Maker Passport panel (2026-07-30): the same badge label, DELIVERED-order
+  // count, and merged (journal + product) video count shown on this
+  // seller's card in the Makers' Circle -- so "View Full Passport" lands
+  // somewhere that actually shows a fuller passport, not just this page's
+  // unrelated Rating/Sales/Response stat grid.
+  sellerBadge: string
+  ordersCompleted: number
+  videos: number
   avgRating: number | null
   reviewCount: number
   totalSales: number
@@ -1050,6 +1058,26 @@ export default function SellerJournalView({
               </span>
             </div>
           )}
+
+          {/* Maker Passport (2026-07-30): the same six real stats shown on
+              this seller's passport card in the Makers' Circle, ranked
+              there automatically by follower count -- linked here so the
+              seller's own page is genuinely a fuller passport, not a dead
+              end back to an unrelated stat grid. */}
+          <div className="jp-card">
+            <div className="jp-sechead">
+              <h3 className="jp-sidetitle">Maker Passport</h3>
+              <Link href="/community/passport" className="jp-viewall" style={{ marginTop: 0 }}>All makers <span aria-hidden="true">&rsaquo;</span></Link>
+            </div>
+            <div className="jp-stats" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              <div className="jp-stat"><span className="jp-stat-num">{seller.ordersCompleted}</span><span className="jp-stat-label">Orders</span></div>
+              <div className="jp-stat"><span className="jp-stat-num">{seller.followers}</span><span className="jp-stat-label">Followers</span></div>
+              <div className="jp-stat"><span className="jp-stat-num">{seller.videos}</span><span className="jp-stat-label">Videos</span></div>
+              <div className="jp-stat"><span className="jp-stat-num">{posts.length}</span><span className="jp-stat-label">Journal</span></div>
+              <div className="jp-stat"><span className="jp-stat-num">{seller.memberSince}</span><span className="jp-stat-label">Member Since</span></div>
+              <div className="jp-stat"><span className="jp-stat-num" style={{ fontSize: 12.5 }}>{seller.sellerBadge}</span><span className="jp-stat-label">Badge</span></div>
+            </div>
+          </div>
 
           <div className="jp-card">
             <h3 className="jp-sidetitle">About {seller.storeName}</h3>

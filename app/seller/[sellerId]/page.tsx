@@ -13,6 +13,24 @@ import { maskPersonalName } from '@/lib/messageIdentity'
 
 const PAID_ORDER_STATUSES: OrderStatus[] = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED']
 
+// Same "publicly visible" rule as the journals directory and every other
+// journal query -- PUBLISHED, or SCHEDULED whose moment has already passed.
+function publiclyVisibleWhere() {
+  return {
+    OR: [
+      { status: 'PUBLISHED' as const },
+      { status: 'SCHEDULED' as const, scheduledAt: { lte: new Date() } },
+    ],
+  }
+}
+
+const BADGE_LABEL: Record<string, string> = {
+  NEW: 'New Seller',
+  ESTABLISHED: 'Established',
+  TRUSTED: 'Trusted',
+  TOP_RATED: 'Top Rated',
+}
+
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
 // "page not found" and keeps people inside the Velor experience.
@@ -202,6 +220,27 @@ export default async function SellerProfilePage({
     return <StoreNotReady />
   }
 
+  // Maker Passport panel (2026-07-30, William: clicking "View Full
+  // Passport" from the Makers' Circle just landed on this page's ordinary
+  // storefront/journal content with none of the passport stats on it --
+  // a real gap, not just a routing choice). Fetched once here and shown on
+  // BOTH branches below (classic storefront and journal view) so every
+  // seller's own page actually shows the same six stats as their passport
+  // card: real DELIVERED-order count (not the broader "totalSales" item
+  // quantity used elsewhere on this page), real follower count, videos
+  // merged from both places a seller can attach one (JournalPost.videoUrl
+  // and Product.videoUrl -- same fix as the hub's Workshop Videos/passport
+  // spotlight), and published journal entry count.
+  const [passportFollowers, passportOrders, passportJournalVideos, passportProductVideos, passportJournalEntries] = await Promise.all([
+    prisma.follow.count({ where: { sellerId: seller.id } }),
+    prisma.order.count({ where: { sellerId: seller.id, status: 'DELIVERED' } }),
+    prisma.journalPost.count({ where: { sellerId: seller.id, videoUrl: { not: null }, ...publiclyVisibleWhere() } }),
+    prisma.product.count({ where: { sellerId: seller.id, videoUrl: { not: null }, status: 'APPROVED' } }),
+    prisma.journalPost.count({ where: { sellerId: seller.id, ...publiclyVisibleWhere() } }),
+  ])
+  const passportVideos = passportJournalVideos + passportProductVideos
+  const passportBadge = BADGE_LABEL[seller.sellerBadge || 'NEW'] || seller.sellerBadge || 'New Seller'
+
   // Velor Social stage 4 (2026-07-30, William: "get rid of the storefront
   // and have the journal replace it" -- "the whole idea of the buyer
   // interacting with the seller's journal" -- "everything can be accessed
@@ -264,8 +303,9 @@ export default async function SellerProfilePage({
           )
         : false
 
-      const [followers, commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, inboundMessages] = await Promise.all([
-        prisma.follow.count({ where: { sellerId: seller.id } }),
+      // Follower count already fetched above (passportFollowers) -- reused
+      // here rather than queried twice.
+      const [commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, inboundMessages] = await Promise.all([
         // A handful of real, published comments per entry -- enough for the
         // design's comment list without an unbounded fetch.
         prisma.journalComment.findMany({
@@ -412,8 +452,11 @@ export default async function SellerProfilePage({
             currency: seller.currency || 'GBP',
             memberSince: seller.createdAt.getFullYear(),
             specialities: sellerSpecialities,
-            followers,
+            followers: passportFollowers,
             listings: seller.products.length,
+            sellerBadge: passportBadge,
+            ordersCompleted: passportOrders,
+            videos: passportVideos,
             avgRating: sellerReviewAgg._count._all > 0 ? Math.round((sellerReviewAgg._avg.rating ?? 0) * 10) / 10 : null,
             reviewCount: sellerReviewAgg._count._all,
             totalSales: totalSalesAgg._sum?.quantity ?? 0,
@@ -469,6 +512,7 @@ export default async function SellerProfilePage({
     month: 'long',
     year: 'numeric',
   })
+  const memberSinceYear = seller.createdAt.getFullYear()
 
   return (
     <div
@@ -624,6 +668,51 @@ export default async function SellerProfilePage({
                   {seller.description}
                 </p>
               )}
+
+              {/* Maker Passport (2026-07-30): the same six real stats
+                  shown on this seller's passport card in the Makers'
+                  Circle, so "View Full Passport" actually shows a fuller
+                  passport here instead of just this store's products. */}
+              <div
+                style={{
+                  marginTop: '18px',
+                  padding: '14px 16px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  maxWidth: '520px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+                    Maker Passport
+                  </span>
+                  <Link href="/community/passport" style={{ fontSize: '11px', color: 'var(--muted)', textDecoration: 'underline' }}>
+                    All makers &rsaquo;
+                  </Link>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {[
+                    { n: String(passportOrders), l: 'Orders' },
+                    { n: String(passportFollowers), l: 'Followers' },
+                    { n: String(passportVideos), l: 'Videos' },
+                    { n: String(passportJournalEntries), l: 'Journal' },
+                    { n: String(memberSinceYear), l: 'Member Since' },
+                    { n: passportBadge, l: 'Badge' },
+                  ].map((s) => (
+                    <div key={s.l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>{s.n}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

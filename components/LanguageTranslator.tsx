@@ -13,14 +13,47 @@
 // - Numbers, prices, currency symbols and single characters are skipped.
 // - The header's language/currency <select>s keep their native names
 //   (SELECT/OPTION are excluded), and anything inside data-no-translate.
-// - English restores originals instantly from the in-memory map.
+// - English still restores anything WE previously wrote (a leftover
+//   translation from switching languages) instantly, no network cost.
+//
+// 2026-07-30 (William caught two real bugs live): a buyer with English
+// selected still saw raw Chinese on a seller's store page. Two fixes:
+// (a) NO_LETTERS used to be ASCII-only (`[^A-Za-z]`), so any text made
+//     entirely of CJK/Arabic/Cyrillic/etc. characters had ZERO ASCII
+//     letters and was silently treated like a bare number or symbol --
+//     never even collected as translatable, in ANY target language, not
+//     just English. Broadened to `\p{L}` (any script's letters) so this
+//     is fixed for every language, not only the English case reported.
+// (b) English used to be pure "restore what I wrote" with no path to ever
+//     translate INTO English -- correct for the site's own copy, but
+//     sellers can write listings in their own language (app/apply: "write
+//     in your own language -- English is not required"), so foreign-
+//     language seller content was never touched at all. English is now a
+//     real target (lib/translate.ts's LANG_NAMES.en), but ONLY for nodes
+//     whose original text is non-Latin-script (isForeignScript below) --
+//     never the site's own already-English copy, which is what keeps this
+//     from re-translating every default English page view into itself and
+//     burning the shared anti-abuse budget.
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { getDisplayLanguage, SUPPORTED_LANGUAGES } from '@/lib/language'
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'SELECT', 'OPTION', 'CODE', 'PRE'])
-const NO_LETTERS = /^[^A-Za-z]*$/
+// Unicode-aware: matches strings with no letter in ANY script -- pure
+// numbers, prices, currency symbols, punctuation. `u` flag required for
+// \p{L} to work -- built via the RegExp constructor (not a literal) since
+// this project's tsconfig.json has no explicit `target`, and TS only
+// allows the `u` flag on regex LITERALS when targeting es6+; the
+// constructor form isn't subject to that literal-syntax check.
+const NO_LETTERS = new RegExp('^[^\\p{L}]*$', 'u')
+// A letter outside the Latin script (and outside numbers/punctuation/
+// symbols/whitespace, which never match \p{L} anyway) -- Chinese, Arabic,
+// Cyrillic, Devanagari, Thai, Hangul, Hiragana/Katakana, etc. Used only to
+// decide what to translate INTO English; every other target language
+// already translates all letter-containing text via NO_LETTERS above.
+const FOREIGN_LETTER = new RegExp('[^\\p{Script=Latin}\\p{N}\\p{P}\\p{S}\\s]', 'u')
+const isForeignScript = (t: string) => FOREIGN_LETTER.test(t)
 
 export default function LanguageTranslator() {
   const pathname = usePathname()
@@ -115,12 +148,24 @@ export default function LanguageTranslator() {
       startObserver()
     }
 
+    // English target (2026-07-30): only ever the foreign-script subset --
+    // never the site's own already-English copy. Every other target
+    // language still uses every letter-containing node (isForeignScript is
+    // irrelevant there; NO_LETTERS already did its job in collectNodes).
+    const nodesForLang = (lang: string): Text[] => {
+      const all = collectNodes()
+      if (lang !== 'en') return all
+      return all.filter((n) => isForeignScript((originals.current.get(n) ?? n.nodeValue ?? '').trim()))
+    }
+
     const translatePage = async () => {
       const lang = getDisplayLanguage()
       if (lang === 'en') {
+        // Revert anything WE previously wrote for a different language --
+        // instant, no network. Foreign-script seller content (handled
+        // below) is untouched by this: it was never one of our own writes,
+        // so it isn't in `originals` unless we've already translated it.
         restoreEnglish()
-        window.setTimeout(() => { void prefetchAll() }, 2500)
-        return
       }
       if (busy.current) {
         // a run is in flight for a possibly different language -- queue a
@@ -133,7 +178,7 @@ export default function LanguageTranslator() {
       try {
         document.documentElement.lang = lang
         const d = langDict(lang)
-        const nodes = collectNodes()
+        const nodes = nodesForLang(lang)
         applyDict(nodes, d) // whatever we already know, instantly
         const pending = [...new Set(
           nodes
@@ -175,7 +220,7 @@ export default function LanguageTranslator() {
                 // stale-run guard: only paint if the user is still on the
                 // language this batch was fetched for
                 if (getDisplayLanguage() === lang) {
-                  applyDict(collectNodes(), d)
+                  applyDict(nodesForLang(lang), d)
                 }
               }
             } catch {}
@@ -244,7 +289,12 @@ export default function LanguageTranslator() {
     }
 
     const startObserver = () => {
-      if (getDisplayLanguage() === 'en') return
+      // Previously skipped entirely for English (there was nothing to
+      // translate). Now foreign-script seller content can appear after the
+      // initial pass too -- e.g. switching between a maker's journal
+      // entries client-side -- so English keeps observing like every other
+      // language; translatePage()'s own nodesForLang() filter is what
+      // keeps it cheap (only foreign-script nodes are ever sent).
       if (!observer.current) {
         observer.current = new MutationObserver(() => schedule())
       }

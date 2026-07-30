@@ -1,10 +1,14 @@
 // POST { lang, texts: string[] } -> { translations: string[] } aligned to input.
 //
-// Public buyer-facing endpoint behind hard caps: only the 18 non-English
-// languages Velor speaks, max 400 strings / 600 chars each / 30k chars per
-// request. Cache-first (TranslationCache), so repeat traffic costs nothing;
-// only never-seen strings reach the Anthropic API. If abuse ever shows up in
-// spend, the next step is an origin check + per-IP daily budget -- flagged in
+// Public buyer-facing endpoint behind hard caps: only the 19 languages
+// Velor speaks (isTranslatableLang, lib/translate.ts), max 400 strings /
+// 600 chars each / 30k chars per request. 'en' is a real target here too
+// (2026-07-30) -- LanguageTranslator only ever sends it non-Latin-script
+// text (e.g. a seller's own-language listing copy), so this stays cheap;
+// it never re-translates the site's own English copy into itself. Cache-
+// first (TranslationCache), so repeat traffic costs nothing; only never-
+// seen strings reach the Anthropic API. If abuse ever shows up in spend,
+// the next step is an origin check + per-IP daily budget -- flagged in
 // CLAUDE.md rather than silently assumed unnecessary.
 
 import { NextResponse } from 'next/server'
