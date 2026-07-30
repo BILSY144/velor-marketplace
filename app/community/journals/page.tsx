@@ -153,7 +153,18 @@ export default function SellerJournalPage() {
               <h1 className="jp-title">Day 128 &ndash; A New<br />Design, A New Beginning</h1>
               <p className="jp-intro">
                 Every piece I create carries the threads of my ancestors. Today I started something new &mdash; a design I
-                hope will honour them and bring joy to your home.
+                hope will honour them and bring joy to your home. It began, as it always does, in the quiet hours before
+                sunrise, when the light through my workshop window is soft enough to see the true colour of a
+                freshly dyed skein. I had been dreaming about this pattern for weeks, turning it over in my mind the
+                way my grandmother once taught me to turn a thought before ever touching the loom &mdash; slowly, and with
+                respect for what it might become. There is a rhythm to this work that cannot be rushed. The warp
+                has to be set with patience, thread by thread, and the dyes are drawn from the plants that grow
+                just outside our door: cochineal from the cactus, indigo from the leaves we tend ourselves. Every
+                knot is placed with a story in mind, and every colour carries a memory of the women who taught me
+                this craft. I hope that when this piece eventually finds its way into your home, you feel a little
+                of the quiet and the care that went into making it &mdash; and that it reminds you, as it reminds me
+                each morning I sit down at the loom, that the oldest traditions are so often the ones most worth
+                keeping alive.
               </p>
               <div className="jp-meta">
                 <span className="jp-meta-item">
