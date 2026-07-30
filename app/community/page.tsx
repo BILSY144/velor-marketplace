@@ -865,7 +865,10 @@ html[data-theme='light'] .mc-page {
   --mc-muted: var(--muted);
   --mc-gold: #a8811a;
 }
-.mc-wrap { max-width: 1280px; margin: 0 auto; padding: 24px clamp(14px, 3vw, 34px) 50px; display: flex; flex-direction: column; gap: 20px; }
+/* Full-bleed per William 2026-07-30 ("fit the page perfectly left to right
+   no gaps either side") -- same no-max-width rule as the homepage. A slim
+   edge inset keeps the boxes' gold borders and rounded corners visible. */
+.mc-wrap { width: 100%; padding: 24px clamp(8px, 1vw, 14px) 50px; display: flex; flex-direction: column; gap: 20px; }
 
 .mc-kicker { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mc-text); }
 .mc-mark { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; border: 1.4px solid var(--accent); color: var(--accent); flex-shrink: 0; }
