@@ -1,9 +1,13 @@
 'use client'
 
-// My Collections (Velor Social stage 3, 2026-07-29). Private curation:
-// collections are visible only to their owner (docs/osa/dpia-velor-social.md
-// -- no public browsing surface at launch). Renders an honest "not enabled"
-// state if the feature flag is ever off.
+// My Collections (Velor Social stage 3, 2026-07-29; public toggle added
+// 2026-07-30 per William's sign-off -- see docs/osa/dpia-velor-social.md's
+// addendum). Collections are PRIVATE BY DEFAULT. A buyer can explicitly make
+// one public with the toggle below; the confirm dialog before turning it on
+// is the one place this is explained in plain language ("may appear on the
+// Makers' Circle homepage") -- nothing becomes public without that
+// confirmation. Renders an honest "not enabled" state if the feature flag
+// is ever off.
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
@@ -85,6 +89,26 @@ export default function CollectionsPage() {
     }
   }
 
+  async function togglePublic(collectionId: string, name: string, makePublic: boolean) {
+    if (makePublic) {
+      const ok = window.confirm(
+        `Make “${name}” public? Its name, saved items, and your display name (e.g. “First L.”) may then be shown to other users, including on the Makers' Circle homepage. Your full name and email are never shown. You can switch it back to private any time.`
+      )
+      if (!ok) return
+    }
+    setBusyId(collectionId)
+    try {
+      await fetch('/api/social/collections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collectionId, isPublic: makePublic }),
+      })
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <main style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 80px', fontFamily: 'var(--font-body)' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '6px' }}>
@@ -94,7 +118,7 @@ export default function CollectionsPage() {
         </Link>
       </div>
       <p style={{ fontSize: '14px', color: 'var(--muted)', margin: '0 0 30px' }}>
-        Private to you. Save pieces from any listing page with “Save to collection”.
+        Private to you by default. Save pieces from any listing page with “Save to collection”, and choose to make a collection public if you want it shown on the Makers&apos; Circle homepage.
       </p>
 
       {state === 'loading' && <p style={{ color: 'var(--muted)' }}>Loading…</p>}
@@ -124,17 +148,34 @@ export default function CollectionsPage() {
               <div>
                 <h2 style={{ fontSize: '19px', margin: 0 }}>{c.name}</h2>
                 <span style={{ fontSize: '12.5px', color: 'var(--muted)' }}>
-                  {c._count.items} item{c._count.items === 1 ? '' : 's'} · Private
+                  {c._count.items} item{c._count.items === 1 ? '' : 's'} · {c.isPublic ? 'Public' : 'Private'}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => void deleteCollection(c.id, c.name)}
-                disabled={busyId === c.id}
-                style={{ background: 'none', border: 'none', padding: '8px', fontSize: '12.5px', color: 'var(--muted)', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                Delete collection
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <button
+                  type="button"
+                  onClick={() => void togglePublic(c.id, c.name, !c.isPublic)}
+                  disabled={busyId === c.id}
+                  title={c.isPublic ? 'Switch back to private' : 'Make this collection public'}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 14px', borderRadius: '999px',
+                    border: c.isPublic ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    background: c.isPublic ? 'var(--accent)' : 'none',
+                    color: c.isPublic ? '#fff' : 'var(--text)',
+                    fontSize: '12.5px', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  {c.isPublic ? 'Public' : 'Make public'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteCollection(c.id, c.name)}
+                  disabled={busyId === c.id}
+                  style={{ background: 'none', border: 'none', padding: '8px', fontSize: '12.5px', color: 'var(--muted)', textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                  Delete collection
+                </button>
+              </div>
             </div>
             {c.items.length === 0 ? (
               <p style={{ fontSize: '13.5px', color: 'var(--muted)', margin: 0 }}>Nothing saved here yet.</p>

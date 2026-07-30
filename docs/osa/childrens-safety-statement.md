@@ -1,6 +1,6 @@
 # Children's Safety Statement & Voluntary Children's Risk Assessment — Velor Marketplace
 
-**STATUS: DRAFT — awaiting review and sign-off by William Sinclair.** Prepared
+**STATUS: SIGNED — reviewed and confirmed by William Sinclair, 2026-07-30.** Prepared
 2026-07-29. Companion to the Children's Access Assessment.
 
 **Legal position, stated plainly:** the Children's Access Assessment (this pack,
@@ -85,4 +85,4 @@ within the legal window, using Ofcom's Protection of Children guidance:
 
 Name: William Sinclair — Director, Velor Commerce Ltd
 
-Signature/date: ______________________________
+Signature/date: William Sinclair -- confirmed directly in a Cowork session, 2026-07-30 (no scanned wet-ink signature on file; this is the record of his verbal/written confirmation as the named accountable person).

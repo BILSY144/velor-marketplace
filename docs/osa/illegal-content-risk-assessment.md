@@ -1,6 +1,6 @@
 # Illegal Content Risk Assessment — Velor Marketplace (velorcommerce.store)
 
-**STATUS: DRAFT — awaiting review and sign-off by William Sinclair.** Nothing in this
+**STATUS: SIGNED — reviewed and confirmed by William Sinclair, 2026-07-30.** Nothing in this
 document is adopted until signed below. Prepared 2026-07-29 following Ofcom's risk
 assessment guidance for user-to-user services under the UK Online Safety Act 2023,
 using the four-step methodology and the 17 kinds of priority illegal harm from
@@ -102,4 +102,4 @@ as the primary enforcement risk for small services.
 
 Name: William Sinclair — Director, Velor Commerce Ltd
 
-Signature/date: ______________________________
+Signature/date: William Sinclair -- confirmed directly in a Cowork session, 2026-07-30 (no scanned wet-ink signature on file; this is the record of his verbal/written confirmation as the named accountable person).

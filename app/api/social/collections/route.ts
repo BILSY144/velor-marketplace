@@ -6,11 +6,14 @@ import { checkMessageContent } from '@/lib/messageFilter'
 // Velor Social: Collections (LAW #4 stage 3 foundations, built 2026-07-29).
 //
 // DORMANT BY DESIGN: 403 unless VELOR_SOCIAL_ENABLED === 'true' -- set by
-// William only after the OSA pack (docs/osa/) is signed. Collections are
-// PRIVATE BY DEFAULT (docs/osa/dpia-velor-social.md); isPublic is an
-// explicit opt-in and there is no public browsing surface at launch.
-// Collection names are user-generated text, so they pass the same shared
-// content filter as every other UGC string on Velor.
+// William only after the OSA pack (docs/osa/) is signed (it now is, see
+// docs/osa/dpia-velor-social.md's sign-off block). Collections are PRIVATE
+// BY DEFAULT; isPublic is an explicit per-collection opt-in via PATCH below.
+// William approved a public browsing surface 2026-07-30 (see the DPIA's
+// addendum of the same date) -- app/community/CommunityPageClient.tsx's "Buyer's
+// Collections" box now lists real isPublic collections. Collection names
+// are user-generated text, so they pass the same shared content filter as
+// every other UGC string on Velor.
 
 const MAX_COLLECTIONS_PER_USER = 50
 const MAX_ITEMS_PER_COLLECTION = 200
@@ -93,6 +96,28 @@ export async function POST(req: NextRequest) {
     select: { id: true, name: true, isPublic: true },
   })
   return NextResponse.json({ ok: true, collection })
+}
+
+// Toggle a collection's visibility: { collectionId, isPublic }. This is the
+// ONLY way isPublic ever changes -- always an explicit, one-collection-at-a-
+// time buyer action, never a bulk or default flip. The client shows plain
+// copy before this fires ("may appear on the Makers' Circle homepage").
+export async function PATCH(req: NextRequest) {
+  const gate = socialDisabled()
+  if (gate) return gate
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const body = await req.json().catch(() => ({}))
+  if (typeof body.collectionId !== 'string' || !body.collectionId || typeof body.isPublic !== 'boolean') {
+    return NextResponse.json({ error: 'collectionId and isPublic required' }, { status: 400 })
+  }
+  const collection = await prisma.collection.findFirst({
+    where: { id: body.collectionId, userId: session.user.id },
+    select: { id: true },
+  })
+  if (!collection) return NextResponse.json({ error: 'Collection not found' }, { status: 404 })
+  await prisma.collection.update({ where: { id: collection.id }, data: { isPublic: body.isPublic } })
+  return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest) {

@@ -11,28 +11,28 @@
 //    Maker Passport -> real data. Learning Centre -> real YouTube videos of
 //    outside craftspeople as a labelled bridge until sellers upload their
 //    own (William confirmed: "clearly labelled as guest content").
+//  - 2026-07-30: Buyer's Collections -> real data. William confirmed he'd
+//    signed the OSA pack (docs/osa/ -- all five documents now show SIGNED,
+//    not DRAFT) and approved building the previously-missing public
+//    browsing surface. That required more than a data swap: buyers had no
+//    way to make a collection public at all before this (the account page
+//    hardcoded every collection as "Private to you"), so a real
+//    public/private toggle with plain-language consent copy was added
+//    (app/account/collections/page.tsx, PATCH on
+//    app/api/social/collections/route.ts) alongside the DPIA addendum and a
+//    new "Community & Social Features" section in the privacy policy. This
+//    box only ever shows collections a buyer explicitly opted into.
 //
-// Buyer's Collections is DELIBERATELY NOT swapped, despite a real
-// Collection/CollectionItem model existing: docs/osa/dpia-velor-social.md
-// (the signed data-protection assessment for Velor Social) explicitly
-// scopes collections as "private by default... no public follower lists at
-// launch" as a mitigation against "over-exposure of buyer activity", and
-// app/api/social/collections/route.ts's own header confirms "there is no
-// public browsing surface at launch" pending the OSA pack sign-off. Turning
-// this box into a public collections feed would mean building a public
-// surface that was deliberately assessed and left out -- that needs
-// William's explicit sign-off, not just a data swap, so this section stays
-// exactly as his design file for now.
-//
-// Community Challenge, Live Shopping, Maker Passport's now-real stats
-// aside, still have no backing model/feature (no contest, submission or
-// voting table) and stay the design's own placeholder content too.
+// Community Challenge and Live Shopping still have no backing model/feature
+// (no contest, submission, voting, or live-chat table) and stay the
+// design's own placeholder content.
 //
 // Honest "nothing yet" states everywhere real data is thin or empty --
 // never a fallback to invented content.
 
 import { prisma } from '@/lib/prisma'
 import { countryToCode } from '@/lib/payoutRail'
+import { maskPersonalName } from '@/lib/messageIdentity'
 import CommunityPageClient, {
   type FeaturedCard,
   type JournalPreview,
@@ -41,6 +41,7 @@ import CommunityPageClient, {
   type CountryRow,
   type WorkshopVideo,
   type MakerPassport,
+  type PublicCollection,
 } from './CommunityPageClient'
 
 function publiclyVisibleWhere() {
@@ -101,6 +102,7 @@ export default async function CommunityPage() {
         workshopVideos={[]}
         guestLessons={GUEST_LESSONS}
         passport={null}
+        publicCollections={[]}
       />
     )
   }
@@ -116,6 +118,7 @@ export default async function CommunityPage() {
     journalPostCount,
     videoPosts,
     topSeller,
+    publicCollectionRows,
   ] = await Promise.all([
     prisma.liveStream.findMany({
       where: { status: 'LIVE', seller: { approved: true } },
@@ -204,6 +207,26 @@ export default async function CommunityPage() {
         },
       },
       orderBy: { followers: { _count: 'desc' } },
+    }),
+    // Buyer's Collections -- ONLY ever collections the buyer explicitly
+    // marked public via the toggle on their own collections page. Never
+    // shows the buyer's real name, only the existing pseudonymous
+    // "First L." format used everywhere else on Velor.
+    prisma.collection.findMany({
+      where: { isPublic: true, items: { some: {} } },
+      select: {
+        id: true,
+        name: true,
+        user: { select: { name: true } },
+        items: {
+          select: { product: { select: { images: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+        _count: { select: { items: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 4,
     }),
   ])
 
@@ -308,6 +331,14 @@ export default async function CommunityPage() {
     }
   }
 
+  const publicCollections: PublicCollection[] = publicCollectionRows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    image: c.items[0]?.product.images[0] || null,
+    itemCount: c._count.items,
+    by: maskPersonalName(c.user.name),
+  }))
+
   return (
     <CommunityPageClient
       featuredCards={featuredCards}
@@ -318,6 +349,7 @@ export default async function CommunityPage() {
       workshopVideos={workshopVideos}
       guestLessons={GUEST_LESSONS}
       passport={passport}
+      publicCollections={publicCollections}
     />
   )
 }

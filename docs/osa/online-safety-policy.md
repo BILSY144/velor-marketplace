@@ -1,6 +1,6 @@
 # Online Safety Policy & Governance Record — Velor Marketplace
 
-**STATUS: DRAFT — awaiting review and sign-off by William Sinclair.** Prepared
+**STATUS: SIGNED — reviewed and confirmed by William Sinclair, 2026-07-30.** Prepared
 2026-07-29. This document records how Velor Commerce Ltd governs online safety on
 velorcommerce.store under the UK Online Safety Act, and doubles as the build
 checklist that gates the Velor Social launch (CLAUDE.md LAW #4, item 2).
@@ -80,4 +80,4 @@ standard — the strictest — applied globally (plan §6/§8).
 
 Name: William Sinclair — Director, Velor Commerce Ltd
 
-Signature/date: ______________________________
+Signature/date: William Sinclair -- confirmed directly in a Cowork session, 2026-07-30 (no scanned wet-ink signature on file; this is the record of his verbal/written confirmation as the named accountable person).

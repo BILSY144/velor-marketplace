@@ -67,11 +67,15 @@ export default function PrivacyPage() {
       body: "Under UK GDPR, you have the right to: access your data; rectify inaccurate data; erase your data (where lawful); restrict or object to processing; data portability; withdraw consent. To exercise any right, email privacy@velorcommerce.store.",
     },
     {
-      title: "9. Cookies",
+      title: "9. Community & Social Features",
+      body: "The Makers' Circle lets buyers follow sellers, and sellers publish journal posts that are public by their nature. Buyer collections (saved product lists) are private by default; a collection is only visible to anyone else if you explicitly switch it to public from your collections page. If you do, its name, saved items, and your existing pseudonymous display name (e.g. \"First L.\") may be shown to other users, including on the Makers' Circle homepage — never your full name, email, or other account data. You can switch a collection back to private, or delete it, at any time.",
+    },
+    {
+      title: "10. Cookies",
       body: "We use strictly necessary cookies for session management and authentication. We do not use third-party advertising cookies without your consent.",
     },
     {
-      title: "10. Contact and Complaints",
+      title: "11. Contact and Complaints",
       body: "Data protection enquiries: privacy@velorcommerce.store. If you are unhappy with how we handle your data, you may lodge a complaint with the Information Commissioner's Office at ico.org.uk.",
     },
   ];
@@ -80,7 +84,7 @@ export default function PrivacyPage() {
     <main style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
       <section style={{ maxWidth: 760, margin: '0 auto', padding: '80px 24px' }}>
         <h1 style={{ fontSize: 40, fontWeight: 800, fontFamily: 'var(--font-display)', marginBottom: 8 }}>Privacy Policy</h1>
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 48 }}>Last updated: 7 July 2026</p>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 48 }}>Last updated: 30 July 2026</p>
         {sections.map(s => (
           <div key={s.title} style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>{s.title}</h2>

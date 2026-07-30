@@ -17,15 +17,14 @@
  *    Centre shows real YouTube videos of outside craftspeople, explicitly
  *    labelled as guest content (not Velor sellers), as a bridge until
  *    makers upload their own.
+ *  - 2026-07-30: Buyer's Collections -- real too, once William signed the
+ *    OSA pack and approved a public browsing surface. Only ever shows
+ *    collections a buyer explicitly made public via the new toggle on
+ *    their own collections page (app/account/collections/page.tsx) --
+ *    nothing here without that explicit, confirmed opt-in.
  *
  * Live Shopping and Community Challenge stay the design's own placeholder
- * content -- no real-time chat or contest/voting model exists yet. Buyer's
- * Collections ALSO stays a placeholder, deliberately: a real Collection
- * model exists, but docs/osa/dpia-velor-social.md (the signed data
- * protection assessment) scopes collections as having "no public browsing
- * surface at launch" to avoid over-exposing buyer activity -- turning this
- * into a public feed needs William's explicit sign-off, not just a data
- * swap.
+ * content -- no real-time chat or contest/voting model exists yet.
  *
  * Every section box is clickable and routes to /community/<section>
  * (placeholders in app/community/[section]/page.tsx until each section's
@@ -97,6 +96,14 @@ export interface GuestLesson {
   thumb: string
   title: string
   country: string
+}
+
+export interface PublicCollection {
+  id: string
+  name: string
+  image: string | null
+  itemCount: number
+  by: string
 }
 
 export interface MakerPassport {
@@ -224,6 +231,7 @@ export default function CommunityPageClient({
   workshopVideos,
   guestLessons,
   passport,
+  publicCollections,
 }: {
   featuredCards: FeaturedCard[]
   journalPreview: JournalPreview | null
@@ -233,19 +241,13 @@ export default function CommunityPageClient({
   workshopVideos: WorkshopVideo[]
   guestLessons: GuestLesson[]
   passport: MakerPassport | null
+  publicCollections: PublicCollection[]
 }) {
   const chat = [
     { img: pexelsUrl(36157389, null, 120), name: 'Emma', msg: 'How long does it take to make one?' },
     { img: pexelsUrl(8330375, null, 120), name: 'Rafael', msg: 'Do you ship to Europe?' },
     { img: pexelsUrl(36919208, null, 120), name: 'Julia', msg: "It's beautiful!" },
     { img: pexelsUrl(28351286, null, 120), name: 'Mia', msg: 'Can I order this in blue?' },
-  ]
-
-  const collections = [
-    { img: pexelsUrl(14705063, null, 500), name: 'My Dream Japanese Home', items: '18 items', by: 'by Olivia' },
-    { img: pexelsUrl(37215000, 'free-photo-of-gourmet-seafood-and-avocado-molcajete-feast', 500), name: 'Traditional Mexican Kitchen', items: '24 items', by: 'by Daniel' },
-    { img: pexelsUrl(29828564, null, 500), name: 'African Handmade', items: '31 items', by: 'by Sarah' },
-    { img: pexelsUrl(6831008, null, 500), name: 'Himalayan Crafts', items: '15 items', by: 'by James' },
   ]
 
   const topCountry = topCountries[0] ?? null
@@ -514,19 +516,27 @@ export default function CommunityPageClient({
 
           <SectionBox href="/community/collections">
             <SectionHead title="Buyer's Collections" href="/community/collections" icon="grid" />
-            <div className="mc-coll-grid">
-              {collections.map((c) => (
-                <Link key={c.name} href="/account/collections" className="mc-coll-tile" onClick={(e) => e.stopPropagation()}>
-                  <img src={c.img} alt={c.name} loading="lazy" />
-                  <span className="mc-coll-name">{c.name}</span>
-                  <span className="mc-coll-by">{c.items}<br />{c.by}</span>
-                </Link>
-              ))}
-            </div>
+            {publicCollections.length === 0 ? (
+              <p className="mc-note">No public collections yet &mdash; buyers can share one from their own collections page.</p>
+            ) : (
+              <div className="mc-coll-grid">
+                {publicCollections.map((c) => (
+                  <div key={c.id} className="mc-coll-tile">
+                    {c.image ? (
+                      <img src={c.image} alt={c.name} loading="lazy" />
+                    ) : (
+                      <div className="mc-ph mc-coll-ph" aria-hidden="true" />
+                    )}
+                    <span className="mc-coll-name">{c.name}</span>
+                    <span className="mc-coll-by">{c.itemCount} item{c.itemCount === 1 ? '' : 's'}<br />by {c.by}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mc-coll-foot">
-              <p className="mc-note">Follow collections from other buyers and get inspired.</p>
+              <p className="mc-note">Save pieces you love, and make a collection public to share it here.</p>
               <Link href="/account/collections" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
-                Create Collection
+                My Collections
               </Link>
             </div>
           </SectionBox>
