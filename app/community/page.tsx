@@ -1,61 +1,29 @@
 'use client'
 
 /**
- * THE MAKERS' CIRCLE -- Velor's community hub (William's redesign, 2026-07-30).
+ * THE MAKERS' CIRCLE -- Velor's community hub.
  *
- * Built to match William's supplied design pixel-close: warm near-black
- * surfaces with gold accents, photo-dominant featured cards with coloured
- * badges, journal carousel, live-shopping frame with chat panel, wireframe
- * globe, passport card, circled gold icons and the trust strip.
+ * EXACT REPLICATION OF WILLIAM'S SUPPLIED DESIGN (his order, 2026-07-30,
+ * verbatim: "take everything out of my design and replicate it exactly the
+ * same non negoatiable"). Every image on this page is extracted directly
+ * from his design file (public/community/*.jpg + community-globe.jpg); all
+ * copy, names, figures and layout mirror the design 1:1. The showcase
+ * makers and figures shown here are the design's own content, kept at
+ * William's explicit instruction (he was offered real-data/honest-empty
+ * states and chose exact replication, twice, informed). When real makers
+ * fill these seats, swap sections to live data with his sign-off.
  *
- * LAW #1 (honesty): every figure, maker, post and stream rendered here comes
- * from a live API (/api/lattice, /api/social/feed, /api/live,
- * /api/shop/products). Nothing is fabricated -- William explicitly chose
- * "real data + honest empty states" over the mockup's sample makers. Empty
- * sections keep the design's exact structure with honest invitation copy.
- *
- * Theme: the page carries its own --mc-* variables. Dark theme (site
- * default) reproduces the design's exact palette; the light toggle maps the
- * same structure onto the site's light tokens. Hero + story banner sit on
- * photography with a dark scrim, so their text stays light in both themes.
- *
- * Every section is a clickable box routing to /community/<section>
+ * Every section box is clickable and routes to /community/<section>
  * (placeholders in app/community/[section]/page.tsx until each section's
- * dedicated design lands -- we build them one at a time).
+ * dedicated page is designed -- built one at a time with William).
+ *
+ * Theme: page-scoped --mc-* palette. Dark theme reproduces the design
+ * exactly; the light/dark toggle maps the same structure onto light tokens
+ * (photography keeps light-on-dark text).
  */
 
-import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { pexelsUrl } from '@/lib/countryImagery'
-
-/* ---------- types (mirroring the live API responses) ---------- */
-
-type FeedPost = {
-  id: string
-  title: string
-  body: string
-  images: string[]
-  videoUrl: string | null
-  createdAt: string
-  seller: { id: string; storeName: string; storeLogo: string | null; country: string | null; foundingBadge: boolean }
-  product: { id: string; title: string; images: string[] } | null
-}
-
-type Stream = {
-  id: string
-  title: string
-  roomName: string
-  status: string
-  scheduledFor: string | null
-  sellerName: string
-  currency: string
-  products: { id: string; title: string; price: number; images: string[] }[]
-}
-
-type LatticeCountry = { code: string; name: string; products: number }
-
-type ShopProduct = { id: string; name: string; images: string[]; sellerName: string }
 
 /* ---------- helpers ---------- */
 
@@ -65,22 +33,6 @@ function flagFor(code: string): string {
   const base = 0x1f1e6
   const a = 'A'.charCodeAt(0)
   return String.fromCodePoint(base + code.toUpperCase().charCodeAt(0) - a, base + code.toUpperCase().charCodeAt(1) - a)
-}
-
-function timeAgo(iso: string): string {
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
-  const m = Math.floor(s / 60)
-  if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  return d === 1 ? '1 day ago' : `${d} days ago`
-}
-
-function excerpt(text: string, max = 170): string {
-  if (!text) return ''
-  return text.length <= max ? text : text.slice(0, max).replace(/\s+\S*$/, '') + '...'
 }
 
 /* ---------- icons (inline SVG, no emojis) ---------- */
@@ -117,20 +69,14 @@ const PATHS = {
   camera: 'M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
   mic: 'M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v5',
   text: 'M4 6h16M4 12h16M4 18h10',
+  eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  comment: 'M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10z',
 }
 
-function Verified() {
+function Verified({ size = 15 }: { size?: number }) {
   return (
-    <span className="mc-verified" aria-label="Verified seller">
-      <Ico d={PATHS.check} size={9} />
-    </span>
-  )
-}
-
-function SectionMark({ icon }: { icon: keyof typeof PATHS }) {
-  return (
-    <span className="mc-mark" aria-hidden="true">
-      <Ico d={PATHS[icon]} size={11} />
+    <span className="mc-verified" style={{ width: size, height: size }} aria-label="Verified seller">
+      <Ico d={PATHS.check} size={Math.round(size * 0.6)} />
     </span>
   )
 }
@@ -139,11 +85,11 @@ function SectionHead({ title, href, icon }: { title: string; href: string; icon:
   return (
     <div className="mc-shead">
       <span className="mc-shead-left">
-        <SectionMark icon={icon} />
+        <span className="mc-mark" aria-hidden="true"><Ico d={PATHS[icon]} size={11} /></span>
         <span className="mc-kicker">{title}</span>
       </span>
       <Link href={href} className="mc-viewall" onClick={(e) => e.stopPropagation()}>
-        View all <span aria-hidden="true">&rarr;</span>
+        View all <span aria-hidden="true">&rsaquo;</span>
       </Link>
     </div>
   )
@@ -171,167 +117,22 @@ function SectionBox({ href, children, className }: { href: string; children: Rea
   )
 }
 
-/** Wireframe globe matching the design's glowing map graphic. */
-function Globe() {
-  return (
-    <div className="mc-globe-wrap" aria-hidden="true">
-      <svg viewBox="0 0 200 200" className="mc-globe">
-        <defs>
-          <radialGradient id="mcGlow" cx="50%" cy="45%" r="60%">
-            <stop offset="0%" stopColor="rgba(212,175,55,0.28)" />
-            <stop offset="70%" stopColor="rgba(212,175,55,0.06)" />
-            <stop offset="100%" stopColor="rgba(212,175,55,0)" />
-          </radialGradient>
-        </defs>
-        <circle cx="100" cy="100" r="96" fill="url(#mcGlow)" />
-        <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(212,175,55,0.55)" strokeWidth="1" />
-        <ellipse cx="100" cy="100" rx="78" ry="30" fill="none" stroke="rgba(212,175,55,0.35)" strokeWidth="0.8" />
-        <ellipse cx="100" cy="100" rx="78" ry="58" fill="none" stroke="rgba(212,175,55,0.25)" strokeWidth="0.8" />
-        <ellipse cx="100" cy="100" rx="30" ry="78" fill="none" stroke="rgba(212,175,55,0.35)" strokeWidth="0.8" />
-        <ellipse cx="100" cy="100" rx="58" ry="78" fill="none" stroke="rgba(212,175,55,0.25)" strokeWidth="0.8" />
-        <line x1="22" y1="100" x2="178" y2="100" stroke="rgba(212,175,55,0.35)" strokeWidth="0.8" />
-        {[
-          [58, 62], [92, 48], [130, 70], [150, 104], [118, 128], [80, 140], [46, 108], [104, 92], [66, 88], [138, 92],
-        ].map(([x, y]) => (
-          <circle key={`${x}-${y}`} cx={x} cy={y} r="2.4" fill="#FF6B00">
-            <animate attributeName="opacity" values="1;0.35;1" dur="3s" begin={`${(x + y) % 7 * 0.4}s`} repeatCount="indefinite" />
-          </circle>
-        ))}
-      </svg>
-    </div>
-  )
-}
-
-/* ---------- page ---------- */
+/* eslint-disable @next/next/no-img-element */
 
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<FeedPost[]>([])
-  const [streams, setStreams] = useState<Stream[]>([])
-  const [countries, setCountries] = useState<LatticeCountry[]>([])
-  const [totalCountries, setTotalCountries] = useState(190)
-  const [productCount, setProductCount] = useState<number | null>(null)
-  const [shopProducts, setShopProducts] = useState<ShopProduct[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [journalIndex, setJournalIndex] = useState(0)
-
-  useEffect(() => {
-    let alive = true
-    async function load() {
-      const [feedR, liveR, latticeR, shopR] = await Promise.allSettled([
-        fetch('/api/social/feed?scope=all').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/live').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/lattice').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/shop/products?limit=8').then((r) => (r.ok ? r.json() : null)),
-      ])
-      if (!alive) return
-      if (feedR.status === 'fulfilled' && feedR.value?.posts) setPosts(feedR.value.posts)
-      if (liveR.status === 'fulfilled' && liveR.value?.streams) setStreams(liveR.value.streams)
-      if (latticeR.status === 'fulfilled' && latticeR.value) {
-        const lat = latticeR.value
-        if (Array.isArray(lat.countries)) {
-          setCountries(lat.countries)
-          setProductCount(lat.countries.reduce((s: number, c: LatticeCountry) => s + (c.products || 0), 0))
-        }
-        if (lat.totalCountries) setTotalCountries(lat.totalCountries)
-      }
-      if (shopR.status === 'fulfilled' && shopR.value?.products) {
-        setShopProducts(
-          shopR.value.products.map((p: { id: string; name: string; images?: string[]; sellerName: string }) => ({
-            id: p.id,
-            name: p.name,
-            images: p.images ?? [],
-            sellerName: p.sellerName,
-          })),
-        )
-      }
-      setLoaded(true)
-    }
-    load()
-    return () => { alive = false }
-  }, [])
-
-  const liveStreams = useMemo(() => streams.filter((s) => s.status === 'LIVE'), [streams])
-  const scheduledStreams = useMemo(() => streams.filter((s) => s.status === 'SCHEDULED'), [streams])
-  const videoPosts = useMemo(() => posts.filter((p) => p.videoUrl), [posts])
-  const tradingCountries = useMemo(
-    () => [...countries].sort((a, b) => (b.products || 0) - (a.products || 0)),
-    [countries],
-  )
-  const journalPost = posts.length > 0 ? posts[Math.min(journalIndex, posts.length - 1)] : null
-  const topCountry = tradingCountries[0] ?? null
-
-  /* Featured Today: real live streams first, then real journal posts, then
-     honest open-seat invitations to fill the row of four. */
-  type FeaturedCard = {
-    key: string
-    tag: string
-    tagTone: 'live' | 'gold' | 'orange' | 'plain'
-    img: string | null
-    name: string
-    countryName: string | null
-    line: string
-    ctaLabel: string
-    ctaHref: string
-    verified: boolean
-  }
-  const featured: FeaturedCard[] = []
-  for (const s of liveStreams.slice(0, 2)) {
-    featured.push({
-      key: `live-${s.id}`,
-      tag: 'Live now',
-      tagTone: 'live',
-      img: s.products[0]?.images?.[0] ?? null,
-      name: s.sellerName,
-      countryName: null,
-      line: s.title,
-      ctaLabel: 'Watch live',
-      ctaHref: `/live/${s.roomName}`,
-      verified: true,
-    })
-  }
-  for (const p of posts) {
-    if (featured.length >= 4) break
-    featured.push({
-      key: `post-${p.id}`,
-      tag: p.videoUrl ? 'New video' : 'Journal',
-      tagTone: p.videoUrl ? 'orange' : 'gold',
-      img: p.images?.[0] ?? p.product?.images?.[0] ?? null,
-      name: p.seller.storeName,
-      countryName: p.seller.country,
-      line: p.title,
-      ctaLabel: p.videoUrl ? 'Watch video' : 'View journal',
-      ctaHref: '/workshop',
-      verified: true,
-    })
-  }
-  while (featured.length < 4) {
-    featured.push({
-      key: `seat-${featured.length}`,
-      tag: 'Open seat',
-      tagTone: 'plain',
-      img: null,
-      name: 'Your craft here',
-      countryName: null,
-      line: 'The world is waiting to watch you work.',
-      ctaLabel: 'Become a creator',
-      ctaHref: '/apply',
-      verified: false,
-    })
-  }
-
-  /* Hero collage -- William approved keeping this imagery choice
-     (verified Pexels photography already used across the site). */
-  const heroImages = [
-    pexelsUrl(37619027, 'free-photo-of-hand-block-printing-on-yellow-fabric', 900),
-    pexelsUrl(9412408, null, 900),
-    pexelsUrl(23436813, 'free-photo-of-man-holding-a-japanese-knife', 900),
-    pexelsUrl(31508160, null, 900),
+  const featured = [
+    { key: 'f1', img: '/community/feat-1.jpg', name: 'Fatima', verified: false, cc: 'MA', country: 'Morocco', line: 'Making hand-painted tagines.', cta: 'Watch live', ctaIcon: true, href: '/live' },
+    { key: 'f2', img: '/community/feat-2.jpg', name: 'Hiroshi', verified: true, cc: 'JP', country: 'Japan', line: 'New workshop journal uploaded. Making Samurai kitchen knives.', cta: 'View journal', ctaIcon: false, href: '/workshop' },
+    { key: 'f3', img: '/community/feat-3.jpg', name: 'Saul', verified: true, cc: 'MX', country: 'Mexico', line: 'Answered 12 buyer questions today.', cta: 'Ask a question', ctaIcon: false, href: '/community/ask' },
+    { key: 'f4', img: '/community/feat-4.jpg', name: 'Lhamo', verified: true, cc: 'NP', country: 'Nepal', line: 'Traditional Himalayan weaving.', cta: 'Watch video', ctaIcon: true, href: '/community/videos' },
   ]
-  const bannerImage = pexelsUrl(34495354, null, 1400)
 
-  const firstLive = liveStreams[0] ?? null
-  const nextScheduled = scheduledStreams[0] ?? null
-  const liveProduct = firstLive?.products[0] ?? null
+  const askRows = [
+    { q: 'How long does this rug take?', n: 23 },
+    { q: 'Can you make this larger?', n: 18 },
+    { q: 'What clay do you use?', n: 31 },
+    { q: 'Can you ship to Australia?', n: 26 },
+  ]
 
   const crafts: { label: string; icon: keyof typeof PATHS }[] = [
     { label: 'All', icon: 'grid' },
@@ -344,11 +145,56 @@ export default function CommunityPage() {
     { label: 'Leather', icon: 'leather' },
   ]
 
-  const askSuggestions = [
-    'How long does a piece like this take to make?',
-    'What materials and techniques do you use?',
-    'Can you make this in a different size?',
-    'Can you ship to my country?',
+  const videos = [
+    { img: '/community/vid-1.jpg', title: 'Natural Dyeing Process', country: 'Peru' },
+    { img: '/community/vid-2.jpg', title: 'Hand Building Pottery', country: 'Italy' },
+    { img: '/community/vid-3.jpg', title: 'Forging a Knife', country: 'Japan' },
+    { img: '/community/vid-4.jpg', title: 'Handwoven Carpet', country: 'Turkey' },
+  ]
+
+  const chat = [
+    { img: '/community/chat-1.jpg', name: 'Emma', msg: 'How long does it take to make one?' },
+    { img: '/community/chat-2.jpg', name: 'Rafael', msg: 'Do you ship to Europe?' },
+    { img: '/community/chat-3.jpg', name: 'Julia', msg: "It's beautiful!" },
+    { img: '/community/chat-4.jpg', name: 'Mia', msg: 'Can I order this in blue?' },
+  ]
+
+  const panelRows = [
+    { img: '/community/panel-1.jpg', label: 'Live Sellers', sub: '23 live now', href: '/live' },
+    { img: '/community/panel-2.jpg', label: 'Latest Videos', sub: 'New this week', href: '/community/videos' },
+    { img: '/community/panel-3.jpg', label: 'Latest Journals', sub: '18 new entries', href: '/workshop' },
+    { img: '/community/panel-4.jpg', label: 'Newest Products', sub: '56 new items', href: '/shop' },
+  ]
+
+  const collections = [
+    { img: '/community/coll-1.jpg', name: 'My Dream Japanese Home', items: '18 items', by: 'by Olivia' },
+    { img: '/community/coll-2.jpg', name: 'Traditional Mexican Kitchen', items: '24 items', by: 'by Daniel' },
+    { img: '/community/coll-3.jpg', name: 'African Handmade', items: '31 items', by: 'by Sarah' },
+    { img: '/community/coll-4.jpg', name: 'Himalayan Crafts', items: '15 items', by: 'by James' },
+  ]
+
+  const lessons = [
+    { img: '/community/lrn-1.jpg', title: 'How Moroccan Leather is Dyed', t: '10:24' },
+    { img: '/community/lrn-2.jpg', title: 'How Japanese Ceramics are Fired', t: '13:18' },
+    { img: '/community/lrn-3.jpg', title: 'Why Peruvian Alpaca Wool is Special', t: '9:47' },
+    { img: '/community/lrn-4.jpg', title: 'History of Turkish Carpets', t: '11:02' },
+  ]
+
+  const followCountries = [
+    { cc: 'JP', name: 'Japan', state: 'Following' },
+    { cc: 'IN', name: 'India', state: 'Follow' },
+    { cc: 'GR', name: 'Greece', state: 'Follow' },
+    { cc: 'MX', name: 'Mexico', state: 'Following' },
+    { cc: 'MA', name: 'Morocco', state: 'Follow' },
+  ]
+
+  const passportStats = [
+    { n: '1,245', l: 'Orders Completed' },
+    { n: '3.8K', l: 'Followers' },
+    { n: '87', l: 'Videos' },
+    { n: '128', l: 'Journal Entries' },
+    { n: '28', l: 'Years Preserving Craft' },
+    { n: 'Gold', l: 'Verification Level' },
   ]
 
   return (
@@ -358,12 +204,11 @@ export default function CommunityPage() {
       {/* ============ HERO ============ */}
       <header className="mc-hero">
         <div className="mc-hero-collage" aria-hidden="true">
-          {heroImages.map((src) => (
-            <div key={src} className="mc-hero-cell">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" loading="eager" />
-            </div>
-          ))}
+          <img src="/community/hero-1.jpg" alt="" loading="eager" />
+          <img src="/community/hero-2.jpg" alt="" loading="eager" />
+          <div className="mc-hero-centercell" />
+          <img src="/community/hero-3.jpg" alt="" loading="eager" />
+          <img src="/community/hero-4.jpg" alt="" loading="eager" />
         </div>
         <div className="mc-hero-scrim" aria-hidden="true" />
         <div className="mc-hero-inner">
@@ -376,8 +221,8 @@ export default function CommunityPage() {
             Watch artisans, ask questions, follow their journey and discover how authentic goods are created around the world.
           </p>
           <div className="mc-hero-ctas">
-            <Link href="/workshop" className="mc-btn mc-btn-primary">Explore stories</Link>
-            <Link href="/apply" className="mc-btn mc-btn-ghost">Become a creator</Link>
+            <Link href="/workshop" className="mc-btn mc-btn-primary">Explore Stories</Link>
+            <Link href="/apply" className="mc-btn mc-btn-ghost">Become a Creator</Link>
           </div>
         </div>
       </header>
@@ -385,29 +230,25 @@ export default function CommunityPage() {
       <div className="mc-wrap">
         {/* ============ FEATURED TODAY ============ */}
         <SectionBox href="/community/featured" className="mc-span2">
-          <SectionHead title="Featured today" href="/community/featured" icon="spark" />
+          <SectionHead title="Featured Today" href="/community/featured" icon="spark" />
           <div className="mc-featured-grid">
             {featured.map((c) => (
-              <article key={c.key} className={`mc-fcard ${c.img ? '' : 'mc-fcard-seat'}`}>
-                {c.img && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img className="mc-fcard-img" src={c.img} alt={c.name} loading="lazy" />
-                )}
-                <div className="mc-fcard-shade" aria-hidden="true" />
-                <span className={`mc-tag mc-tag-${c.tagTone}`}>
-                  {c.tagTone === 'live' && <span className="mc-livedot" aria-hidden="true" />}
-                  {c.tag}
-                </span>
+              <article key={c.key} className="mc-fcard">
+                <div className="mc-fcard-media">
+                  <img src={c.img} alt={c.name} loading="lazy" />
+                </div>
                 <div className="mc-fcard-body">
                   <h3 className="mc-fcard-name">
                     {c.name}
                     {c.verified && <Verified />}
                   </h3>
-                  {c.countryName && <div className="mc-fcard-country">{c.countryName}</div>}
+                  <div className="mc-fcard-country">
+                    <span aria-hidden="true">{flagFor(c.cc)}</span> {c.country}
+                  </div>
                   <p className="mc-fcard-line">{c.line}</p>
-                  <Link href={c.ctaHref} className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
-                    {c.ctaLabel === 'Watch live' && <Ico d={PATHS.play} size={11} />}
-                    {c.ctaLabel}
+                  <Link href={c.href} className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
+                    {c.ctaIcon && <Ico d={PATHS.play} size={10} />}
+                    {c.cta}
                   </Link>
                 </div>
               </article>
@@ -418,87 +259,51 @@ export default function CommunityPage() {
         {/* ============ CREATOR JOURNALS + ASK THE MAKER ============ */}
         <div className="mc-row2">
           <SectionBox href="/community/journals">
-            <SectionHead title="Creator journals" href="/community/journals" icon="passport" />
-            {journalPost ? (
-              <>
-                <div className="mc-journal">
-                  <div className="mc-journal-text">
-                    <h3 className="mc-journal-title">{journalPost.title}</h3>
-                    <p className="mc-journal-body">{excerpt(journalPost.body)}</p>
-                    <div className="mc-journal-meta">
-                      <span className="mc-journal-heart"><Ico d={PATHS.heart} size={13} /></span>
-                      {journalPost.seller.storeName}
-                      {journalPost.seller.country ? ` · ${journalPost.seller.country}` : ''} · {timeAgo(journalPost.createdAt)}
-                    </div>
-                  </div>
-                  <div className="mc-journal-media">
-                    {(journalPost.images?.[0] ?? journalPost.product?.images?.[0]) ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={journalPost.images?.[0] ?? journalPost.product?.images?.[0] ?? ''} alt={journalPost.title} loading="lazy" />
-                    ) : (
-                      <div className="mc-media-empty" />
-                    )}
-                    {journalPost.videoUrl && (
-                      <span className="mc-playbtn" aria-hidden="true"><Ico d={PATHS.play} size={18} /></span>
-                    )}
-                    {posts.length > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          className="mc-arrow mc-arrow-l"
-                          aria-label="Previous journal"
-                          onClick={(e) => { e.stopPropagation(); setJournalIndex((i) => (i - 1 + posts.length) % posts.length) }}
-                        >
-                          &lsaquo;
-                        </button>
-                        <button
-                          type="button"
-                          className="mc-arrow mc-arrow-r"
-                          aria-label="Next journal"
-                          onClick={(e) => { e.stopPropagation(); setJournalIndex((i) => (i + 1) % posts.length) }}
-                        >
-                          &rsaquo;
-                        </button>
-                      </>
-                    )}
-                  </div>
+            <SectionHead title="Creator Journals" href="/community/journals" icon="passport" />
+            <div className="mc-journal">
+              <div className="mc-journal-text">
+                <h3 className="mc-journal-day">Day 128</h3>
+                <p className="mc-journal-body">Today we finished our first order for Canada.</p>
+                <p className="mc-journal-body">The glaze came out perfectly after three attempts.</p>
+                <div className="mc-journal-meta">
+                  <span className="mc-journal-stat"><Ico d={PATHS.heart} size={13} /> 412</span>
+                  <span className="mc-journal-stat"><Ico d={PATHS.comment} size={13} /> 39</span>
                 </div>
-                {posts.length > 1 && (
-                  <div className="mc-dots" aria-hidden="true">
-                    {posts.slice(0, 5).map((p, i) => (
-                      <span key={p.id} className={`mc-dot ${i === journalIndex % Math.min(posts.length, 5) ? 'mc-dot-on' : ''}`} />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="mc-empty">
-                {loaded
-                  ? 'The first workshop journals are being written. Follow a maker and their story starts here.'
-                  : 'Loading journals...'}
-              </p>
-            )}
+                <div className="mc-journal-viewed"><Ico d={PATHS.eye} size={12} /> Viewed in 17 countries</div>
+              </div>
+              <div className="mc-journal-media">
+                <img src="/community/journal.jpg" alt="Creator journal video" loading="lazy" />
+                <Link href="/community/journals" className="mc-arrow mc-arrow-l" aria-label="Previous journal" onClick={(e) => e.stopPropagation()}>&lsaquo;</Link>
+                <Link href="/community/journals" className="mc-arrow mc-arrow-r" aria-label="Next journal" onClick={(e) => e.stopPropagation()}>&rsaquo;</Link>
+              </div>
+            </div>
+            <div className="mc-dots" aria-hidden="true">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <span key={i} className={`mc-dot ${i === 0 ? 'mc-dot-on' : ''}`} />
+              ))}
+            </div>
           </SectionBox>
 
           <SectionBox href="/community/ask">
-            <SectionHead title="Ask the maker" href="/community/ask" icon="chat" />
+            <SectionHead title="Ask the Maker" href="/community/ask" icon="chat" />
             <div className="mc-ask-search" aria-hidden="true">
               <Ico d={PATHS.search} size={14} />
               <span>Ask any verified seller a question...</span>
             </div>
             <div className="mc-ask-rows">
-              {askSuggestions.map((q) => (
-                <Link key={q} href="/shop" className="mc-ask-row" onClick={(e) => e.stopPropagation()}>
+              {askRows.map((r) => (
+                <Link key={r.q} href="/community/ask" className="mc-ask-row" onClick={(e) => e.stopPropagation()}>
                   <span className="mc-ask-avatar" aria-hidden="true"><Ico d={PATHS.user} size={12} /></span>
-                  <span className="mc-ask-q">{q}</span>
-                  <span className="mc-ask-go" aria-hidden="true">&rarr;</span>
+                  <span className="mc-ask-q">{r.q}</span>
+                  <span className="mc-ask-count"><Ico d={PATHS.comment} size={11} /> {r.n}</span>
                 </Link>
               ))}
             </div>
             <div className="mc-ask-using">
               <span className="mc-ask-using-label">Ask using:</span>
+              <span className="mc-ask-mode"><Ico d={PATHS.camera} size={12} /> Video</span>
+              <span className="mc-ask-mode"><Ico d={PATHS.mic} size={12} /> Voice</span>
               <span className="mc-ask-mode"><Ico d={PATHS.text} size={12} /> Text</span>
-              <span className="mc-ask-note">Answers are published for the whole community</span>
             </div>
           </SectionBox>
         </div>
@@ -506,7 +311,7 @@ export default function CommunityPage() {
         {/* ============ WORKSHOP VIDEOS + LIVE SHOPPING ============ */}
         <div className="mc-row2">
           <SectionBox href="/community/videos">
-            <SectionHead title="Workshop videos" href="/community/videos" icon="camera" />
+            <SectionHead title="Workshop Videos" href="/community/videos" icon="camera" />
             <div className="mc-crafts" aria-hidden="true">
               {crafts.map((c, i) => (
                 <span key={c.label} className={`mc-craft ${i === 0 ? 'mc-craft-on' : ''}`}>
@@ -515,104 +320,53 @@ export default function CommunityPage() {
                 </span>
               ))}
             </div>
-            {videoPosts.length > 0 ? (
-              <div className="mc-video-grid">
-                {videoPosts.slice(0, 4).map((v) => (
-                  <Link key={v.id} href="/workshop" className="mc-vcard" onClick={(e) => e.stopPropagation()}>
-                    <div className="mc-vthumb">
-                      {(v.images?.[0] ?? v.product?.images?.[0]) ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={v.images?.[0] ?? v.product?.images?.[0] ?? ''} alt={v.title} loading="lazy" />
-                      ) : (
-                        <div className="mc-media-empty" />
-                      )}
-                      <span className="mc-playbtn mc-playbtn-sm" aria-hidden="true"><Ico d={PATHS.play} size={13} /></span>
-                    </div>
-                    <div className="mc-vcard-meta">
-                      <div className="mc-vcard-title">{v.title}</div>
-                      <div className="mc-vcard-sub">{v.seller.storeName}{v.seller.country ? ` · ${v.seller.country}` : ''}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="mc-video-grid">
-                {['Dyeing', 'Throwing', 'Forging', 'Weaving'].map((t) => (
-                  <div key={t} className="mc-vcard mc-vcard-seatcard">
-                    <div className="mc-vthumb mc-vthumb-seat">
-                      <Ico d={PATHS.play} size={16} />
-                    </div>
-                    <div className="mc-vcard-meta">
-                      <div className="mc-vcard-title">{t} films coming</div>
-                      <div className="mc-vcard-sub">As makers join the circle</div>
-                    </div>
+            <div className="mc-video-grid">
+              {videos.map((v) => (
+                <Link key={v.title} href="/community/videos" className="mc-vcard" onClick={(e) => e.stopPropagation()}>
+                  <div className="mc-vthumb">
+                    <img src={v.img} alt={v.title} loading="lazy" />
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="mc-vcard-meta">
+                    <div className="mc-vcard-title">{v.title}</div>
+                    <div className="mc-vcard-sub">{v.country}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </SectionBox>
 
           <SectionBox href="/community/live-shopping">
-            <SectionHead title="Live shopping" href="/community/live-shopping" icon="play" />
+            <SectionHead title="Live Shopping" href="/community/live-shopping" icon="play" />
             <div className="mc-live">
               <div className="mc-live-left">
                 <div className="mc-live-frame">
-                  {liveProduct?.images?.[0] ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={liveProduct.images[0]} alt={firstLive?.title ?? ''} loading="lazy" />
-                  ) : (
-                    <div className="mc-live-off">
-                      <Ico d={PATHS.play} size={22} />
-                      <span>
-                        {loaded
-                          ? nextScheduled
-                            ? `Next live: ${nextScheduled.title} by ${nextScheduled.sellerName}`
-                            : 'No maker is on air right now'
-                          : 'Loading the live channel...'}
-                      </span>
-                    </div>
-                  )}
-                  {firstLive && (
-                    <span className="mc-tag mc-tag-live mc-tag-onframe"><span className="mc-livedot" aria-hidden="true" />Live</span>
-                  )}
+                  <img src="/community/live.jpg" alt="Live shopping stream" loading="lazy" />
                 </div>
-                {firstLive && liveProduct ? (
-                  <div className="mc-live-productbar">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {liveProduct.images?.[0] && <img className="mc-live-thumb" src={liveProduct.images[0]} alt="" aria-hidden="true" />}
-                    <div className="mc-live-pmeta">
-                      <div className="mc-vcard-title">{liveProduct.title}</div>
-                      <div className="mc-vcard-sub">by {firstLive.sellerName}</div>
-                    </div>
-                    <Link href={`/shop/${liveProduct.id}`} className="mc-cartbtn" onClick={(e) => e.stopPropagation()}>
-                      Add to cart
-                    </Link>
+                <div className="mc-live-productbar">
+                  <img className="mc-live-thumb" src="/community/vase.jpg" alt="" aria-hidden="true" />
+                  <div className="mc-live-pmeta">
+                    <div className="mc-live-pname">Handmade Ceramic Vase</div>
+                    <div className="mc-vcard-sub">By Arjun &ndash; India</div>
                   </div>
-                ) : (
-                  <div className="mc-live-productbar">
-                    <div className="mc-live-pmeta">
-                      <div className="mc-vcard-title">Watch, chat and buy in real time</div>
-                      <div className="mc-vcard-sub">Pieces are pinned live as makers show them</div>
-                    </div>
-                    <Link href="/live" className="mc-cartbtn" onClick={(e) => e.stopPropagation()}>
-                      Live channel
-                    </Link>
-                  </div>
-                )}
+                  <span className="mc-live-price">$129</span>
+                  <Link href="/shop" className="mc-cartbtn" onClick={(e) => e.stopPropagation()}>
+                    Add to Cart
+                  </Link>
+                </div>
               </div>
               <div className="mc-chat">
                 <div className="mc-chat-body">
-                  {firstLive ? (
-                    <p className="mc-chat-note">The chat is live inside the stream -- join to talk to {firstLive.sellerName} and the room.</p>
-                  ) : (
-                    <p className="mc-chat-note">The chat opens the moment a maker goes on air. Ask about pieces, watch them made, and buy without leaving the stream.</p>
-                  )}
+                  {chat.map((m) => (
+                    <div key={m.name} className="mc-chat-msg">
+                      <img className="mc-chat-avatar" src={m.img} alt="" aria-hidden="true" />
+                      <div>
+                        <div className="mc-chat-name">{m.name}</div>
+                        <div className="mc-chat-text">{m.msg}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <Link
-                  href={firstLive ? `/live/${firstLive.roomName}` : '/live'}
-                  className="mc-chat-input"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <Link href="/live" className="mc-chat-input" onClick={(e) => e.stopPropagation()}>
                   <span>Type a message...</span>
                   <span className="mc-chat-send" aria-hidden="true"><Ico d={PATHS.play} size={11} /></span>
                 </Link>
@@ -624,141 +378,118 @@ export default function CommunityPage() {
         {/* ============ AROUND THE WORLD + BUYER'S COLLECTIONS ============ */}
         <div className="mc-row2">
           <SectionBox href="/community/world">
-            <SectionHead title="Around the world" href="/community/world" icon="globe2" />
+            <SectionHead title="Around the World" href="/community/world" icon="globe2" />
             <div className="mc-world">
               <div className="mc-world-left">
                 <div className="mc-world-stats">
-                  <div className="mc-stat"><span className="mc-stat-num">{totalCountries}</span><span className="mc-stat-label">Countries</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">{countries.length}</span><span className="mc-stat-label">Trading</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">{liveStreams.length}</span><span className="mc-stat-label">Live now</span></div>
-                  <div className="mc-stat"><span className="mc-stat-num">{productCount ?? '--'}</span><span className="mc-stat-label">Products</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">190</span><span className="mc-stat-label">Countries</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">12.4K</span><span className="mc-stat-label">Makers</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">2.8K</span><span className="mc-stat-label">Live Now</span></div>
+                  <div className="mc-stat"><span className="mc-stat-num">328</span><span className="mc-stat-label">Products</span></div>
                 </div>
-                <Globe />
+                <div className="mc-globe-wrap" aria-hidden="true">
+                  <img className="mc-globe" src="/community-globe.jpg" alt="" loading="lazy" />
+                </div>
                 <Link href="/community/world" className="mc-outbtn mc-outbtn-wide" onClick={(e) => e.stopPropagation()}>
-                  Explore map
+                  Explore Map
                 </Link>
               </div>
               <div className="mc-world-panel">
-                {topCountry ? (
-                  <>
-                    <div className="mc-world-country">
-                      <span className="mc-flag" aria-hidden="true">{flagFor(topCountry.code)}</span>
-                      <span className="mc-world-cname">{topCountry.name}</span>
-                      <span className="mc-chip-gold">{topCountry.products} {topCountry.products === 1 ? 'piece' : 'pieces'}</span>
-                    </div>
-                    {[
-                      { label: 'Newest products', href: `/shop?origin=${topCountry.code}` },
-                      { label: 'Latest journals', href: '/workshop' },
-                      { label: 'Weekly drop', href: '/drops' },
-                      { label: 'Live sellers', href: '/live' },
-                    ].map((r) => (
-                      <Link key={r.label} href={r.href} className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
-                        <span>{r.label}</span>
-                        <span aria-hidden="true">&rsaquo;</span>
-                      </Link>
-                    ))}
-                  </>
-                ) : (
-                  <p className="mc-empty">
-                    {loaded
-                      ? 'Every country&rsquo;s channel opens the moment its first maker lists.'
-                      : 'Loading the map...'}
-                  </p>
-                )}
+                <div className="mc-world-country">
+                  <span className="mc-flag" aria-hidden="true">{flagFor('PE')}</span>
+                  <span className="mc-world-cname">PERU</span>
+                  <span className="mc-chip-gold">Following</span>
+                </div>
+                {panelRows.map((r) => (
+                  <Link key={r.label} href={r.href} className="mc-panel-row" onClick={(e) => e.stopPropagation()}>
+                    <img className="mc-panel-thumb" src={r.img} alt="" aria-hidden="true" />
+                    <span className="mc-panel-text">
+                      <span className="mc-panel-label">{r.label}</span>
+                      <span className="mc-panel-sub">{r.sub}</span>
+                    </span>
+                    <span className="mc-panel-go" aria-hidden="true">&rsaquo;</span>
+                  </Link>
+                ))}
               </div>
             </div>
           </SectionBox>
 
           <SectionBox href="/community/collections">
-            <SectionHead title="Buyer's collections" href="/community/collections" icon="grid" />
-            {shopProducts.length > 0 ? (
-              <div className="mc-coll-grid">
-                {shopProducts.slice(0, 4).map((p) => (
-                  <Link key={p.id} href={`/shop/${p.id}`} className="mc-coll-tile" onClick={(e) => e.stopPropagation()}>
-                    {p.images?.[0] ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={p.images[0]} alt={p.name} loading="lazy" />
-                    ) : (
-                      <div className="mc-media-empty" />
-                    )}
-                    <span className="mc-coll-name">{p.name}</span>
-                    <span className="mc-coll-by">by {p.sellerName}</span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="mc-coll-grid">
-                {['A dream kitchen', 'A gallery wall', 'Gifts to come back to', 'Heritage pieces'].map((n) => (
-                  <div key={n} className="mc-coll-tile mc-coll-seat">
-                    <div className="mc-media-empty mc-media-sq" />
-                    <span className="mc-coll-name">{n}</span>
-                    <span className="mc-coll-by">Start it today</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="mc-note">Save pieces you love into collections of your own and get inspired.</p>
-            <Link href="/account/collections" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
-              Create collection
-            </Link>
+            <SectionHead title="Buyer's Collections" href="/community/collections" icon="grid" />
+            <div className="mc-coll-grid">
+              {collections.map((c) => (
+                <Link key={c.name} href="/account/collections" className="mc-coll-tile" onClick={(e) => e.stopPropagation()}>
+                  <img src={c.img} alt={c.name} loading="lazy" />
+                  <span className="mc-coll-name">{c.name}</span>
+                  <span className="mc-coll-by">{c.items}<br />{c.by}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="mc-coll-foot">
+              <p className="mc-note">Follow collections from other buyers and get inspired.</p>
+              <Link href="/account/collections" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
+                Create Collection
+              </Link>
+            </div>
           </SectionBox>
         </div>
 
         {/* ============ CHALLENGE + LEARNING + COUNTRIES ============ */}
         <div className="mc-row3">
           <SectionBox href="/community/challenge">
-            <SectionHead title="Community challenge" href="/community/challenge" icon="laurel" />
+            <SectionHead title="Community Challenge" href="/community/challenge" icon="laurel" />
             <div className="mc-challenge">
               <div className="mc-challenge-main">
-                <div className="mc-chip-plain">The first challenge</div>
+                <div className="mc-challenge-label">This Month&rsquo;s Challenge</div>
                 <h3 className="mc-challenge-title">Show us your oldest tool.</h3>
                 <p className="mc-note">Upload a video and share the story behind it.</p>
                 <Link href="/community/challenge" className="mc-goldbtn" onClick={(e) => e.stopPropagation()}>
-                  Join challenge
+                  Join Challenge
                 </Link>
-                <div className="mc-challenge-ends">Opens as the circle grows</div>
+                <div className="mc-challenge-ends">Ends in 12 days</div>
               </div>
               <div className="mc-challenge-winner">
-                <div className="mc-chip-plain">Artisan of the month</div>
-                <div className="mc-winner-avatar" aria-hidden="true"><Ico d={PATHS.user} size={20} /></div>
-                <div className="mc-winner-name">Your name here</div>
-                <div className="mc-laurel" aria-hidden="true"><Ico d={PATHS.laurel} size={16} /></div>
+                <div className="mc-challenge-label">Last Month Winner</div>
+                <img className="mc-winner-avatar" src="/community/winner.jpg" alt="Abdul Karim" loading="lazy" />
+                <div className="mc-winner-name">Abdul Karim</div>
+                <div className="mc-winner-country"><span aria-hidden="true">{flagFor('MA')}</span> Morocco</div>
+                <div className="mc-laurel"><Ico d={PATHS.laurel} size={14} /> Artisan of the Month <Ico d={PATHS.laurel} size={14} /></div>
               </div>
             </div>
           </SectionBox>
 
           <SectionBox href="/community/learning">
-            <SectionHead title="Learning centre" href="/community/learning" icon="cap" />
+            <SectionHead title="Learning Centre" href="/community/learning" icon="cap" />
             <div className="mc-lessons">
-              {['How leather is dyed', 'How ceramics are fired', 'Why one wool is special', 'The story of a carpet'].map((t) => (
-                <div key={t} className="mc-lesson">
-                  <span className="mc-lesson-thumb" aria-hidden="true"><Ico d={PATHS.play} size={12} /></span>
-                  <span className="mc-lesson-title">{t}</span>
-                  <span className="mc-chip-plain">Coming soon</span>
-                </div>
+              {lessons.map((l) => (
+                <Link key={l.title} href="/community/learning" className="mc-lesson" onClick={(e) => e.stopPropagation()}>
+                  <img className="mc-lesson-thumb" src={l.img} alt="" aria-hidden="true" loading="lazy" />
+                  <span className="mc-lesson-title">{l.title}</span>
+                  <span className="mc-lesson-time">{l.t}</span>
+                </Link>
               ))}
             </div>
-            <p className="mc-note">Filmed in real workshops as makers join the circle.</p>
           </SectionBox>
 
           <SectionBox href="/community/countries">
-            <SectionHead title="Follow countries" href="/community/countries" icon="shield" />
+            <SectionHead title="Follow Countries" href="/community/countries" icon="shield" />
             <div className="mc-countries">
-              {tradingCountries.slice(0, 5).map((c) => (
-                <div key={c.code} className="mc-country-row">
-                  <span className="mc-flag" aria-hidden="true">{flagFor(c.code)}</span>
+              {followCountries.map((c) => (
+                <div key={c.cc} className="mc-country-row">
+                  <span className="mc-flag" aria-hidden="true">{flagFor(c.cc)}</span>
                   <span className="mc-country-name">{c.name}</span>
-                  <Link href={`/shop?origin=${c.code}`} className="mc-chip-gold" onClick={(e) => e.stopPropagation()}>
-                    Shop
+                  <Link
+                    href={`/shop?origin=${c.cc}`}
+                    className={c.state === 'Following' ? 'mc-chip-gold' : 'mc-chip-follow'}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {c.state}
                   </Link>
                 </div>
               ))}
-              {loaded && tradingCountries.length === 0 && (
-                <p className="mc-empty">Country channels appear here as makers around the world open them.</p>
-              )}
             </div>
             <Link href="/shop" className="mc-outbtn mc-outbtn-wide" onClick={(e) => e.stopPropagation()}>
-              Browse countries
+              Browse Countries
             </Link>
           </SectionBox>
         </div>
@@ -766,49 +497,45 @@ export default function CommunityPage() {
         {/* ============ MAKER PASSPORT + STORY BANNER ============ */}
         <div className="mc-row2">
           <SectionBox href="/community/passport">
-            <SectionHead title="Maker passport" href="/community/passport" icon="passport" />
+            <SectionHead title="Maker Passport" href="/community/passport" icon="passport" />
             <div className="mc-passport">
               <div className="mc-passport-id">
-                <div className="mc-passport-avatar" aria-hidden="true"><Ico d={PATHS.user} size={26} /></div>
+                <img className="mc-passport-avatar" src="/community/passport.jpg" alt="Maria Quispe" loading="lazy" />
                 <div>
-                  <div className="mc-passport-name">Every maker&rsquo;s record<Verified /></div>
-                  <div className="mc-vcard-sub">Built in public, order by order</div>
-                  <span className="mc-chip-gold mc-chip-founding">Founding seller stamp for life</span>
+                  <div className="mc-passport-name">Maria Quispe<Verified /></div>
+                  <div className="mc-passport-craft">
+                    <span aria-hidden="true">{flagFor('PE')}</span> Peru &nbsp;&middot;&nbsp; Textile Weaving
+                  </div>
                 </div>
               </div>
               <div className="mc-passport-stats">
-                {[
-                  'Orders completed',
-                  'Followers',
-                  'Videos',
-                  'Journal entries',
-                  'Years preserving craft',
-                  'Verification level',
-                ].map((label) => (
-                  <div key={label} className="mc-pstat">
-                    <span className="mc-pstat-num">--</span>
-                    <span className="mc-pstat-label">{label}</span>
+                {passportStats.map((s) => (
+                  <div key={s.l} className="mc-pstat">
+                    <span className={`mc-pstat-num ${s.n === 'Gold' ? 'mc-pstat-gold' : ''}`}>{s.n}</span>
+                    <span className="mc-pstat-label">{s.l}</span>
                   </div>
                 ))}
               </div>
-              <Link href="/community/passport" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
-                View full passport
-              </Link>
+              <div className="mc-passport-foot">
+                <span className="mc-chip-gold">Founding Seller</span>
+                <Link href="/community/passport" className="mc-outbtn" onClick={(e) => e.stopPropagation()}>
+                  <Ico d={PATHS.play} size={10} /> View Full Passport
+                </Link>
+              </div>
             </div>
           </SectionBox>
 
           <section className="mc-banner">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="mc-banner-img" src={bannerImage} alt="" aria-hidden="true" loading="lazy" />
+            <img className="mc-banner-img" src="/community/banner.jpg" alt="" aria-hidden="true" loading="lazy" />
             <div className="mc-banner-scrim" aria-hidden="true" />
             <div className="mc-banner-inner">
               <h2 className="mc-banner-title">
-                Every product has a story.
+                Every Product Has A Story.
                 <br />
-                Every story has a maker.
+                Every Story Has A Maker.
               </h2>
               <p className="mc-banner-sub">Discover the people behind the world&rsquo;s greatest craftsmanship.</p>
-              <Link href="/shop" className="mc-btn mc-btn-primary">Explore the community</Link>
+              <Link href="/shop" className="mc-btn mc-btn-primary">Explore the Community</Link>
             </div>
           </section>
         </div>
@@ -817,11 +544,11 @@ export default function CommunityPage() {
         <div className="mc-trust">
           {(
             [
-              { t: 'Authentic makers', s: 'Real people, real stories', i: 'user' },
-              { t: 'Verified sellers', s: 'Trusted and authenticated', i: 'shield' },
-              { t: 'Global community', s: `${totalCountries} countries connected`, i: 'globe2' },
-              { t: 'Live interaction', s: 'Ask, watch and shop live', i: 'mic' },
-              { t: 'Preserve culture', s: 'Keeping traditions alive', i: 'laurel' },
+              { t: 'Authentic Makers', s: 'Real people, real stories', i: 'user' },
+              { t: 'Verified Sellers', s: 'Trusted and authenticated', i: 'shield' },
+              { t: 'Global Community', s: '190 countries connected', i: 'globe2' },
+              { t: 'Live Interaction', s: 'Ask, watch & shop live', i: 'mic' },
+              { t: 'Preserve Culture', s: 'Keeping traditions alive', i: 'laurel' },
             ] as { t: string; s: string; i: keyof typeof PATHS }[]
           ).map((item) => (
             <div key={item.t} className="mc-trust-item">
@@ -838,10 +565,7 @@ export default function CommunityPage() {
   )
 }
 
-/* ---------- styles ----------
-   The page carries its own --mc-* palette: dark theme reproduces William's
-   design exactly (warm near-black, gold, orange); the light toggle maps the
-   identical structure onto the site's light tokens. */
+/* ---------- styles: exact palette from William's design ---------- */
 
 const css = `
 .mc-page {
@@ -849,7 +573,7 @@ const css = `
   --mc-card: #131008;
   --mc-card2: rgba(255,255,255,0.04);
   --mc-line: rgba(255,255,255,0.28);
-  --mc-goldline: rgba(212,175,55,0.5);
+  --mc-goldline: rgba(212,175,55,0.55);
   --mc-text: #f4efe6;
   --mc-muted: #a99f8c;
   --mc-gold: #D4AF37;
@@ -867,16 +591,14 @@ html[data-theme='light'] .mc-page {
   --mc-gold: #a8811a;
   --mc-shadow: 0 10px 28px rgba(26,20,10,0.09);
 }
-/* Full-bleed per William 2026-07-30 ("fit the page perfectly left to right
-   no gaps either side") -- same no-max-width rule as the homepage. A slim
-   edge inset keeps the boxes' gold borders and rounded corners visible. */
-.mc-wrap { width: 100%; padding: 24px clamp(8px, 1vw, 14px) 50px; display: flex; flex-direction: column; gap: 20px; }
+/* Full-bleed per William ("fit the page perfectly left to right no gaps either side"). */
+.mc-wrap { width: 100%; padding: 22px clamp(8px, 1vw, 14px) 50px; display: flex; flex-direction: column; gap: 20px; }
 
-.mc-kicker { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mc-text); }
-.mc-mark { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; border: 1.4px solid var(--accent); color: var(--accent); flex-shrink: 0; }
-.mc-verified { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: var(--mc-gold); color: #14110c; margin-left: 7px; vertical-align: 2px; }
+.mc-kicker { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mc-text); }
+.mc-mark { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; flex-shrink: 0; }
+.mc-verified { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--mc-gold); color: #14110c; margin-left: 7px; vertical-align: 1px; }
 
-.mc-shead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.mc-shead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
 .mc-shead-left { display: inline-flex; align-items: center; gap: 10px; }
 .mc-viewall { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mc-gold); white-space: nowrap; }
 .mc-viewall:hover { color: var(--accent); }
@@ -891,42 +613,34 @@ html[data-theme='light'] .mc-page {
 @media (max-width: 980px) { .mc-row2, .mc-row3 { grid-template-columns: 1fr; } }
 
 /* buttons */
-.mc-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 26px; border-radius: 8px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.mc-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 26px; border-radius: 6px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 .mc-btn-primary { background: var(--accent); color: #fff; }
 .mc-btn-primary:hover { filter: brightness(1.08); }
 .mc-btn-ghost { border: 1px solid rgba(255,255,255,0.6); color: #fff; }
 .mc-btn-ghost:hover { border-color: #fff; }
-.mc-outbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 7px 16px; margin-top: 10px; border: 1px solid var(--mc-line); border-radius: 7px; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mc-text); align-self: flex-start; background: none; }
-.mc-outbtn:hover { border-color: var(--mc-gold); color: var(--mc-gold); }
-.mc-outbtn-wide { width: 100%; grid-column: 1 / -1; }
-.mc-goldbtn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 20px; margin-top: 10px; border-radius: 7px; background: var(--mc-gold); color: #14110c; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.mc-outbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 16px; border: 1px solid var(--mc-goldline); border-radius: 6px; font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mc-gold); background: none; align-self: flex-start; }
+.mc-outbtn:hover { border-color: var(--mc-gold); filter: brightness(1.15); }
+.mc-goldbtn { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 20px; margin-top: 8px; border-radius: 6px; background: var(--mc-gold); color: #14110c; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 .mc-goldbtn:hover { filter: brightness(1.08); }
-.mc-cartbtn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 7px 15px; border-radius: 6px; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.mc-cartbtn { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 6px 13px; border-radius: 6px; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; white-space: nowrap; }
 .mc-cartbtn:hover { filter: brightness(1.08); }
 
-/* chips + tags */
-.mc-tag { position: absolute; top: 10px; left: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-.mc-tag-live { background: var(--red); color: #fff; }
-.mc-tag-gold { background: var(--mc-gold); color: #14110c; }
-.mc-tag-orange { background: var(--accent); color: #fff; }
-.mc-tag-plain { background: rgba(0,0,0,0.55); color: #eee; border: 1px solid rgba(255,255,255,0.25); }
-.mc-livedot { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
-.mc-chip-gold { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--mc-goldline); color: var(--mc-gold); font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+/* chips */
+.mc-chip-gold { display: inline-flex; align-items: center; justify-content: center; padding: 3px 12px; border-radius: 5px; border: 1px solid var(--mc-goldline); color: var(--mc-gold); font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
 .mc-chip-gold:hover { border-color: var(--mc-gold); }
-.mc-chip-plain { display: inline-flex; padding: 3px 10px; border-radius: 999px; background: var(--mc-card2); color: var(--mc-muted); font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-.mc-chip-founding { margin-top: 7px; }
+.mc-chip-follow { display: inline-flex; align-items: center; justify-content: center; padding: 3px 12px; border-radius: 5px; color: var(--mc-muted); font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
+.mc-chip-follow:hover { color: var(--mc-gold); }
 
 /* hero */
-.mc-hero { position: relative; min-height: 440px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0c0a08; }
-.mc-hero-collage { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
-.mc-hero-cell { position: relative; overflow: hidden; }
-.mc-hero-cell + .mc-hero-cell { border-left: 1px solid rgba(0,0,0,0.35); }
-.mc-hero-cell img { width: 100%; height: 100%; object-fit: cover; }
-.mc-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,6,0.5) 0%, rgba(10,8,6,0.7) 52%, rgba(12,10,8,0.94) 100%); }
-.mc-hero-inner { position: relative; text-align: center; padding: 66px 20px; max-width: 780px; }
-.mc-hero-title { font-size: clamp(34px, 5.6vw, 56px); line-height: 1.06; color: #fff; margin-bottom: 16px; }
-.mc-hero-accent { color: #D4AF37; }
-.mc-hero-sub { color: rgba(255,255,255,0.85); font-size: 15.5px; max-width: 530px; margin: 0 auto 26px; }
+.mc-hero { position: relative; min-height: 420px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0b0906; }
+.mc-hero-collage { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr 2.4fr 1fr 1fr; }
+.mc-hero-collage img { width: 100%; height: 100%; object-fit: cover; }
+.mc-hero-centercell { background: radial-gradient(ellipse at center, #191410 0%, #0b0906 75%); }
+.mc-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,6,0.32) 0%, rgba(10,8,6,0.45) 50%, rgba(11,9,6,0.96) 100%); }
+.mc-hero-inner { position: relative; text-align: center; padding: 62px 20px; max-width: 780px; }
+.mc-hero-title { font-size: clamp(34px, 5.6vw, 56px); line-height: 1.06; color: #fff; margin-bottom: 15px; }
+.mc-hero-accent { color: #E8890C; }
+.mc-hero-sub { color: rgba(255,255,255,0.88); font-size: 15px; max-width: 520px; margin: 0 auto 26px; }
 .mc-hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* featured */
@@ -934,41 +648,33 @@ html[data-theme='light'] .mc-page {
 .mc-featured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 @media (max-width: 980px) { .mc-featured-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 540px) { .mc-featured-grid { grid-template-columns: 1fr; } }
-.mc-fcard { position: relative; border-radius: 14px; overflow: hidden; min-height: 320px; display: flex; align-items: flex-end; background: var(--mc-card2); }
-.mc-fcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.mc-fcard-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,6,0.05) 30%, rgba(10,8,6,0.62) 68%, rgba(10,8,6,0.92) 100%); }
-.mc-fcard-seat .mc-fcard-shade { background: none; }
-.mc-fcard-seat { background: var(--mc-card2); }
-.mc-fcard-body { position: relative; z-index: 2; padding: 14px; display: flex; flex-direction: column; gap: 4px; width: 100%; }
-.mc-fcard-name { font-size: 20px; color: #fff; }
-.mc-fcard-seat .mc-fcard-name { color: var(--mc-text); }
-.mc-fcard-country { font-size: 12.5px; color: rgba(255,255,255,0.8); }
-.mc-fcard-line { font-size: 13px; color: rgba(255,255,255,0.85); }
-.mc-fcard-seat .mc-fcard-country, .mc-fcard-seat .mc-fcard-line { color: var(--mc-muted); }
-.mc-fcard .mc-outbtn { border-color: rgba(255,255,255,0.4); color: #fff; }
-.mc-fcard .mc-outbtn:hover { border-color: #fff; color: #fff; }
-.mc-fcard-seat .mc-outbtn { border-color: var(--mc-line); color: var(--mc-text); }
+.mc-fcard { border-radius: 12px; overflow: hidden; background: #100d07; display: flex; flex-direction: column; box-shadow: 0 10px 26px rgba(0,0,0,0.35); }
+html[data-theme='light'] .mc-fcard { background: var(--surface); box-shadow: var(--mc-shadow); }
+.mc-fcard-media { aspect-ratio: 210 / 122; overflow: hidden; }
+.mc-fcard-media img { width: 100%; height: 100%; object-fit: cover; }
+.mc-fcard-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.mc-fcard-name { font-size: 21px; color: var(--mc-text); display: flex; align-items: center; }
+.mc-fcard-country { font-size: 12.5px; color: var(--mc-muted); display: flex; align-items: center; gap: 6px; }
+.mc-fcard-line { font-size: 12.5px; color: var(--mc-muted); flex: 1; margin-top: 2px; }
+.mc-fcard .mc-outbtn { margin-top: 10px; }
 
 /* journals */
-.mc-journal { display: grid; grid-template-columns: 1fr 1.1fr; gap: 16px; align-items: stretch; }
+.mc-journal { display: grid; grid-template-columns: 1fr 1.25fr; gap: 16px; align-items: stretch; }
 @media (max-width: 640px) { .mc-journal { grid-template-columns: 1fr; } }
 .mc-journal-text { display: flex; flex-direction: column; gap: 9px; }
-.mc-journal-title { font-size: 24px; line-height: 1.15; }
-.mc-journal-body { font-size: 13.5px; color: var(--mc-muted); flex: 1; }
-.mc-journal-meta { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--mc-muted); }
-.mc-journal-heart { color: var(--mc-gold); display: inline-flex; }
-.mc-journal-media { position: relative; border-radius: 14px; overflow: hidden; min-height: 190px; }
+.mc-journal-day { font-size: 27px; }
+.mc-journal-body { font-size: 13.5px; color: var(--mc-muted); }
+.mc-journal-meta { display: flex; align-items: center; gap: 16px; margin-top: auto; }
+.mc-journal-stat { display: inline-flex; align-items: center; gap: 6px; color: var(--mc-gold); font-size: 13px; }
+.mc-journal-viewed { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--mc-muted); }
+.mc-journal-media { position: relative; border-radius: 12px; overflow: hidden; min-height: 190px; }
 .mc-journal-media img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.mc-media-empty { width: 100%; height: 100%; min-height: 150px; background: var(--mc-card2); border-radius: inherit; }
-.mc-media-sq { aspect-ratio: 1; min-height: 0; }
-.mc-playbtn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; border-radius: 50%; background: rgba(12,10,8,0.6); border: 1.5px solid rgba(255,255,255,0.8); color: #fff; display: flex; align-items: center; justify-content: center; }
-.mc-playbtn-sm { width: 36px; height: 36px; }
-.mc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(12,10,8,0.65); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-size: 19px; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.mc-arrow:hover { border-color: #fff; }
+.mc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; background: rgba(12,10,8,0.6); color: var(--mc-gold); font-size: 19px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.mc-arrow:hover { background: rgba(12,10,8,0.85); }
 .mc-arrow-l { left: 10px; }
 .mc-arrow-r { right: 10px; }
-.mc-dots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
-.mc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-goldline); opacity: 0.5; }
+.mc-dots { display: flex; gap: 6px; justify-content: center; margin-top: 13px; }
+.mc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-goldline); opacity: 0.4; }
 .mc-dot-on { background: var(--mc-gold); opacity: 1; }
 
 /* ask */
@@ -978,92 +684,101 @@ html[data-theme='light'] .mc-page {
 .mc-ask-row:hover { background: rgba(212,175,55,0.12); }
 .mc-ask-avatar { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--mc-card); border: 1px solid var(--mc-goldline); color: var(--mc-gold); flex-shrink: 0; }
 .mc-ask-q { flex: 1; }
-.mc-ask-go { color: var(--mc-gold); }
+.mc-ask-count { display: inline-flex; align-items: center; gap: 5px; color: var(--mc-muted); font-size: 12px; }
 .mc-ask-using { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--mc-card2); padding-top: 12px; font-size: 12px; color: var(--mc-muted); }
 .mc-ask-using-label { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10.5px; }
 .mc-ask-mode { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--mc-goldline); color: var(--mc-gold); font-size: 11.5px; }
-.mc-ask-note { flex: 1; text-align: right; min-width: 140px; }
-.mc-empty { font-size: 13.5px; color: var(--mc-muted); background: var(--mc-card2); border-radius: 12px; padding: 16px; }
-.mc-note { font-size: 12.5px; color: var(--mc-muted); margin-top: 10px; }
+.mc-note { font-size: 12.5px; color: var(--mc-muted); }
 
 /* workshop videos */
 .mc-crafts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 13px; }
-.mc-craft { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; padding: 8px 6px; border-radius: 10px; background: var(--mc-card2); color: var(--mc-muted); font-family: var(--font-display); font-size: 10px; font-weight: 600; letter-spacing: 0.05em; }
+.mc-craft { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; padding: 8px 6px; border-radius: 10px; background: var(--mc-card2); color: var(--mc-muted); font-family: var(--font-display); font-size: 10px; font-weight: 600; letter-spacing: 0.05em; }
 .mc-craft-on { color: var(--mc-gold); background: rgba(212,175,55,0.14); }
-.mc-video-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.mc-vcard { border-radius: 12px; overflow: hidden; background: var(--mc-card2); }
+.mc-video-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 640px) { .mc-video-grid { grid-template-columns: repeat(2, 1fr); } }
+.mc-vcard { border-radius: 10px; overflow: hidden; background: var(--mc-card2); }
 .mc-vcard:hover { filter: brightness(1.12); }
-.mc-vthumb { position: relative; aspect-ratio: 16 / 10; }
+.mc-vthumb { position: relative; aspect-ratio: 104 / 97; }
 .mc-vthumb img { width: 100%; height: 100%; object-fit: cover; }
-.mc-vthumb-seat { display: flex; align-items: center; justify-content: center; color: var(--mc-gold); background: rgba(255,255,255,0.03); }
-.mc-vcard-seatcard { background: var(--mc-card2); }
-.mc-vcard-meta { padding: 9px 11px; }
-.mc-vcard-title { font-size: 13.5px; font-weight: 600; color: var(--mc-text); }
-.mc-vcard-sub { font-size: 12px; color: var(--mc-muted); }
+.mc-vcard-meta { padding: 8px 9px; }
+.mc-vcard-title { font-size: 12.5px; font-weight: 600; color: var(--mc-text); }
+.mc-vcard-sub { font-size: 11.5px; color: var(--mc-muted); }
 
 /* live shopping */
-.mc-live { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
+.mc-live { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; }
 @media (max-width: 640px) { .mc-live { grid-template-columns: 1fr; } }
-.mc-live-left { display: flex; flex-direction: column; gap: 10px; }
-.mc-live-frame { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--mc-card2); }
+.mc-live-left { display: flex; flex-direction: column; gap: 0; }
+.mc-live-frame { border-radius: 12px 12px 0 0; overflow: hidden; aspect-ratio: 210 / 143; }
 .mc-live-frame img { width: 100%; height: 100%; object-fit: cover; }
-.mc-tag-onframe { top: 12px; left: 12px; }
-.mc-live-off { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--mc-muted); font-size: 13px; text-align: center; padding: 16px; }
-.mc-live-off svg { color: var(--mc-gold); }
-.mc-live-productbar { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 12px; padding: 9px 11px; }
-.mc-live-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.mc-live-productbar { display: flex; align-items: center; gap: 10px; background: #17120a; border-radius: 0 0 12px 12px; padding: 10px 12px; }
+html[data-theme='light'] .mc-live-productbar { background: var(--surface-2); }
+.mc-live-thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
 .mc-live-pmeta { flex: 1; min-width: 0; }
-.mc-chat { display: flex; flex-direction: column; background: var(--mc-card2); border-radius: 14px; padding: 12px; }
-.mc-chat-body { flex: 1; }
-.mc-chat-note { font-size: 12.5px; color: var(--mc-muted); }
-.mc-chat-input { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; background: var(--mc-card); border-radius: 999px; padding: 8px 8px 8px 16px; color: var(--mc-muted); font-size: 12.5px; }
+.mc-live-pname { font-size: 13px; font-weight: 600; color: var(--mc-gold); }
+.mc-live-price { font-family: var(--font-serif); font-size: 17px; color: var(--mc-text); }
+.mc-chat { display: flex; flex-direction: column; background: var(--mc-card2); border-radius: 12px; padding: 12px; }
+.mc-chat-body { flex: 1; display: flex; flex-direction: column; gap: 11px; }
+.mc-chat-msg { display: flex; align-items: flex-start; gap: 9px; }
+.mc-chat-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.mc-chat-name { font-size: 11.5px; font-weight: 700; color: var(--mc-gold); }
+.mc-chat-text { font-size: 12px; color: var(--mc-text); }
+.mc-chat-input { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; background: var(--mc-card); border-radius: 999px; padding: 7px 7px 7px 15px; color: var(--mc-muted); font-size: 12px; }
 .mc-chat-input:hover { filter: brightness(1.15); }
-.mc-chat-send { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; flex-shrink: 0; }
+.mc-chat-send { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; flex-shrink: 0; }
 
 /* around the world */
-.mc-world { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; align-items: start; }
+.mc-world { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
 @media (max-width: 640px) { .mc-world { grid-template-columns: 1fr; } }
-.mc-world-left { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
-.mc-world-stats { display: flex; flex-direction: column; gap: 12px; }
+.mc-world-left { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: center; }
+.mc-world-stats { display: flex; flex-direction: column; gap: 13px; }
 .mc-stat { text-align: left; }
-.mc-stat-num { display: block; font-family: var(--font-serif); font-size: 22px; color: var(--mc-gold); line-height: 1.15; }
-.mc-stat-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mc-muted); font-family: var(--font-display); }
-.mc-globe-wrap { display: flex; justify-content: center; }
-.mc-globe { width: min(100%, 230px); height: auto; }
-.mc-world-panel { display: flex; flex-direction: column; gap: 8px; background: var(--mc-card2); border-radius: 14px; padding: 13px; }
+.mc-stat-num { display: block; font-family: var(--font-serif); font-size: 24px; color: var(--mc-gold); line-height: 1.1; }
+.mc-stat-label { font-size: 12px; color: var(--mc-text); }
+.mc-globe-wrap { display: flex; justify-content: center; align-items: center; }
+.mc-globe { width: 100%; max-width: 340px; height: auto; border-radius: 10px; }
+.mc-outbtn-wide { width: 100%; margin-top: 12px; grid-column: 1 / -1; }
+.mc-world-panel { display: flex; flex-direction: column; gap: 8px; background: var(--mc-card2); border-radius: 12px; padding: 12px; }
 .mc-world-country { display: flex; align-items: center; gap: 9px; padding-bottom: 9px; border-bottom: 1px solid var(--mc-card2); }
-.mc-world-cname { flex: 1; font-family: var(--font-serif); font-size: 17px; }
-.mc-panel-row { display: flex; align-items: center; justify-content: space-between; background: var(--mc-card); border-radius: 10px; padding: 9px 13px; font-size: 13px; color: var(--mc-text); }
+.mc-world-cname { flex: 1; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.06em; font-size: 14px; }
+.mc-panel-row { display: flex; align-items: center; gap: 10px; background: var(--mc-card); border-radius: 10px; padding: 8px 11px; color: var(--mc-text); }
 .mc-panel-row:hover { filter: brightness(1.15); }
-.mc-panel-row span:last-child { color: var(--mc-gold); font-size: 16px; line-height: 1; }
+.mc-panel-thumb { width: 32px; height: 32px; border-radius: 7px; object-fit: cover; flex-shrink: 0; }
+.mc-panel-text { flex: 1; display: flex; flex-direction: column; }
+.mc-panel-label { font-size: 12.5px; font-weight: 600; }
+.mc-panel-sub { font-size: 11px; color: var(--mc-muted); }
+.mc-panel-go { color: var(--mc-gold); font-size: 17px; line-height: 1; }
 .mc-flag { font-size: 17px; }
 
 /* collections */
 .mc-coll-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 @media (max-width: 640px) { .mc-coll-grid { grid-template-columns: repeat(2, 1fr); } }
-.mc-coll-tile { border-radius: 12px; overflow: hidden; background: var(--mc-card2); display: flex; flex-direction: column; }
+.mc-coll-tile { border-radius: 10px; overflow: hidden; background: var(--mc-card2); display: flex; flex-direction: column; }
 .mc-coll-tile:hover { filter: brightness(1.12); }
-
-.mc-coll-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; }
-.mc-coll-name { display: block; padding: 7px 9px 0; font-size: 12.5px; font-weight: 600; color: var(--mc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mc-coll-by { display: block; padding: 0 9px 8px; font-size: 11px; color: var(--mc-muted); }
+.mc-coll-tile img { width: 100%; aspect-ratio: 99 / 79; object-fit: cover; }
+.mc-coll-name { display: block; padding: 8px 9px 2px; font-size: 12.5px; font-weight: 600; color: var(--mc-text); }
+.mc-coll-by { display: block; padding: 0 9px 9px; font-size: 11px; color: var(--mc-muted); line-height: 1.5; }
+.mc-coll-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
 
 /* challenge */
 .mc-challenge { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; align-items: stretch; }
 @media (max-width: 440px) { .mc-challenge { grid-template-columns: 1fr; } }
-.mc-challenge-main { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; background: var(--mc-card2); border-radius: 14px; padding: 14px; }
-.mc-challenge-title { font-size: 22px; line-height: 1.15; }
+.mc-challenge-label { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mc-muted); }
+.mc-challenge-main { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; background: var(--mc-card2); border-radius: 12px; padding: 14px; }
+.mc-challenge-title { font-size: 21px; line-height: 1.15; }
 .mc-challenge-ends { font-size: 11.5px; color: var(--mc-muted); }
-.mc-challenge-winner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; background: var(--mc-card2); border-radius: 14px; padding: 14px; text-align: center; }
-.mc-winner-avatar { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid var(--mc-gold); color: var(--mc-gold); }
+.mc-challenge-winner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; background: var(--mc-card2); border-radius: 12px; padding: 14px; text-align: center; }
+.mc-winner-avatar { width: 62px; height: 62px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mc-gold); }
 .mc-winner-name { font-family: var(--font-serif); font-size: 16px; }
-.mc-laurel { color: var(--mc-gold); }
+.mc-winner-country { font-size: 11.5px; color: var(--mc-muted); }
+.mc-laurel { display: inline-flex; align-items: center; gap: 7px; color: var(--mc-gold); font-family: var(--font-display); font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 
 /* learning */
 .mc-lessons { display: flex; flex-direction: column; gap: 8px; }
-.mc-lesson { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 12px; padding: 9px 12px; }
-.mc-lesson-thumb { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 30px; border-radius: 6px; background: rgba(212,175,55,0.14); color: var(--mc-gold); flex-shrink: 0; }
-.mc-lesson-title { flex: 1; font-size: 13px; color: var(--mc-text); }
+.mc-lesson { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 10px; padding: 8px 11px; color: var(--mc-text); }
+.mc-lesson:hover { filter: brightness(1.15); }
+.mc-lesson-thumb { width: 48px; height: 34px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.mc-lesson-title { flex: 1; font-size: 12.5px; }
+.mc-lesson-time { font-size: 11.5px; color: var(--mc-muted); }
 
 /* follow countries */
 .mc-countries { display: flex; flex-direction: column; gap: 8px; }
@@ -1074,19 +789,22 @@ html[data-theme='light'] .mc-page {
 /* passport */
 .mc-passport { display: flex; flex-direction: column; gap: 14px; }
 .mc-passport-id { display: flex; align-items: center; gap: 14px; }
-.mc-passport-avatar { display: flex; align-items: center; justify-content: center; width: 66px; height: 66px; border-radius: 50%; border: 1.5px solid var(--mc-gold); color: var(--mc-gold); flex-shrink: 0; }
-.mc-passport-name { font-family: var(--font-serif); font-size: 19px; }
+.mc-passport-avatar { width: 74px; height: 74px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mc-gold); flex-shrink: 0; }
+.mc-passport-name { font-family: var(--font-serif); font-size: 20px; display: flex; align-items: center; }
+.mc-passport-craft { font-size: 12.5px; color: var(--mc-muted); display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 .mc-passport-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (max-width: 540px) { .mc-passport-stats { grid-template-columns: repeat(2, 1fr); } }
-.mc-pstat { background: var(--mc-card2); border-radius: 12px; padding: 10px 8px; text-align: center; }
-.mc-pstat-num { display: block; font-family: var(--font-serif); font-size: 19px; color: var(--mc-gold); }
-.mc-pstat-label { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mc-muted); font-family: var(--font-display); }
+.mc-pstat { background: var(--mc-card2); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.mc-pstat-num { display: block; font-family: var(--font-serif); font-size: 19px; color: var(--mc-text); }
+.mc-pstat-gold { color: var(--mc-gold); }
+.mc-pstat-label { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mc-muted); font-family: var(--font-display); }
+.mc-passport-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
 /* banner */
-.mc-banner { position: relative; border-radius: 18px; overflow: hidden; min-height: 300px; display: flex; align-items: center; box-shadow: var(--mc-shadow); }
-.mc-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.mc-banner-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,8,6,0.85) 0%, rgba(10,8,6,0.55) 60%, rgba(10,8,6,0.3) 100%); }
-.mc-banner-inner { position: relative; padding: 30px; max-width: 480px; }
+.mc-banner { position: relative; border-radius: 18px; overflow: hidden; min-height: 300px; display: flex; align-items: center; box-shadow: var(--mc-shadow); background: #12100a; }
+.mc-banner-img { position: absolute; right: 0; top: 0; height: 100%; width: 46%; object-fit: cover; }
+.mc-banner-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, #12100a 0%, #12100a 46%, rgba(18,16,10,0.55) 62%, rgba(18,16,10,0.1) 100%); }
+.mc-banner-inner { position: relative; padding: 30px; max-width: 520px; }
 .mc-banner-title { font-size: clamp(22px, 2.6vw, 31px); color: #fff; margin-bottom: 10px; }
 .mc-banner-sub { color: rgba(255,255,255,0.85); font-size: 13.5px; margin-bottom: 18px; }
 
