@@ -179,6 +179,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // per DROP_LIVE_HOURS in lib/drops.ts), distinct from /workshop's/live's
     // daily-updating feed.
     { url: `${base}/drops`, changeFrequency: 'weekly', priority: 0.6 },
+    // /community added 2026-07-30 by the standing SEO agent. "The Makers'
+    // Circle" (commit 99a777a4, "community hub replaces Workshop/Drops in
+    // nav") is the new primary community destination in GlobalHeader's main
+    // nav (desktop mega-menu + mobile panel), with its own layout.tsx
+    // metadata added the same cycle (title/description/canonical/OG/Twitter
+    // -- see app/community/layout.tsx). Verified not auth-gated: same
+    // middleware.ts check already documented for /workshop and /drops above.
+    // changeFrequency/priority match /workshop -- both are hub/feed-style
+    // pages whose content genuinely changes often, distinct from the static
+    // monthly pages below. Deliberately NOT adding /community/[section] or
+    // /community/journals here this cycle -- see this cycle's SEO_LOG.md
+    // entry and backlog for why (several [section] pages are explicit
+    // "being crafted right now" placeholders needing separate treatment).
+    { url: `${base}/community`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
     // /mission added 2026-07-23 (commit dbab69cc) -- a static, real-content
     // page (mission/values/seller-guidelines) with its own generateMetadata
