@@ -682,13 +682,13 @@ function flagOf(code: string): string {
 
 const css = `
 .vh{background:var(--bg);color:var(--text);font-family:var(--font-body)}
-.vh-annbar{background:var(--accent);color:#fff;text-align:center;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap}
+.vh-annbar{background:var(--accent);color:#fff;text-align:center;padding:6px 28px;display:flex;align-items:center;justify-content:space-between;gap:6px 24px;flex-wrap:wrap}
 .vh-value{line-height:1.2;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.45),0 0 1px rgba(0,0,0,.35)}
 .vh-value.v1{font-family:'Abril Fatface',serif;font-weight:400;font-size:23px;letter-spacing:.02em}
 .vh-value.v2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:22px;letter-spacing:.015em}
 .vh-value.v3{font-family:'Caveat',cursive;font-weight:600;font-size:28px}
 .vh-value.v4{font-family:'Fraunces',serif;font-weight:600;font-size:21px;letter-spacing:.01em}
-@media (max-width:700px){.vh-annbar{padding:12px 16px;gap:6px 16px}.vh-value.v1{font-size:16px}.vh-value.v2{font-size:15.5px}.vh-value.v3{font-size:20px}.vh-value.v4{font-size:15.5px}}
+@media (max-width:700px){.vh-annbar{padding:5px 16px;gap:4px 16px}.vh-value.v1{font-size:16px}.vh-value.v2{font-size:15.5px}.vh-value.v3{font-size:20px}.vh-value.v4{font-size:15.5px}}
 .vh-sellertop{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#0b0b0b;border:2px solid var(--accent);padding:14px 22px;animation:vhPulseGlow 2.2s ease-in-out infinite}
 .vh-sellertop .txt{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;max-width:70ch;line-height:1.5}
 .vh-sellertop .txt b{color:var(--accent)}
