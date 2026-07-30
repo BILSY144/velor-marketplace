@@ -123,7 +123,7 @@ function SectionBox({ href, children, className }: { href: string; children: Rea
 export default function CommunityPage() {
   const featured = [
     { key: 'f1', img: pexelsUrl(35509025, null, 700), name: 'Fatima', verified: false, cc: 'MA', country: 'Morocco', line: 'Making hand-painted tagines.', cta: 'Watch live', ctaIcon: true, href: '/live' },
-    { key: 'f2', img: pexelsUrl(27084601, null, 700), name: 'Hiroshi', verified: true, cc: 'JP', country: 'Japan', line: 'New workshop journal uploaded. Making Samurai kitchen knives.', cta: 'View journal', ctaIcon: false, href: '/workshop' },
+    { key: 'f2', img: pexelsUrl(27084601, null, 700), name: 'Hiroshi', verified: true, cc: 'JP', country: 'Japan', line: 'New workshop journal uploaded. Making Samurai kitchen knives.', cta: 'View journal', ctaIcon: false, href: '/community/journals' },
     { key: 'f3', img: pexelsUrl(36103768, 'free-photo-of-colorful-mexican-talavera-pottery-display', 700), name: 'Saul', verified: true, cc: 'MX', country: 'Mexico', line: 'Answered 12 buyer questions today.', cta: 'Ask a question', ctaIcon: false, href: '/community/ask' },
     { key: 'f4', img: pexelsUrl(14106294, null, 700), name: 'Lhamo', verified: true, cc: 'NP', country: 'Nepal', line: 'Traditional Himalayan weaving.', cta: 'Watch video', ctaIcon: true, href: '/community/videos' },
   ]
@@ -163,7 +163,7 @@ export default function CommunityPage() {
   const panelRows = [
     { img: pexelsUrl(37966508, null, 120), label: 'Live Sellers', sub: '23 live now', href: '/live' },
     { img: pexelsUrl(16963295, null, 120), label: 'Latest Videos', sub: 'New this week', href: '/community/videos' },
-    { img: pexelsUrl(34189664, null, 120), label: 'Latest Journals', sub: '18 new entries', href: '/workshop' },
+    { img: pexelsUrl(34189664, null, 120), label: 'Latest Journals', sub: '18 new entries', href: '/community/journals' },
     { img: pexelsUrl(37966505, null, 120), label: 'Newest Products', sub: '56 new items', href: '/shop' },
   ]
 
