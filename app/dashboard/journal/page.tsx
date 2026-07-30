@@ -215,7 +215,7 @@ export default function CreatorJournalsPage() {
   }
 
   function share(p: JournalPost) {
-    const url = sellerId ? `${window.location.origin}/community/journals/${sellerId}` : `${window.location.origin}/workshop`
+    const url = sellerId ? `${window.location.origin}/seller/${sellerId}` : `${window.location.origin}/workshop`
     navigator.clipboard?.writeText(url).then(() => {
       setCopied(p.id)
       setTimeout(() => setCopied(null), 1800)
@@ -450,7 +450,7 @@ export default function CreatorJournalsPage() {
                     <td>
                       <div className="dj-actions">
                         <button type="button" className="dj-act" title="Edit" onClick={() => router.push(`/dashboard/journal/new?edit=${p.id}`)}><Ico d={P.pencil} size={14} /></button>
-                        <Link className="dj-act" title="View as a buyer" href={sellerId ? `/community/journals/${sellerId}` : '/community/journals'}><Ico d={P.eye} size={15} /></Link>
+                        <Link className="dj-act" title="View as a buyer" href={sellerId ? `/seller/${sellerId}` : '/community/journals'}><Ico d={P.eye} size={15} /></Link>
                         <Link className="dj-act" title="Analytics" href="/dashboard/analytics"><Ico d={P.chart} size={14} /></Link>
                         <button type="button" className="dj-act" title={copied === p.id ? 'Link copied' : 'Share'} onClick={() => share(p)}><Ico d={P.share} size={14} /></button>
                         {p.status === 'DRAFT' || p.status === 'ARCHIVED' ? (
@@ -525,7 +525,7 @@ export default function CreatorJournalsPage() {
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Link href="/dashboard/journal/new" className="dj-ghostbtn"><Ico d={P.plus} size={14} /> Add an entry</Link>
-                <Link href={sellerId ? `/community/journals/${sellerId}` : '/community/journals'} className="dj-primarybtn"><Ico d={P.eye} size={15} /> View as buyer</Link>
+                <Link href={sellerId ? `/seller/${sellerId}` : '/community/journals'} className="dj-primarybtn"><Ico d={P.eye} size={15} /> View as buyer</Link>
               </div>
             </div>
             {posts.filter(isLive).length === 0 ? (

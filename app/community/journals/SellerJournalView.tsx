@@ -232,11 +232,12 @@ type Tab = 'story' | 'making' | 'photos' | 'notes' | 'behind'
 const STORY_TRUNCATE = 420
 
 export default function SellerJournalView({
-  seller, posts, products, buyerLove, live, otherMakerPosts,
+  seller, posts, products, allProducts, buyerLove, live, otherMakerPosts,
 }: {
   seller: SellerInfo
   posts: JournalEntry[]
   products: TaggedProduct[]
+  allProducts: TaggedProduct[]
   buyerLove: BuyerLove | null
   live: LiveInfo | null
   otherMakerPosts: OtherMakerPost[]
@@ -469,7 +470,7 @@ export default function SellerJournalView({
           <section className="jp-section">
             <div className="jp-sechead">
               <h2 className="jp-sectitle">Shop Products From This Journal</h2>
-              <Link href={`/seller/${seller.id}`} className="jp-viewall">View all products <span aria-hidden="true">&rarr;</span></Link>
+              {allProducts.length > 0 && <a href="#shop-all" className="jp-viewall">View all products <span aria-hidden="true">&rarr;</span></a>}
             </div>
             {entryProducts.length === 0 ? (
               <p className="jp-note" style={{ margin: 0 }}>No listings are tagged on this entry yet &mdash; when {seller.storeName} links a piece, it appears here ready to buy.</p>
@@ -477,6 +478,38 @@ export default function SellerJournalView({
               <div className="jp-prod-grid">
                 {entryProducts.map(pr => (
                   <Link key={pr.id} href={`/shop/${pr.id}`} className="jp-prod" onClick={trackProductClick}>
+                    {pr.image
+                      ? <img src={pr.image} alt={pr.title} loading="lazy" />
+                      : <span style={{ display: 'block', aspectRatio: '1', background: 'var(--mc-card2)' }} aria-hidden />}
+                    <span className="jp-prod-name">{pr.title}</span>
+                    <span className="jp-prod-price">{money(pr.price, seller.currency)}</span>
+                    <span className="jp-prod-foot">
+                      <span className="jp-prod-loves"><Ico d={P.heart} size={11} /> {fmtK(pr.loves)}</span>
+                      <span className="jp-prod-view">View product <span aria-hidden="true">&rarr;</span></span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* full shop -- every approved listing from this maker, not just
+              the ones tagged to the current entry. Added 2026-07-30
+              (William: "get rid of the storefront and have the journal
+              replace it" + "add a shop section to this page") -- this
+              journal page is now a seller's whole public page, so buyers
+              need to browse and buy everything here without a separate
+              storefront to leave to. */}
+          <section className="jp-section" id="shop-all">
+            <div className="jp-sechead">
+              <h2 className="jp-sectitle">Shop {seller.storeName}</h2>
+            </div>
+            {allProducts.length === 0 ? (
+              <p className="jp-note" style={{ margin: 0 }}>No products listed yet &mdash; {seller.storeName} is still setting up their shop.</p>
+            ) : (
+              <div className="jp-prod-grid">
+                {allProducts.map(pr => (
+                  <Link key={pr.id} href={`/shop/${pr.id}`} className="jp-prod">
                     {pr.image
                       ? <img src={pr.image} alt={pr.title} loading="lazy" />
                       : <span style={{ display: 'block', aspectRatio: '1', background: 'var(--mc-card2)' }} aria-hidden />}
@@ -604,7 +637,7 @@ export default function SellerJournalView({
             <p className="jp-note" style={{ margin: 0 }}>
               {seller.description || `${seller.storeName} is telling their story one entry at a time.`}
             </p>
-            <Link href={`/seller/${seller.id}`} className="jp-viewall">Visit the storefront <span aria-hidden="true">&rarr;</span></Link>
+            {allProducts.length > 0 && <a href="#shop-all" className="jp-viewall">Shop {seller.storeName}&rsquo;s products <span aria-hidden="true">&rarr;</span></a>}
           </div>
 
           {/* Today's Workshop -- real live status, or an honest not-live state */}
@@ -632,7 +665,7 @@ export default function SellerJournalView({
             ) : (
               <div className="jp-pal">
                 {otherMakerPosts.map((a) => (
-                  <Link key={a.id} href={`/community/journals/${a.sellerId}`} className="jp-pal-row">
+                  <Link key={a.id} href={`/seller/${a.sellerId}`} className="jp-pal-row">
                     {a.image
                       ? <img src={a.image} alt="" aria-hidden="true" loading="lazy" />
                       : <span style={{ width: 48, height: 48, borderRadius: 9, background: 'var(--mc-card2)', flexShrink: 0 }} aria-hidden="true" />}

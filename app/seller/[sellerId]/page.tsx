@@ -7,7 +7,11 @@ import { countryFlagUrl } from '@/lib/countryFlag'
 import { FounderMedal } from '@/components/FounderMedal'
 import { SellerWishlistHeart } from '@/components/SellerWishlistHeart'
 import FollowSellerButton from '@/components/FollowSellerButton'
-import SellerJournal from '@/components/SellerJournal'
+import SellerJournalView from '@/app/community/journals/SellerJournalView'
+import { OrderStatus } from '@prisma/client'
+import { maskPersonalName } from '@/lib/messageIdentity'
+
+const PAID_ORDER_STATUSES: OrderStatus[] = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED']
 
 // Shown instead of a bare 404 when a store link points to a seller who
 // hasn't finished setup or isn't approved yet — friendlier than a generic
@@ -179,6 +183,7 @@ export default async function SellerProfilePage({
         where: { status: 'APPROVED' },
         include: {
           reviews: { select: { rating: true } },
+          _count: { select: { wishlistItems: true } },
         },
         orderBy: { createdAt: 'desc' },
       },
@@ -195,6 +200,172 @@ export default async function SellerProfilePage({
       redirect('/dashboard')
     }
     return <StoreNotReady />
+  }
+
+  // Velor Social stage 4 (2026-07-30, William: "get rid of the storefront
+  // and have the journal replace it" -- "the whole idea of the buyer
+  // interacting with the seller's journal" -- "everything can be accessed
+  // through their journal"): once a seller has published a journal entry,
+  // THIS page becomes that journal -- the same rich per-entry design the
+  // Workshop Feed and Makers' Circle link to, with a genuine Shop section
+  // added so buyers never have to leave it to browse or buy. A seller who
+  // hasn't written an entry yet keeps the classic storefront below --
+  // starting Journal is optional, so nobody is ever left with a dead page
+  // just because they haven't tried it.
+  if (process.env.VELOR_SOCIAL_ENABLED === 'true') {
+    const journalPosts = await prisma.journalPost.findMany({
+      where: {
+        sellerId: seller.id,
+        OR: [
+          { status: 'PUBLISHED' },
+          { status: 'SCHEDULED', scheduledAt: { lte: new Date() } },
+        ],
+      },
+      select: {
+        id: true, title: true, body: true, images: true, videoUrl: true,
+        createdAt: true, category: true, viewCount: true,
+        makingProcess: true, notesTips: true, behindScenes: true, productIds: true,
+        _count: { select: { likes: true, comments: { where: { status: 'PUBLISHED' } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    })
+
+    if (journalPosts.length > 0) {
+      const postIds = journalPosts.map((p) => p.id)
+
+      const [followers, commentRows, sellerReviewAgg, totalSalesAgg, topReviewRow, liveStream, otherMakerPosts] = await Promise.all([
+        prisma.follow.count({ where: { sellerId: seller.id } }),
+        // A handful of real, published comments per entry -- enough for the
+        // design's comment list without an unbounded fetch.
+        prisma.journalComment.findMany({
+          where: { postId: { in: postIds }, status: 'PUBLISHED' },
+          select: { id: true, postId: true, body: true, createdAt: true, userId: true },
+          orderBy: { createdAt: 'desc' },
+          take: 200,
+        }),
+        prisma.review.aggregate({
+          _avg: { rating: true },
+          _count: { _all: true },
+          where: { product: { sellerId: seller.id } },
+        }),
+        prisma.orderItem.aggregate({
+          _sum: { quantity: true },
+          where: { product: { sellerId: seller.id }, order: { status: { in: PAID_ORDER_STATUSES } } },
+        }),
+        // A genuine 5-star (or best-available) review with real written
+        // text, used as the "Buyer Love" testimonial -- never fabricated.
+        prisma.review.findFirst({
+          where: { product: { sellerId: seller.id }, comment: { not: '' } },
+          select: { comment: true, rating: true, user: { select: { name: true } } },
+          orderBy: [{ rating: 'desc' }, { createdAt: 'desc' }],
+        }),
+        prisma.liveStream.findFirst({
+          where: { sellerId: seller.id, status: 'LIVE' },
+          select: {
+            id: true, title: true, roomName: true, startedAt: true,
+            _count: { select: { viewerSessions: { where: { leftAt: null } } } },
+          },
+          orderBy: { startedAt: 'desc' },
+        }),
+        // Other makers' recent published entries -- the honest substitute
+        // for a cross-recommendation card with no real recommendation
+        // engine behind it on Velor today.
+        prisma.journalPost.findMany({
+          where: {
+            sellerId: { not: seller.id },
+            seller: { approved: true },
+            OR: [{ status: 'PUBLISHED' }, { status: 'SCHEDULED', scheduledAt: { lte: new Date() } }],
+          },
+          select: {
+            id: true, title: true, body: true, images: true, sellerId: true,
+            seller: { select: { storeName: true } },
+            _count: { select: { likes: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        }),
+      ])
+
+      // Specialities live on Product, not Seller -- the "craft" subtitle is
+      // derived from what the seller actually lists, never invented.
+      const specialityCounts = new Map<string, number>()
+      for (const p of seller.products) {
+        for (const term of p.specialities) specialityCounts.set(term, (specialityCounts.get(term) ?? 0) + 1)
+      }
+      const sellerSpecialities = Array.from(specialityCounts.entries()).sort((a, b) => b[1] - a[1]).map(([term]) => term)
+
+      // Every listing tagged across the entries, resolved from the products
+      // already fetched above -- no extra query needed.
+      const taggedIds = new Set(journalPosts.flatMap((p) => p.productIds))
+      const taggedProducts = seller.products.filter((p) => taggedIds.has(p.id))
+
+      // JournalComment has no Prisma relation to User (userId is a bare
+      // scalar), so commenter names are resolved with one batched lookup.
+      const commenterIds = Array.from(new Set(commentRows.map((c) => c.userId)))
+      const commenters = commenterIds.length
+        ? await prisma.user.findMany({ where: { id: { in: commenterIds } }, select: { id: true, name: true } })
+        : []
+      const commenterNames = new Map(commenters.map((u) => [u.id, u.name]))
+
+      const commentsByPost: Record<string, { id: string; body: string; createdAt: string; name: string }[]> = {}
+      for (const c of commentRows) {
+        const arr = commentsByPost[c.postId] ?? (commentsByPost[c.postId] = [])
+        if (arr.length < 5) arr.push({ id: c.id, body: c.body, createdAt: c.createdAt.toISOString(), name: maskPersonalName(commenterNames.get(c.userId) ?? null) })
+      }
+
+      const sellerLogo = (seller as unknown as { storeLogo?: string }).storeLogo || null
+
+      return (
+        <SellerJournalView
+          seller={{
+            id: seller.id,
+            storeName: seller.storeName,
+            description: seller.description,
+            country: seller.country,
+            storeLogo: sellerLogo,
+            foundingBadge: seller.foundingBadge ?? false,
+            currency: seller.currency || 'GBP',
+            memberSince: seller.createdAt.getFullYear(),
+            specialities: sellerSpecialities,
+            followers,
+            listings: seller.products.length,
+            avgRating: sellerReviewAgg._count._all > 0 ? Math.round((sellerReviewAgg._avg.rating ?? 0) * 10) / 10 : null,
+            reviewCount: sellerReviewAgg._count._all,
+            totalSales: totalSalesAgg._sum?.quantity ?? 0,
+          }}
+          posts={journalPosts.map((p) => ({
+            id: p.id,
+            title: p.title,
+            body: p.body,
+            images: p.images,
+            videoUrl: p.videoUrl,
+            createdAt: p.createdAt.toISOString(),
+            category: p.category,
+            viewCount: p.viewCount,
+            makingProcess: p.makingProcess,
+            notesTips: p.notesTips,
+            behindScenes: p.behindScenes,
+            productIds: p.productIds,
+            likes: p._count.likes,
+            comments: p._count.comments,
+            commentList: commentsByPost[p.id] ?? [],
+          }))}
+          products={taggedProducts.map((pr) => ({ id: pr.id, title: pr.title, price: pr.price, image: pr.images[0] || null, loves: pr._count.wishlistItems }))}
+          allProducts={seller.products.map((pr) => ({ id: pr.id, title: pr.title, price: pr.price, image: pr.images[0] || null, loves: pr._count.wishlistItems }))}
+          buyerLove={topReviewRow ? { text: topReviewRow.comment, rating: topReviewRow.rating, name: maskPersonalName(topReviewRow.user.name) } : null}
+          live={liveStream ? { title: liveStream.title, roomName: liveStream.roomName, watching: liveStream._count.viewerSessions } : null}
+          otherMakerPosts={otherMakerPosts.map((p) => ({
+            id: p.id,
+            sellerId: p.sellerId,
+            storeName: p.seller.storeName,
+            title: p.title || p.body.slice(0, 44),
+            image: p.images[0] || null,
+            likes: p._count.likes,
+          }))}
+        />
+      )
+    }
   }
 
   const theme = getTheme((seller as unknown as { storeTheme?: string }).storeTheme)
@@ -545,11 +716,11 @@ export default async function SellerProfilePage({
           </div>
         )}
 
-        {/* Maker Journal (Velor Social stage 4, 2026-07-29): the seller's
-            public process diary -- the storefront is the first "view over
-            the journal" the plan calls for. Client component; renders
-            nothing while the feature flag is off. */}
-        <SellerJournal sellerId={sellerId} storeName={seller.storeName} />
+        {/* No Maker Journal widget here: this classic layout only ever
+            renders when the seller has zero published journal entries (see
+            the branch above) -- so a journal section here would always be
+            empty. The moment they publish their first entry, this whole
+            page becomes the rich journal view instead. */}
       </div>
     </div>
   )

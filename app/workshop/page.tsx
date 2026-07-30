@@ -141,13 +141,14 @@ export default function WorkshopFeedPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         {posts.map(p => (
           <article key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px 22px' }}>
-            {/* Maker header -- links to the maker's real Journal page
-                (/community/journals/[sellerId]), not their plain storefront.
-                William, 2026-07-30: clicking through from a journal post in
-                the Makers' Circle was landing on the storefront's small
-                embedded diary section instead of the full journal page. */}
+            {/* Maker header -- links to the maker's real Journal page, which
+                IS their storefront now (/seller/[sellerId]: William,
+                2026-07-30, "get rid of the storefront and have the journal
+                replace it"). Previously pointed at /community/journals/
+                [sellerId] before the two pages were merged; kept as one
+                link so a future rename only happens in one place. */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              <Link href={`/community/journals/${p.seller.id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--text)', minWidth: 0 }}>
+              <Link href={`/seller/${p.seller.id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--text)', minWidth: 0 }}>
                 <span style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', background: 'var(--surface-2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--accent)', flexShrink: 0 }}>
                   {p.seller.storeLogo ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
