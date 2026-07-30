@@ -303,10 +303,10 @@ export default function GlobalHeader() {
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', display: 'inline-block' }} />
               Live
             </Link>
-            {/* Workshop Feed (Velor Social stage 5) -- William approved
-                adding it to the main nav 2026-07-29. */}
-            <Link href="/workshop" style={navLink}>Workshop</Link>
-            <Link href="/drops" style={navLink}>Drops</Link>
+            {/* The Makers' Circle community hub replaced the separate
+                Workshop + Drops nav links -- William's redesign, 2026-07-30.
+                /workshop and /drops stay live, reached from the hub. */}
+            <Link href="/community" style={navLink}>The Makers&apos; Circle</Link>
             <div ref={catsRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setCatsOpen((v) => !v)}
@@ -825,8 +825,7 @@ export default function GlobalHeader() {
             </Link>
           </div>
           <Link href="/shop" style={menuItem}>Shop by origin</Link>
-          <Link href="/workshop" style={menuItem}>Workshop feed</Link>
-          <Link href="/drops" style={menuItem}>Weekly drop</Link>
+          <Link href="/community" style={menuItem}>The Makers&apos; Circle</Link>
           <Link href="/sell" style={menuItem}>Sell on Velor</Link>
           <Link href="/orders" style={menuItem}>My orders</Link>
           <Link href="/track" style={menuItem}>Track an order</Link>
