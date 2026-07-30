@@ -76,6 +76,20 @@ const P = {
 
 /* eslint-disable @next/next/no-img-element */
 
+// The design's six showcase entries (William, 2026-07-30: "add 6 empty
+// journal entries for visual... like my design" -- same showcase rule as
+// the Makers' Circle, his documented informed decision). Shown ONLY while
+// the seller has no entries of their own; the first real entry replaces
+// them. Images are the thumbs cut from his design file.
+const EXAMPLE_ROWS = [
+  { img: '/community/journal/mj-1.jpg', title: 'Day 128 – A New Design, A New Beginning', status: 'PUBLISHED', date: '26 May 2026', views: '2.8K', likes: '412', comments: '92', clicks: '186', sales: '28', edited: '26 May 2026', editedAt: '07:45 AM' },
+  { img: '/community/journal/mj-2.jpg', title: 'Natural Dyes Bring Life to the Threads', status: 'PUBLISHED', date: '21 May 2026', views: '3.4K', likes: '512', comments: '113', clicks: '214', sales: '34', edited: '21 May 2026', editedAt: '09:15 AM' },
+  { img: '/community/journal/mj-3.jpg', title: 'Behind the Weave – My Daily Rituals', status: 'PUBLISHED', date: '15 May 2026', views: '4.9K', likes: '680', comments: '145', clicks: '268', sales: '51', edited: '15 May 2026', editedAt: '11:30 AM' },
+  { img: '/community/journal/mj-4.jpg', title: 'Weaving Colours of My Ancestors', status: 'SCHEDULED', date: '1 Jun 2026', dateAt: '08:00 AM', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '25 May 2026', editedAt: '04:20 PM' },
+  { img: '/community/journal/mj-5.jpg', title: 'Tools I Use Every Day in My Workshop', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '24 May 2026', editedAt: '10:10 AM' },
+  { img: '/community/journal/mj-6.jpg', title: 'A Visit to the Market in Cusco', status: 'DRAFT', date: '', views: '', likes: '', comments: '', clicks: '', sales: '', edited: '22 May 2026', editedAt: '02:05 PM' },
+] as const
+
 export default function CreatorJournalsPage() {
   const router = useRouter()
   const [posts, setPosts] = useState<JournalPost[]>([])
@@ -254,6 +268,7 @@ export default function CreatorJournalsPage() {
     <div className="dj-page">
       <style>{css}</style>
 
+      <div className="dj-main">
       <div className="dj-head">
         <div>
           <h1 className="dj-title">Creator Journals</h1>
@@ -299,6 +314,7 @@ export default function CreatorJournalsPage() {
       ) : (
         <>
           {/* stat tiles */}
+          {/* (everything through the pager lives inside the big content card, per the design) */}
           <div className="dj-stats">
             {stats.map(s => (
               <div key={s.label} className="dj-stat">
@@ -356,15 +372,51 @@ export default function CreatorJournalsPage() {
                 {state === 'loading' && (
                   <tr><td colSpan={10} className="dj-empty">Loading your journals&hellip;</td></tr>
                 )}
-                {state === 'ready' && shown.length === 0 && (
+                {state === 'ready' && posts.length > 0 && shown.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="dj-empty">
-                      {posts.length === 0
-                        ? <>No journal entries yet. Your story starts with the first one &mdash; <Link href="/dashboard/journal/new" className="dj-link">create your first journal</Link>.</>
-                        : 'Nothing matches these filters.'}
-                    </td>
+                    <td colSpan={10} className="dj-empty">Nothing matches these filters.</td>
                   </tr>
                 )}
+                {/* Showcase rows from William's design while the journal is
+                    empty -- the seller's first real entry replaces them. */}
+                {state === 'ready' && posts.length === 0 && EXAMPLE_ROWS.map(ex => (
+                  <tr key={ex.title} className="dj-example">
+                    <td>
+                      <div className="dj-jcell">
+                        <img className="dj-thumb" src={ex.img} alt="" aria-hidden="true" loading="lazy" />
+                        <span className="dj-jtitle">{ex.title}</span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`dj-chip ${ex.status === 'PUBLISHED' ? 'dj-chip-pub' : ex.status === 'SCHEDULED' ? 'dj-chip-sched' : 'dj-chip-draft'}`}>
+                        {ex.status === 'PUBLISHED' ? 'Published' : ex.status === 'SCHEDULED' ? 'Scheduled' : 'Draft'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {ex.date ? <span>{ex.date}{'dateAt' in ex && ex.dateAt ? <span className="dj-subline">{ex.dateAt}</span> : null}</span> : dash}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>{ex.views || dash}</td>
+                    <td style={{ textAlign: 'center' }}>{ex.likes || dash}</td>
+                    <td style={{ textAlign: 'center' }}>{ex.comments || dash}</td>
+                    <td style={{ textAlign: 'center' }}>{ex.clicks || dash}</td>
+                    <td style={{ textAlign: 'center' }}>{ex.sales || dash}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      {ex.edited}
+                      <span className="dj-subline">{ex.editedAt}</span>
+                    </td>
+                    <td>
+                      <div className="dj-actions">
+                        <Link className="dj-act" title="Example entry — write yours to replace it" href="/dashboard/journal/new"><Ico d={P.pencil} size={14} /></Link>
+                        <span className="dj-act" title="Example entry" aria-hidden><Ico d={P.eye} size={15} /></span>
+                        <span className="dj-act" title="Example entry" aria-hidden><Ico d={P.chart} size={14} /></span>
+                        <span className="dj-act" title="Example entry" aria-hidden><Ico d={P.share} size={14} /></span>
+                        {ex.status === 'DRAFT'
+                          ? <span className="dj-act dj-act-red" title="Example entry" aria-hidden><Ico d={P.trash} size={14} /></span>
+                          : <span className="dj-act" title="Example entry" aria-hidden><Ico d={P.dots} size={15} /></span>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
                 {shown.map(p => (
                   <tr key={p.id}>
                     <td>
@@ -428,9 +480,11 @@ export default function CreatorJournalsPage() {
 
             <div className="dj-foot">
               <span className="dj-sub" style={{ margin: 0 }}>
-                {filtered.length === 0
-                  ? 'Showing 0 journals'
-                  : `Showing ${(pageClamped - 1) * pageSize + 1} to ${Math.min(pageClamped * pageSize, filtered.length)} of ${filtered.length} journals`}
+                {posts.length === 0
+                  ? 'Example entries — write your first journal and it takes their place.'
+                  : filtered.length === 0
+                    ? 'Showing 0 journals'
+                    : `Showing ${(pageClamped - 1) * pageSize + 1} to ${Math.min(pageClamped * pageSize, filtered.length)} of ${filtered.length} journals`}
               </span>
               <div className="dj-pager">
                 <button type="button" className="dj-pagebtn" disabled={pageClamped <= 1} onClick={() => setPage(pageClamped - 1)} aria-label="Previous page">&lsaquo;</button>
@@ -449,6 +503,12 @@ export default function CreatorJournalsPage() {
             </div>
           </div>
 
+        </>
+      )}
+      </div>
+
+      {state !== 'disabled' && (
+        <>
           {/* The Workshop Diary -- the seller's journal exactly as buyers
               see it (William, 2026-07-30: "offer the seller a button on
               their journal page that lets them see what their journal
@@ -513,7 +573,8 @@ export default function CreatorJournalsPage() {
 const css = `
 .dj-page {
   --dj-bg: transparent;
-  --dj-panel: #1c1c1c;
+  --dj-card: #161616;
+  --dj-panel: #1f1f1f;
   --dj-panel2: rgba(255,255,255,0.06);
   --dj-line: rgba(255,255,255,0.08);
   --dj-text: #f2f2f2;
@@ -521,17 +582,19 @@ const css = `
   --dj-green: #46c07a;
   --dj-blue: #5b9bd5;
   color: var(--dj-text);
-  padding: 26px 26px 60px;
+  padding: 0 0 40px;
   font-family: var(--font-body);
 }
 html[data-theme='light'] .dj-page {
+  --dj-card: var(--surface);
   --dj-panel: var(--surface);
   --dj-panel2: rgba(0,0,0,0.05);
   --dj-line: var(--border);
   --dj-text: var(--text);
   --dj-muted: var(--muted);
 }
-.dj-title { font-size: clamp(26px, 3vw, 34px); margin: 0 0 4px; }
+.dj-main { background: var(--dj-card); border-radius: 12px; padding: 22px 24px 18px; }
+.dj-title { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 30px; letter-spacing: 0.2px; margin: 0 0 4px; }
 .dj-sub { font-size: 13.5px; color: var(--dj-muted); margin: 0; }
 .dj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .dj-head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -555,10 +618,10 @@ html[data-theme='light'] .dj-page {
 .dj-stats { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 20px; }
 @media (max-width: 1400px) { .dj-stats { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 700px) { .dj-stats { grid-template-columns: repeat(2, 1fr); } }
-.dj-stat { display: flex; align-items: center; gap: 11px; background: var(--dj-panel); border-radius: 10px; padding: 14px; }
-.dj-stat-ico { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 8px; background: rgba(255,107,0,0.1); color: var(--accent); flex-shrink: 0; }
-.dj-stat-label { display: block; font-size: 11px; color: var(--dj-muted); }
-.dj-stat-num { display: block; font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.25; color: var(--dj-text); }
+.dj-stat { display: flex; align-items: center; gap: 13px; background: var(--dj-panel); border-radius: 10px; padding: 15px 16px; min-height: 66px; }
+.dj-stat-ico { display: inline-flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+.dj-stat-label { display: block; font-size: 12.5px; color: var(--dj-muted); }
+.dj-stat-num { display: block; font-family: var(--font-body); font-weight: 500; font-size: 25px; line-height: 1.2; color: var(--dj-text); }
 
 /* toolbar */
 .dj-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -570,10 +633,10 @@ html[data-theme='light'] .dj-page {
 .dj-searchin { background: none; border: none; outline: none; color: var(--dj-text); font-size: 13px; padding: 9px 0; min-width: 150px; font-family: var(--font-display); }
 
 /* table */
-.dj-tablewrap { padding: 0; overflow-x: auto; }
+.dj-tablewrap { padding: 0; overflow-x: auto; background: none; border-radius: 0; }
 .dj-table { width: 100%; border-collapse: collapse; min-width: 960px; }
 .dj-table th { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; color: var(--dj-muted); text-align: center; padding: 14px 12px; border-bottom: 1px solid var(--dj-line); white-space: nowrap; }
-.dj-table td { padding: 13px 12px; border-bottom: 1px solid var(--dj-line); font-size: 13px; vertical-align: middle; }
+.dj-table td { padding: 7px 12px; border-bottom: 1px solid var(--dj-line); font-size: 13.5px; vertical-align: middle; }
 .dj-table tbody tr:last-child td { border-bottom: none; }
 .dj-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 .dj-jcell { display: flex; align-items: center; gap: 12px; min-width: 240px; }
@@ -584,8 +647,8 @@ html[data-theme='light'] .dj-page {
 .dj-dash { color: var(--dj-muted); }
 .dj-empty { text-align: center; color: var(--dj-muted); padding: 34px 16px !important; font-size: 13.5px; }
 .dj-chip { display: inline-flex; padding: 4px 13px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
-.dj-chip-pub { background: rgba(70,192,122,0.14); color: var(--dj-green); }
-.dj-chip-sched { background: rgba(91,155,213,0.15); color: var(--dj-blue); }
+.dj-chip-pub { background: rgba(70,192,122,0.1); border: 1px solid rgba(70,192,122,0.35); color: var(--dj-green); }
+.dj-chip-sched { background: rgba(91,155,213,0.12); border: 1px solid rgba(91,155,213,0.35); color: var(--dj-blue); }
 .dj-chip-draft { background: transparent; border: 1px solid #3d3d3d; color: var(--dj-muted); }
 .dj-chip-hidden { background: rgba(226,75,74,0.15); color: var(--red); }
 .dj-actions { display: flex; align-items: center; gap: 4px; justify-content: center; }
@@ -617,7 +680,7 @@ html[data-theme='light'] .dj-page {
 .dj-diary-p { font-size: 12.5px; color: var(--dj-muted); line-height: 1.55; margin: 0; }
 
 /* promo cards */
-.dj-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 26px; border-top: 1px solid var(--dj-line); padding-top: 22px; }
+.dj-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 26px; }
 @media (max-width: 1100px) { .dj-cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .dj-cards { grid-template-columns: 1fr; } }
 .dj-card { display: flex; align-items: flex-start; gap: 14px; background: none; padding: 4px 20px; border-left: 1px solid var(--dj-line); }
