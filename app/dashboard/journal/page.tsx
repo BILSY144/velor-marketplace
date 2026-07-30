@@ -380,7 +380,7 @@ export default function CreatorJournalsPage() {
                       {p.status === 'SCHEDULED' && p.scheduledAt ? (
                         <span>
                           {new Date(p.scheduledAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          <span className="dj-subline">{new Date(p.scheduledAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="dj-subline">{new Date(p.scheduledAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
                         </span>
                       ) : p.status === 'DRAFT' ? dash : (
                         new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -393,7 +393,7 @@ export default function CreatorJournalsPage() {
                     <td style={{ textAlign: 'center' }}>{isLive(p) ? fmtK(p.salesCount) : dash}</td>
                     <td style={{ textAlign: 'center' }}>
                       {new Date(p.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      <span className="dj-subline">{new Date(p.updatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="dj-subline">{new Date(p.updatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
                     </td>
                     <td>
                       <div className="dj-actions">
@@ -434,15 +434,61 @@ export default function CreatorJournalsPage() {
               </span>
               <div className="dj-pager">
                 <button type="button" className="dj-pagebtn" disabled={pageClamped <= 1} onClick={() => setPage(pageClamped - 1)} aria-label="Previous page">&lsaquo;</button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 6).map(n => (
-                  <button key={n} type="button" className={`dj-pagebtn ${n === pageClamped ? 'dj-pagebtn-on' : ''}`} onClick={() => setPage(n)}>{n}</button>
-                ))}
+                {(totalPages <= 5
+                  ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                  : [1, 2, 3, 0, totalPages]
+                ).map((n, i) => n === 0
+                  ? <span key={`e${i}`} className="dj-dash" style={{ padding: '0 4px' }}>&hellip;</span>
+                  : <button key={n} type="button" className={`dj-pagebtn ${n === pageClamped ? 'dj-pagebtn-on' : ''}`} onClick={() => setPage(n)}>{n}</button>
+                )}
                 <button type="button" className="dj-pagebtn" disabled={pageClamped >= totalPages} onClick={() => setPage(pageClamped + 1)} aria-label="Next page">&rsaquo;</button>
                 <select className="dj-input dj-select" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }} aria-label="Rows per page">
                   {[10, 20, 50].map(n => <option key={n} value={n}>{n} / page</option>)}
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* The Workshop Diary -- the seller's journal exactly as buyers
+              see it (William, 2026-07-30: "offer the seller a button on
+              their journal page that lets them see what their journal
+              looks like to the buyer" + "add the workshop diary is open
+              section and sellers can add to it so it gives them a look of
+              what it will look like"). Live entries only, newest first. */}
+          <div className="dj-diary">
+            <div className="dj-diary-head">
+              <div>
+                <h2 className="dj-diary-title">The Workshop Diary</h2>
+                <p className="dj-sub">This is how your journal looks to buyers &mdash; every published entry appears here, on your storefront and in the Makers&rsquo; Circle.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link href="/dashboard/journal/new" className="dj-ghostbtn"><Ico d={P.plus} size={14} /> Add an entry</Link>
+                <Link href={sellerId ? `/seller/${sellerId}` : '/workshop'} className="dj-primarybtn"><Ico d={P.eye} size={15} /> View as buyer</Link>
+              </div>
+            </div>
+            {posts.filter(isLive).length === 0 ? (
+              <div className="dj-panel">
+                <p className="dj-sub" style={{ margin: 0 }}>
+                  The diary is open &mdash; nothing published yet. Publish your first entry and it shows here exactly as buyers will see it.{' '}
+                  <Link className="dj-link" href="/dashboard/journal/new">Write the first entry</Link>
+                </p>
+              </div>
+            ) : (
+              <div className="dj-diary-grid">
+                {posts.filter(isLive).slice(0, 3).map(p => (
+                  <article key={p.id} className="dj-diary-card">
+                    {p.images[0]
+                      ? <img className="dj-diary-img" src={p.images[0]} alt="" loading="lazy" />
+                      : <span className="dj-diary-img dj-thumb-empty"><Ico d={P.doc} size={20} /></span>}
+                    <div className="dj-diary-body">
+                      <span className="dj-subline">{new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{p.category ? ` · ${p.category}` : ''}</span>
+                      <h3 className="dj-diary-h3">{p.title || p.body.slice(0, 50)}</h3>
+                      <p className="dj-diary-p">{p.body.slice(0, 120)}{p.body.length > 120 ? '…' : ''}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* footer promo cards */}
@@ -467,11 +513,11 @@ export default function CreatorJournalsPage() {
 const css = `
 .dj-page {
   --dj-bg: transparent;
-  --dj-panel: #141109;
-  --dj-panel2: rgba(255,255,255,0.045);
-  --dj-line: rgba(255,255,255,0.07);
-  --dj-text: #f4efe6;
-  --dj-muted: #a99f8c;
+  --dj-panel: #1c1c1c;
+  --dj-panel2: rgba(255,255,255,0.06);
+  --dj-line: rgba(255,255,255,0.08);
+  --dj-text: #f2f2f2;
+  --dj-muted: #9a9a9a;
   --dj-green: #46c07a;
   --dj-blue: #5b9bd5;
   color: var(--dj-text);
@@ -489,19 +535,19 @@ html[data-theme='light'] .dj-page {
 .dj-sub { font-size: 13.5px; color: var(--dj-muted); margin: 0; }
 .dj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .dj-head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.dj-ghostbtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; border-radius: 0; border: 1px solid var(--dj-line); background: var(--dj-panel); color: var(--dj-text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
+.dj-ghostbtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--dj-line); background: var(--dj-panel); color: var(--dj-text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
 .dj-ghostbtn:hover, .dj-ghostbtn-on { border-color: var(--accent); color: var(--accent); }
-.dj-primarybtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 18px; border-radius: 0; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: var(--font-body); }
+.dj-primarybtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 18px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: var(--font-body); }
 .dj-primarybtn:hover { filter: brightness(1.08); }
 .dj-link { color: var(--accent); font-size: 12.5px; font-weight: 700; text-decoration: none; }
 .dj-link:hover { filter: brightness(1.15); }
-.dj-panel { background: var(--dj-panel); border-radius: 0; padding: 16px; }
-.dj-cats { background: var(--dj-panel); border-radius: 0; padding: 16px; margin-bottom: 18px; }
+.dj-panel { background: var(--dj-panel); border-radius: 10px; padding: 16px; }
+.dj-cats { background: var(--dj-panel); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
 .dj-cats-list { display: flex; gap: 8px; flex-wrap: wrap; }
-.dj-cat { padding: 7px 14px; border-radius: 0; border: 1px solid var(--dj-line); background: none; color: var(--dj-text); font-size: 12.5px; cursor: pointer; }
+.dj-cat { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--dj-line); background: none; color: var(--dj-text); font-size: 12.5px; cursor: pointer; }
 .dj-cat-on { border-color: var(--accent); color: var(--accent); }
 .dj-cats-edit { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.dj-input { background: var(--dj-panel2); border: 1px solid var(--dj-line); border-radius: 0; color: var(--dj-text); font-size: 13px; padding: 9px 12px; font-family: var(--font-body); }
+.dj-input { background: var(--dj-panel2); border: 1px solid var(--dj-line); border-radius: 7px; color: var(--dj-text); font-size: 13px; padding: 9px 12px; font-family: var(--font-body); }
 .dj-select { cursor: pointer; }
 .dj-select option { color: #000; }
 
@@ -509,10 +555,10 @@ html[data-theme='light'] .dj-page {
 .dj-stats { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 20px; }
 @media (max-width: 1400px) { .dj-stats { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 700px) { .dj-stats { grid-template-columns: repeat(2, 1fr); } }
-.dj-stat { display: flex; align-items: center; gap: 11px; background: var(--dj-panel); border-radius: 0; padding: 14px; }
-.dj-stat-ico { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 0; background: rgba(232,137,12,0.13); color: var(--accent); flex-shrink: 0; }
+.dj-stat { display: flex; align-items: center; gap: 11px; background: var(--dj-panel); border-radius: 10px; padding: 14px; }
+.dj-stat-ico { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 8px; background: rgba(255,107,0,0.1); color: var(--accent); flex-shrink: 0; }
 .dj-stat-label { display: block; font-size: 11px; color: var(--dj-muted); }
-.dj-stat-num { display: block; font-family: var(--font-serif); font-size: 21px; line-height: 1.2; color: var(--dj-text); }
+.dj-stat-num { display: block; font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.25; color: var(--dj-text); }
 
 /* toolbar */
 .dj-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -520,7 +566,7 @@ html[data-theme='light'] .dj-page {
 .dj-tab { padding: 9px 13px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--dj-muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
 .dj-tab-on { color: var(--accent); border-bottom-color: var(--accent); }
 .dj-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.dj-searchwrap { display: flex; align-items: center; gap: 8px; background: var(--dj-panel2); border: 1px solid var(--dj-line); border-radius: 0; padding: 0 12px; color: var(--dj-muted); }
+.dj-searchwrap { display: flex; align-items: center; gap: 8px; background: var(--dj-panel2); border: 1px solid var(--dj-line); border-radius: 8px; padding: 0 12px; color: var(--dj-muted); }
 .dj-searchin { background: none; border: none; outline: none; color: var(--dj-text); font-size: 13px; padding: 9px 0; min-width: 150px; font-family: var(--font-display); }
 
 /* table */
@@ -531,38 +577,51 @@ html[data-theme='light'] .dj-page {
 .dj-table tbody tr:last-child td { border-bottom: none; }
 .dj-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 .dj-jcell { display: flex; align-items: center; gap: 12px; min-width: 240px; }
-.dj-thumb { width: 52px; height: 44px; border-radius: 0; object-fit: cover; flex-shrink: 0; }
+.dj-thumb { width: 64px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
 .dj-thumb-empty { display: inline-flex; align-items: center; justify-content: center; background: var(--dj-panel2); color: var(--dj-muted); }
 .dj-jtitle { font-size: 13.5px; font-weight: 600; color: var(--dj-text); line-height: 1.4; }
 .dj-subline { display: block; font-size: 11px; color: var(--dj-muted); }
 .dj-dash { color: var(--dj-muted); }
 .dj-empty { text-align: center; color: var(--dj-muted); padding: 34px 16px !important; font-size: 13.5px; }
-.dj-chip { display: inline-flex; padding: 4px 12px; border-radius: 0; font-size: 11.5px; font-weight: 700; }
+.dj-chip { display: inline-flex; padding: 4px 13px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
 .dj-chip-pub { background: rgba(70,192,122,0.14); color: var(--dj-green); }
 .dj-chip-sched { background: rgba(91,155,213,0.15); color: var(--dj-blue); }
-.dj-chip-draft { background: rgba(255,255,255,0.07); color: var(--dj-muted); }
+.dj-chip-draft { background: transparent; border: 1px solid #3d3d3d; color: var(--dj-muted); }
 .dj-chip-hidden { background: rgba(226,75,74,0.15); color: var(--red); }
 .dj-actions { display: flex; align-items: center; gap: 4px; justify-content: center; }
-.dj-act { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 0; border: none; background: none; color: var(--dj-muted); cursor: pointer; }
+.dj-act { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: none; background: none; color: var(--dj-muted); cursor: pointer; }
 .dj-act:hover { background: var(--dj-panel2); color: var(--accent); }
 .dj-act-red:hover { color: var(--red); }
-.dj-menu { position: absolute; right: 0; top: 34px; z-index: 20; display: flex; flex-direction: column; min-width: 160px; background: var(--dj-panel); border: 1px solid var(--dj-line); border-radius: 0; padding: 6px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); }
-.dj-menu button { background: none; border: none; text-align: left; padding: 9px 12px; border-radius: 0; color: var(--dj-text); font-size: 13px; cursor: pointer; font-family: var(--font-body); }
+.dj-menu { position: absolute; right: 0; top: 34px; z-index: 20; display: flex; flex-direction: column; min-width: 160px; background: var(--dj-panel); border: 1px solid var(--dj-line); border-radius: 8px; padding: 6px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); }
+.dj-menu button { background: none; border: none; text-align: left; padding: 9px 12px; border-radius: 6px; color: var(--dj-text); font-size: 13px; cursor: pointer; font-family: var(--font-body); }
 .dj-menu button:hover { background: var(--dj-panel2); }
 .dj-menu-red { color: var(--red) !important; }
 
 /* footer of table */
 .dj-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; }
 .dj-pager { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dj-pagebtn { min-width: 32px; height: 32px; border-radius: 0; border: 1px solid var(--dj-line); background: none; color: var(--dj-text); font-size: 13px; cursor: pointer; }
+.dj-pagebtn { min-width: 32px; height: 32px; border-radius: 6px; border: none; background: none; color: var(--dj-muted); font-size: 13px; cursor: pointer; }
 .dj-pagebtn:disabled { opacity: 0.35; cursor: default; }
-.dj-pagebtn-on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.dj-pagebtn-on { border: 1px solid var(--accent); color: var(--accent); font-weight: 700; }
+
+/* workshop diary preview */
+.dj-diary { margin-top: 26px; }
+.dj-diary-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.dj-diary-title { font-size: 21px; margin: 0 0 4px; }
+.dj-diary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 1000px) { .dj-diary-grid { grid-template-columns: 1fr; } }
+.dj-diary-card { background: var(--dj-panel); border-radius: 10px; overflow: hidden; }
+.dj-diary-img { display: flex; align-items: center; justify-content: center; width: 100%; height: 150px; object-fit: cover; }
+.dj-diary-body { padding: 13px 15px 16px; }
+.dj-diary-h3 { font-size: 14.5px; margin: 5px 0 6px; color: var(--dj-text); }
+.dj-diary-p { font-size: 12.5px; color: var(--dj-muted); line-height: 1.55; margin: 0; }
 
 /* promo cards */
-.dj-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+.dj-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 26px; border-top: 1px solid var(--dj-line); padding-top: 22px; }
 @media (max-width: 1100px) { .dj-cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .dj-cards { grid-template-columns: 1fr; } }
-.dj-card { display: flex; align-items: flex-start; gap: 12px; background: var(--dj-panel); border-radius: 0; padding: 16px; }
-.dj-card-ico { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 0; border: 1.4px solid var(--accent); color: var(--accent); flex-shrink: 0; }
+.dj-card { display: flex; align-items: flex-start; gap: 14px; background: none; padding: 4px 20px; border-left: 1px solid var(--dj-line); }
+.dj-card:first-child { border-left: none; padding-left: 4px; }
+.dj-card-ico { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 8px; border: 1.4px solid var(--accent); color: var(--accent); flex-shrink: 0; }
 .dj-card-title { font-size: 14px; font-weight: 700; color: var(--dj-text); }
 `

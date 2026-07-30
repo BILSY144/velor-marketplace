@@ -40,6 +40,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import VelorAssistant from '@/components/VelorAssistant';
+import GlobalHeader from '@/components/GlobalHeader';
 import LanguageTranslator from '@/components/LanguageTranslator';
 import { normalizeSellerTier } from '@/lib/tier';
 import { countryToCode } from '@/lib/payoutRail';
@@ -320,10 +321,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // ---- pieces -----------------------------------------------------------
 
   const liveChip = (
-    <span className="dsh-livechip" aria-hidden>
-      <span className="dsh-livedot" />
-      LIVE
-    </span>
+    <span className="dsh-livechip" aria-hidden>LIVE</span>
   );
 
   function badge(item: NavItem) {
@@ -413,10 +411,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ? <img src={stats.storeLogo} alt="" className="dsh-maker-ava" />
         : <span className="dsh-maker-ava dsh-maker-init" aria-hidden>{storeName ? storeName.charAt(0).toUpperCase() : ''}</span>}
       <span className="dsh-maker-meta">
-        <span className="dsh-maker-name">{storeName || 'Your store'}</span>
+        <span className="dsh-maker-name">
+          {storeName || 'Your store'}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--accent, #FF6B00)" aria-hidden style={{ flexShrink: 0 }}><path d="M12 1.5 14.8 4l3.7-.4 1 3.6 3.2 1.9-1.6 3.4 1.6 3.4-3.2 1.9-1 3.6-3.7-.4L12 22.5 9.2 20l-3.7.4-1-3.6-3.2-1.9 1.6-3.4L1.3 8.1l3.2-1.9 1-3.6 3.7.4L12 1.5Z" /><path d="m8.5 12.2 2.4 2.4 4.6-4.9" fill="none" stroke="#0a0a0a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </span>
         <span className="dsh-maker-sub">{flag && <span aria-hidden>{flag} </span>}{country || ''}</span>
+        <Link href={sellerId ? `/seller/${sellerId}` : '/'} className="dsh-maker-view">
+          View Store
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" /></svg>
+        </Link>
       </span>
-      <Link href={sellerId ? `/seller/${sellerId}` : '/'} className="dsh-maker-view">View Store</Link>
     </div>
   );
 
@@ -464,15 +468,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   const sidebar = !isMobile && (
-    <aside className="dsh-side" style={{ padding: collapsed ? '0 8px 20px' : '0 12px 20px' }}>
-      <div style={{
-        display: 'flex', alignItems: 'baseline', gap: 8,
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        padding: collapsed ? '20px 0 10px' : '20px 12px 10px',
-      }}>
-        <Link href="/" className="dsh-wordmark">{collapsed ? 'V' : 'VELOR'}</Link>
-      </div>
-
+    <aside className="dsh-side" style={{ padding: collapsed ? '8px 8px 20px' : '8px 12px 20px' }}>
       <div style={{ flex: 1 }}>{navBody(false)}</div>
 
       <button
@@ -501,9 +497,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         onClick={(e) => e.stopPropagation()}
         className="dsh-drawer"
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '0 12px 4px' }}>
-          <span className="dsh-wordmark" style={{ fontSize: 19 }}>VELOR</span>
-        </div>
         {navBody(true)}
         <div style={{ marginTop: 14, padding: '0 12px' }}>{langCurrencySwitcher}</div>
         <div style={{ marginTop: 14 }}>{makerCard}</div>
@@ -512,14 +505,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="dsh-shell" style={{ gridTemplateColumns: isMobile ? '1fr' : collapsed ? '64px 1fr' : '248px 1fr' }}>
+    <div>
       <style>{shellCss}</style>
 
+      {/* The site's own global header sits above the dashboard, exactly
+          as William's design shows -- one Velor, one header. */}
+      <GlobalHeader />
+
+      <div className="dsh-shell" style={{ gridTemplateColumns: isMobile ? '1fr' : collapsed ? '64px 1fr' : '248px 1fr' }}>
       {sidebar}
 
       <div style={{ minWidth: 0 }}>
-        <header className="dsh-topbar" style={{ padding: isMobile ? '10px 14px' : '10px 28px' }}>
-          {isMobile && (
+        {isMobile && (
+          <div className="dsh-mobilebar">
             <button
               onClick={() => setMobileOpen((v) => !v)}
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
@@ -529,28 +527,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {mobileOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M3 6h18M3 12h18M3 18h18" />}
               </svg>
             </button>
-          )}
-          {isMobile && <span className="dsh-wordmark" style={{ fontSize: 16 }}>VELOR</span>}
-          <div style={{ flex: 1 }} />
-          {!isMobile && (
-            <Link href={sellerId ? `/seller/${sellerId}` : '/'} className="dsh-storelink">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" />
-              </svg>
-              View my storefront
-            </Link>
-          )}
-          {!isMobile && langCurrencySwitcher}
-          {!isMobile && tierLoaded && (
-            <Link href="/dashboard/upgrade" className="dsh-planpill" title={founding ? 'Founding seller — Pro free for life' : tier === 'PRO' ? 'Pro plan' : 'See plans'}>
-              <span style={{ color: 'var(--accent, #FF6B00)', fontWeight: 700 }}>{tier}</span>
-              {founding ? 'Founding · Free for life' : tier === 'PRO' ? 'Unlimited listings' : 'Upgrade'}
-            </Link>
-          )}
-          <span aria-hidden className="dsh-ava">
-            {storeName ? storeName.charAt(0).toUpperCase() : ''}
-          </span>
-        </header>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dsh-muted, #9a9a9a)' }}>Seller Dashboard</span>
+          </div>
+        )}
 
         {mobileDrawer}
 
@@ -565,6 +544,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <VelorAssistant />
       {/* Live whole-page translation, same as every public page. */}
       <LanguageTranslator />
+      </div>
     </div>
   );
 }
@@ -574,14 +554,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 // light remap: William's design IS the dark mode.
 const shellCss = `
 .dsh-shell {
-  --dsh-bg: #0b0906;
-  --dsh-side: #100d08;
-  --dsh-panel: #141109;
-  --dsh-panel2: rgba(255,255,255,0.05);
-  --dsh-line: rgba(255,255,255,0.07);
-  --dsh-text: #f4efe6;
-  --dsh-muted: #a99f8c;
+  --dsh-bg: #0a0a0a;
+  --dsh-side: #141414;
+  --dsh-panel: #1c1c1c;
+  --dsh-panel2: rgba(255,255,255,0.06);
+  --dsh-line: rgba(255,255,255,0.08);
+  --dsh-text: #f2f2f2;
+  --dsh-muted: #9a9a9a;
   --dsh-green: #46c07a;
+  --dsh-red: #e5484d;
   min-height: 100vh;
   display: grid;
   background: var(--dsh-bg);
@@ -591,40 +572,41 @@ const shellCss = `
 .dsh-side { background: var(--dsh-side); border-right: 1px solid var(--dsh-line); position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
 .dsh-wordmark { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.5px; color: var(--dsh-text); text-decoration: none; }
 .dsh-kicker { font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dsh-muted); padding: 12px 12px 7px; }
-.dsh-nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 0; font-size: 13px; font-weight: 500; color: var(--dsh-muted); text-decoration: none; position: relative; margin-bottom: 1px; }
+.dsh-nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--dsh-muted); text-decoration: none; position: relative; margin-bottom: 1px; }
 .dsh-nav:hover { color: var(--dsh-text); background: var(--dsh-panel2); }
-.dsh-nav-on { color: var(--dsh-text); background: var(--dsh-panel2); font-weight: 600; }
+.dsh-nav-on { color: var(--accent, #FF6B00); background: rgba(255,107,0,0.12); font-weight: 600; }
 .dsh-nav-on .dsh-nav-ico { color: var(--accent, #FF6B00); }
 .dsh-nav-ico { display: inline-flex; color: inherit; }
 .dsh-nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .dsh-nav-badge { margin-left: auto; display: inline-flex; }
 .dsh-nav-mini { justify-content: center; padding: 10px 0; }
 .dsh-minidiv { border-top: 1px solid var(--dsh-line); margin: 8px 4px; }
-.dsh-count { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 0; background: var(--dsh-panel2); color: var(--dsh-muted); }
-.dsh-money { color: var(--dsh-green); background: rgba(70,192,122,0.12); }
-.dsh-livechip { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 0; background: rgba(255,107,0,0.16); color: var(--accent, #FF6B00); }
+.dsh-count { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2a2a2a; color: #c9c9c9; }
+.dsh-money { color: #c9c9c9; background: #2a2a2a; }
+.dsh-livechip { display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: var(--dsh-red); color: #fff; }
 .dsh-livedot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent, #FF6B00); animation: dshPulse 1.6s infinite; }
 @keyframes dshPulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
 .dsh-collapse { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 14px; border: none; border-radius: 0; background: transparent; color: var(--dsh-muted); font-family: var(--font-body); font-size: 12px; font-weight: 500; cursor: pointer; }
-.dsh-procard { display: block; background: var(--dsh-panel); border: 1px solid var(--dsh-line); border-radius: 0; padding: 12px; margin: 0 2px; text-decoration: none; color: var(--dsh-text); }
+.dsh-procard { display: block; background: var(--dsh-panel); border: 1px solid var(--dsh-line); border-radius: 10px; padding: 12px; margin: 0 2px; text-decoration: none; color: var(--dsh-text); }
 .dsh-procard-upgrade:hover { border-color: var(--accent, #FF6B00); }
 .dsh-procard-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--dsh-text); }
 .dsh-procard-note { font-size: 11px; color: var(--dsh-muted); margin-top: 4px; }
-.dsh-propill { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 0; background: linear-gradient(135deg, #FF8A2B, #FF6B00); color: #fff; }
+.dsh-propill { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 5px; background: linear-gradient(135deg, #FF8A2B, #FF6B00); color: #fff; }
 .dsh-prolist { list-style: none; margin: 9px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .dsh-prolist li { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--dsh-muted); line-height: 1.4; }
 .dsh-protick { display: inline-flex; color: var(--dsh-green); flex-shrink: 0; }
 .dsh-prolink { color: var(--dsh-text); text-decoration: none; }
 .dsh-prolink:hover { color: var(--accent, #FF6B00); }
 .dsh-upgradecta { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 700; color: var(--accent, #FF6B00); }
-.dsh-maker { display: flex; align-items: center; gap: 9px; border-top: 1px solid var(--dsh-line); margin-top: 12px; padding: 12px 10px 0; }
-.dsh-maker-ava { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.dsh-maker { display: flex; align-items: flex-start; gap: 11px; border-top: 1px solid var(--dsh-line); margin-top: 12px; padding: 14px 10px 0; }
+.dsh-maker-ava { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .dsh-maker-init { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FF8A2B, #FF6B00); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 14px; }
 .dsh-maker-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.dsh-maker-name { font-size: 12.5px; font-weight: 600; color: var(--dsh-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsh-maker-name { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--dsh-text); white-space: nowrap; overflow: hidden; }
 .dsh-maker-sub { font-size: 11px; color: var(--dsh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dsh-maker-view { font-size: 11px; font-weight: 700; color: var(--accent, #FF6B00); text-decoration: none; flex-shrink: 0; }
+.dsh-maker-view { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 11.5px; font-weight: 700; color: var(--accent, #FF6B00); text-decoration: none; }
 .dsh-topbar { display: flex; align-items: center; gap: 14px; background: var(--dsh-side); border-bottom: 1px solid var(--dsh-line); position: sticky; top: 0; z-index: 20; }
+.dsh-mobilebar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--dsh-side); border-bottom: 1px solid var(--dsh-line); }
 .dsh-burger { width: 38px; height: 38px; border-radius: 0; border: 1px solid var(--dsh-line); background: var(--dsh-panel); color: var(--dsh-text); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .dsh-storelink { font-size: 12.5px; font-weight: 500; color: var(--dsh-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; }
 .dsh-storelink:hover { color: var(--dsh-text); }
