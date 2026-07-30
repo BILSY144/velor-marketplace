@@ -85,6 +85,12 @@ export default function PulseSupportPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('tickets')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
+  // Optimistic local overlay: a ticket resolved from the phone should
+  // disappear immediately rather than wait for the next 30s poll.
+  // resolvingId guards against double-taps while a PATCH is in flight.
+  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set())
+  const [resolvingId, setResolvingId] = useState<string | null>(null)
+  const [resolveError, setResolveError] = useState('')
 
   const switchTab = useCallback((t: (typeof TABS)[number]) => {
     setTab(t)
@@ -100,6 +106,24 @@ export default function PulseSupportPage() {
   params.set('pageSize', '20')
 
   const { data, loading, error } = usePulseData<SupportData>(`/api/admin/pulse-support?${params.toString()}`, token, { onUnauthorized: lock })
+
+  const resolveTicket = useCallback(async (id: string) => {
+    setResolvingId(id)
+    setResolveError('')
+    try {
+      const res = await fetch('/api/admin/pulse-support', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) throw new Error('Request failed')
+      setResolvedIds((prev) => new Set(prev).add(id))
+    } catch {
+      setResolveError('Could not resolve that ticket -- try again.')
+    } finally {
+      setResolvingId(null)
+    }
+  }, [token])
 
   if (needsToken) return <TokenGate onUnlock={unlock} />
   if (loading && !data) {
@@ -117,6 +141,7 @@ export default function PulseSupportPage() {
     <PulseShell>
       <PulseHeader title="Support & Trust" subtitle="Tickets, disputes, returns" live />
       {error && <ErrorBanner>{error}</ErrorBanner>}
+      {resolveError && <ErrorBanner>{resolveError}</ErrorBanner>}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         <KpiCard label="Open tickets" value={counts ? counts.openTickets : '—'} accent={PULSE.amber} />
@@ -161,7 +186,9 @@ export default function PulseSupportPage() {
       {data && <ResultsMeta total={data.total} noun={tab === 'tickets' ? 'ticket' : tab === 'disputes' ? 'dispute' : 'return'} page={data.page} totalPages={data.totalPages} />}
       {data && data.items.length === 0 && <EmptyState>Nothing in this queue.</EmptyState>}
 
-      {data && tab === 'tickets' && (data.items as TicketItem[]).map((t) => (
+      {data && tab === 'tickets' && (data.items as TicketItem[])
+        .filter((t) => !resolvedIds.has(t.id))
+        .map((t) => (
         <ListCard key={t.id}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <span style={{ fontSize: 14.5, fontWeight: 700, color: PULSE.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</span>
@@ -185,7 +212,28 @@ export default function PulseSupportPage() {
           >
             {t.message}
           </div>
-          <div style={{ fontSize: 11.5, color: PULSE.mutedDark, marginTop: 6 }}>{fmtDateTime(t.createdAt)}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+            <span style={{ fontSize: 11.5, color: PULSE.mutedDark }}>{fmtDateTime(t.createdAt)}</span>
+            {t.status === 'OPEN' && (
+              <button
+                onClick={() => resolveTicket(t.id)}
+                disabled={resolvingId === t.id}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: `1px solid ${PULSE.green}`,
+                  background: resolvingId === t.id ? 'transparent' : PULSE.green + '1a',
+                  color: PULSE.green,
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: resolvingId === t.id ? 'default' : 'pointer',
+                  opacity: resolvingId === t.id ? 0.6 : 1,
+                }}
+              >
+                {resolvingId === t.id ? 'Resolving...' : 'Resolve'}
+              </button>
+            )}
+          </div>
         </ListCard>
       ))}
 

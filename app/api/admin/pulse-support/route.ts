@@ -119,3 +119,32 @@ export async function GET(request: NextRequest) {
     counts,
   })
 }
+
+// Resolve a support ticket from the /pulse/support mobile dashboard (William,
+// 2026-07-30: needs a way to clear a ticket from his phone -- the queue was
+// previously read-only, so a handled ticket (e.g. the safety-tooling TEST
+// report from 2026-07-29) had no way to be closed and kept re-tripping the
+// hourly agent-watchdog cron past its 24h SLA). Tickets only for now --
+// disputes/returns have their own resolution fields and existing flows and
+// are not exposed here.
+export async function PATCH(request: NextRequest) {
+  if (!(await isAuthorizedAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json().catch(() => null) as { id?: unknown } | null
+  const id = typeof body?.id === 'string' ? body.id : null
+  if (!id) {
+    return NextResponse.json({ error: 'Missing ticket id' }, { status: 400 })
+  }
+
+  try {
+    const ticket = await prisma.supportTicket.update({
+      where: { id },
+      data: { status: 'RESOLVED' },
+    })
+    return NextResponse.json({ ok: true, id: ticket.id, status: ticket.status })
+  } catch {
+    return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
+  }
+}
