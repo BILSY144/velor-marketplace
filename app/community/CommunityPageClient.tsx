@@ -91,11 +91,16 @@ export interface WorkshopVideo {
   href: string
 }
 
-export interface GuestLesson {
+// A Learning Centre card is either a real seller video (source: 'seller' --
+// internal link, no target="_blank") or a guest craft video from outside
+// Velor (source: 'guest' -- external link). Real seller videos always fill
+// slots first; see buildLearningItems in page.tsx.
+export interface LearningItem {
   href: string
-  thumb: string
+  thumb: string | null
   title: string
-  country: string
+  sub: string
+  source: 'seller' | 'guest'
 }
 
 export interface PublicCollection {
@@ -229,7 +234,7 @@ export default function CommunityPageClient({
   worldStats,
   topCountries,
   workshopVideos,
-  guestLessons,
+  learningItems,
   passport,
   publicCollections,
 }: {
@@ -239,7 +244,7 @@ export default function CommunityPageClient({
   worldStats: WorldStats
   topCountries: CountryRow[]
   workshopVideos: WorkshopVideo[]
-  guestLessons: GuestLesson[]
+  learningItems: LearningItem[]
   passport: MakerPassport | null
   publicCollections: PublicCollection[]
 }) {
@@ -569,23 +574,47 @@ export default function CommunityPageClient({
           <SectionBox href="/community/learning">
             <SectionHead title="Learning Centre" href="/community/learning" icon="cap" />
             <p className="mc-note" style={{ marginBottom: 8 }}>
-              Guest videos from the wider craft world &mdash; not Velor sellers &mdash; while makers build up their own.
+              {learningItems.some((l) => l.source === 'guest')
+                ? 'Real seller videos fill this list first; guest craft videos from outside Velor backfill the rest — each card says which.'
+                : 'Real videos from Velor sellers.'}
             </p>
             <div className="mc-lessons">
-              {guestLessons.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mc-lesson"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <img className="mc-lesson-thumb" src={l.thumb} alt="" aria-hidden="true" loading="lazy" />
-                  <span className="mc-lesson-title">{l.title}</span>
-                  <span className="mc-lesson-time">{l.country}</span>
-                </a>
-              ))}
+              {learningItems.map((l) =>
+                l.source === 'seller' ? (
+                  <Link key={l.href} href={l.href} className="mc-lesson" onClick={(e) => e.stopPropagation()}>
+                    {l.thumb ? (
+                      <img className="mc-lesson-thumb" src={l.thumb} alt="" aria-hidden="true" loading="lazy" />
+                    ) : (
+                      <div className="mc-ph mc-lesson-thumb" aria-hidden="true"><Ico d={PATHS.play} size={14} /></div>
+                    )}
+                    <span className="mc-lesson-text">
+                      <span className="mc-lesson-title">{l.title}</span>
+                      <span className="mc-lesson-time">{l.sub}</span>
+                    </span>
+                    <span className="mc-lesson-badge mc-lesson-badge-seller">From this seller</span>
+                  </Link>
+                ) : (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mc-lesson"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {l.thumb ? (
+                      <img className="mc-lesson-thumb" src={l.thumb} alt="" aria-hidden="true" loading="lazy" />
+                    ) : (
+                      <div className="mc-ph mc-lesson-thumb" aria-hidden="true"><Ico d={PATHS.play} size={14} /></div>
+                    )}
+                    <span className="mc-lesson-text">
+                      <span className="mc-lesson-title">{l.title}</span>
+                      <span className="mc-lesson-time">{l.sub}</span>
+                    </span>
+                    <span className="mc-lesson-badge mc-lesson-badge-guest">Guest video</span>
+                  </a>
+                )
+              )}
             </div>
           </SectionBox>
 
@@ -913,11 +942,15 @@ html[data-theme='light'] .mc-live-productbar { background: var(--surface-2); }
 
 /* learning */
 .mc-lessons { display: flex; flex-direction: column; gap: 8px; }
-.mc-lesson { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 10px; padding: 8px 11px; color: var(--mc-text); }
+.mc-lesson { display: flex; align-items: center; gap: 11px; background: var(--mc-card2); border-radius: 10px; padding: 8px 11px; color: var(--mc-text); text-decoration: none; }
 .mc-lesson:hover { filter: brightness(1.15); }
 .mc-lesson-thumb { width: 48px; height: 34px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
-.mc-lesson-title { flex: 1; font-size: 12.5px; }
+.mc-lesson-text { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mc-lesson-title { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-lesson-time { font-size: 11.5px; color: var(--mc-muted); }
+.mc-lesson-badge { flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.mc-lesson-badge-seller { background: rgba(212,175,55,0.18); color: var(--mc-gold); }
+.mc-lesson-badge-guest { background: rgba(255,255,255,0.08); color: var(--mc-muted); }
 
 /* follow countries */
 .mc-countries { display: flex; flex-direction: column; gap: 8px; }

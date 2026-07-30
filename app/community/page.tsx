@@ -22,6 +22,17 @@
 //    app/api/social/collections/route.ts) alongside the DPIA addendum and a
 //    new "Community & Social Features" section in the privacy policy. This
 //    box only ever shows collections a buyer explicitly opted into.
+//  - 2026-07-30 (William caught two real bugs live): (a) seller videos set
+//    via Product.videoUrl (the free video-by-link field on a listing, shown
+//    on the PDP) were never queried here at all -- only JournalPost.videoUrl
+//    was, so a seller's own YouTube upload never reached Workshop Videos or
+//    Learning Centre. Both real video sources are now queried and merged.
+//    (b) Around the World / Follow Countries / Maker Passport counted any
+//    admin-approved seller as an active "maker" even if they'd never opened
+//    their country page or listed a single item. Both queries now require
+//    products: { some: { status: 'APPROVED' } }, matching the same
+//    real-activity gate already used correctly in
+//    app/api/sellers/featured/route.ts.
 //
 // Community Challenge and Live Shopping still have no backing model/feature
 // (no contest, submission, voting, or live-chat table) and stay the
@@ -42,6 +53,7 @@ import CommunityPageClient, {
   type WorkshopVideo,
   type MakerPassport,
   type PublicCollection,
+  type LearningItem,
 } from './CommunityPageClient'
 
 function publiclyVisibleWhere() {
@@ -54,11 +66,12 @@ function publiclyVisibleWhere() {
 }
 
 // Real YouTube videos of craftspeople who are NOT Velor sellers -- an
-// explicit, labelled bridge for the Learning Centre until makers upload
-// their own (William, 2026-08-02: "clearly labelled as guest content").
-// Sourced from real, existing public videos -- never invented video IDs or
-// titles. Shown with a visible "guest video" label in the UI so it's never
-// mistaken for Velor seller content.
+// explicit, labelled bridge for the Learning Centre. William, 2026-07-30
+// (bug caught live): real seller videos must fill these slots FIRST, guest
+// videos only backfill what's left -- see buildLearningItems below. Sourced
+// from real, existing public videos -- never invented video IDs or titles.
+// Each card is labelled "From this seller" or "Guest video" per-item so
+// it's never ambiguous which is which.
 const GUEST_LESSONS = [
   {
     href: 'https://www.youtube.com/watch?v=LzYDnlQvem0',
@@ -86,6 +99,32 @@ const GUEST_LESSONS = [
   },
 ]
 
+const LEARNING_SLOTS = 4
+
+// Real seller videos fill the Learning Centre first; guest videos only
+// backfill whatever's left. As more sellers add videos, guest content
+// naturally gets crowded out -- the "bridge" this section was meant to be.
+function buildLearningItems(
+  realVideos: { title: string | null; image: string | null; sellerName: string; country: string; href: string }[]
+): LearningItem[] {
+  const real: LearningItem[] = realVideos.slice(0, LEARNING_SLOTS).map((v) => ({
+    href: v.href,
+    thumb: v.image,
+    title: v.title || 'Workshop video',
+    sub: `${v.sellerName} · ${v.country}`,
+    source: 'seller' as const,
+  }))
+  const guestSlots = Math.max(0, LEARNING_SLOTS - real.length)
+  const guest: LearningItem[] = GUEST_LESSONS.slice(0, guestSlots).map((g) => ({
+    href: g.href,
+    thumb: g.thumb,
+    title: g.title,
+    sub: g.country,
+    source: 'guest' as const,
+  }))
+  return [...real, ...guest]
+}
+
 export const dynamic = 'force-dynamic'
 
 export default async function CommunityPage() {
@@ -100,7 +139,7 @@ export default async function CommunityPage() {
         worldStats={{ countries: 0, makers: 0, liveNow: 0, products: 0, journalEntries: 0 }}
         topCountries={[]}
         workshopVideos={[]}
-        guestLessons={GUEST_LESSONS}
+        learningItems={buildLearningItems([])}
         passport={null}
         publicCollections={[]}
       />
@@ -116,7 +155,8 @@ export default async function CommunityPage() {
     liveNowCount,
     listedProductCount,
     journalPostCount,
-    videoPosts,
+    journalVideoPosts,
+    productVideos,
     topSeller,
     publicCollectionRows,
   ] = await Promise.all([
@@ -167,19 +207,41 @@ export default async function CommunityPage() {
     // Every approved seller's country -- powers both Around the World's
     // stats/spotlight and the Follow Countries list. Small table, cheap to
     // reduce in JS rather than fight groupBy's aggregate-orderBy syntax.
+    // products: some APPROVED -- being admin-approved isn't enough; a maker
+    // only counts here once they've actually listed something (William,
+    // 2026-07-30: real data was including sellers who'd never opened their
+    // country page or listed an item).
     prisma.seller.findMany({
-      where: { approved: true },
+      where: { approved: true, products: { some: { status: 'APPROVED' } } },
       select: { country: true },
     }),
     prisma.liveStream.count({ where: { status: 'LIVE', seller: { approved: true } } }),
     prisma.product.count({ where: { status: 'APPROVED', seller: { approved: true } } }),
     prisma.journalPost.count({ where: { ...publiclyVisibleWhere(), seller: { approved: true } } }),
+    // Real seller videos, source 1: journal posts with a video attached.
     prisma.journalPost.findMany({
       where: { ...publiclyVisibleWhere(), seller: { approved: true }, videoUrl: { not: null } },
       select: {
         id: true,
         title: true,
         images: true,
+        createdAt: true,
+        seller: { select: { id: true, storeName: true, country: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+    }),
+    // Real seller videos, source 2: Product.videoUrl -- the free video-by-
+    // link field a seller can set directly on a listing (rendered on the
+    // PDP via toEmbedUrl()). Missed entirely before 2026-07-30 -- this was
+    // the actual root cause of "seller's YouTube video never showed up".
+    prisma.product.findMany({
+      where: { status: 'APPROVED', seller: { approved: true }, videoUrl: { not: null } },
+      select: {
+        id: true,
+        title: true,
+        images: true,
+        createdAt: true,
         seller: { select: { id: true, storeName: true, country: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -187,9 +249,10 @@ export default async function CommunityPage() {
     }),
     // Maker Passport spotlight -- the real approved seller with the most
     // followers (a plain, defensible "who's most followed" pick, not an
-    // invented ranking).
+    // invented ranking), restricted to sellers who've actually listed
+    // something (same real-activity gate as above).
     prisma.seller.findFirst({
-      where: { approved: true },
+      where: { approved: true, products: { some: { status: 'APPROVED' } } },
       select: {
         id: true,
         storeName: true,
@@ -301,14 +364,50 @@ export default async function CommunityPage() {
     journalEntries: journalPostCount,
   }
 
-  const workshopVideos: WorkshopVideo[] = videoPosts.map((p) => ({
-    id: p.id,
-    title: p.title || 'Workshop video',
-    image: p.images[0] || null,
-    sellerName: p.seller.storeName,
-    country: p.seller.country || 'Velor maker',
-    href: `/seller/${p.seller.id}`,
+  // Merge both real video sources -- journal posts and product listings --
+  // newest first, so whichever a seller actually used surfaces correctly.
+  const mergedVideos = [
+    ...journalVideoPosts.map((p) => ({
+      // Prefixed -- journal post ids and product ids are separate cuid
+      // spaces and could theoretically collide; this id is only ever used
+      // as a React list key, never queried against.
+      id: `journal:${p.id}`,
+      title: p.title,
+      image: p.images[0] || null,
+      sellerName: p.seller.storeName,
+      country: p.seller.country || 'Velor maker',
+      href: `/seller/${p.seller.id}`,
+      createdAt: p.createdAt,
+    })),
+    ...productVideos.map((p) => ({
+      id: `product:${p.id}`,
+      title: p.title,
+      image: p.images[0] || null,
+      sellerName: p.seller.storeName,
+      country: p.seller.country || 'Velor maker',
+      href: `/shop/${p.id}`,
+      createdAt: p.createdAt,
+    })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
+  const workshopVideos: WorkshopVideo[] = mergedVideos.slice(0, 8).map((v) => ({
+    id: v.id,
+    title: v.title || 'Workshop video',
+    image: v.image,
+    sellerName: v.sellerName,
+    country: v.country,
+    href: v.href,
   }))
+
+  const learningItems = buildLearningItems(
+    mergedVideos.map((v) => ({
+      title: v.title,
+      image: v.image,
+      sellerName: v.sellerName,
+      country: v.country,
+      href: v.href,
+    }))
+  )
 
   let passport: MakerPassport | null = null
   if (topSeller) {
@@ -347,7 +446,7 @@ export default async function CommunityPage() {
       worldStats={worldStats}
       topCountries={topCountries}
       workshopVideos={workshopVideos}
-      guestLessons={GUEST_LESSONS}
+      learningItems={learningItems}
       passport={passport}
       publicCollections={publicCollections}
     />
