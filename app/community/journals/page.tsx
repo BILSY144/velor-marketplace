@@ -7,7 +7,7 @@
  * Quispe "Day 128 -- A New Design, A New Beginning" journal entry. Every
  * image is extracted directly from his design file
  * (public/community/journal/*.jpg; the maker portrait reuses
- * publichttps://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240 from the hub design -- same person).
+ * publichttps://images.pexels.com/photos/26867954/pexels-photo-26867954.jpeg?auto=compress&cs=tinysrgb&w=240 from the hub design -- same person).
  * All copy, names and figures mirror the design 1:1 at William's explicit
  * instruction ("exactly the same so when seller starts, it replaces
  * placeholders") -- this showcase content is the placeholder set that real
@@ -157,7 +157,7 @@ export default function SellerJournalPage() {
               </p>
               <div className="jp-meta">
                 <span className="jp-meta-item">
-                  <img className="jp-meta-avatar" src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
+                  <img className="jp-meta-avatar" src="https://images.pexels.com/photos/26867954/pexels-photo-26867954.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
                   <span>
                     <span className="jp-meta-strong">Maria Quispe<Verified size={13} /></span>
                     <span className="jp-meta-sub">Peru &middot; Textile Weaver</span>
@@ -180,7 +180,7 @@ export default function SellerJournalPage() {
               </div>
             </div>
             <div className="jp-hero-media">
-              <img src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Maria Quispe weaving at her loom" loading="eager" />
+              <img src="https://images.pexels.com/photos/26867954/pexels-photo-26867954.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Maria Quispe weaving at her loom" loading="eager" />
             </div>
           </div>
 
@@ -305,7 +305,7 @@ export default function SellerJournalPage() {
           {/* maker card */}
           <div className="jp-card">
             <div className="jp-maker">
-              <img className="jp-maker-avatar" src="https://images.pexels.com/photos/24645287/pexels-photo-24645287/free-photo-of-elderly-person-holding-embroidered-blankets.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
+              <img className="jp-maker-avatar" src="https://images.pexels.com/photos/26867954/pexels-photo-26867954.jpeg?auto=compress&cs=tinysrgb&w=240" alt="Maria Quispe" />
               <div>
                 <div className="jp-maker-name">Maria Quispe<Verified size={14} /></div>
                 <div className="jp-maker-craft">Textile Weaver</div>
