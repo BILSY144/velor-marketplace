@@ -921,12 +921,49 @@ model JournalPost {
   notesTips     String?  @db.Text
   behindScenes  String?  @db.Text
   productIds    String[] @default([])
+  // Creator Journals studio (William's dashboard design, 2026-07-30):
+  // status grows DRAFT | SCHEDULED | ARCHIVED alongside PUBLISHED | HIDDEN;
+  // scheduled entries go live at scheduledAt (read-time check in the
+  // public queries). Counters are real from day one -- they start at zero
+  // and fill as buyers interact. featured is admin/homepage curation.
+  scheduledAt   DateTime?
+  category      String?
+  featured      Boolean  @default(false)
+  viewCount     Int      @default(0)
+  productClicks Int      @default(0)
+  likes         JournalLike[]
+  comments      JournalComment[]
   // PUBLISHED | HIDDEN (HIDDEN = taken down by moderation, kept for audit)
   status    String   @default("PUBLISHED")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sellerId, status, createdAt])
+}
+
+// One like per person per journal entry (Creator Journals counters).
+model JournalLike {
+  id        String      @id @default(cuid())
+  postId    String
+  post      JournalPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime    @default(now())
+
+  @@unique([postId, userId])
+}
+
+// Buyer comments on a journal entry. Same UGC posture as reviews/messages:
+// content-filtered at the API, PUBLISHED | HIDDEN for moderation.
+model JournalComment {
+  id        String      @id @default(cuid())
+  postId    String
+  post      JournalPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  body      String      @db.Text
+  status    String      @default("PUBLISHED")
+  createdAt DateTime    @default(now())
+
+  @@index([postId])
 }
 
 enum CertificateType {

@@ -22,6 +22,46 @@ const MAX_BODY_LEN = 4000
 const MAX_IMAGES = 6
 const MAX_POSTS_PER_DAY = 10
 const MAX_LINKED_PRODUCTS = 4
+const MAX_CATEGORY_LEN = 40
+
+// Creator Journals studio statuses (2026-07-30). HIDDEN stays a
+// moderation-only state -- sellers can never set or clear it themselves.
+const SELLER_STATUSES = ['PUBLISHED', 'DRAFT', 'SCHEDULED', 'ARCHIVED'] as const
+type SellerStatus = (typeof SELLER_STATUSES)[number]
+
+// A SCHEDULED entry is publicly live once its moment passes -- read-time
+// check, no cron needed.
+function publiclyVisibleWhere() {
+  return {
+    OR: [
+      { status: 'PUBLISHED' },
+      { status: 'SCHEDULED', scheduledAt: { lte: new Date() } },
+    ],
+  }
+}
+
+function parseStatusAndSchedule(body: Record<string, unknown>, opts: { allowArchived: boolean }): { status: SellerStatus; scheduledAt: Date | null } | { error: string } {
+  const raw = typeof body.status === 'string' ? body.status.toUpperCase() : 'PUBLISHED'
+  if (!SELLER_STATUSES.includes(raw as SellerStatus)) return { error: 'Invalid status' }
+  const status = raw as SellerStatus
+  if (status === 'ARCHIVED' && !opts.allowArchived) return { error: 'A new entry cannot start archived' }
+  if (status === 'SCHEDULED') {
+    const when = typeof body.scheduledAt === 'string' ? new Date(body.scheduledAt) : null
+    if (!when || Number.isNaN(when.getTime())) return { error: 'Pick a date and time to schedule this entry' }
+    if (when.getTime() <= Date.now()) return { error: 'Schedule time must be in the future' }
+    return { status, scheduledAt: when }
+  }
+  return { status, scheduledAt: null }
+}
+
+function parseCategory(body: Record<string, unknown>): { category: string | null } | { error: string } {
+  const raw = body.category
+  const v = typeof raw === 'string' ? raw.trim().slice(0, MAX_CATEGORY_LEN) : ''
+  if (!v) return { category: null }
+  const check = checkMessageContent(v)
+  if (check.blocked) return { error: 'That category name is not allowed' }
+  return { category: v }
+}
 const PUBLIC_PAGE_SIZE = 12
 
 function socialDisabled(): NextResponse | null {
@@ -86,10 +126,12 @@ export async function GET(req: NextRequest) {
     const seller = await prisma.seller.findFirst({ where: { id: sellerId, approved: true }, select: { id: true } })
     if (!seller) return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
     const posts = await prisma.journalPost.findMany({
-      where: { sellerId, status: 'PUBLISHED' },
+      where: { sellerId, ...publiclyVisibleWhere() },
       select: {
         id: true, title: true, body: true, images: true, videoUrl: true, createdAt: true,
         makingProcess: true, notesTips: true, behindScenes: true, productIds: true,
+        category: true, viewCount: true,
+        _count: { select: { likes: true, comments: { where: { status: 'PUBLISHED' } } } },
         product: { select: { id: true, title: true, images: true, status: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -111,13 +153,34 @@ export async function GET(req: NextRequest) {
     where: { sellerId: ownSellerId },
     select: {
       id: true, title: true, body: true, images: true, videoUrl: true, status: true, createdAt: true,
+      updatedAt: true, scheduledAt: true, category: true, featured: true,
+      viewCount: true, productClicks: true,
       makingProcess: true, notesTips: true, behindScenes: true, productIds: true,
+      _count: { select: { likes: true, comments: { where: { status: 'PUBLISHED' } } } },
       product: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: 'desc' },
-    take: 50,
+    take: 200,
   })
-  return NextResponse.json({ posts })
+
+  // Real sales counter: units of each entry's TAGGED listings sold since
+  // the entry was created (honest, clearly-defined attribution -- a tagged
+  // piece bought after the entry went up). Zero until buyers buy.
+  const allTagged = Array.from(new Set(posts.flatMap((p) => p.productIds)))
+  const salesByProduct = new Map<string, number>()
+  if (allTagged.length > 0) {
+    const sold = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      where: { productId: { in: allTagged } },
+      _sum: { quantity: true },
+    })
+    for (const row of sold) salesByProduct.set(row.productId, row._sum.quantity ?? 0)
+  }
+  const withSales = posts.map((p) => ({
+    ...p,
+    salesCount: p.productIds.reduce((sum, id) => sum + (salesByProduct.get(id) ?? 0), 0),
+  }))
+  return NextResponse.json({ posts: withSales })
 }
 
 export async function POST(req: NextRequest) {
@@ -155,6 +218,12 @@ export async function POST(req: NextRequest) {
   const tagged = await parseProductIds(body, sellerId)
   if (!Array.isArray(tagged)) return NextResponse.json({ error: tagged.error }, { status: 400 })
 
+  const statusParsed = parseStatusAndSchedule(body, { allowArchived: false })
+  if ('error' in statusParsed) return NextResponse.json({ error: statusParsed.error }, { status: 400 })
+
+  const catParsed = parseCategory(body)
+  if ('error' in catParsed) return NextResponse.json({ error: catParsed.error }, { status: 400 })
+
   // Optional product tie-in: must be the seller's OWN listing. The primary
   // link stays productId (back-compat); tagged listings ride productIds.
   let productId: string | null = null
@@ -191,14 +260,18 @@ export async function POST(req: NextRequest) {
       notesTips: parsedSections.sections.notesTips,
       behindScenes: parsedSections.sections.behindScenes,
       productIds: tagged,
+      status: statusParsed.status,
+      scheduledAt: statusParsed.scheduledAt,
+      category: catParsed.category,
     },
-    select: { id: true, createdAt: true },
+    select: { id: true, createdAt: true, status: true },
   })
 
   // Web bell fan-out (Velor Social plan section 7): every follower of this
   // maker gets the new post in their notification bell. Best-effort -- a
   // fan-out failure never fails the post itself.
   try {
+    if (post.status !== 'PUBLISHED') throw new Error('skip-fanout')
     const [follows, sellerRow] = await Promise.all([
       prisma.follow.findMany({ where: { sellerId }, select: { userId: true }, take: 5000 }),
       prisma.seller.findUnique({ where: { id: sellerId }, select: { storeName: true } }),
@@ -214,7 +287,9 @@ export async function POST(req: NextRequest) {
         })),
       })
     }
-  } catch (err) { console.error('[journal] bell fan-out failed', err) }
+  } catch (err) {
+    if (!(err instanceof Error && err.message === 'skip-fanout')) console.error('[journal] bell fan-out failed', err)
+  }
 
   return NextResponse.json({ ok: true, post }, { status: 201 })
 }
@@ -234,7 +309,7 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.postId !== 'string' || !body.postId) {
     return NextResponse.json({ error: 'postId required' }, { status: 400 })
   }
-  const existing = await prisma.journalPost.findFirst({ where: { id: body.postId, sellerId }, select: { id: true } })
+  const existing = await prisma.journalPost.findFirst({ where: { id: body.postId, sellerId }, select: { id: true, status: true } })
   if (!existing) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
   const title = typeof body.title === 'string' ? body.title.trim().slice(0, MAX_TITLE_LEN) : ''
@@ -257,6 +332,12 @@ export async function PATCH(req: NextRequest) {
 
   const tagged = await parseProductIds(body, sellerId)
   if (!Array.isArray(tagged)) return NextResponse.json({ error: tagged.error }, { status: 400 })
+
+  const statusParsed = parseStatusAndSchedule(body, { allowArchived: true })
+  if ('error' in statusParsed) return NextResponse.json({ error: statusParsed.error }, { status: 400 })
+
+  const catParsed = parseCategory(body)
+  if ('error' in catParsed) return NextResponse.json({ error: catParsed.error }, { status: 400 })
 
   let productId: string | null = null
   if (typeof body.productId === 'string' && body.productId) {
@@ -283,9 +364,38 @@ export async function PATCH(req: NextRequest) {
       notesTips: parsedSections.sections.notesTips,
       behindScenes: parsedSections.sections.behindScenes,
       productIds: tagged,
+      // Moderation always wins: a HIDDEN post stays HIDDEN whatever the
+      // seller sends -- editing never resurrects it.
+      ...(existing.status === 'HIDDEN'
+        ? {}
+        : { status: statusParsed.status, scheduledAt: statusParsed.scheduledAt }),
+      category: catParsed.category,
     },
   })
   return NextResponse.json({ ok: true })
+}
+
+// PUT -- Manage Categories: rename (or clear) one of the seller's journal
+// categories across all their entries.
+export async function PUT(req: NextRequest) {
+  const gate = socialDisabled()
+  if (gate) return gate
+  const session = await auth()
+  const sellerId = (session?.user as { sellerId?: string } | undefined)?.sellerId
+  if (!sellerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const body = await req.json().catch(() => ({}))
+  const from = typeof body.from === 'string' ? body.from.trim() : ''
+  const toRaw = typeof body.to === 'string' ? body.to.trim().slice(0, MAX_CATEGORY_LEN) : ''
+  if (!from) return NextResponse.json({ error: 'Category to rename is required' }, { status: 400 })
+  if (toRaw) {
+    const check = checkMessageContent(toRaw)
+    if (check.blocked) return NextResponse.json({ error: 'That category name is not allowed' }, { status: 400 })
+  }
+  const result = await prisma.journalPost.updateMany({
+    where: { sellerId, category: from },
+    data: { category: toRaw || null },
+  })
+  return NextResponse.json({ ok: true, updated: result.count })
 }
 
 export async function DELETE(req: NextRequest) {

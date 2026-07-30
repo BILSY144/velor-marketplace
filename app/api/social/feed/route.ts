@@ -38,7 +38,12 @@ export async function GET(req: NextRequest) {
 
   const posts = await prisma.journalPost.findMany({
     where: {
-      status: 'PUBLISHED',
+      // PUBLISHED, or SCHEDULED entries whose moment has passed (Creator
+      // Journals studio scheduling, 2026-07-30 -- read-time, no cron).
+      OR: [
+        { status: 'PUBLISHED' },
+        { status: 'SCHEDULED', scheduledAt: { lte: new Date() } },
+      ],
       seller: { approved: true },
       ...sellerFilter,
     },
