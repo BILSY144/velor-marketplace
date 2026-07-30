@@ -130,22 +130,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [language, setLanguage] = useState('en');
   const [langNote, setLangNote] = useState<string | null>(null);
 
-  // Theme: journal routes render William's dark design and follow the
-  // visitor's own site theme (dark by default, light if they toggled
-  // light). Every OTHER dashboard page still forces LIGHT while
-  // mounted -- those pages remain on the light Studio design until
-  // each is redesigned, and their form fields read the site vars.
+  // Theme: the dashboard chrome (sidebar + top bar) is ALWAYS dark --
+  // that IS William's design ("dasboard still white no dark mode",
+  // 2026-07-30) -- via fixed --dsh-* values with no light remap.
+  // Journal routes force data-theme dark so the Creator Journals page
+  // renders the dark design; every OTHER dashboard page still forces
+  // LIGHT while mounted, because those pages remain on the light
+  // Studio design until each is redesigned and their form fields read
+  // the site vars. Their content area keeps a light canvas below.
   useEffect(() => {
     const prev = document.documentElement.getAttribute('data-theme');
     const isJournal = pathname.startsWith('/dashboard/journal');
-    let desired: string;
-    if (isJournal) {
-      let stored: string | null = null;
-      try { stored = window.localStorage.getItem('velor-theme'); } catch { /* private mode */ }
-      desired = stored === 'light' ? 'light' : 'dark';
-    } else {
-      desired = 'light';
-    }
+    const desired = isJournal ? 'dark' : 'light';
     const force = () => {
       if (document.documentElement.getAttribute('data-theme') !== desired) {
         document.documentElement.setAttribute('data-theme', desired);
@@ -558,7 +554,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {mobileDrawer}
 
-        <main style={{ minHeight: '70vh' }}>
+        {/* Journal routes are the dark design end to end; the not-yet-
+            redesigned Studio pages keep their light canvas so their
+            dark-ink text stays readable. */}
+        <main style={{ minHeight: '70vh', background: pathname.startsWith('/dashboard/journal') ? 'transparent' : '#F6F6F7' }}>
           {children}
         </main>
       </div>
@@ -570,11 +569,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 }
 
-// The design's dark palette by default (matches the Creator Journals
-// page's dj-* values), mapped onto the site's light tokens when the
-// visitor's theme is light. Non-journal dashboard pages force light via
-// the layout effect above, so the shell reads light there too --
-// consistent chrome either way.
+// The design's dark palette, fixed -- the dashboard chrome is dark on
+// every route (matches the Creator Journals page's dj-* values). No
+// light remap: William's design IS the dark mode.
 const shellCss = `
 .dsh-shell {
   --dsh-bg: #0b0906;
@@ -590,15 +587,6 @@ const shellCss = `
   background: var(--dsh-bg);
   color: var(--dsh-text);
   font-family: var(--font-body);
-}
-html[data-theme='light'] .dsh-shell {
-  --dsh-bg: var(--bg, #faf8f4);
-  --dsh-side: var(--surface, #ffffff);
-  --dsh-panel: var(--surface, #ffffff);
-  --dsh-panel2: rgba(0,0,0,0.05);
-  --dsh-line: var(--border, rgba(0,0,0,0.1));
-  --dsh-text: var(--text, #1a1a1d);
-  --dsh-muted: var(--muted, #6b6b74);
 }
 .dsh-side { background: var(--dsh-side); border-right: 1px solid var(--dsh-line); position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
 .dsh-wordmark { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.5px; color: var(--dsh-text); text-decoration: none; }
