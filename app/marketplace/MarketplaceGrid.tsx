@@ -67,7 +67,7 @@ const filtered = useMemo(() => {
         .mp-title { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: #fff; }
         .mp-count { font-size: 14px; color: #666; }
         .mp-search-sort { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .mp-search { background: #111; border: 1px solid #222; border-radius: 0; padding: 10px 16px; color: #fff; font-size: 14px; width: 240px; }
+        .mp-search { background: #111; border: 1px solid #222; border-radius: 0; padding: 10px 16px; color: #fff; font-size: 14px; width: 240px; font-family: var(--font-display); }
         .mp-search:focus { outline: none; border-color: #FF6B00; }
         .mp-sort { background: #111; border: 1px solid #222; border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 14px; cursor: pointer; }
         .mp-cats { overflow-x: auto; display: flex; gap: 8px; padding: 0 0 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }

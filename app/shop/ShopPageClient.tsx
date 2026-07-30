@@ -607,7 +607,7 @@ function ShopContent() {
               onFocus={() => setSearchOpen(true)}
               placeholder="Search goods, country or seller..."
               onKeyDown={e => { if (e.key === 'Enter') { navigate({ search: searchInput }); setSearchOpen(false) } }}
-              style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0, padding: '10px 16px', color: 'var(--text)', fontSize: '15px', outline: 'none' }}
+              style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0, padding: '10px 16px', color: 'var(--text)', fontSize: '15px', fontFamily: 'var(--font-display)', outline: 'none' }}
             />
             <button
               onClick={() => { navigate({ search: searchInput }); setSearchOpen(false) }}

@@ -36,7 +36,7 @@ const css = `
 .vsr h1{font-family:var(--font-display);font-weight:500;letter-spacing:-0.02em;font-size:42px;line-height:1.08;margin:0 0 14px}
 .vsr-lede{font-size:15.5px;color:var(--muted);line-height:1.65;margin:0 0 36px;max-width:56ch}
 .vsr-bar{display:flex;gap:12px;margin-bottom:44px}
-.vsr-in{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:0;color:var(--text);font-family:var(--font-body);font-size:16px;padding:16px 20px;outline:none;transition:border-color .15s}
+.vsr-in{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:0;color:var(--text);font-family:var(--font-display);font-size:16px;padding:16px 20px;outline:none;transition:border-color .15s}
 .vsr-in:focus{border-color:var(--accent)}
 .vsr-btn{background:var(--accent);color:#160a00;border:0;border-radius:0;padding:0 30px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 .vsr-note{font-size:13.5px;color:var(--muted);margin-bottom:22px}

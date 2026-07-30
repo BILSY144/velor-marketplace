@@ -483,7 +483,10 @@ export default function GlobalHeader() {
                     color: 'var(--text)',
                     /* 16px stops iOS Safari zooming the page on focus. */
                     fontSize: 16,
-                    fontFamily: 'var(--font-body)',
+                    /* Space Grotesk in every search bar (William, 2026-07-30:
+                       "a good font to fit the website") -- the site's own
+                       display face, matching kickers and buttons. */
+                    fontFamily: 'var(--font-display)',
                   }}
                 />
                 {query && (
