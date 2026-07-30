@@ -994,7 +994,6 @@ export default function HomePage() {
               <div>
                 <h2>{reel.title}</h2>
               </div>
-              <Link className="vh-slink" href="/founding">Where it&apos;s from &rarr;</Link>
             </div>
             <div className="vh-drag">
               {(() => {
