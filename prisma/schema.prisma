@@ -196,6 +196,7 @@ model Seller {
   journalPosts                  JournalPost[]
   collections                   SellerCollection[]
   likes                         SellerLike[]
+  questions                     SellerQuestion[]
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
@@ -956,16 +957,61 @@ model JournalLike {
 
 // Buyer comments on a journal entry. Same UGC posture as reviews/messages:
 // content-filtered at the API, PUBLISHED | HIDDEN for moderation.
+//
+// parentId (2026-08-01, William: "everythink can be shown on there journal
+// pages like q&a thats real interaction ... that draws in new buyers") --
+// a one-level reply so a comment thread can work as real per-entry Q&A: a
+// buyer's top-level comment is the "question", replies from the seller OR
+// other buyers are the "answers". isSeller is never stored -- it's computed
+// at read time (authorId === the post's seller.userId) so it can never go
+// stale if a store ever changes hands.
 model JournalComment {
-  id        String      @id @default(cuid())
+  id        String           @id @default(cuid())
   postId    String
-  post      JournalPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post      JournalPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
   userId    String
-  body      String      @db.Text
-  status    String      @default("PUBLISHED")
-  createdAt DateTime    @default(now())
+  body      String           @db.Text
+  status    String           @default("PUBLISHED")
+  parentId  String?
+  parent    JournalComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   JournalComment[] @relation("CommentReplies")
+  createdAt DateTime         @default(now())
 
   @@index([postId])
+  @@index([parentId])
+}
+
+// "Ask the Maker" -- a general public Q&A board on the seller's journal
+// page, not tied to any single entry (William, 2026-08-01, same request as
+// the JournalComment reply nesting above: real interaction that "draws in
+// new buyers"). Any signed-in buyer can ask; the seller AND other buyers
+// can answer, same open posture as journal comments. Auto-public the
+// instant it's posted -- the seller can hide a bad question or answer
+// afterwards (status flips to HIDDEN, never deleted, matching every other
+// moderation flag in this schema).
+model SellerQuestion {
+  id        String         @id @default(cuid())
+  sellerId  String
+  seller    Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  askerId   String
+  body      String         @db.Text
+  status    String         @default("PUBLISHED")
+  createdAt DateTime       @default(now())
+  answers   SellerAnswer[]
+
+  @@index([sellerId])
+}
+
+model SellerAnswer {
+  id         String         @id @default(cuid())
+  questionId String
+  question   SellerQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  authorId   String
+  body       String         @db.Text
+  status     String         @default("PUBLISHED")
+  createdAt  DateTime       @default(now())
+
+  @@index([questionId])
 }
 
 // A seller's own public showcase grouping of their products (Maria's

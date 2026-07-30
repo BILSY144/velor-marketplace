@@ -51,8 +51,17 @@ import Link from 'next/link'
 import { jpCss } from './jpStyles'
 import { countryToCode } from '@/lib/payoutRail'
 import { buyerLabel } from '@/lib/specialities'
+import ReportContentButton from '@/components/ReportContentButton'
 
 interface CommentEntry { id: string; body: string; createdAt: string; name: string }
+// Live per-entry Q&A (2026-08-01): a top-level comment is the "question",
+// its one level of replies (from the seller OR another buyer) are the
+// "answers" -- see the /comments route this is fetched from.
+interface LiveReply { id: string; body: string; createdAt: string; name: string; isSeller: boolean; hidden: boolean }
+interface LiveComment extends LiveReply { replies: LiveReply[] }
+// "Ask the Maker" general Q&A board (same date) -- not tied to any entry.
+interface AskAnswer { id: string; body: string; createdAt: string; name: string; isSeller: boolean; hidden: boolean }
+interface AskQuestion { id: string; body: string; createdAt: string; name: string; hidden: boolean; answers: AskAnswer[] }
 
 interface JournalEntry {
   id: string
@@ -338,6 +347,331 @@ function SellerLikeButton({ sellerId, liked: initialLiked }: { sellerId: string;
     >
       <Ico d={P.heart} size={14} fill={liked} />
     </button>
+  )
+}
+
+// Real per-entry comments (2026-08-01, William: "everythink can be shown
+// on there journal pages like q&a thats real interaction ... that draws
+// in new buyers"). Replaces a static, read-only list whose "Write a
+// comment..." box was a dead Link to /auth/join for everyone, signed in
+// or not. A reply under a comment is answerable by the seller OR another
+// buyer -- real Q&A, not seller-only.
+function JournalComments({ postId, sellerId, sellerName, initialCount }: { postId: string; sellerId: string; sellerName: string; initialCount: number }) {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+  const isPageOwner = (session?.user as { sellerId?: string } | undefined)?.sellerId === sellerId
+  const [comments, setComments] = useState<LiveComment[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [count, setCount] = useState(initialCount)
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [replyTo, setReplyTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyBusy, setReplyBusy] = useState(false)
+
+  function refresh() {
+    fetch(`/api/social/journal/${postId}/comments`)
+      .then((r) => r.json())
+      .then((d) => { setComments(Array.isArray(d.comments) ? d.comments : []); setCount(typeof d.count === 'number' ? d.count : 0); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    setLoaded(false)
+    fetch(`/api/social/journal/${postId}/comments`)
+      .then((r) => r.json())
+      .then((d) => { if (cancelled) return; setComments(Array.isArray(d.comments) ? d.comments : []); setCount(typeof d.count === 'number' ? d.count : initialCount); setLoaded(true) })
+      .catch(() => { if (!cancelled) setLoaded(true) })
+    return () => { cancelled = true }
+  }, [postId, initialCount])
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`); return }
+    if (!text.trim() || busy) return
+    setBusy(true); setError('')
+    try {
+      const r = await fetch(`/api/social/journal/${postId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: text }) })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setError(d.error || 'Something went wrong'); setBusy(false); return }
+      setText(''); setBusy(false); refresh()
+    } catch { setError('Something went wrong'); setBusy(false) }
+  }
+
+  async function reply(parentId: string) {
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`); return }
+    if (!replyText.trim() || replyBusy) return
+    setReplyBusy(true); setError('')
+    try {
+      const r = await fetch(`/api/social/journal/${postId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: replyText, parentId }) })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setError(d.error || 'Something went wrong'); setReplyBusy(false); return }
+      setReplyText(''); setReplyTo(null); setReplyBusy(false); refresh()
+    } catch { setError('Something went wrong'); setReplyBusy(false) }
+  }
+
+  async function toggleHide(commentId: string, hidden: boolean) {
+    try {
+      await fetch(`/api/social/journal/${postId}/comments`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ commentId, hidden }) })
+    } catch { /* best-effort */ }
+    refresh()
+  }
+
+  const visible = comments.filter((c) => isPageOwner || !c.hidden)
+  const linkStyle: React.CSSProperties = { background: 'none', border: 'none', padding: 0, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }
+
+  return (
+    <section className="jp-section" id="comments">
+      <div className="jp-sechead">
+        <h2 className="jp-sectitle">Comments ({fmtK(count)})</h2>
+        <span className="jp-sort">Sort by: <span className="jp-sort-val">Newest</span> <span aria-hidden="true">&#9662;</span></span>
+      </div>
+      {session ? (
+        <form onSubmit={submit} className="jp-cinput">
+          <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Write a comment..."
+            maxLength={1000}
+            style={{ flex: 1, border: 'none', background: 'transparent', font: 'inherit', color: 'var(--mc-text)', outline: 'none' }}
+          />
+          <button type="submit" className="jp-cinput-send" aria-label="Post comment" disabled={busy || !text.trim()} style={{ background: 'none', border: 'none', cursor: busy ? 'wait' : 'pointer' }}>
+            <Ico d={P.send} size={12} />
+          </button>
+        </form>
+      ) : (
+        <Link href={`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || '/')}`} className="jp-cinput">
+          <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
+          <span className="jp-cinput-ph">Sign in to write a comment...</span>
+        </Link>
+      )}
+      {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: '8px 0 0' }}>{error}</p>}
+      {loaded && visible.length === 0 ? (
+        <p className="jp-note" style={{ margin: '10px 0 0' }}>No comments yet &mdash; be the first to tell {sellerName} what you think.</p>
+      ) : (
+        <div className="jp-comments">
+          {visible.map((c) => (
+            <div key={c.id} className="jp-comment" style={{ opacity: c.hidden ? 0.55 : 1 }}>
+              <span className="jp-comment-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mc-card2)', color: 'var(--mc-gold)' }} aria-hidden="true"><Ico d={P.user} size={13} /></span>
+              <div className="jp-comment-body">
+                <div className="jp-comment-top">
+                  <span className="jp-comment-name">{c.isSeller ? `${sellerName} (Maker)` : c.name}</span>
+                  <span className="jp-comment-time">{timeAgo(c.createdAt)}</span>
+                  {c.hidden && <span style={{ fontSize: 11, color: 'var(--red)' }}>Hidden</span>}
+                </div>
+                <p className="jp-comment-text">{c.body}</p>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 2 }}>
+                  <button type="button" onClick={() => setReplyTo(replyTo === c.id ? null : c.id)} style={{ ...linkStyle, color: 'var(--mc-gold)' }}>Reply</button>
+                  <ReportContentButton contentType="JOURNAL" contentId={c.id} />
+                  {isPageOwner && (
+                    <button type="button" onClick={() => toggleHide(c.id, !c.hidden)} style={{ ...linkStyle, color: 'var(--mc-muted)' }}>
+                      {c.hidden ? 'Unhide' : 'Hide'}
+                    </button>
+                  )}
+                </div>
+                {replyTo === c.id && (
+                  <form onSubmit={(e) => { e.preventDefault(); reply(c.id) }} style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                    <input
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Write a reply..."
+                      maxLength={1000}
+                      style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--mc-goldline)', background: 'var(--mc-card2)', color: 'var(--mc-text)', fontSize: 13.5 }}
+                      autoFocus
+                    />
+                    <button type="submit" disabled={replyBusy || !replyText.trim()} className="jp-goldbtn" style={{ border: 'none', cursor: replyBusy ? 'wait' : 'pointer' }}>Send</button>
+                  </form>
+                )}
+                {c.replies.filter((r) => isPageOwner || !r.hidden).map((r) => (
+                  <div key={r.id} style={{ marginTop: 10, marginLeft: 22, opacity: r.hidden ? 0.55 : 1 }}>
+                    <div className="jp-comment-top">
+                      <span className="jp-comment-name">{r.isSeller ? `${sellerName} (Maker)` : r.name}</span>
+                      <span className="jp-comment-time">{timeAgo(r.createdAt)}</span>
+                      {r.hidden && <span style={{ fontSize: 11, color: 'var(--red)' }}>Hidden</span>}
+                    </div>
+                    <p className="jp-comment-text">{r.body}</p>
+                    {isPageOwner && (
+                      <button type="button" onClick={() => toggleHide(r.id, !r.hidden)} style={{ ...linkStyle, color: 'var(--mc-muted)' }}>
+                        {r.hidden ? 'Unhide' : 'Hide'}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// "Ask the Maker" -- a general public Q&A board for the whole journal page
+// (2026-08-01, same request as JournalComments above), not tied to any one
+// entry. Any signed-in buyer can ask; the seller AND other buyers can
+// answer.
+function AskTheMakerBoard({ sellerId, sellerName }: { sellerId: string; sellerName: string }) {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const isPageOwner = (session?.user as { sellerId?: string } | undefined)?.sellerId === sellerId
+  const [questions, setQuestions] = useState<AskQuestion[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [replyTo, setReplyTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyBusy, setReplyBusy] = useState(false)
+
+  function refresh() {
+    fetch(`/api/social/sellers/${sellerId}/questions`)
+      .then((r) => r.json())
+      .then((d) => { setQuestions(Array.isArray(d.questions) ? d.questions : []); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    setLoaded(false)
+    fetch(`/api/social/sellers/${sellerId}/questions`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) { setQuestions(Array.isArray(d.questions) ? d.questions : []); setLoaded(true) } })
+      .catch(() => { if (!cancelled) setLoaded(true) })
+    return () => { cancelled = true }
+  }, [sellerId])
+
+  async function ask(e: React.FormEvent) {
+    e.preventDefault()
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent('/community/journals/' + sellerId)}`); return }
+    if (!text.trim() || busy) return
+    setBusy(true); setError('')
+    try {
+      const r = await fetch(`/api/social/sellers/${sellerId}/questions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: text }) })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setError(d.error || 'Something went wrong'); setBusy(false); return }
+      setText(''); setBusy(false); refresh()
+    } catch { setError('Something went wrong'); setBusy(false) }
+  }
+
+  async function answer(questionId: string) {
+    if (!session) { router.push(`/auth/sign-in?callbackUrl=${encodeURIComponent('/community/journals/' + sellerId)}`); return }
+    if (!replyText.trim() || replyBusy) return
+    setReplyBusy(true); setError('')
+    try {
+      const r = await fetch(`/api/social/sellers/${sellerId}/questions/${questionId}/answers`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: replyText }) })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setError(d.error || 'Something went wrong'); setReplyBusy(false); return }
+      setReplyText(''); setReplyTo(null); setReplyBusy(false); refresh()
+    } catch { setError('Something went wrong'); setReplyBusy(false) }
+  }
+
+  async function toggleHideQ(questionId: string, hidden: boolean) {
+    try {
+      await fetch(`/api/social/sellers/${sellerId}/questions`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questionId, hidden }) })
+    } catch { /* best-effort */ }
+    refresh()
+  }
+
+  async function toggleHideA(questionId: string, answerId: string, hidden: boolean) {
+    try {
+      await fetch(`/api/social/sellers/${sellerId}/questions/${questionId}/answers`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ answerId, hidden }) })
+    } catch { /* best-effort */ }
+    refresh()
+  }
+
+  const visible = questions.filter((q) => isPageOwner || !q.hidden)
+  const linkStyle: React.CSSProperties = { background: 'none', border: 'none', padding: 0, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }
+
+  return (
+    <section className="jp-section" id="ask-the-maker">
+      <div className="jp-sechead">
+        <h2 className="jp-sectitle">Ask {sellerName}</h2>
+      </div>
+      <p className="jp-note" style={{ margin: '0 0 12px' }}>
+        Real questions, answered by {sellerName} or other buyers &mdash; not tied to any one story.
+      </p>
+      {session ? (
+        <form onSubmit={ask} className="jp-cinput">
+          <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={`Ask ${sellerName} a question...`}
+            maxLength={500}
+            style={{ flex: 1, border: 'none', background: 'transparent', font: 'inherit', color: 'var(--mc-text)', outline: 'none' }}
+          />
+          <button type="submit" className="jp-cinput-send" aria-label="Ask" disabled={busy || !text.trim()} style={{ background: 'none', border: 'none', cursor: busy ? 'wait' : 'pointer' }}>
+            <Ico d={P.send} size={12} />
+          </button>
+        </form>
+      ) : (
+        <Link href={`/auth/sign-in?callbackUrl=${encodeURIComponent('/community/journals/' + sellerId)}`} className="jp-cinput">
+          <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
+          <span className="jp-cinput-ph">Sign in to ask {sellerName} a question...</span>
+        </Link>
+      )}
+      {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: '8px 0 0' }}>{error}</p>}
+      {loaded && visible.length === 0 ? (
+        <p className="jp-note" style={{ margin: '10px 0 0' }}>No questions yet &mdash; be the first to ask {sellerName} something.</p>
+      ) : (
+        <div className="jp-comments">
+          {visible.map((q) => (
+            <div key={q.id} className="jp-comment" style={{ opacity: q.hidden ? 0.55 : 1 }}>
+              <span className="jp-comment-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mc-card2)', color: 'var(--mc-gold)' }} aria-hidden="true"><Ico d={P.user} size={13} /></span>
+              <div className="jp-comment-body">
+                <div className="jp-comment-top">
+                  <span className="jp-comment-name">{q.name}</span>
+                  <span className="jp-comment-time">{timeAgo(q.createdAt)}</span>
+                  {q.hidden && <span style={{ fontSize: 11, color: 'var(--red)' }}>Hidden</span>}
+                </div>
+                <p className="jp-comment-text">{q.body}</p>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 2 }}>
+                  <button type="button" onClick={() => setReplyTo(replyTo === q.id ? null : q.id)} style={{ ...linkStyle, color: 'var(--mc-gold)' }}>Answer</button>
+                  <ReportContentButton contentType="QUESTION" contentId={q.id} />
+                  {isPageOwner && (
+                    <button type="button" onClick={() => toggleHideQ(q.id, !q.hidden)} style={{ ...linkStyle, color: 'var(--mc-muted)' }}>
+                      {q.hidden ? 'Unhide' : 'Hide'}
+                    </button>
+                  )}
+                </div>
+                {replyTo === q.id && (
+                  <form onSubmit={(e) => { e.preventDefault(); answer(q.id) }} style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                    <input
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Write an answer..."
+                      maxLength={2000}
+                      style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--mc-goldline)', background: 'var(--mc-card2)', color: 'var(--mc-text)', fontSize: 13.5 }}
+                      autoFocus
+                    />
+                    <button type="submit" disabled={replyBusy || !replyText.trim()} className="jp-goldbtn" style={{ border: 'none', cursor: replyBusy ? 'wait' : 'pointer' }}>Send</button>
+                  </form>
+                )}
+                {q.answers.filter((a) => isPageOwner || !a.hidden).map((a) => (
+                  <div key={a.id} style={{ marginTop: 10, marginLeft: 22, opacity: a.hidden ? 0.55 : 1 }}>
+                    <div className="jp-comment-top">
+                      <span className="jp-comment-name">{a.isSeller ? `${sellerName} (Maker)` : a.name}</span>
+                      <span className="jp-comment-time">{timeAgo(a.createdAt)}</span>
+                      {a.hidden && <span style={{ fontSize: 11, color: 'var(--red)' }}>Hidden</span>}
+                    </div>
+                    <p className="jp-comment-text">{a.body}</p>
+                    {isPageOwner && (
+                      <button type="button" onClick={() => toggleHideA(q.id, a.id, !a.hidden)} style={{ ...linkStyle, color: 'var(--mc-muted)' }}>
+                        {a.hidden ? 'Unhide' : 'Hide'}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -642,41 +976,11 @@ export default function SellerJournalView({
             )}
           </section>
 
-          {/* comments -- real, published */}
-          <section className="jp-section" id="comments">
-            <div className="jp-sechead">
-              <h2 className="jp-sectitle">Comments ({fmtK(entry.comments)})</h2>
-              <span className="jp-sort">Sort by: <span className="jp-sort-val">Newest</span> <span aria-hidden="true">&#9662;</span></span>
-            </div>
-            <Link href="/auth/join" className="jp-cinput">
-              <span className="jp-cinput-avatar" aria-hidden="true"><Ico d={P.user} size={13} /></span>
-              <span className="jp-cinput-ph">Write a comment...</span>
-              <span className="jp-cinput-send" aria-hidden="true"><Ico d={P.send} size={12} /></span>
-            </Link>
-            {entry.commentList.length === 0 ? (
-              <p className="jp-note" style={{ margin: 0 }}>No comments yet &mdash; be the first to tell {seller.storeName} what you think.</p>
-            ) : (
-              <>
-                <div className="jp-comments">
-                  {entry.commentList.map((c) => (
-                    <div key={c.id} className="jp-comment">
-                      <span className="jp-comment-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mc-card2)', color: 'var(--mc-gold)' }} aria-hidden="true"><Ico d={P.user} size={13} /></span>
-                      <div className="jp-comment-body">
-                        <div className="jp-comment-top">
-                          <span className="jp-comment-name">{c.name}</span>
-                          <span className="jp-comment-time">{timeAgo(c.createdAt)}</span>
-                        </div>
-                        <p className="jp-comment-text">{c.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {entry.comments > entry.commentList.length && (
-                  <a href="#comments" className="jp-viewall">View all comments <span aria-hidden="true">&rarr;</span></a>
-                )}
-              </>
-            )}
-          </section>
+          {/* comments -- real, live, interactive Q&A per entry */}
+          <JournalComments key={entry.id} postId={entry.id} sellerId={seller.id} sellerName={seller.storeName} initialCount={entry.comments} />
+
+          {/* ask the maker -- real, live, general Q&A for the whole journal */}
+          <AskTheMakerBoard sellerId={seller.id} sellerName={seller.storeName} />
 
           {/* more entries */}
           {posts.length > 1 && (
