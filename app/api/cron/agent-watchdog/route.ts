@@ -123,19 +123,47 @@ export async function GET(req: NextRequest) {
   checks.staleCertificates = staleCertificates
   if (staleCertificates > 0) breaches.push(`${staleCertificates} certificate document(s) awaiting review for over 48 hours.`)
 
-  // Record the run honestly, breaches and all.
+  // Alert cooldown (William, 2026-07-31): a breach that stays open re-fires a
+  // fresh email on EVERY hourly run by default -- one stale ticket produced
+  // 20 identical emails in a row before it was resolved. Real behaviour
+  // change, not just cosmetic: a genuinely NEW or WORSENED breach (different
+  // breach list than last time) still alerts immediately every time, since
+  // that's new information. An UNCHANGED, still-open breach only re-alerts
+  // once the cooldown has elapsed since the last email actually sent --
+  // still escalating periodically so an ignored breach isn't silenced
+  // forever, just not once an hour.
+  const ALERT_COOLDOWN_MS = 4 * HOURS
+
+  const previousBreachLog = await prisma.agentLog.findFirst({
+    where: { agentName: 'agent-watchdog', status: 'breaches-found' },
+    orderBy: { createdAt: 'desc' },
+  })
+  const previousDetails = (previousBreachLog?.details ?? null) as { breaches?: string[]; alertSent?: boolean } | null
+  const sameBreachesAsLastTime =
+    !!previousBreachLog && JSON.stringify(previousDetails?.breaches ?? []) === JSON.stringify(breaches)
+  const lastAlertWasWithinCooldown =
+    !!previousBreachLog &&
+    previousDetails?.alertSent === true &&
+    now - previousBreachLog.createdAt.getTime() < ALERT_COOLDOWN_MS
+  const shouldAlert = breaches.length > 0 && !(sameBreachesAsLastTime && lastAlertWasWithinCooldown)
+
+  // Record the run honestly, breaches and all -- including whether this run
+  // actually sent an email, so the next run's cooldown check has something
+  // real to look at rather than re-deriving it.
+  const runDetails: Record<string, unknown> = { checks, breaches }
+  if (breaches.length > 0) runDetails.alertSent = shouldAlert
   await prisma.agentLog.create({
     data: {
       agentName: 'agent-watchdog',
       action: 'hourly-check',
       status: breaches.length === 0 ? 'success' : 'breaches-found',
-      details: { checks, breaches },
+      details: runDetails,
     },
   })
 
-  if (breaches.length > 0) {
+  if (shouldAlert) {
     await sendAlert(`${breaches.length} agent dut${breaches.length === 1 ? 'y' : 'ies'} breached`, breaches)
   }
 
-  return NextResponse.json({ ok: true, breaches: breaches.length, checks })
+  return NextResponse.json({ ok: true, breaches: breaches.length, checks, alertSent: shouldAlert })
 }
