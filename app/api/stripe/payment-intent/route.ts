@@ -13,6 +13,23 @@ export const dynamic = 'force-dynamic'
 const PLATFORM_COMMISSION_RATE = 0.1
 const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0.04 } // ENTERPRISE retired 2026-07-15: legacy rows read as Pro
 
+// Velor Roots Foundation checkout micro-donation (William, 2026-07-31).
+// HELD DARK: CHARITY_DONATIONS_ENABLED must stay unset/false in every
+// environment until Velor Roots Foundation is actually a legally registered
+// UK charity -- soliciting donations in the name of an unregistered charity
+// is a real misrepresentation problem, not a formality. When the flag is
+// off, any donationGBP the client sends is silently zeroed below rather than
+// erroring, so old cached client bundles (or a stray request) can never
+// sneak a charge through. Do not flip this on without confirming
+// registration with William first -- this is not a routine feature flag.
+const CHARITY_DONATIONS_ENABLED = process.env.CHARITY_DONATIONS_ENABLED === 'true'
+// Fixed allowlist, matching the three amounts offered in the checkout UI
+// (app/checkout/page.tsx) -- 20p / 50p / £1. Anything else (including
+// negative numbers, huge numbers, or a value with more than 2dp of drift)
+// is rejected back to 0 rather than trusted, same "never trust a
+// client-supplied amount" principle as every other price on this route.
+const ALLOWED_DONATION_AMOUNTS_GBP = new Set([0.2, 0.5, 1])
+
 // Preview-only listing (William, 2026-07-27, same brief as
 // app/shop/[productId]/ProductPageClient.tsx's PREVIEW_ONLY_PRODUCT_ID):
 // the UI already disables Add to Cart/Buy Now for this product, but this
@@ -90,7 +107,16 @@ export async function POST(request: NextRequest) {
       sellerShipping,
       buyerName,
       shippingAddress,
+      donationGBP,
     } = await request.json()
+
+    // Silently clamp to 0 rather than error -- an invalid or disabled
+    // donation must never block an otherwise-valid checkout. See the
+    // CHARITY_DONATIONS_ENABLED comment above.
+    const donationAmountGBP =
+      CHARITY_DONATIONS_ENABLED && ALLOWED_DONATION_AMOUNTS_GBP.has(round2(Number(donationGBP) || 0))
+        ? round2(Number(donationGBP) || 0)
+        : 0
 
     // The buyer's account email is the one and only trusted identity tied to
     // this order -- never whatever a client form field says. This is what
@@ -429,16 +455,25 @@ export async function POST(request: NextRequest) {
     let subtotalCharge = grandDiscountedSubtotalGBP
     let shippingCharge = grandShippingGBP
     let dutiesCharge = grandDutiesGBP
-    let totalCharge = totalGBP
+    // Donation is added to what's actually charged but deliberately kept OUT
+    // of totalGBP/sellerBreakdown below -- it belongs to no seller and isn't
+    // platform revenue, so lib/orders.ts's per-seller Order totals never see
+    // it. It's charged, then reconciled separately into CharityDonation (see
+    // prisma schema) by createOrderFromPaymentIntent.
+    let totalCharge = totalGBP + donationAmountGBP
     let discountCharge = grandDiscountGBP
+    let donationCharge = donationAmountGBP
 
     if (buyerCurrency !== 'GBP') {
       subtotalCharge = await convert(grandDiscountedSubtotalGBP, 'GBP', buyerCurrency)
       shippingCharge = await convert(grandShippingGBP, 'GBP', buyerCurrency)
       dutiesCharge = await convert(grandDutiesGBP, 'GBP', buyerCurrency)
-      totalCharge = await convert(totalGBP, 'GBP', buyerCurrency)
+      totalCharge = await convert(totalGBP + donationAmountGBP, 'GBP', buyerCurrency)
       if (grandDiscountGBP > 0) {
         discountCharge = await convert(grandDiscountGBP, 'GBP', buyerCurrency)
+      }
+      if (donationAmountGBP > 0) {
+        donationCharge = await convert(donationAmountGBP, 'GBP', buyerCurrency)
       }
     }
 
@@ -495,6 +530,12 @@ export async function POST(request: NextRequest) {
         shippingGBP: grandShippingGBP.toFixed(2),
         dutiesGBP: grandDutiesGBP.toFixed(2),
         totalGBP: totalGBP.toFixed(2),
+        // Velor Roots Foundation checkout donation, GBP, always 0.00 while
+        // CHARITY_DONATIONS_ENABLED is off. Read by
+        // lib/orders.ts::createOrderFromPaymentIntent to write ONE
+        // CharityDonation row per payment (never per seller) -- kept
+        // deliberately separate from totalGBP/sellerBreakdown above.
+        donationGBP: donationAmountGBP.toFixed(2),
         chargeCurrency: buyerCurrency,
         chargeAmount: totalCharge.toFixed(2),
         applicationFee: String(grandApplicationFee),
@@ -518,6 +559,7 @@ export async function POST(request: NextRequest) {
         dutiesAmount: Number(dutiesCharge.toFixed(2)),
         discountAmount: Number(discountCharge.toFixed(2)),
         discountCodes: discountCodesApplied,
+        donationAmount: Number(donationCharge.toFixed(2)),
         total: Number(totalCharge.toFixed(2)),
       },
     })
