@@ -1346,3 +1346,38 @@ model Notification {
 
   @@index([userId, readAt, createdAt])
 }
+
+// Velor Roots Foundation checkout micro-donation ledger (William, 2026-07-31).
+// One row per PAID PaymentIntent that included a donation -- NOT per seller
+// order, since a buyer's optional 20p/50p/£1 add-on is a single amount for
+// the whole cart, independent of how many sellers/Orders that payment spawns
+// (see lib/orders.ts createOrderFromPaymentIntent, which creates one Order
+// per seller but should only ever create ONE CharityDonation per payment).
+// stripePaymentId is unique for exactly that reason: idempotent no matter how
+// many times the webhook or the checkout-confirmation accelerator calls
+// createOrderFromPaymentIntent for the same PaymentIntent.
+//
+// IMPORTANT: this table can accumulate rows the moment
+// CHARITY_DONATIONS_ENABLED is flipped on server-side, but Velor Roots
+// Foundation is NOT YET a registered UK charity as of 2026-07-31 -- both
+// CHARITY_DONATIONS_ENABLED (server) and NEXT_PUBLIC_CHARITY_DONATIONS_ENABLED
+// (client) must stay unset/false until the charity is legally registered
+// with the Charity Commission. Do not remove this comment when flipping the
+// flags -- update it to record the registration date instead.
+model CharityDonation {
+  id              String   @id @default(cuid())
+  stripePaymentId String   @unique
+  amountGBP       Float
+  customerEmail   String?
+  // Snapshot status of the recipient charity at the time this donation was
+  // collected -- always "VELOR_ROOTS_FOUNDATION_PENDING_REGISTRATION" until
+  // the charity's registered number is recorded here after registration.
+  charityStatus   String   @default("VELOR_ROOTS_FOUNDATION_PENDING_REGISTRATION")
+  // Set once Velor Roots Foundation is registered and the collection
+  // agreement is signed -- null until then. Remittance is a manual,
+  // trustee-overseen process while the charity is young, not automated here.
+  remittedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
