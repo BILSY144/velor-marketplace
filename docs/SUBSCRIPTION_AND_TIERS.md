@@ -1,5 +1,29 @@
 # Velor Marketplace — Subscription Tiers & Billing (LOCKED SPEC)
 
+**2026-07-31 update #2 (William's decision, via Claude session): COMMISSION FLOOR SO VELOR CAN NEVER LOSE MONEY ON A SALE.**
+Stripe's card processing fee is charged on the FULL amount collected on a
+PaymentIntent (goods + shipping), not on whatever slice of it Velor calls
+"commission" -- and it's debited from Velor's own platform balance before any
+seller transfer happens (see the Stripe fee mechanics note further down).
+Two gaps meant a sale could previously cost more in Stripe fees than Velor
+earned in commission: (1) commission was calculated on the discounted goods
+subtotal only, ignoring shipping, so a low-price/high-shipping order barely
+generated any commission even though Stripe's fee scaled with the whole
+charge; (2) on very small orders, a percentage commission can fall under
+Stripe's fixed ~20p-per-charge component regardless of rate. Fixed in
+`app/api/stripe/payment-intent/route.ts`: commission is now calculated on
+(discounted goods subtotal + shipping) -- everything Stripe's fee is actually
+charged against, excluding the duties/VAT pass-through amount, which is
+customs money in transit to HMRC or the seller's DDP shipment and was never
+Velor's to take a cut of -- with a `STRIPE_MIN_COMMISSION_GBP = 0.35` floor
+applied per seller parcel (not once per multi-seller order, so it stays safe
+even though Stripe only charges its fee once per PaymentIntent). Applies to
+every seller including the one grandfathered 4% seller -- "under no
+circumstances we lose money" overrides the exact tier percentage on the rare
+tiny-order edge case. `sellerShareGBP` is also clamped at a 0 floor as a
+last-resort safety net against a negative payout on a pathological
+near-zero-value cart.
+
 **2026-07-31 update (William's decision, via Claude session): SELF-SERVE PRO TIER RETIRED. FLAT 10% COMMISSION FOR EVERYONE, ONE GRANDFATHERED EXCEPTION.**
 No more purchasable tiers, full stop -- "no tiers at all." Every seller pays
 a flat 10% commission on every completed sale. There is no £49/mo Pro

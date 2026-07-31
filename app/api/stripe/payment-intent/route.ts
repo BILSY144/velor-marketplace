@@ -13,6 +13,27 @@ export const dynamic = 'force-dynamic'
 const PLATFORM_COMMISSION_RATE = 0.1
 const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0.04 } // ENTERPRISE retired 2026-07-15: legacy rows read as Pro
 
+// "Never lose money on a sale" fix (William, 2026-07-31). Stripe's card fee
+// (UK: ~1.5% + GBP0.20) is charged on the FULL amount collected on this
+// PaymentIntent -- product + shipping together -- not on whatever slice
+// Velor calls "commission". Two gaps used to let a sale cost Velor more in
+// Stripe fees than it earned in commission:
+//   1. Commission was calculated on discountedSubtotalGBP ONLY, ignoring
+//      shipping. A low-price item with expensive shipping (e.g. GBP2 item,
+//      GBP15 shipping) generated almost no commission even though Stripe's
+//      fee scales with the whole GBP17 charge.
+//   2. On very small orders, the *rate* commission (10% or 4%) can fall
+//      below Stripe's fixed ~20p-per-charge component regardless of base.
+// Fix: commission is now calculated on (discountedSubtotalGBP + shippingGBP)
+// -- i.e. everything Stripe actually charges the card fee against, other
+// than the pass-through duties/VAT amount, which is customs money in
+// transit to HMRC/the seller's DDP shipment, never Velor's to take a cut of
+// -- with a per-seller-parcel floor. Applied per seller group (not once per
+// order) so a multi-seller cart is always covered even though Stripe only
+// charges its fee once per PaymentIntent -- this errs safely in Velor's
+// favour rather than trying to divide one floor across sellers.
+const STRIPE_MIN_COMMISSION_GBP = 0.35
+
 // Velor Roots Foundation checkout micro-donation (William, 2026-07-31).
 // HELD DARK: CHARITY_DONATIONS_ENABLED must stay unset/false in every
 // environment until Velor Roots Foundation is actually a legally registered
@@ -424,8 +445,18 @@ export async function POST(request: NextRequest) {
 
       const commissionRate = TIER_COMMISSION[group.tier as unknown as string] ?? PLATFORM_COMMISSION_RATE
       const sellerTotalGBP = discountedSubtotalGBP + shippingGBP + dutiesGBP
-      const applicationFeeAmount = Math.round(discountedSubtotalGBP * commissionRate * 100)
-      const sellerShareGBP = sellerTotalGBP - discountedSubtotalGBP * commissionRate - vatGBP
+      // Commission base = goods + shipping (what Stripe's fee is actually
+      // charged against, minus the duties/VAT pass-through). Floored at
+      // STRIPE_MIN_COMMISSION_GBP so a tiny order can never cost more in
+      // Stripe fees than Velor earns from it. See the comment on
+      // STRIPE_MIN_COMMISSION_GBP above for the full rationale.
+      const commissionBaseGBP = discountedSubtotalGBP + shippingGBP
+      const commissionGBP = Math.max(commissionBaseGBP * commissionRate, STRIPE_MIN_COMMISSION_GBP)
+      const applicationFeeAmount = Math.round(commissionGBP * 100)
+      // Clamped at 0 as a last-resort safety net -- with realistic listing
+      // prices this should never trigger, but it stops a pathological
+      // near-zero-value cart from producing a negative seller payout.
+      const sellerShareGBP = Math.max(0, sellerTotalGBP - commissionGBP - vatGBP)
 
       grandSubtotalGBP += group.subtotalGBP
       grandDiscountedSubtotalGBP += discountedSubtotalGBP
