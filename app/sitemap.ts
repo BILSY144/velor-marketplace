@@ -188,11 +188,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // middleware.ts check already documented for /workshop and /drops above.
     // changeFrequency/priority match /workshop -- both are hub/feed-style
     // pages whose content genuinely changes often, distinct from the static
-    // monthly pages below. Deliberately NOT adding /community/[section] or
-    // /community/journals here this cycle -- see this cycle's SEO_LOG.md
-    // entry and backlog for why (several [section] pages are explicit
-    // "being crafted right now" placeholders needing separate treatment).
+    // monthly pages below.
     { url: `${base}/community`, changeFrequency: 'daily', priority: 0.6 },
+    // Eight /community/* sub-routes added 2026-07-31 by the standing SEO
+    // agent (full audit cycle). All shipped 2026-07-30/31 (commits
+    // 952e975d, 185c20a9) as real, DB-backed pages -- three ("featured",
+    // "journals", "ask") replacing what used to fall through to the
+    // /community/[section] "being crafted right now" placeholder, and five
+    // more ("videos", "world", "collections", "learning", "countries")
+    // built the same way per William: "a lot of the clickable
+    // links/buttons go nowhere." Each is prominently linked from
+    // /community's own section boxes (app/community/CommunityPageClient.tsx,
+    // confirmed via grep) and now has its own real generateMetadata-
+    // equivalent (a sibling layout.tsx with title/description/canonical/
+    // OG/Twitter, added this same cycle -- see each route's own
+    // app/community/<slug>/layout.tsx) so it no longer inherits /community's
+    // canonical, the same false-canonical shape backlog items 2/3/8 already
+    // fixed for /shop and /shop/[productId]. All confirmed not auth-gated
+    // (same middleware.ts check already documented for /workshop/community
+    // above). changeFrequency 'daily' for the two genuinely live/newest-
+    // first feeds (featured, journals); 'weekly' for the rest, which
+    // reflect real but slower-moving underlying data (seller/product/video
+    // counts, follower rankings). Priority 0.5, one notch below the
+    // /community hub itself (0.6) -- real, permanent, linked content, but
+    // one level deeper in the site's own hierarchy. /community/journals/
+    // [sellerId] is deliberately NOT listed -- it is now a plain redirect
+    // to /seller/[sellerId] (commit f170c61a), which is already covered by
+    // this sitemap's dynamic seller-URL section below with its own real
+    // metadata. /community/[section]'s remaining live slug ("challenge", an
+    // honest "being crafted right now" placeholder) is also deliberately
+    // NOT listed -- unresolved judgment call, see backlog item 50.
+    { url: `${base}/community/featured`, changeFrequency: 'daily', priority: 0.5 },
+    { url: `${base}/community/journals`, changeFrequency: 'daily', priority: 0.5 },
+    { url: `${base}/community/ask`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/videos`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/world`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/collections`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/learning`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/countries`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/community/passport`, changeFrequency: 'weekly', priority: 0.5 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
     // /mission added 2026-07-23 (commit dbab69cc) -- a static, real-content
     // page (mission/values/seller-guidelines) with its own generateMetadata
