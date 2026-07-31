@@ -150,8 +150,7 @@ export async function GET(req: NextRequest) {
   // Record the run honestly, breaches and all -- including whether this run
   // actually sent an email, so the next run's cooldown check has something
   // real to look at rather than re-deriving it.
-  const runDetails: Record<string, unknown> = { checks, breaches }
-  if (breaches.length > 0) runDetails.alertSent = shouldAlert
+  const runDetails = breaches.length > 0 ? { checks, breaches, alertSent: shouldAlert } : { checks, breaches }
   await prisma.agentLog.create({
     data: {
       agentName: 'agent-watchdog',
