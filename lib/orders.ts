@@ -643,6 +643,39 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
     )
   }
 
+  // Velor Roots Foundation checkout donation (William, 2026-07-31) -- ONE
+  // row per PAYMENT, never per seller (see CharityDonation in
+  // prisma/schema.prisma). donationGBP is always "0.00" while
+  // CHARITY_DONATIONS_ENABLED is off server-side (see
+  // app/api/stripe/payment-intent/route.ts), so this is a no-op in normal
+  // operation today. Idempotency is via the model's own @unique
+  // stripePaymentId, NOT newlyCreatedCount -- this function can be called
+  // again for the same PaymentIntent (webhook retry, or racing against the
+  // checkout-confirmation accelerator) after every seller order already
+  // exists, and the donation row must still only ever be created once. The
+  // P2002 catch mirrors the same race-tolerant pattern used for Order
+  // creation above.
+  const donationAmountGBP = Math.round((Number(md.donationGBP) || 0) * 100) / 100
+  if (donationAmountGBP > 0) {
+    try {
+      await prisma.charityDonation.create({
+        data: {
+          stripePaymentId: pi.id,
+          amountGBP: donationAmountGBP,
+          customerEmail: customerEmail || null,
+        },
+      })
+    } catch (err: unknown) {
+      const isDuplicate =
+        err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'P2002'
+      if (!isDuplicate) {
+        // Best-effort, isolated: a donation-ledger failure must never roll
+        // back or fail an already-successful, already-paid order.
+        console.error('[createOrderFromPaymentIntent] CharityDonation creation failed for payment', pi.id, err)
+      }
+    }
+  }
+
   // newOrderCount is 0 on a pure retry/race (every seller's order already
   // existed) -- callers use this to gate one-time side effects like
   // discount-usage increments so a retried Stripe webhook delivery can't
