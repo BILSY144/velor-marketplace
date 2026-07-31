@@ -962,7 +962,29 @@ export default function HomePage() {
           button. */}
 
       {/* ============ CULTURE REELS — the shop windows ============ */}
-      {orderedReels.map((reel, ri) => reel.comingSoon ? (
+      {orderedReels.map((reel, ri) => {
+        // A `comingSoon` reel (currently only Artisan Pet Goods -- see its
+        // definition above) has zero curated example tiles, so its "seat
+        // count" is 0. Two bugs used to keep it stuck on the honest
+        // "Opening soon" band FOREVER, even after a seller's real listing
+        // was approved, contradicting this file's own promise ("the moment
+        // a seller lists handmade pet goods, this becomes a real reel"):
+        // (1) the coming-soon branch below was chosen purely from the
+        // static `reel.comingSoon` flag, never rechecked against real data;
+        // (2) even the real-tile branch capped real products to
+        // `reel.tiles.length`, which is 0 for this reel, so a real listing
+        // would always be sliced down to zero anyway. Found 2026-07-31
+        // (William: a seller listed a real Artisan Pet Goods product and
+        // the reel still showed "Opening soon"). Fixed by computing real
+        // products FIRST (uncapped when a reel has no curated tiles, via
+        // `|| Infinity`), then only falling back to the coming-soon band
+        // when a reel is flagged AND genuinely has zero real listings yet.
+        // Every other reel already has a populated `tiles` array, so this
+        // is a no-op for them -- `reel.tiles.length || Infinity` still
+        // evaluates to their real (nonzero) seat count.
+        const realProducts = (categoryProductsLower.get(reel.title.toLowerCase()) ?? []).slice(0, reel.tiles.length || Infinity)
+        const showComingSoon = !!reel.comingSoon && realProducts.length === 0
+        return showComingSoon ? (
         <section key={reel.title} style={{ paddingTop: ri === 0 ? 34 : 6, paddingBottom: 0 }}>
           <div className="vh-wrap">
             <div className="vh-shead">
@@ -1002,8 +1024,9 @@ export default function HomePage() {
                 // then" -- "at the very beginning of the reel"). Capped to
                 // this reel's own seat count so a category never grows past
                 // its curated default; the example tiles fill whatever
-                // seats real listings haven't claimed yet.
-                const realProducts = (categoryProductsLower.get(reel.title.toLowerCase()) ?? []).slice(0, reel.tiles.length)
+                // seats real listings haven't claimed yet. `realProducts` is
+                // already computed above (shared with the showComingSoon
+                // check) -- reused here rather than recomputed.
                 const stockTiles = reel.tiles.slice(0, Math.max(0, reel.tiles.length - realProducts.length))
                 return (
                   <>
@@ -1115,7 +1138,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      ))}
+      )})}
 
       {/* ============ COUNTRIES ============ */}
       <section id="origins">
