@@ -1,5 +1,64 @@
 # Velor Marketplace — Subscription Tiers & Billing (LOCKED SPEC)
 
+**2026-07-31 update (William's decision, via Claude session): SELF-SERVE PRO TIER RETIRED. FLAT 10% COMMISSION FOR EVERYONE, ONE GRANDFATHERED EXCEPTION.**
+No more purchasable tiers, full stop -- "no tiers at all." Every seller pays
+a flat 10% commission on every completed sale. There is no £49/mo Pro
+subscription anymore; `POST /api/seller/subscription {action:'upgrade_to_pro'}`
+now unconditionally refuses the request for every seller (it used to also
+refuse for founding sellers specifically, as a defense-in-depth check --
+now it refuses for everyone, since there's nothing left to buy).
+
+**The one exception**: exactly one existing seller (not William's own
+"williams workshop" store) already had the 4% commission promised to them
+and keeps it, grandfathered. William's own seller account was moved off
+Pro/founding back onto the flat 10% rate in the same change -- he explicitly
+excluded himself ("we have 1 seller who receives the 4% commission not
+including me... we will honour that. but for everyone else they are put on
+the 10% commission rate no tiers at all"). This grandfather is a one-time,
+manual DB correction, not something any code path re-derives -- there is no
+list of "who else might qualify."
+
+**The founding-seller programme is REVISED, not deleted** (see
+`lib/founding.ts`'s `grantCountryFounderIfFirst`, called from product
+approval). The first verified seller from each of Velor's 190 country pages
+still gets recognised as that country's founder, but as of this decision the
+perk is **badge + permanent priority search placement only** -- William's
+explicit follow-up decision once he'd confirmed the commission change:
+"but we need to come up with some sort of benefits a feature founder gets" →
+"Permanent badge + priority placement." The perk bundle it used to include
+(tier: PRO, i.e. 4% commission, unlimited listings, the dedicated AI account
+manager, full API access, a free custom storefront) is **no longer granted
+to new founders** -- `grantCountryFounderIfFirst` sets `foundingBadge: true`
+and `foundingPerksGrantedAt`, and deliberately does NOT touch `tier` anymore.
+The priority-placement mechanism moved from the old tier-based ranking boost
+(`TIER_BOOST` in `lib/seller-ranking.ts`) to a parallel `FOUNDING_BOOST`
+keyed off `foundingBadge` directly, same magnitude (8), combined with
+`Math.max()` rather than summed so the one grandfathered seller (who is both
+PRO-tier and founding-badged) isn't double-boosted.
+
+Public copy updated to match: `app/founding/page.tsx`, the "Founding
+sellers" section and honest-maths calculator on `app/sell/page.tsx`, the
+seller-agreement pages (`app/seller-agreement/page.tsx`,
+`app/legal/seller-agreement/page.tsx`, `components/SellerAgreementGate.tsx`),
+and the dashboard (`components/dashboard/TierUpgradeView.tsx`,
+`app/dashboard/layout.tsx`'s sidebar plan card, `app/dashboard/settings`,
+`app/dashboard/support`, `app/dashboard/api-keys`) all now describe the flat
+10% rate plus the badge-only founding perk, and no longer offer or describe
+a purchasable Pro tier. NOT updated in this pass (flagged, not done): the
+19-language outreach email templates in `lib/outreachEmail.ts` /
+`lib/outreachI18n.ts`, and the React Native mobile app's upgrade screens
+(`mobile/src/screens/DashScreen.tsx`, `SellerOpsScreens.tsx`) -- both still
+describe the old Pro-tier-for-founders promise and need a follow-up pass.
+
+The `TIER_COMMISSION` map itself (`app/api/stripe/payment-intent/route.ts`)
+is UNCHANGED -- `{ STARTER: 0.1, PRO: 0.04, ENTERPRISE: 0.04 }` was already
+correct for "10% standard / 4% for whoever holds PRO tier"; what changed is
+who is allowed to hold PRO tier (nobody new, only the one grandfathered row)
+and what founding status grants when it doesn't also carry PRO tier (badge +
+placement, not commission). No money-calculation code needed to change.
+
+---
+
 **2026-07-15 update (William's decision, via Claude session): ENTERPRISE TIER RETIRED.**
 Two tiers remain. Pro (£49/mo, 4% commission) inherited every Enterprise
 feature: unlimited listings, Go Live video shopping, the dedicated AI account
@@ -20,7 +79,7 @@ Last locked: 2026-07-04.
 
 **2026-07-13 update (William's decision, via Claude session):** Commission rates changed to new permanent figures -- Starter 10% (was 12%), Pro 4% (was 8%), Enterprise 0% (was 5%). Monthly subscription fees unchanged (Pro £49/mo, Enterprise £99/mo per the app -- note this doc's own Stripe price-object reference for Enterprise below still shows £199/mo, a pre-existing discrepancy NOT resolved by this change and flagged for William to verify live in Stripe). RESOLVED 2026-07-14: the Stripe Enterprise price object really was £199/mo and STRIPE_ENTERPRISE_PRICE_ID pointed at it — a live overcharge risk (never triggered, 0 subscriptions). Fixed by creating a new £99/mo default price (price_1Tt7a6DB5eA3WfmuKt5ocwCv), deleting the £199 price, updating the Vercel env var, and redeploying (confirmed Ready in Production). Updated across roughly 30 files site-wide (API routes, dashboard/legal/help pages, public/llms.txt, this doc, docs/PAYOUTS.md, docs/GLOBAL_MARKETING_STRATEGY.md, and all 19 outreach email translations in lib/outreachI18n.ts). Two fields intentionally left as flat non-tier-aware rates rather than risk an unreviewed behavioural change: OrderItem.commission in app/api/orders/route.ts and PLATFORM_FEE_RATE in app/api/dashboard/orders/route.ts. See CLAUDE.md 2026-07-13 checkpoint for full detail.
 
-## Tiers
+## Tiers (SUPERSEDED 2026-07-31 — see the note at the top of this file. Kept as history only; there is no longer a purchasable tier of any kind.)
 
 | Tier | Price | Commission | Listings | Extras |
 |------|-------|-----------|----------|--------|

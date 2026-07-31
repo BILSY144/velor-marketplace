@@ -7,24 +7,14 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 // they sell. Nothing calls this anymore (see grantCountryFounderIfFirst
 // below for the live mechanism); kept only so it isn't a breaking removal
 // for any caller added elsewhere later.
-export async function maybeGrantFoundingPerks(sellerId: string): Promise<void> {
-  const seller = await prisma.seller.findUnique({
-    where: { id: sellerId },
-    select: { id: true, foundingEligible: true, foundingPerksGrantedAt: true, tier: true },
-  })
-  if (!seller || !seller.foundingEligible || seller.foundingPerksGrantedAt) return
-
-  const productCount = await prisma.product.count({ where: { sellerId } })
-  if (productCount < 1) return
-
-  await prisma.seller.update({
-    where: { id: sellerId },
-    data: {
-      foundingPerksGrantedAt: new Date(),
-      foundingBadge: true,
-      tier: 'PRO',
-    },
-  })
+//
+// 2026-07-31 FROZEN (William's decision, via Claude session): even if
+// something does start calling this again, it must not grant the Pro-tier
+// perk anymore -- see the note on grantCountryFounderIfFirst below. Left as
+// a no-op rather than deleted so a future caller gets an obvious empty
+// result instead of a silent tier grant.
+export async function maybeGrantFoundingPerks(_sellerId: string): Promise<void> {
+  return
 }
 
 // Founding credit, decoupled from Seller.country -- see the CountryFounder
@@ -42,6 +32,25 @@ export async function maybeGrantFoundingPerks(sellerId: string): Promise<void> {
 // span, they just can't collect more than one founding credit. A P2002
 // here just means someone else got there first (or this seller already
 // holds a country), which is expected and not an error.
+//
+// 2026-07-31 REVISED (William's decision, via Claude session): the founding
+// programme no longer grants the Pro-tier commission perk (4% + unlimited
+// listings + AI account manager + API access + custom storefront) to new
+// sellers. Velor now runs a single flat 10% commission for everyone going
+// forward -- "no tiers at all" on commission. Exactly one pre-existing
+// seller keeps the 4% rate already promised to them (a manual, one-time
+// grandfather, not driven by this function); William's own seller account
+// was moved off Pro/founding back to the flat rate in the same change.
+//
+// What a new country-founder DOES still get (William's follow-up decision,
+// same session): the permanent "Founding Seller" badge and the priority
+// search-placement boost that comes with it (see FOUNDING_BOOST in
+// lib/seller-ranking.ts) -- pure recognition/visibility, zero commission
+// impact, costs Velor nothing. That's why foundingBadge is still granted
+// below; tier is deliberately NOT touched (stays whatever it already was --
+// STARTER for a brand-new seller).
+// See docs/SUBSCRIPTION_AND_TIERS.md for the full decision record, and
+// app/founding/page.tsx + app/sell/page.tsx for the corresponding copy.
 export async function grantCountryFounderIfFirst(
   sellerId: string,
   productId: string,
@@ -62,12 +71,11 @@ export async function grantCountryFounderIfFirst(
     throw err
   }
 
-  // First (and only) country founded also activates the account-wide
-  // perks -- Pro tier at no charge. This can only run once per seller: a
-  // second call for the same seller would already have failed the create
-  // above via the sellerId unique constraint.
+  // Badge + priority placement only -- NOT tier. A second call for the same
+  // seller can't happen (the sellerId unique constraint on CountryFounder
+  // already threw above), so this always runs at most once per seller.
   await prisma.seller.update({
     where: { id: sellerId },
-    data: { foundingPerksGrantedAt: new Date(), foundingBadge: true, tier: 'PRO' },
+    data: { foundingPerksGrantedAt: new Date(), foundingBadge: true },
   })
 }

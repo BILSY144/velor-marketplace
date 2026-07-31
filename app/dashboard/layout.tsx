@@ -386,23 +386,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ))}
       </ul>
     </div>
-  ) : (
-    <Link href="/dashboard/upgrade" className="dsh-procard dsh-procard-upgrade">
+  ) : founding ? (
+    // 2026-07-31 (William's follow-up decision, same session): a NEW
+    // country-founder (tier stayed STARTER, so they're not in the PRO
+    // branch above) still gets the badge + priority placement perk -- just
+    // not a commission change. See lib/founding.ts / lib/seller-ranking.ts.
+    <div className="dsh-procard">
       <div className="dsh-procard-head">
-        <span className="dsh-propill">PRO</span>
-        Go Pro &mdash; &pound;49/mo
+        <span className="dsh-propill">★</span>
+        Founding seller
       </div>
-      <ul className="dsh-prolist">
-        {PRO_BENEFITS.map((b) => (
-          <li key={b.label}>
-            <span className="dsh-protick" aria-hidden>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m4 13 5 5L20 6" /></svg>
-            </span>
-            <span>{b.label}</span>
-          </li>
-        ))}
-      </ul>
-      <span className="dsh-upgradecta">See plans &rarr;</span>
+      <div className="dsh-procard-note">Permanent badge + priority placement. Commission stays the standard 10%.</div>
+    </div>
+  ) : (
+    // 2026-07-31 (William's decision, via Claude session): the self-serve
+    // Pro purchase is retired -- this is no longer an upsell card, just a
+    // plain statement of the flat rate every non-founding seller is on.
+    // The one grandfathered seller keeps the 4% rate already promised to
+    // them (top branch); nobody else can buy their way to a lower one.
+    <Link href="/dashboard/upgrade" className="dsh-procard">
+      <div className="dsh-procard-head">
+        <span className="dsh-propill" style={{ background: 'linear-gradient(135deg, #6b7280, #4b5563)' }}>10%</span>
+        Your commission rate
+      </div>
+      <div className="dsh-procard-note">Flat for every seller — no paid plan to upgrade to.</div>
     </Link>
   );
 

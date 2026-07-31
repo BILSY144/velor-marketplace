@@ -117,7 +117,7 @@ export default function SellerAgreementGate({ children }: { children: React.Reac
             </p>
 
             <GateRule title="Commission & Fees">
-              Velor charges commission on every completed sale, based on your subscription tier: 10% on Starter (free), 4% on Pro (£49/month), applied to the total price including VAT. No listing fees, ever.
+              Velor charges a flat 10% commission on every completed sale, applied to the total price including VAT. There's no paid plan to lower it — the only exception is Velor's founding-seller programme (4% for the first verified seller from each country, granted free, never purchased). No listing fees, ever.
             </GateRule>
             <GateRule title="Permitted Categories Only">
               You may list products in any of Velor's current marketplace categories: {PERMITTED_CATEGORIES_TEXT}. No age-restricted products.

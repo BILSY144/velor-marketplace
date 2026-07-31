@@ -10,6 +10,15 @@ const BADGE_MIN_ORDERS = 10 // completed (delivered) orders required to unlock a
 // seller can still outrank a poorly-performing paid seller. This does NOT affect
 // the buyer-facing sellerScore/sellerBadge fields — those stay pure merit.
 const TIER_BOOST: Record<string, number> = { STARTER: 0, PRO: 8, ENTERPRISE: 8 }
+// Founding-seller ranking boost — 2026-07-31 (William's decision, via Claude
+// session): the founding programme no longer grants a lower commission tier
+// to new country-founders (see lib/founding.ts), but they keep permanent
+// priority placement as their perk. Same magnitude as the old Pro tier
+// boost so a founder's placement doesn't change just because the programme
+// no longer touches commission. Uses Math.max with TIER_BOOST below, not a
+// sum, so the one grandfathered seller who is both PRO-tier AND
+// founding-badged doesn't get double-boosted.
+const FOUNDING_BOOST = 8
 // ACTIVE MAKER BOOST (William-approved 2026-07-29): visibility is the
 // reward for embracing the social layer -- cash stays sales-linked only
 // (plan LAW #4, the Flip lesson). Bounded like the tier boost.
@@ -48,7 +57,7 @@ function badgeFor(score: number, deliveredOrders: number): string {
 export async function computeSellerScore(sellerId: string) {
   const seller = await prisma.seller.findUnique({
     where: { id: sellerId },
-    select: { id: true, userId: true, tier: true },
+    select: { id: true, userId: true, tier: true, foundingBadge: true },
   })
   if (!seller) return null
 
@@ -103,7 +112,9 @@ export async function computeSellerScore(sellerId: string) {
     prisma.dropItem.count({ where: { sellerId, drop: { scheduledAt: { gte: new Date(Date.now() - 7 * 24 * 3600 * 1000), lte: new Date(Date.now() + 7 * 24 * 3600 * 1000) } } } }),
   ])
   const activeMaker = recentPosts >= ACTIVE_MIN_POSTS || dropParticipation > 0
-  const rankingScore = score + (TIER_BOOST[(seller as { tier?: string }).tier ?? 'STARTER'] ?? 0) + (activeMaker ? ACTIVE_MAKER_BOOST : 0)
+  const tierBoost = TIER_BOOST[(seller as { tier?: string }).tier ?? 'STARTER'] ?? 0
+  const foundingBoost = (seller as { foundingBadge?: boolean }).foundingBadge ? FOUNDING_BOOST : 0
+  const rankingScore = score + Math.max(tierBoost, foundingBoost) + (activeMaker ? ACTIVE_MAKER_BOOST : 0)
 
   const breakdown: ScoreBreakdown = {
     rating: Math.round(ratingScore),

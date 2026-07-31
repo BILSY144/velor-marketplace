@@ -70,55 +70,26 @@ export async function POST(req: NextRequest) {
 
   const { action } = await req.json()
 
-  // Defense in depth: the dashboard UI already hides the "Upgrade to Pro"
-  // button once a founding seller is on the Pro tier (isCurrent === true in
-  // TierUpgradeView), but this endpoint must refuse it too -- a founding
-  // seller must never be able to create a real, chargeable Stripe
-  // subscription for a tier they already have free.
-  if (action === 'upgrade_to_pro' && ((seller as any).foundingEligible || (seller as any).foundingBadge)) {
+  // 2026-07-31 (William's decision, via Claude session): the self-serve
+  // Pro-tier purchase is RETIRED. Velor now runs a single flat 10%
+  // commission for every seller -- there is no paid plan left to sell, so
+  // this action is refused for EVERYONE, founding or not (it used to be
+  // conditional on foundingEligible/foundingBadge; that condition is gone
+  // on purpose -- nobody can buy their way to 4% anymore). Founding sellers
+  // keep the 4% rate already promised to them via lib/founding.ts, which is
+  // untouched by this change. See docs/SUBSCRIPTION_AND_TIERS.md.
+  if (action === 'upgrade_to_pro') {
     return NextResponse.json(
-      { error: 'Founding sellers never pay for Pro. If your badge has not unlocked yet, list your first product and Pro is yours free, for life.' },
+      {
+        error:
+          'Velor runs a single flat 10% commission for every seller -- there is no paid plan to upgrade to. Founding sellers keep the 4% rate already promised to them for life.',
+      },
       { status: 400 }
     )
   }
 
   if (action === 'upgrade_to_enterprise') {
     return NextResponse.json({ error: 'The Enterprise tier has been retired — Pro now includes everything it offered.' }, { status: 400 })
-  }
-
-  if (action === 'upgrade_to_pro') {
-    const priceId = process.env.STRIPE_PRO_PRICE_ID
-    if (!priceId) {
-      return NextResponse.json({ error: 'Selected plan not yet configured' }, { status: 503 })
-    }
-
-    // Get or create Stripe customer
-    let customerId = (seller as any).stripeCustomerId as string | null
-    if (!customerId) {
-      const user = await prisma.user.findUnique({ where: { id: seller.userId } })
-      const customer = await stripe.customers.create({
-        email: user?.email ?? undefined,
-        name: seller.storeName,
-        metadata: { sellerId: seller.id },
-      })
-      customerId = customer.id
-      await prisma.seller.update({
-        where: { id: seller.id },
-        data: { stripeCustomerId: customerId } as any,
-      })
-    }
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://velorcommerce.store'
-    const session2 = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: baseUrl + '/dashboard/upgrade?success=true&plan=pro',
-      cancel_url: baseUrl + '/dashboard/upgrade?cancelled=true',
-      metadata: { sellerId: seller.id },
-    })
-
-    return NextResponse.json({ checkoutUrl: session2.url })
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

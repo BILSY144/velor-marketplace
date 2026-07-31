@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { SUPPORTED_CURRENCIES, CURRENCY_NAMES } from '@/lib/currency'
-import { useSellerTier, tierCardStyle, DASHBOARD_TIER_THEME } from '@/lib/dashboard-theme'
+import { useSellerTier, tierCardStyle } from '@/lib/dashboard-theme'
 
 // Feature list shown in the new "Your Plan" card so sellers can see exactly
 // what their subscription buys them, and what upgrading would add.
@@ -147,8 +147,14 @@ export default function SettingsPage() {
 
   // Enterprise retired 2026-07-15 and is normalized to PRO before this page
   // ever sees it, so this is a plain two-tier check now.
+  //
+  // 2026-07-31 (William's decision, via Claude session): the self-serve
+  // Pro purchase is retired -- nextTier is permanently null now (there is
+  // no paid plan left to upgrade to). Reaching tier === 'PRO' only ever
+  // happens via the founding-seller programme (lib/founding.ts) at this
+  // point, never via a purchase.
   const isPro = tier === 'PRO'
-  const nextTier = tier === 'STARTER' ? 'PRO' : null
+  const nextTier = null
 
   return (
     <div style={{ maxWidth: '680px' }}>
@@ -188,7 +194,7 @@ export default function SettingsPage() {
                 marginBottom: 12,
               }}
             >
-              {isPro ? '★ Pro' : 'Starter'}
+              {isPro ? '★ 4% — Founding Seller' : '10% — flat rate'}
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {PLAN_FEATURES[tier].map((f) => (
@@ -198,24 +204,9 @@ export default function SettingsPage() {
               ))}
             </ul>
           </div>
-          {nextTier && (
-            <Link
-              href={`/dashboard/upgrade/${nextTier.toLowerCase()}`}
-              style={{
-                flexShrink: 0,
-                background: '#4FC3F7',
-                color: '#001018',
-                fontWeight: 800,
-                fontSize: 13,
-                textDecoration: 'none',
-                padding: '10px 18px',
-                borderRadius: 999,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Upgrade to {DASHBOARD_TIER_THEME[nextTier].label}
-            </Link>
-          )}
+          {/* 2026-07-31: the "Upgrade to Pro" CTA that used to live here is
+              retired along with the self-serve purchase -- nextTier is
+              permanently null now, see its declaration above. */}
           {isPro && (
             <span style={{ flexShrink: 0, color: '#FFD54A', fontWeight: 700, fontSize: 13 }}>
               You&apos;re on our top plan

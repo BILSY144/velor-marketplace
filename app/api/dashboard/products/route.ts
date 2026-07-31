@@ -199,13 +199,16 @@ export async function POST(req: NextRequest) {
 
   // Starter: 10 listings. Pro: unlimited (Enterprise retired 2026-07-15 —
   // Pro inherited its unlimited listings; legacy ENTERPRISE rows read as Pro).
+  // 2026-07-31: Pro is no longer purchasable (see docs/SUBSCRIPTION_AND_TIERS.md)
+  // -- the "Upgrade" copy below is stale for everyone except the one
+  // grandfathered PRO seller, so the message no longer implies a purchase path.
   const LISTING_LIMITS: Record<string, number | null> = { STARTER: 10, PRO: null, ENTERPRISE: null }
   const sellerTier = (seller as any).tier ?? 'STARTER'
   const listingLimit = LISTING_LIMITS[sellerTier]
   if (listingLimit !== null) {
     const listingCount = await prisma.product.count({ where: { sellerId: seller.id } })
     if (listingCount >= listingLimit) {
-      return NextResponse.json({ error: 'Listing limit reached. Upgrade for more listings.', upgradeRequired: true }, { status: 403 })
+      return NextResponse.json({ error: `Listing limit reached (${listingLimit}).`, upgradeRequired: false }, { status: 403 })
     }
   }
 

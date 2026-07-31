@@ -4,9 +4,16 @@
 // Every figure on this page must be true of the live platform:
 //   190       = WORLD_COUNTRIES length (same list as /apply and the flag strip)
 //   24h       = APPLICATION_SLA_HOURS, enforced by /api/cron/review-applications
-//   10/4/0%   = TIER_COMMISSION in app/api/stripe/payment-intent/route.ts
-//   GBP 49 = Pro subscription (Enterprise retired 2026-07-15)
+//   10%       = flat commission for every seller, TIER_COMMISSION.STARTER in
+//               app/api/stripe/payment-intent/route.ts
+//   4%        = TIER_COMMISSION.PRO -- founding sellers only (lib/founding.ts),
+//               granted free for life, never purchased
 // The old copy rule stands: do not write a number here that no code backs up.
+//
+// 2026-07-31 (William's decision, via Claude session): the self-serve Pro
+// tier purchase is RETIRED -- there is no paid plan left to compare against
+// Starter, so the old two-tier "Starter vs Pro" calculator below is now a
+// single flat-rate calculator. See docs/SUBSCRIPTION_AND_TIERS.md.
 //
 // Payout detail policy (William, 2026-07-08): public pages do not state hold
 // windows or release timing — the full payout schedule lives in the seller
@@ -16,10 +23,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 
-const TIERS = [
-  { name: 'Starter', sub: 0, com: 0.1, fee: 'Free · 10% commission', meta: 'No subscription. Every tool included. The right start for most sellers.' },
-  { name: 'Pro', sub: 49, com: 0.04, fee: '£49 / month · 4% commission', meta: 'Pays for itself past £820 a month. Free for life for founding sellers.' },
-]
+const FLAT_COMMISSION = 0.1
 
 const css = `
 .vs{background:var(--bg);color:var(--text);font-family:var(--font-body);position:relative}
@@ -107,8 +111,7 @@ export default function SellPage() {
 
 
 
-  const keeps = TIERS.map(t => Math.max(0, sales * (1 - t.com) - t.sub))
-  const best = keeps.indexOf(Math.max(...keeps))
+  const keep = Math.max(0, sales * (1 - FLAT_COMMISSION))
   const pct = ((sales - 100) / (20000 - 100)) * 100
 
   return (
@@ -138,22 +141,21 @@ export default function SellPage() {
             </div>
           </div>
           <div className="vs-stack">
-            <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Live broadcasting — for every seller.</b> Go on air on Velor Live from any tier, Starter included. Founding sellers keep the whole Pro tier free for life.</div></div>
+            <div className="vs-stat"><div className="n">LIVE</div><div className="t"><b>Live broadcasting — for every seller.</b> Go on air on Velor Live from day one, whoever you are. Founding sellers additionally keep a permanent badge and priority placement.</div></div>
             <div className="vs-stat"><div className="n">190</div><div className="t"><b>Countries, one marketplace.</b> Your country&apos;s page exists the day you list — and the first seller from each country opens it.</div></div>
-            <div className="vs-stat"><div className="n">0%</div><div className="t"><b>Listing fees. None.</b> You pay commission when you sell, or a subscription that lowers it. Nothing to list.</div></div>
+            <div className="vs-stat"><div className="n">0%</div><div className="t"><b>Listing fees. None.</b> You pay a flat 10% commission when you sell — the same rate for every seller. Nothing to list.</div></div>
             <div className="vs-stat"><div className="n">{APPLICATION_SLA_HOURS}h</div><div className="t"><b>Application decision</b> within {APPLICATION_SLA_HOURS} hours of applying &mdash; no documents to upload. The clock is ours, the camera is yours.</div></div>
           </div>
         </div>
       </div>
 
-      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive in the coming weeks. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>Starter has no monthly fee, and commission is only ever charged on a completed sale. Every day before buyers arrive costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps the full Pro tier free for life — unlimited listings, the dedicated AI account manager, full API access, a free custom storefront, priority search placement, advanced analytics and early access to new features — a deal no seller gets by joining after the doors are already open.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission and subscription numbers above only start mattering once a buyer actually pays you. Until buyers arrive, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
+      <section style={{ paddingTop: 0 }}><div className="vs-wrap"><div className="vs-launch"><div className="toplbl">The honest answer</div><h2>We don&apos;t have buyers yet. Here&apos;s exactly what that means for you.</h2><p className="sub">Every established marketplace&apos;s commission buys access to an audience that already exists. Velor&apos;s doesn&apos;t — not yet. Buyers arrive in the coming weeks. Until then, here is exactly what joining costs you, and exactly what you get for going first.</p><div className="vs-launch-grid"><div className="vs-launch-card"><div className="ic">Cost while you wait</div><h3>£0, not a maybe</h3><p>There's no monthly fee, and commission is only ever charged on a completed sale. Every day before buyers arrive costs you nothing — the risk of listing early is your time, never your money.</p></div><div className="vs-launch-card"><div className="ic">Shelf space</div><h3>First, not buried</h3><p>Each of the 190 country pages opens with its first verified seller. List now and you are what buyers see the moment a country switches on — not one listing among thousands in a marketplace that filled up without you.</p></div><div className="vs-launch-card"><div className="ic">Founding perks</div><h3>Benefits that don&apos;t come back</h3><p>The first verified seller from each country keeps a permanent founding badge and priority search placement for life — a recognition no seller gets by joining after the doors are already open. Commission stays the same flat 10% for everyone.</p></div></div><div className="vs-launch-risk"><b>Put plainly:</b> the commission number above only starts mattering once a buyer actually pays you. Until buyers arrive, joining Velor is free, reversible, and the only thing it asks of you is the time to list.</div></div></div></section><section id="calc">
         <div className="vs-wrap">
           <div className="vs-calc">
             <div className="toplbl">The honest maths</div>
             <h2>What would you keep?</h2>
-            <p className="sub">Drag to your expected monthly sales. Every tier is shown with its real
-            cost — commission plus subscription — so the best tier for you is a calculation, not a
-            sales pitch.</p>
+            <p className="sub">Drag to your expected monthly sales. One flat 10% commission, no
+            subscription, no tiers to compare — what you see is what you keep.</p>
 
             <div className="vs-sliderrow">
               <span className="vs-bigval">{gbp(sales)}</span>
@@ -165,19 +167,16 @@ export default function SellPage() {
               style={{ background: `linear-gradient(90deg,var(--accent) 0%,var(--accent) ${pct}%,var(--surface-2) ${pct}%)` }}
             />
 
-            <div className="vs-tiers">
-              {TIERS.map((t, i) => (
-                <div key={t.name} className={'vs-tier' + (i === best ? ' best' : '')}>
-                  <div className="vs-bestbadge">Best for you</div>
-                  <h3>{t.name}</h3>
-                  <div className="fee">{t.fee}</div>
-                  <div className="keep">{gbp(keeps[i])}</div>
-                  <div className="keeplbl">yours per month, after Velor</div>
-                  <div className="meta">{t.meta}</div>
-                </div>
-              ))}
+            <div className="vs-tiers" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="vs-tier best">
+                <h3>Every seller</h3>
+                <div className="fee">Free · 10% commission</div>
+                <div className="keep">{gbp(keep)}</div>
+                <div className="keeplbl">yours per month, after Velor</div>
+                <div className="meta">No subscription, no upsell — this is the same rate whether you sell £100 or £20,000 a month, for every seller. The first verified seller from each country additionally keeps a permanent founding badge and priority placement (not a discount) — see the founding section below.</div>
+              </div>
             </div>
-            <div className="vs-calcnote">Figures are sales minus commission minus subscription, in GBP.
+            <div className="vs-calcnote">Figures are sales minus commission, in GBP.
             You price in your own currency; buyers pay in theirs.</div>
           </div>
         </div>
@@ -259,10 +258,11 @@ export default function SellPage() {
           <div className="vs-founding">
             <div>
               <div className="vs-eyebrow"><span className="vs-dot" /> Founding sellers</div>
-              <h2>First from your country? Pro is free, for life.</h2>
+              <h2>First from your country? Keep the badge, for life.</h2>
               <p>The first verified seller from each country opens it on Velor — and keeps the
-              founding badge, the showreel slot, Pro free for as long as the subscription runs
-              unbroken — every Pro benefit, on the house, for as long as they keep selling.</p>
+              founding badge, the showreel slot, and permanent priority placement in search and on
+              their country's page, for as long as they keep selling. Commission stays the same flat
+              10% every seller pays.</p>
             </div>
             <Link className="vs-btn vs-btn-p" href="/founding">See the open countries</Link>
           </div>

@@ -99,10 +99,11 @@ export default function ApiKeysPage() {
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text)', fontSize: '28px', marginBottom: '16px' }}>API Access</h1>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
           <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
-            API key access for programmatic product and order retrieval is available on the Pro plan.
+            API key access for programmatic product and order retrieval is currently reserved for founding
+            sellers, as part of the founding badge — it isn&apos;t something you can buy into.
           </p>
-          <Link href="/dashboard/upgrade/pro" style={{ display: 'inline-block', background: 'linear-gradient(90deg, #FFD54A, #FF6B00)', color: '#111', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
-            Upgrade to Pro
+          <Link href="/dashboard/upgrade" style={{ display: 'inline-block', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+            See your plan
           </Link>
         </div>
       </div>

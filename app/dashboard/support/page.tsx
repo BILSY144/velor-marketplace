@@ -103,8 +103,8 @@ export default function SupportPage() {
         </div>
       ) : (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px 20px', marginBottom: 28, color: 'var(--muted)', fontSize: 14 }}>
-          Our team typically responds within 1-2 business days. Pro sellers get priority-flagged support
-          <a href="/dashboard/upgrade/pro" style={{ color: 'var(--accent)' }}> - see the Pro plan</a>.
+          Our team typically responds within 1-2 business days. Founding sellers get priority-flagged support
+          as part of their founding badge — <a href="/dashboard/upgrade" style={{ color: 'var(--accent)' }}>see your plan</a>.
         </div>
       )}
 

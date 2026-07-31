@@ -1,48 +1,9 @@
-'use client'
+import TierUpgradeView from '@/components/dashboard/TierUpgradeView'
 
-import Link from 'next/link'
-import { useMoneyFmt } from '@/lib/useCurrencyDisplay'
-
-const TILES: { id: string; name: string; priceGbp: number | null; blurb: string; gradient: string }[] = [
-  { id: 'starter', name: 'Starter', priceGbp: null, blurb: 'Up to 10 listings · 10% commission', gradient: 'linear-gradient(160deg, #26262c 0%, #101012 100%)' },
-  { id: 'pro', name: 'Pro', priceGbp: 49, blurb: 'Unlimited listings · 4% commission · Go Live', gradient: 'linear-gradient(160deg, #7c3aed 0%, #3b1177 100%)' },
-]
-
+// 2026-07-31: this used to be a two-tile "choose a plan" picker linking to
+// /dashboard/upgrade/starter and /dashboard/upgrade/pro. Both sub-routes are
+// now redirects back here (see their own files) -- there is only one flat
+// commission rate to show a seller now, so this page shows it directly.
 export default function UpgradeIndexPage() {
-  const fmtMoney = useMoneyFmt()
-  return (
-    <div
-      style={{
-        height: 'calc(100dvh - 64px)', width: '100%', background: 'var(--bg)', color: 'var(--text)',
-        fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}
-    >
-      <header style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 32px', borderBottom: '1px solid var(--border)' }}>
-        <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)' }}>Seller plans</p>
-        <Link href="/dashboard" style={{ fontSize: '13px', color: 'var(--muted)' }}>← Dashboard</Link>
-      </header>
-      <main style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', padding: '24px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '30px', fontWeight: 700, margin: '0 0 6px', fontFamily: 'var(--font-display)' }}>Choose a plan to view</h1>
-          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Each plan has its own dedicated page with full details and payment.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {TILES.map((t) => (
-            <Link
-              key={t.id}
-              href={`/dashboard/upgrade/${t.id}`}
-              style={{
-                width: '220px', borderRadius: '16px', padding: '24px 22px', background: t.gradient,
-                display: 'flex', flexDirection: 'column', gap: '8px', color: '#fff',
-              }}
-            >
-              <span style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{t.name}</span>
-              <span style={{ fontSize: '20px', fontWeight: 700 }}>{t.priceGbp === null ? 'Free' : `${fmtMoney(t.priceGbp)}/mo`}</span>
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)' }}>{t.blurb}</span>
-            </Link>
-          ))}
-        </div>
-      </main>
-    </div>
-  )
+  return <TierUpgradeView />
 }
