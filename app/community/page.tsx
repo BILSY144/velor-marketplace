@@ -44,9 +44,19 @@
 //    fixed the same journal-video-only undercount bug in the passport
 //    "Videos" stat that Workshop Videos had (root-caused the same day).
 //
-// Community Challenge and Live Shopping still have no backing model/feature
-// (no contest, submission, voting, or live-chat table) and stay the
-// design's own placeholder content.
+// Community Challenge still has no backing model/feature (no contest,
+// submission or voting table) and stays the design's own placeholder
+// content -- a real page would mean fabricating a winner, forbidden.
+//
+// 2026-07-31 (William: "a lot of the clickable links/buttons go nowhere"):
+// every OTHER section's "View all" used to dead-end at a generic "being
+// crafted right now" placeholder even when the hub card beside it already
+// showed real data. Built real dedicated pages for all of them: Around the
+// World (app/community/world), Workshop Videos (/videos), Buyer's
+// Collections (/collections), Learning Centre (/learning), Follow Countries
+// (/countries) -- each widens the same real query already used here.
+// Live Shopping's hub card now routes straight to /live (the real
+// live-shopping page) instead of a placeholder dedicated page.
 //
 // Honest "nothing yet" states everywhere real data is thin or empty --
 // never a fallback to invented content.

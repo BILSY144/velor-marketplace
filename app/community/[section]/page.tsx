@@ -12,6 +12,16 @@
  *
  * LAW #1: placeholders say plainly that the page is being built. Every
  * "meanwhile" link points at a real, live feature -- no dead ends.
+ *
+ * 2026-07-31 (William: "a lot of the clickable links/buttons go nowhere"):
+ * world, videos, collections, learning and countries all got real static
+ * routes today (app/community/<section>/page.tsx) and were removed from the
+ * map below. live-shopping was removed too -- its hub card now routes
+ * straight to /live, Velor's real live-shopping page, instead of a
+ * dedicated /community/live-shopping placeholder. Only 'challenge' remains:
+ * there is no real contest/submission/voting model behind it yet, so a real
+ * page would mean fabricating a winner -- forbidden. Left as the honest
+ * placeholder until that feature actually exists.
  */
 
 import Link from 'next/link'
@@ -49,40 +59,6 @@ const SECTIONS: Record<string, SectionDef> = {
       'Ask any verified maker a question and their answer is published for the whole community. Today you can ask from any listing page -- this page will bring every conversation together.',
     links: [{ label: 'Find a maker to ask', href: '/shop' }],
   },
-  videos: {
-    title: 'Workshop videos',
-    kicker: 'Watch the work',
-    description:
-      'Films from real workshops -- dyeing, throwing, forging, weaving -- filterable by craft. The full video library page is being designed now.',
-    links: [{ label: 'See maker films in the feed', href: '/workshop' }],
-  },
-  'live-shopping': {
-    title: 'Live shopping',
-    kicker: 'On air',
-    description:
-      'Watch makers sell live: chat with them, ask about a piece and buy it without leaving the stream. The community live page is being designed now.',
-    links: [{ label: 'Go to the live channel', href: '/live' }],
-  },
-  world: {
-    title: 'Around the world',
-    kicker: 'The map of makers',
-    description:
-      'One hundred and ninety countries, each with its own channel of sellers. This page will map every live seller, journal and product around the world.',
-    links: [
-      { label: 'Shop by country', href: '/shop' },
-      { label: 'See the founding atlas', href: '/founding' },
-    ],
-  },
-  collections: {
-    title: "Buyer's collections",
-    kicker: 'Curate the world',
-    description:
-      'Collections let you gather pieces you love -- a dream kitchen, a gallery wall, gifts to come back to. This page will let the community share and follow each other’s collections.',
-    links: [
-      { label: 'Your collections', href: '/account/collections' },
-      { label: 'Find pieces to save', href: '/shop' },
-    ],
-  },
   challenge: {
     title: 'Community challenge',
     kicker: 'Show us your craft',
@@ -92,20 +68,6 @@ const SECTIONS: Record<string, SectionDef> = {
       { label: 'Become a maker', href: '/apply' },
       { label: 'Meet the community', href: '/community' },
     ],
-  },
-  learning: {
-    title: 'Learning centre',
-    kicker: 'Learn from the source',
-    description:
-      'Short lessons from real makers: how Moroccan leather is dyed, how Japanese ceramics are fired, why Peruvian alpaca wool is special. Filmed in real workshops as makers join the circle.',
-    links: [{ label: 'Meet the makers', href: '/shop' }],
-  },
-  countries: {
-    title: 'Follow countries',
-    kicker: 'Your world, your feed',
-    description:
-      'Follow the countries you love and see their newest makers, pieces and journals first. Today every country has its own shopping channel -- following arrives with this page.',
-    links: [{ label: 'Browse country channels', href: '/shop' }],
   },
 }
 

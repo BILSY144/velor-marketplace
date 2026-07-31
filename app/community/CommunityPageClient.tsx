@@ -23,12 +23,29 @@
  *    their own collections page (app/account/collections/page.tsx) --
  *    nothing here without that explicit, confirmed opt-in.
  *
- * Live Shopping and Community Challenge stay the design's own placeholder
- * content -- no real-time chat or contest/voting model exists yet.
+ * Live Shopping's card visuals (the stream frame, product bar, chat) stay
+ * the design's own placeholder content -- no real-time chat model exists
+ * yet -- but its click-through was fixed 2026-07-31 (William: "a lot of the
+ * clickable links/buttons go nowhere") to route to the real, live /live
+ * page instead of a dead-end placeholder, since /live already IS Velor's
+ * real live-shopping surface.
  *
- * Every section box is clickable and routes to /community/<section>
- * (placeholders in app/community/[section]/page.tsx until each section's
- * dedicated page is designed -- built one at a time with William).
+ * 2026-07-31 (William: "a lot of the clickable links/buttons go nowhere" --
+ * Around the World, Workshop Videos, Buyer's Collections, Learning Centre
+ * and Follow Countries all routed through to the generic "being crafted
+ * right now" placeholder). Real dedicated pages now exist for all five:
+ * app/community/world, /videos, /collections, /learning, /countries --
+ * each just widens/repurposes the same real query the hub card already
+ * uses. Community Challenge still has no backing model (no contest,
+ * submission or voting table exists) so its dedicated page stays the
+ * honest placeholder -- building a real one means fabricating a winner,
+ * which is forbidden.
+ *
+ * Every section box is clickable and routes to /community/<section>.
+ * Featured, Journals, Ask the Maker, Maker Passport, Around the World,
+ * Workshop Videos, Buyer's Collections, Learning Centre and Follow
+ * Countries all have real dedicated pages now; only Community Challenge
+ * still falls through to app/community/[section]/page.tsx's placeholder.
  *
  * Theme: page-scoped --mc-* palette. Dark theme reproduces the design
  * exactly; the light/dark toggle maps the same structure onto light tokens
@@ -409,8 +426,8 @@ export default function CommunityPageClient({
             )}
           </SectionBox>
 
-          <SectionBox href="/community/live-shopping">
-            <SectionHead title="Live Shopping" href="/community/live-shopping" icon="play" />
+          <SectionBox href="/live">
+            <SectionHead title="Live Shopping" href="/live" icon="play" />
             <div className="mc-live">
               <div className="mc-live-left">
                 <div className="mc-live-frame">
