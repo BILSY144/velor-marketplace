@@ -64,7 +64,7 @@ const px = (id: number, slug?: string) =>
 const CULTURE_REELS: {
   title: string
   line: string
-  tiles: { name: string; code: string; img: string; video?: string }[]
+  tiles: { name: string; code?: string; img?: string; video?: string }[]
   comingSoon?: boolean
 }[] = [
   {
@@ -511,13 +511,23 @@ const CULTURE_REELS: {
     // handmade-pet-goods photo in it -- nowhere near the 20 honest,
     // on-theme, country-specific photos every other reel gets. Padding it
     // out with a woven basket or a wool blanket relabelled as a pet product
-    // would break LAW #1 (never a fabricated caption). Rather than a dead
-    // gap, this renders as an honest "opening soon" band instead of a tile
-    // rail -- see the `comingSoon` branch below.
+    // would break LAW #1 (never a fabricated caption).
+    //
+    // 2026-07-31 (William, after a real seller listed a pet-goods product
+    // and the "Opening soon" band finally lifted -- see the render fix
+    // below): asked for the remaining seats filled in with plain ID cards,
+    // no photography for now. These 20 placeholder seats give the rail its
+    // normal "exactly 20 seats" shape (same convention as every other reel)
+    // without pretending to have real craft photography or a specific
+    // country attached -- no image, no country flag, just an honest empty
+    // "Your goods here" seat. The render logic below only shows any of this
+    // once at least one real listing exists (`showComingSoon` stays keyed
+    // off real product count); until then this reel still shows the
+    // "Opening soon" band, untouched.
     title: 'Artisan Pet Goods',
     line: "Handmade collars, beds and goods for cats, dogs and other companions -- crafted, not stamped out.",
     comingSoon: true,
-    tiles: [],
+    tiles: Array.from({ length: 20 }, () => ({ name: 'Your goods here' })),
   },
   {
     title: 'Basketry & Woven Goods',
@@ -1102,19 +1112,23 @@ export default function HomePage() {
                         </div>
                       )
                     })}
-                    {stockTiles.map(t => (
-                      <Link className={'vh-ct' + (t.video ? ' vh-film' : '')} href="/founding" key={t.name + t.code}>
+                    {stockTiles.map((t, ti) => (
+                      <Link className={'vh-ct' + (t.video ? ' vh-film' : '')} href="/founding" key={t.name + (t.code || '') + ti}>
                         {/* ID-card layout (William, 2026-07-17): same framed card as the
                             country-page seat grid -- image pane with the "Your goods
                             here" ribbon, then a caption block. These stay examples
                             until real sellers claim the seats. Each rail is exactly 20
                             seats (William, 2026-07-17) -- reserved for the top 20
                             performing sellers; the film seat is labelled PREVIEW FILM
-                            with no country claim (footage is craft-generic, LAW #1). */}
+                            with no country claim (footage is craft-generic, LAW #1).
+                            2026-07-31: a tile without an `img` (Artisan Pet Goods' 20
+                            plain ID-card seats -- no verified photography yet) renders
+                            no <img> at all, just the muted card background -- an honest
+                            empty seat rather than a broken image or a fabricated photo. */}
                         <div className="ph">
                           {t.video ? (
                             <video src={t.video} poster={t.img} muted loop playsInline preload="none" />
-                          ) : (
+                          ) : t.img ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
                               src={t.img}
@@ -1122,11 +1136,11 @@ export default function HomePage() {
                               loading="lazy"
                               onError={(e) => { const el = (e.target as HTMLElement).closest('.vh-ct') as HTMLElement | null; if (el) el.style.display = 'none' }}
                             />
-                          )}
+                          ) : null}
                           <div className="ribbon">{t.video ? 'Preview' : 'Your goods here'}</div>
                         </div>
                         <div className="cap">
-                          <div className="k">{t.video ? 'PREVIEW FILM' : <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</>}</div>
+                          <div className="k">{t.video ? 'PREVIEW FILM' : t.code ? <>{flagOf(t.code)} {WORLD_COUNTRIES.find(w => w.code === t.code)?.name ?? t.code}</> : 'OPEN SEAT'}</div>
                           <div className="t">{t.name}</div>
                           <div className="pr"><span className="p">{symbol}0.00</span><span className="s">Seller name</span></div>
                         </div>
