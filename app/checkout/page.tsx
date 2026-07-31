@@ -95,8 +95,18 @@ interface ConfirmedBreakdown {
   dutiesAmount: number
   discountAmount: number
   discountCodes: string[]
+  donationAmount: number
   total: number
 }
+
+// Velor Roots Foundation checkout donation (William, 2026-07-31). Fixed
+// tiers only, matching the server's allowlist in
+// app/api/stripe/payment-intent/route.ts -- 0 (no selection, the default)
+// plus 20p/50p/£1. HELD DARK behind NEXT_PUBLIC_CHARITY_DONATIONS_ENABLED
+// until Velor Roots Foundation is a legally registered UK charity -- do not
+// flip this on without confirming registration with William first.
+const CHARITY_DONATIONS_ENABLED = process.env.NEXT_PUBLIC_CHARITY_DONATIONS_ENABLED === 'true'
+const DONATION_TIERS_GBP = [0.2, 0.5, 1]
 
 
 function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
@@ -213,6 +223,22 @@ export default function CheckoutPage() {
   const fmtConfirmed = (val: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: (confirmed && confirmed.currency) || currency }).format(val)
   const [confirmed, setConfirmed] = useState<ConfirmedBreakdown | null>(null)
 
+  // Velor Roots Foundation checkout donation -- unselected (0) by default,
+  // never pre-ticked. See CHARITY_DONATIONS_ENABLED above; the selector
+  // itself is only rendered when that flag is on (Order Summary, below).
+  const [donationGBP, setDonationGBP] = useState(0)
+  const handleDonationChange = (amount: number) => {
+    setDonationGBP((prev) => (prev === amount ? 0 : amount)) // tap the same tier again to deselect
+    // Same stale-quote invalidation as changing quantity or removing an item
+    // (handleQuantityChange/handleRemoveItem above) -- the donation is part
+    // of the charged total, so an already-created PaymentIntent is now wrong.
+    if (clientSecret || confirmed) {
+      setClientSecret('')
+      setConfirmed(null)
+      setStep('shipping')
+    }
+  }
+
   // Discounts are automatic — the seller applies them to the listing, the
   // buyer sees them on the listing/product page, and the exact same amount
   // is looked up again here from lib/discount.ts. There is nothing for the
@@ -259,8 +285,8 @@ export default function CheckoutPage() {
   // converted to the buyer's display currency) plus the GBP-denominated pieces
   // converted once via convert(x, 'GBP') -- never via fmtRaw, which assumes its
   // input is raw GBP and would double-convert or misread a non-GBP raw sum.
-  const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount
-  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, 'GBP') + convert(dutiesAmount, 'GBP')
+  const total = Math.max(0, productSubtotal - discountAmount) + shippingCost + dutiesAmount + donationGBP
+  const totalConverted = Math.max(0, productSubtotalConverted - convert(discountAmount, 'GBP')) + convert(shippingCost, 'GBP') + convert(dutiesAmount, 'GBP') + convert(donationGBP, 'GBP')
 
   useEffect(() => {
     if (items.length === 0) { setAutoDiscount(null); return }
@@ -436,6 +462,10 @@ export default function CheckoutPage() {
             postcode: address.postalCode,
             country: address.country,
           },
+          // Velor Roots Foundation donation -- server re-validates against
+          // its own allowlist and CHARITY_DONATIONS_ENABLED, never trusts
+          // this number directly (see app/api/stripe/payment-intent).
+          donationGBP,
         }),
       })
       const data = await res.json()
@@ -835,6 +865,48 @@ export default function CheckoutPage() {
             {Object.values(sellerDuties).length > 0 && !Object.values(sellerDuties).every(d => d.isDomestic) && dutiesAmount === 0 && (
               <div style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'right' }}>
                 Any import charges for your country are settled on delivery, unless your seller ships duties-paid.
+              </div>
+            )}
+            {/* Velor Roots Foundation checkout donation -- selector only
+                renders while CHARITY_DONATIONS_ENABLED is on (held dark
+                until the charity is legally registered). Never pre-ticked;
+                tapping the selected tier again deselects it. */}
+            {CHARITY_DONATIONS_ENABLED && (
+              <div style={{ paddingTop: '4px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
+                  Add a donation for Velor Roots Foundation?
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {DONATION_TIERS_GBP.map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => handleDonationChange(amt)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        borderRadius: '8px',
+                        border: donationGBP === amt ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                        background: donationGBP === amt ? 'rgba(201,163,93,0.12)' : 'transparent',
+                        color: donationGBP === amt ? 'var(--accent)' : 'var(--text)',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {fmtRaw(amt, 'GBP')}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+                  Optional — 100% goes to Velor Roots Foundation, helping artisans get out of and stay out of homelessness.
+                </div>
+              </div>
+            )}
+            {(confirmed ? confirmed.donationAmount > 0 : donationGBP > 0) && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--muted)' }}>Donation to Velor Roots Foundation</span>
+                <span style={{ color: 'var(--text)' }}>{confirmed ? fmtConfirmed(confirmed.donationAmount) : fmtRaw(donationGBP, 'GBP')}</span>
               </div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700 }}>
