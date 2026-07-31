@@ -10,6 +10,7 @@ import {
   orderHasOpenIssue,
 } from '@/lib/payouts'
 import { requireCronSecret } from '@/lib/cronAuth'
+import { deductOwedBalance } from '@/lib/feeRecovery'
 
 export const maxDuration = 60
 
@@ -97,7 +98,7 @@ export async function GET(req: NextRequest) {
       }
       const sellerEntry = sellerBreakdown.find((s) => s && s.i === o.sellerId)
       const sellerShareGBP = Number(sellerEntry?.e) || 0
-      const sellerShare = Math.round(sellerShareGBP * 100) // minor units (pence) for Stripe/Payoneer
+      let sellerShare = Math.round(sellerShareGBP * 100) // minor units (pence) for Stripe/Payoneer
       if (!sellerShare || sellerShare <= 0) {
         skipped++
         continue
@@ -161,6 +162,35 @@ export async function GET(req: NextRequest) {
       // to true at that moment so every other surface reads consistently.
       if (!sellerRow) {
         skipped++
+        continue
+      }
+
+      // "Never lose money" fee recovery (William, 2026-07-31): deduct any
+      // outstanding platformFeeOwedGBP -- un-refunded Stripe processing fees
+      // from returns, lost-dispute fees, see lib/feeRecovery.ts -- from this
+      // payout before sending it, recovered out of the seller's own future
+      // earnings rather than Velor's margin. Never touches the buyer's side
+      // of any transaction; this only ever reduces what a seller receives.
+      try {
+        const { payableGBP } = await deductOwedBalance(o.sellerId, sellerShareGBP)
+        sellerShare = Math.round(payableGBP * 100)
+      } catch (err) {
+        console.error('[release-payouts] fee-recovery deduction failed for', o.id, err)
+      }
+      if (sellerShare <= 0) {
+        // Fully absorbed by the owed balance -- nothing left to transfer,
+        // but still record a Payout row (amount 0) so this order stops
+        // being re-selected as a candidate on every future run.
+        await prisma.payout.create({
+          data: {
+            sellerId: o.sellerId,
+            orderId: o.id,
+            amount: 0,
+            currency: 'gbp',
+            status: 'absorbed_by_fee_recovery',
+          },
+        })
+        released++
         continue
       }
 

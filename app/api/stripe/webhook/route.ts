@@ -3,6 +3,12 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
 import { createOrderFromPaymentIntent } from '@/lib/orders';
+import {
+  getOriginalStripeFeeGBP,
+  reverseSellerTransferIfAny,
+  addToSellerOwedBalance,
+  UK_DISPUTE_FEE_GBP,
+} from '@/lib/feeRecovery';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-02-24.acacia',
@@ -279,6 +285,97 @@ export async function POST(request: Request): Promise<NextResponse> {
       // -- guarded in app/api/stripe/connect/account/route.ts) or an
       // account not yet linked to a seller row (mid-onboarding, before the
       // first GET /api/stripe/connect/account call that sets it).
+      break;
+    }
+
+    case 'charge.dispute.created': {
+      // A REAL card-network chargeback -- distinct from Velor's own
+      // in-platform "raise an issue with the seller" flow at
+      // app/api/disputes, which the admin Disputes page reads. Before
+      // 2026-07-31 this event type wasn't handled at all: a genuine
+      // chargeback did nothing here, so nothing ever froze the affected
+      // order's payout automatically. Freezing it just means creating a
+      // Dispute row -- lib/payouts.ts's orderHasOpenIssue() already checks
+      // the Dispute table directly and blocks release-payouts on any open
+      // row, so no separate freeze logic is needed here.
+      const dispute = event.data.object as Stripe.Dispute;
+      const paymentIntentId =
+        typeof dispute.payment_intent === 'string' ? dispute.payment_intent : dispute.payment_intent?.id;
+      if (paymentIntentId) {
+        // A single PaymentIntent can cover multiple sellers (a mixed cart --
+        // see lib/orders.ts) -- a chargeback disputes the WHOLE charge, so
+        // every seller's Order under it gets frozen, not just one.
+        const orders = await prisma.order.findMany({ where: { stripePaymentId: paymentIntentId } });
+        for (const order of orders) {
+          try {
+            await prisma.dispute.upsert({
+              where: { orderId: order.id },
+              create: {
+                orderId: order.id,
+                raisedBy: order.customerEmail,
+                reason: `Stripe chargeback: ${dispute.reason}`,
+                evidence: `Stripe dispute ${dispute.id} -- ${(dispute.amount / 100).toFixed(2)} ${String(dispute.currency).toUpperCase()}`,
+                status: 'OPEN',
+              },
+              update: { status: 'OPEN', reason: `Stripe chargeback: ${dispute.reason}` },
+            });
+            await prisma.order.update({ where: { id: order.id }, data: { status: 'DISPUTED' } });
+          } catch (err) {
+            console.error('[webhook] failed to record chargeback for order', order.id, dispute.id, err);
+          }
+        }
+      }
+      break;
+    }
+
+    case 'charge.dispute.closed': {
+      // Resolves the freeze set by charge.dispute.created above. "won":
+      // Stripe returns the disputed amount to Velor -- but NOT the GBP15
+      // dispute fee, which Stripe never returns either way (verified
+      // against Stripe's own docs) -- so a won dispute is a small, known,
+      // accepted cost, deliberately NOT recovered from the seller (William,
+      // 2026-07-31: the seller did nothing wrong in a dispute Velor won).
+      // "lost": the refund is permanent and the dispute fee is gone too --
+      // same "never lose money" recovery as an approved return, applied to
+      // BOTH the original processing fee and the dispute fee, recovered
+      // from the seller's future payouts (see lib/feeRecovery.ts).
+      const dispute = event.data.object as Stripe.Dispute;
+      const paymentIntentId =
+        typeof dispute.payment_intent === 'string' ? dispute.payment_intent : dispute.payment_intent?.id;
+      const won = dispute.status === 'won';
+      const lost = dispute.status === 'lost';
+      if (paymentIntentId && (won || lost)) {
+        const orders = await prisma.order.findMany({
+          where: { stripePaymentId: paymentIntentId },
+          include: { payout: true },
+        });
+        for (const order of orders) {
+          try {
+            await prisma.dispute.updateMany({
+              where: { orderId: order.id },
+              data: {
+                status: won ? 'WON' : 'LOST',
+                resolution: `Stripe chargeback ${dispute.id}: ${dispute.status}`,
+              },
+            });
+
+            if (lost) {
+              await reverseSellerTransferIfAny(
+                order.payout?.stripeTransferId,
+                `dispute_reverse_${dispute.id}_${order.id}`
+              );
+              const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
+              const originalFeeGBP = chargeId ? await getOriginalStripeFeeGBP(chargeId) : 0;
+              await addToSellerOwedBalance(order.sellerId, originalFeeGBP + UK_DISPUTE_FEE_GBP);
+              await prisma.order.update({ where: { id: order.id }, data: { status: 'REFUNDED' } });
+            } else if (won && order.deliveredAt) {
+              await prisma.order.update({ where: { id: order.id }, data: { status: 'DELIVERED' } });
+            }
+          } catch (err) {
+            console.error('[webhook] failed to resolve chargeback for order', order.id, dispute.id, err);
+          }
+        }
+      }
       break;
     }
 

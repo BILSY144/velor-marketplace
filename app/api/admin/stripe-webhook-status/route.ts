@@ -47,6 +47,13 @@ const SUBSCRIPTION_LIFECYCLE_EVENTS: Stripe.WebhookEndpointUpdateParams.EnabledE
   'invoice.payment_failed',
   'invoice.paid',
   'payment_intent.payment_failed',
+  // Real card-network chargebacks (William, 2026-07-31 "never lose money"
+  // fix -- see lib/feeRecovery.ts and app/api/stripe/webhook/route.ts's
+  // charge.dispute.created/closed cases). Same trap as every other event in
+  // this list: the case blocks existing in code means nothing until this
+  // endpoint's enabled_events actually includes them in Stripe.
+  'charge.dispute.created',
+  'charge.dispute.closed',
 ]
 
 function summarize(endpoints: Stripe.WebhookEndpoint[]) {

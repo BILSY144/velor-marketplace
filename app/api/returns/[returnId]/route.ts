@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { getOriginalStripeFeeGBP, addToSellerOwedBalance } from '@/lib/feeRecovery';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' });
 
@@ -90,6 +91,24 @@ export async function PATCH(
           { idempotencyKey: `return_refund_${returnId}` }
         );
         stripeRefundId = refund.id;
+
+        // "Never lose money" fix (William, 2026-07-31): Stripe never returns
+        // its original processing fee on a refund, so this order's refund
+        // just cost Velor that fee with nothing recovering it. The buyer
+        // still gets their full statutory refund -- this is recovered from
+        // the SELLER's future payouts instead (see lib/feeRecovery.ts),
+        // same principle Amazon/Etsy/eBay all use for their own equivalent
+        // gap. Best-effort: a failure here never blocks the refund itself,
+        // which has already succeeded above.
+        const refundChargeId = typeof refund.charge === 'string' ? refund.charge : refund.charge?.id;
+        if (refundChargeId) {
+          try {
+            const feeGBP = await getOriginalStripeFeeGBP(refundChargeId);
+            await addToSellerOwedBalance(order.sellerId, feeGBP);
+          } catch (err) {
+            console.error('[returns] fee-recovery bookkeeping failed for', returnId, err);
+          }
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Stripe refund failed';
         return NextResponse.json({ error: message }, { status: 502 });

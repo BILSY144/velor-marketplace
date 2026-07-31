@@ -251,6 +251,18 @@ model Seller {
   foundingEligible               Boolean   @default(false)
   foundingPerksGrantedAt         DateTime?
   foundingBadge                  Boolean   @default(false)
+  // "Never lose money" fee-recovery ledger (William, 2026-07-31 -- see
+  // docs/PAYOUTS.md's AMENDMENT for the full design). Stripe never returns
+  // its original processing fee on a refund, and never returns its dispute
+  // fee at all (win or lose). Both must still come from somewhere other
+  // than the buyer (who is legally owed a full refund) or Velor's own
+  // margin -- this is a running "owed to the platform" balance, incremented
+  // when a return/lost-dispute causes an unrecoverable cost on that
+  // seller's order, and decremented by lib/feeRecovery.ts's
+  // deductOwedBalance() out of that seller's FUTURE payouts in
+  // app/api/cron/release-payouts. Can go uncollected if the seller never
+  // sells again -- same unavoidable exposure every marketplace carries.
+  platformFeeOwedGBP             Float     @default(0)
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 }
