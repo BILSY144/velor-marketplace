@@ -49,7 +49,7 @@ const DIAL_CODES: Record<string, string> = {
 
 interface CartItem {
   id?: string; productId: string; name: string; price: number; quantity: number;
-  image: string; sellerId?: string;
+  image: string; sellerId?: string; variantId?: string;
 }
 interface ShippingRate {
   rateId: string; carrier: string; service: string;
@@ -344,7 +344,11 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cartItems: items.map(i => ({ productId: i.productId, sellerId: i.sellerId, quantity: i.quantity })),
+          // FIX 2026-08-01: variantId added so the server can price/declare
+          // by the SELECTED variant (ProductVariant.priceOverride) instead of
+          // always falling back to the base product's price -- see
+          // lib/cart.ts's CartItem for the full incident writeup.
+          cartItems: items.map(i => ({ productId: i.productId, variantId: i.variantId, sellerId: i.sellerId, quantity: i.quantity, price: i.price })),
           shippingAddress: { street1: address.line1, city: address.city, zip: address.postalCode, country: address.country },
         }),
       })
@@ -368,7 +372,11 @@ export default function CheckoutPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                cartItems: sellerItems.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+                // variantId added 2026-08-01 -- see lib/cart.ts's CartItem
+                // for why: without it this route always quoted duty/VAT on
+                // the BASE product's price, ignoring a selected variant's
+                // priceOverride.
+                cartItems: sellerItems.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity, price: i.price })),
                 destinationCountry: address.country,
                 originCountry: g.originCountry || 'GB',
                 shippingCostGBP: 0,
@@ -442,7 +450,13 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+          // variantId added 2026-08-01 -- the actual CHARGE was being
+          // computed from the base product's price, ignoring a selected
+          // variant's priceOverride entirely (see lib/cart.ts's CartItem for
+          // the full incident writeup). This is the one that mattered most:
+          // rates/landed-cost only mis-quoted a duty estimate, but this is
+          // what Stripe actually charges the buyer's card.
+          items: items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
           currency,
           sellerShipping,
           // Buyer contact/shipping details -- stored server-side in the
