@@ -800,7 +800,7 @@ function ShopContent() {
                     <div style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>The founding seat</div>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: '15px', fontWeight: 600, lineHeight: 1.3, marginBottom: '8px' }}>The first {originCountry.name} listing goes here</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: '#E9C46A' }}>Pro free for life</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: '#E9C46A' }}>Founding badge, for life</span>
                       <span style={{ fontSize: '11px', color: '#E9C46A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>No. 001</span>
                     </div>
                   </div>
