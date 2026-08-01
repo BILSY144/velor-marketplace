@@ -29,13 +29,19 @@ function readImage(file: File): Promise<string> {
 }
 
 export function DesktopReferenceStep2({
-  form, update, onBack, onNext, error,
+  form, update, onBack, onNext, error, foundedCountryCodes,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   onBack: () => void;
   onNext: () => void;
   error: string | null;
+  // ISO codes that already have a claimed founding seat (see
+  // getFoundedCountryCodes in lib/founding.ts), passed down from
+  // app/apply/page.tsx. Optional so this still renders without it; the
+  // Founding Seller Badge panel below just always offers the badge in that
+  // case rather than hiding it on missing data.
+  foundedCountryCodes?: string[];
 }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, height: DESIGN_HEIGHT });
   const profileInput = useRef<HTMLInputElement>(null);
@@ -86,11 +92,21 @@ export function DesktopReferenceStep2({
     else if (form.productCategories.length < MAX_CATEGORIES) update('productCategories', [...form.productCategories, value]);
   }
 
-  // shippingCountry stores an ISO code (see types.ts) -- now that this
-  // field is a real, visible select on this step (see the fix below), show
-  // the country name here instead of the raw code, same lookup FinishStep
-  // and DesktopReferenceStep4 already use.
+  // shippingCountry stores an ISO code (see types.ts); same lookup
+  // FinishStep and DesktopReferenceStep4 already use to show a name instead
+  // of the raw code. shippingCountry itself is now only ever set on Step 3
+  // (see the removed Country/Region control below) -- it will still be ''
+  // the first time a seller reaches this step, before Step 3 exists.
   const countryName = COUNTRY_OPTIONS.find(([code]) => code === form.shippingCountry)?.[1] ?? form.shippingCountry;
+
+  // 2026-08-xx (William): "remove page 2 country and region box and text
+  // completely as we already have that on page 3" -- Step 3
+  // (DesktopReferenceStep3.tsx) already has a real, working shippingCountry
+  // select, so the one added here earlier was a redundant second control
+  // for the same field. Rather than fixing/keeping it, it's removed
+  // outright (see below); what's left is only knowing whether the
+  // shippingCountry already picked on Step 3 has a founder claimed for it.
+  const countryAlreadyFounded = !!form.shippingCountry && (foundedCountryCodes?.includes(form.shippingCountry) ?? false);
 
   return (
     <div aria-label="Velor seller application, step 2 of 4" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#050505' }}>
@@ -115,26 +131,24 @@ export function DesktopReferenceStep2({
           style={{ ...control, left: 47, top: 625, width: 393, height: 40, padding: '0 14px' }}
         />
 
-        {/* 2026-08-02 fix: William reported "country/region selection does
-            not work". Root cause: this box was baked into design-step2.png
-            as pure decoration -- "Country / Region", the globe icon and
-            "Select your country" are all pixels in the artwork, with no
-            real control ever layered on top of them, so clicking it could
-            never do anything. Bounds pixel-measured directly from
-            design-step2.png (canvas getImageData grid crop): the box runs
-            x=470-750, y=438-490. Wired to the same form.shippingCountry
-            used on Step 3, so picking it here also pre-fills Step 3 (and
-            vice versa) instead of asking twice. */}
-        <select
-          aria-label="Country / Region"
-          autoComplete="country"
-          value={form.shippingCountry}
-          onChange={e => update('shippingCountry', e.target.value)}
-          style={{ ...control, left: 470, top: 438, width: 280, height: 52, padding: '0 14px', appearance: 'auto' }}
-        >
-          <option value="">Select your country</option>
-          {COUNTRY_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
-        </select>
+        {/* 2026-08-02: a real Country/Region select was added here to fix
+            "country/region selection does not work" (see git history for
+            that version). William then pointed out Step 3
+            (DesktopReferenceStep3.tsx) already has a working shippingCountry
+            field, so a second control for the same value on this step was
+            redundant and confusing -- removed per his explicit instruction
+            ("remove page 2 country and region box and text completely").
+            design-step2.png still has "Country / Region" / the globe icon /
+            "Select your country" baked in as static decoration at this
+            position (confirmed via direct pixel measurement: the real
+            content spans x~470-689, y~435-477) -- with no control layered
+            on top anymore, that baked artwork would otherwise show through
+            again, looking like a dead/broken field. This plain panel paints
+            over it with the same near-black background used elsewhere on
+            this card, at the prior control's slightly larger bounds so the
+            decorative box, its border and icon are fully hidden with margin
+            to spare. */}
+        <div style={{ position: 'absolute', left: 470, top: 438, width: 280, height: 52, background: '#0d0d0d', borderRadius: 7 }} />
 
         {/* 2026-08-02 fix: William reported "trouble selecting my crafts".
             Two real bugs found: (1) this select's own width (220) was
@@ -215,8 +229,18 @@ export function DesktopReferenceStep2({
             rectangle edges (background-to-photo transitions, unambiguous)
             are x=738-1065, y=444-636, with a rounded-rect corner radius
             matching the artwork's own (~14px). */}
+        {/* 2026-08-xx correction: William confirmed the profile circle now
+            fits, but said the cover image was "still off". The 1065 right
+            edge above was itself an estimate, not a measurement -- a proper
+            per-column brightness/variance scan of design-step2.png (flat,
+            near-zero-variance background vs. textured photo content) puts
+            the true right edge at x=1084, not 1065, i.e. a true width of
+            346px, not 327px. That 19px shortfall is exactly why the cover
+            photo looked like it wasn't reaching/filling its box on the
+            right side. Left/top/height were already correct (738/444/192,
+            re-verified the same way) and are unchanged. */}
         {form.sampleImages[1] && (
-          <img src={form.sampleImages[1]} alt="Cover preview" style={{ position: 'absolute', left: 738, top: 444, width: 327, height: 192, borderRadius: 14, objectFit: 'cover' }} />
+          <img src={form.sampleImages[1]} alt="Cover preview" style={{ position: 'absolute', left: 738, top: 444, width: 346, height: 192, borderRadius: 14, objectFit: 'cover' }} />
         )}
         {form.sampleImages[0] && (
           <img src={form.sampleImages[0]} alt="Profile preview" style={{ position: 'absolute', left: 757, top: 521, width: 106, height: 106, borderRadius: '50%', border: '3px solid #f2efe7', objectFit: 'cover' }} />
@@ -249,13 +273,33 @@ export function DesktopReferenceStep2({
             column centres at x~1160 with an ~80px circle, not the ~1080/56
             first guess -- a quick local Playwright screenshot caught the
             mismatch before this shipped). */}
+        {/* 2026-08-xx (William): "if the country has a founder all ready
+            the founder badge should not be available for that seller
+            application" -- a country's founding seat is a single unique
+            claim (CountryFounder.countryCode is unique, see
+            grantCountryFounderIfFirst in lib/founding.ts), so once
+            someone from a country holds it, this panel must stop
+            promising the badge to later applicants from the same country.
+            shippingCountry is only known once Step 3 has been visited (it
+            isn't collected on this step anymore -- see the removed
+            Country/Region control above), so this only ever flips to the
+            "claimed" state when a seller comes back to edit Step 2 (from
+            Finish) after already filling in Step 3; on a first pass through
+            with no country yet, it falls back to still offering the badge
+            rather than assuming it's unavailable. */}
         <div style={{ position: 'absolute', left: 1108, top: 328, width: 410, height: 102, background: '#0d0d0d', display: 'flex', alignItems: 'flex-start', gap: 22 }}>
-          <div style={{ width: 74, height: 74, borderRadius: '50%', border: '1.5px solid #f47a20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <IconShieldStar size={32} color="#f47a20" />
+          <div style={{ width: 74, height: 74, borderRadius: '50%', border: `1.5px solid ${countryAlreadyFounded ? '#5a5a5a' : '#f47a20'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <IconShieldStar size={32} color={countryAlreadyFounded ? '#6b6b6b' : '#f47a20'} />
           </div>
           <div style={{ paddingTop: 6 }}>
-            <div style={{ color: '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 5 }}>Founding Seller Badge</div>
-            <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 13.5, lineHeight: 1.45 }}>Permanent status, shown proudly on your store.</div>
+            <div style={{ color: countryAlreadyFounded ? '#9a9a9a' : '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 5 }}>
+              {countryAlreadyFounded ? 'Founding Badge Already Claimed' : 'Founding Seller Badge'}
+            </div>
+            <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 13.5, lineHeight: 1.45 }}>
+              {countryAlreadyFounded
+                ? `Another seller from ${countryName || 'your country'} already holds this badge.`
+                : 'Permanent status, shown proudly on your store.'}
+            </div>
           </div>
         </div>
 

@@ -17,6 +17,7 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
 export default function SellerApplication({
   foundingSeatsAvailable,
+  foundedCountryCodes,
 }: {
   // Live remaining founding-seat count from getAvailableFoundingSeatCount()
   // (lib/founding.ts), passed down from the app/apply/page.tsx server
@@ -24,6 +25,12 @@ export default function SellerApplication({
   // tests) if a caller doesn't supply it; falls back to the static
   // WORLD_COUNTRIES total further below rather than showing nothing.
   foundingSeatsAvailable?: number;
+  // ISO codes that already have a claimed founding seat, from
+  // getFoundedCountryCodes() (lib/founding.ts) -- lets Step 2's Founding
+  // Seller Badge panel stop offering the badge once the applicant's chosen
+  // shipping country is already taken. Optional for the same reason as
+  // above; DesktopReferenceStep2 just always offers the badge if omitted.
+  foundedCountryCodes?: string[];
 }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -147,7 +154,7 @@ export default function SellerApplication({
     <div className="seller-app" style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--sa-bg-gradient)' }}>
       <div className="seller-app-desktop-shell">
         {step === 1 && <DesktopReferenceStep1 form={form} update={update} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
-        {step === 2 && <DesktopReferenceStep2 form={form} update={update} onBack={goBack} onNext={goNext} error={error} />}
+        {step === 2 && <DesktopReferenceStep2 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundedCountryCodes={foundedCountryCodes} />}
         {step === 3 && <DesktopReferenceStep3 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
         {step === 4 && <DesktopReferenceStep4 form={form} onBack={goBack} onEdit={jumpTo} onSubmit={submitApplication} error={error} submitting={submitting} submitted={submitted} />}
       </div>
