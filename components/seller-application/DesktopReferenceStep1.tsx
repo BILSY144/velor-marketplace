@@ -44,11 +44,16 @@ export function DesktopReferenceStep1({
   update,
   onNext,
   error,
+  foundingSeatsAvailable,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   onNext: () => void;
   error: string | null;
+  // Live remaining founding-seat count (see lib/founding.ts). Optional so
+  // the component still renders without it; falls back to the artwork's
+  // own baked "190" claim in that case (i.e. simply doesn't paint over it).
+  foundingSeatsAvailable?: number;
 }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, height: DESIGN_HEIGHT });
   const [showPassword, setShowPassword] = useState(false);
@@ -91,6 +96,29 @@ export function DesktopReferenceStep1({
           draggable={false}
           style={{ position: 'absolute', inset: 0, width: DESIGN_WIDTH, height: DESIGN_HEIGHT, userSelect: 'none', pointerEvents: 'none' }}
         />
+
+        {/* The approved artwork's founding-seats line ("190 FOUNDING SEATS.
+            ALL STILL OPEN.") is a fixed claim baked into design-step1.png,
+            but real seats are being claimed live as sellers become the
+            first from their country (see CountryFounder /
+            getAvailableFoundingSeatCount in lib/founding.ts) -- William,
+            2026-08-01: this must show the live remaining count, not a
+            static "all still open". Only rendered when a live count was
+            actually supplied, so a caller without one just leaves the
+            artwork's own text showing rather than covering it with
+            nothing. Bounds measured directly from design-step1.png via a
+            pixel-gridded crop: the baked line spans x~178-480, y~745-765,
+            with "BE THE FIRST FROM YOUR COUNTRY" above (kept, still
+            accurate) and "Once someone from your country joins..." below
+            (kept) -- this panel covers only the seats line itself.
+            Background sampled near-black from the artwork to match. */}
+        {foundingSeatsAvailable !== undefined && (
+          <div style={{ position: 'absolute', left: 175, top: 742, width: 315, height: 26, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.01em', color: '#f4771f', whiteSpace: 'nowrap' }}>
+              {foundingSeatsAvailable > 0 ? `${foundingSeatsAvailable} FOUNDING SEATS. STILL OPEN.` : 'ALL FOUNDING SEATS CLAIMED.'}
+            </span>
+          </div>
+        )}
 
         {/* Real seller-type controls replace the baked cards so the selection
             can change while retaining the artwork's dimensions. */}

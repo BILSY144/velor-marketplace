@@ -13,13 +13,31 @@ import { DesktopReferenceStep2 } from './DesktopReferenceStep2';
 import { DesktopReferenceStep3 } from './DesktopReferenceStep3';
 import { DesktopReferenceStep4 } from './DesktopReferenceStep4';
 import { IconGlobe } from './icons';
+import { WORLD_COUNTRIES } from '@/lib/worldCountries';
 
-export default function SellerApplication() {
+export default function SellerApplication({
+  foundingSeatsAvailable,
+}: {
+  // Live remaining founding-seat count from getAvailableFoundingSeatCount()
+  // (lib/founding.ts), passed down from the app/apply/page.tsx server
+  // component. Optional so this component still renders (e.g. in isolated
+  // tests) if a caller doesn't supply it; falls back to the static
+  // WORLD_COUNTRIES total further below rather than showing nothing.
+  foundingSeatsAvailable?: number;
+}) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Falls back to the static total only if no live count was supplied at
+  // all (see the prop comment above) -- once a real number comes through
+  // from the server, even 0, it's used as-is.
+  const seatsAvailable = foundingSeatsAvailable ?? WORLD_COUNTRIES.length;
+  const foundingSeatsCopy = seatsAvailable > 0
+    ? `${seatsAvailable} founding seats remaining.`
+    : 'All founding seats have been claimed.';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -128,9 +146,9 @@ export default function SellerApplication() {
   return (
     <div className="seller-app" style={{ position: 'relative', height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--sa-bg-gradient)' }}>
       <div className="seller-app-desktop-shell">
-        {step === 1 && <DesktopReferenceStep1 form={form} update={update} onNext={goNext} error={error} />}
+        {step === 1 && <DesktopReferenceStep1 form={form} update={update} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
         {step === 2 && <DesktopReferenceStep2 form={form} update={update} onBack={goBack} onNext={goNext} error={error} />}
-        {step === 3 && <DesktopReferenceStep3 form={form} update={update} onBack={goBack} onNext={goNext} error={error} />}
+        {step === 3 && <DesktopReferenceStep3 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
         {step === 4 && <DesktopReferenceStep4 form={form} onBack={goBack} onEdit={jumpTo} onSubmit={submitApplication} error={error} submitting={submitting} submitted={submitted} />}
       </div>
 
@@ -145,7 +163,7 @@ export default function SellerApplication() {
           <p style={{ marginTop: 8, fontFamily: 'var(--sa-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--sa-muted)' }}>Be the first verified seller from your country and sell to buyers in <span style={{ color: 'var(--sa-accent)' }}>190 countries.</span></p>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'flex-start', borderRadius: 10, border: '1px solid var(--sa-gold)', padding: '10px 12px' }}>
             <IconGlobe size={20} color="var(--sa-gold)" style={{ marginTop: 1, flexShrink: 0 }} />
-            <p style={{ margin: 0, fontFamily: 'var(--sa-font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--sa-gold)' }}><strong>190 founding seats. All still open.</strong> Be the first from your country.</p>
+            <p style={{ margin: 0, fontFamily: 'var(--sa-font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--sa-gold)' }}><strong>{foundingSeatsCopy}</strong>{seatsAvailable > 0 ? ' Be the first from your country.' : ''}</p>
           </div>
         </div>
         <div style={{ marginBottom: 28 }}><StepProgress current={step} onJump={n => n < step && jumpTo(n)} /></div>

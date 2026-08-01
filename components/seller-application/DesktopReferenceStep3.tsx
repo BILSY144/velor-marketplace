@@ -15,13 +15,17 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function DesktopReferenceStep3({
-  form, update, onBack, onNext, error,
+  form, update, onBack, onNext, error, foundingSeatsAvailable,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   onBack: () => void;
   onNext: () => void;
   error: string | null;
+  // Live remaining founding-seat count (see lib/founding.ts). Optional --
+  // when omitted, the artwork's own baked "190 FOUNDING SEATS. ALL STILL
+  // OPEN." line is simply left showing instead of being painted over.
+  foundingSeatsAvailable?: number;
 }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, height: DESIGN_HEIGHT });
   useEffect(() => {
@@ -80,6 +84,24 @@ export function DesktopReferenceStep3({
             <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 11.5 }}>Analytics &amp; optimisation to grow.</div>
           </div>
         </div>
+
+        {/* Same stale-claim fix as DesktopReferenceStep1.tsx's founding-seats
+            panel (see that comment for the full rationale) -- this artwork
+            has its own separate baked "190 FOUNDING SEATS. ALL STILL OPEN."
+            line lower in the shipping-benefits box. Bounds measured
+            directly from design-step3.png via a pixel-gridded crop: the
+            bordered box interior runs roughly x=1150-1495, y=805-885, with
+            "BE THE FIRST FROM YOUR COUNTRY" above (kept, still accurate)
+            and the box's rounded bottom border below (kept) -- this panel
+            covers only the seats line itself, with margin on both sides
+            so it doesn't bleed into the border. */}
+        {foundingSeatsAvailable !== undefined && (
+          <div style={{ position: 'absolute', left: 1215, top: 850, width: 280, height: 32, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.01em', color: '#f4771f', whiteSpace: 'nowrap' }}>
+              {foundingSeatsAvailable > 0 ? `${foundingSeatsAvailable} FOUNDING SEATS. STILL OPEN.` : 'ALL FOUNDING SEATS CLAIMED.'}
+            </span>
+          </div>
+        )}
 
         {error && <div role="alert" style={{ position: 'absolute', left: 245, top: 922, width: 520, color: '#ff9a82', font: '12px Inter, sans-serif', textAlign: 'center' }}>{error}</div>}
         <button type="button" onClick={onBack} aria-label="Back to Your Store" style={{ position: 'absolute', left: 40, top: 953, width: 200, height: 46, background: 'transparent', border: 0, cursor: 'pointer' }} />
