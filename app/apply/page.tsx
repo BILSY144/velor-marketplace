@@ -1,5 +1,3 @@
-'use client';
-
 // Seller application -- 4-step wizard.
 //
 // Rebuilt 2026-08-01: William connected Claude directly with the ChatGPT
@@ -16,8 +14,24 @@
 //
 // Build order per ChatGPT's brief: Step 1 (About You) first, shown for
 // approval before Steps 2-4 (Your Store / Shipping / Finish) are built out.
+//
+// Server Component (2026-08-01, William's request): the wizard's "founding
+// seats" copy used to say a hardcoded "190 founding seats, all still open",
+// which went stale the moment the first CountryFounder row was created.
+// This now reads the live remaining count server-side via
+// getAvailableFoundingSeatCount() (lib/founding.ts) and passes it down as a
+// prop, so the number on screen always matches the database.
 import SellerApplication from '@/components/seller-application/SellerApplication';
+import { getAvailableFoundingSeatCount } from '@/lib/founding';
 
-export default function ApplyPage() {
-  return <SellerApplication />;
+// Forces this page to run fresh on every request instead of being statically
+// generated once at build time -- without this, Next.js could bake in
+// whatever seat count happened to exist at build time and serve that same
+// stale number to every visitor afterwards, defeating the point of making it
+// live.
+export const dynamic = 'force-dynamic';
+
+export default async function ApplyPage() {
+  const foundingSeatsAvailable = await getAvailableFoundingSeatCount();
+  return <SellerApplication foundingSeatsAvailable={foundingSeatsAvailable} />;
 }
