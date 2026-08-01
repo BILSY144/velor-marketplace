@@ -58,9 +58,12 @@ import {
 // supplies the hero art from his design as a standalone file).
 // Two corrections vs the mockup, on purpose: the footer carries the REAL
 // registered company (Velor Commerce Ltd, no. 17268133 -- the mockup's
-// "Velor Global Market Ltd 16243986" does not exist), and the Pro panel says
-// "free for founding sellers" rather than "lifetime / first verified seller
-// per country", which is not currently a platform policy.
+// "Velor Global Market Ltd 16243986" does not exist), and the founding-perks
+// panel says "permanent badge + priority placement" rather than a Pro-tier
+// giveaway -- lib/founding.ts was revised 2026-07-31/2026-08-01 so founding
+// sellers no longer get the retired Pro tier's commission/feature perk,
+// only the badge and placement, and this copy was updated to match (see the
+// comment on proPlanCard/founding-perks card further down this file).
 const ASSETS = 'https://velorcommerce.store/email-assets'
 
 export type OutreachEmailType = 'initial' | 'followup1' | 'followup2'
@@ -228,18 +231,22 @@ function benefitRow(title: string, body: string) {
   return `<div style='border-top:1px solid #2A2A2A;padding:16px 0;'><div style='color:#FFFFFF;font-size:14px;font-weight:700;margin-bottom:2px;'>${title}</div><div style='color:#A9A9A9;font-size:13px;line-height:1.6;'>${body}</div></div>`
 }
 
-// Pro-plan value card, placed right before the CTA. Mirrors the actual
-// "Pro" tier card in components/dashboard/TierUpgradeView.tsx -- same
-// purple gradient, same "Most popular" kicker, same 6 features and real
-// price (ÃÂ£49/mo, struck through) -- so the email promises exactly what
-// the website delivers, not a made-up summary. Falls back to English
-// copy for any language not yet translated (see OutreachCopy.proTitle).
-// The purple gradient keeps a solid #5B21B6 bgcolor fallback for Outlook.
+// Founding-perks value card, placed right before the CTA. Retired
+// 2026-08-01 (William's decision, via Claude session): this used to be a
+// "Pro plan" card claiming a struck-through GBP49/mo "FREE" for founding
+// sellers -- accurate when the founding programme granted the Pro tier, but
+// false once lib/founding.ts was revised so founding sellers get only the
+// permanent badge + priority placement (no commission/feature perk). The
+// card now shows the real founding perks (see OutreachCopy.proFeatures)
+// with no invented price to strike through. Function/field names
+// (proTitle, proFeatures, proCommissionNote, proPlanCard) kept as-is
+// rather than renamed, to avoid touching every call site across 19
+// languages for a cosmetic rename. Falls back to English copy for any
+// language not yet translated. The purple gradient keeps a solid
+// #5B21B6 bgcolor fallback for Outlook.
 function proPlanCard(c: { proTitle?: string; proFeatures?: string[]; proCommissionNote?: string }): string {
   const title = c.proTitle || OUTREACH_COPY.en.proTitle
   const features = c.proFeatures && c.proFeatures.length ? c.proFeatures : OUTREACH_COPY.en.proFeatures!
-  // "FREE" describes the monthly fee only -- without this line it reads as
-  // if commission is free too, which it is not (William caught this).
   const commissionNote = c.proCommissionNote || OUTREACH_COPY.en.proCommissionNote
   const featureRows = features
     .map(
@@ -247,12 +254,8 @@ function proPlanCard(c: { proTitle?: string; proFeatures?: string[]; proCommissi
         `<tr><td style='color:#EDE9FE;font-size:13px;line-height:1.9;padding:2px 0;'><span style='color:#C4B5FD;'>&#10003;</span>&nbsp; ${f}</td></tr>`
     )
     .join('')
-  const inner = `<div style='display:inline-block;background-color:#4b3a7a;background:rgba(255,255,255,0.18);color:#FFFFFF;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:5px 12px;border-radius:100px;margin-bottom:14px;'>MOST POPULAR</div>
+  const inner = `<div style='display:inline-block;background-color:#4b3a7a;background:rgba(255,255,255,0.18);color:#FFFFFF;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:5px 12px;border-radius:100px;margin-bottom:14px;'>FOUNDING PERKS</div>
     <div style='color:#FFFFFF;font-size:16px;font-weight:800;margin-bottom:10px;'>${title}</div>
-    <div style='margin-bottom:6px;'>
-      <span style='color:rgba(255,255,255,0.55);font-size:14px;text-decoration:line-through;'>&pound;49/mo</span>
-      <span style='color:#FFFFFF;font-size:14px;font-weight:800;margin-left:10px;'>FREE</span>
-    </div>
     <div style='color:rgba(255,255,255,0.65);font-size:11.5px;line-height:1.5;margin-bottom:14px;'>${commissionNote}</div>
     <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>${featureRows}</table>`
   return `<table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0' style='margin:8px 0 22px;'><tr><td bgcolor='#5B21B6' style='background-color:#5B21B6;background-image:url('https://velorcommerce.store/email-assets/pro-card-bg.png');background-size:100% 100%;background-repeat:no-repeat;border-radius:12px;padding:22px 24px;'>${inner}</td></tr></table>`
@@ -286,13 +289,13 @@ const MULTIPLIER_COPY = {
   headline: 'Bring your artisans to a global marketplace built for them',
   intro:
     'Velor is a new global marketplace for authentic cultural goods -- every listing carries its maker and country of origin, and buyers arrive in the coming weeks. We are inviting a small number of artisan organizations to join as founding partners before launch: every one of your member makers can claim a founding-seller place, free.',
-  b1t: 'Founding Pro plan, free for your members',
-  b1b: 'Each maker you bring gets the Pro seller plan (normally £49/mo) free as a founding seller -- their own storefront, listings, and payouts.',
+  b1t: 'A founding seller place, free for every member',
+  b1b: 'Each maker you bring gets a free founding-seller place -- their own storefront, listings, and payouts, with a permanent founding badge and priority placement, on the same flat 10% commission every seller pays.',
   b2t: 'Built for where your makers are',
   b2b: 'Live prices in 20 currencies, 190+ shipping destinations, and sellers can deal with Velor entirely in their own language -- our team replies in whatever language they write.',
   f1Intro: 'A quick follow-up on the founding-partner invitation. Getting your artisans onto Velor takes four steps:',
   f1s1: 'Reply to this email or apply at the link below -- tell us roughly how many makers you represent.',
-  f1s2: 'We set up founding-seller places for your members (free Pro plan for every one).',
+  f1s2: 'We set up founding-seller places for your members -- free for every one.',
   f1s3: 'Makers list their goods -- each listing carries the maker’s name and country of origin.',
   f1s4: 'Buyers arrive in the coming weeks. Payouts are escrow-protected and released on delivery.',
   f2Line1: 'Buyers arrive on Velor in the coming weeks, and founding-partner places close before launch. This is our last note about it.',
@@ -340,7 +343,7 @@ function buildMultiplierBody(
             ${featCell('globe', 'Reach customers around the world', '', 'border-right:1px solid #222222;')}
             ${featCell('live', 'Live selling for your makers', '', 'border-right:1px solid #222222;')}
             ${featCell('star', 'Founding places for every member', '', 'border-right:1px solid #222222;')}
-            ${featCell('pro', 'Free lifetime Pro membership', 'for your member makers', '')}
+            ${featCell('pro', 'Permanent founding badge', 'for your member makers', '')}
           </tr>
         </table>
         <p style='font-family:Arial,Helvetica,sans-serif;color:#A9A9A9;font-size:13px;line-height:1.75;margin:24px 0 0;'>${c.b2b}</p>
