@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import './tokens.css';
 import { FormState, initialForm } from './types';
 import { StepProgress } from './StepProgress';
@@ -161,10 +162,14 @@ export default function SellerApplication({
 
       <div className="seller-app-mobile-shell" style={{ height: '100%', overflowY: 'auto', padding: 24, boxSizing: 'border-box' }}>
         <div style={{ marginBottom: 26 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontFamily: 'var(--sa-font-display)', fontSize: 24, fontWeight: 700, color: 'var(--sa-accent)' }}>VELOR</span>
-            <span style={{ fontFamily: 'var(--sa-font-body)', fontSize: 10, letterSpacing: '0.25em', color: 'var(--sa-muted)' }}>GLOBAL MARKETPLACE</span>
-          </div>
+          {/* William 2026-08-01: this text wordmark wasn't a link at all --
+              same "no way out of the wizard" problem as the desktop steps'
+              baked artwork logo, just a plain span here instead. Now the
+              real logo file (same asset GlobalHeader.tsx uses) and clicks
+              through to the homepage, matching the desktop fix. */}
+          <Link href="/" aria-label="Velor home" style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+            <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" style={{ height: 30, width: 'auto' }} />
+          </Link>
           <p style={{ marginTop: 16, marginBottom: 6, fontFamily: 'var(--sa-font-body)', fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', color: 'var(--sa-accent)' }}>BECOME A FOUNDING SELLER</p>
           <h1 style={{ margin: 0, fontFamily: 'var(--sa-font-display)', fontSize: 30, fontWeight: 600, lineHeight: 1.1, color: 'var(--sa-text)' }}>Open your country&apos;s <span style={{ color: 'var(--sa-accent)' }}>marketplace.</span></h1>
           <p style={{ marginTop: 8, fontFamily: 'var(--sa-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--sa-muted)' }}>Be the first verified seller from your country and sell to buyers in <span style={{ color: 'var(--sa-accent)' }}>190 countries.</span></p>

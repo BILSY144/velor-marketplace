@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { FormState } from './types';
 import { IconBriefcase, IconCheck, IconEye, IconEyeOff, IconPerson } from './icons';
@@ -96,6 +97,22 @@ export function DesktopReferenceStep1({
           draggable={false}
           style={{ position: 'absolute', inset: 0, width: DESIGN_WIDTH, height: DESIGN_HEIGHT, userSelect: 'none', pointerEvents: 'none' }}
         />
+        {/* William 2026-08-01: the wizard is intentionally a full-screen,
+            no-header experience, but that left no way back out to the
+            homepage -- the artwork's own baked "VELOR" wordmark just sits
+            there as flat pixels. Measured directly (pixel-density scan of
+            the orange glyphs, same technique used elsewhere in this file)
+            across all four design-stepN.png files: the wordmark lockup
+            occupies roughly x=33-239, y=25-122 on every step. Covered with
+            a matching near-black panel (sampled background at that spot is
+            pure #000 on all four images) and replaced with the site's real,
+            current logo file (same asset GlobalHeader.tsx uses), wrapped in
+            a home link. */}
+        <div style={{ position: 'absolute', left: 20, top: 15, width: 235, height: 120, background: '#000' }} />
+        <Link href="/" aria-label="Velor home" style={{ position: 'absolute', left: 40, top: 43, display: 'block' }}>
+          <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" draggable={false} style={{ height: 64, width: 'auto' }} />
+        </Link>
+
 
         {/* The approved artwork's founding-seats line ("190 FOUNDING SEATS.
             ALL STILL OPEN.") is a fixed claim baked into design-step1.png,

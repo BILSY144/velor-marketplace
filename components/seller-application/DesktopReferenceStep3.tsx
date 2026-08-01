@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { COUNTRY_OPTIONS, FormState } from './types';
 import { IconChartUp } from './icons';
@@ -52,6 +53,22 @@ export function DesktopReferenceStep3({
     <div aria-label="Velor seller application, step 3 of 4" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#050505' }}>
       <div style={{ position: 'absolute', left, top, width: DESIGN_WIDTH, height: DESIGN_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
         <img src="/apply-wizard/design-step3.png" alt="" aria-hidden="true" draggable={false} style={{ position: 'absolute', inset: 0, width: DESIGN_WIDTH, height: DESIGN_HEIGHT, userSelect: 'none', pointerEvents: 'none' }} />
+        {/* William 2026-08-01: the wizard is intentionally a full-screen,
+            no-header experience, but that left no way back out to the
+            homepage -- the artwork's own baked "VELOR" wordmark just sits
+            there as flat pixels. Measured directly (pixel-density scan of
+            the orange glyphs, same technique used elsewhere in this file)
+            across all four design-stepN.png files: the wordmark lockup
+            occupies roughly x=33-239, y=25-122 on every step. Covered with
+            a matching near-black panel (sampled background at that spot is
+            pure #000 on all four images) and replaced with the site's real,
+            current logo file (same asset GlobalHeader.tsx uses), wrapped in
+            a home link. */}
+        <div style={{ position: 'absolute', left: 20, top: 15, width: 235, height: 120, background: '#000' }} />
+        <Link href="/" aria-label="Velor home" style={{ position: 'absolute', left: 40, top: 43, display: 'block' }}>
+          <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" draggable={false} style={{ height: 64, width: 'auto' }} />
+        </Link>
+
 
         <input aria-label="Shipping full name" autoComplete="name" value={form.shippingName} onChange={e => update('shippingName', e.target.value)} placeholder="e.g. Ahmed Khan" style={{ ...inputStyle, left: 72, top: 428, width: 364 }} />
         <input aria-label="Shipping phone number" autoComplete="tel" value={form.shippingPhone} onChange={e => update('shippingPhone', e.target.value)} placeholder="+44 7123 456789" style={{ ...inputStyle, left: 451, top: 428, width: 316 }} />

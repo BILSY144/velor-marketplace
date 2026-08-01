@@ -427,7 +427,7 @@ export default function ShopPreviewPage() {
       <ExampleRail heading="Recently viewed" items={RECENT_RAIL} />
 
       <div style={{ textAlign: 'center', padding: '0 20px 60px' }}>
-        <Link href="/sell" style={{ display: 'inline-block', background: 'var(--accent)', color: '#160a00', borderRadius: 10, padding: '14px 28px', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+        <Link href="/apply" style={{ display: 'inline-block', background: 'var(--accent)', color: '#160a00', borderRadius: 10, padding: '14px 28px', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
           Claim this seat — start selling
         </Link>
       </div>

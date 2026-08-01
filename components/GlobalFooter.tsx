@@ -164,7 +164,7 @@ export default function GlobalFooter() {
             is confirmed.
           </p>
           <Link
-            href="/sell"
+            href="/apply"
             style={{
               display: 'inline-block',
               marginTop: 16,

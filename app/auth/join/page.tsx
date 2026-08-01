@@ -61,7 +61,7 @@ export default function JoinPage() {
         </p>
         <p style={{ color: '#666666', fontSize: '12px', margin: '10px 0 0', textAlign: 'center' }}>
           Are you a maker?{' '}
-          <Link href="/auth/sign-up" style={{ color: '#999999', textDecoration: 'underline' }}>Apply to sell</Link>
+          <Link href="/apply" style={{ color: '#999999', textDecoration: 'underline' }}>Apply to sell</Link>
         </p>
       </div>
     </div>

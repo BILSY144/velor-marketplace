@@ -109,7 +109,7 @@ export default function TierUpgradeView() {
             You need an approved seller account before Velor has a commission rate to show you.
           </p>
           <Link
-            href="/sell"
+            href="/apply"
             style={{ marginTop: '8px', padding: '12px 28px', background: 'var(--accent)', color: '#fff', borderRadius: '8px', fontWeight: 600, fontSize: '14px' }}
           >
             Apply to sell

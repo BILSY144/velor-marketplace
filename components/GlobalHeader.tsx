@@ -801,7 +801,7 @@ export default function GlobalHeader() {
                             </Link>
                           </>
                         ) : (
-                          <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
+                          <Link href="/apply" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>
                             Start selling
                           </Link>
                         )}
@@ -852,7 +852,7 @@ export default function GlobalHeader() {
 
             <div className="velor-desktop-nav" style={{ display: 'flex', gap: 10 }}>
               <Link
-                href="/sell"
+                href="/apply"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1160,7 +1160,7 @@ export default function GlobalHeader() {
                   <Link href={`/seller/${sellerId}`} style={menuItem}>View my store</Link>
                 </>
               ) : (
-                <Link href="/sell" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Start selling</Link>
+                <Link href="/apply" style={{ ...menuItem, color: 'var(--accent)', fontWeight: 700 }}>Start selling</Link>
               )}
               <button
                 onClick={() => signOut()}

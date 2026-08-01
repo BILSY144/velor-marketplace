@@ -103,7 +103,7 @@ export default function Navigation() {
           }}>
             Log in
           </Link>
-          <Link href="/sell" style={{
+          <Link href="/apply" style={{
             background: 'var(--accent)',
             color: '#fff',
             fontFamily: 'var(--font-display), system-ui, sans-serif',
