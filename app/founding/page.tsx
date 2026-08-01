@@ -309,8 +309,8 @@ export default function FoundingPage() {
           <div className="vf-band">
             <div>
               <h2>Nobody from your country sells on Velor yet.</h2>
-              <p>Apply, verify your identity, and you open your country on Velor &mdash; with Pro free
-              for life, the founding badge, and the first store buyers see on its page.</p>
+              <p>Apply, verify your identity, and you open your country on Velor &mdash; with the
+              permanent founding badge, priority placement, and the first store buyers see on its page.</p>
             </div>
             <Link className="vf-btn" href="/apply">Apply to sell</Link>
           </div>
