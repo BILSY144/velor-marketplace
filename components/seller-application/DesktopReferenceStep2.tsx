@@ -40,6 +40,13 @@ export function DesktopReferenceStep2({
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, height: DESIGN_HEIGHT });
   const profileInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
+  // 2026-08-02 fix: William reported "image uploads not working that great" --
+  // addImage previously rejected an oversized or wrong-type file with a bare
+  // `return`, so a seller picking a normal phone photo (routinely 3-8MB) saw
+  // nothing happen at all, with zero explanation. Local-only state (doesn't
+  // touch the parent's shared `error`, which is reserved for step validation
+  // on Continue) so a rejected file gets an actual, specific message.
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     const measure = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -54,12 +61,23 @@ export function DesktopReferenceStep2({
 
   async function addImage(file: File | undefined, index: number) {
     if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 2 * 1024 * 1024) return;
-    const encoded = await readImage(file);
-    const next = [...form.sampleImages];
-    next[index] = encoded;
-    update('sampleImages', next);
+    if (!file.type.startsWith('image/')) {
+      setImageError(`"${file.name}" isn't an image file. Please choose a JPG, PNG or WebP.`);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError(`"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB -- the limit is 2MB. Try a smaller photo, or compress it first.`);
+      return;
+    }
+    setImageError(null);
+    try {
+      const encoded = await readImage(file);
+      const next = [...form.sampleImages];
+      next[index] = encoded;
+      update('sampleImages', next);
+    } catch {
+      setImageError('Could not read that image -- please try a different file.');
+    }
   }
 
   function toggleCategory(value: string) {
@@ -109,15 +127,47 @@ export function DesktopReferenceStep2({
           </div>
         )}
 
+        {/* 2026-08-02 fix: these thumbnails used to render the chosen photo
+            at opacity .78/.82 directly over the button, with nothing behind
+            it but the baked design-step2.png artwork's own "Upload profile
+            photo / JPG, PNG or WebP. Max 2MB" placeholder text at that same
+            screen position -- so a real uploaded photo showed through at
+            ~20-22% weaker than the baked text, reading as a messy overlap
+            rather than a clean "photo selected" state (this is what William
+            flagged as uploads "not working that great"). A solid backing
+            div at opacity 1, THEN the photo at full opacity on top, fully
+            covers the placeholder text once a file is chosen. */}
         <input ref={profileInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload profile photo" onChange={e => void addImage(e.target.files?.[0], 0)} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
-        <button type="button" onClick={() => profileInput.current?.click()} aria-label="Choose profile photo" style={{ position: 'absolute', left: 47, top: 746, width: 219, height: 146, border: 0, borderRadius: 7, background: 'transparent', cursor: 'pointer', overflow: 'hidden' }}>
-          {form.sampleImages[0] && <img src={form.sampleImages[0]} alt="Profile preview" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: .78 }} />}
+        <button type="button" onClick={() => profileInput.current?.click()} aria-label="Choose profile photo" style={{ position: 'absolute', left: 47, top: 746, width: 219, height: 146, border: 0, borderRadius: 7, background: form.sampleImages[0] ? '#0d0d0d' : 'transparent', cursor: 'pointer', overflow: 'hidden' }}>
+          {form.sampleImages[0] && <img src={form.sampleImages[0]} alt="Profile preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         </button>
 
         <input ref={coverInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload cover photo" onChange={e => void addImage(e.target.files?.[0], 1)} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
-        <button type="button" onClick={() => coverInput.current?.click()} aria-label="Choose cover photo" style={{ position: 'absolute', left: 293, top: 746, width: 397, height: 146, border: 0, borderRadius: 7, background: 'transparent', cursor: 'pointer', overflow: 'hidden' }}>
-          {form.sampleImages[1] && <img src={form.sampleImages[1]} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: .82 }} />}
+        <button type="button" onClick={() => coverInput.current?.click()} aria-label="Choose cover photo" style={{ position: 'absolute', left: 293, top: 746, width: 397, height: 146, border: 0, borderRadius: 7, background: form.sampleImages[1] ? '#0d0d0d' : 'transparent', cursor: 'pointer', overflow: 'hidden' }}>
+          {form.sampleImages[1] && <img src={form.sampleImages[1]} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         </button>
+        {imageError && (
+          <div role="alert" style={{ position: 'absolute', left: 47, top: 897, width: 643, color: '#ff9a82', font: '12px Inter, sans-serif', lineHeight: 1.4 }}>{imageError}</div>
+        )}
+
+        {/* 2026-08-02 fix: William reported the profile/cover photos never
+            showing in this Live Preview card -- confirmed true. This block
+            previously only overlaid TEXT (name/country/description); the
+            card's cover-photo rectangle and circular avatar were always the
+            baked stock photo from design-step2.png, never wired to
+            form.sampleImages at all. Bounds pixel-checked directly against
+            design-step2.png (brightness-scanned, not eyeballed): the cover
+            rectangle runs x=763-1057/y=428-600, and the avatar circle is a
+            180px circle at left=765/top=468 (its bottom edge lines up with
+            the name box starting at top:646, same as the original art).
+            Falls back to the baked stock photo when no image is chosen yet,
+            same as the artwork's own placeholder intent. */}
+        {form.sampleImages[1] && (
+          <img src={form.sampleImages[1]} alt="Cover preview" style={{ position: 'absolute', left: 763, top: 428, width: 294, height: 172, objectFit: 'cover' }} />
+        )}
+        {form.sampleImages[0] && (
+          <img src={form.sampleImages[0]} alt="Profile preview" style={{ position: 'absolute', left: 765, top: 468, width: 180, height: 180, borderRadius: '50%', border: '3px solid #050505', objectFit: 'cover' }} />
+        )}
 
         {/* Live preview overlays only the user-controlled values, leaving the approved visual skin intact. */}
         <div style={{ position: 'absolute', left: 763, top: 646, width: 293, minHeight: 72, background: 'rgba(12,12,12,.94)', padding: '7px 0', boxSizing: 'border-box', color: '#f1eee8', fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 27, fontWeight: 600 }}>
