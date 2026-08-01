@@ -1,0 +1,118 @@
+/* Design tokens for the seller-application wizard (app/apply), scoped under
+   .seller-app so they never leak into or collide with the site-wide theme
+   variables in app/globals.css (--bg, --accent, etc. already mean something
+   different there). Values were sampled directly, pixel-by-pixel, from
+   William's own design-step1..4.png reference images (see the Python/PIL
+   measurements done alongside this build) rather than copied from any
+   generic palette -- this page has to match his designs exactly, not the
+   rest of the site's existing orange (#FF6B00) or serif (Fraunces). */
+.seller-app {
+  /* 2026-08-01 v2: replaced with ChatGPT's "Implementation Specification v1.0"
+     colour palette (section 22), given directly after William flagged the
+     v1 rebuild as still "a lot of difference" from design-step1.png and we
+     asked ChatGPT to work from the original uploaded PNG rather than a
+     side-by-side screenshot. Two distinct oranges now (the spec is explicit
+     these are different): --sa-accent is the general/primary orange (CTA,
+     kicker, required-marker, sign-in link, icons); --sa-hero-orange is only
+     for the orange word in the hero headline ("marketplace."). */
+  --sa-bg: #050505;
+  --sa-bg-gradient: linear-gradient(180deg, #040404 0%, #050505 35%, #060606 100%);
+  --sa-panel: #101010;
+  --sa-panel-secondary: #151515;
+  --sa-input-bg: #0b0b0b;
+  --sa-border: rgba(255, 255, 255, 0.08);
+  --sa-border-light: rgba(255, 255, 255, 0.16);
+  --sa-accent: #f47a20;
+  --sa-accent-dark: #c9560f;
+  --sa-hero-orange: #e46a1b;
+  --sa-gold: #d69c3a;
+  /* QA pass on the v2 rebuild (2026-08-01): "the reference headline feels
+     luxurious partly because the white is slightly softer" -- eased off
+     pure #f4f2ee very slightly. */
+  --sa-text: #f2efe7;
+  --sa-body: #cfcfcf;
+  --sa-muted: #8f8f8f;
+  --sa-font-display: 'Cormorant Garamond', Georgia, serif;
+  --sa-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Desktop shell: full-bleed dark canvas with the globe + hero copy sitting
+   in normal flow on the left, and the step nav + form card FLOATING as
+   absolutely-positioned elements over that same canvas -- NOT two flush,
+   equal-height, edge-to-edge panels. Geometry now follows ChatGPT's
+   "Implementation Specification v1.0" (2026-08-01), produced from the
+   actual uploaded design-step1.png rather than a side-by-side screenshot,
+   after William said the previous rebuild was still "a lot of difference":
+   - globe: ~940x940, centred ~(430,310), overflowing left/top/under the
+     form (section 7)
+   - step nav: floats OUTSIDE/above the card, ~540px wide (section 6)
+   - form card: 650x(top 150/right 32/bottom 32), radius 20, #101010,
+     padding 48 (section 13)
+   - hero content column: max-width only 510px now (section 8), much
+     narrower than the previous 720px attempt, which is what leaves enough
+     gutter to hold the two-column composition down to the spec's own
+     stated minimum desktop width of 1366px (section 1) instead of 1440px.
+     Below that, falls back to the mobile shell's normal-flow stack, which
+     matches the spec's own 768-1023px guidance (condensed hero + compact
+     step indicator + form below) closely enough to reuse for the whole
+     <1366px range rather than building a third, proportionally-scaled
+     tier. */
+.seller-app-desktop-shell {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+@media (max-width: 1365.98px) {
+  .seller-app-desktop-shell {
+    display: none;
+  }
+}
+
+/* Mobile/tablet shell (<1366px): everything in normal stacked flow --
+   condensed hero (logo, kicker, headline, one line of copy, founding-seat
+   note), compact linear step indicator, then the form itself -- full
+   width, no floating card, no absolute globe. Hidden at 1366px+ where the
+   desktop shell above takes over. */
+.seller-app-mobile-shell {
+  display: none;
+}
+@media (max-width: 1365.98px) {
+  .seller-app-mobile-shell {
+    display: block;
+  }
+}
+
+/* Step navigation: the full 4-icon row (StepProgress's default markup) is
+   desktop/larger-tablet only. Below 768px it becomes a single-line "Step X
+   of 4" label + progress bar instead -- a horizontally-scrolling icon row
+   hides future steps and reads poorly that narrow (ChatGPT review,
+   2026-08-01). */
+.seller-app-stepnav-full {
+  display: flex;
+}
+.seller-app-stepnav-compact {
+  display: none;
+}
+@media (max-width: 767.98px) {
+  .seller-app-stepnav-full {
+    display: none;
+  }
+  .seller-app-stepnav-compact {
+    display: block;
+  }
+}
+
+/* AboutYouStep pairs a field column with an info/note box side by side
+   (Store name + full name next to "Why your country matters", password
+   next to the privacy note) -- those two columns need to stack on narrow
+   phones or the inputs and box both become too cramped to use. */
+.seller-app-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 640px) {
+  .seller-app-2col {
+    grid-template-columns: 1fr;
+  }
+}
