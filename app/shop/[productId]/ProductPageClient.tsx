@@ -422,6 +422,12 @@ export default function ProductPageClient() {
   const [contactSending, setContactSending] = useState(false)
   const [contactSent, setContactSent] = useState(false)
   const [contactError, setContactError] = useState('')
+  // Customisation-request / message photos (2026-08-01, William -- buyers
+  // had no way to send a seller a reference photo). Same 4-image thumbnail
+  // strip pattern as review photos; every upload is OCR-scanned server-side
+  // for contact info before it's ever stored -- see lib/imageContentScan.ts.
+  const [contactImages, setContactImages] = useState<string[]>([])
+  const contactFileRef = useRef<HTMLInputElement>(null)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [sellerRail, setSellerRail] = useState<RailItem[]>([])
@@ -606,13 +612,15 @@ export default function ProductPageClient() {
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, sellerId: product.sellerId, content: contactMessage }),
+        body: JSON.stringify({ productId, sellerId: product.sellerId, content: contactMessage, images: contactImages }),
       })
-      if (!res.ok) throw new Error('Failed')
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed')
       setContactSent(true)
       setContactMessage('')
-    } catch {
-      setContactError('Failed to send message. Please try again.')
+      setContactImages([])
+    } catch (err) {
+      setContactError(err instanceof Error && err.message !== 'Failed' ? err.message : 'Failed to send message. Please try again.')
     } finally {
       setContactSending(false)
     }
@@ -891,7 +899,9 @@ export default function ProductPageClient() {
                   : currentStock < 5 ? `In stock — only ${currentStock} left` : 'In stock'}
             </div>
             <div style={{ color: 'var(--muted)' }}>
-              {product.seller?.country ? `Dispatched from ${product.seller.country} within 1–3 business days` : 'Usually dispatched within 1–3 business days'}
+              {product.madeToOrder
+                ? (product.seller?.country ? `Dispatched from ${product.seller.country} once made` : 'Dispatched once made')
+                : (product.seller?.country ? `Dispatched from ${product.seller.country} within 1–3 business days` : 'Usually dispatched within 1–3 business days')}
             </div>
             <DeliveryEstimate productId={product.id} symbol={symbol} convert={convert} />
           </div>
@@ -1623,7 +1633,7 @@ export default function ProductPageClient() {
         >
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '480px', position: 'relative' }}>
             <button
-              onClick={() => { setShowContactModal(false); setContactSent(false); setContactError(''); setContactMessage('') }}
+              onClick={() => { setShowContactModal(false); setContactSent(false); setContactError(''); setContactMessage(''); setContactImages([]) }}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '22px', cursor: 'pointer', lineHeight: 1 }}
             >
               &times;
@@ -1646,6 +1656,60 @@ export default function ProductPageClient() {
                   rows={5}
                   style={{ width: '100%', padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', fontFamily: 'Inter, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
                 />
+                {/* Customisation reference photos (2026-08-01): same +-to-add
+                    strip as review photos. Every photo is scanned server-side
+                    for contact info before the message can send -- see
+                    lib/imageContentScan.ts / app/api/messages/route.ts. */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', margin: '10px 0' }}>
+                  {contactImages.map((img, i) => (
+                    <div key={i} style={{ position: 'relative', width: '56px', height: '56px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button
+                        type="button"
+                        aria-label="Remove photo"
+                        onClick={() => setContactImages(prev => prev.filter((_, x) => x !== i))}
+                        style={{ position: 'absolute', top: 1, right: 1, width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 11, lineHeight: 1, cursor: 'pointer' }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {contactImages.length < 4 && (
+                    <button
+                      type="button"
+                      onClick={() => contactFileRef.current?.click()}
+                      aria-label="Add a reference photo"
+                      style={{ width: '56px', height: '56px', borderRadius: '8px', border: '1.5px dashed var(--border)', background: 'transparent', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }}
+                    >
+                      +
+                    </button>
+                  )}
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Add a reference photo (optional, up to 4)</span>
+                  <input
+                    ref={contactFileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const files = e.target.files
+                      if (files) {
+                        Array.from(files).slice(0, 4 - contactImages.length).forEach(f => {
+                          if (!f.type.startsWith('image/')) return
+                          const reader = new FileReader()
+                          reader.onload = () => {
+                            if (typeof reader.result === 'string') {
+                              setContactImages(prev => prev.length < 4 ? [...prev, reader.result as string] : prev)
+                            }
+                          }
+                          reader.readAsDataURL(f)
+                        })
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
                 {contactError && (
                   <p style={{ color: 'var(--red)', fontSize: '13px', margin: '8px 0 0' }}>{contactError}</p>
                 )}
