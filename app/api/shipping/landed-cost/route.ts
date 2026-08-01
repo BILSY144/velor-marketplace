@@ -49,6 +49,15 @@ export async function POST(request: NextRequest) {
         price: true,
         hsCode: true,
         seller: { select: { currency: true } },
+        // FIX 2026-08-01 (William: VAT quoted way under 20% of the displayed
+        // item price): this route always priced by the BASE product only,
+        // ignoring which variant the buyer actually selected --
+        // ProductVariant.priceOverride was never read here. Live-confirmed:
+        // "Custom Classic Pet Portrait Frame" base price GBP 40.00, selected
+        // variant "Oval 2 Pets" GBP 54.96 -- this route quoted VAT on GBP 40
+        // (GBP 8.00) instead of the correct GBP 54.96 (GBP 10.99). See
+        // lib/cart.ts's CartItem for the full incident writeup.
+        variants: { select: { id: true, priceOverride: true } },
       },
     })
     const byId = new Map(products.map((p) => [p.id, p]))
@@ -56,13 +65,20 @@ export async function POST(request: NextRequest) {
     let declaredValueGBP = 0
     let totalItemCount = 0
     let representativeHsCode: string | null = null
-    for (const item of cartItems as Array<{ productId?: string; quantity?: number }>) {
+    for (const item of cartItems as Array<{ productId?: string; variantId?: string; quantity?: number }>) {
       const product = item.productId ? byId.get(item.productId) : undefined
       if (!product) continue
       const qty = Math.max(1, Math.floor(Number(item.quantity) || 1))
       const sellerCurrency = product.seller?.currency ?? 'GBP'
+      // Resolve the SAME price the buyer was actually quoted: the selected
+      // variant's priceOverride when one applies, exactly mirroring
+      // app/api/shop/products/[productId]/route.ts's own
+      // `v.priceOverride ?? product.price` formula -- never just the base
+      // product price.
+      const variant = item.variantId ? product.variants.find((v) => v.id === item.variantId) : undefined
+      const nativePrice = variant?.priceOverride ?? product.price
       const unitGBP =
-        sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
+        sellerCurrency === 'GBP' ? nativePrice : await convert(nativePrice, sellerCurrency, 'GBP')
       declaredValueGBP += unitGBP * qty
       totalItemCount += qty
       if (!representativeHsCode && product.hsCode) representativeHsCode = product.hsCode
