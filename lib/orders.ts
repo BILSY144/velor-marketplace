@@ -28,6 +28,15 @@ function easyshipOrigins(): Set<string> {
 
 interface PricedItem {
   productId: string
+  // FIX 2026-08-01 (William, live-reproduced VAT/charge bug): carried through
+  // from app/api/stripe/payment-intent/route.ts's PaymentIntent metadata so
+  // the Order/OrderItem record actually reflects which variant was bought
+  // (and so stock gets decremented off the right row) -- previously this
+  // whole pipeline had no concept of variants at all, so an order for a
+  // GBP54.96 "Oval 2 Pets" variant left an OrderItem priced/recorded as if
+  // it were the GBP40.00 base product, and never touched the variant's own
+  // stock count.
+  variantId?: string | null
   quantity: number
   priceGBP: number
 }
@@ -468,6 +477,22 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
   })
   const productById = new Map(products.map((p) => [p.id, p]))
 
+  // Resolve the actual variant purchased (if any) fresh from the database --
+  // never trusted beyond the id itself, which came from this function's own
+  // trusted PaymentIntent metadata (server-written by payment-intent/route.ts,
+  // never the client). Used below both to snapshot color/size/label onto the
+  // OrderItem and to decrement the RIGHT stock count.
+  const variantIds = Array.from(
+    new Set(items.map((i) => i.variantId).filter((v): v is string => typeof v === 'string' && v.length > 0))
+  )
+  const variants = variantIds.length > 0
+    ? await prisma.productVariant.findMany({
+        where: { id: { in: variantIds } },
+        select: { id: true, color: true, size: true, label: true },
+      })
+    : []
+  const variantById = new Map(variants.map((v) => [v.id, v]))
+
   const itemsBySeller = new Map<string, PricedItem[]>()
   for (const item of items) {
     const product = productById.get(item.productId)
@@ -536,6 +561,11 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
             items: {
               create: sellerItems.map((item) => ({
                 productId: item.productId,
+                // Snapshot of the variant purchased -- see PricedItem.variantId
+                // above for the full incident writeup.
+                variantId: item.variantId ?? null,
+                color: item.variantId ? variantById.get(item.variantId)?.color ?? null : null,
+                size: item.variantId ? variantById.get(item.variantId)?.size ?? null : null,
                 quantity: Math.round(Number(item.quantity)) || 0,
                 price: Number(item.priceGBP) || 0,
                 commission: (Number(item.priceGBP) || 0) * (Math.round(Number(item.quantity)) || 0) * sb.c,
@@ -549,11 +579,21 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
         // stock:{gte} guard here is just defense against a race between two
         // near-simultaneous checkouts, so stock can never go negative even
         // in that edge case.
+        // Decrement the variant's OWN stock when one was purchased -- a
+        // variant's stock is tracked separately from the parent product's
+        // (see prisma/schema.prisma's ProductVariant.stock), so decrementing
+        // only Product.stock here (as before) never actually depleted the
+        // variant the buyer picked.
         ...sellerItems.map((item) =>
-          prisma.product.updateMany({
-            where: { id: item.productId, stock: { gte: Math.round(Number(item.quantity)) || 0 } },
-            data: { stock: { decrement: Math.round(Number(item.quantity)) || 0 } },
-          })
+          item.variantId
+            ? prisma.productVariant.updateMany({
+                where: { id: item.variantId, stock: { gte: Math.round(Number(item.quantity)) || 0 } },
+                data: { stock: { decrement: Math.round(Number(item.quantity)) || 0 } },
+              })
+            : prisma.product.updateMany({
+                where: { id: item.productId, stock: { gte: Math.round(Number(item.quantity)) || 0 } },
+                data: { stock: { decrement: Math.round(Number(item.quantity)) || 0 } },
+              })
         ),
       ])
       order = created
@@ -603,11 +643,15 @@ export async function createOrderFromPaymentIntent(pi: Stripe.PaymentIntent) {
         const { subject, html } = buildOrderConfirmationEmail({
           buyerName: customerName,
           orderId: order.id,
-          items: sellerItems.map((item) => ({
-            name: titleById.get(item.productId) || 'Item',
-            quantity: Math.round(Number(item.quantity)) || 0,
-            price: Number(item.priceGBP) || 0,
-          })),
+          items: sellerItems.map((item) => {
+            const baseName = titleById.get(item.productId) || 'Item'
+            const variantLabel = item.variantId ? variantById.get(item.variantId)?.label : null
+            return {
+              name: variantLabel ? `${baseName} (${variantLabel})` : baseName,
+              quantity: Math.round(Number(item.quantity)) || 0,
+              price: Number(item.priceGBP) || 0,
+            }
+          }),
           total: sb.o,
           // buildOrderConfirmationEmail concatenates this directly before each
           // amount (`${currency}${amount}`) -- it wants a display symbol, not
