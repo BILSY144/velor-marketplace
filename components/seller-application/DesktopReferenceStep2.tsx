@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from './types';
+import { COUNTRY_OPTIONS, FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from './types';
 import { IconShieldStar } from './icons';
 
 const DESIGN_WIDTH = 1536;
@@ -86,6 +86,12 @@ export function DesktopReferenceStep2({
     else if (form.productCategories.length < MAX_CATEGORIES) update('productCategories', [...form.productCategories, value]);
   }
 
+  // shippingCountry stores an ISO code (see types.ts) -- now that this
+  // field is a real, visible select on this step (see the fix below), show
+  // the country name here instead of the raw code, same lookup FinishStep
+  // and DesktopReferenceStep4 already use.
+  const countryName = COUNTRY_OPTIONS.find(([code]) => code === form.shippingCountry)?.[1] ?? form.shippingCountry;
+
   return (
     <div aria-label="Velor seller application, step 2 of 4" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#050505' }}>
       <div style={{ position: 'absolute', left, top, width: DESIGN_WIDTH, height: DESIGN_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
@@ -109,14 +115,47 @@ export function DesktopReferenceStep2({
           style={{ ...control, left: 47, top: 625, width: 393, height: 40, padding: '0 14px' }}
         />
 
+        {/* 2026-08-02 fix: William reported "country/region selection does
+            not work". Root cause: this box was baked into design-step2.png
+            as pure decoration -- "Country / Region", the globe icon and
+            "Select your country" are all pixels in the artwork, with no
+            real control ever layered on top of them, so clicking it could
+            never do anything. Bounds pixel-measured directly from
+            design-step2.png (canvas getImageData grid crop): the box runs
+            x=470-750, y=438-490. Wired to the same form.shippingCountry
+            used on Step 3, so picking it here also pre-fills Step 3 (and
+            vice versa) instead of asking twice. */}
+        <select
+          aria-label="Country / Region"
+          autoComplete="country"
+          value={form.shippingCountry}
+          onChange={e => update('shippingCountry', e.target.value)}
+          style={{ ...control, left: 470, top: 438, width: 280, height: 52, padding: '0 14px', appearance: 'auto' }}
+        >
+          <option value="">Select your country</option>
+          {COUNTRY_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </select>
+
+        {/* 2026-08-02 fix: William reported "trouble selecting my crafts".
+            Two real bugs found: (1) this select's own width (220) was
+            narrower than the visible box baked into the artwork (measured
+            at 280px wide -- same width as the Country/Region box directly
+            above), so clicking the right ~60px of the box, including the
+            dropdown chevron the artwork draws there, hit nothing. Widened
+            to match. (2) already-selected categories were never disabled
+            in the list, so reopening the dropdown and clicking one you'd
+            already picked silently REMOVED it (toggleCategory toggles) --
+            easy to do by mistake since the checkmark is easy to miss in a
+            long list. Now disabled once selected; removal is only via the
+            X chip below, so a click here can no longer undo a choice. */}
         <select
           aria-label="Add a product category"
           value=""
           onChange={e => { if (e.target.value) toggleCategory(e.target.value); }}
-          style={{ ...control, left: 470, top: 526, width: 220, height: 42, padding: '0 14px', appearance: 'auto' }}
+          style={{ ...control, left: 470, top: 526, width: 280, height: 42, padding: '0 14px', appearance: 'auto' }}
         >
           <option value="">{form.productCategories.length ? `${form.productCategories.length} selected` : 'Select up to 3 categories'}</option>
-          {PRODUCT_CATEGORY_OPTIONS.map(category => <option key={category} value={category} disabled={!form.productCategories.includes(category) && form.productCategories.length >= MAX_CATEGORIES}>{form.productCategories.includes(category) ? `✓ ${category}` : category}</option>)}
+          {PRODUCT_CATEGORY_OPTIONS.map(category => <option key={category} value={category} disabled={form.productCategories.includes(category) || form.productCategories.length >= MAX_CATEGORIES}>{form.productCategories.includes(category) ? `✓ ${category}` : category}</option>)}
         </select>
 
         {form.productCategories.length > 0 && (
@@ -155,24 +194,38 @@ export function DesktopReferenceStep2({
             previously only overlaid TEXT (name/country/description); the
             card's cover-photo rectangle and circular avatar were always the
             baked stock photo from design-step2.png, never wired to
-            form.sampleImages at all. Bounds pixel-checked directly against
-            design-step2.png (brightness-scanned, not eyeballed): the cover
-            rectangle runs x=763-1057/y=428-600, and the avatar circle is a
-            180px circle at left=765/top=468 (its bottom edge lines up with
-            the name box starting at top:646, same as the original art).
-            Falls back to the baked stock photo when no image is chosen yet,
-            same as the artwork's own placeholder intent. */}
+            form.sampleImages at all. Falls back to the baked stock photo
+            when no image is chosen yet, same as the artwork's own
+            placeholder intent. */}
+        {/* 2026-08-02 correction: William then reported "the cover photo
+            blocks the profile circle" and "profile image does not load at
+            all" once both were live. Root cause: my first pass measured
+            the wrong box entirely -- a plain brightness scan can't find an
+            edge between two overlapping PHOTOS (both bright, both
+            textured), so left=763/top=428/294x172 and a 180px circle were
+            estimates, not measurements, and put a circle nearly twice the
+            true size 47px too high, burying most of it inside the cover
+            photo instead of sitting mostly below it -- with real photos
+            (not the flat test colours used to verify the first fix) that
+            reads as "the cover is covering the profile" / "profile isn't
+            there". Re-measured properly this time by finding the avatar's
+            own white ring (a sharp near-white spike against the photo,
+            unlike a brightness-only scan): ring left/right at x=759/862,
+            top/bottom at y=521/627 -- a ~106px circle, not 180px. Cover
+            rectangle edges (background-to-photo transitions, unambiguous)
+            are x=738-1065, y=444-636, with a rounded-rect corner radius
+            matching the artwork's own (~14px). */}
         {form.sampleImages[1] && (
-          <img src={form.sampleImages[1]} alt="Cover preview" style={{ position: 'absolute', left: 763, top: 428, width: 294, height: 172, objectFit: 'cover' }} />
+          <img src={form.sampleImages[1]} alt="Cover preview" style={{ position: 'absolute', left: 738, top: 444, width: 327, height: 192, borderRadius: 14, objectFit: 'cover' }} />
         )}
         {form.sampleImages[0] && (
-          <img src={form.sampleImages[0]} alt="Profile preview" style={{ position: 'absolute', left: 765, top: 468, width: 180, height: 180, borderRadius: '50%', border: '3px solid #050505', objectFit: 'cover' }} />
+          <img src={form.sampleImages[0]} alt="Profile preview" style={{ position: 'absolute', left: 757, top: 521, width: 106, height: 106, borderRadius: '50%', border: '3px solid #f2efe7', objectFit: 'cover' }} />
         )}
 
         {/* Live preview overlays only the user-controlled values, leaving the approved visual skin intact. */}
         <div style={{ position: 'absolute', left: 763, top: 646, width: 293, minHeight: 72, background: 'rgba(12,12,12,.94)', padding: '7px 0', boxSizing: 'border-box', color: '#f1eee8', fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 27, fontWeight: 600 }}>
           {form.businessName || 'Your Store Name'}
-          <div style={{ marginTop: 7, color: '#c8c2b8', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 400 }}>{form.shippingCountry || 'Country name'}</div>
+          <div style={{ marginTop: 7, color: '#c8c2b8', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 400 }}>{countryName || 'Country name'}</div>
         </div>
         <div style={{ position: 'absolute', left: 763, top: 753, width: 292, height: 55, overflow: 'hidden', background: 'rgba(12,12,12,.96)', color: '#d7d2ca', font: '14px/1.55 Inter, sans-serif', paddingTop: 4 }}>
           {form.storeDescription || 'Your story and what makes your craft special will appear here.'}
