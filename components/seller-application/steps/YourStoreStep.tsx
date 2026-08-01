@@ -60,7 +60,24 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
   onBack: () => void;
   onNext: () => void;
 }) {
-  const imageInput = useRef<HTMLInputElement>(null);
+  // 2026-08-01 fix: this used to be ONE shared file input (`imageInput`) with
+  // a single `addFiles` handler that REPLACED the entire form.sampleImages
+  // array with whatever was picked in that one dialog -- so a seller had to
+  // multi-select both photos in a single native picker action to get both a
+  // profile AND a cover image. Mobile photo pickers overwhelmingly default
+  // to single-selection (or make multi-select non-obvious), so a mobile
+  // seller picking their profile photo, then coming back to pick a cover
+  // photo, silently WIPED the profile photo they'd already chosen -- every
+  // second pick just replaced index 0, since a single-file selection always
+  // lands there. Reported by William: "as a new seller I can only upload a
+  // profile image, there isn't an option to upload a cover image." Root
+  // cause confirmed by comparing against the desktop shell
+  // (DesktopReferenceStep2.tsx), which already had this right: two SEPARATE
+  // inputs/buttons, each independently writing its own index via
+  // `addImage(file, index)` (`next[index] = encoded`, preserving the other
+  // slot) rather than replacing the whole array. Mirrored that pattern here.
+  const profileInput = useRef<HTMLInputElement>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
   // 2026-08-02 fix: same root cause as the desktop Step 2 fix -- a file that
   // failed the type/size check here was silently dropped from the accepted
   // list with no feedback, so choosing a normal (often >2MB) phone photo
@@ -72,26 +89,24 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
     else if (form.productCategories.length < MAX_CATEGORIES) update('productCategories', [...form.productCategories, category]);
   }
 
-  async function addFiles(files: FileList | null) {
-    if (!files) return;
-    const all = Array.from(files).slice(0, 2);
-    const rejected = all.filter(file => !file.type.startsWith('image/'));
-    const accepted = all.filter(file => file.type.startsWith('image/'));
-    const compressed: string[] = [];
-    const compressErrors: string[] = [];
-    for (const file of accepted) {
-      try {
-        compressed.push(await compressImage(file));
-      } catch (caught) {
-        compressErrors.push(caught instanceof Error ? caught.message : `"${file.name}" could not be processed.`);
-      }
+  async function addImage(file: File | undefined, index: number) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageError(`"${file.name}" isn't an image file. Please choose a JPG, PNG or WebP.`);
+      return;
     }
-    const messages = [
-      ...rejected.map(file => `"${file.name}" isn't an image file.`),
-      ...compressErrors,
-    ];
-    setImageError(messages.length ? messages.join(' ') : null);
-    if (compressed.length) update('sampleImages', compressed);
+    setImageError(null);
+    try {
+      const encoded = await compressImage(file);
+      // Merge into the existing array at this index only -- never replace
+      // the whole array, or picking one photo wipes the other (see the
+      // fix note above).
+      const next = [...form.sampleImages];
+      next[index] = encoded;
+      update('sampleImages', next);
+    } catch (caught) {
+      setImageError(caught instanceof Error ? caught.message : 'Could not read that image -- please try a different file.');
+    }
   }
 
   // shippingCountry stores an ISO code (see types.ts) -- match the same
@@ -119,11 +134,18 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
             })}
           </div>
         </Field>
-        <Field label="Store images" required hint="Upload up to two JPG, PNG or WebP images -- large photos are resized automatically.">
-          <input ref={imageInput} type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={e => void addFiles(e.target.files)} style={{ display: 'none' }} />
-          <button type="button" onClick={() => imageInput.current?.click()} style={{ width: '100%', minHeight: 110, border: '1px dashed var(--sa-accent)', borderRadius: 12, background: '#0d0d0d', color: 'var(--sa-muted)', font: '14px var(--sa-font-body)' }}>Choose profile and cover images</button>
+        <Field label="Store images" required hint="Upload a profile photo and a cover photo -- large photos are resized automatically. Profile is required; cover is optional but recommended.">
+          <input ref={profileInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={e => void addImage(e.target.files?.[0], 0)} style={{ display: 'none' }} />
+          <input ref={coverInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={e => void addImage(e.target.files?.[0], 1)} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={() => profileInput.current?.click()} style={{ flex: 1, minHeight: 110, border: '1px dashed var(--sa-accent)', borderRadius: 12, background: '#0d0d0d', color: 'var(--sa-muted)', font: '13px var(--sa-font-body)', overflow: 'hidden', position: 'relative', padding: 0 }}>
+              {form.sampleImages[0] ? <img src={form.sampleImages[0]} alt="Profile preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'Choose profile photo'}
+            </button>
+            <button type="button" onClick={() => coverInput.current?.click()} style={{ flex: 1, minHeight: 110, border: '1px dashed var(--sa-accent)', borderRadius: 12, background: '#0d0d0d', color: 'var(--sa-muted)', font: '13px var(--sa-font-body)', overflow: 'hidden', position: 'relative', padding: 0 }}>
+              {form.sampleImages[1] ? <img src={form.sampleImages[1]} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'Choose cover photo'}
+            </button>
+          </div>
           {imageError && <div role="alert" style={{ marginTop: 8, color: '#ff9a82', font: '12px/1.4 var(--sa-font-body)' }}>{imageError}</div>}
-          {form.sampleImages.filter(Boolean).length > 0 && <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>{form.sampleImages.filter(Boolean).map((src, i) => <img key={i} src={src} alt={`Selected store image ${i + 1}`} style={{ width: 90, height: 70, objectFit: 'cover', borderRadius: 8 }} />)}</div>}
         </Field>
 
         {/* 2026-08-02: William reported the profile/cover photos never
