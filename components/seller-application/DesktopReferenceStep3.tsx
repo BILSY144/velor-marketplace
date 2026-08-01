@@ -15,7 +15,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function DesktopReferenceStep3({
-  form, update, onBack, onNext, error, foundingSeatsAvailable,
+  form, update, onBack, onNext, error, foundingSeatsAvailable, onEditCountry,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
@@ -26,6 +26,13 @@ export function DesktopReferenceStep3({
   // when omitted, the artwork's own baked "190 FOUNDING SEATS. ALL STILL
   // OPEN." line is simply left showing instead of being painted over.
   foundingSeatsAvailable?: number;
+  // 2026-08-xx (William): Country/Region is now chosen on Step 2 and
+  // carries over here -- "so the seller cannot choose a different shipping
+  // address" once it's set. onEditCountry jumps back to Step 2 (the only
+  // place the value can be changed) when shippingCountry is already set;
+  // optional so this still renders read-only-but-unnavigable if a caller
+  // doesn't wire it up.
+  onEditCountry?: () => void;
 }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, height: DESIGN_HEIGHT });
   useEffect(() => {
@@ -36,6 +43,10 @@ export function DesktopReferenceStep3({
   const scale = useMemo(() => Math.min(viewport.width / DESIGN_WIDTH, viewport.height / DESIGN_HEIGHT), [viewport]);
   const left = Math.max(0, (viewport.width - DESIGN_WIDTH * scale) / 2);
   const top = Math.max(0, (viewport.height - DESIGN_HEIGHT * scale) / 2);
+
+  // shippingCountry stores an ISO code (see types.ts) -- same lookup used
+  // on Step 2's Live Preview card and FinishStep/DesktopReferenceStep4.
+  const countryName = COUNTRY_OPTIONS.find(([code]) => code === form.shippingCountry)?.[1] ?? form.shippingCountry;
 
   return (
     <div aria-label="Velor seller application, step 3 of 4" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#050505' }}>
@@ -49,10 +60,32 @@ export function DesktopReferenceStep3({
         <input aria-label="City or town" autoComplete="address-level2" value={form.shippingCity} onChange={e => update('shippingCity', e.target.value)} placeholder="e.g. London" style={{ ...inputStyle, left: 72, top: 684, width: 220 }} />
         <input aria-label="State or region, optional" autoComplete="address-level1" value={form.shippingState} onChange={e => update('shippingState', e.target.value)} placeholder="e.g. Greater London" style={{ ...inputStyle, left: 315, top: 684, width: 220 }} />
         <input aria-label="Postcode or ZIP" autoComplete="postal-code" value={form.shippingZip} onChange={e => update('shippingZip', e.target.value)} placeholder="e.g. SW1A 1AA" style={{ ...inputStyle, left: 558, top: 684, width: 209 }} />
-        <select aria-label="Shipping country" autoComplete="country" value={form.shippingCountry} onChange={e => update('shippingCountry', e.target.value)} style={{ ...inputStyle, left: 72, top: 770, width: 317, appearance: 'auto' }}>
-          <option value="">Select country</option>
-          {COUNTRY_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
-        </select>
+        {/* 2026-08-xx (William): Country/Region is chosen once, on Step 2,
+            and carries over here -- "the seller cannot choose a different
+            shipping address" once it's set. Rather than a second editable
+            select for the same field, this now shows a locked, read-only
+            display of the Step 2 choice with a "Change" link back to
+            Step 2 (the only place it can actually change). Falls back to
+            the normal editable select only if a seller somehow reaches
+            Step 3 with shippingCountry still empty (e.g. skipped straight
+            past Step 2's picker), so the field is never a dead end. */}
+        {form.shippingCountry ? (
+          <div style={{ ...inputStyle, left: 72, top: 770, width: 317, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px' }}>
+            <span>{countryName}</span>
+            <button
+              type="button"
+              onClick={onEditCountry}
+              style={{ background: 'none', border: 0, padding: 0, color: '#f4771f', font: '600 12px Inter, sans-serif', cursor: onEditCountry ? 'pointer' : 'default', textDecoration: 'underline' }}
+            >
+              Change
+            </button>
+          </div>
+        ) : (
+          <select aria-label="Shipping country" autoComplete="country" value={form.shippingCountry} onChange={e => update('shippingCountry', e.target.value)} style={{ ...inputStyle, left: 72, top: 770, width: 317, appearance: 'auto' }}>
+            <option value="">Select country</option>
+            {COUNTRY_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+          </select>
+        )}
 
         {/* The approved art has a "Preferred shipping methods" checklist here (label
             + 3 checkboxes, y~745-848 in the 1536x1024 artwork -- not a live field,

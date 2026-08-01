@@ -175,35 +175,30 @@ export function DesktopReferenceStep2({
         />
 
         {/* 2026-08-02: a real Country/Region select was added here to fix
-            "country/region selection does not work" (see git history for
-            that version). William then pointed out Step 3
-            (DesktopReferenceStep3.tsx) already has a working shippingCountry
-            field, so a second control for the same value on this step was
-            redundant and confusing -- removed per his explicit instruction
-            ("remove page 2 country and region box and text completely").
-            design-step2.png still has "Country / Region" / the globe icon /
-            "Select your country" baked in as static decoration at this
-            position -- with no control layered on top anymore, that baked
-            artwork would otherwise show through again, looking like a
-            dead/broken field. This plain panel paints over it with the
-            same near-black background used elsewhere on this card. */}
-        {/* 2026-08-xx correction: William reported this panel (and the
-            categories select below) "overlapping the profile card area...
-            you can see the other boxes behind them" -- both were sized
-            280x52 on the theory that the baked box matched the Country/
-            Region label's width, which was never actually verified against
-            the artwork, just carried over from an earlier estimate. A
-            proper per-pixel border scan of design-step2.png (looking for
-            the box's own border-highlight pixels, not just its text/icon
-            glyphs) finds the true box is x=470-689, y=434-476 -- 219x42,
-            not 280x52. The old 280-wide panel ran 61px past the box's real
-            right edge (689) into the blank gap before the Live Preview
-            column (which starts at x=738), and its top started 4px below
-            the box's real top border (438 vs 434), leaving a sliver of the
-            baked border visible above it. Resized with a small (2-4px)
-            margin on all sides to fully cover the real box without
-            overshooting into the Live Preview card. */}
-        <div style={{ position: 'absolute', left: 468, top: 432, width: 224, height: 48, background: '#0d0d0d', borderRadius: 7 }} />
+            "country/region selection does not work". William then asked
+            for it to be removed entirely since Step 3 already had its own
+            country field -- done in a later pass, replaced with a plain
+            cover panel painting over the artwork's baked "Country / Region"
+            decoration. William's next message reversed that: he wants a
+            real, working dropdown here after all, whose choice carries
+            over to Step 3 and LOCKS the field there ("the seller cannot
+            choose a different shipping address") -- see the read-only
+            display added in DesktopReferenceStep3.tsx. So the select is
+            back, this time sized to the box's true, pixel-verified bounds
+            (left=468/top=432/224x48 -- see the sizing-fix commit) instead
+            of the earlier 280x52 guess that overlapped the Live Preview
+            card. Shares the same form.shippingCountry as Step 3, so
+            picking it either place keeps both in sync. */}
+        <select
+          aria-label="Country / Region"
+          autoComplete="country"
+          value={form.shippingCountry}
+          onChange={e => update('shippingCountry', e.target.value)}
+          style={{ ...control, left: 468, top: 432, width: 224, height: 48, padding: '0 10px', appearance: 'auto' }}
+        >
+          <option value="">Select your country</option>
+          {COUNTRY_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </select>
 
         {/* 2026-08-02 fix: William reported "trouble selecting my crafts".
             Two real bugs found: (1) this select's own width (220) was
@@ -318,7 +313,22 @@ export function DesktopReferenceStep2({
           {form.businessName || 'Your Store Name'}
           <div style={{ marginTop: 7, color: '#c8c2b8', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 400 }}>{countryName || 'Country name'}</div>
         </div>
-        <div style={{ position: 'absolute', left: 763, top: 753, width: 292, height: 55, overflow: 'hidden', background: 'rgba(12,12,12,.96)', color: '#d7d2ca', font: '14px/1.55 Inter, sans-serif', paddingTop: 4 }}>
+        {/* 2026-08-xx (William): "store description goes off screen in the
+            profile card if the seller chooses a description over a certain
+            amount of words. It should all be in view" -- this box's
+            overflow:hidden simply cut off (invisibly) any text past ~3
+            lines, and the textarea above allows up to 500 characters, far
+            more than 3 lines fits at this font size. The artwork isn't
+            editable, so this box can't just grow -- a per-pixel scan of
+            design-step2.png finds baked icon-row content (the "Crafted
+            with care / Authentic & original / Ships worldwide" row)
+            starting at y~825, only 72px below this box's top (753), which
+            is the hard ceiling before growing the box would start
+            overlapping that row. Switched hidden overflow to a scrollable
+            region within that same footprint instead, so a long
+            description is always fully reachable by scrolling the preview
+            rather than silently truncated with no way to see the rest. */}
+        <div style={{ position: 'absolute', left: 763, top: 753, width: 292, height: 68, overflowY: 'auto', background: 'rgba(12,12,12,.96)', color: '#d7d2ca', font: '14px/1.55 Inter, sans-serif', paddingTop: 4 }}>
           {form.storeDescription || 'Your story and what makes your craft special will appear here.'}
         </div>
 

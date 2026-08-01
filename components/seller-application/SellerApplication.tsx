@@ -155,7 +155,7 @@ export default function SellerApplication({
       <div className="seller-app-desktop-shell">
         {step === 1 && <DesktopReferenceStep1 form={form} update={update} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
         {step === 2 && <DesktopReferenceStep2 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundedCountryCodes={foundedCountryCodes} />}
-        {step === 3 && <DesktopReferenceStep3 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} />}
+        {step === 3 && <DesktopReferenceStep3 form={form} update={update} onBack={goBack} onNext={goNext} error={error} foundingSeatsAvailable={seatsAvailable} onEditCountry={() => jumpTo(2)} />}
         {step === 4 && <DesktopReferenceStep4 form={form} onBack={goBack} onEdit={jumpTo} onSubmit={submitApplication} error={error} submitting={submitting} submitted={submitted} />}
       </div>
 
