@@ -56,7 +56,7 @@ export default function TermsPage() {
     },
     {
       title: "6. Platform Fees",
-      body: "Velor charges a commission on each completed sale based on your subscription tier: 10% on Starter (free) or 4% on Pro (£49/month). This fee is deducted automatically at the time of payment via Stripe Connect. All fees are inclusive of any applicable taxes.",
+      body: "Velor charges a flat 10% commission on each completed sale, the same rate for every seller. There is no paid subscription to lower this rate. Founding sellers (the first verified seller from each country) instead keep a permanent \"Founding Seller\" badge and priority placement, granted free of charge, with no change to their commission rate. (A small number of sellers granted a lower rate before this policy took effect keep that previously-agreed rate; it is not available to new sellers.) This fee is deducted automatically at the time of payment via Stripe Connect. All fees are inclusive of any applicable taxes.",
     },
     {
       title: "7. Prohibited Items",
