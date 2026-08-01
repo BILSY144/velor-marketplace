@@ -107,7 +107,7 @@ interface SellerGroup {
   shippingProfileCountry: string | null
   handlingFeeGBP: number
   internationalFlatRateGBP: number | null
-  items: { productId: string; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null; weightGrams: number | null }[]
+  items: { productId: string; variantId: string | null; quantity: number; priceGBP: number; hsCode: string | null; originCountry: string | null; weightGrams: number | null }[]
   subtotalGBP: number
 }
 
@@ -161,6 +161,17 @@ export async function POST(request: NextRequest) {
         hsCode: true,
         originCountry: true,
         weightGrams: true,
+        // FIX 2026-08-01 (William, live-reproduced): this route -- the one
+        // that sets the ACTUAL Stripe charge amount -- always priced every
+        // line item off the BASE product only, ignoring which variant the
+        // buyer actually selected. Confirmed live at checkout: "Custom
+        // Classic Pet Portrait Frame" base price GBP 40.00, selected variant
+        // "Oval 2 Pets" GBP 54.96 -- the Payment step showed "Oval 2 Pets" in
+        // the order summary but charged GBP 40.00 + GBP 8.00 VAT (= GBP
+        // 48.00) instead of the correct GBP 54.96 + GBP 10.99 VAT. Mirrors
+        // the same fix already applied to app/api/shipping/landed-cost/route.ts
+        // -- see lib/cart.ts's CartItem for the full incident writeup.
+        variants: { select: { id: true, priceOverride: true, stock: true } },
         seller: {
           select: {
             id: true,
@@ -206,22 +217,27 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Product has no seller: ' + item.productId }, { status: 400 })
       }
       const qty = Math.max(1, Number(item.quantity) || 1)
-      if (product.stock < qty) {
+      const variant = item.variantId
+        ? product.variants.find((v) => v.id === item.variantId)
+        : undefined
+      const availableStock = variant ? variant.stock : product.stock
+      if (availableStock < qty) {
         return NextResponse.json(
           {
-            error: product.stock <= 0
+            error: availableStock <= 0
               ? `${product.title} is now sold out.`
-              : `Only ${product.stock} left of ${product.title} -- please reduce the quantity.`,
+              : `Only ${availableStock} left of ${product.title} -- please reduce the quantity.`,
             outOfStock: true,
             productId: item.productId,
-            availableStock: product.stock,
+            availableStock,
           },
           { status: 409 }
         )
       }
       const sellerCurrency = product.seller.currency ?? 'GBP'
+      const nativePrice = variant?.priceOverride ?? product.price
       const unitGBP =
-        sellerCurrency === 'GBP' ? product.price : await convert(product.price, sellerCurrency, 'GBP')
+        sellerCurrency === 'GBP' ? nativePrice : await convert(nativePrice, sellerCurrency, 'GBP')
       const lineGBP = unitGBP * qty
 
       let group = groups.get(product.seller.id)
@@ -242,6 +258,7 @@ export async function POST(request: NextRequest) {
       }
       group.items.push({
         productId: item.productId,
+        variantId: item.variantId ?? null,
         quantity: qty,
         priceGBP: unitGBP,
         hsCode: product.hsCode ?? null,
