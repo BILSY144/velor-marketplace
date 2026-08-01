@@ -13,13 +13,19 @@ import type { Metadata } from 'next'
 // practical ~155-160 char SERP display limit (the same class of issue this
 // log already fixed on the 4 /legal/* pages, 2026-07-14 01:xx UTC), meaning
 // it was being truncated mid-sentence in search results. Trimmed to keep
-// every concrete fact (free to list, 24-hour decision, Pro free for life
-// for founding sellers) and only cut the generic "global marketplace for
-// authentic cultural and heritage goods" framing, which duplicates the
-// title and the root layout's own description -- no fact added or removed.
+// every concrete fact (free to list, 24-hour decision) and only cut the
+// generic "global marketplace for authentic cultural and heritage goods"
+// framing, which duplicates the title and the root layout's own
+// description -- no fact added or removed.
+//
+// description corrected 2026-08-01 (William's decision, via Claude
+// session): "Pro free for life for founding sellers" went stale when
+// lib/founding.ts was revised so founding sellers get only the permanent
+// badge + priority placement, not the retired Pro tier -- swapped for that
+// real, current perk instead.
 const title = 'Apply to Sell on Velor | Founding Seller Programme'
 const description =
-  'Be the first seller from your country on Velor. Free to list, a decision within 2 hours, and Pro free for life for founding sellers.'
+  'Be the first seller from your country on Velor. Free to list, a decision within 2 hours, and a permanent founding badge with priority placement.'
 
 export const metadata: Metadata = {
   title,
