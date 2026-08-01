@@ -381,11 +381,47 @@ export function DesktopReferenceStep2({
             Finish) after already filling in Step 3; on a first pass through
             with no country yet, it falls back to still offering the badge
             rather than assuming it's unavailable. */}
-        <div style={{ position: 'absolute', left: 1108, top: 328, width: 410, height: 102, background: '#0d0d0d', display: 'flex', alignItems: 'flex-start', gap: 22 }}>
+        {/* 2026-08-01 correction (William): "top right is the founders
+            badge and text. it is not alligned with the other badges and
+            the text is too long so it overfolws the border. and you can
+            see a different colour background behing badge and text" --
+            three separate bugs, all traced back to this box's guessed
+            geometry via a pixel-gridded scan of design-step2.png:
+            1) Background seam: the card's true interior background here
+               is (14,14,14)/#0e0e0e (the existing #0d0d0d was already
+               correct, within 1 unit), but this box's bounds
+               (left:1108, width:410 -> spans x1108-1518) OVERFLOW the
+               card's real edges. Edge-detection (biggest brightness jump
+               at y=220/320/420/520/620/720) puts the true interior at
+               x~1117 to x~1506 -- past x1506 and before x1117 is the pure
+               black OUTER page background, so the old box was painting
+               #0d0d0d over that black margin, which is exactly the
+               "different colour background" seam. Narrowed to the real
+               card bounds (left:1117, width:389) so the fill never
+               touches the outer background.
+            2) Icon misalignment: the sibling perk icons ("First from your
+               country", "Velor Live access", "Free to list", "Smart
+               tools", "Seller support") are small flat glyphs (not
+               bordered rings) whose horizontal centres cluster tightly
+               around x~1172-1176 in every row, measured via orange-pixel
+               bounding boxes. This box's 74px bordered icon, flush against
+               the box's left edge with no left padding, centred at
+               ~1108+37=1145 -- ~27-31px left of the siblings. Added
+               paddingLeft:20 (interior left edge 1117+20=1137, icon centre
+               1137+37=1174) to land on the same shared centreline.
+            3) Text overflow: sibling rows' text columns run up to
+               ~264-265px wide before hitting the card's right edge. This
+               box's text had no width cap at all, so it kept running past
+               the card border. With the box narrowed to 389px and 20px of
+               padding on each side, the text column after the icon+gap has
+               ~253px available -- capped it explicitly (width 253,
+               boxSizing border-box) to match the sibling convention and
+               guarantee it wraps inside the card instead of overflowing. */}
+        <div style={{ position: 'absolute', left: 1117, top: 328, width: 389, height: 102, background: '#0d0d0d', display: 'flex', alignItems: 'flex-start', gap: 22, paddingLeft: 20, paddingRight: 20, boxSizing: 'border-box' }}>
           <div style={{ width: 74, height: 74, borderRadius: '50%', border: `1.5px solid ${countryAlreadyFounded ? '#5a5a5a' : '#f47a20'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <IconShieldStar size={32} color={countryAlreadyFounded ? '#6b6b6b' : '#f47a20'} />
           </div>
-          <div style={{ paddingTop: 6 }}>
+          <div style={{ paddingTop: 6, width: 253, boxSizing: 'border-box' }}>
             <div style={{ color: countryAlreadyFounded ? '#9a9a9a' : '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 5 }}>
               {countryAlreadyFounded ? 'Founding Badge Already Claimed' : 'Founding Seller Badge'}
             </div>
