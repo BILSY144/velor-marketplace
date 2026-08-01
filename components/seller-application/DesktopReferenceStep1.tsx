@@ -129,6 +129,13 @@ export function DesktopReferenceStep1({
             accurate) and "Once someone from your country joins..." below
             (kept) -- this panel covers only the seats line itself.
             Background sampled near-black from the artwork to match. */}
+        {/* 2026-08-01 correction #2: William reported this patch visibly
+            "pasted on" -- a lighter rectangle seam against the card's real
+            background. The original #0d0d0d guess was a rough visual
+            estimate, not a real sample. A proper pixel scan of this exact
+            region in design-step1.png (2145 non-glyph pixels checked) comes
+            back essentially all (0,0,0) -- the card interior here is pure
+            black, not dark grey. Swapped to #000 to match exactly. */}
         {/* 2026-08-01 correction: William reported the live seats line
             overlapping the globe icon and bursting past the card border on
             an actual device. Direct pixel-density scanning of
@@ -140,7 +147,7 @@ export function DesktopReferenceStep1({
             the reported overlap. Left/width were already fine (glyphs run
             x~182-470, comfortably inside 175-490) and are unchanged. */}
         {foundingSeatsAvailable !== undefined && (
-          <div style={{ position: 'absolute', left: 175, top: 746, width: 315, height: 30, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: 175, top: 746, width: 315, height: 30, background: '#000', display: 'flex', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.01em', color: '#f4771f', whiteSpace: 'nowrap' }}>
               {foundingSeatsAvailable > 0 ? `${foundingSeatsAvailable} FOUNDING SEATS. STILL OPEN.` : 'ALL FOUNDING SEATS CLAIMED.'}
             </span>
