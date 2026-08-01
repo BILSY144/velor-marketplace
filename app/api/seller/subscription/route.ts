@@ -75,14 +75,21 @@ export async function POST(req: NextRequest) {
   // commission for every seller -- there is no paid plan left to sell, so
   // this action is refused for EVERYONE, founding or not (it used to be
   // conditional on foundingEligible/foundingBadge; that condition is gone
-  // on purpose -- nobody can buy their way to 4% anymore). Founding sellers
-  // keep the 4% rate already promised to them via lib/founding.ts, which is
-  // untouched by this change. See docs/SUBSCRIPTION_AND_TIERS.md.
+  // on purpose -- nobody can buy their way to 4% anymore).
+  //
+  // 2026-08-01 correction: this comment and error message previously said
+  // "founding sellers keep the 4% rate... for life", which was true of the
+  // ORIGINAL founding programme but went stale the moment lib/founding.ts
+  // was revised the same day (William's decision) -- new founding sellers
+  // now get ONLY the permanent badge + priority placement, no commission
+  // change; the 4% rate lives on for exactly one pre-existing seller,
+  // grandfathered outside this mechanism, not something any founding seller
+  // going forward is promised. See lib/founding.ts and docs/SUBSCRIPTION_AND_TIERS.md.
   if (action === 'upgrade_to_pro') {
     return NextResponse.json(
       {
         error:
-          'Velor runs a single flat 10% commission for every seller -- there is no paid plan to upgrade to. Founding sellers keep the 4% rate already promised to them for life.',
+          'Velor runs a single flat 10% commission for every seller -- there is no paid plan to upgrade to. Founding sellers keep a permanent badge and priority placement instead, with no change to their commission rate.',
       },
       { status: 400 }
     )
