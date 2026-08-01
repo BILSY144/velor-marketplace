@@ -669,6 +669,13 @@ model Message {
   receiverId String
   productId  String?
   content    String
+  // Customisation-request / general chat photos (2026-08-01, William --
+  // buyers had no way to send a seller a reference photo, e.g. for a
+  // custom pet portrait). Stored in R2 like Review.images. Every upload is
+  // OCR-scanned server-side and run through the same contact-info filter
+  // as message text before it is ever saved -- see lib/imageContentScan.ts
+  // and app/api/messages/route.ts. Capped at 4 per message.
+  images     String[] @default([])
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
   sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
