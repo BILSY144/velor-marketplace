@@ -18,6 +18,25 @@ export interface CartItem {
   color?: string
   size?: string
   variantName?: string
+  // FIX 2026-08-01 (William: VAT/duty showing far less than 20% of the
+  // displayed item price -- traced to a much bigger bug): every server-side
+  // price re-resolution (app/api/shipping/rates, app/api/shipping/landed-cost,
+  // app/api/stripe/payment-intent) has only ever received `productId`, never
+  // which VARIANT was actually selected/priced (see `id`'s composite
+  // `${productId}-${variantId}` key just above -- the variant id was baked
+  // into that key but never sent to the server as its own field). Every one
+  // of those routes therefore recomputed the price from the BASE product's
+  // price, ignoring ProductVariant.priceOverride entirely. Live-confirmed:
+  // "Custom Classic Pet Portrait Frame" base price GBP 40.00, but the
+  // buyer's cart correctly showed the selected "Oval 2 Pets" variant at
+  // GBP 54.96 -- landed-cost quoted VAT on GBP 40 (GBP 8.00) instead of
+  // GBP 54.96 (GBP 10.99), and -- far more seriously -- payment-intent would
+  // have charged the buyer's card against the same wrong GBP 40 base price,
+  // not the GBP 54.96 they agreed to pay. Adding this field and threading it
+  // through checkout's three server calls (and payment-intent's own item
+  // resolution) closes the gap for every variant-priced listing on the
+  // site, not just this one.
+  variantId?: string
 }
 
 const CART_KEY = 'velor-cart'
