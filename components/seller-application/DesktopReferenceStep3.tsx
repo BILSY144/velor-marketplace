@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { COUNTRY_OPTIONS, FormState } from './types';
+import { IconChartUp } from './icons';
 
 const DESIGN_WIDTH = 1536;
 const DESIGN_HEIGHT = 1024;
@@ -59,6 +60,25 @@ export function DesktopReferenceStep3({
         <div style={{ position: 'absolute', left: 434, top: 744, width: 333, height: 114, background: '#111', borderRadius: 7, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <label style={{ display: 'block', marginBottom: 7, color: '#ece8e0', font: '14px Inter, sans-serif' }}>Company (optional)</label>
           <input aria-label="Shipping company, optional" autoComplete="organization" value={form.shippingCompany} onChange={e => update('shippingCompany', e.target.value)} placeholder="Company or workshop name" style={{ ...inputStyle, position: 'relative', left: 0, top: 0, width: 333 }} />
+        </div>
+
+        {/* The approved artwork's "FOUNDING SELLER BENEFITS" list also had a
+            "Pro, free for life -- Worth £49/month" line (same retired-Pro-
+            tier issue as the Step 2 sidebar -- see the comment there). This
+            box already lists the real current founding perks separately
+            ("Founding seller badge", "Top placement"), so this bullet is
+            just replaced rather than left duplicating stale pricing.
+            Bounds pixel-checked against design-step3.png so neither the
+            box header above nor "Founding seller badge" below is clipped.
+            Placeholder copy/icon pending an updated design pass. */}
+        <div style={{ position: 'absolute', left: 1155, top: 480, width: 370, height: 54, background: '#161616', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', border: '1.3px solid #f47a20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <IconChartUp size={17} color="#f47a20" />
+          </div>
+          <div>
+            <div style={{ color: '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13.5, marginBottom: 2 }}>Smart Tools</div>
+            <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 11.5 }}>Analytics &amp; optimisation to grow.</div>
+          </div>
         </div>
 
         {error && <div role="alert" style={{ position: 'absolute', left: 245, top: 922, width: 520, color: '#ff9a82', font: '12px Inter, sans-serif', textAlign: 'center' }}>{error}</div>}

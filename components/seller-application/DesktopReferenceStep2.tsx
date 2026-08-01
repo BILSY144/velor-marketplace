@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from './types';
+import { IconShieldStar } from './icons';
 
 const DESIGN_WIDTH = 1536;
 const DESIGN_HEIGHT = 1024;
@@ -125,6 +126,34 @@ export function DesktopReferenceStep2({
         </div>
         <div style={{ position: 'absolute', left: 763, top: 753, width: 292, height: 55, overflow: 'hidden', background: 'rgba(12,12,12,.96)', color: '#d7d2ca', font: '14px/1.55 Inter, sans-serif', paddingTop: 4 }}>
           {form.storeDescription || 'Your story and what makes your craft special will appear here.'}
+        </div>
+
+        {/* The approved artwork's "WHY SELL ON VELOR?" list included a
+            "Pro, free for life -- worth £49/month" perk. The self-serve Pro
+            tier was retired for a flat 10% commission for everyone (see
+            app/dashboard/upgrade/pro/page.tsx and the "Retire self-serve
+            Pro tier" commit) -- founding sellers now get a permanent badge
+            + priority placement instead of a waived subscription, so
+            there's no paid tier left to describe as "free". Painted over
+            with the actual current founding perk instead of leaving stale
+            pricing live on screen. Bounds measured directly from
+            design-step2.png (this bullet's icon+title+subtext block only,
+            pixel-checked against the "First from your country" bullet
+            above it and "Velor Live access" below it so neither is
+            clipped). Icon/copy here are a placeholder pending an updated
+            design pass -- flagged to William as such. Coordinates verified
+            against a pixel-gridded render of design-step2.png (the icon
+            column centres at x~1160 with an ~80px circle, not the ~1080/56
+            first guess -- a quick local Playwright screenshot caught the
+            mismatch before this shipped). */}
+        <div style={{ position: 'absolute', left: 1108, top: 328, width: 410, height: 102, background: '#0d0d0d', display: 'flex', alignItems: 'flex-start', gap: 22 }}>
+          <div style={{ width: 74, height: 74, borderRadius: '50%', border: '1.5px solid #f47a20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <IconShieldStar size={32} color="#f47a20" />
+          </div>
+          <div style={{ paddingTop: 6 }}>
+            <div style={{ color: '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 5 }}>Founding Seller Badge</div>
+            <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 13.5, lineHeight: 1.45 }}>Permanent status, shown proudly on your store.</div>
+          </div>
         </div>
 
         {error && <div role="alert" style={{ position: 'absolute', left: 292, top: 905, width: 500, color: '#ff9a82', font: '12px Inter, sans-serif', textAlign: 'center' }}>{error}</div>}
