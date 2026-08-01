@@ -157,7 +157,21 @@ function CheckoutForm({ clientSecret, total, currency, onSuccess }: {
 
   return (
     <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <PaymentElement onReady={() => setElementsReady(true)} />
+      {/* layout: 'tabs' (William, 2026-08-01: "can we get it so it shows
+          them options at the same time as onelink payment options") -- by
+          default (layout omitted) Stripe auto-collapses the whole element
+          down to just the recognized Link/saved-card view ("Onelink") and
+          hides Card/Klarna/Revolut Pay/Amazon Pay behind an extra
+          "Pay without Onelink" click, because those methods can't be saved/
+          redisplayed the way Link/card can -- this is a Stripe platform
+          limitation, not something our old (unconfigured) PaymentElement was
+          choosing. Explicit 'tabs' layout is Stripe's documented way to force
+          every enabled method to render as a row of tabs up front instead of
+          the auto-collapse behaviour. */}
+      <PaymentElement
+        onReady={() => setElementsReady(true)}
+        options={{ layout: { type: 'tabs' } }}
+      />
       {err && (
         <div style={{ padding: '10px 14px', background: 'rgba(255,23,68,0.08)', border: '1px solid var(--red)', borderRadius: '6px', color: 'var(--red)', fontSize: '13px' }}>
           {err}
