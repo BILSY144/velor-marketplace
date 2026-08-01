@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Field, fieldStyle } from '../FormField';
 import { PrimaryButton } from '../PrimaryButton';
 import { FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from '../types';
@@ -21,6 +21,11 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
   onNext: () => void;
 }) {
   const imageInput = useRef<HTMLInputElement>(null);
+  // 2026-08-02 fix: same root cause as the desktop Step 2 fix -- a file that
+  // failed the type/size check here was silently dropped from the accepted
+  // list with no feedback, so choosing a normal (often >2MB) phone photo
+  // just did nothing and looked broken. Now the rejected files are named.
+  const [imageError, setImageError] = useState<string | null>(null);
 
   function toggleCategory(category: string) {
     if (form.productCategories.includes(category)) update('productCategories', form.productCategories.filter(item => item !== category));
@@ -29,8 +34,15 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
 
   async function addFiles(files: FileList | null) {
     if (!files) return;
-    const accepted = Array.from(files).filter(file => file.type.startsWith('image/') && file.size <= 2 * 1024 * 1024).slice(0, 2);
-    update('sampleImages', await Promise.all(accepted.map(readImage)));
+    const all = Array.from(files).slice(0, 2);
+    const rejected = all.filter(file => !file.type.startsWith('image/') || file.size > 2 * 1024 * 1024);
+    const accepted = all.filter(file => file.type.startsWith('image/') && file.size <= 2 * 1024 * 1024);
+    setImageError(rejected.length
+      ? rejected.map(file => !file.type.startsWith('image/')
+        ? `"${file.name}" isn't an image file.`
+        : `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB -- the limit is 2MB.`).join(' ')
+      : null);
+    if (accepted.length) update('sampleImages', await Promise.all(accepted.map(readImage)));
   }
 
   return (
@@ -57,6 +69,7 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
         <Field label="Store images" required hint="Upload up to two JPG, PNG or WebP images, maximum 2MB each.">
           <input ref={imageInput} type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={e => void addFiles(e.target.files)} style={{ display: 'none' }} />
           <button type="button" onClick={() => imageInput.current?.click()} style={{ width: '100%', minHeight: 110, border: '1px dashed var(--sa-accent)', borderRadius: 12, background: '#0d0d0d', color: 'var(--sa-muted)', font: '14px var(--sa-font-body)' }}>Choose profile and cover images</button>
+          {imageError && <div role="alert" style={{ marginTop: 8, color: '#ff9a82', font: '12px/1.4 var(--sa-font-body)' }}>{imageError}</div>}
           {form.sampleImages.filter(Boolean).length > 0 && <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>{form.sampleImages.filter(Boolean).map((src, i) => <img key={i} src={src} alt={`Selected store image ${i + 1}`} style={{ width: 90, height: 70, objectFit: 'cover', borderRadius: 8 }} />)}</div>}
         </Field>
       </div>
