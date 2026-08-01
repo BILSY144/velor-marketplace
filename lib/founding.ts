@@ -79,3 +79,16 @@ export async function grantCountryFounderIfFirst(
     data: { foundingPerksGrantedAt: new Date(), foundingBadge: true },
   })
 }
+
+// Live count of founding seats still open, for the seller-application
+// wizard's "N founding seats" copy (William, 2026-08-01: the "190 founding
+// seats, all still open" claim went stale the moment the first
+// CountryFounder row was created -- it needs to reflect real remaining
+// seats, not the static total). One seat per WORLD_COUNTRIES entry;
+// CountryFounder.countryCode is unique, so its row count is exactly the
+// number of seats already claimed. Floored at 0 so a future edge case
+// (every country claimed) can't render a negative number.
+export async function getAvailableFoundingSeatCount(): Promise<number> {
+  const claimed = await prisma.countryFounder.count()
+  return Math.max(0, WORLD_COUNTRIES.length - claimed)
+}
