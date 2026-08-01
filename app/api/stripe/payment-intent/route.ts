@@ -307,16 +307,25 @@ export async function POST(request: NextRequest) {
         // sellers dispatching from any of the ~190 origin countries, not
         // just the handful with a live carrier account). Never trust the
         // client's shippingAmount -- re-read fresh from the DB (fetched
-        // into group.internationalFlatRateGBP above). If it's since changed
-        // or been unset, treat it like an expired rate rather than silently
-        // charging whatever the client claims or falling back to 0.
-        if (group.internationalFlatRateGBP == null) {
-          return NextResponse.json(
-            { error: "This seller's shipping rate has changed. Please reselect shipping and try again." },
-            { status: 409 }
-          )
-        }
-        shippingGBP = group.internationalFlatRateGBP
+        // into group.internationalFlatRateGBP above).
+        //
+        // FIX 2026-08-01 (William: "shipping rate has changed" error blocking
+        // every checkout, both mobile and desktop): this used to treat
+        // group.internationalFlatRateGBP == null as "the rate must have
+        // expired/changed" and hard-block the whole checkout with a 409 here.
+        // But app/api/shipping/rates/route.ts's flatRateOrFallback was
+        // changed on 2026-07-29 (the "universal seller-arranged era" rule) to
+        // return rateId 'seller-flat-rate' at 0.00 (FREE) for EVERY seller who
+        // has never explicitly configured an international flat rate --
+        // null/never-set is the intentional common case, not a sign anything
+        // changed. Because that quote-side default was never mirrored here,
+        // ANY buyer checking out with a seller who simply never touched
+        // Settings -> Shipping (i.e. most sellers, since FREE is the silent
+        // default) got quoted "Free shipping" and then hit this exact error
+        // trying to pay -- 100% reproducible, not mobile-specific. Now
+        // defaults null to 0 here too, matching the quote route exactly,
+        // instead of erroring.
+        shippingGBP = group.internationalFlatRateGBP ?? 0
       } else if (shipEntry.rateId === 'platform-default-rate') {
         // Platform-default zone/weight estimate (2026-07-27, see
         // app/api/shipping/rates's flatRateOrFallback and
