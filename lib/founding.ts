@@ -92,3 +92,15 @@ export async function getAvailableFoundingSeatCount(): Promise<number> {
   const claimed = await prisma.countryFounder.count()
   return Math.max(0, WORLD_COUNTRIES.length - claimed)
 }
+
+// Per-country founder lookup for the seller-application wizard (William,
+// 2026-08-xx): Step 2's "Founding Seller Badge" panel must stop offering
+// the badge once the applicant's shippingCountry (set on Step 3) already
+// has a founder -- countryCode is unique on CountryFounder, so at most one
+// seller per country can ever hold it. Returns every already-claimed ISO
+// code so the wizard can do a simple client-side .includes() check against
+// form.shippingCountry rather than a live lookup per keystroke.
+export async function getFoundedCountryCodes(): Promise<string[]> {
+  const rows = await prisma.countryFounder.findMany({ select: { countryCode: true } })
+  return rows.map((row: { countryCode: string }) => row.countryCode)
+}
