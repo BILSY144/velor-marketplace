@@ -112,8 +112,18 @@ export function DesktopReferenceStep1({
             accurate) and "Once someone from your country joins..." below
             (kept) -- this panel covers only the seats line itself.
             Background sampled near-black from the artwork to match. */}
+        {/* 2026-08-01 correction: William reported the live seats line
+            overlapping the globe icon and bursting past the card border on
+            an actual device. Direct pixel-density scanning of
+            design-step1.png (row/column orange-pixel counts, not visual
+            estimate) shows the real "190 FOUNDING SEATS. ALL STILL OPEN."
+            glyphs occupy y~749-771, not y~742-768 as originally measured --
+            the old panel was positioned high enough to still show the
+            baked line's lower half beneath the new text, which is exactly
+            the reported overlap. Left/width were already fine (glyphs run
+            x~182-470, comfortably inside 175-490) and are unchanged. */}
         {foundingSeatsAvailable !== undefined && (
-          <div style={{ position: 'absolute', left: 175, top: 742, width: 315, height: 26, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: 175, top: 746, width: 315, height: 30, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.01em', color: '#f4771f', whiteSpace: 'nowrap' }}>
               {foundingSeatsAvailable > 0 ? `${foundingSeatsAvailable} FOUNDING SEATS. STILL OPEN.` : 'ALL FOUNDING SEATS CLAIMED.'}
             </span>

@@ -95,8 +95,16 @@ export function DesktopReferenceStep3({
             and the box's rounded bottom border below (kept) -- this panel
             covers only the seats line itself, with margin on both sides
             so it doesn't bleed into the border. */}
+        {/* 2026-08-01 correction: same pixel-density re-check as
+            DesktopReferenceStep1.tsx after William reported an overlap bug
+            on Step 1's version of this panel. This one's vertical bounds
+            were fine (glyphs at y~859-876, well inside 850-882), but the
+            left edge was measured too far right -- glyphs actually start
+            at x~1188, 27px before this panel's old left:1215, leaving a
+            sliver of the baked "1" visible. Widened left/width to start
+            comfortably before the real text and still clear the border. */}
         {foundingSeatsAvailable !== undefined && (
-          <div style={{ position: 'absolute', left: 1215, top: 850, width: 280, height: 32, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: 1180, top: 850, width: 310, height: 32, background: '#0d0d0d', display: 'flex', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.01em', color: '#f4771f', whiteSpace: 'nowrap' }}>
               {foundingSeatsAvailable > 0 ? `${foundingSeatsAvailable} FOUNDING SEATS. STILL OPEN.` : 'ALL FOUNDING SEATS CLAIMED.'}
             </span>
