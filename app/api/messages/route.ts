@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { checkMessageContent } from '@/lib/messageFilter';
 import { displayIdentities } from '@/lib/messageIdentity';
+import { isImageScanConfigured, scanImagesForContactInfo } from '@/lib/imageContentScan';
+import { imagesToR2 } from '@/lib/r2';
 
 // Privacy rule (2026-07-20): responses from this API never include email
 // addresses, and every name is a display identity -- store name for sellers,
@@ -53,6 +55,7 @@ export async function GET(req: Request) {
         senderId: m.senderId,
         receiverId: m.receiverId,
         content: m.content,
+        images: m.images,
         isRead: m.isRead,
         createdAt: m.createdAt,
         sender: { id: m.sender.id, name: names.get(m.sender.id) ?? 'Velor member', image: m.sender.image },
@@ -68,7 +71,7 @@ export async function GET(req: Request) {
     conversationId: string;
     otherUser: { id: string; name: string };
     product: { id: string; title: string } | null;
-    lastMessage: { content: string; createdAt: Date; senderId: string };
+    lastMessage: { content: string; images: string[]; createdAt: Date; senderId: string };
     unreadCount: number;
   }>();
 
@@ -82,7 +85,7 @@ export async function GET(req: Request) {
         conversationId: [user.id, otherUser.id].sort().join('_'),
         otherUser: { id: otherUser.id, name: names.get(otherUser.id) ?? 'Velor member' },
         product: msg.product ? { id: msg.product.id, title: msg.product.title } : null,
-        lastMessage: { content: msg.content, createdAt: msg.createdAt, senderId: msg.senderId },
+        lastMessage: { content: msg.content, images: msg.images, createdAt: msg.createdAt, senderId: msg.senderId },
         unreadCount: 0,
       });
     }
@@ -110,8 +113,10 @@ export async function POST(req: Request) {
     sellerId?: string;
     productId?: string;
     content?: string;
+    images?: string[];
   };
-  const { receiverId, sellerId, productId, content } = body;
+  const { receiverId, sellerId, productId, content, images } = body;
+  const rawImages = Array.isArray(images) ? images.filter((i) => typeof i === 'string').slice(0, 4) : [];
 
   // The product page's "Message seller" button only knows the Seller-table id
   // (product.sellerId), not the seller's User id -- resolve it here. Before
@@ -166,12 +171,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: check.reason, violations: check.violations }, { status: 400 });
   }
 
+  // Image content scan (2026-08-01, William -- customisation-request photos).
+  // FAIL CLOSED: if scanning isn't configured, or the scan itself errors, the
+  // whole message is rejected rather than letting an unscanned photo through.
+  // See lib/imageContentScan.ts for why this can't just reuse checkMessageContent
+  // directly on the raw images.
+  let storedImages: string[] = [];
+  if (rawImages.length) {
+    if (!isImageScanConfigured()) {
+      return NextResponse.json(
+        { error: "Photo attachments aren't available yet -- please send your message without a photo for now." },
+        { status: 400 }
+      );
+    }
+    const scan = await scanImagesForContactInfo(rawImages);
+    if (scan.blocked) {
+      return NextResponse.json(
+        { error: scan.reason ?? 'This photo could not be sent.', violations: scan.violations },
+        { status: 400 }
+      );
+    }
+    storedImages = await imagesToR2(rawImages, `messages/${user.id}`);
+  }
+
   const message = await prisma.message.create({
     data: {
       senderId: user.id,
       receiverId: receiverUserId,
       productId: productId ?? null,
       content: content.trim(),
+      images: storedImages,
       isRead: false,
     },
     include: {
