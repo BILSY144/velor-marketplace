@@ -36,7 +36,7 @@ export default function SellerAgreementPage() {
   const sections = [
     {
       title: "1. Platform Fee",
-      body: "Velor charges a flat 10% commission on the product subtotal of every completed sale. There is no paid subscription tier to lower this rate. The one exception is Velor's founding-seller programme: the first verified seller from each country keeps a 4% commission rate for as long as they keep selling, granted automatically and free of charge, never purchased. The commission is deducted automatically via Stripe Connect before funds are transferred to your account and is inclusive of payment processing costs.",
+      body: "Velor charges a flat 10% commission on the product subtotal of every completed sale. There is no paid subscription tier to lower this rate, and it applies equally to every seller, including founding sellers. The first verified seller from each country instead keeps a permanent \"Founding Seller\" badge and priority placement in search and on their country's page, for as long as they keep selling -- granted automatically and free of charge, never purchased, but with no change to their commission rate. (A small number of sellers granted a lower rate before this policy took effect keep that previously-agreed rate; it is not available to new sellers.) The commission is deducted automatically via Stripe Connect before funds are transferred to your account and is inclusive of payment processing costs.",
     },
     {
       title: "2. Seller Responsibilities",
