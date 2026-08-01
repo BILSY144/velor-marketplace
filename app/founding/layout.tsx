@@ -13,10 +13,10 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 // re-run) -- the previous version was 195 characters, past Google's
 // practical ~155-160 char SERP display limit (same class of fix already
 // applied to /apply and /origins the same run). Kept every concrete fact
-// (190 countries, one founding seat each, founding badge, Pro free for
-// life, permanent Velor Live access) and only tightened the phrasing --
-// "as the seller who opened your country" was cut as restating what "be
-// first from yours" already says, not a fact removed.
+// (190 countries, one founding seat each, founding badge, permanent Velor
+// Live access) and only tightened the phrasing -- "as the seller who
+// opened your country" was cut as restating what "be first from yours"
+// already says, not a fact removed.
 //
 // description corrected by the standing SEO agent, 2026-07-19 22:xx UTC --
 // "permanent Velor Live access" was a founding-exclusive claim that went
@@ -30,9 +30,14 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 // the page it describes. Swapped the stale claim for a real, still-current
 // founding-exclusive perk already on the live page: the showreel slot
 // ("The showreel slot. Your film, on the homepage." -- app/founding/page.tsx).
+//
+// description corrected again 2026-08-01 (William's decision, via Claude
+// session): "Pro free for life" went stale when lib/founding.ts was
+// revised so founding sellers get only the permanent badge + priority
+// placement, not the retired Pro tier -- swapped for that real perk.
 const title = 'Founding Sellers | One Seat Per Country — Velor'
 const description =
-  '190 countries, one founding seller each. Be first from yours and keep the founding badge, Pro free for life, and the homepage showreel slot.'
+  '190 countries, one founding seller each. Be first from yours and keep the founding badge, priority placement, and the homepage showreel slot.'
 
 export const metadata: Metadata = {
   title,
