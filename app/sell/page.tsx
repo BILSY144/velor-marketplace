@@ -6,8 +6,13 @@
 //   24h       = APPLICATION_SLA_HOURS, enforced by /api/cron/review-applications
 //   10%       = flat commission for every seller, TIER_COMMISSION.STARTER in
 //               app/api/stripe/payment-intent/route.ts
-//   4%        = TIER_COMMISSION.PRO -- founding sellers only (lib/founding.ts),
-//               granted free for life, never purchased
+//   4%        = the legacy TIER_COMMISSION.PRO rate -- NOT a current founding
+//               perk (lib/founding.ts was revised 2026-07-31/2026-08-01 so
+//               founding sellers now get only the permanent badge + priority
+//               placement, no commission change); a small number of
+//               pre-existing sellers grandfathered onto 4% before that
+//               revision keep it, but this page must never describe it as
+//               something a new founding seller gets.
 // The old copy rule stands: do not write a number here that no code backs up.
 //
 // 2026-07-31 (William's decision, via Claude session): the self-serve Pro
