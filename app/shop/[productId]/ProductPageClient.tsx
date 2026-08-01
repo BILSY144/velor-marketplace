@@ -693,6 +693,12 @@ export default function ProductPageClient() {
       quantity: qty,
       image,
       sellerId: product.sellerId,
+      // FIX 2026-08-01 -- see lib/cart.ts's CartItem for the full incident
+      // writeup: without this, every server-side price re-resolution
+      // (shipping rates, landed-cost/VAT, and the actual Stripe charge)
+      // fell back to the base product's price, ignoring this variant's
+      // priceOverride.
+      variantId: selectedVariant?.id,
     })
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
