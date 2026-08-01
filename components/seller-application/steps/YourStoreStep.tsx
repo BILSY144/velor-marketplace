@@ -5,10 +5,50 @@ import { Field, fieldStyle } from '../FormField';
 import { PrimaryButton } from '../PrimaryButton';
 import { COUNTRY_OPTIONS, FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from '../types';
 
-function readImage(file: File): Promise<string> {
+// 2026-08-xx: same fix as the desktop shell's DesktopReferenceStep2.tsx --
+// William reported real photos routinely getting rejected with a size
+// error (a normal phone photo is often 3-15MB, well past the flat 2MB raw
+// cap this used to enforce, see the removed checks in addFiles below).
+// Downscale + re-encode as JPEG instead of hard-rejecting, same approach
+// already used for product images (resizeAndCompressImage in
+// app/dashboard/products/page.tsx), so real photos succeed instead of
+// bouncing off a size limit.
+const MAX_IMAGE_DIMENSION = 1600;
+const MAX_IMAGE_DATA_URL_LEN = 400_000;
+
+function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+          const scale = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Could not process that image.')); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        while (dataUrl.length > MAX_IMAGE_DATA_URL_LEN && quality > 0.35) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        if (dataUrl.length > MAX_IMAGE_DATA_URL_LEN) {
+          reject(new Error('This image is still too large even after compression -- please try a different photo.'));
+          return;
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Could not read that image.'));
+      img.src = String(reader.result ?? '');
+    };
     reader.onerror = () => reject(new Error('Could not read that image.'));
     reader.readAsDataURL(file);
   });
@@ -35,14 +75,23 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
   async function addFiles(files: FileList | null) {
     if (!files) return;
     const all = Array.from(files).slice(0, 2);
-    const rejected = all.filter(file => !file.type.startsWith('image/') || file.size > 2 * 1024 * 1024);
-    const accepted = all.filter(file => file.type.startsWith('image/') && file.size <= 2 * 1024 * 1024);
-    setImageError(rejected.length
-      ? rejected.map(file => !file.type.startsWith('image/')
-        ? `"${file.name}" isn't an image file.`
-        : `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB -- the limit is 2MB.`).join(' ')
-      : null);
-    if (accepted.length) update('sampleImages', await Promise.all(accepted.map(readImage)));
+    const rejected = all.filter(file => !file.type.startsWith('image/'));
+    const accepted = all.filter(file => file.type.startsWith('image/'));
+    const compressed: string[] = [];
+    const compressErrors: string[] = [];
+    for (const file of accepted) {
+      try {
+        compressed.push(await compressImage(file));
+      } catch (caught) {
+        compressErrors.push(caught instanceof Error ? caught.message : `"${file.name}" could not be processed.`);
+      }
+    }
+    const messages = [
+      ...rejected.map(file => `"${file.name}" isn't an image file.`),
+      ...compressErrors,
+    ];
+    setImageError(messages.length ? messages.join(' ') : null);
+    if (compressed.length) update('sampleImages', compressed);
   }
 
   // shippingCountry stores an ISO code (see types.ts) -- match the same
@@ -70,7 +119,7 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
             })}
           </div>
         </Field>
-        <Field label="Store images" required hint="Upload up to two JPG, PNG or WebP images, maximum 2MB each.">
+        <Field label="Store images" required hint="Upload up to two JPG, PNG or WebP images -- large photos are resized automatically.">
           <input ref={imageInput} type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={e => void addFiles(e.target.files)} style={{ display: 'none' }} />
           <button type="button" onClick={() => imageInput.current?.click()} style={{ width: '100%', minHeight: 110, border: '1px dashed var(--sa-accent)', borderRadius: 12, background: '#0d0d0d', color: 'var(--sa-muted)', font: '14px var(--sa-font-body)' }}>Choose profile and cover images</button>
           {imageError && <div role="alert" style={{ marginTop: 8, color: '#ff9a82', font: '12px/1.4 var(--sa-font-body)' }}>{imageError}</div>}
