@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { Field, fieldStyle } from '../FormField';
 import { PrimaryButton } from '../PrimaryButton';
-import { FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from '../types';
+import { COUNTRY_OPTIONS, FormState, MAX_CATEGORIES, PRODUCT_CATEGORY_OPTIONS } from '../types';
 
 function readImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,6 +44,10 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
       : null);
     if (accepted.length) update('sampleImages', await Promise.all(accepted.map(readImage)));
   }
+
+  // shippingCountry stores an ISO code (see types.ts) -- match the same
+  // display-name lookup used on the desktop shell's Live Preview card.
+  const countryName = COUNTRY_OPTIONS.find(([code]) => code === form.shippingCountry)?.[1] ?? form.shippingCountry;
 
   return (
     <div>
@@ -93,7 +97,7 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
             </div>
             <div style={{ padding: '40px 16px 16px' }}>
               <div style={{ color: 'var(--sa-text)', font: '600 18px var(--sa-font-display)' }}>{form.businessName || 'Your Store Name'}</div>
-              <div style={{ marginTop: 2, color: 'var(--sa-muted)', font: '12px var(--sa-font-body)' }}>{form.shippingCountry || 'Country name'}</div>
+              <div style={{ marginTop: 2, color: 'var(--sa-muted)', font: '12px var(--sa-font-body)' }}>{countryName || 'Country name'}</div>
               <div style={{ marginTop: 8, color: 'var(--sa-muted)', font: '13px/1.5 var(--sa-font-body)' }}>{form.storeDescription || 'Your story and what makes your craft special will appear here.'}</div>
             </div>
           </div>
