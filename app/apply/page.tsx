@@ -22,7 +22,7 @@
 // getAvailableFoundingSeatCount() (lib/founding.ts) and passes it down as a
 // prop, so the number on screen always matches the database.
 import SellerApplication from '@/components/seller-application/SellerApplication';
-import { getAvailableFoundingSeatCount } from '@/lib/founding';
+import { getAvailableFoundingSeatCount, getFoundedCountryCodes } from '@/lib/founding';
 
 // Forces this page to run fresh on every request instead of being statically
 // generated once at build time -- without this, Next.js could bake in
@@ -32,6 +32,12 @@ import { getAvailableFoundingSeatCount } from '@/lib/founding';
 export const dynamic = 'force-dynamic';
 
 export default async function ApplyPage() {
-  const foundingSeatsAvailable = await getAvailableFoundingSeatCount();
-  return <SellerApplication foundingSeatsAvailable={foundingSeatsAvailable} />;
+  // 2026-08-xx: also fetched live so Step 2's Founding Seller Badge panel
+  // can stop offering the badge once the applicant's chosen shipping
+  // country already has a founder (see getFoundedCountryCodes, lib/founding.ts).
+  const [foundingSeatsAvailable, foundedCountryCodes] = await Promise.all([
+    getAvailableFoundingSeatCount(),
+    getFoundedCountryCodes(),
+  ]);
+  return <SellerApplication foundingSeatsAvailable={foundingSeatsAvailable} foundedCountryCodes={foundedCountryCodes} />;
 }
