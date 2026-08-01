@@ -72,6 +72,32 @@ export function YourStoreStep({ form, update, onBack, onNext }: {
           {imageError && <div role="alert" style={{ marginTop: 8, color: '#ff9a82', font: '12px/1.4 var(--sa-font-body)' }}>{imageError}</div>}
           {form.sampleImages.filter(Boolean).length > 0 && <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>{form.sampleImages.filter(Boolean).map((src, i) => <img key={i} src={src} alt={`Selected store image ${i + 1}`} style={{ width: 90, height: 70, objectFit: 'cover', borderRadius: 8 }} />)}</div>}
         </Field>
+
+        {/* 2026-08-02: William reported the profile/cover photos never
+            showing in "the preview box" -- true for this shell too, and
+            worse here: this compact mobile/tablet layout (shown on any
+            viewport under the 1365.98px breakpoint in tokens.css -- most
+            laptop windows that aren't maximized) never had a preview card
+            at all, only the small thumbnail chips above. The desktop shell
+            got a Live Preview card wired up to real photos (see
+            DesktopReferenceStep2.tsx), but anyone under that breakpoint
+            never saw it. Adding the same live preview here, in normal flow
+            (no baked artwork on this shell, so no pixel-measured overlay --
+            just a plain card), so it isn't tied to viewport width. */}
+        <Field label="Live preview" hint="This is how your store will appear to buyers.">
+          <div style={{ maxWidth: 360, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--sa-border)', background: '#0d0d0d' }}>
+            <div style={{ position: 'relative', height: 120, background: form.sampleImages[1] ? `center/cover no-repeat url(${form.sampleImages[1]})` : 'linear-gradient(135deg,#1a1a1a,#0d0d0d)' }}>
+              <div style={{ position: 'absolute', left: 16, bottom: -32, width: 64, height: 64, borderRadius: '50%', border: '3px solid #0d0d0d', overflow: 'hidden', background: '#1a1a1a' }}>
+                {form.sampleImages[0] && <img src={form.sampleImages[0]} alt="Profile preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              </div>
+            </div>
+            <div style={{ padding: '40px 16px 16px' }}>
+              <div style={{ color: 'var(--sa-text)', font: '600 18px var(--sa-font-display)' }}>{form.businessName || 'Your Store Name'}</div>
+              <div style={{ marginTop: 2, color: 'var(--sa-muted)', font: '12px var(--sa-font-body)' }}>{form.shippingCountry || 'Country name'}</div>
+              <div style={{ marginTop: 8, color: 'var(--sa-muted)', font: '13px/1.5 var(--sa-font-body)' }}>{form.storeDescription || 'Your story and what makes your craft special will appear here.'}</div>
+            </div>
+          </div>
+        </Field>
       </div>
       <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
         <button type="button" onClick={onBack} style={{ flex: 1, minHeight: 52, border: '1px solid var(--sa-border)', borderRadius: 10, background: 'transparent', color: 'var(--sa-text)' }}>Back</button>
