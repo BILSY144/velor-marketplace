@@ -21,6 +21,13 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     window.scrollTo(0, 0)
   }, [pathname])
   const isPublic = !pathname.startsWith('/dashboard') && !pathname.startsWith('/auth') && !pathname.startsWith('/admin') && !pathname.startsWith('/pulse')
+  // /apply (the 4-step founding-seller wizard) is deliberately chromeless --
+  // William's own design has no site header/footer, just the wizard itself
+  // full-bleed on a dark background (William, 2026-07-31: "i want the pages
+  // like for like no header or footer only what you see on the designs").
+  // Scoped to the exact route (not startsWith) so /apply/invited, a
+  // different page, is unaffected and keeps normal site chrome.
+  const isChromelessApply = pathname === '/apply'
   // A single live room (/live/[room], e.g. /live/abc123) is deliberately
   // immersive -- full-bleed video with everything overlaid on it, the same
   // TikTok LIVE model app/live/[room]/page.tsx now follows (William,
@@ -32,7 +39,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   // is unaffected and keeps normal site chrome; only a specific room, which
   // always has a second path segment, is treated as immersive.
   const isImmersiveLiveRoom = pathname.startsWith('/live/')
-  const showChrome = isPublic && !isImmersiveLiveRoom
+  const showChrome = isPublic && !isImmersiveLiveRoom && !isChromelessApply
   return (
     <>
       {showChrome && <GlobalHeader />}
