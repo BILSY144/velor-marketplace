@@ -55,10 +55,10 @@ function InvitedContent() {
         <div className="iv-perkbox">
           <div className="lbl">What you keep, as a founding seller</div>
           <ul>
-            <li><i>&#10003;</i><span><b>Pro, free for life.</b> Never charged, for as long as the subscription runs unbroken.</span></li>
             <li><i>&#10003;</i><span><b>The founding badge.</b> Permanent, on your store and every listing.</span></li>
             <li><i>&#10003;</i><span>{country ? <><b>The first store on {country.name}&apos;s page.</b> Front and centre until others arrive &mdash; credited as the seller who opened it, always.</> : <><b>The first store on your country&apos;s page.</b> Front and centre until others arrive &mdash; credited as the seller who opened it, always.</>}</span></li>
-            <li><i>&#10003;</i><span><b>Every Pro benefit, free, for life.</b> Unlimited listings, 4% commission, your dedicated AI account manager &mdash; the full paid tier, never billed.</span></li>
+            <li><i>&#10003;</i><span><b>Priority placement in search, for life.</b> Recognition that stays with your store as long as you keep selling.</span></li>
+            <li><i>&#10003;</i><span><b>The same flat 10% commission as everyone.</b> No subscription, no upsell &mdash; free to list, and nothing to buy.</span></li>
           </ul>
         </div>
 
