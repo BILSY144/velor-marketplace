@@ -1,10 +1,6 @@
 // Shared types for the seller-application wizard. Field names match
-// app/api/seller/apply/route.ts exactly (businessName, contactName,
-// contactEmail, password, sellerType, storeDescription, productCategories,
-// shippingCountry, shippingName, shippingCompany, shippingStreet1/2,
-// shippingCity, shippingState, shippingZip, shippingPhone, prospectId) --
-// this form posts straight to the real, already-working endpoint, not a
-// stub. See FormState below.
+// app/api/seller/apply/route.ts exactly. Do not rename these fields without
+// changing the live endpoint and database mapping at the same time.
 
 export type SellerType = 'individual' | 'business';
 
@@ -18,8 +14,10 @@ export type FormState = {
   website: string;
   storeDescription: string;
   productCategories: string[];
+  sampleImages: string[];
   shippingCountry: string;
   shippingName: string;
+  shippingCompany: string;
   shippingPhone: string;
   shippingStreet1: string;
   shippingStreet2: string;
@@ -38,8 +36,10 @@ export const initialForm: FormState = {
   website: '',
   storeDescription: '',
   productCategories: [],
+  sampleImages: [],
   shippingCountry: '',
   shippingName: '',
+  shippingCompany: '',
   shippingPhone: '',
   shippingStreet1: '',
   shippingStreet2: '',
@@ -49,6 +49,47 @@ export const initialForm: FormState = {
 };
 
 export const MAX_CATEGORIES = 3;
+
+export const PRODUCT_CATEGORY_OPTIONS = [
+  'Ceramics & Pottery',
+  'Rugs, Cloth & Thread',
+  "The World's Kitchen",
+  'Adornment',
+  'Tea, Coffee & Pantry',
+  'Light, Scent & Self',
+  'Leather Goods',
+  'Glass & Marble',
+  'Furniture & Woodcraft',
+  'Metalware',
+  'Paper & Stationery',
+  'Spice & Pantry Staples',
+  'Instruments & Music',
+  'Rituals & Celebrations',
+  'Precision Craft',
+  'Home Craft & Décor',
+  'Outdoor & Field Craft',
+  'Basketry & Woven Goods',
+  'Stone & Gem Carving',
+  'Folk Art, Painting & Calligraphy',
+  'Handcrafted Toys, Dolls & Puppets',
+  'Garments',
+] as const;
+
+export const COUNTRY_OPTIONS = [
+  ['GB', 'United Kingdom'], ['US', 'United States'], ['CA', 'Canada'],
+  ['AU', 'Australia'], ['NZ', 'New Zealand'], ['IE', 'Ireland'],
+  ['FR', 'France'], ['DE', 'Germany'], ['IT', 'Italy'], ['ES', 'Spain'],
+  ['PT', 'Portugal'], ['NL', 'Netherlands'], ['BE', 'Belgium'],
+  ['AT', 'Austria'], ['CH', 'Switzerland'], ['SE', 'Sweden'],
+  ['NO', 'Norway'], ['DK', 'Denmark'], ['FI', 'Finland'],
+  ['PL', 'Poland'], ['CZ', 'Czechia'], ['GR', 'Greece'], ['TR', 'Türkiye'],
+  ['MA', 'Morocco'], ['EG', 'Egypt'], ['ZA', 'South Africa'], ['NG', 'Nigeria'],
+  ['KE', 'Kenya'], ['GH', 'Ghana'], ['IN', 'India'], ['PK', 'Pakistan'],
+  ['BD', 'Bangladesh'], ['NP', 'Nepal'], ['LK', 'Sri Lanka'], ['CN', 'China'],
+  ['JP', 'Japan'], ['KR', 'South Korea'], ['TH', 'Thailand'], ['VN', 'Vietnam'],
+  ['ID', 'Indonesia'], ['PH', 'Philippines'], ['MX', 'Mexico'], ['BR', 'Brazil'],
+  ['AR', 'Argentina'], ['CL', 'Chile'], ['CO', 'Colombia'], ['PE', 'Peru'],
+] as const;
 
 export const STEPS = [
   { n: 1, label: 'About You', hint: 'Tell us who you are' },
