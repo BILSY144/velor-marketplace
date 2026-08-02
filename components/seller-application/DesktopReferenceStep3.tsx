@@ -125,11 +125,41 @@ export function DesktopReferenceStep3({
             Bounds pixel-checked against design-step3.png so neither the
             box header above nor "Founding seller badge" below is clipped.
             Placeholder copy/icon pending an updated design pass. */}
-        <div style={{ position: 'absolute', left: 1155, top: 480, width: 370, height: 54, background: '#161616', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* 2026-08-02 correction (William): "smart tools badge is out of
+            place and you can see its overlapping left and right borders
+            and not inline" -- the box's geometry (left:1155, width:370,
+            icon flush against the left edge with only a 10px gap) was
+            never checked against the card's own true bounds. Pixel-gridded
+            re-measurement of design-step3.png found:
+            - Card interior: a full rounded-rect border is drawn at
+              x=1166 (left) and x=1500 (right), y=433 (top) and y~838
+              (bottom) -- confirmed both by a brightness-jump scan for the
+              vertical strokes and by tracing the horizontal top/bottom
+              border lines corner to corner. The old box (x1155-1525)
+              overflowed BOTH edges -- x1155 is 11px left of the true
+              border, x1525 is 25px past it -- exactly the reported
+              left/right border overlap.
+            - Sibling icon boxes (Pro/crown, Founding seller badge/shield,
+              Top placement/ticket, Velor Live access/wifi, Free to
+              list/tag, Seller support/headset) share an identical
+              orange-pixel bounding box of x=1188-1225 (centre x=1206.5)
+              in every single row -- measured directly, not estimated.
+              Their text columns all start at x=1241. This box's 34px
+              icon circle, flush left with only a 10px left inset, centred
+              far to the left of that shared line -- the reported "not
+              inline". Narrowed the box to the true card interior
+              (left:1167, width:332, i.e. x1167-1499, just inside both
+              border strokes) and added paddingLeft:22 + gap:18 so the
+              icon lands at x1189-1223 (centre ~1206) and the text starts
+              at x1241 -- both matching the siblings almost exactly.
+              paddingRight:22 plus an explicit text-column width caps the
+              copy well inside the right border, so it can never overflow
+              or re-overlap it either. */}
+        <div style={{ position: 'absolute', left: 1167, top: 480, width: 332, height: 54, background: '#161616', display: 'flex', alignItems: 'center', gap: 18, paddingLeft: 22, paddingRight: 22, boxSizing: 'border-box' }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', border: '1.3px solid #f47a20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <IconChartUp size={17} color="#f47a20" />
           </div>
-          <div>
+          <div style={{ width: 236, boxSizing: 'border-box' }}>
             <div style={{ color: '#f2efe7', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13.5, marginBottom: 2 }}>Smart Tools</div>
             <div style={{ color: '#8f8f8f', fontFamily: 'Inter, sans-serif', fontSize: 11.5 }}>Analytics &amp; optimisation to grow.</div>
           </div>
