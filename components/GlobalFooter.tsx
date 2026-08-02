@@ -130,6 +130,28 @@ export default function GlobalFooter() {
               style={{ height: 174, width: 'auto', display: 'block' }}
             />
           </a>
+          <Link
+            href="/roots-foundation"
+            title="Velor Roots Foundation — coming soon. Read our vision and mission."
+            style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+          >
+            <img
+              src="/velor-roots-foundation-logo.png"
+              alt="Velor Roots Foundation"
+              style={{ height: 174, width: 'auto', display: 'block' }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--accent)',
+                fontWeight: 700,
+              }}
+            >
+              Coming soon — read our mission
+            </span>
+          </Link>
         </div>
       </div>
 
