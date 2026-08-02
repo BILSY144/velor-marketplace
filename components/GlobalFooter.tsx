@@ -133,24 +133,13 @@ export default function GlobalFooter() {
           <Link
             href="/roots-foundation"
             title="Velor Roots Foundation — coming soon. Read our vision and mission."
-            style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+            style={{ display: 'inline-flex' }}
           >
             <img
               src="/velor-roots-foundation-logo.png"
               alt="Velor Roots Foundation"
-              style={{ width: 150, height: 'auto', display: 'block' }}
+              style={{ height: 174, width: 'auto', display: 'block' }}
             />
-            <span
-              style={{
-                fontSize: 11,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: 'var(--accent)',
-                fontWeight: 700,
-              }}
-            >
-              Coming soon — read our mission
-            </span>
           </Link>
         </div>
       </div>
@@ -176,7 +165,7 @@ export default function GlobalFooter() {
               letterSpacing: '0.12em',
               color: 'var(--accent)',
               marginBottom: 12,
-          }}
+            }}
           >
             <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" style={{ height: 32, width: 'auto' }} />
           </div>
