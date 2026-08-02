@@ -703,7 +703,29 @@ export default function SellerJournalView({
   const [tab, setTab] = useState<Tab>('story')
   const [shared, setShared] = useState(false)
   const [storyExpanded, setStoryExpanded] = useState(false)
+  // Live count of countries with a claimed founding seat -- backs the
+  // trust strip's 'Countries Connected' stat below. See the fetch effect
+  // for why this replaced the old hardcoded '190 Countries Connected'.
+  const [countriesConnected, setCountriesConnected] = useState<number | null>(null)
   const viewed = useRef<Set<string>>(new Set())
+
+  // Live count of countries with a claimed founding seat, for the trust
+  // strip's 'Countries Connected' stat -- standing platform fact, not
+  // seller-specific data (see comment at the trust strip below). Previously
+  // hardcoded to '190 Countries Connected', the same overstatement issue
+  // fixed on the homepage header; this reads the identical
+  // /api/stats/countries-connected endpoint that fix introduced, so all
+  // three "Countries Connected" mentions on the site now agree. Falls back
+  // to a non-numeric phrase while loading or on fetch failure rather than
+  // ever guessing a number.
+  useEffect(() => {
+    fetch('/api/stats/countries-connected')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (typeof d?.count === 'number') setCountriesConnected(d.count)
+      })
+      .catch(() => {})
+  }, [])
 
   const entry = posts.find(p => p.id === currentId) ?? posts[0]
   const entryTitle = entry.title || entry.body.slice(0, 60)
@@ -1193,7 +1215,11 @@ export default function SellerJournalView({
         {(
           [
             { t: 'Real People, Real Stories', s: 'Every maker has a story worth sharing', i: 'user' },
-            { t: '190 Countries Connected', s: 'A global community of independent makers', i: 'globe2' },
+            {
+              t: countriesConnected === null ? 'Connecting Sellers Worldwide' : `${countriesConnected} ${countriesConnected === 1 ? 'Country' : 'Countries'} Connected`,
+              s: 'A global community of independent makers',
+              i: 'globe2',
+            },
             { t: 'Live Interaction', s: 'Watch, ask & shop live with makers', i: 'mic' },
             { t: 'Preserve Culture', s: 'Keeping traditions alive for generations', i: 'laurel' },
           ] as { t: string; s: string; i: keyof typeof P }[]
