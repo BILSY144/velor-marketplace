@@ -138,7 +138,7 @@ export default function GlobalFooter() {
             <img
               src="/velor-roots-foundation-logo.png"
               alt="Velor Roots Foundation"
-              style={{ height: 174, width: 'auto', display: 'block' }}
+              style={{ width: 150, height: 'auto', display: 'block' }}
             />
             <span
               style={{
@@ -176,7 +176,7 @@ export default function GlobalFooter() {
               letterSpacing: '0.12em',
               color: 'var(--accent)',
               marginBottom: 12,
-            }}
+          }}
           >
             <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" style={{ height: 32, width: 'auto' }} />
           </div>
