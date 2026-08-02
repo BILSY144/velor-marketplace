@@ -325,6 +325,31 @@ export function DesktopReferenceStep2({
           <img src={form.sampleImages[0]} alt="Profile preview" style={{ position: 'absolute', left: 757, top: 521, width: 106, height: 106, borderRadius: '50%', border: '3px solid #f2efe7', objectFit: 'cover' }} />
         )}
 
+        {/* 2026-08-02 (William): "when a potential seller signs up and the
+            country already has a founder, do we not give them the option
+            to see any founder badge in the store mock up" -- the gold
+            "FOUNDING SELLER" pill next to the store name in this Live
+            Preview card is NOT a dynamic overlay at all -- it's baked
+            directly into design-step2.png's stock-photo artwork, so it
+            was rendering unconditionally for every single applicant,
+            including ones whose shippingCountry already has a claimed
+            founding seat (countryAlreadyFounded, computed above) and who
+            will NOT actually receive this badge. That's directly
+            misleading -- the mock-up promised a badge some sellers were
+            never going to get. Pixel-measured the pill's exact bounds in
+            design-step2.png (gold-fill detection, distinct from the
+            near-black card background around it): x=866-999, y=613-635.
+            Background sampled at several points just outside the pill
+            (605/640/620 rows) comes back (11,11,11)-(12,12,12), matching
+            the #0d0d0d already used elsewhere in this file, so a solid
+            #0d0d0d panel exactly over those bounds cleanly erases the
+            pill with no visible seam. Only rendered when
+            countryAlreadyFounded is true -- every other applicant still
+            sees the real "FOUNDING SELLER" pill exactly as designed. */}
+        {countryAlreadyFounded && (
+          <div style={{ position: 'absolute', left: 864, top: 610, width: 138, height: 28, background: '#0d0d0d' }} />
+        )}
+
         {/* Live preview overlays only the user-controlled values, leaving the approved visual skin intact. */}
         <div style={{ position: 'absolute', left: 763, top: 646, width: 293, minHeight: 72, background: 'rgba(12,12,12,.94)', padding: '7px 0', boxSizing: 'border-box', color: '#f1eee8', fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 27, fontWeight: 600 }}>
           {form.businessName || 'Your Store Name'}
