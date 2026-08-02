@@ -729,7 +729,7 @@ export default function CommunityPageClient({
             [
               { t: 'Authentic Makers', s: 'Real people, real stories', i: 'user' },
               { t: 'Verified Sellers', s: 'Trusted and authenticated', i: 'shield' },
-              { t: 'Global Community', s: '190 countries connected', i: 'globe2' },
+              { t: 'Global Community', s: `${worldStats.countries} ${worldStats.countries === 1 ? 'country' : 'countries'} connected`, i: 'globe2' },
               { t: 'Live Interaction', s: 'Ask, watch & shop live', i: 'mic' },
               { t: 'Preserve Culture', s: 'Keeping traditions alive', i: 'laurel' },
             ] as { t: string; s: string; i: keyof typeof PATHS }[]
