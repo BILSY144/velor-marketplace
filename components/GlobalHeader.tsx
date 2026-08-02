@@ -106,6 +106,11 @@ export default function GlobalHeader() {
   const [query, setQuery] = useState('')
   const [megaOpen, setMegaOpen] = useState(false)
   const [liveCount, setLiveCount] = useState<number | null>(null)
+  // Live count of countries with a claimed founding seat (i.e. at least
+  // one approved product with that origin) -- backs the top trust-bar's
+  // 'Countries Connected' stat. See the fetch effect below for why this
+  // replaced the old hardcoded '190 Countries Connected' copy.
+  const [countriesConnected, setCountriesConnected] = useState<number | null>(null)
   const [acctOpen, setAcctOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [currency, setCurrency] = useState('GBP')
@@ -226,6 +231,27 @@ export default function GlobalHeader() {
       })
       .catch(() => {})
   }, [megaOpen, liveCount])
+
+  // Live count of countries with a claimed founding seat, for the top
+  // trust-bar's 'Countries Connected' stat. Previously hardcoded to
+  // '190 Countries Connected', which read as an existing-reach claim ('we
+  // have live sellers in 190 countries') when 190 is really the total
+  // number of founding SEATS (WORLD_COUNTRIES.length -- see lib/founding.ts
+  // and the /apply page's '189 FOUNDING SEATS. STILL OPEN.' copy), almost
+  // all still unclaimed. Backed by /api/stats/countries-connected, which
+  // reads the same CountryFounder table getAvailableFoundingSeatCount()
+  // already uses, so this number can never overstate real reach. Fetched
+  // once on mount (not lazily) since the trust bar is visible above the
+  // fold on first paint; while loading or on fetch failure the label below
+  // falls back to a truthful non-numeric phrase rather than ever guessing.
+  useEffect(() => {
+    fetch('/api/stats/countries-connected')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (typeof d?.count === 'number') setCountriesConnected(d.count)
+      })
+      .catch(() => {})
+  }, [])
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -350,6 +376,14 @@ export default function GlobalHeader() {
     textDecoration: 'none',
   }
 
+  // Truthful label for the trust-bar globe item -- see the fetch effect
+  // above. Never renders a specific country count until the real number
+  // has loaded from the server.
+  const countriesConnectedLabel =
+    countriesConnected === null
+      ? 'Connecting Sellers Worldwide'
+      : `${countriesConnected} ${countriesConnected === 1 ? 'Country' : 'Countries'} Connected`
+
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 50, fontFamily: 'var(--font-body)' }}>
       {/* Top strip -- William's header design 2026-07-30: five value points
@@ -372,7 +406,7 @@ export default function GlobalHeader() {
       >
         {(
           [
-            { l: '190 Countries Connected', i: HP.globe },
+            { l: countriesConnectedLabel, i: HP.globe },
             { l: 'Free To List', i: HP.tag },
             { l: 'Live Seller Access', i: HP.broadcast },
             { l: 'Global Community', i: HP.users },
