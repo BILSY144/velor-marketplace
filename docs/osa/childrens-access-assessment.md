@@ -34,7 +34,7 @@ no measured child user base because the buyer side has not opened.
 Draft conclusion: **No significant number of child users at present.** This limb
 must be re-evaluated with real data (e.g. any age-related support contacts,
 payment declines, analytics signals) beginning 3 months after buyer launch
-(target date for that re-evaluation: 2026-11-06).
+(target date for that re-evaluation: 2026-12-06).
 
 **(b) Is the service of a kind likely to attract a significant number of child
 users?**
@@ -61,7 +61,7 @@ children's risk assessment and children's safety duties under Part 3 do not
 currently apply. This conclusion is held honestly but cautiously:
 
 1. It is recorded with the evidence above and is reviewable — annually, at buyer
-   launch +3 months (2026-11-06), and before each Velor Social feature launch.
+   launch +3 months (2026-12-06), and before each Velor Social feature launch.
 2. Velor nonetheless adopts child-protective defaults voluntarily, per the plan
    and the ICO Age Appropriate Design Code posture: if any account is known or
    suspected to belong to a minor it is restricted pending verification; future

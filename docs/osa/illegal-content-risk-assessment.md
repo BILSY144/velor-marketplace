@@ -22,8 +22,8 @@ Velor Marketplace is a small global online marketplace for authentic cultural an
 artisan goods. Independent sellers list physical products; buyers purchase through
 Stripe checkout with funds held in escrow until delivery. UK-registered company,
 users worldwide. At the date of this assessment the service is pre-buyer-launch
-(buyers open 6 August 2026) with under twenty approved sellers and a catalogue
-under ten live listings.
+(buyers open 6 September 2026) with under twenty approved sellers and a catalogue
+of roughly a dozen live listings, nearly all concentrated in one country.
 
 **Existing user-to-user functionalities (live today):**
 
@@ -103,3 +103,5 @@ as the primary enforcement risk for small services.
 Name: William Sinclair — Director, Velor Commerce Ltd
 
 Signature/date: William Sinclair -- confirmed directly in a Cowork session, 2026-07-30 (no scanned wet-ink signature on file; this is the record of his verbal/written confirmation as the named accountable person).
+
+**Update, 2026-08-02:** buyer-launch date corrected from 6 August to 6 September 2026, and the seller/catalogue snapshot refreshed to reflect actual figures at that date, per William Sinclair's direction in that session's Cowork conversation. No other assessment conclusion changed.

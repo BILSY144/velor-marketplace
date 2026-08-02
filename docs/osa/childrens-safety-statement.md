@@ -14,7 +14,7 @@ the access position ever changes, Velor is already compliant on day one rather
 than starting a statutory clock.
 
 **Named owner:** William Sinclair, Director, Velor Commerce Ltd (Company No.
-17268133). **Review:** annually, at buyer launch +3 months (2026-11-06), and
+17268133). **Review:** annually, at buyer launch +3 months (2026-12-06), and
 before every new user-to-user feature launch — alongside the access assessment.
 
 ---
