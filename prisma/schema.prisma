@@ -200,6 +200,7 @@ model Seller {
   shippingProfile               SellerShippingProfile?
   discountCodes                 DiscountCode[]
   payouts                       Payout[]
+  payoutBatches                 PayoutBatch[]
   supportTickets                SupportTicket[]
   apiKeys                       ApiKey[]
   liveStreams                   LiveStream[]
@@ -522,9 +523,50 @@ model Payout {
   // see lib/payoutRail.ts's header. The column still physically exists in
   // the database; dropping it needs a separate migration, deliberately not
   // attempted here.
+  // rail/batchId added 2026-08-02 (William: batch non-Stripe payouts weekly
+  // per seller instead of per order -- see lib/payoutBatching.ts). rail
+  // records which payout rail this row belongs to ('PAYONEER' today; only
+  // set on rows created by the batching path, existing/Stripe rows stay
+  // null, which is harmless). A row can be status 'queued_for_batch' with
+  // no stripeTransferId/payoneerPayoutId yet -- money hasn't moved, but the
+  // order is still correctly excluded from future release-payouts scans
+  // (Payout.orderId is unique, so it still "has a payout" the moment this
+  // row exists). batchId is set only once the weekly batch cron actually
+  // sends the money, linking every order that shared that one Payoneer
+  // transfer back to the single PayoutBatch row that moved it.
+  rail             String?
+  batchId          String?
+  batch            PayoutBatch? @relation(fields: [batchId], references: [id])
   status           String   @default("pending")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+// Weekly batched payout for a non-Stripe-rail seller (William, 2026-08-02:
+// "batch non stripe payments weekly per seller" -- see
+// lib/payoutBatching.ts and app/api/cron/release-payoneer-batch/route.ts).
+// One row here = one real outbound Payoneer (or future Airwallex) transfer,
+// covering potentially many Orders' worth of Payout rows at once, so a flat
+// per-transfer fee is amortised across a week of that seller's sales
+// instead of eating a single small order's entire commission.
+model PayoutBatch {
+  id                 String   @id @default(cuid())
+  sellerId           String
+  seller             Seller   @relation(fields: [sellerId], references: [id])
+  rail               String
+  totalAmount        Float
+  currency           String   @default("gbp")
+  orderCount         Int      @default(0)
+  // Sum of Order.platformFee across every order in this batch -- what Velor
+  // actually earned in commission from the sales this transfer pays out.
+  // Compared against NON_STRIPE_PAYOUT_FEE_ESTIMATE_GBP before sending; see
+  // lib/payoutBatching.ts for the full "never lose money" check.
+  totalCommissionGBP Float    @default(0)
+  payoneerPayoutId   String?  @unique
+  status             String   @default("pending")
+  createdAt          DateTime @default(now())
+  sentAt             DateTime?
+  payouts            Payout[]
 }
 
 model AgentLog {
