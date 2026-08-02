@@ -379,7 +379,7 @@ export default function GlobalHeader() {
             { l: 'Real People. Real Culture.', i: HP.heart },
           ] as { l: string; i: string }[]
         ).map((item, idx) => (
-          <span key={item.l} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <span key={item.l} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, verticalAlign: 'middle' }}>
             {idx > 0 && <span style={{ opacity: 0.25, margin: '0 18px', fontWeight: 400 }}>|</span>}
             <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><HIco d={item.i} size={14} /></span>
             {item.l}
