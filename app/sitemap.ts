@@ -150,6 +150,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // by William the same evening, commit dcdf8b0). SEO agent: do NOT
     // re-add the index page or its nav links.
     { url: `${base}/sell`, changeFrequency: 'monthly', priority: 0.85 },
+    // /vs/etsy added 2026-08-03 by the standing SEO agent (full audit
+    // cycle). Real, live route (commit a844b0b1, 2026-08-02, "Add /vs/etsy
+    // comparison page with sourced fee breakdown and mission section")
+    // built specifically for a "zero-budget visibility campaign" per its
+    // own top-of-file comment -- a server component (no 'use client'), not
+    // auth-gated (middleware.ts's protected-route matcher does not cover
+    // /vs/etsy), with its own real layout.tsx metadata (title/description/
+    // canonical/OG/Twitter, completed the same cycle -- see
+    // app/vs/etsy/layout.tsx). Missing from this sitemap until now; same
+    // gap class as every prior new-route omission this file has fixed
+    // (/workshop, /drops, /community, /mission, /safety). Priority 0.7,
+    // one notch below /sell/founding/apply -- a real seller-recruitment
+    // and fee-comparison page (the exact "Etsy alternative" query class
+    // CLAUDE.md's own standing directive weights above buyer terms while
+    // supply is the bottleneck) but not a core funnel page. changeFrequency
+    // 'monthly' -- a static comparison page, not a feed, though its sourced
+    // fee figures may be revisited periodically as either platform's
+    // pricing changes.
+    { url: `${base}/vs/etsy`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/live`, changeFrequency: 'daily', priority: 0.6 },
     // /workshop added 2026-07-29 (commit 7b520baa, "Workshop Feed (Velor
     // Social stage 5)") -- a real, chronological maker-journal feed with
@@ -236,6 +255,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // agent added this line -- same priority/frequency as the similar
     // static /about page.
     { url: `${base}/mission`, changeFrequency: 'monthly', priority: 0.6 },
+    // /roots-foundation added 2026-08-03 by the standing SEO agent (full
+    // audit cycle). Real, live route (commit 3b58d20c, 2026-08-02, "Create
+    // Velor Roots Foundation vision & mission page") -- a server component
+    // (no 'use client'), not auth-gated (same middleware.ts check
+    // documented above), with a real internal link from GlobalFooter's
+    // Roots Foundation badge (commit 28a3ec3c) and its own layout.tsx
+    // metadata (title/description/canonical/OG/Twitter, completed the same
+    // cycle -- see app/roots-foundation/layout.tsx). Missing from this
+    // sitemap until now; same gap class and fix as /mission/ /safety
+    // directly above. changeFrequency/priority match /mission -- both are
+    // static, real-content, footer-linked pages one level below the core
+    // funnel.
+    { url: `${base}/roots-foundation`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/help`, changeFrequency: 'monthly', priority: 0.6 },
     // /safety added 2026-07-29 (commit 876f1151) -- a static, real-content
     // trust-and-safety page (report content / appeal a decision, per the
