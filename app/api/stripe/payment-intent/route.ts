@@ -34,6 +34,16 @@ const TIER_COMMISSION: Record<string, number> = { STARTER: 0.1, PRO: 0.04, ENTER
 // favour rather than trying to divide one floor across sellers.
 const STRIPE_MIN_COMMISSION_GBP = 0.35
 
+// WeChat Pay / Alipay minimum spend (William, 2026-08-03: "add a minimum
+// order to cover our costs lets say GBP10minimum ... maybe we can exclude
+// the shipping cost entirely in that minimum spend as we dont earn from
+// shipping"). WeChat Pay and Alipay cost Velor 2.9% + GBP0.20 per charge
+// (+2% more if a currency conversion is required) versus a standard card's
+// 1.5% + GBP0.20 -- see the 2026-08-02 margin review. A per-payment-method
+// SURCHARGE is illegal in the UK (Consumer Rights (Payment Surcharges)
+// Regulations 2012, extended to digital wallets), so this is a minimum
+// ORDER VALUE gate instead -- legally the correct mechanism, and it simply
+
 // Velor Roots Foundation checkout micro-donation (William, 2026-07-31).
 // HELD DARK: CHARITY_DONATIONS_ENABLED must stay unset/false in every
 // environment until Velor Roots Foundation is actually a legally registered
@@ -509,6 +519,10 @@ export async function POST(request: NextRequest) {
 
     const totalGBP = grandTotalGBP
 
+    // See WECHAT_ALIPAY_MINIMUM_SUBTOTAL_GBP above -- subtotal only, not
+    // shipping/duties/donation.
+    const meetsWechatAlipayMinimum = grandDiscountedSubtotalGBP >= WECHAT_ALIPAY_MINIMUM_SUBTOTAL_GBP
+
     let subtotalCharge = grandDiscountedSubtotalGBP
     let shippingCharge = grandShippingGBP
     let dutiesCharge = grandDutiesGBP
@@ -552,7 +566,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
+    // excluded_payment_method_types is a real, current PaymentIntent create
+    // param (see https://docs.stripe.com/api/payment_intents/create#create_payment_intent-excluded_payment_method_types)
+    // but isn't in the type definitions shipped with stripe@17.7.0 (this repo's
+    // pinned version) yet -- it's newer than that SDK release. Intersecting the
+    // type here (rather than bumping the whole Stripe SDK major/minor version,
+    // which would be a much bigger, riskier change to a live payments route)
+    // keeps this narrow and avoids retyping every other Stripe call in the repo.
+    // The Node SDK serialises whatever's in this object to the API as-is, so
+    // this reaches Stripe exactly like any other documented param.
+    type PaymentIntentCreateParamsWithExclusions = Stripe.PaymentIntentCreateParams & {
+      excluded_payment_method_types?: string[]
+    }
+
+    const paymentIntentParams: PaymentIntentCreateParamsWithExclusions = {
       amount: amountMinorUnits,
       currency: buyerCurrency.toLowerCase(),
       // Required for the client's <PaymentElement> to actually resolve and render
@@ -565,6 +592,12 @@ export async function POST(request: NextRequest) {
       // the method-type config. automatic_payment_methods is safe and gives buyers
       // card, Link, Klarna, Revolut Pay, and Amazon Pay where eligible.
       automatic_payment_methods: { enabled: true },
+      // WeChat Pay / Alipay minimum-spend gate -- see
+      // WECHAT_ALIPAY_MINIMUM_SUBTOTAL_GBP above. Below the threshold, both are
+      // excluded from this PaymentIntent specifically; every other automatic
+      // payment method is untouched. Omitted entirely (not sent as an empty
+      // array) once the order clears the minimum.
+      ...(meetsWechatAlipayMinimum ? {} : { excluded_payment_method_types: ['wechat_pay', 'alipay'] }),
       metadata: {
         // Server-computed {productId, quantity, priceGBP} per line item --
         // NOT the raw client body. Built from `groups` (the server-resolved,
