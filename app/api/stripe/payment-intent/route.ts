@@ -43,6 +43,18 @@ const STRIPE_MIN_COMMISSION_GBP = 0.35
 // SURCHARGE is illegal in the UK (Consumer Rights (Payment Surcharges)
 // Regulations 2012, extended to digital wallets), so this is a minimum
 // ORDER VALUE gate instead -- legally the correct mechanism, and it simply
+// hides WeChat Pay/Alipay as options on small orders rather than charging
+// anyone extra.
+//
+// Checked against product subtotal ONLY (post-discount, summed across every
+// seller in the cart) -- deliberately excluding shipping, duties/VAT, and
+// the charity donation. Shipping is a pass-through reimbursement to the
+// seller's carrier and duties/VAT is pass-through to HMRC/the seller's DDP
+// shipment -- neither is money Velor earns a margin on, so neither should
+// count toward "is this order big enough to safely absorb the extra fee".
+// A cart could otherwise dodge the gate with a GBP2 item and GBP15
+// shipping; checking subtotal alone closes that gap.
+const WECHAT_ALIPAY_MINIMUM_SUBTOTAL_GBP = 10
 
 // Velor Roots Foundation checkout micro-donation (William, 2026-07-31).
 // HELD DARK: CHARITY_DONATIONS_ENABLED must stay unset/false in every
