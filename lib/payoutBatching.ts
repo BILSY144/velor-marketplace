@@ -15,31 +15,34 @@
 // Airwallex application-prep doc -- can reuse the same batching cron and
 // loss-check with a couple of added branches, not a rewrite.
 
-// PLACEHOLDER -- UPDATE THE MOMENT A REAL NUMBER IS KNOWN. Payoneer's
-// published pricing (payoneer.com/about/pricing) only covers the
-// RECEIVING/withdrawal side; what Payoneer actually charges VELOR to SEND a
-// Mass Payout is not published anywhere and needs a direct answer from
-// Payoneer (partner/API agreement, not the public pricing page). Until
-// that's known, this is a deliberately conservative estimate seeded from
-// the researched SWIFT-transfer range (GBP10-20) for cross-border payout
-// providers generally -- it exists so the loss-check below has SOMETHING
-// to compare against rather than silently assuming fees are zero. Airwallex
-// gives a real, cheaper anchor for comparison once that rail is live: free
-// via local rails in 120+ countries, GBP10-20 only where SWIFT is the only
-// option -- Payoneer's actual number could land anywhere in or outside that
-// range. Err on the side of overestimating this constant, not
-// underestimating it: overestimating only delays a payout by deferring it
-// to the next batch (see MAX_BATCH_DEFER_DAYS below, which guarantees it's
-// never delayed forever); underestimating risks actually sending a batch
-// that loses money, exactly what this file exists to prevent.
-export const NON_STRIPE_PAYOUT_FEE_ESTIMATE_GBP = 15
+// William, 2026-08-03: replaced the earlier flat GBP15 placeholder with
+// real, account-verified numbers pulled directly from the actual Velor
+// Commerce Ltd Payoneer account (Manage > Fees > Pay > "When paying
+// directly to another Payoneer account", Customer ID 104582691): $3 flat
+// when the recipient is in the same country as Velor, or 0.6% of the
+// transaction amount (minimum $3) when they're in a different country.
+// Velor's sellers are virtually always in a different country from Velor
+// (UK), so the different-country rate -- percentage with a flat minimum --
+// is the one that applies here, not a single flat number.
+//
+// Caveat: this is the fee schedule for the account's manual "Pay" feature,
+// not yet confirmed as the exact rate the Mass Payouts API will charge.
+// Velor applied to Payoneer's Mass Payouts partner program on 13 July 2026
+// and followed up urgently on 21 July; Payoneer's only reply (25 July,
+// ticket 260721-023420) didn't confirm approval or a rate -- it just
+// pointed back to the generic contractor-payments lead form. Until that
+// application clears and confirms whether the Mass Payouts rate matches
+// this one, treat these two constants as the best real anchor available,
+// not a final number -- update them the moment it does.
+export const NON_STRIPE_PAYOUT_FEE_PERCENT = 0.006
+export const NON_STRIPE_PAYOUT_FEE_MINIMUM_USD = 3
 
 // A batch only sends once the commission Velor earned on its underlying
 // orders is comfortably clear of the estimated transfer fee -- "comfortably"
 // meaning a margin on top of the raw fee estimate, not just equal to it, so
 // normal week-to-week variance in the real fee doesn't flip a batch from
 // profitable to loss-making. 1.5x is a deliberately simple, round starting
-// point -- tune once a real Payoneer fee number replaces the estimate above.
+// point -- tune once the Mass Payouts application confirms the real API rate.
 export const BATCH_SEND_SAFETY_MULTIPLIER = 1.5
 
 // A seller's queued (unsent) orders are never held indefinitely just
@@ -56,38 +59,56 @@ export const BATCH_SEND_SAFETY_MULTIPLIER = 1.5
 export const MAX_BATCH_DEFER_DAYS = 28
 
 export type BatchDecision =
-    | { send: true; forced: boolean }
+      | { send: true; forced: boolean }
   | { send: false; reason: 'below_safety_threshold' }
 
+// feeEstimateGBP: the caller computes this from the batch's real totalAmount
+// via estimateFeeGBP() below, using a live USD->GBP rate from lib/fx.ts
+// rather than a hardcoded conversion that would silently drift out of date.
+// Required, not defaulted -- a stale hardcoded GBP figure baked in here is
+// exactly the kind of drift this file exists to avoid. Keeping this function
+// itself pure and synchronous (no I/O) also keeps it trivial to unit test.
+//
 // oldestQueuedOrderCreatedAt: createdAt of the oldest Order among the
 // seller's queued Payout rows (not the Payout row's own createdAt -- an
 // order that waited out its hold window already spent real time before
 // ever reaching the queue).
 export function shouldSendBatch(params: {
-    totalCommissionGBP: number
-    feeEstimateGBP?: number
-    oldestQueuedOrderCreatedAt: Date
-    now?: Date
+      totalCommissionGBP: number
+      feeEstimateGBP: number
+      oldestQueuedOrderCreatedAt: Date
+      now?: Date
 }): BatchDecision {
-    const feeEstimate = params.feeEstimateGBP ?? NON_STRIPE_PAYOUT_FEE_ESTIMATE_GBP
-    const now = params.now ?? new Date()
-    const safetyThreshold = feeEstimate * BATCH_SEND_SAFETY_MULTIPLIER
+      const now = params.now ?? new Date()
+      const safetyThreshold = params.feeEstimateGBP * BATCH_SEND_SAFETY_MULTIPLIER
 
   if (params.totalCommissionGBP >= safetyThreshold) {
-        return { send: true, forced: false }
+          return { send: true, forced: false }
   }
 
   const ageMs = now.getTime() - params.oldestQueuedOrderCreatedAt.getTime()
-    const maxAgeMs = MAX_BATCH_DEFER_DAYS * 24 * 60 * 60 * 1000
-    if (ageMs >= maxAgeMs) {
-          // Forced send: still under the SAFETY margin, but a seller's money
-      // can't wait forever. Only ever forced below the safety margin, never
-      // below the raw fee estimate itself becoming clearly absurd (e.g. a
-      // single GBP0.60 order) -- that scenario is caught by simply summing
-      // more orders in over time; MAX_BATCH_DEFER_DAYS is the backstop for
-      // the case where volume genuinely never arrives.
-      return { send: true, forced: true }
-    }
+      const maxAgeMs = MAX_BATCH_DEFER_DAYS * 24 * 60 * 60 * 1000
+      if (ageMs >= maxAgeMs) {
+              // Forced send: still under the SAFETY margin, but a seller's money
+        // can't wait forever. Only ever forced below the safety margin, never
+        // below the raw fee estimate itself becoming clearly absurd (e.g. a
+        // single GBP0.60 order) -- that scenario is caught by simply summing
+        // more orders in over time; MAX_BATCH_DEFER_DAYS is the backstop for
+        // the case where volume genuinely never arrives.
+        return { send: true, forced: true }
+      }
 
   return { send: false, reason: 'below_safety_threshold' }
+}
+
+// Estimated Payoneer fee (in GBP) for sending totalAmountGBP to a seller in
+// a different country from Velor -- the case that applies to virtually
+// every payout here. Percentage-of-amount with a currency-converted flat
+// minimum, matching Payoneer's real "different country" Pay fee (see the
+// 2026-08-03 note above). usdToGbpRate should come from lib/fx.ts's
+// getRate('USD', 'GBP') so the $3 minimum tracks the real exchange rate
+// instead of a number that quietly goes stale as GBP/USD moves.
+export function estimateFeeGBP(totalAmountGBP: number, usdToGbpRate: number): number {
+      const minimumGBP = NON_STRIPE_PAYOUT_FEE_MINIMUM_USD * usdToGbpRate
+      return Math.max(totalAmountGBP * NON_STRIPE_PAYOUT_FEE_PERCENT, minimumGBP)
 }
