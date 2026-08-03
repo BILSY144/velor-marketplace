@@ -1,6 +1,8 @@
 # Good Market Outreach Log — Velor Roots Foundation Seller Recruitment
 
-Checkpoint saved: 2026-08-03 (updated with Sri Lanka + Indonesia batches)
+Checkpoint saved: 2026-08-03 (updated with Philippines, Ghana, Kenya batches)
+
+Note: no budget is currently available for paid certifications (WFTO, B Corp, People and Planet First Verified, Living Wage, 1% for the Planet, Social Enterprise UK). Researched and deferred until finance is available. Continuing maker outreach in the meantime.
 
 ## Marketplace Listing
 
@@ -20,7 +22,9 @@ Standing instruction (2026-08-03): user authorized sending outreach messages wit
 
 Selection criteria: direct makers only (artisan cooperatives / employment-based social enterprises working with vulnerable or marginalized artisans). Resellers, importers, and wholesalers are identified and deliberately skipped.
 
-### Organizations messaged plus followed (23 total)
+Payout coverage note (2026-08-02, pre-dates this campaign): standing decision was to target marketing and outreach at Stripe-supported countries only until Payoneer Mass Payouts is confirmed, since non-Stripe-country sellers' payouts just accrue in escrow. This outreach campaign has continued into non-Stripe countries under the explicit 2026-08-03 instruction to build relationships now regardless.
+
+### Organizations messaged plus followed (26 total)
 
 | # | Organization | Location | Notes |
 |---|---|---|---|
@@ -47,15 +51,18 @@ Selection criteria: direct makers only (artisan cooperatives / employment-based 
 | 21 | Apelka | Malabe, Sri Lanka | Women artisans plus people with disabilities, work-from-home, National Craft Council member |
 | 22 | TORAJAMELO | South Jakarta, Indonesia | Indigenous community artisans, alleviates cycle of systemic poverty, B Corp |
 | 23 | Tenun eBoon Artisan | West Nusa Tenggara, Indonesia | Backstrap loom/ikat weavers, fair payment, production built around caregiving duties |
+| 24 | Panublix | Iloilo City, Philippines | Connects Filipino farmers/artisans to tropical fiber market access, Catalyst 2030 member |
+| 25 | ASIGE | Agushi, Ghana | Women and girls in northern Ghana, elephant grass weaving, funds girls' education, WFTO member |
+| 26 | Mifuko | Kiusyani, Kenya | Basket weaving, Mifuko Trust supports women's self-help groups, WFTO guaranteed member |
 
-Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka, Indonesia.
+Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka, Indonesia, Philippines, Ghana, Kenya.
 
 Searched with zero qualifying direct-maker results: Morocco (0 results), Mexico (only reseller found, skipped).
 
 ### Resellers and intermediaries identified and deliberately excluded
 
-Karakorum, Hamac del Sol, Will and Atlas, Sunbird, Ethik, Lucia's Imports, Lucuma Designs, Lydia's Loom, Revy Fair Trade, Serendip (UK-based reseller of Sri Lankan crafts), Kasih Co-op and Studio by Ferni (US/UK-based resellers of Indonesian crafts) — all Western-based import/wholesale businesses rather than the artisan makers themselves, inconsistent with Velor's direct-seller model.
+Karakorum, Hamac del Sol, Will and Atlas, Sunbird, Ethik, Lucia's Imports, Lucuma Designs, Lydia's Loom, Revy Fair Trade, Serendip (UK-based reseller of Sri Lankan crafts), Kasih Co-op and Studio by Ferni (US/UK-based resellers of Indonesian crafts), LIKHA and KINdom (US-based resellers of Philippine crafts), Ayebea's Sankofa Marketplace (US-based reseller of Ghanaian crafts), Pala Eyewear and Schoolyard Chillies (UK-based, not primarily handcraft) — all Western-based import/wholesale businesses rather than the artisan makers themselves, inconsistent with Velor's direct-seller model.
 
 ## Next Steps
 
-Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach plus following profiles, per standing authorization. Candidate next regions: Philippines, Ghana, Nigeria, Bolivia, Ecuador, Mongolia, Cambodia, South Africa.
+Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach plus following profiles, per standing authorization. Candidate next regions: Nigeria, Bolivia, Ecuador, Mongolia, Cambodia, South Africa.
