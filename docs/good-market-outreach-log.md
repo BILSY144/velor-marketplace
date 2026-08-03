@@ -1,6 +1,6 @@
 # Good Market Outreach Log — Velor Roots Foundation Seller Recruitment
 
-Checkpoint saved: 2026-08-03 (updated with Sri Lanka batch)
+Checkpoint saved: 2026-08-03 (updated with Sri Lanka + Indonesia batches)
 
 ## Marketplace Listing
 
@@ -20,7 +20,7 @@ Standing instruction (2026-08-03): user authorized sending outreach messages wit
 
 Selection criteria: direct makers only (artisan cooperatives / employment-based social enterprises working with vulnerable or marginalized artisans). Resellers, importers, and wholesalers are identified and deliberately skipped.
 
-### Organizations messaged + followed (21 total)
+### Organizations messaged plus followed (23 total)
 
 | # | Organization | Location | Notes |
 |---|---|---|---|
@@ -44,16 +44,18 @@ Selection criteria: direct makers only (artisan cooperatives / employment-based 
 | 18 | Saidpur Enterprises | Saidpur, Bangladesh | 1,500+ artisans, refugee-resettlement origin (1977), WFTO guaranteed member |
 | 19 | Agasthya | Kandy, Sri Lanka | Rural women caregivers earn income from home, handwoven reed/palm/coconut coir goods |
 | 20 | Touch Lady | Kadawatha, Sri Lanka | Women artisans, batik with traditional Sri Lankan motifs, community enterprise |
-| 21 | Apelka | Malabe, Sri Lanka | Women artisans + people with disabilities, work-from-home, National Craft Council member |
+| 21 | Apelka | Malabe, Sri Lanka | Women artisans plus people with disabilities, work-from-home, National Craft Council member |
+| 22 | TORAJAMELO | South Jakarta, Indonesia | Indigenous community artisans, alleviates cycle of systemic poverty, B Corp |
+| 23 | Tenun eBoon Artisan | West Nusa Tenggara, Indonesia | Backstrap loom/ikat weavers, fair payment, production built around caregiving duties |
 
-Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka.
+Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka, Indonesia.
 
 Searched with zero qualifying direct-maker results: Morocco (0 results), Mexico (only reseller found, skipped).
 
-### Resellers/intermediaries identified and deliberately excluded
+### Resellers and intermediaries identified and deliberately excluded
 
-Karakorum, Hamac del Sol, Will & Atlas, Sunbird, Ethik, Lucia's Imports, Lucuma Designs, Lydia's Loom, Revy Fair Trade, Serendip (UK-based reseller of Sri Lankan crafts) — all Western-based import/wholesale businesses rather than the artisan makers themselves, inconsistent with Velor's direct-seller model.
+Karakorum, Hamac del Sol, Will and Atlas, Sunbird, Ethik, Lucia's Imports, Lucuma Designs, Lydia's Loom, Revy Fair Trade, Serendip (UK-based reseller of Sri Lankan crafts), Kasih Co-op and Studio by Ferni (US/UK-based resellers of Indonesian crafts) — all Western-based import/wholesale businesses rather than the artisan makers themselves, inconsistent with Velor's direct-seller model.
 
 ## Next Steps
 
-Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach + following profiles, per standing authorization. Candidate next regions: Indonesia, Philippines, Ghana, Nigeria, Bolivia, Ecuador, Mongolia, Cambodia, South Africa.
+Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach plus following profiles, per standing authorization. Candidate next regions: Philippines, Ghana, Nigeria, Bolivia, Ecuador, Mongolia, Cambodia, South Africa.
