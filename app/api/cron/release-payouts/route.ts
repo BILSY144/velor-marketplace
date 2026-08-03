@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { isPayoneerConfigured, createPayout as createPayoneerPayout, getPayeeStatus } from '@/lib/payoneer'
+import { isPayoneerConfigured, getPayeeStatus } from '@/lib/payoneer'
 import { getPayoutRail } from '@/lib/payoutRail'
 import {
   PROBATION_HOLD_MS,
@@ -16,11 +16,18 @@ export const maxDuration = 60
 
 // Payout release cron. Holds funds on the platform until delivery is confirmed,
 // then releases the seller's share (from the PaymentIntent metadata) once the
-// hold window passes and no return/dispute is open. The rail differs by seller
-// (Stripe transfer, or a Payoneer payout for Stripe-unsupported countries --
-// see lib/payoutRail.ts) but the RULES are identical on every rail by
-// explicit decision: same delivery confirmation requirement, same
-// 15-day/72-hour holds, same dispute freeze.
+// hold window passes and no return/dispute is open. Rails now diverge in
+// TIMING as well as transport (William, 2026-08-02: "batch non stripe
+// payments weekly per seller"): a STRIPE-rail seller is still paid
+// immediately, per order, via stripe.transfers.create() below. A
+// PAYONEER-rail seller's share is only QUEUED here (Payout row, status
+// 'queued_for_batch') -- the actual Payoneer transfer is sent by the
+// separate weekly app/api/cron/release-payoneer-batch/route.ts cron, which
+// batches every queued order into one payout per seller so a flat
+// per-transfer fee never eats a single small order's entire commission
+// (see lib/payoutBatching.ts). The delivery/hold/dispute RULES stay
+// identical on every rail regardless of this split: same 15-day/72-hour
+// holds, same dispute freeze, same "never lose money" fee recovery.
 export async function GET(req: NextRequest) {
   const authError = requireCronSecret(req)
   if (authError) return authError
@@ -55,7 +62,7 @@ export async function GET(req: NextRequest) {
   })
 
   let released = 0
-  let releasedPayoneer = 0
+  let queuedForPayoneerBatch = 0
   let heldOpen = 0
   let waiting = 0
   let heldForPayoneer = 0
@@ -254,55 +261,53 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // PAYONEER rail -- the only non-Stripe rail (see
-      // lib/payoutRail.ts's header). Same holds and dispute checks already
-      // passed above -- only the transfer differs.
-      if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
-        // A payeeId is stored the moment a registration link is generated,
-        // BEFORE the seller has necessarily completed Payoneer signup --
-        // pay only a payee Payoneer itself reports as active, otherwise
-        // keep the funds safely in escrow and retry next run.
-        const payee = await getPayeeStatus(sellerRow.payoneerPayeeId)
-        if (String(payee.status).toUpperCase() !== 'ACTIVE') {
-          heldForPayoneer++
-          continue
-        }
-        // ACTIVE means Payoneer's KYC has passed -- self-heal the identity
-        // flag so every surface reads consistently (same as Stripe branch).
-        if (!sellerRow.identityVerified) {
-          await prisma.seller
-            .update({ where: { id: o.sellerId }, data: { identityVerified: true } })
-            .catch(() => {})
-        }
-        // client_reference_id `payout_<orderId>` mirrors the Stripe
-        // idempotency convention so a retried run can never double-pay.
-        const { payoutId } = await createPayoneerPayout({
-          payeeId: sellerRow.payoneerPayeeId,
-          amount: sellerShare / 100,
-          currency,
-          clientReferenceId: `payout_${o.id}`,
-          description: `Velor Marketplace payout for order ${o.id}`,
-        })
-        await prisma.payout.create({
-          data: {
-            sellerId: o.sellerId,
-            orderId: o.id,
-            amount: sellerShare / 100,
-            currency,
-            payoneerPayoutId: payoutId,
-            status: 'paid',
-          },
-        })
-        releasedPayoneer++
-      } else if (rail === 'PAYONEER') {
-        // Payoneer rail not live yet, or seller not onboarded: funds stay
-        // safely in the platform escrow and this order retries every run.
-        heldForPayoneer++
-      } else {
-        // Stripe-rail seller without a completed Connect account: funds
-        // stay safely in escrow until their Stripe onboarding finishes.
-        heldForStripeSetup++
-      }
+            // PAYONEER rail -- the only non-Stripe rail (see
+            // lib/payoutRail.ts's header). Same holds and dispute checks already
+            // passed above -- only the transfer differs. Unlike STRIPE, a
+            // PAYONEER-rail seller is no longer paid per order here (William,
+            // 2026-08-02: "batch non stripe payments weekly per seller" -- see
+            // lib/payoutBatching.ts). This just QUEUES the seller's share as a
+            // Payout row with status 'queued_for_batch'; the weekly
+            // release-payoneer-batch cron is the only place a real Payoneer
+            // transfer is sent, once enough orders have accumulated to clear the
+            // "never lose money" fee-safety check.
+            if (rail === 'PAYONEER' && sellerRow.payoneerPayeeId && isPayoneerConfigured()) {
+                      // A payeeId is stored the moment a registration link is generated,
+                      // BEFORE the seller has necessarily completed Payoneer signup --
+                      // pay only a payee Payoneer itself reports as active, otherwise
+                      // keep the funds safely in escrow and retry next run.
+                      const payee = await getPayeeStatus(sellerRow.payoneerPayeeId)
+                      if (String(payee.status).toUpperCase() !== 'ACTIVE') {
+                                  heldForPayoneer++
+                                  continue
+                      }
+                      // ACTIVE means Payoneer's KYC has passed -- self-heal the identity
+                      // flag so every surface reads consistently (same as Stripe branch).
+                      if (!sellerRow.identityVerified) {
+                                  await prisma.seller
+                                    .update({ where: { id: o.sellerId }, data: { identityVerified: true } })
+                                    .catch(() => {})
+                      }
+                      await prisma.payout.create({
+                                  data: {
+                                                sellerId: o.sellerId,
+                                                orderId: o.id,
+                                                amount: sellerShare / 100,
+                                                currency,
+                                                rail: 'PAYONEER',
+                                                status: 'queued_for_batch',
+                                  },
+                      })
+                      queuedForPayoneerBatch++
+            } else if (rail === 'PAYONEER') {
+                      // Payoneer rail not live yet, or seller not onboarded: funds stay
+                      // safely in the platform escrow and this order retries every run.
+                      heldForPayoneer++
+            } else {
+                      // Stripe-rail seller without a completed Connect account: funds
+                      // stay safely in escrow until their Stripe onboarding finishes.
+                      heldForStripeSetup++
+            }
     } catch {
       skipped++
     }
@@ -312,7 +317,7 @@ export async function GET(req: NextRequest) {
     ok: true,
     scanned: candidates.length,
     released,
-    releasedPayoneer,
+    queuedForPayoneerBatch,
     heldOpen,
     waiting,
     heldForPayoneer,
