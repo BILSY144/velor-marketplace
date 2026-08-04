@@ -11,6 +11,7 @@ import { fmt, useI18nTick } from '../i18n'
 import { fetchShop, ShopProduct } from '../api'
 import { CATEGORIES } from '../categories'
 import { countryName } from '../data'
+import { SearchBar } from '../components/SearchBar'
 
 // HOME — the website homepage, replicated (2026-08-04, William: "redesign
 // the app to kind of replicate the website... with the website's data and
@@ -73,7 +74,7 @@ export default function HomeScreen() {
         {/* Header — logo left, bell / hearts / theme right (website header) */}
         <View style={[s.header, { paddingTop: insets.top + 10 }]}>
           <RNImage
-            source={require('../../assets/splash.png')}
+            source={require('../../assets/velor-logo-2026.png')}
             style={{ width: 108, height: 36 }}
             resizeMode="contain"
           />
@@ -106,6 +107,9 @@ export default function HomeScreen() {
             </Text>
           ))}
         </ScrollView>
+
+        {/* Site-wide search entry (website header parity) */}
+        <SearchBar topMargin={14} />
 
         {isLoading ? (
           <Text style={s.loading}>Opening the marketplace…</Text>

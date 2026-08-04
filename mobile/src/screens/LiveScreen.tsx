@@ -198,8 +198,18 @@ function FilmPage({
         <Pressable style={s.backBtn} onPress={() => nav.navigate('Tabs', { screen: 'Home' })}>
           <Ionicons name="chevron-back" size={16} color={C.text} />
         </Pressable>
-        <View style={s.prevPill}>
-          <Text style={s.prevTx}>PREVIEW</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* Search entry on the Live page too (William: every page) — a
+              compact glass button; the full bar would fight the video. */}
+          <Pressable
+            style={s.backBtn}
+            onPress={() => nav.navigate('Tabs', { screen: 'Shop', params: { focusSearch: Date.now() } })}
+          >
+            <Ionicons name="search-outline" size={16} color={C.text} />
+          </Pressable>
+          <View style={s.prevPill}>
+            <Text style={s.prevTx}>PREVIEW</Text>
+          </View>
         </View>
       </View>
 

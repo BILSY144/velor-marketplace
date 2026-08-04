@@ -13,6 +13,7 @@ import { fetchProductsByOrigin } from '../api'
 import { Chrome } from '../components/Chrome'
 import { Kicker, Body, Dim, Btn, Empty } from '../ui'
 import { useCart, useFollows } from '../store'
+import { SearchBar } from '../components/SearchBar'
 
 // Country dive — built from plate 02 + spec/country.txt:
 // kenburns cover fading into bg, YOU HAVE ARRIVED IN kicker, Fraunces 52
@@ -45,6 +46,7 @@ export default function CountryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+        <SearchBar topMargin={16} />
         <View style={s.cover}>
           {imgs[0] ? (
             <Image source={{ uri: pexels(imgs[0].i) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />

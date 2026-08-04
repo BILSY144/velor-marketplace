@@ -35,6 +35,7 @@ import {
   saveCredentials,
 } from '../biometrics'
 import { Chrome } from '../components/Chrome'
+import { SearchBar } from '../components/SearchBar'
 
 // You — the app's front door and identity hub, in three honest states:
 //
@@ -909,6 +910,7 @@ export default function YouScreen() {
           contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 60 }}
           keyboardShouldPersistTaps="handled"
         >
+        <SearchBar />
           <Door />
           <Text style={s.build}>Velor — the world's shopping channel · app preview build</Text>
         </ScrollView>
@@ -921,6 +923,7 @@ export default function YouScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 60 }}>
+        <SearchBar />
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.kickDim}>YOU</Text>
           <Text style={s.h1}>{user.name ? user.name.split(' ')[0] : 'Your Velor.'}</Text>

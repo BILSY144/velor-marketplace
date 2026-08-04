@@ -10,6 +10,7 @@ import { fmt, onI18n, useI18nTick } from '../i18n'
 import { useCart, CartItem, cartLinePrice } from '../store'
 import { countryName } from '../data'
 import { Chrome } from '../components/Chrome'
+import { SearchBar } from '../components/SearchBar'
 
 // Basket — plate 07, exact structure: "N makers. One payment." Fraunces 32,
 // the green escrow banner, items GROUPED BY SELLER (flag + store name +
@@ -50,6 +51,7 @@ export default function BasketScreen() {
       <ScrollView
         contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: items.length ? 140 : 40 }}
       >
+        <SearchBar />
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.kickDim}>YOUR BASKET</Text>
           <Text style={s.h1}>{title}</Text>

@@ -2,6 +2,7 @@ import React from 'react'
 import { View, FlatList, Pressable, StyleSheet, RefreshControl } from 'react-native'
 import { Text } from '../ui/T'
 import { TextInput } from '../ui/TI'
+import type { TextInput as RNTextInput } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -32,6 +33,12 @@ export default function ShopScreen() {
   const nav = useNavigation<any>()
   const route = useRoute<any>()
   const [category, setCategory] = React.useState<string>(route.params?.category ?? '')
+  const searchRef = React.useRef<RNTextInput>(null)
+  // SearchBar on other pages lands here asking for the keyboard (param is a
+  // timestamp so repeat taps re-focus).
+  React.useEffect(() => {
+    if (route.params?.focusSearch) setTimeout(() => searchRef.current?.focus(), 350)
+  }, [route.params?.focusSearch])
   const [input, setInput] = React.useState('')
   const [search, setSearch] = React.useState('')
 
@@ -111,6 +118,7 @@ export default function ShopScreen() {
         <View style={s.searchBox}>
           <Ionicons name="search-outline" size={16} color={t.dim} />
           <TextInput
+            ref={searchRef}
             value={input}
             onChangeText={setInput}
             placeholder="Search goods, country or seller..."
