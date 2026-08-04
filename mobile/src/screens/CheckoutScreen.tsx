@@ -10,6 +10,7 @@ import { useStripe } from '@stripe/stripe-react-native'
 import { F, flagUrl, useTheme, Palette } from '../theme'
 import { fmt, getCurrency, useI18nTick } from '../i18n'
 import { useCart, useSession, cartLinePrice } from '../store'
+import { COUNTRIES, countryName } from '../data'
 import { createPaymentIntent, confirmOrders, fetchShippingRates, validateDiscounts, SellerRateGroup, PaymentBreakdown, CheckoutAddress } from '../api'
 
 // CHECKOUT — REAL, website-parity (2026-08-04). This is the same machinery
@@ -27,6 +28,17 @@ import { createPaymentIntent, confirmOrders, fetchShippingRates, validateDiscoun
 
 const QUICK_COUNTRIES = ['GB', 'US', 'DE', 'FR', 'AU', 'CA'] as const
 
+// Full shipping-destination list — website /checkout parity: GB first, then
+// every country Velor ships to, alphabetical. Same sanction exclusions as
+// the site's DESTINATION_EXCLUSIONS.
+const DESTINATION_EXCLUSIONS = new Set(['KP', 'IR', 'SY', 'CU', 'SD', 'RU', 'BY'])
+const ALL_DESTINATIONS: { c: string; n: string }[] = [
+  { c: 'GB', n: countryName('GB') },
+  ...COUNTRIES.filter((x) => x.c !== 'GB' && !DESTINATION_EXCLUSIONS.has(x.c))
+    .map((x) => ({ c: x.c, n: x.n }))
+    .sort((a, b) => a.n.localeCompare(b.n)),
+]
+
 export default function CheckoutScreen() {
   useI18nTick()
   const t = useTheme()
@@ -43,6 +55,8 @@ export default function CheckoutScreen() {
   const [city, setCity] = useState('')
   const [postcode, setPostcode] = useState('')
   const [country, setCountry] = useState('GB')
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerQuery, setPickerQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null)
@@ -297,16 +311,47 @@ export default function CheckoutScreen() {
                 <Text style={[s.ccTx, country === cc && { color: '#fff' }]}>{cc}</Text>
               </Pressable>
             ))}
-            <TextInput
-              value={country}
-              onChangeText={(v) => setCountry(v.toUpperCase().slice(0, 2))}
-              placeholder="CC"
-              placeholderTextColor={t.dim}
-              style={s.ccIn}
-              autoCapitalize="characters"
-              maxLength={2}
-            />
           </View>
+          <Pressable style={s.countryBtn} onPress={() => setPickerOpen(true)}>
+            <Image source={{ uri: flagUrl(country || 'GB', 40) }} style={{ width: 20, height: 14, borderRadius: 2 }} />
+            <Text style={s.countryBtnTx}>{countryName(country) || 'Choose country'}</Text>
+            <Ionicons name="chevron-down" size={14} color={t.mut} />
+          </Pressable>
+          <Text style={s.countryHint}>
+            Shipping to {ALL_DESTINATIONS.length} countries — tap to change
+          </Text>
+          {pickerOpen ? (
+            <View style={s.pickerCard}>
+              <TextInput
+                value={pickerQuery}
+                onChangeText={setPickerQuery}
+                placeholder="Search countries"
+                placeholderTextColor={t.dim}
+                style={s.in}
+                autoFocus
+              />
+              <ScrollView style={{ maxHeight: 320 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                {ALL_DESTINATIONS.filter((d) => d.n.toLowerCase().includes(pickerQuery.trim().toLowerCase())).map((d) => (
+                  <Pressable
+                    key={d.c}
+                    style={s.pickerRow}
+                    onPress={() => {
+                      setCountry(d.c)
+                      setPickerOpen(false)
+                      setPickerQuery('')
+                    }}
+                  >
+                    <Image source={{ uri: flagUrl(d.c, 40) }} style={{ width: 20, height: 14, borderRadius: 2 }} />
+                    <Text style={[s.pickerTx, country === d.c && { color: t.accent }]}>{d.n}</Text>
+                    {country === d.c ? <Ionicons name="checkmark" size={15} color={t.accent} /> : null}
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <Pressable style={s.pickerClose} onPress={() => { setPickerOpen(false); setPickerQuery('') }}>
+                <Text style={s.pickerCloseTx}>Close</Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           <Text style={s.label}>
             DELIVERY · {groups.length} PARCEL{groups.length === 1 ? '' : 'S'}
@@ -463,6 +508,40 @@ const styles = (t: Palette) =>
       backgroundColor: t.surf,
     },
     ccChipOn: { backgroundColor: t.accent, borderColor: t.accent },
+    countryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
+      marginTop: 10,
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 12,
+      paddingHorizontal: 13,
+      paddingVertical: 12,
+    },
+    countryBtnTx: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text, flex: 1 },
+    countryHint: { fontFamily: F.body, fontSize: 10.5, color: t.mut, marginTop: 6 },
+    pickerCard: {
+      marginTop: 10,
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 14,
+      padding: 10,
+    },
+    pickerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 11,
+      paddingHorizontal: 6,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: t.line,
+    },
+    pickerTx: { fontFamily: F.body, fontSize: 13, color: t.text, flex: 1 },
+    pickerClose: { alignItems: 'center', paddingVertical: 10 },
+    pickerCloseTx: { fontFamily: F.bodySemi, fontSize: 12, color: t.accent },
     ccTx: { fontFamily: F.displayMed, fontSize: 11.5, color: t.text },
     ccIn: {
       width: 52,
