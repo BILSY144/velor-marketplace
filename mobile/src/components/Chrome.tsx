@@ -28,7 +28,7 @@ export function Chrome({ back, onBack }: { back?: string; onBack?: () => void })
         <Pressable style={s.gbtn} onPress={() => nav.navigate('LangCur')}>
           <Ionicons name="globe-outline" size={17} color={C.text} />
         </Pressable>
-        <Pressable style={s.gbtn} onPress={() => nav.navigate('Tabs', { screen: 'Search' })}>
+        <Pressable style={s.gbtn} onPress={() => nav.navigate('Tabs', { screen: 'Shop' })}>
           <Ionicons name="search-outline" size={17} color={C.text} />
         </Pressable>
         <Pressable style={s.gbtn} onPress={() => nav.navigate('Menu')}>

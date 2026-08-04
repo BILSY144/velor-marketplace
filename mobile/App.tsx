@@ -31,9 +31,11 @@ import { onI18n, initPrefs, T as tr } from './src/i18n'
 import { Fraunces_400Regular, Fraunces_500Medium_Italic, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
-import { C, F } from './src/theme'
+import { C, F, useTheme, useThemeStore, LIGHT, DARK } from './src/theme'
 import { useCart } from './src/store'
 import AtlasScreen from './src/screens/AtlasScreen'
+import HomeScreen from './src/screens/HomeScreen'
+import ShopScreen from './src/screens/ShopScreen'
 import CountryScreen from './src/screens/CountryScreen'
 import LiveScreen from './src/screens/LiveScreen'
 import SearchScreen from './src/screens/SearchScreen'
@@ -75,16 +77,22 @@ const query = new QueryClient()
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
+// Website-parity tab bar (2026-08-04): Home (the website homepage), Shop
+// (the /shop page), Live, Basket, You — the same doors the site's header
+// offers, five items max per the platform rule. The old Atlas globe and
+// country explorer stay fully reachable (stack screens below + Menu); the
+// old MenuTab is retired — the Menu opens from the Home header, exactly
+// like the website's header menu.
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  Atlas: 'globe-outline',
+  Home: 'home-outline',
+  Shop: 'storefront-outline',
   Live: 'videocam-outline',
-  Search: 'search-outline',
   Basket: 'bag-outline',
   You: 'person-outline',
-  MenuTab: 'menu-outline',
 }
 
 function Tabs() {
+  const t = useTheme()
   const count = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0))
   // Tab labels are drawn by react-navigation's own Text, which the ui/T
   // wrapper never touches -- translate them here and re-evaluate on every
@@ -96,49 +104,27 @@ function Tabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(10,10,13,0.98)',
-          borderTopColor: C.line,
+          backgroundColor: t.surf,
+          borderTopColor: t.line,
         },
-        tabBarActiveTintColor: C.accent,
-        tabBarInactiveTintColor: C.mut,
+        tabBarActiveTintColor: t.accent,
+        tabBarInactiveTintColor: t.mut,
         tabBarLabelStyle: { fontFamily: F.displayMed, fontSize: 9.5 },
-        tabBarLabel: tr(route.name === 'MenuTab' ? 'Menu' : route.name),
+        tabBarLabel: tr(route.name),
         tabBarIcon: ({ color, size }) => (
           <Ionicons name={ICONS[route.name]} size={size - 2} color={color} />
         ),
         tabBarBadge: route.name === 'Basket' && count > 0 ? count : undefined,
-        tabBarBadgeStyle: { backgroundColor: C.accent, color: '#0b0b0e', fontSize: 10 },
+        tabBarBadgeStyle: { backgroundColor: t.accent, color: '#fff', fontSize: 10 },
       })}
     >
-      <Tab.Screen name="Atlas" component={AtlasScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Shop" component={ShopScreen} />
       <Tab.Screen name="Live" component={LiveScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Basket" component={BasketScreen} />
       <Tab.Screen name="You" component={YouScreen} />
-      <Tab.Screen
-        name="MenuTab"
-        component={YouScreen}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault()
-            navigation.navigate('Menu')
-          },
-        })}
-      />
     </Tab.Navigator>
   )
-}
-
-const theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: C.bg,
-    card: C.ink,
-    primary: C.accent,
-    text: C.text,
-    border: C.line,
-  },
 }
 
 // The opening moment — plate 00. Continues seamlessly from the native
@@ -365,10 +351,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={query}>
-        <NavigationContainer theme={theme}>
-          <StatusBar style="light" />
+        <ThemedNav>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Tabs" component={Tabs} />
+            <Stack.Screen name="Atlas" component={AtlasScreen} />
+            <Stack.Screen name="Explore" component={SearchScreen} />
             <Stack.Screen name="Country" component={CountryScreen} />
             <Stack.Screen name="Assist" component={AssistScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />
@@ -431,8 +418,36 @@ export default function App() {
             />
           ) : null}
           {splash ? <SplashOverlay onDone={() => setSplash(false)} /> : null}
-        </NavigationContainer>
+        </ThemedNav>
       </QueryClientProvider>
     </SafeAreaProvider>
+  )
+}
+
+// Navigation shell that re-themes with the active palette (website parity:
+// light by default, dark on toggle — same tokens as velorcommerce.store).
+function ThemedNav({ children }: { children: React.ReactNode }) {
+  const mode = useThemeStore((s) => s.mode)
+  const p = mode === 'light' ? LIGHT : DARK
+  const navTheme = React.useMemo(
+    () => ({
+      ...DarkTheme,
+      dark: mode === 'dark',
+      colors: {
+        ...DarkTheme.colors,
+        background: p.bg,
+        card: p.surf,
+        primary: p.accent,
+        text: p.text,
+        border: p.line,
+      },
+    }),
+    [mode, p]
+  )
+  return (
+    <NavigationContainer theme={navTheme}>
+      <StatusBar style={mode === 'light' ? 'dark' : 'light'} />
+      {children}
+    </NavigationContainer>
   )
 }

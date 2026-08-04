@@ -58,6 +58,37 @@ export async function fetchProductsByOrigin(cc: string, limit = 12): Promise<Sho
   return Array.isArray(data?.products) ? data.products : []
 }
 
+// Full shop query — the SAME /api/shop/products route the website's /shop
+// page uses, with the same filter params (2026-08-04 website-parity pass).
+export type ShopQuery = {
+  search?: string
+  category?: string
+  origin?: string
+  page?: number
+  limit?: number
+  sort?: string
+}
+
+export type ShopPage = { products: ShopProduct[]; total: number; pages: number }
+
+export async function fetchShop(q: ShopQuery = {}): Promise<ShopPage> {
+  const p = new URLSearchParams()
+  if (q.search) p.set('search', q.search)
+  if (q.category) p.set('category', q.category)
+  if (q.origin) p.set('origin', q.origin)
+  if (q.sort) p.set('sort', q.sort)
+  p.set('page', String(q.page ?? 1))
+  p.set('limit', String(q.limit ?? 60))
+  const data = await get<{ products?: ShopProduct[]; total?: number; pages?: number }>(
+    `/api/shop/products?${p.toString()}`
+  )
+  return {
+    products: Array.isArray(data?.products) ? data.products : [],
+    total: data?.total ?? 0,
+    pages: data?.pages ?? 1,
+  }
+}
+
 export type AssistMessage = { role: 'user' | 'assistant'; content: string }
 
 /** Ask Velor — the exact same brain as the website chat (buyer persona). */

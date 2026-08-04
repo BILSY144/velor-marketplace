@@ -195,7 +195,7 @@ function FilmPage({
 
       {/* Top chrome — back chip left, PREVIEW pill right */}
       <View style={[s.topRow, { top: insets.top + 10 }]}>
-        <Pressable style={s.backBtn} onPress={() => nav.navigate('Atlas')}>
+        <Pressable style={s.backBtn} onPress={() => nav.navigate('Tabs', { screen: 'Home' })}>
           <Ionicons name="chevron-back" size={16} color={C.text} />
         </Pressable>
         <View style={s.prevPill}>

@@ -55,7 +55,7 @@ export default function MenuScreen() {
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
           <Pressable
             style={s.feature}
-            onPress={go(() => nav.navigate('Tabs', { screen: 'Atlas' }))}
+            onPress={go(() => nav.navigate('Atlas'))}
           >
             <View style={s.atlasRing}>
               <Ionicons name="earth" size={30} color={C.accent} />
@@ -92,7 +92,7 @@ export default function MenuScreen() {
         <View style={s.grid}>
           {(
             [
-              ['search-outline', 'Search', 'A place, a craft, a thing', () => nav.navigate('Tabs', { screen: 'Search' }), 0],
+              ['search-outline', 'Search', 'A place, a craft, a thing', () => nav.navigate('Tabs', { screen: 'Shop' }), 0],
               ['bag-outline', 'Basket', count ? `${count} in your basket` : 'Many makers, one payment', () => nav.navigate('Tabs', { screen: 'Basket' }), count],
               ['cube-outline', 'Orders', 'Tracking & protection', () => nav.navigate('Orders'), 0],
               ['bookmark-outline', 'Passport', 'Your countries, stamped', () => nav.navigate('Passport'), 0],

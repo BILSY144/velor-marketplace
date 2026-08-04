@@ -6,13 +6,12 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { C, F, flagUrl, pexels } from '../theme'
+import { F, flagUrl, pexels, useTheme, Palette } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import type { ShopProduct } from '../api'
 import { useCart, useFavs } from '../store'
 import { Chrome } from '../components/Chrome'
-import { Kicker, Body, Dim, Btn } from '../ui'
 
 // Product page — plate 04 + spec/pdp.txt, top to bottom: gallery with dots,
 // "{COUNTRY} × {CRAFT}" kicker, Fraunces 31 title, Fraunces 30 price with the
@@ -25,6 +24,8 @@ import { Kicker, Body, Dim, Btn } from '../ui'
 // such field in the API yet, so it is not shown).
 export default function PdpScreen() {
   useI18nTick()
+  const t = useTheme()
+  const s = styles(t)
   const route = useRoute<any>()
   const nav = useNavigation<any>()
   const { width } = useWindowDimensions()
@@ -45,8 +46,8 @@ export default function PdpScreen() {
 
   if (!product) {
     return (
-      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Dim>This listing is no longer available.</Dim>
+      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily: F.body, fontSize: 13, color: t.mut }}>This listing is no longer available.</Text>
       </View>
     )
   }
@@ -73,10 +74,10 @@ export default function PdpScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 118 }}>
         {/* Gallery — swipeable, dots below, fading into the page like the plate */}
-        <View style={{ height: 470, backgroundColor: C.surf }}>
+        <View style={{ height: 470, backgroundColor: t.surf2 }}>
           {images.length ? (
             <ScrollView
               horizontal
@@ -89,11 +90,11 @@ export default function PdpScreen() {
               ))}
             </ScrollView>
           ) : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: C.surf2 }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: t.surf2 }]} />
           )}
           <LinearGradient
             pointerEvents="none"
-            colors={['rgba(8,8,11,0.25)', 'rgba(8,8,11,0)', 'rgba(8,8,11,0.55)', '#08080b']}
+            colors={['rgba(8,8,11,0.22)', 'rgba(8,8,11,0)', 'rgba(8,8,11,0)', t.bg]}
             locations={[0, 0.3, 0.82, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -102,7 +103,7 @@ export default function PdpScreen() {
             style={[s.favBtn, { top: insets.top + 58 }]}
             onPress={() => toggleFav(product.id)}
           >
-            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={18} color={isFav ? C.accent : C.text} />
+            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={18} color={isFav ? t.accent : '#ffffff'} />
           </Pressable>
           {images.length > 1 ? (
             <View style={s.dots}>
@@ -149,7 +150,7 @@ export default function PdpScreen() {
           {/* Escrow — Your money is protected */}
           <View style={s.escrow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="shield-checkmark" size={16} color={C.green} />
+              <Ionicons name="shield-checkmark" size={16} color={t.green} />
               <Text style={s.escrowT}>Your money is protected</Text>
             </View>
             <Text style={s.escrowP}>
@@ -180,14 +181,14 @@ export default function PdpScreen() {
                       key={i}
                       name={i <= Math.round(product.avgRating!) ? 'star' : 'star-outline'}
                       size={13}
-                      color={C.accent}
+                      color={t.accent}
                     />
                   ))}
                 </View>
-                <Body style={{ fontSize: 12.5 }}>
+                <Text style={{ fontFamily: F.body, fontSize: 12.5, color: t.text }}>
                   {product.avgRating.toFixed(1)} · {product.reviewCount} verified{' '}
                   {product.reviewCount === 1 ? 'review' : 'reviews'}
-                </Body>
+                </Text>
               </View>
             ) : (
               <Text style={s.revEmpty}>
@@ -201,9 +202,9 @@ export default function PdpScreen() {
         {/* MORE FROM {COUNTRY} — craft rail, same tiles as the country dive */}
         {crafts.length ? (
           <View style={{ paddingTop: 30 }}>
-            <Kicker style={{ paddingHorizontal: 20, color: C.mut }}>
+            <Text style={[s.dimKick, { paddingHorizontal: 20 }]}>
               MORE FROM {name.toUpperCase()}
-            </Kicker>
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -236,11 +237,9 @@ export default function PdpScreen() {
             <Text style={s.stepTx}>+</Text>
           </Pressable>
         </View>
-        <Btn
-          label={added ? 'Added to basket ✓' : `Add · ${fmt(price * qty)}`}
-          onPress={onAdd}
-          style={{ flex: 1 }}
-        />
+        <Pressable style={s.addBtn} onPress={onAdd}>
+          <Text style={s.addBtnTx}>{added ? 'Added to basket ✓' : `Add · ${fmt(price * qty)}`}</Text>
+        </Pressable>
       </View>
 
       <Chrome back={name || 'Back'} onBack={() => nav.goBack()} />
@@ -248,16 +247,16 @@ export default function PdpScreen() {
   )
 }
 
-const s = StyleSheet.create({
+const styles = (t: Palette) => StyleSheet.create({
   favBtn: {
     position: 'absolute',
     right: 14,
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(20,20,26,0.72)',
+    backgroundColor: 'rgba(20,20,26,0.55)',
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 5,
@@ -273,50 +272,50 @@ const s = StyleSheet.create({
   },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.35)' },
   dotOn: { backgroundColor: '#fff', width: 16 },
-  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.accent },
-  title: { fontFamily: F.serifLight, fontSize: 31, lineHeight: 37, color: C.text, marginTop: 8 },
-  price: { fontFamily: F.serifLight, fontSize: 30, color: C.text },
-  deliver: { fontFamily: F.body, fontSize: 12, color: C.green, flexShrink: 1 },
+  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: t.accent },
+  title: { fontFamily: F.serifLight, fontSize: 31, lineHeight: 37, color: t.text, marginTop: 8 },
+  price: { fontFamily: F.serifLight, fontSize: 30, color: t.text },
+  deliver: { fontFamily: F.body, fontSize: 12, color: t.green, flexShrink: 1 },
   maker: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginTop: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: t.surf,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 18,
     padding: 14,
   },
   makerFlag: { width: 44, height: 32, borderRadius: 8 },
-  makerName: { fontFamily: F.serif, fontSize: 15, color: C.text },
-  makerLoc: { fontFamily: F.body, fontSize: 11, color: C.mut, marginTop: 2 },
-  dimKick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.mut },
-  making: { fontFamily: F.serifLight, fontSize: 16, lineHeight: 24, color: '#d4d3cf', marginTop: 10 },
+  makerName: { fontFamily: F.serif, fontSize: 15, color: t.text },
+  makerLoc: { fontFamily: F.body, fontSize: 11, color: t.mut, marginTop: 2 },
+  dimKick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: t.mut },
+  making: { fontFamily: F.serifLight, fontSize: 16, lineHeight: 24, color: t.text, marginTop: 10 },
   escrow: {
     marginTop: 24,
-    backgroundColor: 'rgba(61,220,132,0.06)',
+    backgroundColor: 'rgba(46,204,113,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(61,220,132,0.22)',
+    borderColor: 'rgba(46,204,113,0.3)',
     borderRadius: 18,
     padding: 14,
   },
-  escrowT: { fontFamily: F.displayMed, fontSize: 13.5, color: C.text },
-  escrowP: { fontFamily: F.body, fontSize: 12, lineHeight: 18, color: C.mut, marginTop: 8 },
+  escrowT: { fontFamily: F.displayMed, fontSize: 13.5, color: t.text },
+  escrowP: { fontFamily: F.body, fontSize: 12, lineHeight: 18, color: t.mut, marginTop: 8 },
   pill: {
     paddingHorizontal: 13,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: t.surf2,
   },
-  pillTx: { fontFamily: F.displayMed, fontSize: 12, color: C.text },
-  revEmpty: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: C.dim, marginTop: 10 },
+  pillTx: { fontFamily: F.displayMed, fontSize: 12, color: t.text },
+  revEmpty: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.dim, marginTop: 10 },
   moreTile: {
     width: 118,
     aspectRatio: 3 / 4,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: C.surf2,
+    backgroundColor: t.surf2,
   },
   moreName: {
     position: 'absolute',
@@ -326,7 +325,7 @@ const s = StyleSheet.create({
     fontFamily: F.displayMed,
     fontSize: 13,
     lineHeight: 16,
-    color: C.text,
+    color: t.text,
   },
   bar: {
     position: 'absolute',
@@ -338,22 +337,30 @@ const s = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingTop: 12,
-    backgroundColor: 'rgba(10,10,13,0.97)',
+    backgroundColor: t.surf,
     borderTopWidth: 1,
-    borderTopColor: C.line,
+    borderTopColor: t.line,
   },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: t.surf,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 999,
     paddingHorizontal: 6,
     height: 48,
   },
   stepBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-  stepTx: { fontFamily: F.body, fontSize: 18, color: C.text },
-  stepN: { fontFamily: F.display, fontSize: 16, color: C.text, minWidth: 18, textAlign: 'center' },
+  stepTx: { fontFamily: F.body, fontSize: 18, color: t.text },
+  stepN: { fontFamily: F.display, fontSize: 16, color: t.text, minWidth: 18, textAlign: 'center' },
+  addBtn: {
+    flex: 1,
+    backgroundColor: t.accent,
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  addBtnTx: { fontFamily: F.display, fontSize: 14, color: '#fff' },
 })

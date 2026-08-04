@@ -59,7 +59,7 @@ export default function PassportScreen() {
             {COUNTRIES.length} countries are opening their channels. Every one is a stamp waiting
             to happen.
           </Text>
-          <Pressable style={s.ghost} onPress={() => nav.navigate('Tabs', { screen: 'Atlas' })}>
+          <Pressable style={s.ghost} onPress={() => nav.navigate('Tabs', { screen: 'Home' })}>
             <Text style={s.ghostTx}>Open the Atlas</Text>
           </Pressable>
         </View>
