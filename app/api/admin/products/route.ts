@@ -60,10 +60,14 @@ export async function PATCH(req: NextRequest) {
   // signal ones, since ordinary listings go live instantly and never reach
   // this queue); 'delist' takes an already-live APPROVED listing down after
   // the fact.
-  if (!productId || !['approve', 'reject', 'delist'].includes(action)) {
+      if (!productId || !['approve', 'reject', 'delist', 'override_approve'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
-
+      // Admin override: lets an authenticated admin push a certificate-gated listing live on their own judgement, without a verified certificate on file. Deliberately a SEPARATE action from 'approve' below, so the hard certificate gate stays completely untouched for any listing that hasn't been overridden. A written reason is mandatory and stored permanently against the product for audit/regulatory defensibility, per velor-global-compliance's Certificate-Required Products section. (William, 2026-08-04.)
+      if (action === 'override_approve' && (!note || !String(note).trim())) {
+              return NextResponse.json({ error: 'A reason is required to override the certificate gate.' }, { status: 400 })
+      }
+      
   // Certificate gate: a regulated-material listing can never be approved
   // until at least one certificate has been VERIFIED by admin review and is
   // not expired. See /legal/seller-rules section 4 and the
@@ -109,7 +113,8 @@ export async function PATCH(req: NextRequest) {
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
-      status: action === 'approve' ? 'APPROVED' : action === 'delist' ? 'DELISTED' : 'REJECTED',
+            status: (action === 'approve' || action === 'override_approve') ? 'APPROVED' : action === 'delist' ? 'DELISTED' : 'REJECTED',
+            ...(action === 'override_approve' ? { certificateOverrideNote: String(note).slice(0, 2000), certificateOverrideBy: (session.user as any)?.email || (session.user as any)?.name || 'unknown admin', certificateOverrideAt: new Date() } : {}),
     },
     include: {
       seller: {
@@ -124,7 +129,7 @@ export async function PATCH(req: NextRequest) {
   const sellerName = product.seller.user.name || 'there'
   const storeName = product.seller.storeName
 
-  if (action === 'approve') {
+      if (action === 'approve' || action === 'override_approve') {
       await grantCountryFounderIfFirst(product.sellerId, product.id, product.originCountry)
     await sendEmail({
       from: 'Velor Marketplace <noreply@velorcommerce.store>',
