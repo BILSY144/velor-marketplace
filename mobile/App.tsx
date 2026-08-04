@@ -60,6 +60,7 @@ import { AddrScreen, PayScreen, LangCurScreen } from './src/screens/SettingsScre
 import SeatsScreen from './src/screens/SeatsScreen'
 import DashScreen from './src/screens/DashScreen'
 import { SellerOrdersScreen, ApiKeysScreen, PayoutsScreen } from './src/screens/SellerOpsScreens'
+import { SellerQuestionsScreen, DiscountsScreen, ReturnsScreen, FollowersScreen, SupportScreen, ShippingSettingsScreen } from './src/screens/SellerToolsScreens'
 import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
 import LiveRoomScreen from './src/screens/LiveRoomScreen'
@@ -401,6 +402,12 @@ export default function App() {
             <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
             <Stack.Screen name="ApiKeys" component={ApiKeysScreen} />
             <Stack.Screen name="Payouts" component={PayoutsScreen} />
+            <Stack.Screen name="SellerQuestions" component={SellerQuestionsScreen} />
+            <Stack.Screen name="Discounts" component={DiscountsScreen} />
+            <Stack.Screen name="Returns" component={ReturnsScreen} />
+            <Stack.Screen name="Followers" component={FollowersScreen} />
+            <Stack.Screen name="Support" component={SupportScreen} />
+            <Stack.Screen name="ShippingSettings" component={ShippingSettingsScreen} />
             <Stack.Screen name="NewListing" component={NewListingScreen} />
             <Stack.Screen name="GoLive" component={GoLiveScreen} />
             <Stack.Screen name="LiveRoom" component={LiveRoomScreen} />

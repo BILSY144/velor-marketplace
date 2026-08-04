@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { TextInput } from '../ui/TI'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -10,7 +11,7 @@ import { C, F } from '../theme'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
-import { fetchSellerOrders, fetchSellerPayouts, fetchSubscription, startProUpgrade, SellerOrder } from '../api'
+import { fetchSellerOrders, fetchSellerPayouts, fetchSubscription, startProUpgrade, addTracking, SellerOrder } from '../api'
 import { fmt, useI18nTick } from '../i18n'
 
 // Seller orders (plate 28), API access (plate 29) and Payouts (plate 31) —
@@ -79,30 +80,7 @@ export function SellerOrdersScreen() {
           </View>
 
           {shown.length ? (
-            shown.map((o) => (
-              <View key={o.id} style={s.orderCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  {o.items[0]?.product?.images?.[0] ? (
-                    <Image source={{ uri: o.items[0].product.images[0] }} style={s.ordImg} contentFit="cover" />
-                  ) : (
-                    <View style={[s.ordImg, { backgroundColor: C.surf2 }]} />
-                  )}
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={s.ordT} numberOfLines={1}>
-                      {o.items.map((i) => i.product?.name ?? 'Product').join(' · ')}
-                    </Text>
-                    <Text style={s.ordS} numberOfLines={1}>
-                      {o.buyerName} · {new Date(o.createdAt).toLocaleDateString('en-GB')} ·{' '}
-                      {o.status}
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.ordP}>{fmt(o.total ?? 0)}</Text>
-                    <Text style={s.ordPay}>yours {fmt(o.sellerEarnings ?? 0)}</Text>
-                  </View>
-                </View>
-              </View>
-            ))
+            shown.map((o) => <SellerOrderCard key={o.id} o={o} onDone={() => orders.refetch()} />)
           ) : (
             <View style={s.zero}>
               <Ionicons name="cube-outline" size={22} color={C.mut} />
@@ -123,6 +101,70 @@ export function SellerOrdersScreen() {
         </View>
       </ScrollView>
       <Chrome back="Dashboard" onBack={() => nav.goBack()} />
+    </View>
+  )
+}
+
+function SellerOrderCard({ o, onDone }: { o: SellerOrder; onDone: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [carrier, setCarrier] = useState('')
+  const [tn, setTn] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const st = (o.status ?? '').toUpperCase()
+  const canShip = ['PAID', 'PROCESSING'].includes(st)
+  return (
+    <View style={s.orderCard}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        {o.items[0]?.product?.images?.[0] ? (
+          <Image source={{ uri: o.items[0].product.images[0] }} style={s.ordImg} contentFit="cover" />
+        ) : (
+          <View style={[s.ordImg, { backgroundColor: C.surf2 }]} />
+        )}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={s.ordT} numberOfLines={1}>
+            {o.items.map((i) => i.product?.name ?? 'Product').join(' · ')}
+          </Text>
+          <Text style={s.ordS} numberOfLines={1}>
+            {o.buyerName} · {new Date(o.createdAt).toLocaleDateString('en-GB')} · {o.status}
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={s.ordP}>{fmt(o.total ?? 0)}</Text>
+          <Text style={s.ordPay}>yours {fmt(o.sellerEarnings ?? 0)}</Text>
+        </View>
+      </View>
+      {canShip ? (
+        !open ? (
+          <Pressable style={s.shipBtn} onPress={() => setOpen(true)}>
+            <Ionicons name="cube-outline" size={13} color={C.accent} />
+            <Text style={s.shipTx}>Add tracking & mark shipped</Text>
+          </Pressable>
+        ) : (
+          <View style={{ marginTop: 12, gap: 8 }}>
+            <TextInput style={s.trkIn} value={carrier} onChangeText={setCarrier} placeholder="Carrier (e.g. Royal Mail, DHL)" placeholderTextColor={C.dim} />
+            <TextInput style={s.trkIn} value={tn} onChangeText={setTn} placeholder="Tracking number" placeholderTextColor={C.dim} autoCapitalize="characters" />
+            {note ? <Dim style={{ fontSize: 11, color: '#e05545' }}>{note}</Dim> : null}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Pressable
+                style={[s.trkSave, (busy || !carrier.trim() || !tn.trim()) && { opacity: 0.5 }]}
+                disabled={busy || !carrier.trim() || !tn.trim()}
+                onPress={async () => {
+                  setBusy(true); setNote(null)
+                  const r = await addTracking(o.id, carrier.trim(), tn.trim())
+                  setBusy(false)
+                  if (r.ok) { setOpen(false); onDone() } else setNote(r.error ?? 'Could not save tracking.')
+                }}
+              >
+                <Text style={s.trkSaveTx}>{busy ? 'Saving…' : 'Save & notify buyer'}</Text>
+              </Pressable>
+              <Pressable style={s.trkCancel} onPress={() => setOpen(false)}>
+                <Text style={s.trkCancelTx}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        )
+      ) : null}
     </View>
   )
 }
@@ -352,6 +394,13 @@ const s = StyleSheet.create({
     padding: 15,
   },
   fd: { fontFamily: F.bodySemi, fontSize: 13, color: C.text },
+  shipBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 12, borderWidth: 1, borderColor: C.accent, borderRadius: 11, paddingVertical: 10 },
+  shipTx: { fontFamily: F.bodySemi, fontSize: 12, color: C.accent },
+  trkIn: { borderWidth: 1, borderColor: C.line, borderRadius: 10, padding: 11, fontFamily: F.body, fontSize: 12.5, color: C.text },
+  trkSave: { flex: 1.4, backgroundColor: C.accent, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  trkSaveTx: { fontFamily: F.bodySemi, fontSize: 12, color: '#fff' },
+  trkCancel: { flex: 1, borderWidth: 1, borderColor: C.line, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  trkCancelTx: { fontFamily: F.body, fontSize: 12, color: C.mut },
   orderCard: {
     marginTop: 10,
     backgroundColor: 'rgba(255,255,255,0.03)',

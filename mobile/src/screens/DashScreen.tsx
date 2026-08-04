@@ -223,7 +223,7 @@ export default function DashScreen() {
           </View>
           {live && listings.length ? (
             listings.slice(0, 8).map((p) => (
-              <View key={p.id} style={s.listRow}>
+              <Pressable key={p.id} style={s.listRow} onPress={() => nav.navigate('NewListing', { edit: p })}>
                 {p.images?.[0] ? (
                   <Image source={{ uri: p.images[0] }} style={s.listImg} contentFit="cover" />
                 ) : (
@@ -240,7 +240,8 @@ export default function DashScreen() {
                   </Text>
                 </View>
                 <Text style={s.lp}>{fmt(p.price)}</Text>
-              </View>
+                <Ionicons name="chevron-forward" size={15} color={C.mut} style={{ marginLeft: 6 }} />
+              </Pressable>
             ))
           ) : (
             <View style={s.card2}>

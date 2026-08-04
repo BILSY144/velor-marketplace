@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { TextInput } from '../ui/TI'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -11,7 +11,8 @@ import { C, F } from '../theme'
 import { Dim, Btn } from '../ui'
 import { Chrome } from '../components/Chrome'
 import { useSession } from '../store'
-import { createListing } from '../api'
+import { createListing, updateListing, deleteListing } from '../api'
+import { Alert } from 'react-native'
 import { fmt, useI18nTick } from '../i18n'
 
 // New listing — plate 30, fully interactive as a PREVIEW: real photo picker
@@ -27,14 +28,18 @@ export default function NewListingScreen() {
   const nav = useNavigation<any>()
   const user = useSession((st) => st.user)
   const live = Boolean(user?.sellerId)
-  const [photos, setPhotos] = useState<Photo[]>([])
+  const route = useRoute<any>()
+  const editing = route.params?.edit as any | undefined
+  const [photos, setPhotos] = useState<Photo[]>(
+    editing?.images?.length ? editing.images.map((u: string) => ({ uri: u, dataUrl: u })) : []
+  )
   const [cover, setCover] = useState(0)
-  const [title, setTitle] = useState('')
-  const [price, setPrice] = useState('')
-  const [stock, setStock] = useState('')
+  const [title, setTitle] = useState(editing?.name ?? editing?.title ?? '')
+  const [price, setPrice] = useState(editing ? String(editing.price ?? '') : '')
+  const [stock, setStock] = useState(editing?.stock != null ? String(editing.stock) : '')
   const [parcel, setParcel] = useState('')
-  const [desc, setDesc] = useState('')
-  const [story, setStory] = useState('')
+  const [desc, setDesc] = useState(editing?.description ?? '')
+  const [story, setStory] = useState(editing?.makerStory ?? '')
   const [regulated, setRegulated] = useState<null | boolean>(null)
   const [certs, setCerts] = useState<string[]>([])
   const [note, setNote] = useState<string | null>(null)
@@ -110,7 +115,7 @@ export default function NewListingScreen() {
     const kg = parcel.match(/([\d.]+)\s*kg/i)
     const g = parcel.match(/([\d.]+)\s*g\b/i)
     const dims = parcel.match(/(\d+)\s*[×x*]\s*(\d+)\s*[×x*]\s*(\d+)/)
-    const res = await createListing({
+    const payload = {
       name: title.trim(),
       description: desc.trim(),
       price: priceN,
@@ -125,13 +130,16 @@ export default function NewListingScreen() {
       lengthCm: dims ? parseInt(dims[1], 10) : null,
       widthCm: dims ? parseInt(dims[2], 10) : null,
       heightCm: dims ? parseInt(dims[3], 10) : null,
-    })
+    }
+    const res = editing ? await updateListing(editing.id, payload) : await createListing(payload)
     setBusy(false)
     if (res.ok) {
       setNote(
-        regulated
-          ? 'Published — held for certificate verification, live the moment it clears.'
-          : 'Published — your listing is in review and goes live on approval.'
+        editing
+          ? 'Saved — your changes are live.'
+          : regulated
+            ? 'Published — held for certificate verification, live the moment it clears.'
+            : 'Published — your listing is in review and goes live on approval.'
       )
       setTimeout(() => {
         setNote(null)
@@ -147,8 +155,8 @@ export default function NewListingScreen() {
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 120 }}>
         <View style={{ paddingHorizontal: 20 }}>
-          <Text style={s.kick}>YOUR CHANNEL · NEW LISTING</Text>
-          <Text style={s.h1}>List a piece.</Text>
+          <Text style={s.kick}>YOUR CHANNEL · {editing ? 'EDIT LISTING' : 'NEW LISTING'}</Text>
+          <Text style={s.h1}>{editing ? 'Edit piece.' : 'List a piece.'}</Text>
 
           {/* Photos — cover + thumbs */}
           <Pressable style={s.cover} onPress={photos.length ? undefined : addPhotos}>
@@ -310,9 +318,22 @@ export default function NewListingScreen() {
 
       <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
         <Btn
-          label={busy ? 'Publishing…' : ready ? 'Publish listing' : 'Publish listing — checklist first'}
+          label={busy ? (editing ? 'Saving…' : 'Publishing…') : editing ? 'Save changes' : ready ? 'Publish listing' : 'Publish listing — checklist first'}
           onPress={publish}
         />
+        {editing && live ? (
+          <Pressable
+            style={{ marginTop: 10, alignItems: 'center', paddingVertical: 8 }}
+            onPress={() => {
+              Alert.alert('Delete listing?', 'This removes the piece from your store. Listings that have been ordered are hidden rather than erased, to keep order history intact.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: async () => { const r = await deleteListing(editing.id); if (r.ok) nav.goBack(); else setNote(r.error ?? 'Could not delete.') } },
+              ])
+            }}
+          >
+            <Text style={{ fontFamily: F.body, fontSize: 12.5, color: '#e05545' }}>Delete this listing</Text>
+          </Pressable>
+        ) : null}
       </View>
       <Chrome back="Dashboard" onBack={() => nav.goBack()} />
     </View>

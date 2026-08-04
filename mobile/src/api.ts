@@ -894,3 +894,174 @@ export async function sendMessage(body: {
   }
   return { ok: true }
 }
+
+// ============================================================================
+// SELLER DASHBOARD APIS (2026-08-04, Phase B website parity). Every call hits
+// the exact /api/dashboard/* or role-scoped route the website's seller
+// dashboard uses; session-cookie authed; seller-only server-side.
+// ============================================================================
+
+// --- Listing edit / delete (dashboard products PATCH/DELETE by ?id=) ---
+export async function updateListing(id: string, body: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/products?id=${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+export async function deleteListing(id: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/products?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Fulfilment: attach carrier + tracking (creates the shipment/label) ---
+export async function addTracking(orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/shipping/label`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ orderId, carrier, trackingNumber, trackingUrl }),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Seller Q&A inbox (answer buyer questions) ---
+export type SellerQuestion = { id: string; question: string; answer: string | null; answeredAt: string | null; createdAt: string; user: { name: string | null }; product: { id: string; title: string | null; images: string[] } }
+export async function fetchSellerQuestions(): Promise<SellerQuestion[]> {
+  const res = await fetch(`${BASE}/api/questions?scope=seller`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.questions) ? d.questions : []
+}
+export async function answerQuestion(questionId: string, answer: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/questions`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ questionId, answer }),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Discount codes manager ---
+export type DiscountCode = { id: string; code: string; type: string; value: number; active?: boolean; usageCount?: number; usageLimit?: number | null; expiresAt?: string | null }
+export async function fetchDiscountCodes(): Promise<DiscountCode[]> {
+  const res = await fetch(`${BASE}/api/dashboard/discount-codes`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.codes) ? d.codes : Array.isArray(d) ? d : []
+}
+export async function createDiscountCode(body: { code: string; type: 'PERCENTAGE' | 'FIXED'; value: number; usageLimit?: number | null; expiresAt?: string | null; productIds?: string[] }): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/discount-codes`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+export async function toggleDiscountCode(id: string, active: boolean): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/dashboard/discount-codes`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id, active }),
+  })
+  return res.ok
+}
+export async function deleteDiscountCode(id: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/dashboard/discount-codes?id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
+  return res.ok
+}
+
+// --- Returns queue (seller: view + approve/reject) ---
+export type ReturnRequest = { id: string; orderId: string; reason: string; status: string; createdAt: string; order?: { items?: { title?: string | null; quantity?: number }[] } }
+export async function fetchSellerReturns(): Promise<ReturnRequest[]> {
+  const res = await fetch(`${BASE}/api/returns?role=seller`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.returns) ? d.returns : []
+}
+export async function updateReturn(returnId: string, status: string, notes?: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/returns/${encodeURIComponent(returnId)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ status, notes }),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Followers list ---
+export type SellerFollower = { id: string; name: string | null; since: string }
+export async function fetchSellerFollowers(): Promise<SellerFollower[]> {
+  const res = await fetch(`${BASE}/api/dashboard/followers`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.followers) ? d.followers : []
+}
+
+// --- Analytics (raw pass-through; UI reads what it needs) ---
+export async function fetchAnalytics(): Promise<any | null> {
+  const res = await fetch(`${BASE}/api/dashboard/analytics`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return null
+  return res.json()
+}
+
+// --- Support tickets ---
+export type SupportTicket = { id: string; subject: string; message?: string; status?: string; createdAt: string; priority?: boolean }
+export async function fetchSupportTickets(): Promise<SupportTicket[]> {
+  const res = await fetch(`${BASE}/api/dashboard/support`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.tickets) ? d.tickets : Array.isArray(d) ? d : []
+}
+export async function openSupportTicket(subject: string, message: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/support`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ subject, message }),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Storefront settings + shipping profile ---
+export async function fetchStorefront(): Promise<any | null> {
+  const res = await fetch(`${BASE}/api/seller/storefront`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return null
+  return res.json()
+}
+export async function saveStorefront(body: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/seller/storefront`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+export async function fetchShippingSettings(): Promise<any | null> {
+  const res = await fetch(`${BASE}/api/dashboard/settings/shipping`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return null
+  return res.json()
+}
+export async function saveShippingSettings(body: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/dashboard/settings/shipping`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
