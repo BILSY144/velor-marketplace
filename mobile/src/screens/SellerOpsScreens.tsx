@@ -135,19 +135,10 @@ export function ApiKeysScreen() {
   const live = Boolean(user?.sellerId)
   const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription, enabled: live })
   const pro = live && (sub.data?.tier as string) === 'PRO'
-  const [upBusy, setUpBusy] = useState(false)
-
-  // Starter sellers do not get Pro tools — the door here is the upgrade,
-  // which opens Stripe's hosted checkout in the browser.
-  const upgrade = async () => {
-    if (upBusy) return
-    setUpBusy(true)
-    try {
-      const r = await startProUpgrade()
-      if (r.checkoutUrl) await Linking.openURL(r.checkoutUrl)
-    } catch {}
-    setUpBusy(false)
-  }
+  // One tier only (2026-08-04): the Pro upgrade flow is retired on the
+  // website (/dashboard/upgrade/pro redirects) — API keys remain available
+  // to the single grandfathered legacy Pro account, so no purchase door
+  // exists here any more.
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -173,13 +164,9 @@ export function ApiKeysScreen() {
 
           {live && !pro ? (
             <View style={{ marginTop: 14 }}>
-              <Btn
-                label={upBusy ? 'Opening secure checkout…' : 'Pro-only — Upgrade to Pro'}
-                onPress={upgrade}
-              />
-              <Dim style={{ fontSize: 10.5, lineHeight: 15, marginTop: 8, textAlign: 'center' }}>
-                API access is a Pro tool. Checkout opens in your browser — payment details go to
-                Stripe, never to the app.
+              <Dim style={{ fontSize: 11, lineHeight: 16, textAlign: 'center' }}>
+                API access is part of the legacy Pro account. Velor now has one flat plan — if
+                your integration needs keys, contact support and we will set you up.
               </Dim>
             </View>
           ) : (

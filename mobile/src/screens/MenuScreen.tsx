@@ -9,6 +9,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
 import { FILMS } from '../data'
 import { useCart } from '../store'
+import { getLang, getCurrency, APP_LANGS } from '../i18n'
 
 // The hamburger menu — redesigned beyond the mockup's flat list at
 // William's call (2026-07-15: "menu page still looks the same… no redesign
@@ -161,7 +162,7 @@ export default function MenuScreen() {
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 26 }}>
           <Pressable style={s.foot} onPress={go(() => nav.navigate('LangCur'))}>
             <Ionicons name="globe-outline" size={13} color={C.mut} />
-            <Text style={s.footTx}>English · GBP</Text>
+            <Text style={s.footTx}>{`${(APP_LANGS.find((l) => l.code === getLang())?.english ?? 'English')} · ${getCurrency()}`}</Text>
           </Pressable>
           <Pressable style={s.foot} onPress={go(() => nav.navigate('Legal', { doc: 'terms' }))}>
             <Ionicons name="shield-checkmark-outline" size={13} color={C.mut} />

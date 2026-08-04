@@ -4,10 +4,13 @@ import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
+import { useQuery } from '@tanstack/react-query'
 import { C, F, flagUrl } from '../theme'
 import { COUNTRIES, countryName } from '../data'
 import { Dim } from '../ui'
 import { Chrome } from '../components/Chrome'
+import { useSession } from '../store'
+import { fetchMyOrders } from '../api'
 
 // Buyer passport — plate 14, exact: VELOR · BUYER PASSPORT orange kicker,
 // the big Fraunces "0 / 190" counter, progress hairline, the grid of dashed
@@ -20,7 +23,25 @@ const WAITING = ['MA', 'CN', 'JP', 'TR', 'IN', 'PE', 'MX', 'IT', 'GH', 'KR', 'ET
 export default function PassportScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
-  const stamps = 0
+  const user = useSession((st) => st.user)
+  // Real stamps (2026-08-04): one per distinct origin country across the
+  // buyer's DELIVERED/COMPLETED orders — the same live /api/orders data the
+  // website reads. Signed out or nothing delivered yet -> honest zero.
+  const ordersQ = useQuery({
+    queryKey: ['myOrders'],
+    queryFn: fetchMyOrders,
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  })
+  const earned = React.useMemo(() => {
+    const set = new Set<string>()
+    for (const o of ordersQ.data ?? []) {
+      if (!['DELIVERED', 'COMPLETED'].includes(o.status?.toUpperCase?.() ?? '')) continue
+      for (const it of o.items) if (it.originCountry) set.add(it.originCountry.toUpperCase())
+    }
+    return [...set]
+  }, [ordersQ.data])
+  const stamps = earned.length
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -40,9 +61,17 @@ export default function PassportScreen() {
           </View>
         </View>
 
-        {/* Stamp grid */}
+        {/* Stamp grid — earned stamps first (solid), then waiting */}
         <View style={s.grid}>
-          {WAITING.map((cc) => (
+          {earned.map((cc) => (
+            <Pressable key={cc} style={[s.stamp, s.stampEarned]} onPress={() => nav.navigate('Country', { cc })}>
+              <Image source={{ uri: flagUrl(cc) }} style={[s.stampFlag, { opacity: 1 }]} />
+              <Text style={[s.stampNm, { color: C.accent }]} numberOfLines={1}>
+                {countryName(cc).toUpperCase()}
+              </Text>
+            </Pressable>
+          ))}
+          {WAITING.filter((cc) => !earned.includes(cc)).map((cc) => (
             <Pressable key={cc} style={s.stamp} onPress={() => nav.navigate('Country', { cc })}>
               <Image source={{ uri: flagUrl(cc) }} style={s.stampFlag} />
               <Text style={s.stampNm} numberOfLines={1}>
@@ -100,6 +129,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  stampEarned: { borderStyle: 'solid', borderColor: C.accent },
   stampFlag: { width: 34, height: 24, borderRadius: 4, opacity: 0.45 },
   stampNm: {
     fontFamily: F.display,

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import * as FileSystem from 'expo-file-system/legacy'
 import type { ShopProduct } from './api'
 
 // Cart lines carry the picked VARIANT (2026-08-04 website-parity checkout):
@@ -109,3 +110,26 @@ export const useSession = create<SessionState>((set) => ({
   set: (user) => set({ user, ready: true }),
   markReady: () => set({ ready: true }),
 }))
+
+
+// ---- Cart persistence (2026-08-04, website parity: the site's cart lives in
+// localStorage and survives closing the tab; the app basket previously
+// evaporated on restart). Whole-cart JSON snapshot on every change, restored
+// once at module load. Best-effort: a failed disk write never breaks the UI.
+const CART_FILE = (FileSystem.documentDirectory ?? '') + 'velor-cart.json'
+let cartHydrated = false
+async function hydrateCart() {
+  if (cartHydrated) return
+  cartHydrated = true
+  try {
+    const raw = await FileSystem.readAsStringAsync(CART_FILE)
+    const saved = JSON.parse(raw)
+    if (Array.isArray(saved) && saved.length) {
+      useCart.setState({ items: saved })
+    }
+  } catch {}
+  useCart.subscribe((st) => {
+    FileSystem.writeAsStringAsync(CART_FILE, JSON.stringify(st.items)).catch(() => {})
+  })
+}
+void hydrateCart()

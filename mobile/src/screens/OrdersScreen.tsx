@@ -9,7 +9,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, useTheme, Palette } from '../theme'
 import { fmt, useI18nTick } from '../i18n'
 import { useSession } from '../store'
-import { fetchMyOrders, BuyerOrder } from '../api'
+import { fetchMyOrders, confirmDelivery, BuyerOrder } from '../api'
 import { Chrome } from '../components/Chrome'
 
 // ORDERS — REAL buyer orders (2026-08-04 website-parity pass): the same
@@ -69,7 +69,9 @@ export default function OrdersScreen() {
           ) : orders.length === 0 ? (
             <EmptyCard s={s} t={t} />
           ) : (
-            orders.map((o) => <OrderCard key={o.id} o={o} s={s} t={t} />)
+            orders.map((o) => (
+              <OrderCard key={o.id} o={o} s={s} t={t} onChanged={() => refetch()} nav={nav} />
+            ))
           )}
 
           {/* Protection explainers — unchanged, always true */}
@@ -94,10 +96,24 @@ export default function OrdersScreen() {
   )
 }
 
-function OrderCard({ o, s, t }: { o: BuyerOrder; s: ReturnType<typeof styles>; t: Palette }) {
+function OrderCard({
+  o,
+  s,
+  t,
+  onChanged,
+  nav,
+}: {
+  o: BuyerOrder
+  s: ReturnType<typeof styles>
+  t: Palette
+  onChanged: () => void
+  nav: any
+}) {
   const stop = STATUS_INDEX[o.status?.toUpperCase?.() ?? ''] ?? 0
   const first = o.items?.[0]
   const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
+  const [confirming, setConfirming] = React.useState(false)
+  const shipped = ['SHIPPED', 'IN_TRANSIT'].includes(o.status?.toUpperCase?.() ?? '')
   return (
     <View style={s.card}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -128,6 +144,28 @@ function OrderCard({ o, s, t }: { o: BuyerOrder; s: ReturnType<typeof styles>; t
             <Text style={[s.railTx, i <= stop && { color: t.text }]}>{l}</Text>
           </View>
         ))}
+      </View>
+
+      {/* Website /orders parity: per-order tracking page link, and the
+          escrow-releasing "I have received this order" button on SHIPPED. */}
+      <View style={{ flexDirection: 'row', gap: 9, marginTop: 16 }}>
+        <Pressable style={s.actGhost} onPress={() => nav.navigate('Track', { orderId: o.id })}>
+          <Text style={s.actGhostTx}>Track order</Text>
+        </Pressable>
+        {shipped ? (
+          <Pressable
+            style={[s.actSolid, confirming && { opacity: 0.6 }]}
+            disabled={confirming}
+            onPress={async () => {
+              setConfirming(true)
+              const r = await confirmDelivery(o.id)
+              setConfirming(false)
+              if (r.ok) onChanged()
+            }}
+          >
+            <Text style={s.actSolidTx}>{confirming ? 'Confirming…' : 'I have received this order'}</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   )
@@ -233,6 +271,23 @@ const styles = (t: Palette) =>
       borderColor: t.line,
     },
     railTx: { fontFamily: F.display, fontSize: 9, letterSpacing: 0.8, color: t.mut },
+    actGhost: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 11,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    actGhostTx: { fontFamily: F.bodySemi, fontSize: 12, color: t.text },
+    actSolid: {
+      flex: 1.4,
+      backgroundColor: t.accent,
+      borderRadius: 11,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    actSolidTx: { fontFamily: F.bodySemi, fontSize: 12, color: '#fff' },
     hr: { height: 1, backgroundColor: t.line, marginTop: 18 },
     foot: { fontFamily: F.body, fontSize: 11, color: t.dim, marginTop: 12 },
     exp: {

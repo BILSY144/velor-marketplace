@@ -132,7 +132,7 @@ export default function BellScreen() {
               <Text style={s.nt}>Quiet, for now</Text>
               <Text style={s.ns}>
                 Follow a country and its opening bell lands here. Order something and every step
-                of the parcel rings in too — orders switch on with buyer launch, 6 August.
+                of the parcel rings in too — orders switch on with buyer launch, 6 September.
               </Text>
             </View>
           )}

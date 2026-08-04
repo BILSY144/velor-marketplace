@@ -71,8 +71,8 @@ export default function NewListingScreen() {
   }
 
   const priceN = parseFloat(price) || 0
-  const keepStarter = Math.max(0, priceN * 0.9)
-  const keepPro = Math.max(0, priceN * 0.96)
+  // One tier only (flat 10% commission) -- the old Starter/Pro split is gone.
+  const keepAfterCommission = Math.max(0, priceN * 0.9)
 
   const checks: [string, boolean][] = useMemo(() => {
     const base: [string, boolean][] = [
@@ -198,8 +198,7 @@ export default function NewListingScreen() {
           {priceN > 0 ? (
             <Text style={s.keep}>
               You'd keep{' '}
-              <Text style={{ color: C.accent }}>{fmt(keepStarter)}</Text> on Starter (10%) ·{' '}
-              <Text style={{ color: C.accent }}>{fmt(keepPro)}</Text> on Pro (4%). Shipping
+              <Text style={{ color: C.accent }}>{fmt(keepAfterCommission)}</Text> after Velor's flat 10% commission. Shipping
               is paid on top and passes to you in full.
             </Text>
           ) : null}

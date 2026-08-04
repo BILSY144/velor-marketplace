@@ -278,7 +278,14 @@ export async function confirmOrders(paymentIntentId: string): Promise<{ ok: bool
 }
 
 // --- Buyer orders (same /api/account/orders as the website /orders page) ---
-export type BuyerOrderItem = { id: string; title?: string | null; quantity: number; price: number; image?: string | null }
+export type BuyerOrderItem = {
+  id: string
+  title?: string | null
+  quantity: number
+  price: number
+  image?: string | null
+  originCountry?: string | null
+}
 export type BuyerOrder = {
   id: string
   status: string
@@ -286,14 +293,88 @@ export type BuyerOrder = {
   currency?: string | null
   createdAt: string
   trackingNumber?: string | null
+  carrier?: string | null
   items: BuyerOrderItem[]
 }
 
+// Website parity (2026-08-04): the site's /orders page reads GET /api/orders,
+// which joins each item's product (title/images/origin) and the shipment —
+// the app previously used the thinner /api/account/orders and so had no
+// titles or images at all. Same scoping: server trusts only the session.
 export async function fetchMyOrders(): Promise<BuyerOrder[]> {
-  const res = await fetch(`${BASE}/api/account/orders`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  const res = await fetch(`${BASE}/api/orders`, { headers: { accept: 'application/json' }, credentials: 'include' })
   if (!res.ok) return []
   const d = await res.json()
-  return Array.isArray(d) ? d : Array.isArray(d?.orders) ? d.orders : []
+  const raw = Array.isArray(d) ? d : Array.isArray(d?.orders) ? d.orders : []
+  return raw.map((o: any): BuyerOrder => ({
+    id: o.id,
+    status: o.status ?? 'PENDING',
+    total: Number(o.total) || 0,
+    currency: o.currency ?? null,
+    createdAt: o.createdAt,
+    trackingNumber: o.shipment?.trackingNumber ?? o.trackingNumber ?? null,
+    carrier: o.shipment?.carrier ?? null,
+    items: (o.items ?? []).map((it: any): BuyerOrderItem => ({
+      id: it.id,
+      title: it.product?.title ?? it.title ?? null,
+      quantity: it.quantity ?? 1,
+      price: Number(it.price) || 0,
+      image: Array.isArray(it.product?.images) ? it.product.images[0] ?? null : it.image ?? null,
+      originCountry: it.product?.originCountry ?? null,
+    })),
+  }))
+}
+
+/** Buyer confirms a SHIPPED order arrived — starts the escrow release window
+ *  (website parity: the "I have received this order" button on /orders). */
+export async function confirmDelivery(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/orders/${encodeURIComponent(orderId)}/confirm-delivery`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } }
+  }
+  return { ok: true }
+}
+
+export type TrackEvent = { status?: string | null; description?: string | null; location?: string | null; date?: string | null }
+export type OrderTracking = {
+  carrier?: string | null
+  service?: string | null
+  status?: string | null
+  trackingNumber?: string | null
+  trackingUrl?: string | null
+  events: TrackEvent[]
+}
+
+/** Tracking timeline for one order — same endpoint as the site's
+ *  /orders/[orderId]/track page (requires the buyer's email, which the
+ *  server cross-checks against the order; the session cookie rides along). */
+export async function fetchOrderTracking(orderId: string, email: string): Promise<OrderTracking | null> {
+  const res = await fetch(
+    `${BASE}/api/orders/${encodeURIComponent(orderId)}/track?email=${encodeURIComponent(email)}`,
+    { headers: { accept: 'application/json' }, credentials: 'include' }
+  )
+  if (!res.ok) return null
+  const d = await res.json()
+  const sh = d?.shipment
+  return {
+    carrier: sh?.carrier ?? null,
+    service: sh?.status ?? null,
+    status: d?.status ?? null,
+    trackingNumber: sh?.trackingNumber ?? null,
+    trackingUrl: sh?.trackingUrl ?? null,
+    events: Array.isArray(sh?.events)
+      ? sh.events.map((e: any): TrackEvent => ({
+          status: e.status ?? null,
+          description: e.description ?? null,
+          location: e.location ?? null,
+          date: e.occurredAt ?? null,
+        }))
+      : [],
+  }
 }
 
 // --- Public runtime config (Stripe publishable key; never anything secret) ---

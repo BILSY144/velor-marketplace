@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, useTheme, Palette } from '../theme'
-import { fmt, useI18nTick } from '../i18n'
+import { fmt, useI18nTick, getLang, getCurrency, APP_LANGS } from '../i18n'
 import { useFavs, useFollows, useSession } from '../store'
 import {
   signInWithPassword,
@@ -872,7 +872,7 @@ export default function YouScreen() {
     },
     {
       title: 'Language & currency',
-      sub: 'English · GBP',
+      sub: `${APP_LANGS.find((l) => l.code === getLang())?.english ?? 'English'} · ${getCurrency()}`,
       onPress: () => nav.navigate('LangCur'),
     },
     {
