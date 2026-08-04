@@ -132,6 +132,16 @@ export default function SellerScreen() {
               </Pressable>
             ) : null}
 
+            {user ? (
+              <Pressable
+                style={s.msgBtn}
+                onPress={() => nav.navigate('Messages', { sellerId, sellerName: storeName })}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={14} color={t.accent} />
+                <Text style={s.msgTx}>Message this maker</Text>
+              </Pressable>
+            ) : null}
+
             <Text style={s.listKick}>
               {productsQ.isLoading ? 'OPENING THE STORE…' : `LIVE LISTINGS · ${products.length}`}
             </Text>
@@ -178,6 +188,18 @@ const styles = (t: Palette) =>
     },
     followingBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: t.accent },
     followTx: { fontFamily: F.bodySemi, fontSize: 12.5, color: '#fff' },
+    msgBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      marginTop: 10,
+      borderWidth: 1,
+      borderColor: t.accent,
+      borderRadius: 11,
+      paddingVertical: 10,
+    },
+    msgTx: { fontFamily: F.bodySemi, fontSize: 12.5, color: t.accent },
     listKick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: t.mut, marginTop: 24 },
     gridCard: { flex: 1, maxWidth: '48.6%', marginTop: 14 },
     gridImg: { width: '100%', aspectRatio: 1, borderRadius: 16 },

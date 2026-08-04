@@ -876,6 +876,11 @@ export default function YouScreen() {
       onPress: () => nav.navigate('Wishlist'),
     },
     {
+      title: 'Messages',
+      sub: 'Conversations with makers, all on Velor',
+      onPress: () => nav.navigate('Messages'),
+    },
+    {
       title: 'Language & currency',
       sub: `${APP_LANGS.find((l) => l.code === getLang())?.english ?? 'English'} · ${getCurrency()}`,
       onPress: () => nav.navigate('LangCur'),

@@ -850,3 +850,47 @@ export async function unfollowSeller(sellerId: string): Promise<boolean> {
   })
   return res.ok
 }
+
+// --- Messages (buyer inbox + message-the-seller; same /api/messages the
+// website buyer inbox reads with format=raw). Threads are grouped
+// client-side by the other party, exactly like app/messages/page.tsx. ---
+export type RawMessage = {
+  id: string
+  senderId: string
+  receiverId: string
+  content: string
+  images?: string[]
+  isRead?: boolean
+  createdAt: string
+  sender: { id: string; name: string; image?: string | null }
+  receiver: { id: string; name: string; image?: string | null }
+  product?: { id: string; name?: string; images?: string[] } | null
+}
+export async function fetchMessages(): Promise<RawMessage[]> {
+  const res = await fetch(`${BASE}/api/messages?format=raw`, {
+    headers: { accept: 'application/json' },
+    credentials: 'include',
+  })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d) ? d : []
+}
+/** Send a message. Give receiverId when replying in a thread, or sellerId
+ *  when starting one from a listing (server resolves the seller's user). */
+export async function sendMessage(body: {
+  receiverId?: string
+  sellerId?: string
+  productId?: string
+  content: string
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } }
+  }
+  return { ok: true }
+}

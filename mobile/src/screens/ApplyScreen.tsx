@@ -5,6 +5,7 @@ import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
+import * as FileSystem from 'expo-file-system/legacy'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
@@ -34,6 +35,20 @@ export default function ApplyScreen() {
   const [craft, setCraft] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [picking, setPicking] = useState(false)
+  // Real submission fields (2026-08-04): the site's /api/seller/apply
+  // requires contact identity + credentials + a real ship-from address —
+  // the app previously collected a form and threw it away.
+  const [sellerType, setSellerType] = useState<'individual' | 'business'>('individual')
+  const [contactName, setContactName] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [street1, setStreet1] = useState('')
+  const [street2, setStreet2] = useState('')
+  const [aCity, setACity] = useState('')
+  const [aState, setAState] = useState('')
+  const [zip, setZip] = useState('')
+  const [phone, setPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function addPhotos() {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -48,7 +63,7 @@ export default function ApplyScreen() {
     setPhotos((p) => p.filter((_, i) => i !== index))
   }
 
-  function submit() {
+  async function submit() {
     if (!store.trim() || !craft.trim() || photos.length < 3) {
       Alert.alert(
         'Not quite ready',
@@ -60,7 +75,61 @@ export default function ApplyScreen() {
       )
       return
     }
-    nav.navigate('Verify')
+    if (!contactName.trim() || !contactEmail.trim() || password.length < 8) {
+      Alert.alert('About you', 'Your name, email and a password of at least 8 characters are needed to create the account your store hangs off.')
+      return
+    }
+    if (!street1.trim() || !aCity.trim() || !zip.trim()) {
+      Alert.alert('Ship-from address', 'Street, city and postcode are needed — they set your buyers\' real delivery quotes.')
+      return
+    }
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      // Photos go up as data URLs, the same shape the web wizard sends.
+      const sampleImages: string[] = []
+      for (const uri of photos.slice(0, 6)) {
+        try {
+          const b64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
+          sampleImages.push(`data:image/jpeg;base64,${b64}`)
+        } catch {}
+      }
+      const res = await fetch('https://velorcommerce.store/api/seller/apply', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          businessName: store.trim(),
+          contactEmail: contactEmail.trim().toLowerCase(),
+          contactName: contactName.trim(),
+          password,
+          sellerType,
+          storeDescription: craft.trim(),
+          website: '',
+          productCategories: [],
+          sampleImages,
+          shippingName: contactName.trim(),
+          shippingCompany: sellerType === 'business' ? store.trim() : '',
+          shippingStreet1: street1.trim(),
+          shippingStreet2: street2.trim(),
+          shippingCity: aCity.trim(),
+          shippingState: aState.trim(),
+          shippingZip: zip.trim(),
+          shippingCountry: cc,
+          shippingPhone: phone.trim(),
+        }),
+      })
+      if (!res.ok) {
+        let msg = `Application failed (${res.status}) — try again.`
+        try { const d = await res.json(); if (d?.error) msg = d.error } catch {}
+        Alert.alert('Not submitted', msg)
+        return
+      }
+      nav.navigate('Verify')
+    } catch {
+      Alert.alert('Not submitted', 'Could not reach Velor — check your connection and try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -86,6 +155,36 @@ export default function ApplyScreen() {
             </View>
           </View>
         ))}
+      </View>
+
+      <Kicker style={s.kick}>ABOUT YOU</Kicker>
+      <View style={s.fld}>
+        <Dim style={s.label}>SELLING AS</Dim>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {(['individual', 'business'] as const).map((k) => (
+            <Pressable
+              key={k}
+              onPress={() => setSellerType(k)}
+              style={[s.typeChip, sellerType === k && { borderColor: C.accent, backgroundColor: 'rgba(255,107,0,0.12)' }]}
+            >
+              <Body style={{ fontSize: 12.5, color: sellerType === k ? C.accent : C.text }}>
+                {k === 'individual' ? 'An individual maker' : 'A business'}
+              </Body>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+      <View style={s.fld}>
+        <Dim style={s.label}>YOUR NAME</Dim>
+        <TextInput style={s.input} value={contactName} onChangeText={setContactName} placeholder="Full name" placeholderTextColor={C.dim} />
+      </View>
+      <View style={s.fld}>
+        <Dim style={s.label}>EMAIL</Dim>
+        <TextInput style={s.input} value={contactEmail} onChangeText={setContactEmail} placeholder="you@example.com" placeholderTextColor={C.dim} autoCapitalize="none" keyboardType="email-address" />
+      </View>
+      <View style={s.fld}>
+        <Dim style={s.label}>PASSWORD · MIN 8 CHARACTERS</Dim>
+        <TextInput style={s.input} value={password} onChangeText={setPassword} placeholder="For signing in to your dashboard" placeholderTextColor={C.dim} secureTextEntry />
       </View>
 
       <Kicker style={s.kick}>YOUR STORE</Kicker>
@@ -156,9 +255,16 @@ export default function ApplyScreen() {
 
       <Kicker style={s.kick}>SHIPPING & MATERIALS</Kicker>
       <View style={s.fld}>
-        <Dim style={s.label}>SHIP-FROM ADDRESS</Dim>
-        <View style={s.input}>
-          <Dim>Where parcels leave from — sets your buyers' real delivery quotes. Collected at the next step.</Dim>
+        <Dim style={s.label}>SHIP-FROM ADDRESS · SETS YOUR BUYERS' REAL DELIVERY QUOTES</Dim>
+        <TextInput style={s.input} value={street1} onChangeText={setStreet1} placeholder="Street address" placeholderTextColor={C.dim} />
+        <TextInput style={[s.input, { marginTop: 8 }]} value={street2} onChangeText={setStreet2} placeholder="Street line 2 (optional)" placeholderTextColor={C.dim} />
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <TextInput style={[s.input, { flex: 1.3 }]} value={aCity} onChangeText={setACity} placeholder="City" placeholderTextColor={C.dim} />
+          <TextInput style={[s.input, { flex: 1 }]} value={zip} onChangeText={setZip} placeholder="Postcode" placeholderTextColor={C.dim} autoCapitalize="characters" />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <TextInput style={[s.input, { flex: 1 }]} value={aState} onChangeText={setAState} placeholder="State / county (optional)" placeholderTextColor={C.dim} />
+          <TextInput style={[s.input, { flex: 1 }]} value={phone} onChangeText={setPhone} placeholder="Phone (optional)" placeholderTextColor={C.dim} keyboardType="phone-pad" />
         </View>
       </View>
       <View style={s.fld}>
@@ -170,7 +276,7 @@ export default function ApplyScreen() {
       </View>
 
       <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-        <Btn label="Submit application" onPress={submit} />
+        <Btn label={submitting ? 'Submitting…' : 'Submit application'} onPress={submit} />
         <Dim style={{ textAlign: 'center', marginTop: 9, fontSize: 11 }}>
           Decision within 2 hours — no documents to upload.
         </Dim>
@@ -255,6 +361,14 @@ const p = StyleSheet.create({
 })
 
 const s = StyleSheet.create({
+  typeChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 12,
+    paddingVertical: 11,
+    alignItems: 'center',
+  },
   back: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.07)',

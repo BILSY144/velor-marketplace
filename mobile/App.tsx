@@ -45,6 +45,7 @@ import OrdersScreen from './src/screens/OrdersScreen'
 import TrackScreen from './src/screens/TrackScreen'
 import WishlistScreen from './src/screens/WishlistScreen'
 import SellerScreen from './src/screens/SellerScreen'
+import MessagesScreen from './src/screens/MessagesScreen'
 import PassportScreen from './src/screens/PassportScreen'
 import SellScreen from './src/screens/SellScreen'
 import LegalScreen from './src/screens/LegalScreen'
@@ -377,6 +378,7 @@ export default function App() {
             <Stack.Screen name="Track" component={TrackScreen} />
             <Stack.Screen name="Wishlist" component={WishlistScreen} />
             <Stack.Screen name="Seller" component={SellerScreen} />
+            <Stack.Screen name="Messages" component={MessagesScreen} />
             <Stack.Screen name="Passport" component={PassportScreen} />
             <Stack.Screen name="Sell" component={SellScreen} />
             <Stack.Screen name="Legal" component={LegalScreen} />

@@ -240,6 +240,20 @@ export default function PdpScreen() {
             {product.sellerId ? <Ionicons name="chevron-forward" size={15} color={t.mut} /> : null}
           </Pressable>
 
+          {product.sellerId ? (
+            <Pressable
+              style={s.msgBtn}
+              onPress={() =>
+                user
+                  ? nav.navigate('Messages', { sellerId: product.sellerId, sellerName: product.sellerName, productId: product.id })
+                  : nav.navigate('SignIn')
+              }
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={14} color={t.accent} />
+              <Text style={s.msgBtnTx}>{user ? 'Message the maker' : 'Sign in to message the maker'}</Text>
+            </Pressable>
+          ) : null}
+
           {/* THE MAKING */}
           {product.description ? (
             <View style={{ marginTop: 26 }}>
@@ -565,6 +579,18 @@ const styles = (t: Palette) => StyleSheet.create({
     paddingVertical: 5,
   },
   helpfulTx: { fontFamily: F.body, fontSize: 10.5, color: t.mut },
+  msgBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: t.accent,
+    borderRadius: 12,
+    paddingVertical: 10,
+  },
+  msgBtnTx: { fontFamily: F.bodySemi, fontSize: 12.5, color: t.accent },
   wrOpen: {
     flexDirection: 'row',
     alignItems: 'center',
