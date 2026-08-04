@@ -8,8 +8,10 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, flagUrl } from '../theme'
 import { countryName } from '../data'
-import { useFollows } from '../store'
+import { useFollows, useSession } from '../store'
 import { enableNotifications } from '../push'
+import { useQuery } from '@tanstack/react-query'
+import { fetchNotifications, markNotificationsRead } from '../api'
 import { Dim } from '../ui'
 import { Chrome } from '../components/Chrome'
 
@@ -32,6 +34,19 @@ export default function BellScreen() {
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const follows = useFollows((s) => s.ids)
+  const user = useSession((st) => st.user)
+  // Real notifications — the same /api/notifications feed the website's
+  // header bell polls; opening this screen marks them read (site parity).
+  const notifQ = useQuery({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+    enabled: Boolean(user),
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+  })
+  useEffect(() => {
+    if (user && (notifQ.data?.unread ?? 0) > 0) void markNotificationsRead()
+  }, [user, notifQ.data?.unread])
   const toggleFollow = useFollows((s) => s.toggle)
   const playerRef = useRef<AudioPlayer | null>(null)
   const swing = useRef(new Animated.Value(0)).current
@@ -101,6 +116,29 @@ export default function BellScreen() {
             </View>
             <Ionicons name="chevron-forward" size={15} color={C.dim} />
           </Pressable>
+
+          {user && (notifQ.data?.items.length ?? 0) > 0 ? (
+            <View>
+              <Text style={[s.kickDim, { marginTop: 22 }]}>LATEST RINGS</Text>
+              {notifQ.data!.items.slice(0, 10).map((n) => (
+                <View key={n.id} style={s.card}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                    <Ionicons name="notifications" size={17} color={C.accent} style={{ marginTop: 2 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.nt}>{n.title ?? 'Velor'}</Text>
+                      {n.body ? <Dim style={{ fontSize: 11.5, marginTop: 3, lineHeight: 16 }}>{n.body}</Dim> : null}
+                      {n.createdAt ? (
+                        <Dim style={{ fontSize: 10, marginTop: 5 }}>
+                          {new Date(n.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </Dim>
+                      ) : null}
+                    </View>
+                    {!n.readAt ? <View style={s.unreadDot} /> : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
 
           <Text style={[s.kickDim, { marginTop: 22 }]}>YOUR BELLS</Text>
 
@@ -210,6 +248,7 @@ export default function BellScreen() {
 const s = StyleSheet.create({
   h1: { fontFamily: F.serifLight, fontSize: 30, color: C.text },
   kickDim: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.mut },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent, marginTop: 4 },
   card: {
     marginTop: 12,
     backgroundColor: 'rgba(255,255,255,0.03)',

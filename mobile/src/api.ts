@@ -64,6 +64,8 @@ export type ShopQuery = {
   search?: string
   category?: string
   origin?: string
+  sellerId?: string
+  excludeId?: string
   page?: number
   limit?: number
   sort?: string
@@ -76,6 +78,8 @@ export async function fetchShop(q: ShopQuery = {}): Promise<ShopPage> {
   if (q.search) p.set('search', q.search)
   if (q.category) p.set('category', q.category)
   if (q.origin) p.set('origin', q.origin)
+  if (q.sellerId) p.set('sellerId', q.sellerId)
+  if (q.excludeId) p.set('excludeId', q.excludeId)
   if (q.sort) p.set('sort', q.sort)
   p.set('page', String(q.page ?? 1))
   p.set('limit', String(q.limit ?? 60))
@@ -815,4 +819,34 @@ export async function fetchDeliveryEstimate(productId: string, country: string):
     estimatedDays: d?.estimatedDays ?? null,
     isFree: d?.amountGBP === 0 || /free/i.test(String(d?.service ?? '')),
   }
+}
+
+// --- Seller follows (site FollowSellerButton parity). The server keeps this
+// DORMANT until VELOR_SOCIAL_ENABLED is on: every method 403s, and the UI
+// hides itself exactly like the website does. ---
+export async function fetchFollowedSellers(): Promise<{ enabled: boolean; sellerIds: string[] }> {
+  const res = await fetch(`${BASE}/api/social/follows`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (res.status === 403) return { enabled: false, sellerIds: [] }
+  if (!res.ok) return { enabled: true, sellerIds: [] }
+  const d = await res.json()
+  const ids = Array.isArray(d?.follows) ? d.follows.map((f: any) => f.sellerId).filter(Boolean) : Array.isArray(d?.sellerIds) ? d.sellerIds : []
+  return { enabled: true, sellerIds: ids }
+}
+export async function followSeller(sellerId: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/social/follows`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ sellerId }),
+  })
+  return res.ok
+}
+export async function unfollowSeller(sellerId: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/social/follows`, {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ sellerId }),
+  })
+  return res.ok
 }

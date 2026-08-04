@@ -219,8 +219,15 @@ export default function PdpScreen() {
             </View>
           ) : null}
 
-          {/* Maker card */}
-          <View style={s.maker}>
+          {/* Maker card — taps through to the storefront (website parity) */}
+          <Pressable
+            style={s.maker}
+            onPress={() =>
+              product.sellerId
+                ? nav.navigate('Seller', { sellerId: product.sellerId, sellerName: product.sellerName })
+                : undefined
+            }
+          >
             {cc ? <Image source={{ uri: flagUrl(cc) }} style={s.makerFlag} /> : null}
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={s.makerName} numberOfLines={1}>
@@ -230,7 +237,8 @@ export default function PdpScreen() {
                 {name ? `${name} · opened this channel` : 'Verified on Velor'}
               </Text>
             </View>
-          </View>
+            {product.sellerId ? <Ionicons name="chevron-forward" size={15} color={t.mut} /> : null}
+          </Pressable>
 
           {/* THE MAKING */}
           {product.description ? (
