@@ -1,3 +1,6 @@
+// polyfills MUST be the first import -- see polyfills.ts (DOMException fix)
+import './polyfills';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';
