@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
-import { CATEGORY_NAMES as CATEGORIES, CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
+import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { countryImages, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
 import { FounderMedal } from '@/components/FounderMedal'
@@ -744,25 +744,10 @@ function ShopContent() {
               </div>
             )}
           </div>
-          {!originCountry && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => navigate({ category: '' })}
-              style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: !category ? 'var(--accent)' : 'transparent', color: !category ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-            >
-              All
-            </button>
-            {CATEGORIES.map(c => (
-              <button
-                key={c}
-                onClick={() => navigate({ category: c })}
-                style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--border)', background: category === c ? 'var(--accent)' : 'transparent', color: category === c ? '#000' : 'var(--muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          )}
+          {/* The text category-pill row that sat here was removed 2026-08-04
+              per William -- the photo rail above is now the only category
+              filter UI (it sets the same `category` param the pills did;
+              clicking the active tile again clears the filter). */}
         </div>
       </div>
 
