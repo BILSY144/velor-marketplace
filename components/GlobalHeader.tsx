@@ -104,8 +104,6 @@ export default function GlobalHeader() {
 
   const { count: cartCount } = useCart()
   const [query, setQuery] = useState('')
-  const [megaOpen, setMegaOpen] = useState(false)
-  const [liveCount, setLiveCount] = useState<number | null>(null)
   // Live count of countries with a claimed founding seat (i.e. at least
   // one approved product with that origin) -- backs the top trust-bar's
   // 'Countries Connected' stat. See the fetch effect below for why this
@@ -193,11 +191,9 @@ export default function GlobalHeader() {
     if (current === 'light' || current === 'dark') setThemeMode(current)
   }, [])
 
-  const megaRef = useRef<HTMLDivElement>(null)
   const acctRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setMegaOpen(false)
     setAcctOpen(false)
     setMobileOpen(false)
     setSearchOpen(false)
@@ -205,7 +201,6 @@ export default function GlobalHeader() {
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (megaRef.current && !megaRef.current.contains(e.target as Node)) setMegaOpen(false)
       if (acctRef.current && !acctRef.current.contains(e.target as Node)) setAcctOpen(false)
       if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) setSearchOpen(false)
     }
@@ -219,18 +214,6 @@ export default function GlobalHeader() {
       document.removeEventListener('keydown', onKey)
     }
   }, [])
-
-  // Real live-session count for the mega menu's "Live Now" row -- fetched
-  // lazily on first open so the header adds zero requests to normal loads.
-  useEffect(() => {
-    if (!megaOpen || liveCount !== null) return
-    fetch('/api/live')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.streams) setLiveCount((d.streams as { status: string }[]).filter((x) => x.status === 'LIVE').length)
-      })
-      .catch(() => {})
-  }, [megaOpen, liveCount])
 
   // Live count of countries with a claimed founding seat, for the top
   // trust-bar's 'Countries Connected' stat. Previously hardcoded to
@@ -319,63 +302,6 @@ export default function GlobalHeader() {
     fontFamily: 'var(--font-body)',
   }
 
-  /* Mega-menu shared styles (William's header design, 2026-07-30). */
-  const megaTitle: React.CSSProperties = {
-    fontFamily: 'var(--font-display)',
-    fontSize: 13.5,
-    fontWeight: 800,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: 'var(--text)',
-  }
-  const megaSub: React.CSSProperties = {
-    fontSize: 12.5,
-    color: 'var(--muted)',
-    marginBottom: 14,
-    lineHeight: 1.5,
-  }
-  const megaRow: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 11,
-    padding: '7px 8px',
-    margin: '0 -8px',
-    borderRadius: 10,
-    color: 'var(--text)',
-    textDecoration: 'none',
-  }
-  const megaIconBox: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 38,
-    height: 38,
-    borderRadius: 9,
-    background: 'var(--surface-2)',
-    color: 'var(--accent)',
-    flexShrink: 0,
-  }
-  const megaChev: React.CSSProperties = {
-    color: 'var(--muted)',
-    fontSize: 17,
-    lineHeight: 1,
-    flexShrink: 0,
-  }
-  const megaViewAll: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 'auto',
-    paddingTop: 14,
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    fontFamily: 'var(--font-display)',
-    color: 'var(--accent)',
-    textDecoration: 'none',
-  }
-
   // Truthful label for the trust-bar globe item -- see the fetch effect
   // above. Never renders a specific country count until the real number
   // has loaded from the server.
@@ -446,20 +372,28 @@ export default function GlobalHeader() {
             <img src="/velor-logo-2026.png" alt="Velor — Global Marketplace" style={{ height: 40, width: 'auto' }} />
           </Link>
 
-          {/* Primary nav (desktop) -- Shop / Live / Origins open the shared
-              mega menu (William's header design, 2026-07-30); The Makers'
-              Circle is a direct link with the active orange underline. */}
+          {/* Primary nav (desktop) -- Shop and Live are direct links (the
+              shared mega menu + its Origins nav link were removed 2026-08-04
+              per William); The Makers' Circle is a direct link with the
+              active orange underline. */}
           <nav className="velor-desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
-            {(['Shop', 'Live'] as const).map((label) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => setMegaOpen((v) => !v)}
-                aria-expanded={megaOpen}
-                style={{ ...navLink, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+            {([
+              { label: 'Shop', href: '/shop' },
+              { label: 'Live', href: '/live' },
+            ] as const).map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                style={{
+                  ...navLink,
+                  color: pathname?.startsWith(item.href) ? 'var(--accent)' : 'var(--text)',
+                  borderBottom: pathname?.startsWith(item.href) ? '2px solid var(--accent)' : '2px solid transparent',
+                  paddingBottom: 6,
+                  whiteSpace: 'nowrap',
+                }}
               >
-                {label} <span style={{ fontSize: 10, color: 'var(--muted)' }}>▾</span>
-              </button>
+                {item.label}
+              </Link>
             ))}
             <Link
               href="/community"
@@ -473,14 +407,6 @@ export default function GlobalHeader() {
             >
               The Makers&apos; Circle
             </Link>
-            <button
-              type="button"
-              onClick={() => setMegaOpen((v) => !v)}
-              aria-expanded={megaOpen}
-              style={{ ...navLink, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
-            >
-              Origins <span style={{ fontSize: 10, color: 'var(--muted)' }}>▾</span>
-            </button>
           </nav>
 
           {/* Search. On phones this wraps onto its own full-width row.
@@ -934,181 +860,6 @@ export default function GlobalHeader() {
         </div>
       </div>
 
-      {/* Mega menu -- William's header design 2026-07-30: one shared panel
-          opened by Shop / Live / Origins, with the Makers' Circle column,
-          Origins column, promo panel and the five-point footer strip.
-          Hidden on phones via velor-desktop-nav (mobile keeps its panel). */}
-      {megaOpen && (
-        <div ref={megaRef} className="velor-desktop-nav" style={{ position: 'absolute', left: 0, right: 0, top: '100%', zIndex: 60, padding: '10px 14px 26px' }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: '0 40px 90px rgba(0,0,0,0.55)', maxWidth: 1680, margin: '0 auto', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.02fr 1.06fr 1.06fr 1fr 1.42fr' }}>
-
-              {/* SHOP */}
-              <div style={{ padding: '22px 20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><HIco d={HP.cart} size={17} /></span>
-                  <span style={megaTitle}>Shop</span>
-                </div>
-                <div style={megaSub}>Browse authentic goods from around the world</div>
-                {(
-                  [
-                    { l: 'All Categories', img: 'cat-1', href: '/shop' },
-                    { l: 'Home & Living', img: 'cat-2', href: `/shop?category=${encodeURIComponent('Home Craft & Décor')}` },
-                    { l: 'Clothing & Textiles', img: 'cat-3', href: `/shop?category=${encodeURIComponent('Rugs, Cloth & Thread')}` },
-                    { l: 'Jewellery & Accessories', img: 'cat-4', href: `/shop?category=${encodeURIComponent('Adornment')}` },
-                    { l: 'Art & Collectibles', img: 'cat-5', href: '/shop' },
-                    { l: 'Tools & Materials', img: 'cat-6', href: `/shop?category=${encodeURIComponent('Metalware')}` },
-                    { l: 'Food & Beverages', img: 'cat-7', href: `/shop?category=${encodeURIComponent('Spice & Pantry Staples')}` },
-                  ] as { l: string; img: string; href: string }[]
-                ).map((r) => (
-                  <Link key={r.l} href={r.href} style={megaRow}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/community/header/${r.img}.jpg`} alt="" aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{r.l}</span>
-                    <span style={megaChev}>&rsaquo;</span>
-                  </Link>
-                ))}
-                <Link href="/shop" style={megaViewAll}>View all categories <span aria-hidden="true">&rarr;</span></Link>
-              </div>
-
-              {/* LIVE */}
-              <div style={{ padding: '22px 20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><HIco d={HP.broadcast} size={17} /></span>
-                  <span style={megaTitle}>Live</span>
-                </div>
-                <div style={megaSub}>Watch, chat and shop live with makers</div>
-                {(
-                  [
-                    { l: 'Live Now', sub: liveCount === null ? 'Live sessions' : liveCount === 0 ? 'No one on air right now' : `${liveCount} live session${liveCount === 1 ? '' : 's'}`, icon: 'reddot', href: '/live' },
-                    { l: "Today's Schedule", sub: "What's happening today", icon: HP.calendar, href: '/live' },
-                    { l: 'Replay Shows', sub: 'Watch past sessions', icon: HP.play, href: '/live' },
-                    { l: 'Top Live Sellers', sub: 'Most watched today', icon: HP.star, href: '/live' },
-                    { l: 'Become a Live Seller', sub: 'Start your broadcast', icon: HP.camera, href: '/sell' },
-                  ] as { l: string; sub: string; icon: string; href: string }[]
-                ).map((r) => (
-                  <Link key={r.l} href={r.href} style={megaRow}>
-                    <span style={megaIconBox}>
-                      {r.icon === 'reddot' ? (
-                        <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--red)', display: 'inline-block' }} />
-                      ) : (
-                        <HIco d={r.icon} size={16} />
-                      )}
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{r.l}</span>
-                      <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>{r.sub}</span>
-                    </span>
-                    <span style={megaChev}>&rsaquo;</span>
-                  </Link>
-                ))}
-                <Link href="/dashboard/live" style={{ display: 'block', borderRadius: 12, overflow: 'hidden', marginTop: 12 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/community/header/golive.jpg" alt="Go live. Reach the world. Start a live session" style={{ width: '100%', display: 'block' }} />
-                </Link>
-              </div>
-
-              {/* THE MAKERS' CIRCLE */}
-              <div style={{ padding: '22px 20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><HIco d={HP.users} size={17} /></span>
-                  <span style={megaTitle}>The Makers&rsquo; Circle</span>
-                </div>
-                <div style={megaSub}>Connect, learn and grow with makers worldwide</div>
-                {(
-                  [
-                    { l: 'Featured Today', sub: "Today's highlights", icon: HP.star, href: '/community/featured' },
-                    { l: 'Creator Journals', sub: 'Stories from real makers', icon: HP.book, href: '/community/journals' },
-                    { l: 'Ask The Maker', sub: 'Questions & answers', icon: HP.help, href: '/community/ask' },
-                    { l: 'Workshop Videos', sub: 'Learn traditional skills', icon: HP.videoplay, href: '/community/videos' },
-                    { l: 'Live Shopping', sub: 'Buy directly from makers', icon: HP.broadcast, href: '/community/live-shopping' },
-                    { l: 'Community Challenge', sub: 'Join & win rewards', icon: HP.trophy, href: '/community/challenge' },
-                  ] as { l: string; sub: string; icon: string; href: string }[]
-                ).map((r) => (
-                  <Link key={r.l} href={r.href} style={megaRow}>
-                    <span style={megaIconBox}><HIco d={r.icon} size={16} /></span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{r.l}</span>
-                      <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>{r.sub}</span>
-                    </span>
-                    <span style={megaChev}>&rsaquo;</span>
-                  </Link>
-                ))}
-                <Link
-                  href="/auth/join"
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, border: '1px solid rgba(212,175,55,0.55)', borderRadius: 12, padding: '12px 14px', textDecoration: 'none' }}
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: '50%', border: '1.3px solid #D4AF37', color: '#D4AF37', flexShrink: 0 }}>
-                    <HIco d={HP.globe} size={17} />
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#D4AF37' }}>Join The Circle</span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>Unlock exclusive benefits for makers &amp; supporters</span>
-                  </span>
-                  <span style={{ ...megaChev, color: '#D4AF37' }}>&rsaquo;</span>
-                </Link>
-              </div>
-
-              {/* ORIGINS */}
-              <div style={{ padding: '22px 20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><HIco d={HP.compass} size={17} /></span>
-                  <span style={megaTitle}>Origins</span>
-                </div>
-                <div style={megaSub}>Discover the stories behind culture and craftsmanship</div>
-                {(
-                  [
-                    { l: 'Countries', sub: 'Explore all 190 countries', img: 'org-1', href: '/shop' },
-                    { l: 'Cultures', sub: 'Traditions & heritage', img: 'org-2', href: '/founding' },
-                    { l: 'Crafts', sub: 'Traditional crafts', img: 'org-3', href: '/shop' },
-                    { l: 'Materials', sub: 'Natural & authentic', img: 'org-4', href: '/shop' },
-                    { l: 'Origins Stories', sub: 'The story behind it all', img: 'org-5', href: '/mission' },
-                  ] as { l: string; sub: string; img: string; href: string }[]
-                ).map((r) => (
-                  <Link key={r.l} href={r.href} style={megaRow}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/community/header/${r.img}.jpg`} alt="" aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }} />
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{r.l}</span>
-                      <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>{r.sub}</span>
-                    </span>
-                    <span style={megaChev}>&rsaquo;</span>
-                  </Link>
-                ))}
-                <Link href="/shop" style={megaViewAll}>View all origins <span aria-hidden="true">&rarr;</span></Link>
-              </div>
-
-              {/* PROMO -- image extracted from William's design; the whole
-                  panel opens the Makers' Circle. */}
-              <Link href="/community" aria-label="Real Makers. Real Stories. Real Culture. Explore the community" style={{ display: 'block', position: 'relative', minHeight: 420 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/community/header/promo.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-              </Link>
-            </div>
-
-            {/* Footer strip */}
-            <div style={{ borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, padding: '16px 24px' }}>
-              {(
-                [
-                  { t: 'Authentic & Verified', sub: 'Every seller verified', icon: HP.shieldcheck },
-                  { t: 'Global Shipping', sub: 'Delivering worldwide', icon: HP.truck },
-                  { t: 'Secure Payments', sub: 'Safe, trusted & protected', icon: HP.lock },
-                  { t: 'Seller Support', sub: "We're here to help", icon: HP.headset },
-                  { t: 'Buy With Impact', sub: 'Support real communities', icon: HP.star },
-                ] as { t: string; sub: string; icon: string }[]
-              ).map((f) => (
-                <div key={f.t} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                  <span style={{ color: 'var(--accent)', display: 'inline-flex', flexShrink: 0 }}><HIco d={f.icon} size={19} /></span>
-                  <span>
-                    <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'var(--font-display)', color: 'var(--text)' }}>{f.t}</span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>{f.sub}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mobile panel */}
       {mobileOpen && (
