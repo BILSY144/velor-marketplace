@@ -651,6 +651,18 @@ function SellerChannel() {
       route: 'GoLive',
     },
     {
+      icon: 'analytics-outline',
+      title: 'Analytics',
+      sub: 'Real revenue, top pieces, 30-day chart',
+      route: 'Analytics',
+    },
+    {
+      icon: 'color-palette-outline',
+      title: 'Storefront',
+      sub: 'Pick the theme of your public store page',
+      route: 'Storefront',
+    },
+    {
       icon: 'chatbubbles-outline',
       title: 'Questions',
       sub: 'Answer buyers asking about your pieces',
