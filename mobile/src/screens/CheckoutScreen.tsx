@@ -163,7 +163,25 @@ export default function CheckoutScreen() {
             </Pressable>
           ) : null}
 
-          <Text style={s.label}>DELIVER TO</Text>
+          {/* Director test shortcut (2026-08-04): Appetize free sessions die
+              at 3 minutes, which is not enough to hand-type an address. A
+              long-press here fills the company address in one gesture. Gated
+              hard to William's own signed-in account -- invisible and inert
+              for every real buyer. */}
+          <Pressable
+            onLongPress={() => {
+              if (user?.email !== 'willsinclair144@gmail.com') return
+              setName('William Sinclair')
+              setLine1('49 Station Road')
+              setLine2('')
+              setCity('Polegate')
+              setPostcode('BN26 6EA')
+              setCountry('GB')
+            }}
+            delayLongPress={600}
+          >
+            <Text style={s.label}>DELIVER TO</Text>
+          </Pressable>
           <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={t.dim} style={s.in} />
           <TextInput value={line1} onChangeText={setLine1} placeholder="Address line 1" placeholderTextColor={t.dim} style={s.in} />
           <TextInput value={line2} onChangeText={setLine2} placeholder="Address line 2 (optional)" placeholderTextColor={t.dim} style={s.in} />
