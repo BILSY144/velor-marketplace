@@ -220,7 +220,12 @@ export default function CheckoutScreen() {
             <View style={s.hr} />
             <View style={s.rowLine}>
               <Text style={s.totL}>Total</Text>
-              <Text style={s.totR}>{breakdown ? money(breakdown.total, breakdown.currency) : `${fmt(total())} + delivery`}</Text>
+              <Text style={s.totR}>
+                {breakdown
+                  ? money(breakdown.total, breakdown.currency) +
+                    (getCurrency() !== breakdown.currency ? `  ·  ≈ ${fmt(breakdown.total)}` : '')
+                  : `${fmt(total())} + delivery`}
+              </Text>
             </View>
           </View>
 
