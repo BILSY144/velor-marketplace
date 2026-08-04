@@ -25,6 +25,7 @@ import {
   fetchSellerOrders,
   fetchSellerProducts,
   fetchSubscription,
+  updateProfileName,
 } from '../api'
 import {
   biometricsAvailable,
@@ -824,6 +825,59 @@ const scX = (t: Palette) => StyleSheet.create({
 // ---------------------------------------------------------------------------
 // The screen.
 // ---------------------------------------------------------------------------
+function NameHeader({ user, t, s, onSignOut, setSession }: { user: any; t: any; s: any; onSignOut: () => void; setSession: any }) {
+  const [editing, setEditing] = React.useState(false)
+  const [name, setName] = React.useState(user.name ?? '')
+  const [busy, setBusy] = React.useState(false)
+  if (editing) {
+    return (
+      <View style={{ marginTop: 8 }}>
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          placeholder="Your name"
+          placeholderTextColor={t.dim}
+          style={{ borderWidth: 1, borderColor: t.line, borderRadius: 12, padding: 12, fontFamily: F.serifLight, fontSize: 22, color: t.text }}
+          autoFocus
+        />
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+          <Pressable
+            style={{ flex: 1.4, backgroundColor: t.accent, borderRadius: 11, paddingVertical: 10, alignItems: 'center', opacity: busy || !name.trim() ? 0.5 : 1 }}
+            disabled={busy || !name.trim()}
+            onPress={async () => {
+              setBusy(true)
+              const r = await updateProfileName(name.trim())
+              setBusy(false)
+              if (r.ok) { setSession({ ...user, name: name.trim() }); setEditing(false) }
+            }}
+          >
+            <Text style={{ fontFamily: F.bodySemi, fontSize: 12, color: '#fff' }}>{busy ? 'Saving…' : 'Save name'}</Text>
+          </Pressable>
+          <Pressable style={{ flex: 1, borderWidth: 1, borderColor: t.line, borderRadius: 11, paddingVertical: 10, alignItems: 'center' }} onPress={() => { setName(user.name ?? ''); setEditing(false) }}>
+            <Text style={{ fontFamily: F.body, fontSize: 12, color: t.mut }}>Cancel</Text>
+          </Pressable>
+        </View>
+      </View>
+    )
+  }
+  return (
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Text style={s.h1}>{user.name ? user.name.split(' ')[0] : 'Your Velor.'}</Text>
+        <Pressable onPress={() => setEditing(true)} hitSlop={8}>
+          <Ionicons name="pencil-outline" size={16} color={t.mut} />
+        </Pressable>
+      </View>
+      <View style={s.idRow}>
+        <Text style={s.passkey}>Signed in · {user.email}</Text>
+        <Pressable onPress={onSignOut} hitSlop={6}>
+          <Text style={[s.passkey, { color: t.accent }]}>Sign out</Text>
+        </Pressable>
+      </View>
+    </View>
+  )
+}
+
 export default function YouScreen() {
   const t = useTheme()
   const s = sX(t)
@@ -972,13 +1026,7 @@ export default function YouScreen() {
         <SearchBar />
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.kickDim}>YOU</Text>
-          <Text style={s.h1}>{user.name ? user.name.split(' ')[0] : 'Your Velor.'}</Text>
-          <View style={s.idRow}>
-            <Text style={s.passkey}>Signed in · {user.email}</Text>
-            <Pressable onPress={signOut} hitSlop={6}>
-              <Text style={[s.passkey, { color: t.accent }]}>Sign out</Text>
-            </Pressable>
-          </View>
+          <NameHeader user={user} t={t} s={s} onSignOut={signOut} setSession={setSession} />
 
           <MemberCard
             name={user.name}
