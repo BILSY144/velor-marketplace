@@ -1,6 +1,6 @@
 # Good Market Outreach Log — Velor Roots Foundation Seller Recruitment
 
-Checkpoint saved: 2026-08-03 (updated with Philippines, Ghana, Kenya batches)
+Checkpoint saved: 2026-08-04 (updated with Nigeria, Bolivia, Ecuador, Cambodia, South Africa batches)
 
 Note: no budget is currently available for paid certifications (WFTO, B Corp, People and Planet First Verified, Living Wage, 1% for the Planet, Social Enterprise UK). Researched and deferred until finance is available. Continuing maker outreach in the meantime.
 
@@ -24,7 +24,7 @@ Selection criteria: direct makers only (artisan cooperatives / employment-based 
 
 Payout coverage note (2026-08-02, pre-dates this campaign): standing decision was to target marketing and outreach at Stripe-supported countries only until Payoneer Mass Payouts is confirmed, since non-Stripe-country sellers' payouts just accrue in escrow. This outreach campaign has continued into non-Stripe countries under the explicit 2026-08-03 instruction to build relationships now regardless.
 
-### Organizations messaged plus followed (26 total)
+### Organizations messaged plus followed (34 total)
 
 | # | Organization | Location | Notes |
 |---|---|---|---|
@@ -54,10 +54,18 @@ Payout coverage note (2026-08-02, pre-dates this campaign): standing decision wa
 | 24 | Panublix | Iloilo City, Philippines | Connects Filipino farmers/artisans to tropical fiber market access, Catalyst 2030 member |
 | 25 | ASIGE | Agushi, Ghana | Women and girls in northern Ghana, elephant grass weaving, funds girls' education, WFTO member |
 | 26 | Mifuko | Kiusyani, Kenya | Basket weaving, Mifuko Trust supports women's self-help groups, WFTO guaranteed member |
+| 27 | Happi Tote | Lagos, Nigeria | Handmade tote bags, previously sent 2026-08-03, logged retroactively |
+| 28 | El Plethora Vocational Academy | Nigeria | Vocational training, handmade goods |
+| 29 | TINKU | Bolivia | Artisan cooperative |
+| 30 | Maki Fair Trade | Cuenca, Ecuador | Rural/indigenous women, toquilla straw weaving, ikat macana shawls, traditional basketry, WFTO approved |
+| 31 | Nomi Network | Phnom Penh, Cambodia | Fashion Incubator, survivors and women at risk of trafficking, clothing/bags/accessories |
+| 32 | Original T-Bag Designs | Cape Town, South Africa | Hout Bay township artisans, hand-painted upcycled teabag art, trays, coasters, home decor |
+| 33 | Not I But We | Cape Town, South Africa | Trauma-informed employment for trafficking/GBV survivors, handmade bags and accessories |
+| 34 | H18 Foundation | Cape Town, South Africa | Joe Slovo Park women, hand-crocheted upcycled mats/baskets/bowls/planters from plastic and textile waste |
 
-Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka, Indonesia, Philippines, Ghana, Kenya.
+Countries covered so far: United Kingdom, Ireland, Senegal, Colombia, Egypt, Albania, Laos, Palestine, India, United States, Tanzania, Vietnam, Bangladesh, Sri Lanka, Indonesia, Philippines, Ghana, Kenya, Nigeria, Bolivia, Ecuador, Cambodia, South Africa.
 
-Searched with zero qualifying direct-maker results: Morocco (0 results), Mexico (only reseller found, skipped).
+Searched with zero qualifying direct-maker results: Morocco (0 results), Mexico (only reseller found, skipped), Mongolia (only a Nepal-based wholesale reseller found, skipped).
 
 ### Resellers and intermediaries identified and deliberately excluded
 
@@ -65,4 +73,4 @@ Karakorum, Hamac del Sol, Will and Atlas, Sunbird, Ethik, Lucia's Imports, Lucum
 
 ## Next Steps
 
-Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach plus following profiles, per standing authorization. Candidate next regions: Nigeria, Bolivia, Ecuador, Mongolia, Cambodia, South Africa.
+Continue searching globally for additional homelessness/poverty-focused direct-maker candidates and sending outreach plus following profiles. Note: as of 2026-08-04, the user has asked to review each outreach message before it sends, rather than sending without confirmation. Regions completed this batch: Nigeria, Bolivia, Ecuador, Cambodia, South Africa. LAM Bolivia (https://www.goodmarket.global/lam) was found but could not be messaged — its Good Market profile page consistently renders blank/broken (no org name, no Contact button, no photos), confirmed a site-side bug, not fixable from our side; revisit periodically to see if Good Market fixes the listing. All outreach CTAs now point to the homepage (velorcommerce.store) rather than /apply, so recipients see the site layout before applying, per instruction. Candidate next regions: Indonesia (additional), Peru, Guatemala, Rwanda, Uganda, Nepal.
