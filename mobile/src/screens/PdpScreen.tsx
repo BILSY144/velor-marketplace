@@ -8,7 +8,7 @@ import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, flagUrl, pexels, useTheme, Palette } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
-import { countryName, IMAGERY } from '../data'
+import { countryName, COUNTRIES, IMAGERY } from '../data'
 import { useQuery } from '@tanstack/react-query'
 import type { ShopProduct, ProductDetail, Variant } from '../api'
 import { fetchProductDetail, fetchQuestions, addToWishlist, removeFromWishlist, fetchWishlist, writeReview, markReviewHelpful, fetchDeliveryEstimate } from '../api'
@@ -430,10 +430,15 @@ export default function PdpScreen() {
 }
 
 
-// --- Delivery estimate widget (website PDP parity: /api/shipping/estimate) ---
+// --- Delivery estimate widget (website PDP parity: /api/shipping/estimate).
+// The site offers the FULL world list in its "Deliver to" dropdown, so the
+// app does too: six quick chips for the common lanes plus a searchable
+// full-list picker behind the globe chip (every country, same as checkout).
 const EST_COUNTRIES = ['GB', 'US', 'DE', 'FR', 'AU', 'CA']
 function DeliveryEstimate({ productId, origin, t, s }: { productId: string; origin: string; t: any; s: any }) {
   const [cc, setCc] = React.useState('GB')
+  const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState('')
   const q = useQuery({
     queryKey: ['estimate', productId, cc],
     queryFn: () => fetchDeliveryEstimate(productId, cc),
@@ -450,7 +455,7 @@ function DeliveryEstimate({ productId, origin, t, s }: { productId: string; orig
   return (
     <View style={{ flexShrink: 1 }}>
       <Text style={s.deliver}>
-        {label} · ships from {origin}
+        {label} · ships from {origin} · to {countryName(cc)}
       </Text>
       <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
         {EST_COUNTRIES.map((c) => (
@@ -462,7 +467,46 @@ function DeliveryEstimate({ productId, origin, t, s }: { productId: string; orig
             <Text style={[s.estChipTx, cc === c && { color: t.accent }]}>{c}</Text>
           </Pressable>
         ))}
+        <Pressable
+          onPress={() => setOpen(!open)}
+          style={[s.estChip, (open || !EST_COUNTRIES.includes(cc)) && { borderColor: t.accent, backgroundColor: t.accentSoft }]}
+        >
+          <Ionicons name="earth" size={11} color={open || !EST_COUNTRIES.includes(cc) ? t.accent : t.mut} />
+          <Text style={[s.estChipTx, (open || !EST_COUNTRIES.includes(cc)) && { color: t.accent }]}>
+            {!EST_COUNTRIES.includes(cc) ? cc : 'ALL'}
+          </Text>
+        </Pressable>
       </View>
+      {open ? (
+        <View style={{ marginTop: 8, borderWidth: 1, borderColor: t.line, borderRadius: 12, padding: 8, backgroundColor: t.surf }}>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search all countries"
+            placeholderTextColor={t.dim}
+            style={{ borderWidth: 1, borderColor: t.line, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 8, fontFamily: F.body, fontSize: 12, color: t.text }}
+          />
+          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {COUNTRIES.filter((x) => x.n.toLowerCase().includes(query.trim().toLowerCase()))
+              .slice()
+              .sort((a, b) => a.n.localeCompare(b.n))
+              .map((x) => (
+                <Pressable
+                  key={x.c}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 9, paddingHorizontal: 4 }}
+                  onPress={() => {
+                    setCc(x.c)
+                    setOpen(false)
+                    setQuery('')
+                  }}
+                >
+                  <Image source={{ uri: flagUrl(x.c, 40) }} style={{ width: 18, height: 13, borderRadius: 2 }} />
+                  <Text style={{ fontFamily: F.body, fontSize: 12.5, color: cc === x.c ? t.accent : t.text }}>{x.n}</Text>
+                </Pressable>
+              ))}
+          </ScrollView>
+        </View>
+      ) : null}
     </View>
   )
 }
