@@ -338,6 +338,16 @@ model Product {
   leadTimeDays  Int?
   sizeGuide     String?       @db.Text
   requiresCertificate Boolean @default(false)
+  // Admin override for a false-positive certificate flag -- lets an admin
+  // push a certificate-gated listing live on their own judgement without a
+  // verified certificate on file. Requires a written reason every time
+  // (enforced in app/api/admin/products PATCH), kept permanently here for
+  // audit/regulatory defensibility. Distinct from the normal certificates
+  // relation below, which is the non-override VERIFIED-certificate path.
+  // (William, 2026-08-04.)
+  certificateOverrideNote String?  @db.Text
+  certificateOverrideBy   String?
+  certificateOverrideAt   DateTime?
   certificates  ProductCertificate[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
