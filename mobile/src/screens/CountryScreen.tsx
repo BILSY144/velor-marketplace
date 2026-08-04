@@ -173,7 +173,7 @@ export default function CountryScreen() {
             <Text style={s.foundT}>Open {name}'s{'\n'}channel.</Text>
             <Dim style={{ marginTop: 9, lineHeight: 18 }}>
               Nobody sells from {name} yet. Its first verified seller keeps the founding
-              badge and the full Pro tier free for life — and is credited as the seller
+              badge and permanent priority placement — and is credited as the seller
               who opened it.
             </Dim>
             <Btn label="Claim the founding seat" style={{ marginTop: 16 }} onPress={() => nav.navigate('Apply', { cc })} />

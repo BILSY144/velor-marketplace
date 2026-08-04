@@ -11,21 +11,17 @@ import { Chrome } from '../components/Chrome'
 
 const PERKS: [string, string][] = [
   ['Founding badge, permanent', 'On your store and every listing, forever.'],
-  ['The full Pro tier, free for life', 'Unlimited listings, Go Live, your AI account manager — £49/mo at £0 while your subscription runs. 4% commission.'],
+  ['Priority placement', 'Founding sellers rank first in search and category pages — permanently.'],
   ['The homepage showreel slot', 'Your film, on the front page of the world’s shopping channel.'],
   ['Your country’s page, alone', 'You open the channel and are credited as the seller who opened it.'],
 ]
 
-// Real tier maths — TIER_CONFIG figures (Starter free/10%, Pro £49/4%,
-// two-tier scheme since Enterprise retired 2026-07-15).
-const TIERS = {
-  starter: { label: 'Starter', fee: 0, rate: 0.1, foot: 'Free · 10%' },
-  pro: { label: 'Pro', fee: 49, rate: 0.04, foot: '£49 · 4% · unlimited' },
-} as const
-type TierKey = keyof typeof TIERS
+// ONE TIER ONLY (William, 2026-08-01 + 2026-08-04 "remember we only have 1
+// tier now"): flat 10% commission for every seller, no monthly fee, no
+// purchasable subscription. The old Starter/Pro comparison is retired.
+const COMMISSION = 0.1
 
-const keep = (t: TierKey, sales: number) =>
-  Math.max(0, Math.round(sales * (1 - TIERS[t].rate) - TIERS[t].fee))
+const keep = (sales: number) => Math.max(0, Math.round(sales * (1 - COMMISSION)))
 
 // The sell pitch — plate 23 + spec/sell.txt, exact: the sellhero photo cover
 // (the mockup's own Pexels 31330206) melting into black, SELL ON VELOR
@@ -35,7 +31,6 @@ const keep = (t: TierKey, sales: number) =>
 export default function SellScreen() {
   const nav = useNavigation<any>()
   const [sales, setSales] = useState(1000)
-  const [tier, setTier] = useState<TierKey>('starter')
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -53,7 +48,7 @@ export default function SellScreen() {
             <Text style={s.h1}>Your country's{'\n'}shopping channel.</Text>
             <Text style={s.heroSub}>
               Broadcast live from the workshop and sell around the clock with listings. Buyers
-              arrive 6 August.
+              arrive 6 September.
             </Text>
           </View>
         </View>
@@ -77,28 +72,24 @@ export default function SellScreen() {
         <View style={s.calc}>
           <Body style={{ fontFamily: F.bodySemi, fontSize: 14 }}>What you'd keep</Body>
           <Dim style={{ fontSize: 11.5, marginTop: 3 }}>
-            Drag your expected monthly sales — tap a plan to compare.
+            Drag your expected monthly sales — one flat plan for everyone.
           </Dim>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 14 }}>
-            <Text style={s.calcAmt}>{'£'}{keep(tier, sales).toLocaleString('en-GB')}</Text>
+            <Text style={s.calcAmt}>{'£'}{keep(sales).toLocaleString('en-GB')}</Text>
             <Dim style={{ fontSize: 12 }}>
-              of £{sales.toLocaleString('en-GB')} · {TIERS[tier].label}
+              of £{sales.toLocaleString('en-GB')} · flat 10% commission
             </Dim>
           </View>
           <Slider value={sales} min={0} max={10000} step={100} onChange={setSales} />
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            {(Object.keys(TIERS) as TierKey[]).map((k) => (
-              <Pressable key={k} style={[s.tcard, tier === k && s.tcardOn]} onPress={() => setTier(k)}>
-                <Text style={[s.tn, tier === k && { color: C.accent }]}>{TIERS[k].label}</Text>
-                <Text style={s.tk}>{'£'}{keep(k, sales).toLocaleString('en-GB')}</Text>
-                <Text style={s.tf}>{TIERS[k].foot}</Text>
-              </Pressable>
-            ))}
+          <View style={[s.tcard, s.tcardOn, { marginTop: 16 }]}>
+            <Text style={[s.tn, { color: C.accent }]}>Every seller</Text>
+            <Text style={s.tk}>{'£'}{keep(sales).toLocaleString('en-GB')}</Text>
+            <Text style={s.tf}>Free to join · flat 10% · no monthly fee</Text>
           </View>
           <Dim style={{ fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>
-            0% listing fees on every plan. Paid out after each delivery is confirmed — payouts by
-            Stripe & Payoneer. Every seller starts free — upgrade to Pro any time from your
-            dashboard.
+            Nothing to list, ever — one flat 10% commission when you sell, the same for every
+            seller. No subscriptions, no tiers. Paid out after each delivery is confirmed —
+            payouts by Stripe & Payoneer.
           </Dim>
         </View>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -16,7 +16,6 @@ import {
   fetchSellerOrders,
   fetchSellerProducts,
   fetchSubscription,
-  startProUpgrade,
 } from '../api'
 
 // Seller dashboard — plate 27's structure, in TWO honest modes:
@@ -36,35 +35,17 @@ export default function DashScreen() {
   const nav = useNavigation<any>()
   const user = useSession((s) => s.user)
   const live = Boolean(user?.sellerId)
-  const [previewTier, setPreviewTier] = useState<Tier>('STARTER')
-  const [upBusy, setUpBusy] = useState(false)
-  const [upError, setUpError] = useState<string | null>(null)
   useI18nTick() // repaint fmt() money on currency/rate ticks
-
-  // Upgrade to Pro — Stripe's hosted checkout opens in the browser; the
-  // seller adds their payment details with Stripe, never inside the app.
-  const upgrade = async () => {
-    if (upBusy) return
-    setUpBusy(true)
-    setUpError(null)
-    try {
-      const r = await startProUpgrade()
-      if (r.checkoutUrl) await Linking.openURL(r.checkoutUrl)
-      else setUpError(r.error ?? 'Could not start the upgrade — try again.')
-    } catch {
-      setUpError('Could not reach Velor — check your connection and try again.')
-    } finally {
-      setUpBusy(false)
-    }
-  }
 
   const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription, enabled: live })
   const payouts = useQuery({ queryKey: ['sellerPayouts'], queryFn: fetchSellerPayouts, enabled: live })
   const orders = useQuery({ queryKey: ['sellerOrders'], queryFn: fetchSellerOrders, enabled: live })
   const products = useQuery({ queryKey: ['sellerProducts'], queryFn: fetchSellerProducts, enabled: live })
 
-  const tier: Tier = live ? ((sub.data?.tier as Tier) ?? 'STARTER') : previewTier
-  const pro = tier === 'PRO'
+  // ONE TIER (William, 2026-08-04): flat 10% for every seller. `pro` is true
+  // ONLY for the single grandfathered legacy Pro account the API still
+  // reports -- never something a seller can buy.
+  const pro = live && (sub.data?.tier as Tier | undefined) === 'PRO'
   const founding = live && Boolean((sub.data as any)?.foundingBadge)
 
   const os = orders.data ?? []
@@ -119,23 +100,12 @@ export default function DashScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
             <Text style={s.h1}>{live ? 'Your channel' : 'Your store'}</Text>
             {founding ? <Text style={s.fbadge}>FOUNDING</Text> : null}
-            <Text style={s.tbadge}>{pro ? 'PRO · 4%' : 'STARTER · 10%'}</Text>
+            <Text style={s.tbadge}>{pro ? 'PRO · 4% (LEGACY)' : 'VERIFIED · 10%'}</Text>
           </View>
           {!live ? (
             <Dim style={{ fontSize: 11.5, marginTop: 4 }}>
-              Founding sellers carry the badge here — with Pro free for life.
+              Founding sellers carry the badge here — permanent, with priority placement.
             </Dim>
-          ) : null}
-
-          {/* Tier toggle — preview only; a real account shows its real tier */}
-          {!live ? (
-            <View style={s.seg}>
-              {(['STARTER', 'PRO'] as Tier[]).map((t) => (
-                <Pressable key={t} style={[s.segBtn, previewTier === t && s.segOn]} onPress={() => setPreviewTier(t)}>
-                  <Text style={[s.segTx, previewTier === t && s.segTxOn]}>{t}</Text>
-                </Pressable>
-              ))}
-            </View>
           ) : null}
 
           {/* Stat tiles */}
@@ -155,30 +125,6 @@ export default function DashScreen() {
             ))}
           </View>
 
-          {/* Upgrade to Pro — live Starter sellers only. Founding sellers
-              never see this: they already hold Pro free for life. */}
-          {live && !pro ? (
-            <View style={s.upCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={s.upKick}>UPGRADE</Text>
-                <Text style={s.upPrice}>{fmt(49)}/month</Text>
-              </View>
-              <Text style={s.upT}>Go Pro. Keep 6% more of every sale.</Text>
-              <Text style={s.upS}>
-                4% commission instead of 10%, unlimited listings instead of 10, and your AI
-                account manager watching the channel around the clock.
-              </Text>
-              {upError ? <Text style={s.upErr}>{upError}</Text> : null}
-              <Pressable style={[s.upBtn, upBusy && { opacity: 0.7 }]} onPress={upgrade}>
-                <Text style={s.upBtnTx}>{upBusy ? 'Opening secure checkout\u2026' : 'Upgrade to Pro'}</Text>
-                <Ionicons name="arrow-forward" size={15} color="#160a00" />
-              </Pressable>
-              <Text style={s.upNote}>
-                Checkout opens in your browser — payment details go to Stripe, never to the
-                app. Your plan switches the moment payment completes.
-              </Text>
-            </View>
-          ) : null}
 
           {/* Revenue */}
           <View style={s.card}>
@@ -203,8 +149,10 @@ export default function DashScreen() {
             )}
           </View>
 
-          {/* AI account manager — Pro-only */}
-          <View style={[s.card, !pro && { opacity: 0.55 }]}>
+          {/* AI account manager — legacy-Pro account only (no upsell; there
+              is nothing to buy). Hidden for everyone else. */}
+          {pro ? (
+          <View style={s.card}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={s.aiIcon}>
                 <Ionicons name="sparkles" size={16} color={C.accent} />
@@ -212,24 +160,22 @@ export default function DashScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={s.fd}>Your AI account manager</Text>
                 <Text style={s.smdim}>
-                  {pro ? 'Watching your channel around the clock' : 'Pro-only · upgrade any time from here'}
+                  {'Watching your channel around the clock'}
                 </Text>
               </View>
-              {!pro ? <Ionicons name="lock-closed" size={14} color={C.mut} /> : null}
             </View>
-            {pro ? (
-              <View style={{ marginTop: 12, gap: 8 }}>
-                <Text style={s.aitip}>
-                  {live
-                    ? 'She reads your real views, orders and holds — ask her anything about your channel.'
-                    : 'She reads your real views, orders and holds — her first tips appear with your first listings.'}
-                </Text>
-                <Pressable style={s.lineBtn} onPress={() => nav.navigate('Assist')}>
-                  <Text style={s.lineBtnTx}>Ask her anything</Text>
-                </Pressable>
-              </View>
-            ) : null}
+            <View style={{ marginTop: 12, gap: 8 }}>
+              <Text style={s.aitip}>
+                {live
+                  ? 'She reads your real views, orders and holds — ask her anything about your channel.'
+                  : 'She reads your real views, orders and holds — her first tips appear with your first listings.'}
+              </Text>
+              <Pressable style={s.lineBtn} onPress={() => nav.navigate('Assist')}>
+                <Text style={s.lineBtnTx}>Ask her anything</Text>
+              </Pressable>
+            </View>
           </View>
+          ) : null}
 
           {/* Order pipeline */}
           <Text style={[s.kickDim, { marginTop: 24 }]}>ORDER PIPELINE</Text>
@@ -300,29 +246,26 @@ export default function DashScreen() {
             <View style={s.card2}>
               <Text style={s.fd}>No listings yet</Text>
               <Text style={s.smdim}>
-                {pro
-                  ? 'List as much as you make — unlimited on Pro.'
-                  : 'Starter carries up to 10 live listings — Pro is unlimited.'}
+                List what you make — your first listing opens the shop window.
               </Text>
             </View>
           )}
 
-          {/* API access — Pro-only */}
-          <View style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 10 }, !pro && { opacity: 0.55 }]}>
+          {/* API access — legacy-Pro account only; hidden for everyone else
+              (one tier now, nothing to upsell). */}
+          {pro ? (
+          <View style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
             <View style={{ flex: 1 }}>
               <Text style={s.fd}>API access</Text>
               <Text style={s.smdim}>
-                {pro ? 'Wire your channel into your own tools' : 'Pro-only — included the day you upgrade'}
+                {'Wire your channel into your own tools'}
               </Text>
             </View>
-            {pro ? (
-              <Pressable style={s.lineBtn} onPress={() => nav.navigate('ApiKeys')}>
-                <Text style={s.lineBtnTx}>Keys</Text>
-              </Pressable>
-            ) : (
-              <Ionicons name="lock-closed" size={14} color={C.mut} />
-            )}
+            <Pressable style={s.lineBtn} onPress={() => nav.navigate('ApiKeys')}>
+              <Text style={s.lineBtnTx}>Keys</Text>
+            </Pressable>
           </View>
+          ) : null}
 
           {!live ? (
             <View style={{ marginTop: 26, gap: 10 }}>

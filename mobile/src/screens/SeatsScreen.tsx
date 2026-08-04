@@ -22,7 +22,7 @@ import { Chrome } from '../components/Chrome'
 // country pre-picked.
 const CARRIES: [string, string][] = [
   ['Founding badge', 'Permanent, on your store and every listing.'],
-  ['Pro free for life', 'Unlimited listings, Go Live, your AI account manager — 4% commission.'],
+  ['Priority placement', 'Founding sellers rank first in search and category pages — permanently.'],
   ['Homepage showreel', 'Your film on the front page of the channel.'],
   ['Opening credit', 'Named as the seller who opened your country’s page.'],
 ]

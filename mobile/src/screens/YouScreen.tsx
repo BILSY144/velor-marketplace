@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { C, F } from '../theme'
+import { F, useTheme, Palette } from '../theme'
 import { fmt, useI18nTick } from '../i18n'
 import { useFavs, useFollows, useSession } from '../store'
 import {
@@ -34,7 +34,6 @@ import {
   clearCredentials,
   saveCredentials,
 } from '../biometrics'
-import { Dim } from '../ui'
 import { Chrome } from '../components/Chrome'
 
 // You — the app's front door and identity hub, in three honest states:
@@ -74,16 +73,18 @@ function MemberCard({
   seller: boolean
   founding: boolean
 }) {
+  const t = useTheme()
+  const mc = mcX(t)
   return (
     <LinearGradient
-      colors={['#1b1b22', '#101014', '#0b0b0e']}
+      colors={t.light ? ['#ffffff', '#f7f5f1', '#f1efe9'] : ['#1b1b22', '#101014', '#0b0b0e']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={mc.card}
     >
       {/* Accent thread along the top edge — the channel's on-air line */}
       <LinearGradient
-        colors={['rgba(255,107,0,0)', C.accent, 'rgba(255,107,0,0)']}
+        colors={['rgba(255,107,0,0)', t.accent, 'rgba(255,107,0,0)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={mc.thread}
@@ -105,23 +106,23 @@ function MemberCard({
 
       <View style={mc.chipRow}>
         <View style={[mc.chip, mc.chipOn]}>
-          <Ionicons name="bag-outline" size={11} color={C.text} />
+          <Ionicons name="bag-outline" size={11} color={t.text} />
           <Text style={mc.chipTx}>BUYER</Text>
         </View>
         <View style={[mc.chip, seller ? mc.chipSeller : null]}>
           <Ionicons
             name="storefront-outline"
             size={11}
-            color={seller ? C.accent : C.dim}
+            color={seller ? t.accent : t.dim}
           />
-          <Text style={[mc.chipTx, seller ? { color: C.accent } : { color: C.dim }]}>
+          <Text style={[mc.chipTx, seller ? { color: t.accent } : { color: t.dim }]}>
             SELLER
           </Text>
         </View>
         {founding ? (
           <View style={[mc.chip, mc.chipSeller]}>
-            <Ionicons name="ribbon-outline" size={11} color={C.accent} />
-            <Text style={[mc.chipTx, { color: C.accent }]}>FOUNDING</Text>
+            <Ionicons name="ribbon-outline" size={11} color={t.accent} />
+            <Text style={[mc.chipTx, { color: t.accent }]}>FOUNDING</Text>
           </View>
         ) : null}
         <View style={{ flex: 1 }} />
@@ -131,7 +132,7 @@ function MemberCard({
   )
 }
 
-const mc = StyleSheet.create({
+const mcX = (t: Palette) => StyleSheet.create({
   card: {
     marginTop: 22,
     borderRadius: 22,
@@ -142,27 +143,27 @@ const mc = StyleSheet.create({
   },
   thread: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  wordmark: { fontFamily: F.display, fontSize: 15, letterSpacing: 5, color: C.text },
+  wordmark: { fontFamily: F.display, fontSize: 15, letterSpacing: 5, color: t.text },
   oneAcct: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
-  oneAcctTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 2, color: C.accent },
-  holder: { fontFamily: F.serifLight, fontSize: 23, color: C.text, marginTop: 22 },
-  holderSub: { fontFamily: F.body, fontSize: 11, color: C.mut, marginTop: 4 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent },
+  oneAcctTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 2, color: t.accent },
+  holder: { fontFamily: F.serifLight, fontSize: 23, color: t.text, marginTop: 22 },
+  holderSub: { fontFamily: F.body, fontSize: 11, color: t.mut, marginTop: 4 },
   chipRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 20 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  chipOn: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  chipOn: { backgroundColor: t.surf2 },
   chipSeller: { borderColor: 'rgba(255,107,0,0.45)', backgroundColor: 'rgba(255,107,0,0.1)' },
-  chipTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 1.4, color: C.text },
-  brand: { fontFamily: F.displayMed, fontSize: 6.5, letterSpacing: 1.2, color: C.dim },
+  chipTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 1.4, color: t.text },
+  brand: { fontFamily: F.displayMed, fontSize: 6.5, letterSpacing: 1.2, color: t.dim },
 })
 
 // ---------------------------------------------------------------------------
@@ -189,10 +190,12 @@ function Field({
   show?: boolean
   onToggleShow?: () => void
 }) {
+  const t = useTheme()
+  const fd = fdX(t)
   const [focus, setFocus] = React.useState(false)
   return (
     <View style={{ marginTop: 18 }}>
-      <Text style={[fd.label, focus && { color: C.accent }]}>{label}</Text>
+      <Text style={[fd.label, focus && { color: t.accent }]}>{label}</Text>
       <View style={[fd.box, focus && fd.boxFocus]}>
         <TextInput
           value={value}
@@ -205,12 +208,12 @@ function Field({
           keyboardType={keyboardType}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          placeholderTextColor={C.dim}
+          placeholderTextColor={t.dim}
           style={fd.input}
         />
         {onToggleShow ? (
           <Pressable onPress={onToggleShow} hitSlop={10}>
-            <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={18} color={C.mut} />
+            <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={18} color={t.mut} />
           </Pressable>
         ) : null}
       </View>
@@ -218,27 +221,27 @@ function Field({
   )
 }
 
-const fd = StyleSheet.create({
+const fdX = (t: Palette) => StyleSheet.create({
   label: {
     fontFamily: F.display,
     fontSize: 9.5,
     letterSpacing: 1.6,
-    color: C.mut,
+    color: t.mut,
     marginBottom: 8,
   },
   box: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: t.surf2,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: t.line,
     borderRadius: 16,
     paddingHorizontal: 16,
   },
   boxFocus: { borderColor: 'rgba(255,107,0,0.55)', backgroundColor: 'rgba(255,107,0,0.05)' },
   input: {
     flex: 1,
-    color: C.text,
+    color: t.text,
     fontFamily: F.body,
     fontSize: 14.5,
     paddingVertical: 15,
@@ -249,6 +252,9 @@ const fd = StyleSheet.create({
 // SIGNED OUT — the door. Inline, cinematic, one login for both sides.
 // ---------------------------------------------------------------------------
 function Door() {
+  const t = useTheme()
+  const dr = drX(t)
+  const fd = fdX(t)
   const nav = useNavigation<any>()
   const setSession = useSession((s) => s.set)
   const [email, setEmail] = React.useState('')
@@ -323,10 +329,10 @@ function Door() {
     <View style={{ paddingHorizontal: 20 }}>
       <Text style={dr.kick}>YOU</Text>
       <Text style={dr.h1}>Step inside.</Text>
-      <Dim style={{ marginTop: 10, lineHeight: 19 }}>
+      <Text style={{ fontFamily: F.body, fontSize: 12.5, color: t.mut, marginTop: 10, lineHeight: 19 }}>
         One sign-in for both sides of the counter — shop the world, or sell to it. The same
         account as velorcommerce.store.
-      </Dim>
+      </Text>
 
       <MemberCard seller={false} founding={false} />
 
@@ -357,29 +363,29 @@ function Door() {
       </Pressable>
 
       <Pressable onPress={() => setForgot(true)} style={{ marginTop: 14, minHeight: 30 }}>
-        <Dim style={{ textAlign: 'center', fontSize: 12 }}>
-          Forgot your password? <Text style={{ color: C.accent }}>Reset by email</Text>
-        </Dim>
+        <Text style={{ fontFamily: F.body, color: t.mut, textAlign: 'center', fontSize: 12 }}>
+          Forgot your password? <Text style={{ color: t.accent }}>Reset by email</Text>
+        </Text>
       </Pressable>
 
       {forgot ? (
         <View style={dr.panel}>
           {forgotSent ? (
             <>
-              <Ionicons name="mail-unread-outline" size={18} color={C.green} />
+              <Ionicons name="mail-unread-outline" size={18} color={t.green} />
               <Text style={dr.panelT}>Check your email</Text>
-              <Dim style={{ fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
+              <Text style={{ fontFamily: F.body, color: t.mut, fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
                 If an account exists for {email.trim() || 'that address'}, a reset link is on its
                 way — it works for one hour. Set the new password, then sign in here.
-              </Dim>
+              </Text>
             </>
           ) : (
             <>
               <Text style={dr.panelT}>Reset by email</Text>
-              <Dim style={{ fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
+              <Text style={{ fontFamily: F.body, color: t.mut, fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
                 We email a one-hour reset link to the address above — verified by the link
                 itself, nothing changes until you click it.
-              </Dim>
+              </Text>
               <Pressable style={dr.panelBtn} onPress={sendReset}>
                 <Text style={dr.panelBtnTx}>{busy ? 'Sending…' : 'Email me the link'}</Text>
               </Pressable>
@@ -391,14 +397,14 @@ function Door() {
       {/* What the one account opens — both doors, plainly */}
       <View style={dr.doors}>
         <View style={dr.door}>
-          <Ionicons name="bag-outline" size={17} color={C.text} />
+          <Ionicons name="bag-outline" size={17} color={t.text} />
           <Text style={dr.doorT}>Buying</Text>
           <Text style={dr.doorS}>
             190 countries, escrow-protected — money moves only when your parcel lands
           </Text>
         </View>
         <View style={[dr.door, dr.doorSell]}>
-          <Ionicons name="storefront-outline" size={17} color={C.accent} />
+          <Ionicons name="storefront-outline" size={17} color={t.accent} />
           <Text style={dr.doorT}>Selling</Text>
           <Text style={dr.doorS}>
             Your dashboard, listings and payouts — your country's channel, in your pocket
@@ -407,35 +413,35 @@ function Door() {
       </View>
 
       <View style={dr.newRow}>
-        <Ionicons name="sparkles-outline" size={15} color={C.mut} />
-        <Dim style={{ flex: 1, fontSize: 11.5, lineHeight: 17 }}>
+        <Ionicons name="sparkles-outline" size={15} color={t.mut} />
+        <Text style={{ fontFamily: F.body, color: t.mut, flex: 1, fontSize: 11.5, lineHeight: 17 }}>
           New to Velor? A buyer account is created with your first order — the activation link
           arrives by email. Sellers apply in five minutes.
-        </Dim>
+        </Text>
       </View>
 
       <Pressable
         onPress={() => nav.navigate('Apply', {})}
         style={{ marginTop: 16, minHeight: 30 }}
       >
-        <Dim style={{ textAlign: 'center', fontSize: 12 }}>
-          Want to sell? <Text style={{ color: C.accent }}>Apply to open your channel →</Text>
-        </Dim>
+        <Text style={{ fontFamily: F.body, color: t.mut, textAlign: 'center', fontSize: 12 }}>
+          Want to sell? <Text style={{ color: t.accent }}>Apply to open your channel →</Text>
+        </Text>
       </Pressable>
 
       {/* Face ID enable offer — shown right after a successful sign-in */}
       {bioOffer && pendingCreds ? (
         <View style={dr.bioCard}>
-          <Ionicons name="scan-circle-outline" size={22} color={C.accent} />
+          <Ionicons name="scan-circle-outline" size={22} color={t.accent} />
           <Text style={dr.panelT}>Sign in with {bioOffer} next time?</Text>
-          <Dim style={{ fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
+          <Text style={{ fontFamily: F.body, color: t.mut, fontSize: 11.5, lineHeight: 17, textAlign: 'center' }}>
             {bioOffer} opens the app AND signs you in — no more passwords. Your credentials live
             in this phone's encrypted keychain, used only after your {bioOffer} passes, and are
             wiped the moment you turn this off or sign out.
             {bioPreview
               ? ' Note: in this Expo Go preview, Apple shows your phone PASSCODE instead of the face prompt — true Face ID switches on in the full app build.'
               : ''}
-          </Dim>
+          </Text>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
             <Pressable
               style={[dr.panelBtn, { flex: 1 }]}
@@ -458,7 +464,7 @@ function Door() {
                 setPendingCreds(null)
               }}
             >
-              <Text style={[dr.panelBtnTx, { color: C.text }]}>Not now</Text>
+              <Text style={[dr.panelBtnTx, { color: t.text }]}>Not now</Text>
             </Pressable>
           </View>
         </View>
@@ -467,14 +473,14 @@ function Door() {
   )
 }
 
-const dr = StyleSheet.create({
-  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.mut },
-  h1: { fontFamily: F.serifLight, fontSize: 34, color: C.text, marginTop: 8 },
+const drX = (t: Palette) => StyleSheet.create({
+  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: t.mut },
+  h1: { fontFamily: F.serifLight, fontSize: 34, color: t.text, marginTop: 8 },
   err: {
     fontFamily: F.body,
     fontSize: 12,
     lineHeight: 17,
-    color: C.red,
+    color: t.red,
     marginTop: 14,
     textAlign: 'center',
   },
@@ -484,25 +490,25 @@ const dr = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: 22,
-    backgroundColor: C.accent,
+    backgroundColor: t.accent,
     borderRadius: 999,
     paddingVertical: 16,
   },
-  ctaTx: { fontFamily: F.display, fontSize: 14, color: '#160a00' },
+  ctaTx: { fontFamily: F.display, fontSize: 14, color: '#ffffff' },
   panel: {
     alignItems: 'center',
     gap: 8,
     marginTop: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: t.surf,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 18,
     padding: 16,
   },
-  panelT: { fontFamily: F.bodySemi, fontSize: 13.5, color: C.text },
+  panelT: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text },
   panelBtn: {
     marginTop: 10,
-    backgroundColor: C.accent,
+    backgroundColor: t.accent,
     borderRadius: 999,
     paddingVertical: 13,
     paddingHorizontal: 20,
@@ -511,15 +517,15 @@ const dr = StyleSheet.create({
   panelGhost: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: t.line,
   },
-  panelBtnTx: { fontFamily: F.displayMed, fontSize: 12.5, color: '#160a00' },
+  panelBtnTx: { fontFamily: F.displayMed, fontSize: 12.5, color: '#ffffff' },
   doors: { flexDirection: 'row', gap: 10, marginTop: 26 },
   door: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: t.surf,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 18,
     padding: 14,
   },
@@ -527,16 +533,16 @@ const dr = StyleSheet.create({
     backgroundColor: 'rgba(255,107,0,0.06)',
     borderColor: 'rgba(255,107,0,0.22)',
   },
-  doorT: { fontFamily: F.bodySemi, fontSize: 13, color: C.text, marginTop: 8 },
-  doorS: { fontFamily: F.body, fontSize: 10.5, lineHeight: 15, color: C.mut, marginTop: 4 },
+  doorT: { fontFamily: F.bodySemi, fontSize: 13, color: t.text, marginTop: 8 },
+  doorS: { fontFamily: F.body, fontSize: 10.5, lineHeight: 15, color: t.mut, marginTop: 4 },
   newRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
     marginTop: 14,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: t.surf,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 16,
     padding: 13,
   },
@@ -557,6 +563,8 @@ const dr = StyleSheet.create({
 // anything still loading shows an em dash, never an invented figure.
 // ---------------------------------------------------------------------------
 function SellerChannel() {
+  const t = useTheme()
+  const sc = scX(t)
   const nav = useNavigation<any>()
   const sub = useQuery({ queryKey: ['sub'], queryFn: fetchSubscription })
   const payouts = useQuery({ queryKey: ['sellerPayouts'], queryFn: fetchSellerPayouts })
@@ -662,7 +670,7 @@ function SellerChannel() {
               <Text style={sc.onAir}>ON AIR</Text>
             </View>
             <View style={[sc.tierPill, founding && sc.tierPillFounding]}>
-              <Text style={[sc.tierTx, founding && { color: C.accent }]}>{tierLabel}</Text>
+              <Text style={[sc.tierTx, founding && { color: t.accent }]}>{tierLabel}</Text>
             </View>
           </View>
 
@@ -685,18 +693,18 @@ function SellerChannel() {
 
           <View style={sc.cardFoot}>
             <Text style={sc.cardFootTx}>Open the dashboard</Text>
-            <Ionicons name="arrow-forward" size={13} color={C.accent} />
+            <Ionicons name="arrow-forward" size={13} color={t.accent} />
           </View>
         </Pressable>
 
-        <Text style={[sc.kick, { marginTop: 24, color: C.mut }]}>SELLER STUDIO</Text>
+        <Text style={[sc.kick, { marginTop: 24, color: t.mut }]}>SELLER STUDIO</Text>
       </View>
 
       <View style={{ marginTop: 4 }}>
         {studio.map((r) => (
           <Pressable key={r.title} style={sc.row} onPress={() => nav.navigate(r.route)}>
-            <View style={[sc.rowIcon, r.locked && { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-              <Ionicons name={r.icon} size={17} color={r.locked ? C.mut : C.accent} />
+            <View style={[sc.rowIcon, r.locked && { backgroundColor: t.surf2 }]}>
+              <Ionicons name={r.icon} size={17} color={r.locked ? t.mut : t.accent} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={sc.rowT}>{r.title}</Text>
@@ -707,7 +715,7 @@ function SellerChannel() {
             <Ionicons
               name={r.locked ? 'lock-closed' : 'chevron-forward'}
               size={r.locked ? 14 : 16}
-              color={C.dim}
+              color={t.dim}
             />
           </Pressable>
         ))}
@@ -716,8 +724,8 @@ function SellerChannel() {
   )
 }
 
-const sc = StyleSheet.create({
-  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.accent, marginTop: 28 },
+const scX = (t: Palette) => StyleSheet.create({
+  kick: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: t.accent, marginTop: 28 },
   card: {
     marginTop: 12,
     borderRadius: 20,
@@ -727,11 +735,11 @@ const sc = StyleSheet.create({
     padding: 16,
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.accent },
-  onAir: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: C.accent },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: t.accent },
+  onAir: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2, color: t.accent },
   tierPill: {
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -740,11 +748,11 @@ const sc = StyleSheet.create({
     borderColor: 'rgba(255,107,0,0.5)',
     backgroundColor: 'rgba(255,107,0,0.1)',
   },
-  tierTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 1.2, color: C.text },
+  tierTx: { fontFamily: F.displayMed, fontSize: 8.5, letterSpacing: 1.2, color: t.text },
   statRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18 },
-  statDiv: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.08)', marginHorizontal: 12 },
-  statN: { fontFamily: F.display, fontSize: 19, color: C.text },
-  statL: { fontFamily: F.displayMed, fontSize: 7.5, letterSpacing: 1.4, color: C.mut, marginTop: 4 },
+  statDiv: { width: 1, height: 30, backgroundColor: t.line, marginHorizontal: 12 },
+  statN: { fontFamily: F.display, fontSize: 19, color: t.text },
+  statL: { fontFamily: F.displayMed, fontSize: 7.5, letterSpacing: 1.4, color: t.mut, marginTop: 4 },
   cardFoot: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -754,7 +762,7 @@ const sc = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,107,0,0.16)',
   },
-  cardFootTx: { fontFamily: F.displayMed, fontSize: 11.5, color: C.accent },
+  cardFootTx: { fontFamily: F.displayMed, fontSize: 11.5, color: t.accent },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -762,7 +770,7 @@ const sc = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: t.line,
   },
   rowIcon: {
     width: 36,
@@ -772,14 +780,16 @@ const sc = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowT: { fontFamily: F.bodySemi, fontSize: 13.5, color: C.text },
-  rowS: { fontFamily: F.body, fontSize: 11.5, color: C.dim, marginTop: 3 },
+  rowT: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text },
+  rowS: { fontFamily: F.body, fontSize: 11.5, color: t.dim, marginTop: 3 },
 })
 
 // ---------------------------------------------------------------------------
 // The screen.
 // ---------------------------------------------------------------------------
 export default function YouScreen() {
+  const t = useTheme()
+  const s = sX(t)
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
   const favs = useFavs((s) => s.ids)
@@ -880,9 +890,9 @@ export default function YouScreen() {
   // a signed-in seller never sees the sign-in form flash past.
   if (!ready) {
     return (
-      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={s.kickDim}>YOU</Text>
-        <Dim style={{ marginTop: 10 }}>Opening your Velor…</Dim>
+        <Text style={{ fontFamily: F.body, fontSize: 12.5, color: t.mut, marginTop: 10 }}>Opening your Velor…</Text>
         <Chrome />
       </View>
     )
@@ -892,7 +902,7 @@ export default function YouScreen() {
   if (!user) {
     return (
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: C.bg }}
+        style={{ flex: 1, backgroundColor: t.bg }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
@@ -909,7 +919,7 @@ export default function YouScreen() {
 
   // --------------------------------------------------------------- signed in
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 60 }}>
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.kickDim}>YOU</Text>
@@ -917,7 +927,7 @@ export default function YouScreen() {
           <View style={s.idRow}>
             <Text style={s.passkey}>Signed in · {user.email}</Text>
             <Pressable onPress={signOut} hitSlop={6}>
-              <Text style={[s.passkey, { color: C.accent }]}>Sign out</Text>
+              <Text style={[s.passkey, { color: t.accent }]}>Sign out</Text>
             </Pressable>
           </View>
 
@@ -931,9 +941,9 @@ export default function YouScreen() {
           {/* Buyer only: the small door to the other side of the counter */}
           {!isSeller ? (
             <Pressable style={s.becomePill} onPress={() => nav.navigate('Sell')}>
-              <Ionicons name="storefront-outline" size={13} color={C.accent} />
+              <Ionicons name="storefront-outline" size={13} color={t.accent} />
               <Text style={s.becomeTx}>Become a seller</Text>
-              <Ionicons name="arrow-forward" size={12} color={C.accent} />
+              <Ionicons name="arrow-forward" size={12} color={t.accent} />
             </Pressable>
           ) : null}
         </View>
@@ -945,7 +955,7 @@ export default function YouScreen() {
           {/* Passport card */}
           <Pressable style={s.passcard} onPress={() => nav.navigate('Passport')}>
             <View style={s.passIcon}>
-              <Ionicons name="earth" size={22} color={C.accent} />
+              <Ionicons name="earth" size={22} color={t.accent} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.passT}>Your Passport</Text>
@@ -957,7 +967,7 @@ export default function YouScreen() {
           {/* Face ID lock — visible, flippable, guarded by the face itself */}
           {bio.available ? (
             <Pressable style={s.bioRow} onPress={toggleBio}>
-              <Ionicons name="scan-circle-outline" size={20} color={bioOn ? C.accent : C.mut} />
+              <Ionicons name="scan-circle-outline" size={20} color={bioOn ? t.accent : t.mut} />
               <View style={{ flex: 1 }}>
                 <Text style={s.rowT}>{bio.label} lock</Text>
                 <Text style={s.rowS}>
@@ -968,7 +978,7 @@ export default function YouScreen() {
                 </Text>
               </View>
               <View style={[s.pillState, bioOn && s.pillStateOn]}>
-                <Text style={[s.pillStateTx, bioOn && { color: C.accent }]}>
+                <Text style={[s.pillStateTx, bioOn && { color: t.accent }]}>
                   {bioOn ? 'ON' : 'OFF'}
                 </Text>
               </View>
@@ -987,7 +997,7 @@ export default function YouScreen() {
                   {r.sub}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color={C.dim} />
+              <Ionicons name="chevron-forward" size={16} color={t.dim} />
             </Pressable>
           ))}
         </View>
@@ -999,11 +1009,11 @@ export default function YouScreen() {
   )
 }
 
-const s = StyleSheet.create({
-  kickDim: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: C.mut },
-  h1: { fontFamily: F.serifLight, fontSize: 30, color: C.text, marginTop: 8 },
+const sX = (t: Palette) => StyleSheet.create({
+  kickDim: { fontFamily: F.displayMed, fontSize: 9, letterSpacing: 2.2, color: t.mut },
+  h1: { fontFamily: F.serifLight, fontSize: 30, color: t.text, marginTop: 8 },
   idRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' },
-  passkey: { fontFamily: F.body, fontSize: 11.5, color: C.dim, marginTop: 6 },
+  passkey: { fontFamily: F.body, fontSize: 11.5, color: t.dim, marginTop: 6 },
   becomePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1017,7 +1027,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 9,
   },
-  becomeTx: { fontFamily: F.displayMed, fontSize: 11.5, color: C.accent },
+  becomeTx: { fontFamily: F.displayMed, fontSize: 11.5, color: t.accent },
   passcard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1037,29 +1047,29 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  passT: { fontFamily: F.bodySemi, fontSize: 14, color: C.text },
-  passS: { fontFamily: F.body, fontSize: 11.5, color: C.dim, marginTop: 2 },
-  passN: { fontFamily: F.display, fontSize: 26, color: C.accent },
+  passT: { fontFamily: F.bodySemi, fontSize: 14, color: t.text },
+  passS: { fontFamily: F.body, fontSize: 11.5, color: t.dim, marginTop: 2 },
+  passN: { fontFamily: F.display, fontSize: 26, color: t.accent },
   bioRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginTop: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: t.surf2,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 18,
     padding: 14,
   },
   pillState: {
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: t.line,
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 6,
   },
   pillStateOn: { borderColor: 'rgba(255,107,0,0.5)', backgroundColor: 'rgba(255,107,0,0.1)' },
-  pillStateTx: { fontFamily: F.display, fontSize: 9.5, letterSpacing: 1, color: C.mut },
+  pillStateTx: { fontFamily: F.display, fontSize: 9.5, letterSpacing: 1, color: t.mut },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1067,14 +1077,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: t.line,
   },
-  rowT: { fontFamily: F.bodySemi, fontSize: 13.5, color: C.text },
-  rowS: { fontFamily: F.body, fontSize: 11.5, color: C.dim, marginTop: 3 },
+  rowT: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text },
+  rowS: { fontFamily: F.body, fontSize: 11.5, color: t.dim, marginTop: 3 },
   build: {
     fontFamily: F.body,
     fontSize: 10.5,
-    color: C.dim,
+    color: t.dim,
     textAlign: 'center',
     marginTop: 30,
   },

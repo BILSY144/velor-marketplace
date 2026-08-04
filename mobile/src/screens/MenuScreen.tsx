@@ -139,7 +139,7 @@ export default function MenuScreen() {
           <Text style={s.sellK}>SELL ON VELOR</Text>
           <Text style={s.sellT}>Your country's{'\n'}shopping channel.</Text>
           <Text style={s.sellS}>
-            One founding seat per country — Pro free for life for whoever opens it.
+            One founding seat per country — a permanent badge and priority placement for whoever opens it.
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
             {(

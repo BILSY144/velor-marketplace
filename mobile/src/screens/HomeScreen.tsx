@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, FlatList, Pressable, StyleSheet, Image as RNImage } from 'react-native'
+import { View, ScrollView, FlatList, Pressable, StyleSheet, Image as RNImage, RefreshControl } from 'react-native'
 import { Text } from '../ui/T'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
@@ -34,10 +34,14 @@ export default function HomeScreen() {
   const nav = useNavigation<any>()
   const toggleTheme = useThemeStore((s) => s.toggle)
 
-  const { data, isLoading } = useQuery({
+  // LIVE DATA (William, 2026-08-04: "the app has to have real time data"):
+  // straight from the production API every time -- 30s freshness window,
+  // refetch on remount, and pull-to-refresh below for an instant update.
+  const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['home-shop'],
     queryFn: () => fetchShop({ limit: 100 }),
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchOnMount: 'always',
   })
 
   // Group real listings by category, in the canonical category order —
@@ -61,7 +65,11 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={t.accent} colors={[t.accent]} />}
+      >
         {/* Header — logo left, bell / hearts / theme right (website header) */}
         <View style={[s.header, { paddingTop: insets.top + 10 }]}>
           <RNImage

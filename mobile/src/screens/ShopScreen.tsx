@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, FlatList, Pressable, StyleSheet } from 'react-native'
+import { View, FlatList, Pressable, StyleSheet, RefreshControl } from 'react-native'
 import { Text } from '../ui/T'
 import { TextInput } from '../ui/TI'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -46,10 +46,13 @@ export default function ShopScreen() {
     return () => clearTimeout(h)
   }, [input])
 
-  const { data, isLoading } = useQuery({
+  // LIVE DATA: production API, 15s freshness, refetch on remount,
+  // pull-to-refresh on the list itself.
+  const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['shop', category, search],
     queryFn: () => fetchShop({ category: category || undefined, search: search || undefined, limit: 60 }),
-    staleTime: 30_000,
+    staleTime: 15_000,
+    refetchOnMount: 'always',
   })
 
   // Country hits for the live search dropdown — same behaviour as the
@@ -161,6 +164,7 @@ export default function ShopScreen() {
         columnWrapperStyle={{ paddingHorizontal: 16, gap: 10 }}
         contentContainerStyle={{ paddingBottom: 30, gap: 10 }}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={t.accent} colors={[t.accent]} />}
         renderItem={({ item }) => (
           <GridCard p={item} t={t} onPress={() => nav.navigate('Pdp', { product: item })} />
         )}
