@@ -14,6 +14,7 @@ interface AdminProduct {
   description: string
   images: string[]
   status: ProductStatus
+    requiresCertificate: boolean
   createdAt: string
   seller: {
     storeName: string
@@ -99,7 +100,7 @@ export default function AdminProductsPage() {
   // job splits into resolving the narrow certificate/regulated-material
   // hold queue, AND reviewing already-live listings after the fact and
   // taking down anything that shouldn't have been listed, eBay-style).
-  const [noteModal, setNoteModal] = useState<{ productId: string; productName: string; action: 'reject' | 'delist' } | null>(null)
+  const [noteModal, setNoteModal] = useState<{ productId: string; productName: string; action: 'reject' | 'delist' | 'override_approve' } | null>(null)
   const [rejectNote, setRejectNote] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -139,7 +140,7 @@ export default function AdminProductsPage() {
     }
   }, [activeTab, status, session])
 
-  const handleAction = async (productId: string, action: 'approve' | 'reject' | 'delist', note?: string) => {
+  const handleAction = async (productId: string, action: 'approve' | 'reject' | 'delist' | 'override_approve', note?: string) => {
     setActionLoading(productId)
     await fetch('/api/admin/products', {
       method: 'PATCH',
@@ -152,7 +153,7 @@ export default function AdminProductsPage() {
     fetchProducts(activeTab)
   }
 
-  const openNoteModal = (productId: string, productName: string, action: 'reject' | 'delist') => {
+  const openNoteModal = (productId: string, productName: string, action: 'reject' | 'delist' | 'override_approve') => {
     setRejectNote('')
     setNoteModal({ productId, productName, action })
   }
@@ -228,7 +229,8 @@ export default function AdminProductsPage() {
                           'Approve'
                         )}
                       </button>
-                      <button
+                                {product.requiresCertificate && (<button className="adm-btn adm-override" disabled={actionLoading === product.id} onClick={() => openNoteModal(product.id, product.name, 'override_approve')}>Override & Approve</button>)}
+                                <button
                         className="adm-btn adm-reject"
                         disabled={actionLoading === product.id}
                         onClick={() => openNoteModal(product.id, product.name, 'reject')}
@@ -259,15 +261,15 @@ export default function AdminProductsPage() {
       {noteModal && (
         <div className="adm-overlay">
           <div className="adm-modal">
-            <div className="adm-modal-title">{noteModal.action === 'delist' ? 'Delist Listing' : 'Reject Listing'}</div>
+            <div className="adm-modal-title">{noteModal.action === 'delist' ? 'Delist Listing' : noteModal.action === 'override_approve' ? 'Override & Approve Listing' : 'Reject Listing'}</div>
             <div className="adm-modal-sub">
               {noteModal.action === 'delist'
                 ? 'This listing is currently live and visible to buyers -- delisting removes it immediately. Adding a reason helps the seller understand why; this note will be included in the email sent to them.'
-                : 'Adding a reason helps the seller understand what to fix. This note will be included in the email sent to them.'}
+                : noteModal.action === 'override_approve' ? 'This overrides the certificate compliance gate on your own judgement -- a written reason is required and is kept on record for the audit trail.' : 'Adding a reason helps the seller understand what to fix. This note will be included in the email sent to them.'}
             </div>
             <textarea
               className="adm-textarea"
-              placeholder={noteModal.action === 'delist' ? 'Reason for delisting (optional)' : 'Reason for rejection (optional)'}
+              placeholder={noteModal.action === 'delist' ? 'Reason for delisting (optional)' : noteModal.action === 'override_approve' ? 'Reason for overriding the certificate gate (required)' : 'Reason for rejection (optional)'}
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
             />
@@ -282,20 +284,12 @@ export default function AdminProductsPage() {
                 Cancel
               </button>
               <button
-                className="adm-btn adm-confirm-reject"
-                disabled={actionLoading === noteModal.productId}
+                className={noteModal.action === 'override_approve' ? 'adm-btn adm-approve' : 'adm-btn adm-confirm-reject'}
+                disabled={actionLoading === noteModal.productId || (noteModal.action === 'override_approve' && !rejectNote.trim())}
                 onClick={() => handleAction(noteModal.productId, noteModal.action, rejectNote)}
               >
-                {actionLoading === noteModal.productId ? (
-                  <span className="adm-spinner adm-spinner-white" />
-                ) : noteModal.action === 'delist' ? (
-                  'Confirm Delist'
-                ) : (
-                  'Confirm Rejection'
-                )}
+                {actionLoading === noteModal.productId ? (<span className="adm-spinner adm-spinner-white" />) : noteModal.action === 'delist' ? ('Confirm Delist') : noteModal.action === 'override_approve' ? ('Confirm Override & Approve') : ('Confirm Rejection')}
               </button>
-            </div>
-          </div>
         </div>
       )}
     </>
