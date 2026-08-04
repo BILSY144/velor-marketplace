@@ -149,6 +149,22 @@ export function setAppCurrency(code: string) {
 
 async function loadRates() {
   if (CUR === 'GBP') return
+  // Website parity (2026-08-04, William: app prices differed from the site):
+  // the site converts with its OWN rate table (/api/fx/rates via lib/fx),
+  // and this app previously called frankfurter directly -- two different FX
+  // sources meant the same product could show two different converted
+  // prices. The site's endpoint is now the primary source so app and web
+  // always agree to the penny; the public providers remain as fallbacks
+  // only for when the site is unreachable.
+  try {
+    const r = await fetch('https://velorcommerce.store/api/fx/rates?base=GBP', {
+      headers: { accept: 'application/json' },
+    })
+    if (r.ok) {
+      const j = await r.json()
+      if (j?.rates) { RATES = { GBP: 1, ...j.rates }; emit(); return }
+    }
+  } catch {}
   try {
     const r = await fetch('https://api.frankfurter.app/latest?from=GBP')
     if (r.ok) {
