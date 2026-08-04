@@ -11,6 +11,7 @@ import { fmt, useI18nTick } from '../i18n'
 import { fetchShop, ShopProduct } from '../api'
 import { CATEGORIES } from '../categories'
 import { countryName } from '../data'
+import { CULTURE_REELS, CultureReel, ReelTile } from '../data/reels'
 import { SearchBar } from '../components/SearchBar'
 
 // HOME — the website homepage, replicated (2026-08-04, William: "redesign
@@ -45,21 +46,25 @@ export default function HomeScreen() {
     refetchOnMount: 'always',
   })
 
-  // Group real listings by category, in the canonical category order —
-  // exactly how the website's homepage builds its rails.
-  const rails = React.useMemo(() => {
+  // The website homepage's full culture-reel wall (William: "there is 20
+  // tiles per reel and 24 reels... isnt this suppose to have everything the
+  // website has"). Every reel, every seat, same order, same rule as the
+  // site: real listings claim the front seats of their category's reel,
+  // capped at the reel's own seat count; the curated cultural example tiles
+  // fill whatever seats real listings haven't claimed yet.
+  const reels = React.useMemo(() => {
     const byCat = new Map<string, ShopProduct[]>()
     for (const p of data?.products ?? []) {
-      const cat = p.category ?? 'Home Craft & Décor'
+      const cat = (p.category ?? 'Home Craft & Décor').toLowerCase()
       const arr = byCat.get(cat) ?? []
       arr.push(p)
       byCat.set(cat, arr)
     }
-    // Categories with real listings first (site behaviour), then a couple of
-    // open-slot-only rails so the page reads as a marketplace, not a void.
-    const withGoods = CATEGORIES.filter((c) => byCat.get(c.name)?.length)
-    const empties = CATEGORIES.filter((c) => !byCat.get(c.name)?.length && c.image).slice(0, 4)
-    return [...withGoods, ...empties].map((c) => ({ def: c, products: byCat.get(c.name) ?? [] }))
+    return CULTURE_REELS.map((reel) => {
+      const real = (byCat.get(reel.title.toLowerCase()) ?? []).slice(0, reel.tiles.length || Infinity)
+      const stock = reel.tiles.slice(0, Math.max(0, reel.tiles.length - real.length))
+      return { reel, real, stock, comingSoonEmpty: Boolean(reel.comingSoon) && real.length === 0 }
+    })
   }, [data])
 
   const s = styles(t)
@@ -114,28 +119,47 @@ export default function HomeScreen() {
         {isLoading ? (
           <Text style={s.loading}>Opening the marketplace…</Text>
         ) : (
-          rails.map(({ def, products }) => (
-            <View key={def.slug} style={{ marginTop: 26 }}>
+          reels.map(({ reel, real, stock, comingSoonEmpty }) => (
+            <View key={reel.title} style={{ marginTop: 26 }}>
               <View style={s.railHead}>
-                <Text style={s.railTitle}>{def.name}</Text>
-                <Pressable onPress={() => nav.navigate('Tabs', { screen: 'Shop', params: { category: def.name } })}>
+                <Text style={s.railTitle}>{reel.title}</Text>
+                <Pressable onPress={() => nav.navigate('Tabs', { screen: 'Shop', params: { category: reel.title } })}>
                   <Text style={s.railAll}>See all →</Text>
                 </Pressable>
               </View>
-              <FlatList
-                horizontal
-                data={[...products.slice(0, 8), ...openSlots(def, Math.max(0, 4 - products.length))]}
-                keyExtractor={(item, i) => ('id' in item ? item.id : `slot-${def.slug}-${i}`)}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 12 }}
-                renderItem={({ item }) =>
-                  'id' in item ? (
-                    <ProductCard p={item} t={t} onPress={() => nav.navigate('Pdp', { product: item })} />
-                  ) : (
-                    <SlotCard imgId={item.imgId} t={t} onPress={() => nav.navigate('Sell')} />
-                  )
-                }
-              />
+              {reel.line ? <Text style={s.railLine}>{reel.line}</Text> : null}
+              {comingSoonEmpty ? (
+                // The site's honesty note (Artisan Pet Goods): no verified
+                // photography yet, so no reel — a real note instead of
+                // fabricated tiles. LAW #1.
+                <View style={s.soonCard}>
+                  <Text style={s.soonT}>Coming soon — honestly.</Text>
+                  <Text style={s.soonS}>
+                    We only show real, verified photography on Velor — and we don't have enough of it for this
+                    category yet to fill it honestly. The moment a seller lists here, this becomes a real reel.
+                  </Text>
+                  <Pressable onPress={() => nav.navigate('Apply', {})}>
+                    <Text style={s.soonBtn}>Sell in this category →</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <FlatList
+                  horizontal
+                  data={[...real.map((p) => ({ kind: 'p' as const, p })), ...stock.map((tile, i) => ({ kind: 't' as const, tile, i }))]}
+                  keyExtractor={(item) => (item.kind === 'p' ? item.p.id : `${reel.title}-${item.tile.name}-${item.i}`)}
+                  showsHorizontalScrollIndicator={false}
+                  initialNumToRender={4}
+                  windowSize={3}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 12 }}
+                  renderItem={({ item }) =>
+                    item.kind === 'p' ? (
+                      <ProductCard p={item.p} t={t} onPress={() => nav.navigate('Pdp', { product: item.p })} />
+                    ) : (
+                      <CultureTileCard tile={item.tile} t={t} onPress={() => nav.navigate('Seats')} />
+                    )
+                  }
+                />
+              )}
             </View>
           ))
         )}
@@ -158,8 +182,46 @@ export default function HomeScreen() {
   )
 }
 
-function openSlots(def: { image: { id: number } | null }, n: number): { imgId: number | null }[] {
-  return Array.from({ length: n }, () => ({ imgId: def.image?.id ?? null }))
+// Culture tile — the website's curated example seat: real cultural
+// photography, the craft's name, its country flag, and the "Your goods
+// here" sash so it can never be mistaken for a listing. Tiles without an
+// image (Artisan Pet Goods' plain ID-card seats) render the muted card
+// background — an honest empty seat, never a broken image. Film seats are
+// labelled PREVIEW FILM with no country claim, exactly like the site.
+// Tapping any seat opens the founding-seats story (site: links /founding).
+function CultureTileCard({ tile, t, onPress }: { tile: ReelTile; t: Palette; onPress: () => void }) {
+  const s = styles(t)
+  const isFilm = Boolean(tile.video)
+  return (
+    <Pressable style={s.card} onPress={onPress}>
+      <View style={s.cardImgWrap}>
+        {tile.img ? (
+          <Image source={{ uri: tile.img }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: t.surf2 }]} />
+        )}
+        <View style={s.sash}>
+          <Text style={s.sashTx}>{isFilm ? 'Preview film' : 'Your goods here'}</Text>
+        </View>
+      </View>
+      <View style={{ padding: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {tile.code && !isFilm ? (
+            <Image source={{ uri: flagUrl(tile.code, 40) }} style={{ width: 15, height: 11, borderRadius: 2 }} />
+          ) : null}
+          <Text style={s.cardCat} numberOfLines={1}>
+            {isFilm ? 'PREVIEW FILM' : tile.code ? countryName(tile.code).toUpperCase() : 'OPEN SEAT'}
+          </Text>
+        </View>
+        <Text style={s.cardTitle} numberOfLines={2}>
+          {tile.name}
+        </Text>
+        <View style={s.cardFoot}>
+          <Text style={[s.cardSeller, { color: t.accent }]}>Start selling →</Text>
+        </View>
+      </View>
+    </Pressable>
+  )
 }
 
 // Product card — the website's shop card: image, category kicker, serif
@@ -259,6 +321,19 @@ const styles = (t: Palette) =>
     },
     railTitle: { fontFamily: F.serif, fontSize: 21, color: t.text },
     railAll: { fontFamily: F.bodySemi, fontSize: 12, color: t.accent },
+    railLine: { fontFamily: F.body, fontSize: 12, color: t.mut, paddingHorizontal: 16, marginTop: 3 },
+    soonCard: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 14,
+      padding: 16,
+    },
+    soonT: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text },
+    soonS: { fontFamily: F.body, fontSize: 12, color: t.mut, lineHeight: 17, marginTop: 5 },
+    soonBtn: { fontFamily: F.bodySemi, fontSize: 12.5, color: t.accent, marginTop: 10 },
     card: {
       width: 168,
       borderRadius: 12,
