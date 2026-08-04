@@ -229,7 +229,7 @@ export default function AdminProductsPage() {
                           'Approve'
                         )}
                       </button>
-                                {product.requiresCertificate && (<button className="adm-btn adm-override" disabled={actionLoading === product.id} onClick={() => openNoteModal(product.id, product.name, 'override_approve')}>Override & Approve</button>)}
+                                {product.requiresCertificate && (<button className="adm-btn adm-approve" disabled={actionLoading === product.id} onClick={() => openNoteModal(product.id, product.name, 'override_approve')}>Override & Approve</button>)}
                                 <button
                         className="adm-btn adm-reject"
                         disabled={actionLoading === product.id}
@@ -290,7 +290,7 @@ export default function AdminProductsPage() {
               >
                 {actionLoading === noteModal.productId ? (<span className="adm-spinner adm-spinner-white" />) : noteModal.action === 'delist' ? ('Confirm Delist') : noteModal.action === 'override_approve' ? ('Confirm Override & Approve') : ('Confirm Rejection')}
               </button>
-        </div>
+            </div></div></div>
       )}
     </>
   )
