@@ -11,7 +11,7 @@ import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
 import { useQuery } from '@tanstack/react-query'
 import type { ShopProduct, ProductDetail, Variant } from '../api'
-import { fetchProductDetail, fetchQuestions, addToWishlist, removeFromWishlist, fetchWishlist } from '../api'
+import { fetchProductDetail, fetchQuestions, addToWishlist, removeFromWishlist, fetchWishlist, writeReview, markReviewHelpful, fetchDeliveryEstimate } from '../api'
 import { TextInput } from '../ui/TI'
 import { useCart, useFavs, useSession } from '../store'
 import { Chrome } from '../components/Chrome'
@@ -191,9 +191,7 @@ export default function PdpScreen() {
           {/* Price + delivery row */}
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
             <Text style={s.price}>{fmt(price)}</Text>
-            <Text style={s.deliver}>
-              FREE or seller-set delivery — shown at checkout · ships from {name || 'origin'}
-            </Text>
+            <DeliveryEstimate productId={product.id} origin={name || 'origin'} t={t} s={s} />
           </View>
 
           {/* Variant selector — priced options, the option's own price wins */}
@@ -302,8 +300,25 @@ export default function PdpScreen() {
                   <Text style={s.revName}>{r.buyerName ?? 'Verified buyer'}</Text>
                 </View>
                 {r.comment ? <Text style={s.revBody}>{r.comment}</Text> : null}
+                {user ? (
+                  <Pressable
+                    style={s.helpfulBtn}
+                    onPress={async () => {
+                      await markReviewHelpful(r.id)
+                    }}
+                  >
+                    <Ionicons name="thumbs-up-outline" size={11} color={t.mut} />
+                    <Text style={s.helpfulTx}>
+                      Helpful{typeof r.helpfulCount === 'number' && r.helpfulCount > 0 ? ` · ${r.helpfulCount}` : ''}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             ))}
+
+            {/* Write a review — website parity: the server purchase-gates it
+                and filters contact details; its message is surfaced verbatim. */}
+            {user ? <WriteReview productId={product.id} t={t} s={s} onDone={() => detailQ.refetch()} /> : null}
           </View>
 
           {/* Questions & Answers — same /api/questions as the website PDP:
@@ -392,6 +407,106 @@ export default function PdpScreen() {
   )
 }
 
+
+// --- Delivery estimate widget (website PDP parity: /api/shipping/estimate) ---
+const EST_COUNTRIES = ['GB', 'US', 'DE', 'FR', 'AU', 'CA']
+function DeliveryEstimate({ productId, origin, t, s }: { productId: string; origin: string; t: any; s: any }) {
+  const [cc, setCc] = React.useState('GB')
+  const q = useQuery({
+    queryKey: ['estimate', productId, cc],
+    queryFn: () => fetchDeliveryEstimate(productId, cc),
+    staleTime: 5 * 60_000,
+  })
+  const e = q.data
+  const label = q.isLoading
+    ? 'checking delivery…'
+    : !e || !e.available
+      ? 'delivery quoted at checkout'
+      : e.isFree || e.amountGBP === 0
+        ? 'FREE delivery'
+        : `delivery ${fmt(e.amountGBP ?? 0)}${e.estimatedDays ? ` · ~${e.estimatedDays} days` : ''}`
+  return (
+    <View style={{ flexShrink: 1 }}>
+      <Text style={s.deliver}>
+        {label} · ships from {origin}
+      </Text>
+      <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+        {EST_COUNTRIES.map((c) => (
+          <Pressable
+            key={c}
+            onPress={() => setCc(c)}
+            style={[s.estChip, cc === c && { borderColor: t.accent, backgroundColor: t.accentSoft }]}
+          >
+            <Text style={[s.estChipTx, cc === c && { color: t.accent }]}>{c}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+// --- Write a review (server purchase-gates; error surfaced verbatim) ---
+function WriteReview({ productId, t, s, onDone }: { productId: string; t: any; s: any; onDone: () => void }) {
+  const [open, setOpen] = React.useState(false)
+  const [rating, setRating] = React.useState(0)
+  const [comment, setComment] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  const [note, setNote] = React.useState<string | null>(null)
+  if (!open) {
+    return (
+      <Pressable style={s.wrOpen} onPress={() => setOpen(true)}>
+        <Ionicons name="create-outline" size={13} color={t.accent} />
+        <Text style={s.wrOpenTx}>Write a review</Text>
+      </Pressable>
+    )
+  }
+  return (
+    <View style={s.wrCard}>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Pressable key={i} onPress={() => setRating(i)} hitSlop={6}>
+            <Ionicons name={i <= rating ? 'star' : 'star-outline'} size={22} color={t.accent} />
+          </Pressable>
+        ))}
+      </View>
+      <TextInput
+        value={comment}
+        onChangeText={setComment}
+        placeholder="What was the piece like in person?"
+        placeholderTextColor={t.dim}
+        style={s.wrInput}
+        multiline
+      />
+      {note ? <Text style={s.wrNote}>{note}</Text> : null}
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Pressable
+          style={[s.wrSubmit, (busy || rating === 0) && { opacity: 0.5 }]}
+          disabled={busy || rating === 0}
+          onPress={async () => {
+            setBusy(true)
+            setNote(null)
+            const r = await writeReview(productId, rating, comment.trim())
+            setBusy(false)
+            if (r.ok) {
+              setOpen(false)
+              setRating(0)
+              setComment('')
+              onDone()
+            } else {
+              setNote(r.error ?? 'Could not post the review — try again.')
+            }
+          }}
+        >
+          <Text style={s.wrSubmitTx}>{busy ? 'Posting…' : 'Post review'}</Text>
+        </Pressable>
+        <Pressable style={s.wrCancel} onPress={() => setOpen(false)}>
+          <Text style={s.wrCancelTx}>Cancel</Text>
+        </Pressable>
+      </View>
+    </View>
+  )
+}
+
 const styles = (t: Palette) => StyleSheet.create({
   favBtn: {
     position: 'absolute',
@@ -421,6 +536,65 @@ const styles = (t: Palette) => StyleSheet.create({
   title: { fontFamily: F.serifLight, fontSize: 31, lineHeight: 37, color: t.text, marginTop: 8 },
   price: { fontFamily: F.serifLight, fontSize: 30, color: t.text },
   deliver: { fontFamily: F.body, fontSize: 12, color: t.green, flexShrink: 1 },
+  estChip: {
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  estChipTx: { fontFamily: F.display, fontSize: 9, letterSpacing: 0.6, color: t.mut },
+  helpfulBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  helpfulTx: { fontFamily: F.body, fontSize: 10.5, color: t.mut },
+  wrOpen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: t.accent,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  wrOpenTx: { fontFamily: F.bodySemi, fontSize: 12, color: t.accent },
+  wrCard: {
+    marginTop: 12,
+    backgroundColor: t.surf,
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+  },
+  wrInput: {
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 10,
+    padding: 10,
+    minHeight: 70,
+    fontFamily: F.body,
+    fontSize: 12.5,
+    color: t.text,
+    textAlignVertical: 'top' as const,
+  },
+  wrNote: { fontFamily: F.body, fontSize: 11, color: '#e05545' },
+  wrSubmit: { backgroundColor: t.accent, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14 },
+  wrSubmitTx: { fontFamily: F.bodySemi, fontSize: 12, color: '#fff' },
+  wrCancel: { borderWidth: 1, borderColor: t.line, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14 },
+  wrCancelTx: { fontFamily: F.body, fontSize: 12, color: t.mut },
   maker: {
     flexDirection: 'row',
     alignItems: 'center',

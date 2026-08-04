@@ -43,6 +43,7 @@ import YouScreen from './src/screens/YouScreen'
 import AssistScreen from './src/screens/AssistScreen'
 import OrdersScreen from './src/screens/OrdersScreen'
 import TrackScreen from './src/screens/TrackScreen'
+import WishlistScreen from './src/screens/WishlistScreen'
 import PassportScreen from './src/screens/PassportScreen'
 import SellScreen from './src/screens/SellScreen'
 import LegalScreen from './src/screens/LegalScreen'
@@ -373,6 +374,7 @@ export default function App() {
             <Stack.Screen name="Assist" component={AssistScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />
             <Stack.Screen name="Track" component={TrackScreen} />
+            <Stack.Screen name="Wishlist" component={WishlistScreen} />
             <Stack.Screen name="Passport" component={PassportScreen} />
             <Stack.Screen name="Sell" component={SellScreen} />
             <Stack.Screen name="Legal" component={LegalScreen} />

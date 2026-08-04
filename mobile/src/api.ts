@@ -726,3 +726,93 @@ export async function startScheduledLiveStream(id: string): Promise<CreateLiveSt
 export async function endLiveStream(id: string): Promise<{ stream: SellerLiveStream }> {
   return authedPost(`/api/dashboard/live/${encodeURIComponent(id)}/end`)
 }
+
+// ---- Batch 2 website-parity APIs (2026-08-04) --------------------------------
+
+/** Write a product review (server enforces the purchased-it rule + the
+ *  no-contact-details filter; surfaces its error message verbatim). */
+export async function writeReview(
+  productId: string,
+  rating: number,
+  comment: string
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/reviews`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ productId, rating, comment }),
+  })
+  if (!res.ok) {
+    try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } }
+  }
+  return { ok: true }
+}
+
+/** Toggle a helpful vote on a review (idempotent toggle server-side). */
+export async function markReviewHelpful(reviewId: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/reviews/helpful`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ reviewId }),
+  })
+  return res.ok
+}
+
+export type VelorNotification = { id: string; title?: string | null; body?: string | null; href?: string | null; readAt?: string | null; createdAt?: string }
+/** Real notifications — the same feed the website's bell polls. */
+export async function fetchNotifications(): Promise<{ items: VelorNotification[]; unread: number }> {
+  const res = await fetch(`${BASE}/api/notifications`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return { items: [], unread: 0 }
+  const d = await res.json()
+  return { items: Array.isArray(d?.items) ? d.items : [], unread: Number(d?.unread) || 0 }
+}
+export async function markNotificationsRead(): Promise<void> {
+  await fetch(`${BASE}/api/notifications`, { method: 'POST', credentials: 'include' }).catch(() => {})
+}
+
+export type AppliedDiscount = { code?: string; label?: string; amountGBP?: number }
+/** Auto-applied seller discounts for the current cart (website parity: no
+ *  code entry anywhere — codes apply themselves). One call per seller. */
+export async function validateDiscounts(
+  sellerId: string,
+  items: { productId: string; quantity: number; price: number }[]
+): Promise<{ totalDiscountGBP: number; applied: AppliedDiscount[] }> {
+  const res = await fetch(`${BASE}/api/discount/validate`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ sellerId, items }),
+  })
+  if (!res.ok) return { totalDiscountGBP: 0, applied: [] }
+  const d = await res.json()
+  return { totalDiscountGBP: Number(d?.totalDiscountGBP) || 0, applied: Array.isArray(d?.applied) ? d.applied : [] }
+}
+
+export type DeliveryEstimate = {
+  country: string
+  available: boolean
+  amountGBP?: number
+  carrier?: string
+  service?: string
+  estimatedDays?: number | null
+  isFree?: boolean
+}
+/** PDP delivery estimate — same widget data as the website product page. */
+export async function fetchDeliveryEstimate(productId: string, country: string): Promise<DeliveryEstimate | null> {
+  const res = await fetch(
+    `${BASE}/api/shipping/estimate?productId=${encodeURIComponent(productId)}&country=${encodeURIComponent(country)}`,
+    { headers: { accept: 'application/json' } }
+  )
+  if (!res.ok) return null
+  const d = await res.json()
+  return {
+    country: d?.country ?? country,
+    available: Boolean(d?.available),
+    amountGBP: typeof d?.amountGBP === 'number' ? d.amountGBP : undefined,
+    carrier: d?.carrier,
+    service: d?.service,
+    estimatedDays: d?.estimatedDays ?? null,
+    isFree: d?.amountGBP === 0 || /free/i.test(String(d?.service ?? '')),
+  }
+}

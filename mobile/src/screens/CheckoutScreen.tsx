@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { Text } from '../ui/T'
 import { TextInput } from '../ui/TI'
@@ -10,7 +10,7 @@ import { useStripe } from '@stripe/stripe-react-native'
 import { F, flagUrl, useTheme, Palette } from '../theme'
 import { fmt, getCurrency, useI18nTick } from '../i18n'
 import { useCart, useSession, cartLinePrice } from '../store'
-import { createPaymentIntent, confirmOrders, fetchShippingRates, PaymentBreakdown, CheckoutAddress } from '../api'
+import { createPaymentIntent, confirmOrders, fetchShippingRates, validateDiscounts, SellerRateGroup, PaymentBreakdown, CheckoutAddress } from '../api'
 
 // CHECKOUT — REAL, website-parity (2026-08-04). This is the same machinery
 // the website's /checkout uses end to end:
@@ -62,6 +62,69 @@ export default function CheckoutScreen() {
   const nItems = items.reduce((n, i) => n + i.qty, 0)
   const formOk = name.trim() && line1.trim() && city.trim() && postcode.trim() && country.trim().length === 2
 
+  // --- Live delivery rates + auto-applied discounts (website parity) -------
+  // Rates fetch on their own once the address is complete (debounced 800ms,
+  // like the site), one group per seller; the buyer can pick between rates
+  // when a seller offers more than one. Discounts apply THEMSELVES -- the
+  // site has no code entry anywhere; sellers create codes that auto-attach.
+  const [rateGroups, setRateGroups] = useState<SellerRateGroup[]>([])
+  const [chosenRates, setChosenRates] = useState<Record<string, string>>({})
+  const [ratesNote, setRatesNote] = useState<string | null>(null)
+  const [autoDiscountGBP, setAutoDiscountGBP] = useState(0)
+  const [autoDiscountLabels, setAutoDiscountLabels] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!formOk || items.length === 0) return
+    const h = setTimeout(async () => {
+      try {
+        setRatesNote(null)
+        const gs = await fetchShippingRates({
+          cartItems: items.map((i) => ({
+            productId: i.product.id,
+            variantId: i.variant?.id ?? null,
+            sellerId: i.product.sellerId ?? '',
+            quantity: i.qty,
+            price: cartLinePrice(i),
+          })),
+          shippingAddress: { street1: line1.trim(), city: city.trim(), zip: postcode.trim(), country: country.trim().toUpperCase() },
+        })
+        setRateGroups(gs)
+        setChosenRates((prev) => {
+          const next: Record<string, string> = {}
+          for (const g of gs) next[g.sellerId] = prev[g.sellerId] && g.rates.some((r) => r.rateId === prev[g.sellerId]) ? prev[g.sellerId] : g.rates[0]?.rateId ?? ''
+          return next
+        })
+      } catch {
+        setRatesNote('Could not fetch delivery rates for this address yet.')
+      }
+    }, 800)
+    return () => clearTimeout(h)
+  }, [formOk, line1, city, postcode, country, items])
+
+  useEffect(() => {
+    if (items.length === 0) { setAutoDiscountGBP(0); setAutoDiscountLabels([]); return }
+    let alive = true
+    ;(async () => {
+      const bySeller = new Map<string, { productId: string; quantity: number; price: number }[]>()
+      for (const i of items) {
+        const sid = i.product.sellerId ?? ''
+        if (!sid) continue
+        const arr = bySeller.get(sid) ?? []
+        arr.push({ productId: i.product.id, quantity: i.qty, price: cartLinePrice(i) })
+        bySeller.set(sid, arr)
+      }
+      let total = 0
+      const labels: string[] = []
+      for (const [sid, its] of bySeller) {
+        const r = await validateDiscounts(sid, its)
+        total += r.totalDiscountGBP
+        for (const a of r.applied) if (a.code || a.label) labels.push(a.code ?? a.label ?? '')
+      }
+      if (alive) { setAutoDiscountGBP(total); setAutoDiscountLabels(labels) }
+    })()
+    return () => { alive = false }
+  }, [items])
+
   const pay = async () => {
     if (busy) return
     setError(null)
@@ -103,7 +166,13 @@ export default function CheckoutScreen() {
             country: shippingAddress.country,
           },
         })
-        sellerShipping = groups.map((g) => ({ sellerId: g.sellerId, rateId: g.rates?.[0]?.rateId ?? '' }))
+        sellerShipping = groups.map((g) => ({
+          sellerId: g.sellerId,
+          rateId:
+            (chosenRates[g.sellerId] && g.rates?.some((r) => r.rateId === chosenRates[g.sellerId])
+              ? chosenRates[g.sellerId]
+              : g.rates?.[0]?.rateId) ?? '',
+        }))
         if (sellerShipping.length === 0 || sellerShipping.some((sh) => !sh.rateId)) {
           setError('Could not get delivery rates for this address — check the address and try again.')
           return
@@ -243,17 +312,46 @@ export default function CheckoutScreen() {
             DELIVERY · {groups.length} PARCEL{groups.length === 1 ? '' : 'S'}
           </Text>
           <View style={s.card}>
-            {groups.map(([seller, g], i) => (
-              <View key={seller} style={[s.parcelRow, i > 0 && s.parcelDiv]}>
-                {g.cc ? (
-                  <Image source={{ uri: flagUrl(g.cc, 40) }} style={{ width: 22, height: 16, borderRadius: 3 }} />
-                ) : null}
-                <Text style={s.parcelTx} numberOfLines={2}>
-                  {seller} · self-shipped, tracked by their own carrier
-                </Text>
-                <Text style={s.parcelP}>seller-set</Text>
-              </View>
-            ))}
+            {groups.map(([seller, g], i) => {
+              const live = rateGroups.find((rg) => (rg.sellerName ?? rg.sellerId) === seller || rg.sellerId === (items.find((it) => (it.product.sellerName ?? '') === seller)?.product.sellerId ?? ''))
+              return (
+                <View key={seller} style={[i > 0 && s.parcelDiv, { paddingVertical: 10 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    {g.cc ? (
+                      <Image source={{ uri: flagUrl(g.cc, 40) }} style={{ width: 22, height: 16, borderRadius: 3 }} />
+                    ) : null}
+                    <Text style={s.parcelTx} numberOfLines={2}>
+                      {seller} · self-shipped, tracked by their own carrier
+                    </Text>
+                  </View>
+                  {live && live.rates.length > 0 ? (
+                    live.rates.map((r) => {
+                      const on = chosenRates[live.sellerId] === r.rateId
+                      const free = (r.amountGBP ?? r.amount ?? 0) === 0
+                      return (
+                        <Pressable
+                          key={r.rateId}
+                          style={[s.rateRow, on && s.rateRowOn]}
+                          onPress={() => setChosenRates((p) => ({ ...p, [live.sellerId]: r.rateId }))}
+                        >
+                          <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={15} color={on ? t.accent : t.mut} />
+                          <Text style={s.rateTx} numberOfLines={1}>
+                            {[r.carrier, r.service].filter(Boolean).join(' · ') || 'Delivery'}
+                          </Text>
+                          <Text style={[s.rateP, free && { color: t.green }]}>
+                            {free ? 'FREE' : fmt(r.amountGBP ?? r.amount ?? 0)}
+                          </Text>
+                        </Pressable>
+                      )
+                    })
+                  ) : (
+                    <Text style={s.rateHint}>
+                      {formOk ? (ratesNote ?? 'Fetching delivery options…') : 'Rates appear once the address is filled in.'}
+                    </Text>
+                  )}
+                </View>
+              )
+            })}
             {groups.length === 0 ? (
               <Text style={{ fontFamily: F.body, fontSize: 12, color: t.mut }}>Your basket is empty — nothing to deliver yet.</Text>
             ) : null}
@@ -263,6 +361,9 @@ export default function CheckoutScreen() {
           <View style={[s.card, { gap: 9 }]}>
             <Row s={s} t={t} l={`Items (${nItems})`} r={breakdown ? money(breakdown.productSubtotal, breakdown.currency) : fmt(total())} />
             <Row s={s} t={t} l="Delivery (FREE unless seller-priced)" r={breakdown ? money(breakdown.shippingCost, breakdown.currency) : 'at payment'} dimR={!breakdown} />
+            {!breakdown && autoDiscountGBP > 0 ? (
+              <Row s={s} t={t} l={`Discount applied automatically${autoDiscountLabels.length ? ` (${autoDiscountLabels.join(', ')})` : ''}`} r={'-' + fmt(autoDiscountGBP)} />
+            ) : null}
             <Row s={s} t={t} l="UK VAT (where due)" r={breakdown ? money(breakdown.dutiesAmount, breakdown.currency) : 'at payment'} dimR={!breakdown} />
             {breakdown && breakdown.discountAmount > 0 ? (
               <Row s={s} t={t} l="Discount" r={'-' + money(breakdown.discountAmount, breakdown.currency)} />
@@ -399,6 +500,21 @@ const styles = (t: Palette) =>
     parcelDiv: { borderTopWidth: 1, borderColor: t.line },
     parcelTx: { flex: 1, fontFamily: F.body, fontSize: 13, lineHeight: 18, color: t.text },
     parcelP: { fontFamily: F.body, fontSize: 12, color: t.mut },
+    rateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
+      marginTop: 8,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 11,
+      paddingHorizontal: 11,
+      paddingVertical: 9,
+    },
+    rateRowOn: { borderColor: t.accent, backgroundColor: t.accentSoft },
+    rateTx: { flex: 1, fontFamily: F.body, fontSize: 12, color: t.text },
+    rateP: { fontFamily: F.bodySemi, fontSize: 12, color: t.text },
+    rateHint: { fontFamily: F.body, fontSize: 11, color: t.mut, marginTop: 8 },
     rowLine: { flexDirection: 'row', alignItems: 'baseline' },
     rowL: { flex: 1, fontFamily: F.body, fontSize: 13, color: t.mut },
     rowR: { fontFamily: F.body, fontSize: 13, color: t.text },

@@ -871,6 +871,11 @@ export default function YouScreen() {
       onPress: () => nav.navigate('Pay'),
     },
     {
+      title: 'Wishlist',
+      sub: 'Everything you have saved, on every device',
+      onPress: () => nav.navigate('Wishlist'),
+    },
+    {
       title: 'Language & currency',
       sub: `${APP_LANGS.find((l) => l.code === getLang())?.english ?? 'English'} · ${getCurrency()}`,
       onPress: () => nav.navigate('LangCur'),
