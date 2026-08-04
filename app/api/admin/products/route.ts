@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { grantCountryFounderIfFirst } from '@/lib/founding'
+import { isAuthorizedAdmin } from '@/lib/adminAuth'
 
 async function sendEmail(payload: object) {
   return fetch('https://api.resend.com/emails', {
@@ -47,10 +48,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session || (session.user as any)?.role !== 'ADMIN') {
+  if (!(await isAuthorizedAdmin(req))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  // Accepts EITHER a NextAuth ADMIN session (desktop /admin/products) or a
+  // Bearer ADMIN_SECRET header (Velor Pulse mobile dashboard) -- same shared
+  // gate already used by /api/admin/certificates and /api/admin/pulse-listings.
+  // Does not weaken the check: a mobile caller still needs the real admin
+  // secret, same as any other admin action. (William, 2026-08-04.)
+  const session = await auth()
 
   const { productId, action, note } = await req.json()
   // 'delist' added 2026-07-26 alongside instant-listing (William: "once
@@ -114,7 +120,7 @@ export async function PATCH(req: NextRequest) {
     where: { id: productId },
     data: {
             status: (action === 'approve' || action === 'override_approve') ? 'APPROVED' : action === 'delist' ? 'DELISTED' : 'REJECTED',
-            ...(action === 'override_approve' ? { certificateOverrideNote: String(note).slice(0, 2000), certificateOverrideBy: (session.user as any)?.email || (session.user as any)?.name || 'unknown admin', certificateOverrideAt: new Date() } : {}),
+            ...(action === 'override_approve' ? { certificateOverrideNote: String(note).slice(0, 2000), certificateOverrideBy: (session?.user as any)?.email || (session?.user as any)?.name || 'William (Pulse mobile)', certificateOverrideAt: new Date() } : {}),
     },
     include: {
       seller: {
