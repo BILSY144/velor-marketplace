@@ -1065,3 +1065,39 @@ export async function saveShippingSettings(body: Record<string, unknown>): Promi
   if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
   return { ok: true }
 }
+
+// --- Global search (website /api/search: real product + seller results) ---
+export type SearchResult = { id: string; name: string; price: number; image: string | null; category?: string; sellerId?: string; sellerName?: string }
+export type SearchSeller = { id: string; storeName?: string; name?: string; country?: string; productCount?: number }
+export async function searchAll(q: string): Promise<{ results: SearchResult[]; sellers: SearchSeller[] }> {
+  if (!q.trim()) return { results: [], sellers: [] }
+  const res = await fetch(`${BASE}/api/search?q=${encodeURIComponent(q.trim())}`, { headers: { accept: 'application/json' } })
+  if (!res.ok) return { results: [], sellers: [] }
+  const d = await res.json()
+  return { results: Array.isArray(d?.results) ? d.results : [], sellers: Array.isArray(d?.sellers) ? d.sellers : [] }
+}
+
+// --- Account profile (name edit, website /account) ---
+export async function fetchProfile(): Promise<{ name?: string | null; email?: string | null; createdAt?: string } | null> {
+  const res = await fetch(`${BASE}/api/account/profile`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return null
+  return res.json()
+}
+export async function updateProfileName(name: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/account/profile`, {
+    method: 'PATCH', headers: { 'content-type': 'application/json' }, credentials: 'include',
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) { try { const d = await res.json(); return { ok: false, error: d?.error } } catch { return { ok: false } } }
+  return { ok: true }
+}
+
+// --- Buyer collections (dormant until VELOR_SOCIAL_ENABLED, like the site) ---
+export type Collection = { id: string; name: string; isPublic?: boolean; itemCount?: number; items?: { productId: string; product?: ShopProduct }[] }
+export async function fetchCollections(): Promise<{ enabled: boolean; collections: Collection[] }> {
+  const res = await fetch(`${BASE}/api/social/collections`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (res.status === 403) return { enabled: false, collections: [] }
+  if (!res.ok) return { enabled: true, collections: [] }
+  const d = await res.json()
+  return { enabled: true, collections: Array.isArray(d?.collections) ? d.collections : [] }
+}
