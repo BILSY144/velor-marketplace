@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, useTheme, pexels, flagUrl, Palette } from '../theme'
 import { fmt, useI18nTick } from '../i18n'
-import { fetchShop, ShopProduct } from '../api'
+import { fetchShop, searchAll, ShopProduct } from '../api'
 import { CATEGORIES } from '../categories'
 import { COUNTRIES } from '../data'
 import { countryName } from '../data'
@@ -61,6 +61,15 @@ export default function ShopScreen() {
     staleTime: 15_000,
     refetchOnMount: 'always',
   })
+
+  // Seller/storefront hits for the search dropdown (website /search parity).
+  const sellerHitsQ = useQuery({
+    queryKey: ['searchSellers', search],
+    queryFn: () => searchAll(search),
+    enabled: search.trim().length >= 2,
+    staleTime: 30_000,
+  })
+  const sellerHits = sellerHitsQ.data?.sellers ?? []
 
   // Country hits for the live search dropdown — same behaviour as the
   // website's search: a country name match opens that country's channel.
@@ -133,6 +142,20 @@ export default function ShopScreen() {
           ) : null}
         </View>
       </View>
+
+      {/* Seller hits — tapping opens the maker's storefront (website search parity) */}
+      {sellerHits.length ? (
+        <View style={s.hits}>
+          {sellerHits.slice(0, 4).map((se) => (
+            <Pressable key={se.id} style={s.hitRow} onPress={() => nav.navigate('Seller', { sellerId: se.id, sellerName: se.storeName ?? se.name })}>
+              <Ionicons name="storefront-outline" size={16} color={t.accent} />
+              <Text style={s.hitTx}>{se.storeName ?? se.name ?? 'Maker'}</Text>
+              <Text style={s.hitSub}>Storefront</Text>
+              <Ionicons name="arrow-forward" size={14} color={t.accent} />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
 
       {/* Live country hits — tapping opens the country channel */}
       {countryHits.length ? (
