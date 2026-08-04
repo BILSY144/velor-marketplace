@@ -61,8 +61,8 @@ export default function MenuScreen() {
               <Ionicons name="earth" size={30} color={C.accent} />
             </View>
             <View style={{ position: 'absolute', left: 14, bottom: 14, right: 14 }}>
-              <Text style={s.featT}>The Atlas</Text>
-              <Text style={s.featS}>Spin the world</Text>
+              <Text style={s.featT}>Shop by country</Text>
+              <Text style={s.featS}>190 country channels</Text>
             </View>
           </Pressable>
           <Pressable

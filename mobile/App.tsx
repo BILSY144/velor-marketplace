@@ -127,10 +127,11 @@ function Tabs() {
   )
 }
 
-// The opening moment — plate 00. Continues seamlessly from the native
-// splash (same logo image, same black), adds the mockup's "THE ATLAS ·
-// ON AIR" status line with the pulsing live dot and TAP TO SKIP, then
-// fades into the Atlas after ~2.4s (or on tap).
+// The opening moment. Continues seamlessly from the native splash (same
+// logo image, same black), shows the GLOBAL MARKETPLACE identity line and
+// TAP TO SKIP, then fades into the website-style HOME page after ~2.4s
+// (or on tap). The old "THE ATLAS · ON AIR" opener is retired -- the app
+// opens on the homepage like the website (William, 2026-08-04).
 function SplashOverlay({ onDone }: { onDone: () => void }) {
   const fade = React.useRef(new Animated.Value(1)).current
   const pulse = React.useRef(new Animated.Value(1)).current
@@ -163,7 +164,7 @@ function SplashOverlay({ onDone }: { onDone: () => void }) {
         />
         <View style={sp.idRow}>
           <Animated.View style={[sp.dot, { opacity: pulse }]} />
-          <Text style={sp.idTx}>THE ATLAS · ON AIR</Text>
+          <Text style={sp.idTx}>GLOBAL MARKETPLACE</Text>
         </View>
         <Text style={sp.skip}>TAP TO SKIP</Text>
       </Pressable>
