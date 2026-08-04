@@ -9,8 +9,8 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useStripe } from '@stripe/stripe-react-native'
 import { F, flagUrl, useTheme, Palette } from '../theme'
 import { fmt, getCurrency, useI18nTick } from '../i18n'
-import { useCart, useSession } from '../store'
-import { createPaymentIntent, confirmOrders, PaymentBreakdown, CheckoutAddress } from '../api'
+import { useCart, useSession, cartLinePrice } from '../store'
+import { createPaymentIntent, confirmOrders, fetchShippingRates, PaymentBreakdown, CheckoutAddress } from '../api'
 
 // CHECKOUT — REAL, website-parity (2026-08-04). This is the same machinery
 // the website's /checkout uses end to end:
@@ -82,6 +82,37 @@ export default function CheckoutScreen() {
         postcode: postcode.trim(),
         country: country.trim().toUpperCase(),
       }
+      // Step 1 — delivery rates per seller (the server refuses to price a
+      // cart without a chosen rate for EVERY seller; website parity, and
+      // exactly the error William hit on 2026-08-04). The website's default
+      // is the first returned rate per seller — same here.
+      let sellerShipping: { sellerId: string; rateId: string }[]
+      try {
+        const groups = await fetchShippingRates({
+          cartItems: items.map((i) => ({
+            productId: i.product.id,
+            variantId: i.variant?.id ?? null,
+            sellerId: i.product.sellerId ?? '',
+            quantity: i.qty,
+            price: cartLinePrice(i),
+          })),
+          shippingAddress: {
+            street1: shippingAddress.line1,
+            city: shippingAddress.city,
+            zip: shippingAddress.postcode,
+            country: shippingAddress.country,
+          },
+        })
+        sellerShipping = groups.map((g) => ({ sellerId: g.sellerId, rateId: g.rates?.[0]?.rateId ?? '' }))
+        if (sellerShipping.length === 0 || sellerShipping.some((sh) => !sh.rateId)) {
+          setError('Could not get delivery rates for this address — check the address and try again.')
+          return
+        }
+      } catch {
+        setError('Could not get delivery rates — check your connection and try again.')
+        return
+      }
+
       const r = await createPaymentIntent({
         items: items.map((i) => ({
           productId: i.product.id,
@@ -91,6 +122,7 @@ export default function CheckoutScreen() {
         currency: getCurrency(),
         buyerName: name.trim(),
         shippingAddress,
+        sellerShipping,
       })
       if (!r.clientSecret) {
         setError(r.error ?? 'Could not start checkout — try again.')

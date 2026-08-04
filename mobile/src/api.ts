@@ -208,11 +208,47 @@ export type PaymentBreakdown = {
   total: number
 }
 
+// Per-seller shipping rates (2026-08-04, William hit "Shipping has not been
+// selected for every seller in this cart" at payment): the payment-intent
+// route REQUIRES a chosen rateId per seller group, re-verified server-side.
+// Same POST /api/shipping/rates call the website checkout makes.
+export type ShippingRate = {
+  rateId: string
+  carrier?: string
+  service?: string
+  amount?: number
+  currency?: string
+  amountGBP?: number
+}
+export type SellerRateGroup = { sellerId: string; sellerName?: string; rates: ShippingRate[] }
+
+export async function fetchShippingRates(body: {
+  cartItems: {
+    productId: string
+    variantId: string | null
+    sellerId: string
+    quantity: number
+    price: number
+  }[]
+  shippingAddress: { street1: string; city: string; zip: string; country: string }
+}): Promise<SellerRateGroup[]> {
+  const res = await fetch(`${BASE}/api/shipping/rates`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`rates ${res.status}`)
+  const d = await res.json()
+  return Array.isArray(d?.sellerGroups) ? d.sellerGroups : []
+}
+
 export async function createPaymentIntent(body: {
   items: { productId: string; variantId: string | null; quantity: number }[]
   currency: string
   buyerName: string
   shippingAddress: CheckoutAddress
+  sellerShipping: { sellerId: string; rateId: string }[]
 }): Promise<{ clientSecret?: string; breakdown?: PaymentBreakdown; error?: string }> {
   const res = await fetch(`${BASE}/api/stripe/payment-intent`, {
     method: 'POST',
