@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { View, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
 import { Text } from '../ui/T'
 import { Image } from 'expo-image'
@@ -9,8 +9,11 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, flagUrl, pexels, useTheme, Palette } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, IMAGERY } from '../data'
-import type { ShopProduct } from '../api'
-import { useCart, useFavs } from '../store'
+import { useQuery } from '@tanstack/react-query'
+import type { ShopProduct, ProductDetail, Variant } from '../api'
+import { fetchProductDetail, fetchQuestions, addToWishlist, removeFromWishlist, fetchWishlist } from '../api'
+import { TextInput } from '../ui/TI'
+import { useCart, useFavs, useSession } from '../store'
 import { Chrome } from '../components/Chrome'
 
 // Product page — plate 04 + spec/pdp.txt, top to bottom: gallery with dots,
@@ -38,6 +41,72 @@ export default function PdpScreen() {
   const add = useCart((s) => s.add)
   const favIds = useFavs((s) => s.ids)
   const toggleFav = useFavs((s) => s.toggle)
+  const user = useSession((st) => st.user)
+
+  // WEBSITE PARITY (2026-08-04): the route hands over the list-card product;
+  // the FULL detail (priced variants, real reviews, maker story) loads from
+  // the same /api/shop/products/[id] the website PDP uses. Variants price
+  // their own Add — the exact class of bug the site fixed on 2026-08-01.
+  const detailQ = useQuery({
+    queryKey: ['pdp', product?.id],
+    queryFn: () => fetchProductDetail(product.id),
+    enabled: Boolean(product?.id),
+    staleTime: 30_000,
+  })
+  const detail: ProductDetail | undefined = detailQ.data
+  const variants: Variant[] = detail?.variants ?? []
+  const [variantId, setVariantId] = useState<string | null>(null)
+  useEffect(() => {
+    if (variants.length && variantId === null) {
+      const first = variants.find((v) => v.stock > 0) ?? variants[0]
+      setVariantId(first.id)
+    }
+  }, [variants, variantId])
+  const selVariant = variants.find((v) => v.id === variantId) ?? null
+
+  const questionsQ = useQuery({
+    queryKey: ['pdp-questions', product?.id],
+    queryFn: () => fetchQuestions(product.id),
+    enabled: Boolean(product?.id),
+    staleTime: 60_000,
+  })
+
+  // Server wishlist for signed-in buyers (same /api/wishlist as the site);
+  // the local heart stays as the signed-out fallback.
+  const [serverFav, setServerFav] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (!user || !product?.id) return
+    fetchWishlist().then((items) => setServerFav(items.some((w) => w.productId === product.id))).catch(() => {})
+  }, [user, product?.id])
+  const heartOn = user ? Boolean(serverFav) : favIds.includes(product?.id ?? '')
+  const onHeart = () => {
+    if (!user) {
+      toggleFav(product.id)
+      return
+    }
+    const next = !serverFav
+    setServerFav(next)
+    ;(next ? addToWishlist(product.id) : removeFromWishlist(product.id)).catch(() => setServerFav(!next))
+  }
+
+  const [askText, setAskText] = useState('')
+  const [askState, setAskState] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle')
+  const ask = async () => {
+    if (!askText.trim() || askState === 'busy') return
+    setAskState('busy')
+    try {
+      const res = await fetch('https://velorcommerce.store/api/questions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ productId: product.id, question: askText.trim() }),
+      })
+      setAskState(res.ok ? 'sent' : 'error')
+      if (res.ok) setAskText('')
+    } catch {
+      setAskState('error')
+    }
+  }
 
   const [qty, setQty] = useState(1)
   const [slide, setSlide] = useState(0)
@@ -53,9 +122,10 @@ export default function PdpScreen() {
   }
 
   const title = product.name ?? product.title ?? 'Listing'
-  const price = product.discountedPrice ?? product.price
-  const images = product.images?.length ? product.images : []
-  const isFav = favIds.includes(product.id)
+  const price = selVariant?.price ?? detail?.discountedPrice ?? detail?.price ?? product.discountedPrice ?? product.price
+  const baseImages = (detail?.images?.length ? detail.images : product.images) ?? []
+  const variantImages = selVariant?.images?.length ? selVariant.images : selVariant?.image ? [selVariant.image] : []
+  const images = [...variantImages, ...baseImages.filter((u) => !variantImages.includes(u))]
   const craftPill = product.specialities?.[0] ?? product.category ?? ''
   const kicker = [name.toUpperCase(), craftPill ? craftPill.toUpperCase() : null]
     .filter(Boolean)
@@ -67,7 +137,7 @@ export default function PdpScreen() {
   }
 
   const onAdd = () => {
-    add(product, qty)
+    add(product, qty, selVariant ? { id: selVariant.id, name: selVariant.name, price: selVariant.price } : null)
     setAdded(true)
     if (addedTimer.current) clearTimeout(addedTimer.current)
     addedTimer.current = setTimeout(() => setAdded(false), 1600)
@@ -101,9 +171,9 @@ export default function PdpScreen() {
           {/* Heart — spec's gbtn fav() */}
           <Pressable
             style={[s.favBtn, { top: insets.top + 58 }]}
-            onPress={() => toggleFav(product.id)}
+            onPress={onHeart}
           >
-            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={18} color={isFav ? t.accent : '#ffffff'} />
+            <Ionicons name={heartOn ? 'heart' : 'heart-outline'} size={18} color={heartOn ? t.accent : '#ffffff'} />
           </Pressable>
           {images.length > 1 ? (
             <View style={s.dots}>
@@ -122,9 +192,34 @@ export default function PdpScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
             <Text style={s.price}>{fmt(price)}</Text>
             <Text style={s.deliver}>
-              Delivery quoted live at checkout · ships from {name || 'origin'}
+              FREE or seller-set delivery — shown at checkout · ships from {name || 'origin'}
             </Text>
           </View>
+
+          {/* Variant selector — priced options, the option's own price wins */}
+          {variants.length ? (
+            <View style={{ marginTop: 16 }}>
+              <Text style={s.dimKick}>OPTIONS</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                {variants.map((v) => {
+                  const on = v.id === variantId
+                  const out = v.stock <= 0
+                  return (
+                    <Pressable
+                      key={v.id}
+                      onPress={() => !out && setVariantId(v.id)}
+                      style={[s.vPill, on && s.vPillOn, out && { opacity: 0.4 }]}
+                    >
+                      <Text style={[s.vPillTx, on && { color: '#fff' }]} numberOfLines={1}>
+                        {v.name}{out ? ' · out' : ''}
+                      </Text>
+                      <Text style={[s.vPillPrice, on && { color: '#fff' }]}>{fmt(v.price)}</Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </View>
+          ) : null}
 
           {/* Maker card */}
           <View style={s.maker}>
@@ -195,6 +290,56 @@ export default function PdpScreen() {
                 Real reviews appear here once verified buyers receive real orders — nothing on
                 Velor carries a rating it has not earned.
               </Text>
+            )}
+            {(detail?.reviews ?? []).slice(0, 3).map((r) => (
+              <View key={r.id} style={s.revCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Ionicons key={i} name={i <= r.rating ? 'star' : 'star-outline'} size={11} color={t.accent} />
+                    ))}
+                  </View>
+                  <Text style={s.revName}>{r.buyerName ?? 'Verified buyer'}</Text>
+                </View>
+                {r.comment ? <Text style={s.revBody}>{r.comment}</Text> : null}
+              </View>
+            ))}
+          </View>
+
+          {/* Questions & Answers — same /api/questions as the website PDP:
+              answered pairs are public; signed-in buyers can ask. */}
+          <View style={{ marginTop: 28 }}>
+            <Text style={s.dimKick}>QUESTIONS &amp; ANSWERS</Text>
+            {(questionsQ.data ?? []).filter((q) => q.answer).slice(0, 4).map((q) => (
+              <View key={q.id} style={s.qaCard}>
+                <Text style={s.qaQ}>Q · {q.question}</Text>
+                <Text style={s.qaA}>A · {q.answer}</Text>
+              </View>
+            ))}
+            {!(questionsQ.data ?? []).some((q) => q.answer) ? (
+              <Text style={s.revEmpty}>No questions answered yet — ask the maker below.</Text>
+            ) : null}
+            {user ? (
+              <View style={{ marginTop: 12 }}>
+                <TextInput
+                  value={askText}
+                  onChangeText={setAskText}
+                  placeholder="Ask the maker a question…"
+                  placeholderTextColor={t.dim}
+                  style={s.qaInput}
+                  multiline
+                />
+                <Pressable style={[s.qaBtn, askState === 'busy' && { opacity: 0.6 }]} onPress={ask}>
+                  <Text style={s.qaBtnTx}>
+                    {askState === 'sent' ? 'Sent — the maker will answer' : askState === 'busy' ? 'Sending…' : 'Ask the maker'}
+                  </Text>
+                </Pressable>
+                {askState === 'error' ? (
+                  <Text style={[s.revEmpty, { color: t.red }]}>Could not send — questions can't carry contact details.</Text>
+                ) : null}
+              </View>
+            ) : (
+              <Text style={s.revEmpty}>Sign in to ask the maker a question.</Text>
             )}
           </View>
         </View>
@@ -310,6 +455,61 @@ const styles = (t: Palette) => StyleSheet.create({
   },
   pillTx: { fontFamily: F.displayMed, fontSize: 12, color: t.text },
   revEmpty: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.dim, marginTop: 10 },
+  revCard: {
+    marginTop: 12,
+    backgroundColor: t.surf,
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 14,
+    padding: 12,
+  },
+  revName: { fontFamily: F.bodySemi, fontSize: 11.5, color: t.mut },
+  revBody: { fontFamily: F.body, fontSize: 12.5, lineHeight: 18, color: t.text, marginTop: 6 },
+  qaCard: {
+    marginTop: 12,
+    backgroundColor: t.surf,
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 14,
+    padding: 12,
+  },
+  qaQ: { fontFamily: F.bodySemi, fontSize: 12.5, lineHeight: 18, color: t.text },
+  qaA: { fontFamily: F.body, fontSize: 12.5, lineHeight: 18, color: t.mut, marginTop: 6 },
+  qaInput: {
+    backgroundColor: t.surf,
+    borderWidth: 1,
+    borderColor: t.line,
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 64,
+    color: t.text,
+    fontFamily: F.body,
+    fontSize: 13,
+    textAlignVertical: 'top',
+  },
+  qaBtn: {
+    marginTop: 10,
+    backgroundColor: t.accent,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  qaBtnTx: { fontFamily: F.displayMed, fontSize: 12.5, color: '#fff' },
+  vPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: t.line,
+    backgroundColor: t.surf,
+    maxWidth: 260,
+  },
+  vPillOn: { backgroundColor: t.accent, borderColor: t.accent },
+  vPillTx: { fontFamily: F.bodySemi, fontSize: 12.5, color: t.text, flexShrink: 1 },
+  vPillPrice: { fontFamily: F.display, fontSize: 12, color: t.mut },
   moreTile: {
     width: 118,
     aspectRatio: 3 / 4,

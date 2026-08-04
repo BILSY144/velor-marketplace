@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F } from '../theme'
-import { signInWithPassword, requestPasswordReset } from '../api'
+import { signInWithPassword, requestPasswordReset, registerBuyer } from '../api'
 import { useSession } from '../store'
 import {
   biometricsAvailable,
@@ -36,6 +36,39 @@ export default function SignInScreen() {
   const [bioPreview, setBioPreview] = useState(false)
   const [forgot, setForgot] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
+  // Buyer sign-up — the same /api/auth/register-buyer the website's
+  // /auth/join page uses (built 2026-07-29); auto signs in on success.
+  const [joining, setJoining] = useState(false)
+  const [joinName, setJoinName] = useState('')
+
+  async function createBuyerAccount() {
+    if (busy) return
+    if (!joinName.trim() || !email.trim() || password.length < 8) {
+      setError('Name, email and a password of at least 8 characters, please.')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const r = await registerBuyer(joinName.trim(), email.trim().toLowerCase(), password)
+      if (!r.ok) {
+        setError(r.error ?? 'Could not create the account — try again.')
+        return
+      }
+      const user = await signInWithPassword(email.trim().toLowerCase(), password)
+      if (user) {
+        setSession(user)
+        nav.goBack()
+      } else {
+        setError('Account created — now sign in with your new password.')
+        setJoining(false)
+      }
+    } catch {
+      setError('Could not reach Velor — check your connection and try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function submit() {
     if (busy) return
@@ -216,13 +249,33 @@ export default function SignInScreen() {
             </View>
           ) : null}
 
-          <View style={s.buyerNote}>
-            <Ionicons name="finger-print-outline" size={15} color={C.mut} />
-            <Dim style={{ flex: 1, fontSize: 11.5, lineHeight: 17 }}>
-              New to Velor? A buyer account is created with your first order — the activation
-              link arrives by email. No separate signup needed.
-            </Dim>
-          </View>
+          {joining ? (
+            <View style={{ marginTop: 18 }}>
+              <Text style={s.kick}>NEW TO VELOR</Text>
+              <TextInput
+                value={joinName}
+                onChangeText={setJoinName}
+                placeholder="Your name"
+                placeholderTextColor={C.dim}
+                style={s.input}
+                autoCorrect={false}
+              />
+              <Pressable style={[s.panelBtn, busy && { opacity: 0.7 }, { marginTop: 10 }]} onPress={createBuyerAccount}>
+                <Text style={s.panelBtnTx}>{busy ? 'Creating your account…' : 'Create account & sign in'}</Text>
+              </Pressable>
+              <Dim style={{ fontSize: 11, lineHeight: 16, marginTop: 8 }}>
+                Uses the email and password fields above — one account for buying and selling,
+                shared with velorcommerce.store.
+              </Dim>
+            </View>
+          ) : (
+            <Pressable style={s.buyerNote} onPress={() => setJoining(true)}>
+              <Ionicons name="person-add-outline" size={15} color={C.accent} />
+              <Dim style={{ flex: 1, fontSize: 11.5, lineHeight: 17 }}>
+                New to Velor? <Text style={{ color: C.accent }}>Create your buyer account →</Text>
+              </Dim>
+            </Pressable>
+          )}
 
           <Pressable onPress={() => nav.navigate('Apply', {})} style={{ marginTop: 18 }}>
             <Dim style={{ textAlign: 'center', fontSize: 12 }}>

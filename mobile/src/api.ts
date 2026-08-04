@@ -89,6 +89,186 @@ export async function fetchShop(q: ShopQuery = {}): Promise<ShopPage> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// WEBSITE-PARITY BUYER APIS (2026-08-04). Every call below hits the exact
+// route the website itself uses -- server-priced, session-cookie authed
+// (the app shares the platform cookie jar the sign-in flow fills).
+
+export type Variant = {
+  id: string
+  name: string
+  label?: string | null
+  color?: string | null
+  size?: string | null
+  price: number
+  stock: number
+  image?: string
+  images?: string[]
+}
+
+export type ProductReview = {
+  id: string
+  rating: number
+  comment?: string | null
+  buyerName?: string | null
+  createdAt?: string
+  images?: string[]
+  helpfulCount?: number
+}
+
+export type ProductDetail = ShopProduct & {
+  variants?: Variant[]
+  reviews?: ProductReview[]
+  stock?: number
+  isHandmade?: boolean
+  makerStory?: string | null
+  materials?: string | null
+}
+
+/** Full product detail -- same /api/shop/products/[id] the website PDP uses. */
+export const fetchProductDetail = (id: string) =>
+  get<ProductDetail>(`/api/shop/products/${encodeURIComponent(id)}`)
+
+/** Answered public Q&A for a listing (askers masked server-side). */
+export async function fetchQuestions(productId: string): Promise<{ id: string; question: string; answer: string | null }[]> {
+  try {
+    const d = await get<{ questions?: { id: string; question: string; answer: string | null }[] }>(
+      `/api/questions?productId=${encodeURIComponent(productId)}`
+    )
+    return Array.isArray(d?.questions) ? d.questions : []
+  } catch {
+    return []
+  }
+}
+
+// --- Wishlist (server-backed, signed-in buyers; same /api/wishlist) ---
+export type WishlistEntry = { id: string; productId: string; product: ShopProduct }
+
+export async function fetchWishlist(): Promise<WishlistEntry[]> {
+  const res = await fetch(`${BASE}/api/wishlist`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d?.items) ? d.items : Array.isArray(d) ? d : []
+}
+
+export async function addToWishlist(productId: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/wishlist`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ productId }),
+  })
+  return res.ok
+}
+
+export async function removeFromWishlist(productId: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/wishlist?productId=${encodeURIComponent(productId)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  return res.ok
+}
+
+// --- Buyer account (same /api/auth/register-buyer the website /auth/join uses) ---
+export async function registerBuyer(
+  name: string,
+  email: string,
+  password: string
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${BASE}/api/auth/register-buyer`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name, email, password }),
+  })
+  if (res.ok) return { ok: true }
+  try {
+    const d = await res.json()
+    return { ok: false, error: d?.error ?? `Sign-up failed (${res.status})` }
+  } catch {
+    return { ok: false, error: `Sign-up failed (${res.status})` }
+  }
+}
+
+// --- Payment (the SAME server-priced /api/stripe/payment-intent as the site) ---
+export type CheckoutAddress = {
+  line1: string
+  line2?: string
+  city: string
+  postcode: string
+  country: string // ISO-2
+}
+
+export type PaymentBreakdown = {
+  currency: string
+  productSubtotal: number
+  shippingCost: number
+  dutiesAmount: number
+  discountAmount: number
+  donationAmount?: number
+  total: number
+}
+
+export async function createPaymentIntent(body: {
+  items: { productId: string; variantId: string | null; quantity: number }[]
+  currency: string
+  buyerName: string
+  shippingAddress: CheckoutAddress
+}): Promise<{ clientSecret?: string; breakdown?: PaymentBreakdown; error?: string }> {
+  const res = await fetch(`${BASE}/api/stripe/payment-intent`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  })
+  try {
+    const d = await res.json()
+    if (!res.ok) return { error: d?.error ?? `Checkout failed (${res.status})` }
+    return d
+  } catch {
+    return { error: `Checkout failed (${res.status})` }
+  }
+}
+
+/** Confirmation accelerator -- the webhook is the reliable path; this returns
+ *  order ids immediately for the success screen (idempotent server-side). */
+export async function confirmOrders(paymentIntentId: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${BASE}/api/orders`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ paymentIntentId }),
+  })
+  return { ok: res.ok }
+}
+
+// --- Buyer orders (same /api/account/orders as the website /orders page) ---
+export type BuyerOrderItem = { id: string; title?: string | null; quantity: number; price: number; image?: string | null }
+export type BuyerOrder = {
+  id: string
+  status: string
+  total: number
+  currency?: string | null
+  createdAt: string
+  trackingNumber?: string | null
+  items: BuyerOrderItem[]
+}
+
+export async function fetchMyOrders(): Promise<BuyerOrder[]> {
+  const res = await fetch(`${BASE}/api/account/orders`, { headers: { accept: 'application/json' }, credentials: 'include' })
+  if (!res.ok) return []
+  const d = await res.json()
+  return Array.isArray(d) ? d : Array.isArray(d?.orders) ? d.orders : []
+}
+
+// --- Public runtime config (Stripe publishable key; never anything secret) ---
+export async function fetchPublicConfig(): Promise<{ stripePublishableKey: string | null }> {
+  try {
+    return await get<{ stripePublishableKey: string | null }>('/api/public/config')
+  } catch {
+    return { stripePublishableKey: null }
+  }
+}
+
 export type AssistMessage = { role: 'user' | 'assistant'; content: string }
 
 /** Ask Velor — the exact same brain as the website chat (buyer persona). */

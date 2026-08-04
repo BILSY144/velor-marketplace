@@ -61,6 +61,8 @@ import NewListingScreen from './src/screens/NewListingScreen'
 import GoLiveScreen from './src/screens/GoLiveScreen'
 import LiveRoomScreen from './src/screens/LiveRoomScreen'
 import SignInScreen from './src/screens/SignInScreen'
+import { StripeProvider } from '@stripe/stripe-react-native'
+import { fetchPublicConfig } from './src/api'
 import { pingInstall } from './src/installPing'
 import { useSession } from './src/store'
 import { getSession, signOutRemote, signInWithPassword } from './src/api'
@@ -311,6 +313,16 @@ export default function App() {
   const setSession = useSession((s) => s.set)
   const markReady = useSession((s) => s.markReady)
 
+  // Stripe publishable key -- fetched from the site's /api/public/config so a
+  // key rotation never needs an app release. Payment buttons simply surface
+  // an honest error until it has loaded (checkout is unusable offline anyway).
+  const [stripeKey, setStripeKey] = React.useState('')
+  React.useEffect(() => {
+    fetchPublicConfig().then((c) => {
+      if (c.stripePublishableKey) setStripeKey(c.stripePublishableKey)
+    })
+  }, [])
+
   // FACE ID GUARDS THE APP DOOR (William, 2026-07-15: "when I open the app
   // it should have Face ID to open the app"). The lock arms INSTANTLY from
   // the local SecureStore flag — no network wait — on every cold start, and
@@ -351,6 +363,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
+      <StripeProvider publishableKey={stripeKey} merchantIdentifier="merchant.store.velorcommerce.app" urlScheme="velor">
       <QueryClientProvider client={query}>
         <ThemedNav>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -421,6 +434,7 @@ export default function App() {
           {splash ? <SplashOverlay onDone={() => setSplash(false)} /> : null}
         </ThemedNav>
       </QueryClientProvider>
+      </StripeProvider>
     </SafeAreaProvider>
   )
 }

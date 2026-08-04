@@ -1,31 +1,52 @@
 import React, { useMemo, useState } from 'react'
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { Text } from '../ui/T'
+import { TextInput } from '../ui/TI'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { useStripe } from '@stripe/stripe-react-native'
 import { F, flagUrl, useTheme, Palette } from '../theme'
-import { fmt, onI18n, useI18nTick } from '../i18n'
-import { useCart } from '../store'
-import { Chrome } from '../components/Chrome'
+import { fmt, getCurrency, useI18nTick } from '../i18n'
+import { useCart, useSession } from '../store'
+import { createPaymentIntent, confirmOrders, PaymentBreakdown, CheckoutAddress } from '../api'
 
-// Checkout — plate 08, exact structure: Fraunces "Checkout", DELIVER TO
-// row, DELIVERY · N PARCELS card (one row per seller, flag + carrier line),
-// SUMMARY card, the white wallet-pay button, "or pay by card · Stripe"
-// divider, CARD field placeholders, the green escrow banner word-for-word,
-// and the sticky "Pay securely · £" bar. Honesty divergences: no SAMPLE
-// address (the deliver-to row says where the address really gets added);
-// per-parcel prices read "quoted live" until the address exists; and every
-// pay control carries the 6-August gate — Velor never fakes an order.
+// CHECKOUT — REAL, website-parity (2026-08-04). This is the same machinery
+// the website's /checkout uses end to end:
+//   POST /api/stripe/payment-intent  (server-priced: the server re-reads
+//   every product/variant price, seller-set shipping — FREE unless the
+//   seller set a rate — and the UK-only deemed-supplier VAT lane; nothing
+//   the app sends is trusted for pricing)
+//   → Stripe PaymentSheet (native; card details go to Stripe, never Velor)
+//   → POST /api/orders (confirmation accelerator; the Stripe webhook is the
+//   reliable path and both are idempotent per (paymentIntent, seller)).
+// Escrow model unchanged: charged once by Velor, held per seller-parcel,
+// released on confirmed delivery. The old "buying opens…" date gate is
+// retired — the platform's checkout is live, so the app's is too.
+
+const QUICK_COUNTRIES = ['GB', 'US', 'DE', 'FR', 'AU', 'CA'] as const
+
 export default function CheckoutScreen() {
   useI18nTick()
   const t = useTheme()
   const s = styles(t)
   const insets = useSafeAreaInsets()
   const nav = useNavigation<any>()
-  const { items, total } = useCart()
-  const [note, setNote] = useState<string | null>(null)
+  const { items, total, clear } = useCart()
+  const user = useSession((st) => st.user)
+  const { initPaymentSheet, presentPaymentSheet } = useStripe()
+
+  const [name, setName] = useState(user?.name ?? '')
+  const [line1, setLine1] = useState('')
+  const [line2, setLine2] = useState('')
+  const [city, setCity] = useState('')
+  const [postcode, setPostcode] = useState('')
+  const [country, setCountry] = useState('GB')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null)
+  const [paid, setPaid] = useState(false)
 
   const groups = useMemo(() => {
     const m = new Map<string, { cc?: string; count: number }>()
@@ -39,25 +60,134 @@ export default function CheckoutScreen() {
   }, [items])
 
   const nItems = items.reduce((n, i) => n + i.qty, 0)
+  const formOk = name.trim() && line1.trim() && city.trim() && postcode.trim() && country.trim().length === 2
 
-  const gate = () => {
-    setNote(
-      'Buying opens 6 September. In-app payment — Stripe, wallet pay, escrow-protected — switches on the day buyers arrive. Velor never fakes an order.'
+  const pay = async () => {
+    if (busy) return
+    setError(null)
+    if (!user) {
+      nav.navigate('SignIn')
+      return
+    }
+    if (!formOk) {
+      setError('Fill in your name and delivery address first — every field except line 2.')
+      return
+    }
+    setBusy(true)
+    try {
+      const shippingAddress: CheckoutAddress = {
+        line1: line1.trim(),
+        line2: line2.trim() || undefined,
+        city: city.trim(),
+        postcode: postcode.trim(),
+        country: country.trim().toUpperCase(),
+      }
+      const r = await createPaymentIntent({
+        items: items.map((i) => ({
+          productId: i.product.id,
+          variantId: i.variant?.id ?? null,
+          quantity: i.qty,
+        })),
+        currency: getCurrency(),
+        buyerName: name.trim(),
+        shippingAddress,
+      })
+      if (!r.clientSecret) {
+        setError(r.error ?? 'Could not start checkout — try again.')
+        return
+      }
+      setBreakdown(r.breakdown ?? null)
+
+      const init = await initPaymentSheet({
+        paymentIntentClientSecret: r.clientSecret,
+        merchantDisplayName: 'Velor',
+        defaultBillingDetails: { name: name.trim() },
+        returnURL: 'velor://stripe-redirect',
+      })
+      if (init.error) {
+        setError(init.error.message)
+        return
+      }
+      const sheet = await presentPaymentSheet()
+      if (sheet.error) {
+        if (sheet.error.code !== 'Canceled') setError(sheet.error.message)
+        return
+      }
+      // Paid. Tell the server to build the orders now (webhook is the backstop).
+      const piId = r.clientSecret.split('_secret')[0]
+      await confirmOrders(piId).catch(() => {})
+      clear()
+      setPaid(true)
+    } catch {
+      setError('Could not reach Velor — check your connection and try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (paid) {
+    return (
+      <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+        <View style={s.paidRing}>
+          <Ionicons name="checkmark" size={40} color={t.green} />
+        </View>
+        <Text style={s.paidT}>Order placed.</Text>
+        <Text style={s.paidS}>
+          Charged once, by Velor — held in escrow until each parcel's delivery is confirmed.
+          Your confirmation email is on its way.
+        </Text>
+        <Pressable style={s.payBtn2} onPress={() => nav.navigate('Orders')}>
+          <Text style={s.payBtnTx}>Track your order</Text>
+        </Pressable>
+        <Pressable style={{ marginTop: 14 }} onPress={() => nav.navigate('Tabs', { screen: 'Home' })}>
+          <Text style={{ fontFamily: F.bodySemi, fontSize: 13, color: t.accent }}>Back to the marketplace</Text>
+        </Pressable>
+      </View>
     )
-    setTimeout(() => setNote(null), 3600)
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 58, paddingBottom: 140 }} keyboardShouldPersistTaps="handled">
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={s.h1}>Checkout</Text>
 
+          {!user ? (
+            <Pressable style={s.signCard} onPress={() => nav.navigate('SignIn')}>
+              <Ionicons name="person-circle-outline" size={22} color={t.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.signT}>Sign in to pay</Text>
+                <Text style={s.signS}>Your order history and buyer protection hang off your account.</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color={t.accent} />
+            </Pressable>
+          ) : null}
+
           <Text style={s.label}>DELIVER TO</Text>
-          <Pressable style={s.inRow} onPress={gate}>
-            <Text style={s.inTx}>Your delivery address — added at payment</Text>
-            <Text style={s.change}>Why?</Text>
-          </Pressable>
+          <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={t.dim} style={s.in} />
+          <TextInput value={line1} onChangeText={setLine1} placeholder="Address line 1" placeholderTextColor={t.dim} style={s.in} />
+          <TextInput value={line2} onChangeText={setLine2} placeholder="Address line 2 (optional)" placeholderTextColor={t.dim} style={s.in} />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TextInput value={city} onChangeText={setCity} placeholder="City" placeholderTextColor={t.dim} style={[s.in, { flex: 1.4 }]} />
+            <TextInput value={postcode} onChangeText={setPostcode} placeholder="Postcode" placeholderTextColor={t.dim} style={[s.in, { flex: 1 }]} autoCapitalize="characters" />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            {QUICK_COUNTRIES.map((cc) => (
+              <Pressable key={cc} style={[s.ccChip, country === cc && s.ccChipOn]} onPress={() => setCountry(cc)}>
+                <Image source={{ uri: flagUrl(cc, 40) }} style={{ width: 18, height: 13, borderRadius: 2 }} />
+                <Text style={[s.ccTx, country === cc && { color: '#fff' }]}>{cc}</Text>
+              </Pressable>
+            ))}
+            <TextInput
+              value={country}
+              onChangeText={(v) => setCountry(v.toUpperCase().slice(0, 2))}
+              placeholder="CC"
+              placeholderTextColor={t.dim}
+              style={s.ccIn}
+              autoCapitalize="characters"
+              maxLength={2}
+            />
+          </View>
 
           <Text style={s.label}>
             DELIVERY · {groups.length} PARCEL{groups.length === 1 ? '' : 'S'}
@@ -69,9 +199,9 @@ export default function CheckoutScreen() {
                   <Image source={{ uri: flagUrl(g.cc, 40) }} style={{ width: 22, height: 16, borderRadius: 3 }} />
                 ) : null}
                 <Text style={s.parcelTx} numberOfLines={2}>
-                  {seller} · tracked, their own carrier
+                  {seller} · self-shipped, tracked by their own carrier
                 </Text>
-                <Text style={s.parcelP}>quoted live</Text>
+                <Text style={s.parcelP}>seller-set</Text>
               </View>
             ))}
             {groups.length === 0 ? (
@@ -81,69 +211,56 @@ export default function CheckoutScreen() {
 
           <Text style={s.label}>SUMMARY</Text>
           <View style={[s.card, { gap: 9 }]}>
-            <Row s={s} t={t} l={`Items (${nItems})`} r={fmt(total())} />
-            <Row s={s} t={t} l="Delivery" r="at payment" dimR />
-            <Row s={s} t={t} l="Import duty · est." r="at payment" dimR />
+            <Row s={s} t={t} l={`Items (${nItems})`} r={breakdown ? money(breakdown.productSubtotal, breakdown.currency) : fmt(total())} />
+            <Row s={s} t={t} l="Delivery (FREE unless seller-priced)" r={breakdown ? money(breakdown.shippingCost, breakdown.currency) : 'at payment'} dimR={!breakdown} />
+            <Row s={s} t={t} l="UK VAT (where due)" r={breakdown ? money(breakdown.dutiesAmount, breakdown.currency) : 'at payment'} dimR={!breakdown} />
+            {breakdown && breakdown.discountAmount > 0 ? (
+              <Row s={s} t={t} l="Discount" r={'-' + money(breakdown.discountAmount, breakdown.currency)} />
+            ) : null}
             <View style={s.hr} />
             <View style={s.rowLine}>
               <Text style={s.totL}>Total</Text>
-              <Text style={s.totR}>{fmt(total())} + delivery</Text>
+              <Text style={s.totR}>{breakdown ? money(breakdown.total, breakdown.currency) : `${fmt(total())} + delivery`}</Text>
             </View>
-          </View>
-
-          {/* Wallet pay — white button */}
-          <Pressable style={s.wht} onPress={gate}>
-            <Ionicons name="wallet-outline" size={17} color={t.light ? '#fff' : '#000'} />
-            <Text style={s.whtTx}>Pay · opens 6 September</Text>
-          </Pressable>
-
-          <View style={s.orRow}>
-            <View style={s.orLine} />
-            <Text style={s.orTx}>or pay by card · Stripe</Text>
-            <View style={s.orLine} />
-          </View>
-
-          <Text style={[s.label, { marginTop: 0 }]}>CARD</Text>
-          <Pressable style={s.inRow} onPress={gate}>
-            <Text style={s.ph}>Card number</Text>
-          </Pressable>
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-            <Pressable style={[s.inRow, { flex: 1 }]} onPress={gate}>
-              <Text style={s.ph}>MM / YY</Text>
-            </Pressable>
-            <Pressable style={[s.inRow, { flex: 1 }]} onPress={gate}>
-              <Text style={s.ph}>CVC</Text>
-            </Pressable>
           </View>
 
           <View style={s.escrow}>
             <Ionicons name="shield-checkmark" size={15} color={t.green} />
             <Text style={s.escrowTx}>
               Charged once, by Velor. Held in escrow until each parcel is delivered. Anything
-              wrong — the funds freeze.
+              wrong — the funds freeze. Card details go to Stripe, never to the app.
             </Text>
           </View>
 
-          <Text style={[s.orTx, { textAlign: 'center', marginTop: 10 }]}>
-            Secure Stripe checkout · Payouts by Stripe & Payoneer
-          </Text>
-
-          {note ? (
-            <View style={s.noteBub}>
-              <Text style={s.noteTx}>{note}</Text>
+          {error ? (
+            <View style={s.errBub}>
+              <Text style={s.errTx}>{error}</Text>
             </View>
           ) : null}
         </View>
       </ScrollView>
 
       <View style={[s.dock, { paddingBottom: insets.bottom + 12 }]}>
-        <Pressable style={s.payBtn} onPress={gate}>
-          <Text style={s.payBtnTx}>{`Pay securely · ${fmt(total())} + delivery`}</Text>
+        <Pressable style={[s.payBtn, (busy || items.length === 0) && { opacity: 0.6 }]} onPress={pay} disabled={busy || items.length === 0}>
+          {busy ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={s.payBtnTx}>{user ? `Pay securely · ${fmt(total())} + delivery` : 'Sign in to pay'}</Text>
+          )}
         </Pressable>
       </View>
-      <Chrome back="Basket" onBack={() => nav.goBack()} />
+
+      <Pressable style={[s.backChip, { top: insets.top + 8 }]} onPress={() => nav.goBack()}>
+        <Ionicons name="chevron-back" size={14} color={t.text} />
+        <Text style={s.backTx}>Basket</Text>
+      </Pressable>
     </View>
   )
+}
+
+function money(v: number, cur: string): string {
+  const sym: Record<string, string> = { GBP: '£', USD: '$', EUR: '€', JPY: '¥', AUD: 'A$', CAD: 'C$' }
+  return (sym[cur] ?? cur + ' ') + v.toFixed(cur === 'JPY' ? 0 : 2)
 }
 
 function Row({ l, r, dimR, s, t }: { l: string; r: string; dimR?: boolean; s: ReturnType<typeof styles>; t: Palette }) {
@@ -155,89 +272,142 @@ function Row({ l, r, dimR, s, t }: { l: string; r: string; dimR?: boolean; s: Re
   )
 }
 
-const styles = (t: Palette) => StyleSheet.create({
-  h1: { fontFamily: F.serifLight, fontSize: 30, color: t.text },
-  label: {
-    fontFamily: F.display,
-    fontSize: 10,
-    letterSpacing: 1,
-    color: t.mut,
-    marginTop: 22,
-    marginBottom: 8,
-  },
-  inRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: t.surf2,
-    borderRadius: 15,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-  },
-  inTx: { flex: 1, fontFamily: F.body, fontSize: 13.5, color: t.text },
-  change: { fontFamily: F.bodySemi, fontSize: 12, color: t.accent },
-  ph: { fontFamily: F.body, fontSize: 13, color: t.dim },
-  card: {
-    backgroundColor: t.surf,
-    borderWidth: 1,
-    borderColor: t.line,
-    borderRadius: 16,
-    padding: 14,
-  },
-  parcelRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
-  parcelDiv: { borderTopWidth: 1, borderColor: t.line },
-  parcelTx: { flex: 1, fontFamily: F.body, fontSize: 13, lineHeight: 18, color: t.text },
-  parcelP: { fontFamily: F.body, fontSize: 12, color: t.mut },
-  rowLine: { flexDirection: 'row', alignItems: 'baseline' },
-  rowL: { flex: 1, fontFamily: F.body, fontSize: 13, color: t.mut },
-  rowR: { fontFamily: F.body, fontSize: 13, color: t.text },
-  hr: { height: 1, backgroundColor: t.line },
-  totL: { flex: 1, fontFamily: F.bodySemi, fontSize: 13, color: t.text },
-  totR: { fontFamily: F.bodySemi, fontSize: 13, color: t.text },
-  wht: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    backgroundColor: t.light ? '#1a1a1d' : '#ffffff',
-    borderRadius: 999,
-    paddingVertical: 16,
-    marginTop: 24,
-  },
-  whtTx: { fontFamily: F.displayMed, fontSize: 14.5, color: t.light ? '#fff' : '#000' },
-  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 18 },
-  orLine: { flex: 1, height: 1, backgroundColor: t.line },
-  orTx: { fontFamily: F.body, fontSize: 11, color: t.dim },
-  escrow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginTop: 18,
-    backgroundColor: 'rgba(46,204,113,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(46,204,113,0.3)',
-    borderRadius: 16,
-    padding: 13,
-  },
-  escrowTx: { flex: 1, fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.text },
-  noteBub: {
-    marginTop: 14,
-    backgroundColor: t.surf,
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,0,0.35)',
-    borderRadius: 14,
-    padding: 13,
-  },
-  noteTx: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.text, textAlign: 'center' },
-  dock: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 16,
-    backgroundColor: t.surf,
-    borderTopWidth: 1,
-    borderColor: t.line,
-  },
-  payBtn: { backgroundColor: t.accent, borderRadius: 16, paddingVertical: 15, alignItems: 'center' },
-  payBtnTx: { fontFamily: F.display, fontSize: 14, color: '#fff' },
-})
+const styles = (t: Palette) =>
+  StyleSheet.create({
+    h1: { fontFamily: F.serifLight, fontSize: 30, color: t.text },
+    label: {
+      fontFamily: F.display,
+      fontSize: 10,
+      letterSpacing: 1,
+      color: t.mut,
+      marginTop: 22,
+      marginBottom: 8,
+    },
+    in: {
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 13,
+      color: t.text,
+      fontFamily: F.body,
+      fontSize: 13.5,
+      marginTop: 10,
+    },
+    ccChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 11,
+      paddingVertical: 8,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: t.line,
+      backgroundColor: t.surf,
+    },
+    ccChipOn: { backgroundColor: t.accent, borderColor: t.accent },
+    ccTx: { fontFamily: F.displayMed, fontSize: 11.5, color: t.text },
+    ccIn: {
+      width: 52,
+      textAlign: 'center',
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 999,
+      paddingVertical: 8,
+      color: t.text,
+      fontFamily: F.displayMed,
+      fontSize: 11.5,
+    },
+    signCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginTop: 16,
+      backgroundColor: t.accentSoft,
+      borderWidth: 1,
+      borderColor: t.accent,
+      borderRadius: 14,
+      padding: 13,
+    },
+    signT: { fontFamily: F.bodySemi, fontSize: 13.5, color: t.text },
+    signS: { fontFamily: F.body, fontSize: 11, color: t.mut, marginTop: 2 },
+    card: {
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 16,
+      padding: 14,
+    },
+    parcelRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+    parcelDiv: { borderTopWidth: 1, borderColor: t.line },
+    parcelTx: { flex: 1, fontFamily: F.body, fontSize: 13, lineHeight: 18, color: t.text },
+    parcelP: { fontFamily: F.body, fontSize: 12, color: t.mut },
+    rowLine: { flexDirection: 'row', alignItems: 'baseline' },
+    rowL: { flex: 1, fontFamily: F.body, fontSize: 13, color: t.mut },
+    rowR: { fontFamily: F.body, fontSize: 13, color: t.text },
+    hr: { height: 1, backgroundColor: t.line },
+    totL: { flex: 1, fontFamily: F.bodySemi, fontSize: 13, color: t.text },
+    totR: { fontFamily: F.bodySemi, fontSize: 13, color: t.text },
+    escrow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 10,
+      marginTop: 18,
+      backgroundColor: 'rgba(46,204,113,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(46,204,113,0.3)',
+      borderRadius: 16,
+      padding: 13,
+    },
+    escrowTx: { flex: 1, fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.text },
+    errBub: {
+      marginTop: 14,
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.red,
+      borderRadius: 14,
+      padding: 13,
+    },
+    errTx: { fontFamily: F.body, fontSize: 11.5, lineHeight: 17, color: t.red, textAlign: 'center' },
+    dock: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      padding: 16,
+      backgroundColor: t.surf,
+      borderTopWidth: 1,
+      borderColor: t.line,
+    },
+    payBtn: { backgroundColor: t.accent, borderRadius: 16, paddingVertical: 15, alignItems: 'center' },
+    payBtn2: { backgroundColor: t.accent, borderRadius: 16, paddingVertical: 15, alignItems: 'center', alignSelf: 'stretch', marginTop: 26 },
+    payBtnTx: { fontFamily: F.display, fontSize: 14, color: '#fff' },
+    paidRing: {
+      width: 86,
+      height: 86,
+      borderRadius: 43,
+      borderWidth: 2,
+      borderColor: t.green,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+    paidT: { fontFamily: F.serif, fontSize: 26, color: t.text },
+    paidS: { fontFamily: F.body, fontSize: 12.5, lineHeight: 19, color: t.mut, textAlign: 'center', marginTop: 10 },
+    backChip: {
+      position: 'absolute',
+      left: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: t.surf,
+      borderWidth: 1,
+      borderColor: t.line,
+      borderRadius: 999,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    backTx: { fontFamily: F.displayMed, fontSize: 12, color: t.text },
+  })

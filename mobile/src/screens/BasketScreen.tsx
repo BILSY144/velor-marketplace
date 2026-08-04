@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { F, flagUrl, useTheme, Palette } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
-import { useCart, CartItem } from '../store'
+import { useCart, CartItem, cartLinePrice } from '../store'
 import { countryName } from '../data'
 import { Chrome } from '../components/Chrome'
 
@@ -88,7 +88,7 @@ export default function BasketScreen() {
                 </View>
 
                 {g.items.map((item) => (
-                  <View key={item.product.id} style={s.itemRow}>
+                  <View key={item.product.id + (item.variant?.id ?? '')} style={s.itemRow}>
                     <Pressable onPress={() => nav.navigate('Pdp', { product: item.product, cc: g.cc })}>
                       {item.product.images?.[0] ? (
                         <Image source={{ uri: item.product.images[0] }} style={s.img} contentFit="cover" />
@@ -100,21 +100,26 @@ export default function BasketScreen() {
                       <Text style={s.it} numberOfLines={2}>
                         {item.product.name ?? item.product.title}
                       </Text>
-                      <Text style={s.pr}>
-                        {fmt(item.product.discountedPrice ?? item.product.price)}
-                      </Text>
+                      {item.variant ? (
+                        <Text style={{ fontFamily: F.body, fontSize: 10.5, color: t.mut, marginTop: 2 }}>
+                          {item.variant.name}
+                        </Text>
+                      ) : null}
+                      <Text style={s.pr}>{fmt(cartLinePrice(item))}</Text>
                     </View>
                     <View style={s.qtyRow}>
                       <Pressable
                         style={s.qbtn}
                         onPress={() =>
-                          item.qty === 1 ? remove(item.product.id) : setQty(item.product.id, item.qty - 1)
+                          item.qty === 1
+                            ? remove(item.product.id, item.variant?.id ?? null)
+                            : setQty(item.product.id, item.qty - 1, item.variant?.id ?? null)
                         }
                       >
                         <Text style={s.qtx}>{item.qty === 1 ? '×' : '−'}</Text>
                       </Pressable>
                       <Text style={s.qn}>{item.qty}</Text>
-                      <Pressable style={s.qbtn} onPress={() => setQty(item.product.id, item.qty + 1)}>
+                      <Pressable style={s.qbtn} onPress={() => setQty(item.product.id, item.qty + 1, item.variant?.id ?? null)}>
                         <Text style={s.qtx}>+</Text>
                       </Pressable>
                     </View>
@@ -124,7 +129,7 @@ export default function BasketScreen() {
                 <View style={s.shipNote}>
                   <Ionicons name="radio-button-on" size={14} color={t.accent} />
                   <Text style={s.shipTx}>
-                    Delivery quoted at checkout — from this maker's real dispatch address.
+                    Delivery is this maker's own price — FREE unless they set a rate. Shown at checkout.
                   </Text>
                 </View>
               </View>
@@ -134,7 +139,7 @@ export default function BasketScreen() {
             <View style={s.summary}>
               <Row s={s} t={t} l="Items" r={fmt(total())} />
               <Row s={s} t={t} l={`Delivery · ${n} parcel${n === 1 ? '' : 's'}`} r="at checkout" dimR />
-              <Row s={s} t={t} l="Import duty · est." r="at checkout" dimR />
+              <Row s={s} t={t} l="UK VAT (where due)" r="at checkout" dimR />
               <View style={s.hr} />
               <View style={s.rowLine}>
                 <Text style={s.totL}>Total</Text>

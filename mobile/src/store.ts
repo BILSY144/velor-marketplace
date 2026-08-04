@@ -1,43 +1,63 @@
 import { create } from 'zustand'
 import type { ShopProduct } from './api'
 
-export type CartItem = { product: ShopProduct; qty: number }
+// Cart lines carry the picked VARIANT (2026-08-04 website-parity checkout):
+// the server prices each line by (productId, variantId) in
+// /api/stripe/payment-intent, so a priced variant ("Oval 2 Pets") charges
+// its own price -- the exact class of bug the website fixed on 2026-08-01.
+export type CartVariant = { id: string; name: string; price: number } | null
+
+export type CartItem = { product: ShopProduct; qty: number; variant?: CartVariant }
+
+const lineKey = (productId: string, variant?: CartVariant) =>
+  productId + '::' + (variant?.id ?? '')
+
+export const cartLinePrice = (i: CartItem) =>
+  i.variant?.price ?? i.product.discountedPrice ?? i.product.price
 
 type CartState = {
   items: CartItem[]
-  add: (p: ShopProduct, qty?: number) => void
-  remove: (id: string) => void
-  setQty: (id: string, qty: number) => void
+  add: (p: ShopProduct, qty?: number, variant?: CartVariant) => void
+  remove: (id: string, variantId?: string | null) => void
+  setQty: (id: string, qty: number, variantId?: string | null) => void
+  clear: () => void
   count: () => number
   total: () => number
 }
 
 export const useCart = create<CartState>((set, get) => ({
   items: [],
-  add: (p, qty = 1) =>
+  add: (p, qty = 1, variant = null) =>
     set((s) => {
-      const existing = s.items.find((i) => i.product.id === p.id)
+      const key = lineKey(p.id, variant)
+      const existing = s.items.find((i) => lineKey(i.product.id, i.variant ?? null) === key)
       if (existing)
         return {
           items: s.items.map((i) =>
-            i.product.id === p.id ? { ...i, qty: i.qty + qty } : i
+            lineKey(i.product.id, i.variant ?? null) === key ? { ...i, qty: i.qty + qty } : i
           ),
         }
-      return { items: [...s.items, { product: p, qty }] }
+      return { items: [...s.items, { product: p, qty, variant }] }
     }),
-  remove: (id) => set((s) => ({ items: s.items.filter((i) => i.product.id !== id) })),
-  setQty: (id, qty) =>
+  remove: (id, variantId = null) =>
+    set((s) => ({
+      items: s.items.filter(
+        (i) => !(i.product.id === id && (i.variant?.id ?? null) === variantId)
+      ),
+    })),
+  setQty: (id, qty, variantId = null) =>
     set((s) => ({
       items: s.items
-        .map((i) => (i.product.id === id ? { ...i, qty: Math.max(0, qty) } : i))
+        .map((i) =>
+          i.product.id === id && (i.variant?.id ?? null) === variantId
+            ? { ...i, qty: Math.max(0, qty) }
+            : i
+        )
         .filter((i) => i.qty > 0),
     })),
+  clear: () => set({ items: [] }),
   count: () => get().items.reduce((n, i) => n + i.qty, 0),
-  total: () =>
-    get().items.reduce(
-      (n, i) => n + (i.product.discountedPrice ?? i.product.price) * i.qty,
-      0
-    ),
+  total: () => get().items.reduce((n, i) => n + cartLinePrice(i) * i.qty, 0),
 }))
 
 // Favourites — the mockup's FAVS model (heart on Live cards and the product
