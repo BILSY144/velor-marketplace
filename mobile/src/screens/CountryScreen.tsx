@@ -1,15 +1,15 @@
 import React from 'react'
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, FlatList, ActivityIndicator, Pressable, StyleSheet } from 'react-native'
 import { Text } from '../ui/T'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { C, F, pexels, flagUrl } from '../theme'
 import { fmt, onI18n, useI18nTick } from '../i18n'
 import { countryName, HINTS, IMAGERY, STORIES, filmsFor } from '../data'
-import { fetchProductsByOrigin } from '../api'
+import { fetchShop, ShopProduct } from '../api'
 import { Chrome } from '../components/Chrome'
 import { Kicker, Body, Dim, Btn, Empty } from '../ui'
 import { useCart, useFollows } from '../store'
@@ -34,18 +34,60 @@ export default function CountryScreen() {
   const films = filmsFor(cc)
   const add = useCart((s) => s.add)
 
-  const products = useQuery({
-    queryKey: ['products', cc],
-    queryFn: () => fetchProductsByOrigin(cc),
+  // Infinite vertical catalogue (2026-08-04, William: "listings need to be
+  // down the page not 1 rail as we plan for thousands of listings per
+  // country"). Server-paged 24 at a time through the same /api/shop/products
+  // route the website uses; scrolling near the bottom pulls the next page,
+  // and FlatList virtualises rows so thousands of listings stay smooth.
+  const listQ = useInfiniteQuery({
+    queryKey: ['countryProducts', cc],
+    queryFn: ({ pageParam }) => fetchShop({ origin: cc, page: pageParam as number, limit: 24 }),
+    initialPageParam: 1,
+    getNextPageParam: (last, all) => (all.length < (last.pages ?? 1) ? all.length + 1 : undefined),
   })
-  const trading = (products.data?.length ?? 0) > 0
+  const items: ShopProduct[] = React.useMemo(
+    () => (listQ.data?.pages ?? []).flatMap((p) => p.products),
+    [listQ.data]
+  )
+  const total = listQ.data?.pages?.[0]?.total ?? 0
+  const trading = items.length > 0
   const follows = useFollows((s) => s.ids)
   const toggleFollow = useFollows((s) => s.toggle)
   const followed = follows.includes(cc)
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+      <FlatList
+        data={trading ? items : []}
+        numColumns={2}
+        keyExtractor={(p) => p.id}
+        columnWrapperStyle={{ paddingHorizontal: 20, gap: 10 }}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        onEndReachedThreshold={0.6}
+        onEndReached={() => {
+          if (listQ.hasNextPage && !listQ.isFetchingNextPage) listQ.fetchNextPage()
+        }}
+        renderItem={({ item: p }) => (
+          <Pressable style={s.gridCard} onPress={() => nav.navigate('Pdp', { product: p, cc })}>
+            {p.images?.[0] ? (
+              <Image source={{ uri: p.images[0] }} style={s.gridImg} contentFit="cover" transition={150} />
+            ) : (
+              <View style={[s.gridImg, { backgroundColor: C.surf2 }]} />
+            )}
+            <Body style={{ fontFamily: F.bodySemi, fontSize: 12, marginTop: 8 }} numberOfLines={1}>
+              {p.name ?? p.title}
+            </Body>
+            <Dim style={{ fontSize: 11 }}>
+              {fmt(p.discountedPrice ?? p.price)}
+              {p.sellerName ? ` · ${p.sellerName}` : ''}
+            </Dim>
+            <Pressable style={s.addBtn} onPress={() => add(p)}>
+              <Body style={{ fontFamily: F.display, fontSize: 10, color: '#0b0b0e' }}>ADD TO BASKET</Body>
+            </Pressable>
+          </Pressable>
+        )}
+        ListHeaderComponent={
+          <View>
         <SearchBar topMargin={16} />
         <View style={s.cover}>
           {imgs[0] ? (
@@ -119,43 +161,17 @@ export default function CountryScreen() {
           </View>
         ) : null}
 
-        <View style={{ paddingTop: 28 }}>
+        <View style={{ paddingTop: 28, paddingBottom: 6 }}>
           <Kicker style={{ paddingHorizontal: 20, color: C.mut }}>
-            {trading ? `LISTINGS · ${products.data!.length} · LIVE` : 'LIVE LISTINGS'}
+            {trading ? `LISTINGS · ${total} · LIVE` : 'LIVE LISTINGS'}
           </Kicker>
-          {products.isLoading ? (
+          {listQ.isLoading ? (
             <Dim style={{ paddingHorizontal: 20, paddingTop: 12 }}>Checking the live catalogue…</Dim>
-          ) : products.isError ? (
+          ) : listQ.isError ? (
             <Dim style={{ paddingHorizontal: 20, paddingTop: 12 }}>
               Could not reach the catalogue — try again shortly.
             </Dim>
-          ) : trading ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingTop: 12 }}>
-              {products.data!.map((p) => (
-                <Pressable
-                  key={p.id}
-                  style={s.prodCard}
-                  onPress={() => nav.navigate('Pdp', { product: p, cc })}
-                >
-                  {p.images?.[0] ? (
-                    <Image source={{ uri: p.images[0] }} style={s.prodImg} contentFit="cover" />
-                  ) : (
-                    <View style={[s.prodImg, { backgroundColor: C.surf2 }]} />
-                  )}
-                  <Body style={{ fontFamily: F.bodySemi, fontSize: 12, marginTop: 8 }} numberOfLines={1}>
-                    {p.name ?? p.title}
-                  </Body>
-                  <Dim style={{ fontSize: 11 }}>
-                    {fmt(p.discountedPrice ?? p.price)}
-                    {p.sellerName ? ` · ${p.sellerName}` : ''}
-                  </Dim>
-                  <Pressable style={s.addBtn} onPress={() => add(p)}>
-                    <Body style={{ fontFamily: F.display, fontSize: 10, color: '#0b0b0e' }}>ADD TO BASKET</Body>
-                  </Pressable>
-                </Pressable>
-              ))}
-            </ScrollView>
-          ) : (
+          ) : !trading ? (
             <View>
               <Empty
                 title={`Nobody sells from ${name} yet.`}
@@ -165,11 +181,20 @@ export default function CountryScreen() {
                 <Btn label="Open this channel — apply to sell" onPress={() => nav.navigate('Apply', { cc })} />
               </View>
             </View>
-          )}
+          ) : null}
         </View>
+          </View>
+        }
+        ListFooterComponent={
+          <View>
+            {listQ.isFetchingNextPage ? (
+              <View style={{ paddingVertical: 18, alignItems: 'center' }}>
+                <ActivityIndicator color={C.accent} />
+              </View>
+            ) : null}
 
         {/* BE THE FIRST — founding spotlight (plate 02), only while nobody sells */}
-        {!trading && !products.isLoading ? (
+        {!trading && !listQ.isLoading ? (
           <View style={s.found}>
             <Text style={s.foundK}>BE THE FIRST</Text>
             <Text style={s.foundT}>Open {name}'s{'\n'}channel.</Text>
@@ -220,7 +245,9 @@ export default function CountryScreen() {
             })}
           </ScrollView>
         </View>
-      </ScrollView>
+          </View>
+        }
+      />
       <Chrome back="Back" onBack={() => nav.goBack()} />
     </View>
   )
@@ -327,6 +354,8 @@ const s = StyleSheet.create({
     color: C.text,
   },
   prodCard: { width: 150 },
+  gridCard: { flex: 1, maxWidth: '48.6%', marginTop: 14 },
+  gridImg: { width: '100%', aspectRatio: 1, borderRadius: 16 },
   prodImg: { width: 150, height: 150, borderRadius: 16 },
   addBtn: {
     marginTop: 8,
