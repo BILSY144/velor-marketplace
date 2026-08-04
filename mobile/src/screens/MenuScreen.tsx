@@ -55,7 +55,7 @@ export default function MenuScreen() {
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
           <Pressable
             style={s.feature}
-            onPress={go(() => nav.navigate('Atlas'))}
+            onPress={go(() => nav.navigate('Explore'))}
           >
             <View style={s.atlasRing}>
               <Ionicons name="earth" size={30} color={C.accent} />

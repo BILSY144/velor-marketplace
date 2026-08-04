@@ -33,7 +33,6 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 
 import { C, F, useTheme, useThemeStore, LIGHT, DARK } from './src/theme'
 import { useCart } from './src/store'
-import AtlasScreen from './src/screens/AtlasScreen'
 import HomeScreen from './src/screens/HomeScreen'
 import ShopScreen from './src/screens/ShopScreen'
 import CountryScreen from './src/screens/CountryScreen'
@@ -368,7 +367,6 @@ export default function App() {
         <ThemedNav>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Tabs" component={Tabs} />
-            <Stack.Screen name="Atlas" component={AtlasScreen} />
             <Stack.Screen name="Explore" component={SearchScreen} />
             <Stack.Screen name="Country" component={CountryScreen} />
             <Stack.Screen name="Assist" component={AssistScreen} />

@@ -219,7 +219,7 @@ export default function CountryScreen() {
           </ScrollView>
         </View>
       </ScrollView>
-      <Chrome back="Atlas" onBack={() => nav.goBack()} />
+      <Chrome back="Back" onBack={() => nav.goBack()} />
     </View>
   )
 }

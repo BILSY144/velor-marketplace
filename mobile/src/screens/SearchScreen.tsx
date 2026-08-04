@@ -95,7 +95,7 @@ export default function SearchScreen() {
           maxToRenderPerBatch={3}
         />
       )}
-      <Chrome back="Atlas" onBack={() => nav.navigate('Atlas')} />
+      <Chrome back="Back" onBack={() => nav.goBack()} />
     </View>
   )
 }
