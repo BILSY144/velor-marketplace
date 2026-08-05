@@ -9,7 +9,6 @@ import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
 import { countryImages, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { buyerLabel } from '@/lib/specialities'
-import { FounderMedal } from '@/components/FounderMedal'
 
 // Live search helpers (William, 2026-07-19: "every search bar on the
 // website a full optimization search bar, country, category, product...
@@ -402,7 +401,6 @@ function ShopContent() {
                     <div style={{ padding: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: '3px' }}>
                         <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{p.category}</span>
-                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
                       </div>
                       {/* Rating line dropped (William, 2026-07-26, "homepage
                           size is correct, please replicate to all other
@@ -433,11 +431,15 @@ function ShopContent() {
                       {/* Founding Seller pill removed from this card entirely
                           (William, 2026-07-26, "remove the pill ... that
                           says founding seller of the united kingdom
-                          completly remove it") -- founding status now shows
-                          ONLY as the small round FounderMedal beside the
-                          seller name above, never on the image (moved there
-                          later the same day -- see the image div's own
-                          comment above for the full quote).
+                          completly remove it"), and the small round
+                          FounderMedal that replaced it was later removed from
+                          this and every other listing surface too (William,
+                          2026-08-05: badges belong on a founder's own product
+                          page, journal, storefront, dashboard and the
+                          founders passport -- surfacing them on ordinary shop
+                          listings risked making other sellers feel reduced in
+                          importance and discouraging signups). No founding
+                          indicator is shown on this card at all now.
                           Stock and handmade status are NOT shown here either
                           (William, same thread, "not on id cards" -- "can be
                           shown in the product page before a buyer goes to
