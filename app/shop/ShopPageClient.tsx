@@ -487,7 +487,7 @@ function ShopContent() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
       <style dangerouslySetInnerHTML={{ __html: shopSearchCss }} />
       {originCountry && <style dangerouslySetInnerHTML={{ __html: slotsCss }} />}
-      <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '20px 40px', position: 'relative' }}>
         {/* On a country page the whole header band carries that country's
             flag, faded behind the heading and search (William, 2026-07-21:
             "a high definition faded flag for that country ... cover that
@@ -495,7 +495,7 @@ function ShopContent() {
             Low opacity + a fade-out toward the bottom keep the heading and
             search fully readable in both light and dark themes. */}
         {originCountry && (
-          <>
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
             {/* Layer 1 -- coverage: the flag blurred into a soft wash of its
                 own colours, filling the band edge to edge. A straight
                 object-fit:cover crop of a 3:2 flag into this wide short band
@@ -519,7 +519,7 @@ function ShopContent() {
               style={{ position: 'absolute', right: '4%', top: '50%', transform: 'translateY(-50%)', height: '76%', width: 'auto', opacity: 0.45, borderRadius: 8, boxShadow: '0 4px 30px rgba(0,0,0,0.10)', pointerEvents: 'none' }}
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 45%, var(--surface) 135%)', pointerEvents: 'none' }} />
-          </>
+          </div>
         )}
         <div style={{ maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
           <Link href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '24px', letterSpacing: '-0.5px' }}>VELOR</Link>
