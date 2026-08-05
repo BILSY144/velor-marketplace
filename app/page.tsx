@@ -31,7 +31,6 @@ import { cultureHints } from '@/lib/cultureHints'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { APPLICATION_SLA_HOURS } from '@/lib/sellerApplicationReview'
 import { orderByCategoryActivity } from '@/lib/categoryOrdering'
-import { FounderMedal } from '@/components/FounderMedal'
 
 type CategoryProduct = {
   id: string
@@ -1068,15 +1067,6 @@ export default function HomePage() {
                             <div className="cap">
                               <div className="k" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                                 <span>{countryName ? <>{flagOf(code as string)} {countryName}</> : 'Velor seller'}</span>
-                                {/* Founding-seller medal (William, 2026-07-26, "on the
-                                    homepage in the id card section ... make it small so
-                                    it does not take up too much room in the id card"):
-                                    moved off the listing image into the id card/caption,
-                                    small, so nothing ever blocks the buyer's view of the
-                                    photo -- only the wishlist heart sits on the image.
-                                    Same shared medallion as /shop, /search, /origins,
-                                    /specialities and a seller's own storefront grid. */}
-                                {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
                               </div>
                               <div className="t">{p.title}</div>
                               <div className="pr"><span className="p">{symbol}{convert(p.price, p.currency).toFixed(2)}</span><span className="s">{p.storeName}</span></div>
