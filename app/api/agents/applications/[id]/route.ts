@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { isAuthorizedAdmin } from '@/lib/adminAuth';
 import { approveApplication, rejectApplication, redactApplication } from '@/lib/provisionSeller';
+import { translateBatch } from '@/lib/translate';
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,15 @@ if (!application) {
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
 
-return NextResponse.json({ application: redactApplication(application) });
+// Pulse detail view -- translate the seller's own-language storeDescription
+// to English for whoever reviews the application next (William, 2026-08-05).
+let translatedApplication = application;
+if (application.storeDescription) {
+  const { translations } = await translateBatch('en', [application.storeDescription]);
+  translatedApplication = { ...application, storeDescription: translations[0] };
+}
+
+return NextResponse.json({ application: redactApplication(translatedApplication) });
 }
 
 export async function PATCH(
