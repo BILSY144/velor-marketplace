@@ -4807,3 +4807,11 @@ What William caught and what was fixed (all pushed, remote verified):
 
 Build state: preview build 6 (f3a4a13) ran on Appetize and was recorded (GIF delivered). Production build 7 (5b9fc9d3, 1.1.0(7)) finished but is SUPERSEDED — do NOT submit it; it lacks the shipping+reel fixes. Build 8 (preview + production) to be dispatched from remote head after these fixes. Then: Appetize-test build 8 incl. homepage reel wall + checkout country picker, record for William, THEN Play Console.
 Remote pushes all via browser Contents API pattern (PAT lacks workflow scope — download-apk.yml cannot be edited; use Appetize URL-upload POST /v1/apps instead, token in earlier checkpoint).
+
+## Checkpoint 2026-08-05: Build 8 verified on Appetize (both parity fixes confirmed live)
+
+Retrieved build 8 preview artifact URL (Expo build 3beb18df, commit ba68292, 1.1.0(7)) via the kebab "Download build" menu on the Expo build page. Uploaded to Appetize via POST /v1/apps/dm5w2e6z5llqiml22hzh355dk4 -> versionCode 2. Verified in the live player: (1) Homepage renders the full 24-reel culture wall in sequence (Ceramics & porcelain, Rugs/cloth/thread, The world's kitchen, Adornment, Tea/coffee/pantry all confirmed scrolling correctly) with real listings + curated tiles both showing. (2) PDP delivery estimate on a real listing (Qiankun Ring Pendant) has the new ALL globe chip -> searchable full-country list -> typed "Zam" filtered to Mozambique/Zambia -> selected Zambia -> delivery line updated to "to Zambia" and ZM chip activated. Worldwide picker confirmed working end-to-end.
+
+Recorded a 36-frame GIF walkthrough and delivered it to William for review.
+
+NEXT: awaiting William's approval of the recording. Once approved, submit PRODUCTION build 8 (Expo build id 98501459-8674-49fe-9dd3-daaf18f77e11, "Android Play Store build 1.1.0 (8)") to Play Console -- NOT build 7 (5b9fc9d3, superseded).
