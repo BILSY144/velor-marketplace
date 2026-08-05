@@ -413,7 +413,7 @@ function ShopContent() {
                         <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
                           {onSale ? (
                             <>
-                              <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--accent)' }}>
+                              <span style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--accent)' }}>
                                 {symbol}{convert(p.discountedPrice as number, p.currency).toFixed(2)}
                               </span>
                               <span style={{ fontSize: '13px', color: 'var(--muted)', textDecoration: 'line-through' }}>
@@ -421,7 +421,7 @@ function ShopContent() {
                               </span>
                             </>
                           ) : (
-                            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
+                            <span style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', color: 'var(--muted)' }}>{symbol}{convert(p.price, p.currency).toFixed(2)}</span>
                           )}
                         </span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: 'var(--muted)', maxWidth: '130px' }}>
@@ -457,11 +457,11 @@ function ShopContent() {
                   title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}
                   style={{
                     position: 'absolute',
-                    top: '10px',
-                    left: onSale ? undefined : '10px',
-                    right: onSale ? '10px' : undefined,
-                    width: '34px',
-                    height: '34px',
+                    top: '8px',
+                    left: onSale ? undefined : '8px',
+                    right: onSale ? '8px' : undefined,
+                    width: '28px',
+                    height: '28px',
                     borderRadius: '50%',
                     background: 'rgba(13,13,13,0.78)',
                     border: 'none',
