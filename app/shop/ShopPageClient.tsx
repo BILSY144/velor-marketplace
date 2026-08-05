@@ -126,7 +126,7 @@ const shopSearchCss = `
 // inventory, per LAW #1.
 const slotsCss = `
 .shslots{width:100%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0 0;margin-bottom:8px}
-.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;max-width:1400px;margin:0 auto;padding:0 40px 36px}
+.shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:0 14px 36px}
 `
 
 interface Product {
