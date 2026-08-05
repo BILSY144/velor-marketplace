@@ -12,7 +12,6 @@ import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { countryImage, pexelsUrl, matchCraftImagery, type CraftMatch } from '@/lib/countryImagery'
 import { CATEGORIES as CATEGORY_DEFS } from '@/lib/categories'
-import { FounderMedal } from '@/components/FounderMedal'
 
 interface SearchResult {
   id: string
@@ -348,11 +347,6 @@ function SearchContent() {
                     <div className="vsr-body">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                         <p className="vsr-name" style={{ margin: 0 }}>{item.name ?? item.title}</p>
-                        {/* Founding-seller medal, small, in the id card (William,
-                            2026-07-26) -- moved off the image so nothing ever
-                            blocks the buyer's view; only the wishlist heart
-                            sits on the photo. */}
-                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={28} />}
                       </div>
                       <p className="vsr-seller">by {item.sellerName ?? item.seller?.storeName ?? ''}</p>
                       <p className="vsr-price">{symbol}{convert(item.price, item.currency ?? item.seller?.currency ?? 'GBP').toFixed(2)}</p>
@@ -400,10 +394,6 @@ function SearchContent() {
                     <div className="vsr-body">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                         <p className="vsr-cat" style={{ margin: 0 }}>{item.category}</p>
-                        {/* Founding-seller medal, small, in the id card (William,
-                            2026-07-26) -- same treatment as every other listing
-                            surface; only the wishlist heart sits on the photo. */}
-                        {item.sellerFounding && <FounderMedal countryName={item.sellerFoundingCountry} size={28} />}
                       </div>
                       <p className="vsr-name">{item.name}</p>
                       <p className="vsr-seller">by {item.sellerName}</p>
