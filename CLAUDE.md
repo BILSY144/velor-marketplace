@@ -4815,3 +4815,14 @@ Retrieved build 8 preview artifact URL (Expo build 3beb18df, commit ba68292, 1.1
 Recorded a 36-frame GIF walkthrough and delivered it to William for review.
 
 NEXT: awaiting William's approval of the recording. Once approved, submit PRODUCTION build 8 (Expo build id 98501459-8674-49fe-9dd3-daaf18f77e11, "Android Play Store build 1.1.0 (8)") to Play Console -- NOT build 7 (5b9fc9d3, superseded).
+
+
+## Checkpoint 2026-08-05 (cont): Store listing screenshots fixed, ready for William to upload
+
+Found via live inspection of Play Console "Default store listing" that the "Metadata policy: Unclear Visuals" rejection was still live -- only 2 phone screenshots existed and both were pure marketing/branding graphics (VELOR banner, world-map graphic), no real app UI. Required 7-inch tablet screenshots were also 0/required.
+
+Fixed by capturing real app-UI screenshots directly from the Appetize-hosted build 8 (dm5w2e6z5llqiml22hzh355dk4): 6 phone screenshots (catalog grid, PDP top, PDP with shipping/country-picker + seller card, basket/checkout, homepage culture wall, homepage with real listings) captured on the pixel7 device, plus 2 tablet screenshots (home, catalog) captured on the nexus9 device. All cropped to isolate just the phone/tablet screen, then padded with black letterboxing to bring aspect ratio within Play Console's required 2:1 max (raw Pixel 7 captures were 338x746 = 2.2:1, out of range; padded to 420x746 = 1.78:1).
+
+Delivered all 8 PNGs to William via chat. NEXT (William, manual step required): same environmental limitation as the AAB upload -- Play Console's screenshot "Add assets" widget has no accessible file input this session can drive programmatically (confirmed: file_upload tool rejects even Bash-writable paths as not session-shared), so William needs to drag-and-drop the 8 delivered PNGs into Grow users -> Store presence -> Store listings -> Phone screenshots (replace the 2 marketing-only ones) and 7-inch tablet screenshots, then Save. After saving, re-check Policy status to confirm Unclear Visuals clears.
+
+Once screenshots are saved AND the build 8 .aab is uploaded into the open production release draft (release 2, still pending William's manual drag-drop -- see prior checkpoint), the release is ready to submit for review.
