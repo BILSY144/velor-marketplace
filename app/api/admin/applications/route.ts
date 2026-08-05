@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isAuthorizedAdmin } from '@/lib/adminAuth'
+import { translateBatch } from '@/lib/translate'
 
 // Permanent admin route: browse every SellerApplication with full detail,
 // filterable and paginated. Built 2026-07-12 to back /pulse/applications so
@@ -69,8 +70,21 @@ export async function GET(request: NextRequest) {
     prisma.sellerApplication.count({ where }),
   ])
 
+  // Pulse is read by whoever reviews applications next, not necessarily in
+  // the language the seller wrote storeDescription in (William, 2026-08-05:
+  // sellers sign up in their own language -- great -- but "the next user
+  // needs to be able to read it"). Translate to English here, server-side,
+  // cache-first via translateBatch -- same function /api/translate uses.
+  // This route is already isAuthorizedAdmin-gated and low-volume (max
+  // `pageSize` descriptions per call), so it skips the anti-abuse budget
+  // gate that the public /api/translate endpoint needs.
+  const { translations } = await translateBatch('en', applications.map((a) => a.storeDescription || ''))
+  const translatedApplications = applications.map((a, i) =>
+    a.storeDescription ? { ...a, storeDescription: translations[i] } : a
+  )
+
   return NextResponse.json({
-    applications,
+    applications: translatedApplications,
     total,
     page,
     pageSize,
