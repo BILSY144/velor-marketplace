@@ -37,7 +37,6 @@ import {
 } from '@/lib/specialities'
 import { WORLD_COUNTRIES } from '@/lib/worldCountries'
 import { useCurrencyDisplay } from '@/lib/useCurrencyDisplay'
-import { FounderMedal } from '@/components/FounderMedal'
 
 interface PreviewProduct {
   id: string
@@ -254,11 +253,6 @@ export default function SpecialityTermPage() {
                     <div className="spt-cbody">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
                         <div className="spt-cname" style={{ marginBottom: 0 }}>{p.name}</div>
-                        {/* Founding-seller medal, small, in the id card
-                            (William, 2026-07-26) -- moved off the image so
-                            nothing ever blocks the buyer's view; only the
-                            wishlist heart sits on the photo. */}
-                        {p.sellerFounding && <FounderMedal countryName={p.sellerFoundingCountry} size={28} />}
                       </div>
                       <div className="spt-cprice">{symbol}{convert(p.price, p.currency).toFixed(2)}</div>
                     </div>
