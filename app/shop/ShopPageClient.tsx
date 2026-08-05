@@ -126,9 +126,6 @@ const shopSearchCss = `
 // inventory, per LAW #1.
 const slotsCss = `
 .shslots{width:100%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0 0;margin-bottom:8px}
-.shslots-head{max-width:1400px;margin:0 auto;padding:0 40px 20px}
-.shslots-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0 0 10px;color:var(--text)}
-.shslots-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:80ch;margin:0}
 .shslots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;max-width:1400px;margin:0 auto;padding:0 40px 36px}
 `
 
@@ -753,14 +750,6 @@ function ShopContent() {
 
       {originCountry && (
         <div className="shslots">
-          <div className="shslots-head">
-            <h2>{products.length > 0 ? String(products.length) + ' of 200 seats filled for ' + originCountry.name + ' goods' : '200 seats open for ' + originCountry.name + ' goods'}</h2>
-            <p>
-              {products.length > 0
-                ? 'The filled boxes are real listings from verified ' + originCountry.name + ' sellers. Every dashed box is still an open seat — the moment another verified seller lists, it fills in with their photo, name, and price.'
-                : 'Every box below is an open goods slot, not a listing — nothing is for sale here yet. The gold box is the founding seat. The moment a verified seller from ' + originCountry.name + ' lists their goods, one box fills in with its photo, name, and price.'}
-            </p>
-          </div>
           <div className="shslots-grid">
             {products.map(renderProductCard)}
             {products.length === 0 && (
