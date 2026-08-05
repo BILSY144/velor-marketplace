@@ -1217,7 +1217,7 @@ export default function ProductPageClient() {
               number is computed live in app/api/shop/products/[productId]
               from real Orders/Reviews/Products, never fabricated. */}
           {product.seller && (
-            <div style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+            <div style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
                   {product.seller.storeLogo ? (
@@ -1236,7 +1236,7 @@ export default function ProductPageClient() {
                         on the listing image -- same shared medallion as
                         every other listing surface. */}
                     {product.seller.foundingBadge && (
-                      <FounderMedal countryName={product.seller.countryFounded?.countryName} size={28} />
+                      <FounderMedal countryName={product.seller.countryFounded?.countryName} size={48} style={{ position: 'absolute', top: '14px', right: '14px' }} />
                     )}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
