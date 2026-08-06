@@ -1097,7 +1097,7 @@ export default function HomePage() {
                               lineHeight: 1,
                             }}
                           >
-                            {wishlistIds.has(p.id) ? '♥' : '♡'}
+                            <span style={{ position: 'relative', top: '1px' }}>{wishlistIds.has(p.id) ? '♥' : '♡'}</span>
                           </button>
                         </div>
                       )
