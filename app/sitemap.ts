@@ -129,6 +129,53 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
+  // Added 2026-08-06 by the standing SEO agent (full audit cycle). Real gap
+  // found this cycle: individual /shop/[productId] and /seller/[sellerId]
+  // pages already have their own real, DB-backed generateMetadata (title/
+  // description/canonical/OG/Twitter -- backlog items 2 and 8, resolved
+  // 2026-07-29 by commit fc7d1128) but were never actually listed as URLs
+  // here. The comment on the /community/journals/[sellerId] entry above
+  // (added 2026-07-31) already claimed "this sitemap's dynamic seller-URL
+  // section below" existed -- it did not; that comment described intent
+  // that was never implemented, not a real section, confirmed by reading
+  // this whole file top to bottom this cycle. These are Velor's actual
+  // product and storefront pages -- the pages a buyer search query should
+  // land on -- so their total absence from the sitemap (discoverable only
+  // via internal links/crawl, never explicitly submitted) is a real,
+  // meaningful gap, not a cosmetic one. Filtered exactly like every
+  // generateMetadata above: products need `status: 'APPROVED'`, sellers
+  // need `approved: true` (verified against each page's own query, not
+  // guessed). No `lastModified` for the same reason the rest of this file
+  // omits it (see the top-of-file note) -- neither model has a real
+  // content-change timestamp wired in here. changeFrequency 'weekly'/
+  // priority 0.5 for products mirrors specialityEntries just above (real,
+  // permanent, individually-linked content one level below the category/
+  // country pages at 0.6); sellers one notch lower at 0.4, matching a
+  // storefront's slower-moving profile relative to a single listing.
+  const productEntries: MetadataRoute.Sitemap = await (async () => {
+    const products = await prisma.product.findMany({
+      where: { status: 'APPROVED' },
+      select: { id: true },
+    });
+    return products.map((p) => ({
+      url: `${base}/shop/${p.id}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    }));
+  })();
+
+  const sellerEntries: MetadataRoute.Sitemap = await (async () => {
+    const sellers = await prisma.seller.findMany({
+      where: { approved: true },
+      select: { id: true },
+    });
+    return sellers.map((s) => ({
+      url: `${base}/seller/${s.id}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.4,
+    }));
+  })();
+
   return [
     { url: base, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/apply`, changeFrequency: 'daily', priority: 0.9 },
@@ -289,5 +336,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
     ...specialityEntries,
     ...originCountryEntries,
+    ...productEntries,
+    ...sellerEntries,
   ];
 }
