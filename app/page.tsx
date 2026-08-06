@@ -734,9 +734,9 @@ const css = `
 .vh-ct .cap{padding:12px 14px}
 .vh-ct .cap .k{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
 .vh-ct .cap .t{font-family:var(--font-serif);font-size:14px;font-weight:600;line-height:1.3}
-.vh-ct .cap .pr{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-.vh-ct .cap .p{font-size:15px;font-weight:700;font-family:Space Grotesk,sans-serif;color:var(--muted)}
-.vh-ct .cap .s{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.vh-ct .cap .pr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-top:8px}
+.vh-ct .cap .p{font-size:15px;font-weight:700;font-family:Space Grotesk,sans-serif;color:var(--muted);white-space:nowrap}
+.vh-ct .cap .s{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;text-align:right}
 .vh-ccard{flex:0 0 272px;border:1px solid rgba(255,107,0,.32);border-radius:14px;padding:20px;background:var(--surface);min-height:198px;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
 .vh-ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
 .vh-ccard.live{border-color:rgba(46,204,113,.32)}
