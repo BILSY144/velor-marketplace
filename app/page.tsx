@@ -956,7 +956,7 @@ export default function HomePage() {
           didone for the refusal, serif italic for the authenticity,
           handwriting for the hands. */}
       <div className="vh-annbar">
-        <span className="vh-value v1">Never factory-made</span>
+        <span className="vh-value v1">Never mass-produced</span>
         <span className="vh-value v2">Real cultural goods</span>
         <span className="vh-value v4">Every piece tells a story</span>
         <span className="vh-value v3">Made by hand, always</span>
