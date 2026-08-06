@@ -29,6 +29,14 @@
 // Both phases are a STABLE sort (explicit index tiebreak, not relying only
 // on the engine's stable-sort guarantee) so untouched categories never
 // visibly jitter between renders.
+//
+// HOMEPAGE OVERRIDE (William, 2026-08-06: "on the homepage the most filled
+// rail with most listings brought to the top and then followed by the
+// second most filled rail and so on") -- the homepage reel call now passes
+// { forceCountRanking: true } to skip the cold-start binary-boost phase
+// entirely and always rank by live count, even before the taxonomy is half
+// full. /shop, /marketplace and /search callers are unchanged and still
+// respect the maturity gate described above.
 
 import { CATEGORY_NAMES } from './categories'
 
@@ -58,9 +66,10 @@ export function orderByCategoryActivity<T>(
   items: T[],
   getCategoryName: (item: T) => string,
   categoryCounts: CategoryCounts,
+  opts?: { forceCountRanking?: boolean },
 ): T[] {
   const countsLower = new Map(Object.entries(categoryCounts).map(([k, v]) => [k.toLowerCase(), v]))
-  const mature = isCategoryOrderingMature(categoryCounts)
+  const mature = opts?.forceCountRanking || isCategoryOrderingMature(categoryCounts)
 
   return items
     .map((item, index) => ({ item, index, count: countFor(getCategoryName(item), countsLower) }))
