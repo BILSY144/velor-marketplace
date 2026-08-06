@@ -910,10 +910,16 @@ export default function HomePage() {
   // ("Ceramics & porcelain") while Product.category stores the canonical
   // casing from lib/categories.ts ("Ceramics & Porcelain") -- same string,
   // different case, confirmed 1:1 across all 24 categories.
+  // William, 2026-08-06: "the most filled rail with most listings brought
+  // to the top and then followed by the second most filled rail and so
+  // on" -- forces pure count ranking on the homepage reels immediately,
+  // instead of waiting for the cold-start maturity gate in
+  // lib/categoryOrdering.ts to clear.
   const orderedReels = orderByCategoryActivity(
     CULTURE_REELS,
     (reel) => reel.title,
     lattice?.categories ?? {},
+    { forceCountRanking: true },
   )
 
   // Real listings per category (William, same thread, "why can i not see my
