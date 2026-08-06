@@ -2,7 +2,7 @@
 //
 // Public buyer-facing endpoint behind hard caps: only the 19 languages
 // Velor speaks (isTranslatableLang, lib/translate.ts), max 400 strings /
-// 600 chars each / 30k chars per request. 'en' is a real target here too
+// 5,000 chars each / 60k chars per request. 'en' is a real target here too
 // (2026-07-30) -- LanguageTranslator only ever sends it non-Latin-script
 // text (e.g. a seller's own-language listing copy), so this stays cheap;
 // it never re-translates the site's own English copy into itself. Cache-
@@ -65,9 +65,9 @@ export async function POST(req: Request) {
   let total = 0
   for (const t of body.texts) {
     if (typeof t !== 'string') return NextResponse.json({ error: 'texts must be strings' }, { status: 400 })
-    const s = t.slice(0, 600)
+    const s = t.slice(0, 5000)
     total += s.length
-    if (total > 30000) return NextResponse.json({ error: 'payload too large' }, { status: 400 })
+    if (total > 60000) return NextResponse.json({ error: 'payload too large' }, { status: 400 })
     texts.push(s)
   }
   const debug = body && (body as Record<string, unknown>).debug === true
