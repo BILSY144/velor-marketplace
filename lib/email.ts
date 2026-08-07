@@ -34,10 +34,16 @@ export interface EmailOptions {
   bcc?: string;
   from?: string;
   replyTo?: string;
+  // Raw email headers, e.g. List-Unsubscribe / List-Unsubscribe-Post for
+  // bulk-mail deliverability (Gmail/Yahoo require these on high-volume
+  // sends as of their 2024 bulk-sender rules -- see the seller-activation
+  // reminder emails in app/api/cron/verification-reminders, William,
+  // 2026-08-07: "we need to make the emails go to their inboxes not junk").
+  headers?: Record<string, string>;
 }
 
-export async function sendEmail({ to, subject, html, bcc, from, replyTo }: EmailOptions): Promise<void> {
-  const { error } = await getResendClient().emails.send({ from: from || FROM, to, subject, html, replyTo: replyTo || REPLY_TO, ...(bcc ? { bcc } : {}) });
+export async function sendEmail({ to, subject, html, bcc, from, replyTo, headers }: EmailOptions): Promise<void> {
+  const { error } = await getResendClient().emails.send({ from: from || FROM, to, subject, html, replyTo: replyTo || REPLY_TO, ...(bcc ? { bcc } : {}), ...(headers ? { headers } : {}) });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
   }
@@ -128,6 +134,60 @@ export function buildSellerApprovedEmail(d: {
     ${WRAP_CLOSE}`;
 
   return { subject: `Approved: ${d.storeName} on Velor Commerce`, html };
+}
+
+// ---- Seller Activation Reminders ----
+// Sent by app/api/cron/verification-reminders on a day-3/7/14-then-monthly
+// ladder to an approved seller who isn't fully active yet -- see the
+// comment on Seller.activationRemindersSent in prisma/schema.prisma for the
+// full story (William, 2026-08-07: "34 sellers but only 4-5 have actually
+// listed"). Two variants because a seller is in exactly one of two states
+// at any time: still finishing payout-rail setup (can't reach Products at
+// all yet -- middleware.ts's payout gate), or payout is done but they have
+// not listed a product. Never implies any penalty or deadline -- reminders
+// continue indefinitely, no auto-suspension.
+
+export function buildPayoutSetupReminderEmail(d: {
+  contactName: string;
+  storeName: string;
+  setupUrl: string;
+}): { subject: string; html: string } {
+  const html = `${WRAP_OPEN}
+    <h2 style="color:#FFF;font-size:22px;margin:0 0 16px">Finish setting up payouts for ${h(d.storeName)}</h2>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
+      Hi ${h(d.contactName)}, your Velor seller account is approved, but there's one step left before you can list products: connecting your payout details.
+    </p>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 24px">
+      It only takes a few minutes, and everything you sell is held safely by Velor until it's confirmed delivered -- your payout details just tell us where to send your share.
+    </p>
+    <a href="${d.setupUrl}" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">Finish payout setup</a>
+    <p style="color:#777;font-size:13px;line-height:1.6;margin:20px 0 0">
+      Questions? Just reply to this email -- a real person will help.
+    </p>
+    ${WRAP_CLOSE}`;
+
+  return { subject: `Almost there: finish payout setup for ${d.storeName}`, html };
+}
+
+export function buildFirstListingReminderEmail(d: {
+  contactName: string;
+  storeName: string;
+}): { subject: string; html: string } {
+  const html = `${WRAP_OPEN}
+    <h2 style="color:#FFF;font-size:22px;margin:0 0 16px">List your first product on Velor</h2>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 20px">
+      Hi ${h(d.contactName)}, ${h(d.storeName)} is fully approved and ready to sell -- the only thing left is adding your first product.
+    </p>
+    <p style="color:#BBB;font-size:15px;line-height:1.7;margin:0 0 24px">
+      We'd suggest uploading your whole catalogue rather than just one item to test the waters -- the more you list, the more likely buyers are to find you. It usually takes a few minutes per item.
+    </p>
+    <a href="https://velorcommerce.store/dashboard/products" style="display:inline-block;background:#FF6B00;color:#FFF;font-weight:600;font-size:14px;padding:12px 24px;border-radius:6px;text-decoration:none">List your first product</a>
+    <p style="color:#777;font-size:13px;line-height:1.6;margin:20px 0 0">
+      Not sure where to start, or ran into a problem? Just reply to this email -- a real person will help you get your first listing live.
+    </p>
+    ${WRAP_CLOSE}`;
+
+  return { subject: `${d.storeName}: your store is ready -- list your first product`, html };
 }
 
 export function buildSellerRejectedEmail(d: {
