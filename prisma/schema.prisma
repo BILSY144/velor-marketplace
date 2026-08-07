@@ -264,6 +264,24 @@ model Seller {
   // app/api/cron/release-payouts. Can go uncollected if the seller never
   // sells again -- same unavoidable exposure every marketplace carries.
   platformFeeOwedGBP             Float     @default(0)
+  // Post-approval activation nudge ladder (William, 2026-08-07 -- "34
+  // sellers but only 4-5 have actually listed"). Tracks reminders sent by
+  // app/api/cron/verification-reminders (repurposed from its retired
+  // photo-ID-reminder incarnation -- see that file's header) to a seller
+  // who is approved but not yet fully active: either still finishing
+  // payout-rail setup (Stripe Connect / Payoneer -- the gap the old cron's
+  // own "FOLLOW-UP CANDIDATE" comment flagged and never built), or payout
+  // is done but they have zero product listings. One counter covers both
+  // stages since a seller can only ever be in one at a time (the payout
+  // gate in middleware.ts blocks reaching Products until payout is done),
+  // and the cron itself decides which message to send based on live state
+  // each run -- see REMINDER_DAY_THRESHOLDS there for the day-3/7/14-then-
+  // monthly cadence. No suspension or penalty is attached to this counter
+  // (William's decision): sellers are nudged indefinitely, never removed,
+  // matching how every established marketplace researched (Etsy, Amazon,
+  // eBay) actually handles early-stage non-activation.
+  activationRemindersSent        Int       @default(0)
+  activationReminderLastSentAt   DateTime?
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 }
