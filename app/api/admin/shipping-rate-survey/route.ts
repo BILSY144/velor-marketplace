@@ -77,7 +77,7 @@ function genericAddress(country: string, isOrigin: boolean): ShippoAddress {
     state: rep?.state,
     country,
     phone: '+00 000 000 0000',
-    email: 'noreply@velorcommerce.store',
+    email: 'noreply@velorglobalmarket.com',
   }
 }
 
