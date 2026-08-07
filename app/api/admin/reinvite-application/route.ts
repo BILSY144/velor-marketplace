@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           and we'll review it within 24 hours.
         </p>
         <p style="color:#777;font-size:13px;line-height:1.6">
-          Questions? Write to customerservice@velorcommerce.co.uk.
+          Questions? Write to customerservice@velorglobalmarket.com.
         </p>
       </div>
     </div>`
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     to: application.contactEmail,
     subject,
     html,
-    from: 'Velor Seller Team <sellers@velorcommerce.store>',
+    from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
   })
 
   return NextResponse.json({ sent: true, to: application.contactEmail, applicationId: application.id })
