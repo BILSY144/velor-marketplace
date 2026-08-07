@@ -6,32 +6,6 @@ import { SUPPORTED_CURRENCIES, CURRENCY_NAMES, COUNTRY_TO_CURRENCY, symbolFor } 
 import { useSellerTier, PlanBadge, tierCardStyle } from '@/lib/dashboard-theme'
 import { HALO, HaloButton } from '@/lib/halo'
 
-const HS_CATEGORY_MAP: Record<string, { label: string; example: string }> = {
-'01': { label: 'Live Animals', example: '010110 — horses' },
-'10': { label: 'Cereals', example: '100110 — wheat' },
-'39': { label: 'Plastics & Articles', example: '392690 — plastic articles' },
-'44': { label: 'Wood & Articles', example: '441900 — wooden household goods' },
-'49': { label: 'Books & Printed Media', example: '490110 — books' },
-'61': { label: 'Clothing (knitted)', example: '610910 — T-shirts' },
-'62': { label: 'Clothing (woven)', example: '620411 — suits' },
-'63': { label: 'Home Textiles', example: '630120 — bedding' },
-'64': { label: 'Footwear', example: '640299 — shoes' },
-'84': { label: 'Machinery & Equipment', example: '847130 — laptops' },
-'85': { label: 'Electronics', example: '851712 — smartphones' },
-'87': { label: 'Vehicles & Parts', example: '871190 — motorcycles' },
-'90': { label: 'Optical & Medical Instruments', example: '901831 — syringes' },
-'91': { label: 'Clocks & Watches', example: '910111 — wristwatches' },
-'94': { label: 'Furniture & Lighting', example: '940360 — wooden furniture' },
-'95': { label: 'Toys & Games', example: '950300 — toys' },
-'96': { label: 'Miscellaneous Articles', example: '960910 — pencils' },
-}
-
-function hsChapterInfo(hsCode: string) {
-if (!hsCode || hsCode.length < 2) return null
-const chapter = hsCode.slice(0, 2)
-return HS_CATEGORY_MAP[chapter] ?? null
-}
-
 interface ListingSuggestion { level: 'warning' | 'tip'; text: string }
 
 function getListingSuggestions(
@@ -68,20 +42,6 @@ suggestions.push({ level: 'tip', text: 'Add a weight so shipping costs and deliv
 }
 return suggestions
 }
-const DUTY_GUIDANCE: Record<string, string> = {
-'61': 'UK 12% | EU 12% | US 18% | AU 17.5%',
-'62': 'UK 12% | EU 12% | US 18% | AU 17.5%',
-'63': 'UK 12% | EU 12% | US 9% | AU 10%',
-'64': 'UK 4% | EU 3.7% | US 10% | AU 17.5%',
-'84': 'UK 0% | EU 0% | US 0% | AU 0%',
-'85': 'UK 0% | EU 0% | US 0% | AU 0%',
-'87': 'UK 6.5% | EU 6.5% | US 2.5% | AU 5%',
-'90': 'UK 0% | EU 0% | US 0% | AU 0%',
-'91': 'UK 4.5% | EU 4.5% | US 0% | AU 5%',
-'94': 'UK 5.7% | EU 5.7% | US 0% | AU 5%',
-'95': 'UK 0% | EU 4.7% | US 0% | AU 0%',
-}
-
 // The 16 categories used site-wide (matches components/GlobalHeader.tsx nav
 // and app/shop/page.tsx filters exactly). The shop's products API does a
 // strict string match on category, so a listing only shows up under a
@@ -173,7 +133,7 @@ interface Product {
 id: string; name: string; description: string; price: number; stock: number;
 category: string; images: string[]; status: string;
 weightGrams: number | null; lengthCm: number | null; widthCm: number | null; heightCm: number | null;
-hsCode: string | null; originCountry: string | null;
+originCountry: string | null;
 isHandmade: boolean; makerStory: string | null;
 materials: string | null; requiresCertificate: boolean;
 variants?: { id: string; label: string | null; color: string | null; size: string | null; images?: string[]; stock: number; priceOverride: number | null; sku: string | null }[];
@@ -188,7 +148,7 @@ const MAX_IMAGE_DATA_URL_LEN = 350_000
 const emptyForm = {
 name: '', description: '', price: '', stock: '', category: '',
 images: ['', '', '', '', '', '', '', ''],
-weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', hsCode: '', originCountry: '', currency: '',
+weightGrams: '', lengthCm: '', widthCm: '', heightCm: '', originCountry: '', currency: '',
 isHandmade: '', makerStory: '', materials: '', containsRegulated: '',
 videoUrl: '', madeToOrder: '', leadTimeDays: '', sizeGuide: '',
 }
@@ -854,7 +814,7 @@ weightGrams: p.weightGrams !== null ? String(p.weightGrams) : '',
 lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
 widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
-hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 videoUrl: p.videoUrl ?? '', madeToOrder: p.madeToOrder ? 'true' : '',
@@ -902,7 +862,7 @@ weightGrams: p.weightGrams !== null ? String(p.weightGrams) : '',
 lengthCm: p.lengthCm !== null ? String(p.lengthCm) : '',
 widthCm: p.widthCm !== null ? String(p.widthCm) : '',
 heightCm: p.heightCm !== null ? String(p.heightCm) : '',
-hsCode: p.hsCode ?? '', originCountry: p.originCountry ?? '',
+originCountry: p.originCountry ?? '',
 isHandmade: p.isHandmade ? 'true' : '', makerStory: p.makerStory ?? '',
 materials: p.materials ?? '', containsRegulated: p.requiresCertificate ? 'true' : '',
 videoUrl: p.videoUrl ?? '', madeToOrder: p.madeToOrder ? 'true' : '',
@@ -1065,7 +1025,6 @@ weightGrams: form.weightGrams ? parseInt(form.weightGrams, 10) : null,
 lengthCm: form.lengthCm ? parseFloat(form.lengthCm) : null,
 widthCm: form.widthCm ? parseFloat(form.widthCm) : null,
 heightCm: form.heightCm ? parseFloat(form.heightCm) : null,
-hsCode: form.hsCode || null,
 originCountry: form.originCountry || null,
 isHandmade: form.isHandmade === 'true',
 makerStory: form.makerStory.trim() || null,
@@ -1117,12 +1076,10 @@ const STEP_TIPS: Record<number, { title: string; tip: string }> = {
 1: { title: 'Photos & video', tip: 'Photos are your shop window. Natural light, plain background, and at least one photo showing scale (in a hand, on a table). A short video of the piece — or you making it — is the single biggest trust-builder on Velor.' },
 2: { title: 'The basics', tip: 'Write the title the way a buyer would search: what it is, the material, the tradition. Your price is what you receive — buyers see it converted to their own currency automatically.' },
 3: { title: 'Options & sizes', tip: 'One listing can hold every version you make — designs, colours, sizes, sets — each with its own photos (up to 6), price, and stock. Buyers pick on your product page; you never list the same piece twice.' },
-4: { title: 'Shipping', tip: 'Weight and box size are what generate your prepaid shipping label the moment a buyer pays — measure the parcel, not the piece. The HS code helps customs for international orders.' },
+4: { title: 'Shipping', tip: 'Weight and box size help buyers know what they are getting and are shown on your listing — you arrange and pay for your own shipping, so measure the parcel, not the piece.' },
 5: { title: 'Story & submit', tip: 'Buyers come to Velor for the story — who made it, where, and what tradition it carries. Two or three honest sentences outsell a paragraph of marketing.' },
 }
 
-const hsInfo = hsChapterInfo(form.hsCode)
-const dutyGuide = form.hsCode?.length >= 2 ? DUTY_GUIDANCE[form.hsCode.slice(0, 2)] : null
 const validImageCount = form.images.map(u => u.trim()).filter(Boolean).length
 const categoryIsKnown = !form.category || PRODUCT_CATEGORIES.includes(form.category)
 
@@ -1669,12 +1626,12 @@ return (
 <div style={{ display: step === 4 ? 'flex' : 'none', flexDirection: 'column', gap: '0px' }}>
 <div style={{ marginBottom: '14px' }}>
 <h3 style={{ fontFamily: HALO.fontSerif, fontStyle: 'italic', fontWeight: 500, fontSize: '22px', color: HALO.ink, margin: 0 }}>Getting it to the buyer</h3>
-<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Weigh and measure the packed parcel — Velor generates your prepaid shipping label from these the moment a buyer pays. You just print it and hand the parcel over.</div>
+<div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: 4, lineHeight: 1.6 }}>Weigh and measure the packed parcel — you arrange and pay for your own shipping, so accurate numbers here help you price it and help buyers know what to expect.</div>
 </div>
 <div style={{ borderTop: 'none', paddingTop: '0px' }}>
 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>Shipping & Customs</div>
 <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '14px' }}>
-Weight and dimensions are used for shipping labels. HS code is recommended if this item may ever ship internationally — Velor is a global marketplace, so a buyer anywhere could order it.
+Weight and dimensions are shown on your listing and help buyers know what they're getting — Velor is a global marketplace, so a buyer anywhere could order it.
 </div>
 
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
@@ -1696,11 +1653,7 @@ Weight and dimensions are used for shipping labels. HS code is recommended if th
 </div>
 </div>
 
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-<div>
-<label style={labelStyle}>HS Code (6-digit, recommended)</label>
-<input style={inputStyle} value={form.hsCode} onChange={e => set('hsCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} placeholder="851712" maxLength={6} />
-</div>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '14px' }}>
 <div>
 <label style={labelStyle}>Origin Country</label>
 <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.originCountry} onChange={e => setOriginCountry(e.target.value)}>
@@ -1713,32 +1666,6 @@ Please tell us the true cultural origin of this item, not your own location — 
 </div>
 </div>
 
-{/* HS code guidance panel */}
-{hsInfo && (
-<div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px' }}>
-<div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>
-Chapter {form.hsCode.slice(0, 2)} — {hsInfo.label}
-</div>
-<div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
-Example: {hsInfo.example}
-</div>
-{dutyGuide && (
-<div style={{ fontSize: '12px', color: 'var(--accent)' }}>
-Typical duty rates: {dutyGuide}
-</div>
-)}
-{!dutyGuide && (
-<div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-Duty rates vary by destination country — confirm with your carrier or the destination country's customs authority.
-</div>
-)}
-</div>
-)}
-{!hsInfo && form.hsCode.length === 0 && (
-<div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-Recommended: enter your product&apos;s HS code to see duty rate guidance for international orders. You can find it using your country's official customs tariff lookup tool.
-</div>
-)}
 </div>
 
 </div>
@@ -1856,7 +1783,6 @@ background: isPro ? 'linear-gradient(180deg, #FFD54A, #FF6B00)' : '#4FC3F7',
 <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
 <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
 {symbolFor(sellerCurrency)}{p.price.toFixed(2)} &middot; Inventory No: {p.stock} &middot;
-{p.hsCode ? ' HS: ' + p.hsCode : ' No HS code'} &middot;
 {p.weightGrams ? ' ' + p.weightGrams + 'g' : ' No weight'}
 </div>
 </div>
