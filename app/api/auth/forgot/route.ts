@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
               <a href="${link}" style="background:#FF6B00;color:#160a00;text-decoration:none;padding:13px 26px;border-radius:999px;font-weight:bold">Set a new password</a>
             </p>
             <p style="color:#888;font-size:13px;line-height:1.6">If you didn't ask for this, ignore this email — nothing changes unless the link is used.
-            For help, write to customerservice@velorcommerce.co.uk.</p>
+            For help, write to customerservice@velorglobalmarket.com.</p>
           </div>`,
       }).catch(() => {})
     }
