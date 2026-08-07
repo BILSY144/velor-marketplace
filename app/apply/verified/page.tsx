@@ -45,12 +45,12 @@ export const metadata = {
 
 // Fixed by the standing SEO agent, 2026-07-16 09:xx UTC -- the "Questions?"
 // support link at the bottom of this page pointed at
-// customerservice@velorcommerce.co.uk, which that run swapped to
-// support@velorcommerce.store on the theory that .co.uk was the separate,
+// customerservice@velorglobalmarket.com, which that run swapped to
+// support@velorglobalmarket.com on the theory that .co.uk was the separate,
 // unrelated dropshipping business's domain being conflated in.
 //
 // CORRECTED by a later same-day SEO-agent run, 2026-07-16 -- reverted back
-// to customerservice@velorcommerce.co.uk. See app/press/page.tsx's own
+// to customerservice@velorglobalmarket.com. See app/press/page.tsx's own
 // comment (fixed in the same run) for the full citation trail: per
 // CLAUDE.md's dated checkpoints, velorcommerce.co.uk is Velor Marketplace's
 // own real, working, Resend-verified mailbox, while velorcommerce.store has
@@ -190,8 +190,8 @@ export default function VerificationSubmittedPage() {
 
           <p style={{ color: 'var(--muted)', fontSize: 13, margin: '24px 0 0' }}>
             Questions? Email{' '}
-            <a href="mailto:customerservice@velorcommerce.co.uk" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-              customerservice@velorcommerce.co.uk
+            <a href="mailto:customerservice@velorglobalmarket.com" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+              customerservice@velorglobalmarket.com
             </a>
           </p>
         </div>
