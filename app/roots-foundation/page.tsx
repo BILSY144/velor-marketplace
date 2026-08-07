@@ -76,7 +76,7 @@ export default function RootsFoundationPage() {
         <section className="vrf-cta">
           <Link href="/apply">Apply as a founding seller →</Link>
           <Link href="/contact" className="ghost">Get in touch →</Link>
-          <p>Questions about Velor Roots Foundation? Reach us at <a href="mailto:customerservice@velorcommerce.co.uk">customerservice@velorcommerce.co.uk</a>.</p>
+          <p>Questions about Velor Roots Foundation? Reach us at <a href="mailto:customerservice@velorglobalmarket.com">customerservice@velorglobalmarket.com</a>.</p>
         </section>
       </div>
     </main>
