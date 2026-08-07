@@ -30,7 +30,7 @@ The seller pitch writes the buyer pitch: every seller recruited before 6 August 
 3. **Established SMB wholesalers/brands**: formal partnership-tone outreach; Pro tier pitch (4% commission, unlimited listings, API access, AI account manager). (Enterprise tier retired 2026-07-15.)
 
 ### Email programme (seller side)
-- Sending identity: agent emails from customerservice@velorcommerce.co.uk (established Resend domain); seller support replies via sellers@velorcommerce.store. Verify SPF/DKIM/DMARC on both domains before any volume increase, and ramp send volume gradually (deliverability warm-up) rather than bursting.
+- Sending identity: agent emails from customerservice@velorglobalmarket.com (established Resend domain); seller support replies via sellers@velorglobalmarket.com. Verify SPF/DKIM/DMARC on both domains before any volume increase, and ramp send volume gradually (deliverability warm-up) rather than bursting.
 - Sequences: (a) cold outreach 3-step; (b) application received -> approved -> first-listing nudge onboarding drip; (c) "listed but no sales yet" coaching email; (d) weekly founding-seller update until launch (what's new, seller count, launch countdown).
 - Every email personalised (name, platform, product category); never bulk-identical; log every send in OutreachLog. These rules already exist in velor-agents and are non-negotiable.
 - Gate: OUTREACH_ENABLED stays off until William confirms the site is presentable; flipping it on is the Phase 1 go signal.
