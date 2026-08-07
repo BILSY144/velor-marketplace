@@ -112,7 +112,7 @@ if (status === 'VERIFIED' && application.status === 'APPROVED') {
   try {
     await sendEmail({
       to: application.contactEmail,
-      from: 'Velor Seller Team <sellers@velorcommerce.store>',
+      from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
       subject: `You are verified – list your first item on Velor`,
       html: `<p>Hi ${application.contactName},</p>
       <p>Your identity has been verified. ${application.businessName} is now fully cleared to sell on Velor – including receiving payouts, which were on hold until this finished.</p>
