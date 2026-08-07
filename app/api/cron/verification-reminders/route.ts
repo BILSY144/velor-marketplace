@@ -16,7 +16,7 @@ export const maxDuration = 60
 // only applies to a URL-based List-Unsubscribe, so it is intentionally
 // omitted here rather than added incorrectly.
 const UNSUBSCRIBE_HEADERS = {
-  'List-Unsubscribe': '<mailto:customerservice@velorcommerce.co.uk?subject=unsubscribe>',
+  'List-Unsubscribe': '<mailto:customerservice@velorglobalmarket.com?subject=unsubscribe>',
 }
 
 // Seller Activation Reminder ladder (William, 2026-08-07: "we have 34
