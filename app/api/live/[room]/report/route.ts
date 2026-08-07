@@ -87,7 +87,7 @@ export async function POST(
       data: {
         sellerId: stream.sellerId,
         name: seller?.storeName ?? 'Unknown seller',
-        email: 'ops@velorcommerce.store',
+        email: 'ops@velorglobalmarket.com',
         subject: `Live stream auto-ended after ${updated.reportCount} reports: ${stream.title}`,
         message: `Stream ${room} was automatically ended after receiving ${updated.reportCount} separate viewer reports and needs review before the seller's next stream is approved.\n\nReason breakdown: ${breakdown}${detailLines ? `\n\nReporter details:\n${detailLines}` : ''}`,
         priority: 'PRIORITY',
