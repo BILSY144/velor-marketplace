@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
 const LOW_STOCK_THRESHOLD = 5;
-const ALERT_RECIPIENT = 'customerservice@velorcommerce.co.uk';
+const ALERT_RECIPIENT = 'customerservice@velorglobalmarket.com';
 
 async function requireAdmin() {
   const session = await auth();
