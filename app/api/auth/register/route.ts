@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
 
   await Promise.allSettled([
     sendEmail({
-      from: 'Velor Marketplace <noreply@velorcommerce.store>',
-      reply_to: 'customerservice@velorcommerce.store',
+      from: 'Velor Marketplace <noreply@velorglobalmarket.com>',
+      reply_to: 'customerservice@velorglobalmarket.com',
       to: email,
       subject: 'Welcome to Velor Marketplace — Application Received',
       html: `<p>Hi ${name},</p><p>Thank you for applying to sell on Velor Marketplace. We will review your application and be in touch shortly.</p><p>The Velor Team</p>`,
