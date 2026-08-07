@@ -64,7 +64,7 @@ export default function PrivacyPage() {
     },
     {
       title: "8. Your Rights",
-      body: "Under UK GDPR, you have the right to: access your data; rectify inaccurate data; erase your data (where lawful); restrict or object to processing; data portability; withdraw consent. To exercise any right, email privacy@velorcommerce.store.",
+      body: "Under UK GDPR, you have the right to: access your data; rectify inaccurate data; erase your data (where lawful); restrict or object to processing; data portability; withdraw consent. To exercise any right, email privacy@velorglobalmarket.com.",
     },
     {
       title: "9. Community & Social Features",
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
     },
     {
       title: "11. Contact and Complaints",
-      body: "Data protection enquiries: privacy@velorcommerce.store. If you are unhappy with how we handle your data, you may lodge a complaint with the Information Commissioner's Office at ico.org.uk.",
+      body: "Data protection enquiries: privacy@velorglobalmarket.com. If you are unhappy with how we handle your data, you may lodge a complaint with the Information Commissioner's Office at ico.org.uk.",
     },
   ];
 
