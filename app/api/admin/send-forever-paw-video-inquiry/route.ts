@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   await sendEmail({
     to: 'qimingou586@gmail.com',
-    from: 'Velor Seller Team <sellers@velorcommerce.store>',
+    from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
     subject: 'Quick question about your product video',
     html,
   })
