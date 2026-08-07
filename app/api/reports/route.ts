@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     where: { reporterEmail, createdAt: { gte: dayAgo } },
   })
   if (recent >= MAX_REPORTS_PER_EMAIL_PER_DAY) {
-    return NextResponse.json({ error: 'Report limit reached for today. If this is urgent, email customerservice@velorcommerce.co.uk' }, { status: 429 })
+    return NextResponse.json({ error: 'Report limit reached for today. If this is urgent, email customerservice@velorglobalmarket.com' }, { status: 429 })
   }
 
   let report
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
   // Email customer service -- best-effort, never blocks the report itself.
   try {
     await sendEmail({
-      to: 'customerservice@velorcommerce.co.uk',
+      to: 'customerservice@velorglobalmarket.com',
       subject: `[${priority}] Content report: ${contentType} - ${reason}`,
       html: `<p>New content report on Velor.</p>
 <p><strong>What:</strong> ${what}<br>
