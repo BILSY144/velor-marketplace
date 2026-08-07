@@ -132,7 +132,7 @@ async function generateAndSend() {
     <tr><td>Environment</td><td><code>${env}</code></td></tr>
     <tr><td>Deployed Commit</td><td><code>${commitSha}</code> &mdash; ${commitMsg}</td></tr>
     <tr><td>Shippo Key Mode</td><td><span class="${shippoMode === 'LIVE' ? 'live' : 'test'}">${shippoMode}</span></td></tr>
-    <tr><td>Email Routing</td><td>Ops &rarr; <code>customerservice@velorcommerce.co.uk</code> &middot; Briefings &rarr; <code>willsinclair144@gmail.com</code></td></tr>
+    <tr><td>Email Routing</td><td>Ops &rarr; <code>customerservice@velorglobalmarket.com</code> &middot; Briefings &rarr; <code>willsinclair144@gmail.com</code></td></tr>
   </table>
 
   <tr><td colspan="2" style="padding:0;">
@@ -153,7 +153,7 @@ async function generateAndSend() {
   </body></html>`
 
   return resend.emails.send({
-    from: 'Velor AI Director <noreply@velorcommerce.co.uk>',
+    from: 'Velor AI Director <noreply@velorglobalmarket.com>',
     to: ['willsinclair144@gmail.com'],
     subject: `Velor Daily Briefing — ${dateStr}`,
     html,
