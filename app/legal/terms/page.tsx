@@ -80,7 +80,7 @@ export default function TermsPage() {
     },
     {
       title: "12. Contact",
-      body: "Velor Commerce Ltd, registered in England and Wales. For legal enquiries: legal@velorcommerce.store",
+      body: "Velor Commerce Ltd, registered in England and Wales. For legal enquiries: legal@velorglobalmarket.com",
     },
   ];
 
