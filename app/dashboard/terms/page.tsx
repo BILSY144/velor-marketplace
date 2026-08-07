@@ -164,7 +164,7 @@ export default function TermsPage() {
           <p style={pStyle}>These terms, together with the Platform Privacy Policy and the Seller Rules and Product Compliance Policy, constitute the entire agreement between the Seller and the Platform. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
 
           <p style={{ color: '#9C9FA5', fontSize: '12px', margin: '24px 0 0' }}>
-            Effective date: 4 July 2026 - Version 1.2 - Operated by Velor Commerce Ltd - Contact: customerservice@velorcommerce.store
+            Effective date: 4 July 2026 - Version 1.2 - Operated by Velor Commerce Ltd - Contact: customerservice@velorglobalmarket.com
           </p>
 
           <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #ECECEF' }}>
