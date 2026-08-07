@@ -32,7 +32,7 @@ required — reporting to authorities.
 - **Report routes live today:** live streams (in-player reasoned report form,
   five distinct accounts auto-end a stream and open an ops review ticket);
   listings ("Report this listing" on every product page); anything else via
-  customerservice@velorcommerce.co.uk (monitored inbox, available to non-users).
+  customerservice@velorglobalmarket.com (monitored inbox, available to non-users).
 - **Committed before Velor Social launch (build list):**
   1. Report button on EVERY piece of user content — adding reviews and messages
      to the existing stream/listing coverage, and shipping on Collections,
