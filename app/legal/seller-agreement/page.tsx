@@ -76,7 +76,7 @@ export default function SellerAgreementPage() {
     },
     {
       title: "11. Contact",
-      body: "Seller support: sellers@velorcommerce.store. Legal enquiries: legal@velorcommerce.store",
+      body: "Seller support: sellers@velorglobalmarket.com. Legal enquiries: legal@velorglobalmarket.com",
     },
   ];
 
