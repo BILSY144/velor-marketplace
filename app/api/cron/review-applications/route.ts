@@ -13,8 +13,8 @@ import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
 
-const SUPPORT_EMAIL = 'customerservice@velorcommerce.co.uk';
-const SELLER_FROM = 'Velor Seller Team <sellers@velorcommerce.store>';
+const SUPPORT_EMAIL = 'customerservice@velorglobalmarket.com';
+const SELLER_FROM = 'Velor Seller Team <sellers@velorglobalmarket.com>';
 const AGENT = 'seller-onboarding';
 
 // Seller Onboarding Agent, hourly.
