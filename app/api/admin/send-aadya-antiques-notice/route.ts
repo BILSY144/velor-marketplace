@@ -115,7 +115,7 @@ ${itemsHtml}
 
   await sendEmail({
     to: 'aadyabazaar@gmail.com',
-    from: 'Velor Seller Team <sellers@velorcommerce.store>',
+    from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
     subject: `Aadya Bazaar on Velor: ${FLAGGED.length} listings need a quick reword before they can go live`,
     html,
   })
