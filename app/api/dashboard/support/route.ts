@@ -64,8 +64,8 @@ export async function POST(req: Request) {
   const subjectLine = `${isPriority ? '[PRIORITY] ' : ''}[Seller Support - ${seller.tier}] ${subject.trim()}`
 
   const { error: notifyError } = await resend.emails.send({
-        from: 'Velor Seller Support <noreply@velorcommerce.store>',
-        to: ['sellers@velorcommerce.store'],
+        from: 'Velor Seller Support <noreply@velorglobalmarket.com>',
+        to: ['sellers@velorglobalmarket.com'],
         replyTo: sellerEmail || undefined,
         subject: subjectLine,
         html: `<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a">
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
   if (sellerEmail) {
         await resend.emails.send({
-                from: 'Velor Seller Support <noreply@velorcommerce.store>',
+                from: 'Velor Seller Support <noreply@velorglobalmarket.com>',
                 to: [sellerEmail],
                 subject: 'We received your support request',
                 html: `<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a">
