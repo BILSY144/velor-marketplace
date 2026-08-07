@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 // Agent watchdog -- the enforcement arm of docs/AGENT_OPERATIONS.md.
 // Runs hourly. Checks real, observable OUTCOMES in the database (never
 // self-reported statuses) against each agent's duty and SLA. Any breach is
-// emailed to customerservice@velorcommerce.co.uk immediately and every run is
+// emailed to customerservice@velorglobalmarket.com immediately and every run is
 // recorded in AgentLog so the daily director briefing can report watchdog
 // health honestly.
 
@@ -24,8 +24,8 @@ async function sendAlert(subject: string, lines: string[]) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Velor Agent Watchdog <noreply@velorcommerce.store>',
-      to: ['customerservice@velorcommerce.co.uk'],
+      from: 'Velor Agent Watchdog <noreply@velorglobalmarket.com>',
+      to: ['customerservice@velorglobalmarket.com'],
       subject: `[WATCHDOG] ${subject}`,
       html: `<div style="font-family:Inter,sans-serif;background:#0D0D0D;color:#fff;padding:32px;border-radius:12px;max-width:640px;margin:0 auto;"><h2 style="color:#FF6B00;margin:0 0 16px;">Agent Watchdog Alert</h2>${lines.map(l => `<p style="color:#ccc;font-size:14px;line-height:1.6;margin:0 0 8px;">${l}</p>`).join('')}<p style="color:#666;font-size:12px;margin-top:20px;">Duties and SLAs: docs/AGENT_OPERATIONS.md. This alert is generated from live database checks, not self-reported statuses.</p></div>`,
     }),
