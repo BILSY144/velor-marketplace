@@ -241,8 +241,8 @@ export default function SafetyPage() {
         <h2 style={{ fontSize: '20px', margin: '0 0 8px' }}>Urgent or offline</h2>
         <p style={{ fontSize: '14.5px', color: 'var(--muted)', lineHeight: 1.7, margin: 0 }}>
           For anything urgent, email{' '}
-          <a href="mailto:customerservice@velorcommerce.co.uk" style={{ color: 'var(--accent)' }}>
-            customerservice@velorcommerce.co.uk
+          <a href="mailto:customerservice@velorglobalmarket.com" style={{ color: 'var(--accent)' }}>
+            customerservice@velorglobalmarket.com
           </a>
           . If a child is at immediate risk anywhere, contact your local police first.
           Safety on Velor is owned by a named director of Velor Commerce Ltd (Company
