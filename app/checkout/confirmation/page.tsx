@@ -192,8 +192,8 @@ function ConfirmationContent() {
           </div>
           <p style={{ textAlign: 'center', color: '#999999', fontSize: 12, marginTop: 28 }}>
             Charged anyway, or need help? Email{' '}
-            <a href="mailto:customerservice@velorcommerce.store" style={{ color: '#FF6B00', textDecoration: 'none' }}>
-              customerservice@velorcommerce.store
+            <a href="mailto:customerservice@velorglobalmarket.com" style={{ color: '#FF6B00', textDecoration: 'none' }}>
+              customerservice@velorglobalmarket.com
             </a>
           </p>
         </div>
@@ -390,8 +390,8 @@ function ConfirmationContent() {
         {/* Help */}
         <p style={{ textAlign: 'center', color: '#999999', fontSize: 12, marginTop: 28 }}>
           Questions? Email{' '}
-          <a href="mailto:customerservice@velorcommerce.store" style={{ color: '#FF6B00', textDecoration: 'none' }}>
-            customerservice@velorcommerce.store
+          <a href="mailto:customerservice@velorglobalmarket.com" style={{ color: '#FF6B00', textDecoration: 'none' }}>
+            customerservice@velorglobalmarket.com
           </a>
         </p>
       </div>
