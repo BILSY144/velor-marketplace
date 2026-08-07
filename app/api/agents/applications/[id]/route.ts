@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { isAuthorizedAdmin } from '@/lib/adminAuth';
 import { approveApplication, rejectApplication, redactApplication } from '@/lib/provisionSeller';
+import { findDuplicateApplicant } from '@/lib/duplicateApplicant';
 import { translateBatch } from '@/lib/translate';
 
 export async function GET(
@@ -29,7 +30,31 @@ if (application.storeDescription) {
   translatedApplication = { ...application, storeDescription: translations[0] };
 }
 
-return NextResponse.json({ application: redactApplication(translatedApplication) });
+// Surface a possible-duplicate warning to whoever is reviewing this in
+// Pulse (William, 2026-08-07 -- found two live "hushlume" storefronts
+// approved same-day under two different emails; see
+// lib/duplicateApplicant.ts for the full story). Additive and best-effort
+// only: never blocks the detail view or the approve/reject action below --
+// a human still makes the final call either way, this just makes sure they
+// see the signal first instead of finding out from Pulse's Sellers list
+// afterwards.
+let duplicateWarning: string | null = null;
+if (application.status === 'PENDING') {
+  try {
+    const duplicate = await findDuplicateApplicant({
+      businessName: application.businessName,
+      contactEmail: application.contactEmail,
+      shippingStreet1: application.shippingStreet1,
+      shippingZip: application.shippingZip,
+      shippingPhone: application.shippingPhone,
+    }, application.id);
+    duplicateWarning = duplicate?.reason ?? null;
+  } catch {
+    // Best-effort -- never let this check block the detail view loading.
+  }
+}
+
+return NextResponse.json({ application: redactApplication(translatedApplication), duplicateWarning });
 }
 
 export async function PATCH(
