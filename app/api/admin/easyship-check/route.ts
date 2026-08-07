@@ -114,11 +114,11 @@ export async function GET(request: NextRequest) {
   const rates = await getEasyshipRates({
     originAddress: toEasyshipAddress({
       name: 'Velor Probe', street1: o.line1, city: o.city, state: o.state ?? '',
-      zip: o.zip, country: origin, email: 'customerservice@velorcommerce.co.uk',
+      zip: o.zip, country: origin, email: 'customerservice@velorglobalmarket.com',
     }),
     destinationAddress: toEasyshipAddress({
       name: 'Velor Probe', street1: d.line1, city: d.city, state: d.state ?? '',
-      zip: d.zip, country: dest, email: 'customerservice@velorcommerce.co.uk',
+      zip: d.zip, country: dest, email: 'customerservice@velorglobalmarket.com',
     }),
     totalWeightKg: grams / 1000,
     boxCm: { length: 20, width: 15, height: 10 },
