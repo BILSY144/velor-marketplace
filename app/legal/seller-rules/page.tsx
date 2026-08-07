@@ -90,7 +90,7 @@ export default function SellerRulesPage() {
     },
     {
       title: "13. Enforcement",
-      body: "Violations are handled in proportion to their severity: listing corrections and warnings for minor issues, delisting for misrepresentation, and immediate account suspension for prohibited items, undeclared regulated materials, mis-declared dangerous goods, counterfeits or fraud. Funds from affected orders may be withheld while a violation is investigated. Where the law requires it, Velor reports serious violations to the relevant authorities. Decisions can be appealed by contacting sellers@velorcommerce.store.",
+      body: "Violations are handled in proportion to their severity: listing corrections and warnings for minor issues, delisting for misrepresentation, and immediate account suspension for prohibited items, undeclared regulated materials, mis-declared dangerous goods, counterfeits or fraud. Funds from affected orders may be withheld while a violation is investigated. Where the law requires it, Velor reports serious violations to the relevant authorities. Decisions can be appealed by contacting sellers@velorglobalmarket.com.",
     },
   ];
 
@@ -112,7 +112,7 @@ export default function SellerRulesPage() {
         ))}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 24px', marginTop: 8 }}>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--muted)' }}>
-            Questions about whether your product can be listed, or what documentation it needs? Contact sellers@velorcommerce.store before listing -- we would much rather help you get it right than reject a listing.
+            Questions about whether your product can be listed, or what documentation it needs? Contact sellers@velorglobalmarket.com before listing -- we would much rather help you get it right than reject a listing.
           </p>
         </div>
       </section>
