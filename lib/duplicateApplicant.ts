@@ -85,7 +85,14 @@ export async function findDuplicateApplicant(
     where: {
       id: excludeApplicationId ? { not: excludeApplicationId } : undefined,
       status: { in: ['PENDING', 'APPROVED'] },
-      contactEmail: { not: { equals: input.contactEmail, mode: 'insensitive' } },
+      // NOT hoisted to the top level of `where`, rather than nested as
+      // `contactEmail: { not: { equals, mode } }` -- Prisma's
+      // NestedStringFilter (used inside a field-level `not`) does not carry
+      // `mode` for this field/provider combination, only the top-level
+      // StringFilter does. This failed the production build (TS2353,
+      // "'mode' does not exist in type 'NestedStringFilter'") --
+      // caught here after the fact; see the note left for William.
+      NOT: { contactEmail: { equals: input.contactEmail, mode: 'insensitive' } },
     },
     select: {
       id: true,
