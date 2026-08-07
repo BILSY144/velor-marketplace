@@ -40,7 +40,7 @@ to what standard, and how failures are caught. The enforcement mechanism is real
   dispute/return (excluding heldForPayoneer orders awaiting rail activation).
 - Certificates: alerts if any PENDING ProductCertificate is older than 48h unreviewed.
 Every run writes an AgentLog entry (agentName "agent-watchdog"). Breaches email
-customerservice@velorcommerce.co.uk immediately and appear in the daily director briefing.
+customerservice@velorglobalmarket.com immediately and appear in the daily director briefing.
 
 ## Honest gaps (do not misrepresent these as running)
 1. Paid advertising (Meta/TikTok/Google) is NOT live: it requires ad accounts, payment methods and
@@ -57,4 +57,4 @@ customerservice@velorcommerce.co.uk immediately and appear in the daily director
 ## Escalation to William (only these reach his personal email)
 Daily director briefing (7am), plus immediate alerts for: payment/payout anomalies, legal or
 regulatory contact, watchdog-detected system-wide failure. Everything else is handled by agents
-via customerservice@velorcommerce.co.uk.
+via customerservice@velorglobalmarket.com.
