@@ -33,8 +33,8 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 //
 // Fixed by the standing SEO agent, 2026-07-16 09:xx UTC -- this page's four
 // mailto links and its "Media contact" body text all pointed journalists at
-// hello@velorcommerce.co.uk, which that run swapped to
-// support@velorcommerce.store on the theory that .co.uk was the separate,
+// hello@velorglobalmarket.com, which that run swapped to
+// support@velorglobalmarket.com on the theory that .co.uk was the separate,
 // unrelated dropshipping business's domain being conflated in.
 //
 // CORRECTED by a later same-day SEO-agent run, 2026-07-16 -- that premise
@@ -49,11 +49,11 @@ import { OUTREACH_V2 } from '@/lib/outreachI18n'
 // contrast, has NO real inbox activated at all -- CLAUDE.md's checkpoint
 // records the GoDaddy dashboard for velorcommerce.store showing email as
 // an unactivated placeholder, and says outright "do not assume replies to
-// any @velorcommerce.store address reach anyone." lib/email.ts's own
+// any @velorglobalmarket.com address reach anyone." lib/email.ts's own
 // REPLY_TO already points transactional email at
-// customerservice@velorcommerce.co.uk for exactly this reason (see that
+// customerservice@velorglobalmarket.com for exactly this reason (see that
 // file). So the 09:xx fix, while well-intentioned, replaced a real working
-// address with a dead one. Reverted to customerservice@velorcommerce.co.uk
+// address with a dead one. Reverted to customerservice@velorglobalmarket.com
 // here, matching the already-established, already-verified pattern in
 // lib/email.ts -- not a new address, not a guess. Also added
 // descriptive alt text to the two media-kit logo download images below,
@@ -292,9 +292,9 @@ export default function PressPage() {
               <div className="t">Master logo file (PNG)</div>
               <div className="d">Higher-resolution source file for print or large formats.</div>
             </a>
-            <a className="pr-kitcard" href="mailto:customerservice@velorcommerce.co.uk?subject=Media%20kit%20request">
+            <a className="pr-kitcard" href="mailto:customerservice@velorglobalmarket.com?subject=Media%20kit%20request">
               <div className="t">Need something else?</div>
-              <div className="d">Email customerservice@velorcommerce.co.uk and we&apos;ll send it over directly.</div>
+              <div className="d">Email customerservice@velorglobalmarket.com and we&apos;ll send it over directly.</div>
             </a>
           </div>
         </section>
@@ -305,14 +305,14 @@ export default function PressPage() {
               <h2>Media contact</h2>
               <p>
                 William Sinclair, Founder<br />
-                customerservice@velorcommerce.co.uk<br />
+                customerservice@velorglobalmarket.com<br />
                 velorcommerce.store
               </p>
               <p style={{ marginTop: 10, fontSize: 12.5 }}>
                 Velor Commerce Ltd (company no. 17268133), registered in England and Wales.
               </p>
             </div>
-            <a className="pr-btn pr-btn-p" href="mailto:customerservice@velorcommerce.co.uk">Get in touch</a>
+            <a className="pr-btn pr-btn-p" href="mailto:customerservice@velorglobalmarket.com">Get in touch</a>
           </div>
         </section>
       </div>
