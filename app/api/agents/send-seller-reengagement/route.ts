@@ -20,7 +20,7 @@ function wrap(bodyHtml: string): string {
 <div style="padding:32px">${bodyHtml}</div>
 <div style="background:#111;padding:20px 32px;border-top:1px solid #1E1E1E">
   <p style="margin:0;font-size:12px;color:#666;line-height:1.6">
-    Velor Commerce Ltd &middot; customerservice@velorcommerce.co.uk<br>
+    Velor Commerce Ltd &middot; customerservice@velorglobalmarket.com<br>
     You are receiving this because you have an approved seller account on Velor.
   </p>
 </div>
@@ -166,7 +166,7 @@ export async function GET(req: NextRequest) {
     }
     try {
       await sendEmail({
-        from: 'Velor Seller Team <hello@velorcommerce.store>',
+        from: 'Velor Seller Team <hello@velorglobalmarket.com>',
         to: email.to,
         subject: email.subject,
         html: email.html,
