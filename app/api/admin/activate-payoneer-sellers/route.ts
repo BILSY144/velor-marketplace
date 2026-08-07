@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
           storeName: seller.storeName,
           registrationLink,
         }),
-        from: 'Velor Seller Team <sellers@velorcommerce.store>',
+        from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
       })
 
       await prisma.agentLog.create({
@@ -141,7 +141,7 @@ function buildActivationEmail(params: { name: string; storeName: string; registr
           </a>
         </p>
         <p style="color:#777;font-size:13px;line-height:1.6">
-          Questions? Write to customerservice@velorcommerce.co.uk.
+          Questions? Write to customerservice@velorglobalmarket.com.
         </p>
       </div>
     </div>`
