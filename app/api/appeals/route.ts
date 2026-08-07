@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     where: { email, subject: { startsWith: 'Appeal:' }, createdAt: { gte: dayAgo } },
   })
   if (recent >= MAX_APPEALS_PER_EMAIL_PER_DAY) {
-    return NextResponse.json({ error: 'Appeal limit reached for today. If this is urgent, email customerservice@velorcommerce.co.uk' }, { status: 429 })
+    return NextResponse.json({ error: 'Appeal limit reached for today. If this is urgent, email customerservice@velorglobalmarket.com' }, { status: 429 })
   }
 
   const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim().slice(0, 120) : 'Appeal'
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
   try {
     await sendEmail({
-      to: 'customerservice@velorcommerce.co.uk',
+      to: 'customerservice@velorglobalmarket.com',
       subject: `[PRIORITY] Appeal: ${decision}`,
       html: `<p>New appeal on Velor.</p>
 <p><strong>Decision being appealed:</strong> ${decision.replace(/</g, '&lt;')}<br>
