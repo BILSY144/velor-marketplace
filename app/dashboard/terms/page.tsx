@@ -1,11 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function TermsPage() {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // William, 2026-08-07: "terms and conditions keeps popping up for editing
+  // a listing" -- it should only ever need clicking once, at signup.
+  // middleware.ts gates every /dashboard/* route purely on the presence of
+  // the velor_terms COOKIE, with no DB fallback -- so any seller who
+  // genuinely accepted once but later lost that cookie (cleared cookies, a
+  // new device/browser, incognito, normal browser cookie-eviction) got
+  // bounced back to this page on every visit forever, with no way for the
+  // already-recorded DB acceptance to ever re-arm it. Fix: before showing
+  // the agreement at all, ask GET /api/seller/terms (now updated to
+  // self-heal the cookie as a side effect -- same pattern already used for
+  // the payout gate in lib/payoutGate.ts) whether this seller already has a
+  // current-version acceptance on file. If so, silently let the refreshed
+  // cookie land and bounce straight back to the dashboard -- the seller
+  // never sees the form again. Only a genuine first-time acceptance, or a
+  // real future terms-version bump, ever renders the checkbox below.
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/seller/terms')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        if (d?.accepted && !d?.needsReAcceptance) {
+          // Hard navigation: guarantees the browser re-sends the request
+          // with the cookie the GET call above just refreshed, so
+          // middleware sees it fresh rather than relying on a stale
+          // client-side router cache.
+          window.location.href = '/dashboard';
+          return;
+        }
+        setChecking(false);
+      })
+      .catch(() => {
+        // If the check itself fails, fail open to the form rather than
+        // stranding the seller on a blank screen.
+        if (!cancelled) setChecking(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleAccept = async () => {
     if (!accepted) return;
@@ -37,6 +77,17 @@ export default function TermsPage() {
   };
   const h3Style = { fontWeight: 600, fontSize: '16px', color: '#1A1A1D', margin: '28px 0 10px' };
   const pStyle = { color: '#44464B', fontSize: '14px', lineHeight: '1.7', margin: '0 0 4px' };
+
+  if (checking) {
+    // Brief, silent check against DB-recorded acceptance -- see the
+    // useEffect above. Sellers who already accepted the current version
+    // never see anything more than this before landing back on /dashboard.
+    return (
+      <div style={{ minHeight: '100vh', background: '#F6F6F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', color: '#6D7175', fontSize: '14px' }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F6F6F7', fontFamily: 'Inter, sans-serif', padding: '48px 24px', color: '#1A1A1D' }}>
