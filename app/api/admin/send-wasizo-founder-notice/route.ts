@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   await sendEmail({
     to: 'nugrahamedia@gmail.com',
-    from: 'Velor Seller Team <sellers@velorcommerce.store>',
+    from: 'Velor Seller Team <sellers@velorglobalmarket.com>',
     subject: "Wasizo deco is approved \u2014 list first to become Velor's Founding Seller of Indonesia",
     html,
   })
