@@ -293,26 +293,26 @@ const jsonLd = {
       // than a second hand-typed copy, so the two can never drift apart.
       //
       // CORRECTED 2026-07-16 (later same-day SEO-agent run) -- this was
-      // support@velorcommerce.store, added 2026-07-13 on the belief it was
+      // support@velorglobalmarket.com, added 2026-07-13 on the belief it was
       // "the real, live support address" verified against app/contact and
       // app/help. That belief was wrong: CLAUDE.md's own dated checkpoint
       // ("2026-07-13 checkpoint (continued 4)") records the GoDaddy
       // dashboard for velorcommerce.store showing email as an unactivated
       // placeholder, and says outright "do not assume replies to any
-      // @velorcommerce.store address reach anyone." Swapped to
-      // customerservice@velorcommerce.co.uk, Velor Marketplace's own real,
+      // @velorglobalmarket.com address reach anyone." Swapped to
+      // customerservice@velorglobalmarket.com, Velor Marketplace's own real,
       // working GoDaddy Microsoft 365 mailbox and already-verified Resend
       // sending domain (confirmed live via app/api/contact/route.ts's own
       // FROM address) -- the same address lib/email.ts's REPLY_TO already
       // uses for this exact reason, and the same fix applied this run to
       // app/press/page.tsx, app/apply/verified/page.tsx, app/contact/*, and
       // app/help/*.
-      email: 'customerservice@velorcommerce.co.uk',
+      email: 'customerservice@velorglobalmarket.com',
       contactPoint: [
         {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          email: 'customerservice@velorcommerce.co.uk',
+          email: 'customerservice@velorglobalmarket.com',
           availableLanguage: ['English'],
         },
         // Second ContactPoint added by the standing SEO agent, 2026-07-16
