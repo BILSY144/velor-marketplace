@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   if (!user.setupTokenExpiresAt || user.setupTokenExpiresAt < new Date()) {
     return NextResponse.json(
-      { error: 'This activation link has expired. Contact customerservice@velorcommerce.store for a new one.' },
+      { error: 'This activation link has expired. Contact customerservice@velorglobalmarket.com for a new one.' },
       { status: 400 }
     )
   }
