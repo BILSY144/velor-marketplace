@@ -8,6 +8,7 @@ import {
   APPLICATION_SLA_HOURS,
   APPLICATION_ESCALATE_AFTER_HOURS,
 } from '@/lib/sellerApplicationReview';
+import { findDuplicateApplicant } from '@/lib/duplicateApplicant';
 import { requireCronSecret } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
@@ -94,6 +95,35 @@ export async function GET(req: NextRequest) {
 
     if (result.verdict === 'hold') {
       hold(app, result.reason);
+      continue;
+    }
+
+    // --- 1b. Duplicate-account check (William, 2026-08-07: found two live
+    // "hushlume" storefronts approved the same day under two different
+    // emails via Pulse). screenApplication() above only ever judges ONE
+    // application's own content -- it has no database access by design, so
+    // it can never notice that a same-named business with the same
+    // ship-from phone or address already has a PENDING/APPROVED
+    // application, or an already-approved live seller account, under a
+    // different email. Never auto-reject on this -- a seller who typo'd
+    // their email and reapplied is normal and legitimate -- always hold
+    // for a human, same as any other judgement call this agent can't
+    // fully screen (LAW #1).
+    let duplicate;
+    try {
+      duplicate = await findDuplicateApplicant({
+        businessName: app.businessName,
+        contactEmail: app.contactEmail,
+        shippingStreet1: app.shippingStreet1,
+        shippingZip: app.shippingZip,
+        shippingPhone: app.shippingPhone,
+      }, app.id);
+    } catch (err) {
+      errors.push(`duplicate-check ${app.id}: ${err instanceof Error ? err.message : 'error'}`);
+      duplicate = null;
+    }
+    if (duplicate) {
+      hold(app, duplicate.reason);
       continue;
     }
 
