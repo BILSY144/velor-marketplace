@@ -145,7 +145,7 @@ const CULTURE_REELS: {
     ],
   },
   {
-    title: 'Adornment',
+    title: 'Adornment & Jewellery',
     line: "Amber, jade, beadwork — worn the way it's always been worn.",
     tiles: [
       { name: 'Cameo & gold', code: 'IT', img: px(6154083) },
