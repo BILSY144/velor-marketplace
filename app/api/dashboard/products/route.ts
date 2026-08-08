@@ -112,17 +112,30 @@ interface ProductBody {
 function normalizeVideoUrl(raw: unknown): { videoUrl: string | null } | { error: string } {
     if (raw === null || raw === undefined || String(raw).trim() === '') return { videoUrl: null }
     const url = String(raw).trim().slice(0, 300)
-    const ok = /^https:\/\/(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+|vimeo\.com\/\d+)/.test(url)
+    const ok = /^https://(www.)?(youtube.com/watch?v=[w-]+|youtu.be/[w-]+|youtube.com/shorts/[w-]+|vimeo.com/d+)/.test(url)
     if (!ok) return { error: 'Video must be a YouTube or Vimeo link (e.g. https://youtube.com/watch?v=... or https://vimeo.com/...).' }
     return { videoUrl: url }
 }
+
+// Guardrail: how far a variant's priceOverride is allowed to diverge from
+// the listing's own base price before we reject it as a likely mistake
+// (2026-08-08, William, after the Premium Leather Sling Bag listing showed
+// £180 on the homepage but £1600 on its own page -- both variants had a
+// priceOverride of 1600, an obvious typo that shipped live because nothing
+// checked it at save time. William: "this cannot keep happening, even as we
+// grow, it will be much harder to monitor every listing." This makes the
+// check automatic instead of relying on manual listing review).
+const VARIANT_PRICE_MAX_MULTIPLE = 3
 
 // Shared by POST and PATCH. Returns either a normalized, de-duplicated list
 // ready for createMany, or an error string to show the seller. Validation
 // lives here (not just relying on the DB's @@unique([productId, color,
 // size])) so a seller gets a clear message instead of a raw constraint
-// error.
-function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error: string } {
+// error. basePrice is the listing's own (about-to-be-saved) price -- used
+// only for the divergence guardrail below; pass 0 to skip that check (e.g.
+// when the base price itself already failed validation and will be
+// rejected separately).
+function normalizeVariants(raw: unknown, basePrice: number): { variants: VariantBody[] } | { error: string } {
     if (!Array.isArray(raw) || raw.length === 0) return { variants: [] }
         const seen = new Set<string>()
     const out: VariantBody[] = []
@@ -145,6 +158,19 @@ function normalizeVariants(raw: unknown): { variants: VariantBody[] } | { error:
                       : null
               if (priceOverride !== null && (isNaN(priceOverride) || priceOverride <= 0)) {
                       return { error: 'Variant price override must be a positive number.' }
+              }
+              // Divergence guardrail -- see VARIANT_PRICE_MAX_MULTIPLE comment above.
+              // Only runs when we have a real base price to compare against; a
+              // missing/invalid base price is already rejected by the caller's own
+              // price validation, so skipping here just avoids a confusing double
+              // error.
+              if (priceOverride !== null && basePrice > 0) {
+                      const ratio = priceOverride / basePrice
+                      if (ratio > VARIANT_PRICE_MAX_MULTIPLE || ratio < 1 / VARIANT_PRICE_MAX_MULTIPLE) {
+                              return {
+                                      error: `The price for "${[label, color, size].filter(Boolean).join(' / ') || 'this option'}" (${priceOverride}) looks like a mistake -- it's too far from the listing's base price (${basePrice}). Variant prices must stay within ${VARIANT_PRICE_MAX_MULTIPLE}x of the base price in either direction.`,
+                              }
+                      }
               }
               const rawImgs = Array.isArray((v as VariantBody)?.images) ? ((v as VariantBody).images as string[]) : []
                     // Cap 6 photos per option (William, 2026-07-28: multiple photos per
@@ -195,7 +221,7 @@ export async function POST(req: NextRequest) {
               )
   }
 
-  // Starter: 10 listings. Pro: unlimited (Enterprise retired 2026-07-15 —
+  // Starter: 10 listings. Pro: unlimited (Enterprise retired 2026-07-15 --
   // Pro inherited its unlimited listings; legacy ENTERPRISE rows read as Pro).
   // 2026-07-31: Pro is no longer purchasable (see docs/SUBSCRIPTION_AND_TIERS.md)
   // -- the "Upgrade" copy below is stale for everyone except the one
@@ -225,7 +251,11 @@ export async function POST(req: NextRequest) {
         videoUrl: rawVideoUrl, madeToOrder, leadTimeDays, sizeGuide,
   } = body as ProductBody
 
-  const variantResult = normalizeVariants(rawVariants)
+  // Parsed once, early, so the variant divergence guardrail can compare
+  // against it -- the full required/positive-number validation still runs
+  // below and is what actually rejects a bad base price.
+  const basePriceForVariants = parseFloat(String(price))
+    const variantResult = normalizeVariants(rawVariants, isNaN(basePriceForVariants) ? 0 : basePriceForVariants)
     if ('error' in variantResult) {
           return NextResponse.json({ error: variantResult.error }, { status: 400 })
     }
@@ -448,7 +478,10 @@ export async function PATCH(req: NextRequest) {
   // future partial-update caller can never silently wipe a seller's
   // colour/size options just by not mentioning them.
   const variantsProvided = 'variants' in body
-    const variantResult = normalizeVariants(rawVariants)
+    // Parsed once, early, so the variant divergence guardrail can compare
+    // against it -- see the matching comment in POST above.
+    const basePriceForVariants = parseFloat(String(price))
+    const variantResult = normalizeVariants(rawVariants, isNaN(basePriceForVariants) ? 0 : basePriceForVariants)
     if ('error' in variantResult) {
           return NextResponse.json({ error: variantResult.error }, { status: 400 })
     }
