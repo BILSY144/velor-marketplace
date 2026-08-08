@@ -51,10 +51,16 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
           is kept unmounted in case he ever wants the strip back. */}
       {children}
       {showChrome && <GlobalFooter />}
-      {/* Velor AI assistant on every public (buyer + prospective-seller) page.
-          The seller dashboard mounts its own instance via app/dashboard/layout.tsx,
-          so it is excluded here to avoid a duplicate widget. */}
-      {showChrome && <VelorAssistant variant="buyer" />}
+      {/* Velor AI assistant, buyer-facing, TEMPORARILY DISABLED (2026-08-08,
+          William): the unmetered public endpoint (no auth, no per-IP cap,
+          no daily budget, unlike /api/translate) was the single largest
+          driver of Anthropic API spend while sellers are still onboarding
+          and the site hasn't gone public yet -- see the matching note in
+          app/api/assistant/chat/route.ts. Seller dashboard's own instance
+          (app/dashboard/layout.tsx) is unaffected. Reintroduce once traffic
+          justifies it -- ideally with the same budget gate /api/translate
+          uses. */}
+      {false && showChrome && <VelorAssistant variant="buyer" />}
       {/* Whole-page live translation for the 19 languages -- see LanguageTranslator. */}
       {showChrome && <LanguageTranslator />}
     </>
