@@ -54,7 +54,7 @@ export const PRODUCT_CATEGORY_OPTIONS = [
   'Ceramics & Pottery',
   'Rugs, Cloth & Thread',
   "The World's Kitchen",
-  'Adornment',
+  'Adornment & Jewellery',
   'Tea, Coffee & Pantry',
   'Light, Scent & Self',
   'Leather Goods',
