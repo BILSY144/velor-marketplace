@@ -112,7 +112,7 @@ interface ProductBody {
 function normalizeVideoUrl(raw: unknown): { videoUrl: string | null } | { error: string } {
     if (raw === null || raw === undefined || String(raw).trim() === '') return { videoUrl: null }
     const url = String(raw).trim().slice(0, 300)
-    const ok = /^https://(www.)?(youtube.com/watch?v=[w-]+|youtu.be/[w-]+|youtube.com/shorts/[w-]+|vimeo.com/d+)/.test(url)
+    const ok = /^https:\/\/(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+|vimeo\.com\/\d+)/.test(url)
     if (!ok) return { error: 'Video must be a YouTube or Vimeo link (e.g. https://youtube.com/watch?v=... or https://vimeo.com/...).' }
     return { videoUrl: url }
 }
