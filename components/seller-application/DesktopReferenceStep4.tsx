@@ -95,7 +95,7 @@ export function DesktopReferenceStep4({
           </>
         )}
 
-        {submitted && <a href="/seller/dashboard" aria-label="Go to Seller Dashboard" style={{ position: 'absolute', left: 739, top: 878, width: 730, height: 59 }} />}
+        {submitted && <a href="/dashboard" aria-label="Go to Seller Dashboard" style={{ position: 'absolute', left: 739, top: 878, width: 730, height: 59 }} />}
         {error && <div role="alert" style={{ position: 'absolute', left: 739, top: 944, width: 730, color: '#ff9a82', font: '12px Inter, sans-serif', textAlign: 'center' }}>{error}</div>}
         <button type="button" onClick={onBack} aria-label="Back to Shipping" style={{ position: 'absolute', left: 37, top: 951, width: 185, height: 48, background: 'transparent', border: 0, cursor: 'pointer' }} />
       </div>
