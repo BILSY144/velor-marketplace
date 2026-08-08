@@ -6,8 +6,8 @@ import { computeSellerStatus, sellerActionData } from '@/lib/sellerStatus'
 import { sendEmail, buildSellerApprovedEmail, buildSellerRejectedEmail } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
-  const session = await auth()
-  if (!session?.user || (session.user as any).role !== 'ADMIN') {
+  const isAdmin = await (await import('@/lib/adminAuth')).isAuthorizedAdmin(request)
+  if (!isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
