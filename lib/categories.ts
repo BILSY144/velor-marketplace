@@ -52,11 +52,17 @@ export interface CategoryDef {
   image: CategoryImage | null
 }
 
+// 2026-08-08 (William): renamed 'Adornment' to 'Adornment & Jewellery' so
+// the category name says exactly what it sells -- flagged after a
+// prospective seller's outreach reply had already referred to a
+// "Jewellery" category that didn't literally exist under that name.
+// Same slot, images and description, just a clearer, more explicit name.
+// See LEGACY_CATEGORY_MIGRATION below for the rename entries.
 export const CATEGORIES: CategoryDef[] = [
   { name: 'Ceramics & Porcelain', slug: 'ceramics-porcelain', description: "Thrown, fired and glazed by hand -- pottery and porcelain from the world's kiln towns", image: { id: 36253267, slug: 'free-photo-of-elegant-tea-set-on-traditional-chinese-table' } },
   { name: 'Rugs, Cloth & Thread', slug: 'rugs-cloth-thread', description: 'Hand-knotted rugs, woven cloth and embroidered textiles -- wool, silk and thread worked the old way', image: { id: 34343822, slug: null } },
   { name: "The World's Kitchen", slug: 'worlds-kitchen', description: 'Cookware, knives and kitchen craft -- the tools real cooking is done with, from the places that made them famous', image: { id: 23436813, slug: 'free-photo-of-man-holding-a-japanese-knife' } },
-  { name: 'Adornment', slug: 'adornment', description: 'Fine and handmade jewellery, watches and wearable craft -- silver, amber and filigree from the makers who work it', image: { id: 33154729, slug: null } },
+  { name: 'Adornment & Jewellery', slug: 'adornment-jewellery', description: 'Fine and handmade jewellery, watches and wearable craft -- silver, amber and filigree from the makers who work it', image: { id: 33154729, slug: null } },
   { name: 'Tea, Coffee & Pantry', slug: 'tea-coffee-pantry', description: 'Tea, coffee and the rituals built around them -- leaves and beans from the growers, not a supermarket shelf', image: { id: 30767475, slug: 'free-photo-of-red-chinese-teapot-set-on-dark-wooden-table' } },
   { name: 'Light, Scent & Self', slug: 'light-scent-self', description: 'Skincare, perfumery and incense -- wellness and beauty traditions from where they began', image: { id: 458541, slug: null } },
   { name: 'Leather Goods', slug: 'leather-goods', description: 'Tanned, cut and stitched the slow way -- leather goods from tanneries with generations behind them', image: { id: 22434771, slug: null } },
@@ -93,7 +99,8 @@ export const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
   'Home & Garden': 'Home Craft & Décor',
   'Beauty & Health': 'Light, Scent & Self',
   'Sports & Outdoors': 'Outdoor & Field Craft',
-  'Jewellery & Watches': 'Adornment',
+  'Jewellery & Watches': 'Adornment & Jewellery',
+  'Adornment': 'Adornment & Jewellery',
   'Pet Supplies': 'Artisan Pet Goods',
   'Musical Instruments': 'Instruments & Music',
   'Office & Stationery': 'Paper & Stationery',
