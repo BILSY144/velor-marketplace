@@ -13,7 +13,7 @@ export function FinishStep({ form, onBack, onEdit, onSubmit, submitting, submitt
 }) {
   const [accepted, setAccepted] = useState(false);
   const country = COUNTRY_OPTIONS.find(([code]) => code === form.shippingCountry)?.[1] ?? form.shippingCountry;
-  if (submitted) return <div style={{ textAlign: 'center', color: 'var(--sa-text)' }}><h2 style={{ font: '600 40px var(--sa-font-display)' }}>You&apos;re almost there.</h2><p style={{ color: 'var(--sa-muted)' }}>Your seller application has been received.</p><a href="/seller/dashboard" style={{ display: 'block', marginTop: 28, borderRadius: 10, background: 'var(--sa-accent)', padding: 16, color: '#160a00', fontWeight: 700 }}>Go to Seller Dashboard</a></div>;
+  if (submitted) return <div style={{ textAlign: 'center', color: 'var(--sa-text)' }}><h2 style={{ font: '600 40px var(--sa-font-display)' }}>You&apos;re almost there.</h2><p style={{ color: 'var(--sa-muted)' }}>Your seller application has been received.</p><a href="/dashboard" style={{ display: 'block', marginTop: 28, borderRadius: 10, background: 'var(--sa-accent)', padding: 16, color: '#160a00', fontWeight: 700 }}>Go to Seller Dashboard</a></div>;
 
   const section = (title: string, text: React.ReactNode, step: number) => <div style={{ position: 'relative', borderBottom: '1px solid var(--sa-border)', padding: '16px 90px 16px 0' }}><strong style={{ display: 'block', color: 'var(--sa-text)' }}>{title}</strong><div style={{ marginTop: 6, color: 'var(--sa-muted)', lineHeight: 1.5 }}>{text}</div><button type="button" onClick={() => onEdit(step)} style={{ position: 'absolute', right: 0, top: 18, border: '1px solid var(--sa-border)', borderRadius: 7, background: '#111', color: 'var(--sa-text)', padding: '7px 12px' }}>Edit</button></div>;
 
