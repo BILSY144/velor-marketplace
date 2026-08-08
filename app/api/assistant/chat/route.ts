@@ -34,8 +34,10 @@ HONESTY RULES, never break these:
 LANGUAGE (this rule overrides tone, never break it):
 Always reply in the SAME language the person is writing to you in. If they write in Spanish, answer in Spanish. If they write in Vietnamese, Arabic, Hindi, Turkish, Bengali, Mandarin, or any other language, answer fluently in that language. Do not apologise for the language, do not ask them to switch to English, and do not answer in two languages at once. If their message mixes languages, use the language of the majority of their message. Proper nouns like "Velor", "Stripe" and "Payoneer" stay as they are.`
 
-// Public / buyer-facing assistant. No login, no seller or account data. This
-// is the persona every visitor and shopper on the public site talks to.
+// Public / buyer-facing assistant system prompt. TEMPORARILY UNUSED
+// (2026-08-08, William) -- the buyer path below returns early without
+// calling this; kept in place, not deleted, for a quick re-enable.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BUYER_SYSTEM_PROMPT = `You are the Velor AI Assistant, the shopping helper on the public Velor Marketplace website at velorcommerce.store. You are a real AI, not a human. You help BUYERS and visitors - not sellers. You have no access to any private account data, so never claim to look anything up about a specific person's account or a specific order's live status.
 
 ABOUT VELOR (for buyers):
@@ -97,7 +99,11 @@ async function callAnthropic(systemPrompt: string, messages: { role: string; con
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-5',
+      // Switched from claude-sonnet-5 to claude-haiku-5 (2026-08-08,
+      // William: cut Anthropic spend). Seller assistant answers scoped
+      // Q&A from a fixed system prompt + account snapshot -- well within
+      // a lighter model's capability, at a fraction of the per-call cost.
+      model: 'claude-haiku-5',
       max_tokens: 1024,
       system: systemPrompt,
       messages: normalized,
@@ -118,22 +124,21 @@ export async function POST(req: NextRequest) {
   }
   const audience: 'buyer' | 'seller' = body?.audience === 'buyer' ? 'buyer' : 'seller'
 
-  // ---- Public / buyer path: no login required, no account data ----
+  // ---- Public / buyer path: TEMPORARILY DISABLED (2026-08-08, William) ----
+  // This path had no auth, no per-IP cap and no daily budget (unlike
+  // /api/translate, which has both) -- it was the single largest, fully
+  // unmetered driver of Anthropic API spend while sellers are still
+  // onboarding and the site hasn't gone public yet. Frontend mount removed
+  // in components/ConditionalLayout.tsx; this early return is defense in
+  // depth so a direct call to this route still can't reach the model.
+  // BUYER_SYSTEM_PROMPT and callAnthropic(...) above are left intact for
+  // when this is reintroduced -- ideally with the same budget gate
+  // /api/translate uses.
   if (audience === 'buyer') {
-    try {
-      const res = await callAnthropic(BUYER_SYSTEM_PROMPT, messages, apiKey)
-      if (!res.ok) {
-        const errText = await res.text()
-        console.error('Anthropic API error (buyer):', res.status, errText)
-        return NextResponse.json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' }, { status: 502 })
-      }
-      const data = await res.json()
-      const reply: string = (Array.isArray(data?.content) ? data.content.filter((b: { type?: string; text?: string }) => b?.type === 'text' && typeof b.text === 'string').map((b: { text?: string }) => b.text as string).join('\n').trim() : '') || 'Sorry, I was not able to generate a response.'
-      return NextResponse.json({ reply })
-    } catch (err) {
-      console.error('Assistant buyer route error:', err)
-      return NextResponse.json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' }, { status: 500 })
-    }
+    return NextResponse.json(
+      { error: 'The buyer assistant is temporarily unavailable.' },
+      { status: 503 }
+    )
   }
 
   // ---- Seller path: requires login + seller account, tier-aware ----
