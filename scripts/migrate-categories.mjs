@@ -25,7 +25,10 @@ const RENAMES = {
   'Home & Garden': 'Home Craft & Décor',
   'Beauty & Health': 'Light, Scent & Self',
   'Sports & Outdoors': 'Outdoor & Field Craft',
-  'Jewellery & Watches': 'Adornment',
+  'Jewellery & Watches': 'Adornment & Jewellery',
+  // 'Adornment' added 2026-08-08 (William): renamed to 'Adornment & Jewellery'
+  // for clarity; this entry catches rows already sitting at the old 'Adornment' name.
+  'Adornment': 'Adornment & Jewellery',
   'Pet Supplies': 'Artisan Pet Goods',
   'Musical Instruments': 'Instruments & Music',
   'Office & Stationery': 'Paper & Stationery',
