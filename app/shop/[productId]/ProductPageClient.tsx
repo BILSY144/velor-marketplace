@@ -279,6 +279,91 @@ function RailCard({ p, symbol, convert }: { p: RailItem; symbol: string; convert
 }
 
 function Rail({ heading, items, symbol, convert, viewAllHref }: { heading: string; items: RailItem[]; symbol: string; convert: (amount: number, from: string) => number; viewAllHref?: string }) {
+  // Mouse-drag-to-scroll, added 2026-08-08 (William: "these reels do not
+  // swipe like they are suppose to"). .velor-pdp-rail-scroll already
+  // scrolls fine on touch (native overflow-x + scroll-snap, no JS
+  // needed), but a plain click-and-drag with a MOUSE just selected text/
+  // images instead of scrolling -- desktop has no built-in drag-to-scroll
+  // gesture the way touch does. Same deferred-pointer-capture pattern as
+  // components/CountryOriginStrip.tsx's own tap-reliability fix (2026-07-17):
+  // capture is taken only once a real drag crosses the threshold, so a
+  // plain click on a card still fires its native Link navigation, and the
+  // one click that follows a genuine drag is swallowed via onClickCapture
+  // so releasing a drag over a card never accidentally navigates there.
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const drag = useRef({ pointerId: -1, startX: 0, startScrollLeft: 0, dragging: false, suppressClick: false, lastX: 0, lastT: 0, velocity: 0 })
+  const rafId = useRef<number | null>(null)
+
+  const stopMomentum = () => {
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current)
+      rafId.current = null
+    }
+  }
+
+  const runMomentum = () => {
+    const track = trackRef.current
+    if (!track) return
+    const step = () => {
+      drag.current.velocity *= 0.94
+      if (Math.abs(drag.current.velocity) < 0.05) { rafId.current = null; return }
+      track.scrollLeft -= drag.current.velocity
+      rafId.current = requestAnimationFrame(step)
+    }
+    rafId.current = requestAnimationFrame(step)
+  }
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return
+    const track = trackRef.current
+    if (!track) return
+    stopMomentum()
+    drag.current = { pointerId: e.pointerId, startX: e.clientX, startScrollLeft: track.scrollLeft, dragging: false, suppressClick: false, lastX: e.clientX, lastT: performance.now(), velocity: 0 }
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const track = trackRef.current
+    if (!track || drag.current.pointerId !== e.pointerId) return
+    const dx = e.clientX - drag.current.startX
+    if (!drag.current.dragging) {
+      if (Math.abs(dx) <= 6) return
+      drag.current.dragging = true
+      drag.current.suppressClick = true
+      setIsDragging(true)
+      try { track.setPointerCapture(e.pointerId) } catch {}
+    }
+    track.scrollLeft = drag.current.startScrollLeft - dx
+    const now = performance.now()
+    const dt = now - drag.current.lastT
+    if (dt > 0) {
+      const instVelocity = (e.clientX - drag.current.lastX) / dt * 16.7
+      drag.current.velocity = drag.current.velocity * 0.7 + instVelocity * 0.3
+    }
+    drag.current.lastX = e.clientX
+    drag.current.lastT = now
+  }
+
+  const endDrag = (e: React.PointerEvent) => {
+    if (drag.current.pointerId !== e.pointerId) return
+    drag.current.pointerId = -1
+    if (drag.current.dragging) {
+      setIsDragging(false)
+      drag.current.dragging = false
+      if (Math.abs(drag.current.velocity) > 0.05) runMomentum()
+    }
+  }
+
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (drag.current.suppressClick) {
+      drag.current.suppressClick = false
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
+  useEffect(() => stopMomentum, [])
+
   if (items.length === 0) return null
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 40px' }}>
@@ -288,7 +373,16 @@ function Rail({ heading, items, symbol, convert, viewAllHref }: { heading: strin
           <Link href={viewAllHref} style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>View all</Link>
         )}
       </div>
-      <div className="velor-pdp-rail-scroll">
+      <div
+        ref={trackRef}
+        className="velor-pdp-rail-scroll"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab', userSelect: isDragging ? 'none' : undefined }}
+      >
         {items.map((p) => (
           <RailCard key={p.id} p={p} symbol={symbol} convert={convert} />
         ))}
