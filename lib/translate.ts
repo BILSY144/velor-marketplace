@@ -46,7 +46,12 @@ async function modelTranslate(lang: string, texts: string[]): Promise<string[]> 
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-5',
+      // Switched from claude-sonnet-5 to claude-haiku-5 (2026-08-08,
+      // William: cut Anthropic spend). Structured UI-string translation is
+      // a good fit for a lighter model -- same JSON-in/JSON-out contract,
+      // much cheaper per call, and this path runs at real volume (up to
+      // 25k new strings/day).
+      model: 'claude-haiku-5',
       max_tokens: 8000,
       system:
         `You translate user-interface strings for Velor, a global marketplace for authentic cultural goods. Translate each string in the given JSON array into ${LANG_NAMES[lang]}. Rules: keep the brand name "Velor" untranslated; keep numbers, prices, currency symbols and punctuation intact; keep the register natural for an ecommerce site; never add or drop items. Reply with ONLY a JSON array of the translated strings, same length and order as the input.`,
